@@ -1,0 +1,271 @@
+{
+    "paginator": {
+        "page": "pagina",
+        "of": "di {pages}"
+    },
+    "copied": {
+        "label": "Copiato!"
+    },
+    "sidebarApplication": {
+        "renameApplication": "Rinomina {type}",
+        "viewTrash": "Visualizza cestino",
+        "deleteApplication": "Elimina {type}"
+    },
+    "sidebar": {
+        "createGroup": "Crea gruppo",
+        "inviteOthers": "Invita altri",
+        "logoff": "Esci",
+        "errorNoGroup": "Non hai nessun gruppo.",
+        "admin": "Admin",
+        "dashboard": "Dashboard",
+        "trash": "Cestino",
+        "settings": "Impostazioni"
+    },
+    "accountForm": {
+        "nameLabel": "Il tuo nome",
+        "languageLabel": "Lingua interfaccia"
+    },
+    "accountSettings": {
+        "title": "Account",
+        "changedTitle": "Cambiato",
+        "changedDescription": "Le informazioni del tuo account sono state cambiate.",
+        "submitButton": "Aggiorna account"
+    },
+    "settingsModal": {
+        "title": "Impostazioni"
+    },
+    "passwordSettings": {
+        "title": "Modifica password",
+        "changedTitle": "Password modificata",
+        "changedDescription": "La tua password è stata modificata. La prossima volta che vuoi accedere, devi usare la nuova password.",
+        "oldPasswordLabel": "Vecchia password",
+        "oldPasswordRequiredError": "La vecchia password è obbligatoria.",
+        "newPasswordLabel": "Nuova password",
+        "repeatNewPasswordLabel": "Ripeti la nuova password",
+        "repeatNewPasswordMatchError": "Questo campo deve corrispondere al campo della nuova password.",
+        "submitButton": "Modifica password",
+        "errorInvalidOldPasswordTitle": "Password non valida",
+        "errorInvalidOldPasswordMessage": "Impossibile cambiare la password perché la vecchia password non è valida."
+    },
+    "error": {
+        "alreadyExistsTitle": "Utente già esistente",
+        "alreadyExistsMessage": "Un utente con l'indirizzo e-mail fornito esiste già.",
+        "passwordRequired": "Una password è obbligatoria.",
+        "invalidEmail": "Inserisci un indirizzo e-mail valido.",
+        "disabledAccountTitle": "Account disabilitato",
+        "disabledAccountMessage": "Questo account utente è stato disabilitato.",
+        "incorrectCredentialTitle": "Credenziali non corrette",
+        "incorrectCredentialMessage": "L'indirizzo e-mail o la password forniti non sono corretti.",
+        "inputRequired": "Inserimento obbligatorio."
+    },
+    "field": {
+        "language": "Lingua",
+        "emailAddress": "Indirizzo e-mail",
+        "name": "Il tuo nome",
+        "password": "Password",
+        "passwordRepeat": "Ripeti la password"
+    },
+    "invitationTitle": "Invito",
+    "invitationMessage": "{invitedBy} ti ha invitato in {group}.",
+    "groupForm": {
+        "nameLabel": "Nome"
+    },
+    "leaveGroupModal": {
+        "title": "Lascia {group}",
+        "message": "Sei sicuro di voler lasciare il gruppo {gruppo}? Non sarai più in grado di accedere alle applicazioni correlate e se vuoi riottenere l'accesso, uno degli amministratori deve invitarti di nuovo. Se lasci il gruppo, non verrà eliminato. Tutti gli altri membri vi avranno ancora accesso. Non è possibile lasciare un gruppo se sei l'ultimo amministratore perché questo lo lascerà privo di gestione.",
+        "leave": "Lascia gruppo"
+    },
+    "dashboardGroup": {
+        "showMembers": "Membri",
+        "createApplication": "Crea nuovo"
+    },
+    "groupInvitation": {
+        "title": "Invito",
+        "message": "{by} ti ha invitato in {group}.",
+        "reject": "Rifiuta",
+        "accept": "Accetta"
+    },
+    "groupMemberModal": {
+        "membersModalTitle": "membri di {group}",
+        "userDescription": "{user} - membro da {since}",
+        "invitationDescription": "invitato da {since}",
+        "sendInvite": "Invia invito",
+        "userAlreadyInGroupTitle": "Utente già nel gruppo.",
+        "userAlreadyInGroupText": "Non è possibile inviare un invito quando l'utente è già membro del gruppo."
+    },
+    "groupInviteForm": {
+        "invitationFormTitle": "Invita via e-mail",
+        "optionalMessagePlaceholder": "Messaggio facoltativo",
+        "errorInvalidEmail": "Inserisci un indirizzo e-mail valido."
+    },
+    "groupsContext": {
+        "search": "Cerca gruppo",
+        "noResults": "Nessun risultato",
+        "createGroup": "Crea gruppo"
+    },
+    "groupContext": {
+        "renameGroup": "Rinomina gruppo",
+        "members": "Membri",
+        "viewTrash": "Visualizza cestino",
+        "leaveGroup": "Lascia gruppo",
+        "deleteGroup": "Elimina gruppo"
+    },
+    "createGroupModal": {
+        "createNew": "Crea nuovo gruppo",
+        "add": "Aggiungi gruppo"
+    },
+    "templateCategories": {
+        "search": "Cerca modelli",
+        "title": "Modelli"
+    },
+    "templateHeader": {
+        "use": "Usa questo modello"
+    },
+    "trashSidebar": {
+        "title": "Cestino",
+        "unnamedGroup": "Gruppo senza nome {id}"
+    },
+    "trashContents": {
+        "message": "Ripristina gli elementi eliminati negli ultimi {duration}",
+        "empty": "Negli ultimi tre giorni non è stato eliminato niente.",
+        "emptyButtonTrashed": "Elimina {type} in modo permanente",
+        "emptyButtonNotTrashed": "Svuota il cestino di {type}",
+        "unnamed": "{type} senza nome {id}"
+    },
+    "trashEmptyModal": {
+        "titleIsTrashed": "Sei sicuro di voler eliminare definitivamente {name}?",
+        "titleIsNotTrashed": "Sei sicuro di voler svuotare il cestino di {name}?",
+        "messageIsTrashed": "Questo lo eliminerà definitivamente, insieme a tutti i suoi contenuti. Non potranno poi essere recuperati.",
+        "messageIsNotTrashed": "Questo eliminerà definitivamente gli elementi elencati. Non potranno poi essere recuperati.",
+        "buttonIsTrashed": "Eliminato in modo permanente",
+        "buttonIsNotTrashed": "Vuoto"
+    },
+    "trashEntry": {
+        "deletedUser": "Un utente eliminato",
+        "fromParent": "da {parent}",
+        "name": "{user} eliminato {type} {title} {parent}",
+        "restore": "Ripristina",
+        "unnamed": "{type} senza nome {id}"
+    },
+    "trashModal": {
+        "emptyTitle": "Nessun gruppo",
+        "emptyMessage": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono a un gruppo, quindi per crearli devi creare un gruppo."
+    },
+    "uploadViaURLUserFileUpload": {
+        "title": "Carica da un URL",
+        "urlLabel": "URL",
+        "urlError": "Un URL valido è obbligatorio."
+    },
+    "userFilesModal": {
+        "title": "Carica da"
+    },
+    "uploadFileUserFileUpload": {
+        "title": "Carica dal mio dispositivo",
+        "drop": "Lascia qui",
+        "clickOrDrop": "Clicca o lascia qui i tuoi file",
+        "retry": "Riprova"
+    },
+    "createApplicationContext": {
+        "fromTemplate": "Da modello"
+    },
+    "applicationForm": {
+        "nameLabel": "Nome"
+    },
+    "connectingNotification": {
+        "title": "Riconnessione in corso",
+        "content": "Riconnessione con il server."
+    },
+    "failedConnectingNotification": {
+        "title": "Non riuscito",
+        "content": "La connessione al server non è riuscita. Aggiorna la pagina.",
+        "action": "Aggiorna la pagina"
+    },
+    "restoreNotification": {
+        "restore": "Ripristina {type} eliminato"
+    },
+    "copyingNotification": {
+        "title": "Copia in corso...",
+        "content": "Preparazione dei tuoi dati in corso"
+    },
+    "errorLayout": {
+        "notFound": "La pagina che stai cercando non è stata trovata. Potrebbe essere perché l'URL non è corretto o perché non hai l'autorizzazione per visualizzare la pagina.",
+        "error": "Qualcosa è andato storto durante il caricamento della pagina. I nostri sviluppatori sono stati informati del problema. Prova ad aggiornare o a tornare alla dashboard.",
+        "backDashboard": "Torna alla dashboard",
+        "backLogin": "Torna all'accesso",
+        "wrong": "Qualcosa è andato storto"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "alertTitle": "Aiutaci!",
+        "alertText": "Se trovi che Baserow sia utile, ci farebbe molto piacere se potessi sponsorizzarci, valutarci o condividerci. Sponsorizzandoci su GitHub avrai accesso anticipato alle funzioni premium!",
+        "tweetContent": "Dai un'occhiata a @baserow, uno strumento di database open source senza codice e un'alternativa a Airtable!",
+        "redditTitle": "Baserow - Un database open source senza codice",
+        "noGroupTitle": "Nessun gruppo",
+        "noGroupText": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono a un gruppo, quindi per crearli devi creare un gruppo.",
+        "createGroup": "Crea gruppo",
+        "becomeGithubSponsor": "Diventa uno sponsor GitHub",
+        "starOnGitlab": "Valutaci su Gitlab",
+        "shareOnTwitter": "Invia un tweet su Baserow",
+        "shareOnReddit": "Condividi su Reddit",
+        "shareOnFacebook": "Condividi su Facebook",
+        "shareOnLinkedIn": "Condividi su LinkedIn"
+    },
+    "login": {
+        "title": "Accedi",
+        "forgotPassword": "Password dimenticata"
+    },
+    "resetPassword": {
+        "title": "Reimposta password",
+        "newPassword": "Nuova password",
+        "repeatNewPassword": "Ripeti la nuova password",
+        "submit": "Modifica password",
+        "changed": "Password modificata",
+        "errorInvalidLinkTitle": "Link non valido",
+        "errorInvalidLinkMessage": "Impossibile reimpostare la password perché il link non è valido.",
+        "errorLinkExpiredTitle": "Link scaduto",
+        "errorLinkExpiredMessage": "Il link per la reimpostazione della password è scaduto, richiedine un altro."
+    },
+    "signup": {
+        "headTitle": "Crea nuovo account",
+        "title": "Registrati",
+        "disabled": "Registrazione disabilitata",
+        "disabledMessage": "Non è possibile creare un account perché è stato disabilitato."
+    },
+    "forgotPassword": {
+        "title": "Password dimenticata",
+        "message": "Inserisci nel modulo il tuo indirizzo e-mail. Se troviamo un account corrispondente, ti invieremo un'e-mail con un link per reimpostare la password.",
+        "submit": "Invia link",
+        "confirmation": "Se il tuo indirizzo e-mail è presente nel nostro database, riceverai in pochi minuti a tale indirizzo un link per la reimpostazione della password."
+    },
+    "settings": {
+        "settingsTitle": "Impostazioni admin",
+        "baserowInstanceId": "ID istanza",
+        "instanceIdDescription": "L'ID dell'istanza è l'identificatore univoco della tua copia di Baserow.",
+        "groupSignupRestrictions": "Limitazioni di registrazione",
+        "settingAllowNewAccountsName": "Consenti la creazione di nuovi account",
+        "settingAllowNewAccountsDescription": "Per impostazione predefinita, qualsiasi utente che visita il tuo dominio Baserow può registrarsi per un nuovo account.",
+        "settingAllowSignupsViaGroupInvitationsName": "Consenti l'iscrizione tramite inviti di gruppo",
+        "settingAllowSignupsViaGroupInvitationDescription": "Anche se la creazione di nuovi account è disabilitata, questa opzione permette agli utenti invitati direttamente di creare un account.",
+        "enabled": "abilitato"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Annullando..",
+        "undoingText": "Annullando l'ultima azione",
+        "undoneTitle": "Azione annullata",
+        "undoneText": "L'azione è annullata",
+        "redoingText": "Rifacendo la tua azione",
+        "redoingTitle": "Rifacendo...",
+        "redoneTitle": "Azione rifatta",
+        "skippingUndoDueToError": "Errore nell'annullare l'ultima azione.",
+        "noMoreUndo": "Nessun altra azione da annullare",
+        "redoneText": "L'azione è stata rifatta",
+        "noMoreRedo": "Nessuna azione da rifare",
+        "skippingRedoDueToError": "Errore nel rifare l'ultima azione.",
+        "failed": "Errore"
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Autorizzazione negata",
+        "content": "Sembra tu non abbia i permessi per accedere a questa risorsa.",
+        "action": "Aggiorna pagina"
+    }
+}

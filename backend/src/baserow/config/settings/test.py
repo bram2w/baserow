@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from .base import *  # noqa: F403, F401
 
+TESTS = True
 
 # This is a hardcoded key for test runs only.
 SECRET_KEY = "test_hardcoded_secret_key"  # nosec
@@ -36,3 +37,14 @@ CACHES = {
         "VERSION": None,
     },
 }
+
+
+class Everything(object):
+    def __contains__(self, other):
+        return True
+
+
+# Overriding the FEATURE_FLAGS object in the tests because if we do `feature` in
+# settings.FEATURE_FLAGS, we always want it to be enabled, otherwise the tests might
+# fail.
+FEATURE_FLAGS = Everything()

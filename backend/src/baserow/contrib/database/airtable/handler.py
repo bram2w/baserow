@@ -39,6 +39,7 @@ from baserow.contrib.database.airtable.constants import (
 
 from .exceptions import (
     AirtableBaseNotPublic,
+    AirtableShareIsNotABase,
     AirtableImportJobDoesNotExist,
     AirtableImportJobAlreadyRunning,
 )
@@ -90,6 +91,9 @@ class AirtableHandler:
         init_data = json.loads(raw_init_data)
         cookies = response.cookies.get_dict()
 
+        if "sharedApplicationId" not in raw_init_data:
+            raise AirtableShareIsNotABase("The `shared_id` is not a base.")
+
         return request_id, init_data, cookies
 
     @staticmethod
@@ -131,7 +135,7 @@ class AirtableHandler:
         stringified_object_params = {
             "includeDataForViewIds": None,
             "shouldIncludeSchemaChecksum": True,
-            "mayOnlyIncludeRowAndCellDataForIncludedViews": True,
+            "mayOnlyIncludeRowAndCellDataForIncludedViews": False,
         }
         access_policy = json.loads(init_data["accessPolicy"])
 
@@ -213,7 +217,7 @@ class AirtableHandler:
             baserow_field,
             airtable_column_type,
         ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-            column, timezone
+            table, column, timezone
         )
 
         if baserow_field is None:
@@ -283,7 +287,10 @@ class AirtableHandler:
             updated_on=None,
         )
 
-        for column_id, column_value in row["cellValuesByColumnId"].items():
+        # Some empty rows don't have the `cellValuesByColumnId` property because it
+        # doesn't contain values, hence the fallback to prevent failing hard.
+        cell_values = row.get("cellValuesByColumnId", {})
+        for column_id, column_value in cell_values.items():
             if column_id not in column_mapping:
                 continue
 

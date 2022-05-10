@@ -70,9 +70,9 @@ export default {
       this.value.splice(index, 1)
       this.$emit('input', this.value)
     },
-    add() {
+    add(optionValue = '') {
       this.value.push({
-        value: '',
+        value: optionValue,
         color: randomColor(),
         id: this.lastSeenId,
       })

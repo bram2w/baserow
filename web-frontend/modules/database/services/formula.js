@@ -1,7 +1,10 @@
 export default (client) => {
   return {
-    type(formulaId, formula) {
-      return client.post(`/database/formula/${formulaId}/type/`, { formula })
+    type(tableId, fieldName, formula) {
+      return client.post(`/database/formula/${tableId}/type/`, {
+        formula,
+        name: fieldName,
+      })
     },
   }
 }

@@ -6,6 +6,7 @@ export function createView(data) {
     filters_disabled: false,
     filters: [],
     sortings: [],
+    decorations: [],
   }
 
   return {
@@ -17,7 +18,7 @@ export function createView(data) {
 export function createPublicGridView(
   mock,
   viewSlug,
-  { name, fields = [], sortings = [] }
+  { name, fields = [], sortings = [], decorations = [] }
 ) {
   if (name === undefined) {
     name = `public_mock_view_${viewSlug}`
@@ -44,7 +45,14 @@ export function createGridView(
   mock,
   application,
   table,
-  { viewType = 'grid', viewId = 1, filters = [], publicView = false }
+  {
+    viewType = 'grid',
+    viewId = 1,
+    filters = [],
+    sortings = [],
+    decorations = [],
+    publicView = false,
+  }
 ) {
   const tableId = table.id
   const gridView = {
@@ -63,6 +71,8 @@ export function createGridView(
     filters_disabled: false,
     public: publicView,
     filters,
+    sortings,
+    decorations,
   }
   mock.onGet(`/database/views/table/${tableId}/`).reply(200, [gridView])
   return gridView

@@ -23,6 +23,9 @@ export default {
   },
   created() {
     this.copy = this.filter.value
+    if (this.copy) {
+      this.$v.$touch()
+    }
   },
   methods: {
     delayedUpdate(value, immediately = false) {

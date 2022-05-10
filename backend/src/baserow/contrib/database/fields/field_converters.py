@@ -3,7 +3,6 @@ from psycopg2 import sql
 
 from django.db import models, transaction
 
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.db.schema import (
     lenient_schema_editor,
     safe_django_schema_editor,
@@ -159,85 +158,6 @@ class MultipleSelectConversionBase(MultipleSelectConversionConfig):
                 ),
             )
 
-    def _get_trim_and_split_field_values_query(self, model, field):
-        """
-        Creates a sql statement for the table of the given model which will split the
-        contents of the column of the given field by the configured regex and
-        subsequently trim the created strings by the configured trim settings.
-        """
-
-        return sql.SQL(
-            """
-                select
-                    trim(
-                        both {trimmed} from
-                        unnest(regexp_split_to_array({column}::text, {regex}))
-                    ) as col
-                from
-                    {table}
-            """
-        ).format(
-            table=sql.Identifier(model._meta.db_table),
-            trimmed=sql.Literal(self.trim_empty_and_quote),
-            column=sql.Identifier(field.db_column),
-            regex=sql.Literal(self.regex_split),
-        )
-
-    def count_unique_field_values_options(self, connection, model, field):
-        """
-        Counts the unique field values of a given field type.
-        """
-
-        subselect = self._get_trim_and_split_field_values_query(model, field)
-        query = sql.SQL(
-            """
-           select
-               count(distinct col)
-           from
-               ({table_select}) as tmp_table
-           where
-               col != ''
-           """
-        ).format(
-            table_select=subselect,
-        )
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            res = cursor.fetchall()
-
-        return res[0][0]
-
-    def extract_field_values_to_options(self, connection, model, field):
-        """
-        Extracts the distinct values for a specific field type over all the existing
-        rows into one column with one row per value.
-        This is needed in order to generate the select_options when converting from any
-        text field to a multiple_select field.
-
-        :return: A list of select_options.
-        :rtype: list.
-        """
-
-        subselect = self._get_trim_and_split_field_values_query(model, field)
-        query = sql.SQL(
-            """
-            select
-                distinct left(col, {select_options_length})
-            from
-                ({table_select}) as tmp_table
-            where
-                col != ''
-            """
-        ).format(
-            table_select=subselect,
-            select_options_length=sql.Literal(self.allowed_select_options_length),
-        )
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            res = cursor.fetchall()
-            options = [{"value": x[0], "color": "blue"} for x in res]
-            return options
-
     @staticmethod
     def update_column_with_values(
         connection, values: sql.SQL, table: str, db_column: str
@@ -353,7 +273,6 @@ class TextFieldToMultipleSelectFieldConverter(FieldConverter):
             # Since we are converting to a multiple select field we might have to
             # create select options before we can then populate the table with the
             # given select options.
-            has_select_options = to_field.select_options.count() > 0
             values_query = sql.SQL(
                 """
                     SELECT
@@ -404,25 +323,7 @@ class TextFieldToMultipleSelectFieldConverter(FieldConverter):
             # lower than the allowed threshold and the user has not provided any
             # select_options themselves, we need to extract the options and create them.
             with transaction.atomic():
-                if (
-                    not has_select_options
-                    and helper.count_unique_field_values_options(
-                        connection,
-                        to_model,
-                        tmp_model_field,
-                    )
-                    <= helper.new_select_options_threshold
-                ):
-                    options = helper.extract_field_values_to_options(
-                        connection, to_model, tmp_model_field
-                    )
-                    field_handler = FieldHandler()
-                    field_handler.update_field_select_options(user, to_field, options)
-
-                helper.insert_into_many_relationship(
-                    connection,
-                    values_query,
-                )
+                helper.insert_into_many_relationship(connection, values_query)
             schema_editor.remove_field(to_model, tmp_model_field)
 
 
@@ -631,7 +532,6 @@ class SingleSelectFieldToMultipleSelectFieldConverter(FieldConverter):
         user,
         connection,
     ):
-
         helper = MultipleSelectConversionBase(
             from_field,
             to_field,

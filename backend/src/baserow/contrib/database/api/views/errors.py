@@ -1,4 +1,8 @@
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+)
 
 
 ERROR_VIEW_DOES_NOT_EXIST = (
@@ -66,8 +70,28 @@ ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST = (
     HTTP_400_BAD_REQUEST,
     "The specified aggregation type does not exist.",
 )
+ERROR_VIEW_DECORATION_DOES_NOT_EXIST = (
+    "ERROR_VIEW_DECORATION_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The view decoration does not exist.",
+)
+ERROR_VIEW_DECORATION_NOT_SUPPORTED = (
+    "ERROR_VIEW_DECORATION_NOT_SUPPORTED",
+    HTTP_400_BAD_REQUEST,
+    "Decoration is not supported for the view type.",
+)
+ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE = (
+    "ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE",
+    HTTP_400_BAD_REQUEST,
+    "The value provider is not compatible with the decorator type.",
+)
 ERROR_CANNOT_SHARE_VIEW_TYPE = (
     "ERROR_CANNOT_SHARE_VIEW_TYPE",
     HTTP_400_BAD_REQUEST,
     "This view type does not support sharing.",
+)
+ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW = (
+    "ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW",
+    HTTP_401_UNAUTHORIZED,
+    "The user does not have the permissions to see this password protected shared view.",
 )

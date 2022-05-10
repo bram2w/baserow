@@ -6,6 +6,7 @@
   list-style: none;
   margin: 0;
   padding: 0 4px;
+  -moz-user-select: none;
 
   &.active {
     height: auto;

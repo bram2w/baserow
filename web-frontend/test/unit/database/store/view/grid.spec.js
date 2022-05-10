@@ -5,7 +5,6 @@ import {
   ContainsViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import { clone } from '@baserow/modules/core/utils/object'
-import flushPromises from 'flush-promises'
 
 describe('Grid view store', () => {
   let testApp = null
@@ -827,18 +826,13 @@ describe('Grid view store', () => {
     gridStore.state = () => state
     store.registerModule('grid', gridStore)
 
-    const fieldId1 = 2
-    const fieldId2 = 3
-
     const view = {
       id: 1,
     }
 
-    mockServer.getFieldAggregationData(view.id, fieldId1, 'empty_count', {
-      value: 84,
-    })
-    mockServer.getFieldAggregationData(view.id, fieldId2, 'not_empty_count', {
-      value: 256,
+    mockServer.getAllFieldAggregationData(view.id, {
+      field_2: 84,
+      field_3: 256,
     })
 
     await store.dispatch('grid/fetchAllFieldAggregationData', {
@@ -856,17 +850,8 @@ describe('Grid view store', () => {
       },
     })
 
-    // Check if a failing endpoint won't prevent other endpoints to update
-    mockServer.getFieldAggregationData(
-      view.id,
-      fieldId1,
-      'empty_count',
-      null,
-      true
-    )
-    mockServer.getFieldAggregationData(view.id, fieldId2, 'not_empty_count', {
-      value: 100,
-    })
+    // What if the query fails?
+    mockServer.getAllFieldAggregationData(view.id, null, true)
 
     testApp.dontFailOnErrorResponses()
     await expect(
@@ -883,40 +868,7 @@ describe('Grid view store', () => {
       },
       3: {
         loading: false,
-        value: 100,
-      },
-    })
-  })
-
-  test('fetchFieldAggregationData', async () => {
-    const state = Object.assign(gridStore.state(), {
-      fieldAggregationData: {},
-      fieldOptions: { 2: { aggregation_raw_type: 'empty_count' } },
-    })
-    gridStore.state = () => state
-    store.registerModule('grid', gridStore)
-
-    const fieldId = 2
-
-    const view = {
-      id: 1,
-    }
-
-    mockServer.getFieldAggregationData(view.id, fieldId, 'empty_count', {
-      value: 21,
-    })
-
-    await store.dispatch('grid/fetchFieldAggregationData', {
-      view,
-      fieldId,
-    })
-
-    await flushPromises()
-
-    expect(clone(store.getters['grid/getAllFieldAggregationData'])).toEqual({
-      2: {
-        loading: false,
-        value: 21,
+        value: null,
       },
     })
   })

@@ -1,224 +1,247 @@
 {
     "premium": {
         "user": {
-            "isStaff": "",
-            "isGroupAdmin": "",
-            "active": "",
-            "deactivated": ""
+            "isStaff": "Es staff",
+            "isGroupAdmin": "Es administrador de grupo",
+            "active": "Activo",
+            "deactivated": "Desactivado"
         },
         "adminType": {
-            "dashboard": "",
-            "users": "",
-            "groups": "",
-            "licenses": ""
+            "dashboard": "Tablero",
+            "users": "Usuarios",
+            "groups": "Grupos",
+            "licenses": "Licencias"
         },
         "viewType": {
-            "kanban": ""
+            "kanban": "Kanban"
         },
         "exporterType": {
-            "json": "",
-            "xml": ""
+            "json": "Exportar a JSON",
+            "xml": "Exportar a XML"
         }
     },
     "rowCommentSidebar": {
-        "onlyPremium": "",
-        "readOnlyNoComment": "",
-        "noComment": "",
-        "comment": ""
+        "onlyPremium": "Los comentarios de Fila están disponibles en la versión premium.",
+        "readOnlyNoComment": "No comentarios para esta fila.",
+        "noComment": "Aún no hay comentarios para esta fila. Utilice el siguiente formulario para añadir un comentario.",
+        "comment": "Comentario"
     },
     "rowComment": {
-        "you": ""
+        "you": "Tú"
     },
     "registerLicenseModal": {
-        "titleRegisterLicense": "",
-        "registerLicense": "",
-        "viewPricing": "",
-        "licenseDescription": "",
+        "titleRegisterLicense": "Registrar una licencia",
+        "registerLicense": "Registrar licencia",
+        "viewPricing": "Ver precios",
+        "licenseDescription": "Solo se puede obtener una licencia en baserow.io. Si has comprado una licencia, te llegará por correo electrónico y podrás acceder desde la descripción general de tu cuenta. Copia y pega la clave de licencia en el cuadro a continuación y has clic en el botón para registrar la clave de licencia para esta instancia. No es posible utilizar la misma clave en dos instalaciones diferentes. {pricingLink} si aún no tiene una clave.",
         "licenseError": {
-            "invalidTitle": "",
-            "invalid": "",
-            "unsupportedTitle": "",
-            "unsupported": "",
-            "expiredTitle": "",
-            "expired": "",
-            "duplicateTitle": "",
-            "duplicate": "",
-            "instanceMismatchTitle": "",
-            "instanceMismatch": ""
+            "invalidTitle": "Inválido",
+            "invalid": "La licencia proporcionada no es válida.",
+            "unsupportedTitle": "No soportado",
+            "unsupported": "La licencia provista es incompatible con su versión de Baserow. Actualice a la última versión y vuelva a intentarlo.",
+            "expiredTitle": "Expirado",
+            "expired": "La licencia proporcionada ha caducado.",
+            "duplicateTitle": "Duplicar",
+            "duplicate": "La licencia proporcionada ya está registrada en esta instancia.",
+            "instanceMismatchTitle": "Discrepancia de instancia",
+            "instanceMismatch": "La licencia proporcionada no pertenece a esta instancia."
         }
     },
     "disconnectLicenseModal": {
-        "disconnectLicense": "",
-        "disconnectDescription": ""
+        "disconnectLicense": "Desconectar licencia",
+        "disconnectDescription": "¿Está seguro de que desea desconectar esta licencia? Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contact} si desea utilizar esta licencia en otra instancia autohospedada."
     },
     "registerLicenseForm": {
-        "licenseKey": ""
+        "licenseKey": "Clave de licencia"
     },
     "groupsAdminTable": {
-        "allGroups": "",
-        "id": "",
-        "name": "",
-        "members": "",
-        "applications": "",
-        "created": ""
+        "allGroups": "Todos los grupos",
+        "id": "ID",
+        "name": "Nombre",
+        "members": "Miembros",
+        "applications": "Aplicaciones",
+        "created": "Creado"
     },
     "editGroupContext": {
-        "delete": ""
+        "delete": "Eliminado permanentemente"
     },
     "deleteGroupModal": {
-        "title": "",
-        "confirmation": "",
-        "comment": "",
-        "delete": ""
+        "title": "Eliminar {name}",
+        "confirmation": "¿Está seguro de que desea eliminar el grupo: {name}?",
+        "comment": "El grupo se eliminará de forma permanente, incluidas las aplicaciones relacionadas. No es posible deshacer esta acción.",
+        "delete": "Eliminar grupo {name}"
     },
     "activeUsers": {
-        "newUsers": "",
-        "activeUsers": ""
+        "newUsers": "Nuevos usuarios",
+        "activeUsers": "Usuarios activos"
     },
     "usersAdminTable": {
-        "allUsers": "",
-        "id": "",
-        "username": "",
-        "name": "",
-        "groups": "",
-        "lastLogin": "",
-        "dateJoined": "",
-        "active": ""
+        "allUsers": "Todos los usuarios",
+        "id": "id",
+        "username": "Nombre de usuario",
+        "name": "Nombre",
+        "groups": "Grupos",
+        "lastLogin": "Último acceso",
+        "dateJoined": "Inscrito",
+        "active": "Activo"
     },
     "editUserContext": {
-        "changePassword": "",
-        "delete": ""
+        "changePassword": "Cambiar la contraseña",
+        "delete": "Borrar permanentemente",
+        "impersonate": "Suplantar"
     },
     "changePasswordForm": {
-        "newPassword": "",
-        "repeatPassword": "",
-        "changePassword": "",
+        "newPassword": "Nueva contraseña",
+        "repeatPassword": "Repetir contraseña",
+        "changePassword": "Cambiar contraseña",
         "error": {
-            "doesntMatch": ""
+            "doesntMatch": "Este campo debe coincidir con su campo de contraseña."
         }
     },
     "userForm": {
-        "fullName": "",
-        "email": "",
-        "isActive": "",
+        "fullName": "Nombre completo",
+        "email": "Email",
+        "isActive": "Está activo",
         "warning": {
-            "changeEmail": "",
-            "inactiveUser": "",
-            "userStaff": ""
+            "changeEmail": "Cambiar la dirección de correo electrónico de este usuario significa que cuando inician sesión deben usar la nueva dirección de correo electrónico para hacerlo. Esto debe ser comunicado con ese usuario.",
+            "inactiveUser": "Cuando un usuario se marca como inactivo, no puede iniciar sesión.",
+            "userStaff": "Hacer que el usuario sea personal les otorga acceso de administrador a todos los usuarios, todos los grupos y la capacidad de revocar sus propios permisos de personal."
         },
         "error": {
-            "invalidName": "",
-            "invalidEmail": ""
+            "invalidName": "Ingrese un nombre completo válido, debe tener más de 2 letras y menos de 150.",
+            "invalidEmail": "Por favor, introduce una dirección de correo electrónico válida."
         }
     },
     "changeUserPasswordModal": {
-        "changePassword": ""
+        "changePassword": "Cambiar contraseña para {username}"
     },
     "deleteUserModal": {
-        "title": "",
-        "confirmation": "",
-        "comment1": "",
-        "comment2": "",
-        "delete": ""
+        "title": "Eliminar {username}",
+        "confirmation": "¿Está seguro de que desea eliminar el usuario: {name}?",
+        "comment1": "La cuenta de usuario se eliminará, sin embargo, los grupos de los que el usuario es miembro seguirán existiendo. El grupo de usuarios no se eliminará, incluso si este usuario es el último usuario del grupo. Eliminar el último usuario de un grupo evita que cualquiera pueda acceder a ese grupo.",
+        "comment2": "Después de eliminar un usuario, es posible que un nuevo usuario se registre nuevamente utilizando la dirección de correo electrónico de los usuarios eliminados. Para asegurarse de que no puedan volver a registrarse, desactive al usuario y no lo elimine.",
+        "delete": "Eliminar usuario {username}"
     },
     "editUserModal": {
-        "delete": "",
-        "edit": ""
+        "delete": "Eliminar usuario",
+        "edit": "Editar {username}"
     },
     "crudTableSearchContext": {
-        "search": ""
+        "search": "Buscar"
     },
     "tableJSONExporter": {
-        "encoding": ""
+        "encoding": "Codificación"
     },
     "tableXMLExporter": {
-        "encoding": ""
+        "encoding": "Codificación"
     },
     "kanbanViewStackContext": {
-        "createCard": "",
-        "editStack": "",
-        "deleteStack": "",
-        "delete": "",
-        "deleteDescription": ""
+        "createCard": "Crear tarjeta",
+        "editStack": "Editar pila",
+        "deleteStack": "Eliminar pila",
+        "delete": "Eliminar {name}",
+        "deleteDescription": "¿Está seguro de que desea eliminar la pila {nombre}? Eliminar la pila da como resultado la eliminación de la opción de selección del campo de selección único, lo que podría provocar la pérdida de datos porque los valores de fila se establecerán en vacío."
     },
     "kanbanViewHeader": {
-        "stackBy": "",
-        "stackedBy": "",
-        "customizeCards": ""
+        "stackBy": "Apilado por",
+        "stackedBy": "Apilado por {fieldName}",
+        "customizeCards": "Personalizar tarjetas"
     },
     "kanbanViewOptionForm": {
-        "selectOption": ""
+        "selectOption": "Seleccionar opción"
     },
     "kanbanViewStakedBy": {
-        "title": "",
-        "chooseField": "",
-        "addSelectField": ""
+        "title": "Campo de grupo",
+        "chooseField": "¿Por qué campo de selección único deben apilarse las cartas?",
+        "addSelectField": "agregar un solo campo de selección"
     },
     "kanbanViewStack": {
-        "uncategorized": "",
-        "tryAgain": "",
-        "new": ""
+        "uncategorized": "Sin categorizar",
+        "tryAgain": "Intentar otra vez",
+        "new": "Nuevo"
     },
     "dashboard": {
-        "title": "",
-        "totals": "",
-        "totalUsers": "",
-        "totalGroups": "",
-        "totalApplications": "",
-        "newUsers": "",
-        "newUsers24h": "",
-        "newUsers7days": "",
-        "newUsers30days": "",
-        "activeUsers": "",
-        "activeUsers24h": "",
-        "activeUsers7days": "",
-        "activeUsers30days": "",
-        "viewAll": ""
+        "title": "Tablero",
+        "totals": "Totales",
+        "totalUsers": "Usuarios totales",
+        "totalGroups": "Grupos totales",
+        "totalApplications": "Aplicaciones totales",
+        "newUsers": "Nuevos usuarios",
+        "newUsers24h": "Nuevos usuarios últimas 24 horas",
+        "newUsers7days": "Nuevos usuarios últimos 7 días",
+        "newUsers30days": "Nuevos usuarios últimos 30 días",
+        "activeUsers": "Usuarios activos",
+        "activeUsers24h": "Usuarios activos últimas 24 horas",
+        "activeUsers7days": "Usuarios activos últimos 7 días",
+        "activeUsers30days": "Usuarios activos últimos 30 días",
+        "viewAll": "Ver todo"
     },
     "licenses": {
-        "titleNoLicenses": "",
-        "titleLicenses": "",
-        "noLicensesDescription": "",
-        "rowComments": "",
-        "kanbanView": "",
-        "exports": "",
-        "admin": "",
-        "getLicense": "",
-        "baserowInstanceId": "",
-        "registerLicense": "",
-        "licenceId": "",
-        "premium": "",
-        "expired": "",
-        "validity": "",
-        "seats": "",
-        "premiumFeatures": ""
+        "titleNoLicenses": "No se encontraron licencias",
+        "titleLicenses": "Licencias",
+        "noLicensesDescription": "Su instancia de Baserow no tiene ninguna licencia registrada. Una licencia premium le brinda acceso inmediato a todas las funciones adicionales. Si ya tiene una licencia, puede registrarla aquí. Alternativamente, puede obtener uno haciendo clic en el botón a continuación.",
+        "rowComments": "Comentarios de fila",
+        "kanbanView": "Vista Kanban",
+        "exports": "Exportación JSON y XML",
+        "admin": "Funcionalidad de administración",
+        "getLicense": "obtener una licencia",
+        "baserowInstanceId": "Su ID de instancia de Baserow es:",
+        "registerLicense": "Registrar licencia",
+        "licenceId": "ID de licencia",
+        "premium": "Premium",
+        "expired": "Expirado",
+        "validity": "Válido desde {start} hasta {end}",
+        "seats": "asientos",
+        "premiumFeatures": "Características premium"
     },
     "license": {
-        "title": "",
-        "users": "",
-        "description": "",
-        "seatLeft": "",
-        "fillSeats": "",
-        "removeAll": "",
-        "licenseId": "",
-        "addUser": "",
-        "plan": "",
-        "premium": "",
-        "expired": "",
-        "validFrom": "",
-        "validThrough": "",
-        "validThroughDescription": "",
-        "lastCheck": "",
-        "lastCheckDescription": "",
-        "checkNow": "",
-        "seats": "",
-        "licensedTo": "",
-        "premiumFeatures": "",
-        "applications": "",
-        "unlimited": "",
-        "rowUsage": "",
-        "storeUsage": "",
-        "disconnectLicense": "",
-        "disconnectDescription": ""
+        "title": "{product_code} plan",
+        "users": "Usuarios",
+        "description": "Elija los usuarios que pueden usar el plan {product_code}. Esta licencia le permite otorgar {product_code} a un máximo de {seats} usuarios.",
+        "seatLeft": "No te quedan asientos| Te queda un asiento| Te quedan {count} asientos",
+        "fillSeats": "Llenar asientos con usuarios que no están en el plan",
+        "removeAll": "Eliminar todos los usuarios",
+        "licenseId": "ID de licencia",
+        "addUser": "Agregar un usuario",
+        "plan": "Plan",
+        "premium": "premium",
+        "expired": "Expirado",
+        "validFrom": "Válido desde",
+        "validThrough": "Válido a través de",
+        "validThroughDescription": "Después de que se expire tu licencia, tu y los usuarios asignados ya no podrán usar la funcionalidad adicional otorgada por la licencia.",
+        "lastCheck": "Última revisión",
+        "lastCheckDescription": "La licencia se comprueba periódicamente en busca de cambios. Si, por ejemplo, renovó o actualizó su licencia, los cambios se activan después de la verificación.",
+        "checkNow": "revisar ahora",
+        "seats": "Asientos (cantidad de usuarios)",
+        "licensedTo": "Licenciado para",
+        "premiumFeatures": "Características premium",
+        "applications": "Aplicaciones / bases de datos",
+        "unlimited": "Ilimitado",
+        "rowUsage": "Uso de fila",
+        "storeUsage": "Uso de almacenamiento",
+        "disconnectLicense": "Desconectar licencia",
+        "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada."
+    },
+    "conditionalColorValueProviderForm": {
+        "addCondition": "Añadir condición",
+        "colorAlwaysApply": "Este color se aplica por defecto. Puede añadir condiciones haciendo clic en el botón \"Añadir condición\".",
+        "addColor": "añadir color"
+    },
+    "viewDecoratorType": {
+        "leftBorderColorDescription": "Colorear el borde izquierdo de una fila",
+        "onlyForPremium": "Disponible en la versión premium",
+        "leftBorderColor": "Borde izquierdo",
+        "backgroundColor": "Color de fondo",
+        "backgroundColorDescription": "Colorear el fondo de una fila",
+        "onlyOneDecoratorPerView": "Sólo se puede tener una decoración de ese tipo para una vista"
+    },
+    "decoratorValueProviderType": {
+        "singleSelectColor": "Selección individual",
+        "singleSelectColorDescription": "Colorear las filas igual que un solo valor de selección",
+        "conditionalColor": "Condiciones",
+        "conditionalColorDescription": "Colorea las filas cuando coinciden con las condiciones"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "¿Por cual campo de selección individual debe colorearse la fila?"
     }
 }

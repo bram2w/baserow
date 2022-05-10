@@ -15,6 +15,8 @@ found in the root of the Baserow repo.
   the dev environment.
 - See [intellij setup](intellij-setup.md) for how to configure Intellij 
   to work well with Baserow for development purposes.
+- See [feature flags](feature-flags.md) for how Baserow uses basic feature flags for
+  optionally enabling unfinished or unready features.
 
 ## Fixing git blame
 

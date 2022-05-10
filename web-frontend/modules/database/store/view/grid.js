@@ -83,13 +83,13 @@ export const state = () => ({
   multiSelectActive: false,
   // Indicates if the user is clicking and holding the mouse over a cell
   multiSelectHolding: false,
-  /*
-    The indexes for head and tail cells in a multi-select grid.
-    Multi-Select works by tracking four different indexes, these are:
-      - The field and row index for the first cell selected, known as the head.
-      - The field and row index for the last cell selected, known as the tail.
-    All the cells between the head and tail cells are later also calculated as selected.
-  */
+  /**
+   * The indexes for head and tail cells in a multi-select grid.
+   * Multi-Select works by tracking four different indexes, these are:
+   *   - The field and row index for the first cell selected, known as the head.
+   *   - The field and row index for the last cell selected, known as the tail.
+   * All the cells between the head and tail cells are later also calculated as selected.
+   */
   multiSelectHeadRowIndex: -1,
   multiSelectHeadFieldIndex: -1,
   multiSelectTailRowIndex: -1,
@@ -133,7 +133,10 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
+  // if this grid is shared publicly or not
   public: false,
+  // The token needed to authorize the access to password protected public URL
+  publicAuthToken: null,
   fieldAggregationData: {},
 })
 
@@ -152,8 +155,9 @@ export const mutations = {
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
   },
-  SET_PUBLIC(state, newPublicValue) {
-    state.public = newPublicValue
+  SET_PUBLIC(state, { isPublic, publicAuthToken }) {
+    state.public = isPublic
+    state.publicAuthToken = publicAuthToken
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm
@@ -340,13 +344,15 @@ export const mutations = {
   },
   ADD_FIELD_TO_ROWS_IN_BUFFER(state, { field, value }) {
     const name = `field_${field.id}`
-    state.rows.forEach((row) => {
+    // We have to replace all the rows by using the map function to make it
+    // reactive and update immediately. If we don't do this, the value in the
+    // field components of the grid and modal don't always have the correct value
+    // binding.
+    state.rows = state.rows.map((row) => {
       if (!Object.prototype.hasOwnProperty.call(row, name)) {
-        // We have to use the Vue.set function here to make it reactive immediately.
-        // If we don't do this the value in the field components of the grid and modal
-        // don't have the correct value and will act strange.
-        Vue.set(row, name, value)
+        row[`field_${field.id}`] = value
       }
+      return { ...row }
     })
   },
   DECREASE_ORDERS_IN_BUFFER_LOWER_THAN(state, existingOrder) {
@@ -485,8 +491,11 @@ let lastRequest = null
 let lastRequestOffset = null
 let lastRequestLimit = null
 let lastRefreshRequest = null
-let lastRefreshRequestSource = null
-let lastSource = null
+let lastRefreshRequestController = null
+let lastQueryController = null
+
+// We want to cancel previous aggregation request before creating a new one.
+const lastAggregationRequest = { request: null, controller: null }
 
 export const actions = {
   /**
@@ -588,22 +597,23 @@ export const actions = {
       // If another request is runnig we need to cancel that one because it won't
       // what we need at the moment.
       if (lastRequest !== null) {
-        lastSource.cancel('Canceled in favor of new request')
+        lastQueryController.abort()
       }
 
       // Doing the actual request and remember what we are requesting so we can compare
       // it when making a new request.
       lastRequestOffset = requestOffset
       lastRequestLimit = requestLimit
-      lastSource = axios.CancelToken.source()
+      lastQueryController = new AbortController()
       lastRequest = GridService(this.$client)
         .fetchRows({
           gridId,
           offset: requestOffset,
           limit: requestLimit,
-          cancelToken: lastSource.token,
+          signal: lastQueryController.signal,
           search: getters.getServerSearchTerm,
           publicUrl: getters.isPublic,
+          publicAuthToken: getters.getPublicAuthToken,
           orderBy: getOrderBy(getters, rootGetters),
           filters: getFilters(getters, rootGetters),
         })
@@ -764,6 +774,7 @@ export const actions = {
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
       publicUrl: getters.isPublic,
+      publicAuthToken: getters.getPublicAuthToken,
       orderBy: getOrderBy(getters, rootGetters),
       filters: getFilters(getters, rootGetters),
     })
@@ -800,16 +811,18 @@ export const actions = {
     { view, fields, primary, includeFieldOptions = false }
   ) {
     const gridId = getters.getLastGridId
+
     if (lastRefreshRequest !== null) {
-      lastRefreshRequestSource.cancel('Cancelled in favor of new request')
+      lastRefreshRequestController.abort()
     }
-    lastRefreshRequestSource = axios.CancelToken.source()
+    lastRefreshRequestController = new AbortController()
     lastRefreshRequest = GridService(this.$client)
       .fetchCount({
         gridId,
         search: getters.getServerSearchTerm,
-        cancelToken: lastRefreshRequestSource.token,
+        signal: lastRefreshRequestController.signal,
         publicUrl: getters.isPublic,
+        publicAuthToken: getters.getPublicAuthToken,
         filters: getFilters(getters, rootGetters),
       })
       .then((response) => {
@@ -830,9 +843,10 @@ export const actions = {
             offset,
             limit,
             includeFieldOptions,
-            cancelToken: lastRefreshRequestSource.token,
+            signal: lastRefreshRequestController.signal,
             search: getters.getServerSearchTerm,
             publicUrl: getters.isPublic,
+            publicAuthToken: getters.getPublicAuthToken,
             orderBy: getOrderBy(getters, rootGetters),
             filters: getFilters(getters, rootGetters),
           })
@@ -886,9 +900,28 @@ export const actions = {
    * backend with the changed values. If the request fails the action is reverted.
    */
   async updateFieldOptionsOfField(
-    { commit, getters },
+    { commit, getters, dispatch },
     { field, values, oldValues, readOnly = false }
   ) {
+    const previousOptions = getters.getAllFieldOptions[field.id]
+    let needAggregationValueUpdate = false
+
+    /**
+     * If the aggregation raw type has changed, we delete the corresponding the
+     * aggregation value from the store.
+     */
+    if (
+      Object.prototype.hasOwnProperty.call(values, 'aggregation_raw_type') &&
+      values.aggregation_raw_type !== previousOptions.aggregation_raw_type
+    ) {
+      needAggregationValueUpdate = true
+      commit('SET_FIELD_AGGREGATION_DATA', { fieldId: field.id, value: null })
+      commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+        fieldId: field.id,
+        value: true,
+      })
+    }
+
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
@@ -910,6 +943,10 @@ export const actions = {
           values: oldValues,
         })
         throw error
+      } finally {
+        if (needAggregationValueUpdate && values.aggregation_type) {
+          dispatch('fetchAllFieldAggregationData', { view: { id: gridId } })
+        }
       }
     }
   },
@@ -917,7 +954,7 @@ export const actions = {
    * Updates the field options of a given field in the store. So no API request to
    * the backend is made.
    */
-  setFieldOptionsOfField({ commit }, { field, values }) {
+  setFieldOptionsOfField({ commit, getters }, { field, values }) {
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
@@ -954,61 +991,100 @@ export const actions = {
   forceUpdateAllFieldOptions({ commit }, fieldOptions) {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
   },
-  async fetchFieldAggregationData({ commit, getters }, { view, fieldId }) {
-    const options = getters.getAllFieldOptions[fieldId]
+  /**
+   * Fetch all field aggregation data from the server for this view. Set loading state
+   * to true while doing the query. Do nothing if this is a public view or if there is
+   * no aggregation at all. If the query goes in error, the values are set to `null`
+   * to prevent wrong information.
+   * If a request is already in progress, it is aborted in favour of the new one.
+   */
+  async fetchAllFieldAggregationData({ getters, commit }, { view }) {
     const isPublic = getters.isPublic
+    const search = getters.getActiveSearchTerm
 
-    if (!options?.aggregation_raw_type || isPublic) {
+    if (isPublic) {
       return
     }
 
-    commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
-      fieldId,
-      value: true,
-    })
-    commit('SET_FIELD_AGGREGATION_DATA', {
-      fieldId,
-      value: null,
-    })
-
-    try {
-      const {
-        data: { value },
-      } = await GridService(this.$client).fetchFieldAggregation(
-        view.id,
-        fieldId,
-        options.aggregation_raw_type
-      )
-
-      commit('SET_FIELD_AGGREGATION_DATA', {
-        fieldId,
-        value,
-      })
-    } catch (e) {
-      // Emptied the value
-      commit('SET_FIELD_AGGREGATION_DATA', {
-        fieldId,
-        value: null,
-      })
-      throw e
-    } finally {
-      commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
-        fieldId,
-        value: false,
-      })
-    }
-  },
-  fetchAllFieldAggregationData({ dispatch, getters }, { view }) {
     const fieldOptions = getters.getAllFieldOptions
 
-    return Promise.all(
-      Object.keys(fieldOptions).map((fieldId) => {
-        return dispatch('fetchFieldAggregationData', {
-          view,
+    let atLeastOneAggregation = false
+
+    Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+      if (options.aggregation_raw_type) {
+        commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
           fieldId,
+          value: true,
         })
+        atLeastOneAggregation = true
+      }
+    })
+
+    if (!atLeastOneAggregation) {
+      return
+    }
+
+    try {
+      if (lastAggregationRequest.request !== null) {
+        lastAggregationRequest.controller.abort()
+      }
+
+      lastAggregationRequest.controller = new AbortController()
+      lastAggregationRequest.request = GridService(
+        this.$client
+      ).fetchFieldAggregations({
+        gridId: view.id,
+        search,
+        signal: lastAggregationRequest.controller.signal,
       })
-    )
+
+      const { data } = await lastAggregationRequest.request
+      lastAggregationRequest.request = null
+
+      Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+        if (options.aggregation_raw_type) {
+          commit('SET_FIELD_AGGREGATION_DATA', {
+            fieldId,
+            value: data[`field_${fieldId}`],
+          })
+        }
+      })
+
+      Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+        if (options.aggregation_raw_type) {
+          commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+            fieldId,
+            value: false,
+          })
+        }
+      })
+    } catch (error) {
+      if (!axios.isCancel(error)) {
+        lastAggregationRequest.request = null
+
+        // Emptied the values
+        Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+          if (options.aggregation_raw_type) {
+            commit('SET_FIELD_AGGREGATION_DATA', {
+              fieldId,
+              value: null,
+            })
+          }
+        })
+
+        // Remove loading state
+        Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+          if (options.aggregation_raw_type) {
+            commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+              fieldId,
+              value: false,
+            })
+          }
+        })
+
+        throw error
+      }
+    }
   },
   /**
    * Updates the order of all the available field options. The provided order parameter
@@ -1068,13 +1144,14 @@ export const actions = {
   setMultiSelectActive({ commit }, value) {
     commit('SET_MULTISELECT_ACTIVE', value)
   },
-  clearMultiSelect({ commit }) {
+  clearAndDisableMultiSelect({ commit }) {
     commit('CLEAR_MULTISELECT')
+    commit('SET_MULTISELECT_ACTIVE', false)
   },
   multiSelectStart({ getters, commit }, { rowId, fieldIndex }) {
     commit('CLEAR_MULTISELECT')
 
-    const rowIndex = getters.getMultiSelectRowIndexById(rowId)
+    const rowIndex = getters.getRowIndexById(rowId)
     // Set the head and tail index to highlight the first cell
     commit('UPDATE_MULTISELECT', { position: 'head', rowIndex, fieldIndex })
     commit('UPDATE_MULTISELECT', { position: 'tail', rowIndex, fieldIndex })
@@ -1091,74 +1168,84 @@ export const actions = {
 
       commit('UPDATE_MULTISELECT', {
         position: 'tail',
-        rowIndex: getters.getMultiSelectRowIndexById(rowId),
+        rowIndex: getters.getRowIndexById(rowId),
         fieldIndex,
       })
 
       commit('SET_MULTISELECT_ACTIVE', true)
     }
   },
+  /**
+   * Prepares a two dimensional array containing prepared values for copy. It only
+   * contains the cell values selected by the multiple select. If one or more rows
+   * are not in the buffer, they are fetched from the backend.
+   */
   async exportMultiSelect({ dispatch, getters, commit }, fields) {
-    if (getters.isMultiSelectActive) {
-      const output = []
-      const [minFieldIndex, maxFieldIndex] =
-        getters.getMultiSelectFieldIndexSorted
-
-      let rows = []
-      fields = fields.slice(minFieldIndex, maxFieldIndex + 1)
-
-      if (getters.areMultiSelectRowsWithinBuffer) {
-        rows = getters.getSelectedRows
-      } else {
-        // Fetch rows from backend
-        rows = await dispatch('getMultiSelectedRows', fields)
-      }
-
-      // Loop over selected rows
-      for (const row of rows) {
-        const line = []
-
-        // Loop over selected fields
-        for (const field of fields) {
-          const rawValue = row['field_' + field.id]
-          // Format the value for copying using the field's prepareValueForCopy()
-          const value = this.$registry
-            .get('field', field.type)
-            .toHumanReadableString(field, rawValue)
-          line.push(JSON.stringify(value))
-        }
-        output.push(line.join('\t'))
-      }
-      return output.join('\n')
+    if (!getters.isMultiSelectActive) {
+      return
     }
-  },
-  /* 
-    This function is called if a user attempts to access rows that are 
-    no longer in the row buffer and need to be fetched from the backend.
-    A user can select some or all fields in a row, and only those fields 
-    will be returned.
-  */
-  async getMultiSelectedRows({ getters, rootGetters }, fields) {
-    const [minRow, maxRow] = getters.getMultiSelectRowIndexSorted
-    const gridId = getters.getLastGridId
+    const [minFieldIndex, maxFieldIndex] =
+      getters.getMultiSelectFieldIndexSorted
 
-    return await GridService(this.$client)
-      .fetchRows({
-        gridId,
-        offset: minRow,
-        limit: maxRow - minRow + 1,
-        search: getters.getServerSearchTerm,
-        publicUrl: getters.isPublic,
-        orderBy: getOrderBy(getters, rootGetters),
-        filters: getFilters(getters, rootGetters),
-        includeFields: fields.map((field) => `field_${field.id}`),
+    let rows = []
+    fields = fields.slice(minFieldIndex, maxFieldIndex + 1)
+
+    if (getters.areMultiSelectRowsWithinBuffer) {
+      rows = getters.getSelectedRows
+    } else {
+      // Fetch rows from backend
+      const [minRowIndex, maxRowIndex] = getters.getMultiSelectRowIndexSorted
+      const limit = maxRowIndex - minRowIndex + 1
+      rows = await dispatch('fetchRowsByIndex', {
+        startIndex: minRowIndex,
+        limit,
+        fields,
       })
-      .catch((error) => {
-        throw error
-      })
-      .then(({ data }) => {
-        return data.results
-      })
+    }
+
+    const data = []
+    for (const row of rows) {
+      const line = []
+
+      for (const field of fields) {
+        const rawValue = row['field_' + field.id]
+        const value = this.$registry
+          .get('field', field.type)
+          .prepareValueForCopy(field, rawValue)
+        line.push(value)
+      }
+      data.push(line)
+    }
+
+    return data
+  },
+  /**
+   * This function is called if a user attempts to access rows that are
+   * no longer in the row buffer and need to be fetched from the backend.
+   * A user can select some or all fields in a row, and only those fields
+   * will be returned.
+   */
+  async fetchRowsByIndex(
+    { getters, rootGetters },
+    { startIndex, limit, fields }
+  ) {
+    if (fields !== undefined) {
+      fields = fields.map((field) => `field_${field.id}`)
+    }
+
+    const gridId = getters.getLastGridId
+    const { data } = await GridService(this.$client).fetchRows({
+      gridId,
+      offset: startIndex,
+      limit,
+      search: getters.getServerSearchTerm,
+      publicUrl: getters.isPublic,
+      publicAuthToken: getters.getPublicAuthToken,
+      orderBy: getOrderBy(getters, rootGetters),
+      filters: getFilters(getters, rootGetters),
+      includeFields: fields,
+    })
+    return data.results
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })
@@ -1282,10 +1369,6 @@ export const actions = {
     dispatch('updateMatchFilters', { view, row, fields, primary })
     dispatch('updateSearchMatchesForRow', { row, fields, primary })
 
-    dispatch('fetchAllFieldAggregationData', {
-      view,
-    })
-
     // If the row does not match the filters or the search then we don't have to add
     // it at all.
     if (!row._.matchFilters || !row._.matchSearch) {
@@ -1403,6 +1486,7 @@ export const actions = {
         fields,
         primary,
       })
+      dispatch('fetchAllFieldAggregationData', { view: grid })
     } catch (error) {
       dispatch('updatedExistingRow', {
         view: grid,
@@ -1432,7 +1516,7 @@ export const actions = {
 
     // Store the before value of the field that gets updated
     // in case we need to rollback changes
-    valuesBeforeOptimisticUpdate[field.id] = oldValue
+    valuesBeforeOptimisticUpdate[`field_${field.id}`] = oldValue
 
     let fieldsToCallOnRowChange = [...fields, primary]
 
@@ -1448,9 +1532,6 @@ export const actions = {
       const currentFieldValue = row[fieldID]
       const optimisticFieldValue = fieldType.onRowChange(
         row,
-        field,
-        value,
-        oldValue,
         fieldToCall,
         currentFieldValue
       )
@@ -1493,6 +1574,140 @@ export const actions = {
     }
   },
   /**
+   * This action is used by the grid view to change multiple cells when pasting
+   * multiple values. It figures out which cells need to be changed, makes a request
+   * to the backend and updates the affected rows in the store.
+   */
+  async updateDataIntoCells(
+    { getters, commit, dispatch },
+    { table, view, primary, fields, getScrollTop, data, rowIndex, fieldIndex }
+  ) {
+    // If the origin origin row and field index are not provided, we need to use the
+    // head indexes of the multiple select.
+    const rowHeadIndex = rowIndex || getters.getMultiSelectHeadRowIndex
+    const fieldHeadIndex = fieldIndex || getters.getMultiSelectHeadFieldIndex
+
+    // Based on the data, we can figure out in which cells we must paste. Here we find
+    // the maximum tail indexes.
+    const rowTailIndex =
+      Math.min(getters.getCount, rowHeadIndex + data.length) - 1
+    const fieldTailIndex =
+      Math.min(fields.length, fieldHeadIndex + data[0].length) - 1
+
+    // Expand the selection of the multiple select to the cells that we're going to
+    // paste in, so the user can see which values have been updated. This is because
+    // it could be that there are more or less values in the clipboard compared to
+    // what was originally selected.
+    commit('UPDATE_MULTISELECT', {
+      position: 'head',
+      rowIndex: rowHeadIndex,
+      fieldIndex: fieldHeadIndex,
+    })
+    commit('UPDATE_MULTISELECT', {
+      position: 'tail',
+      rowIndex: rowTailIndex,
+      fieldIndex: fieldTailIndex,
+    })
+    commit('SET_MULTISELECT_ACTIVE', true)
+    // Unselect a single selected cell because we've just updated the multiple
+    // selected and we don't want that to conflict.
+    commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
+
+    // Figure out which rows are already in the buffered and temporarily store them
+    // in an array.
+    const fieldsInOrder = fields.slice(fieldHeadIndex, fieldTailIndex + 1)
+    let rowsInOrder = getters.getAllRows.slice(
+      rowHeadIndex - getters.getBufferStartIndex,
+      rowTailIndex + 1 - getters.getBufferStartIndex
+    )
+
+    // Check if there are fields that can be updated. If there aren't any fields,
+    // maybe because the provided index is outside of the available fields or
+    // because there are only read only fields, we don't want to do anything.
+    const writeFields = fieldsInOrder.filter(
+      (field) => !field._.type.isReadOnly
+    )
+    if (writeFields.length === 0) {
+      return
+    }
+
+    // Calculate if there are rows outside of the buffer that need to be fetched and
+    // prepended or appended to the `rowsInOrder`
+    const startIndex = rowHeadIndex + rowsInOrder.length
+    const limit = rowTailIndex - rowHeadIndex - rowsInOrder.length + 1
+    if (limit > 0) {
+      const rowsNotInBuffer = await dispatch('fetchRowsByIndex', {
+        startIndex,
+        limit,
+      })
+      // Depends on whether the missing rows are before or after the buffer.
+      rowsInOrder =
+        startIndex < getters.getBufferStartIndex
+          ? [...rowsNotInBuffer, ...rowsInOrder]
+          : [...rowsInOrder, ...rowsNotInBuffer]
+    }
+
+    // Create a copy of the existing (old) rows, which are needed to create the
+    // comparison when checking if the rows still matches the filters and position.
+    const oldRowsInOrder = clone(rowsInOrder)
+    // Prepare the values that must be send to the server.
+    const valuesForUpdate = []
+
+    // Prepare the values for update and update the row objects.
+    rowsInOrder.forEach((row, rowIndex) => {
+      valuesForUpdate[rowIndex] = { id: row.id }
+
+      fieldsInOrder.forEach((field, fieldIndex) => {
+        // We can't pre-filter because we need the correct filter index.
+        if (field._.type.isReadOnly) {
+          return
+        }
+
+        const fieldId = `field_${field.id}`
+        const value = data[rowIndex][fieldIndex]
+        const fieldType = this.$registry.get('field', field._.type.type)
+        const preparedValue = fieldType.prepareValueForPaste(field, value)
+        const newValue = fieldType.prepareValueForUpdate(field, preparedValue)
+        valuesForUpdate[rowIndex][fieldId] = newValue
+      })
+    })
+
+    // We don't have to update the rows in the buffer before the request is being made
+    // because we're showing a loading animation to the user indicating that the
+    // rows are being updated.
+    const { data: responseData } = await RowService(this.$client).batchUpdate(
+      table.id,
+      valuesForUpdate
+    )
+    const updatedRows = responseData.items
+
+    // Loop over the old rows, find the matching updated row and update them in the
+    // buffer accordingly.
+    for (const row of oldRowsInOrder) {
+      // The values are the updated row returned by the response.
+      const values = updatedRows.find((updatedRow) => updatedRow.id === row.id)
+      // Calling the updatedExistingRow will automatically remove the row from the
+      // view if it doesn't matter the filters anymore and it will also be moved to
+      // the right position if changed.
+      await dispatch('updatedExistingRow', {
+        view,
+        fields,
+        primary,
+        row,
+        values,
+      })
+    }
+
+    // Must be called because rows could have been removed or moved to a different
+    // position and we might need to fetch missing rows.
+    await dispatch('fetchByScrollTopDelayed', {
+      scrollTop: getScrollTop(),
+      fields,
+      primary,
+    })
+    dispatch('fetchAllFieldAggregationData', { view })
+  },
+  /**
    * Called after an existing row has been updated, which could be by the user or
    * via another channel. It will make sure that the row has the correct position or
    * that is will be deleted or created depending if was already in the view.
@@ -1511,10 +1726,6 @@ export const actions = {
 
     dispatch('updateMatchFilters', { view, row: newRow, fields, primary })
     dispatch('updateSearchMatchesForRow', { row: newRow, fields, primary })
-
-    dispatch('fetchAllFieldAggregationData', {
-      view,
-    })
 
     const oldRowExists = oldRow._.matchFilters && oldRow._.matchSearch
     const newRowExists = newRow._.matchFilters && newRow._.matchSearch
@@ -1654,6 +1865,7 @@ export const actions = {
         fields,
         primary,
       })
+      dispatch('fetchAllFieldAggregationData', { view })
     } catch (error) {
       commit('SET_ROW_LOADING', { row, value: false })
       throw error
@@ -1673,10 +1885,6 @@ export const actions = {
     // Check if that row was visible in the view.
     dispatch('updateMatchFilters', { view, row, fields, primary })
     dispatch('updateSearchMatchesForRow', { row, fields, primary })
-
-    dispatch('fetchAllFieldAggregationData', {
-      view,
-    })
 
     // If the row does not match the filters or the search then did not exist in the
     // view, so we don't have to do anything.
@@ -1859,8 +2067,8 @@ export const actions = {
       commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
     }
   },
-  setPublic({ commit }, newPublicValue) {
-    commit('SET_PUBLIC', newPublicValue)
+  setPublic({ commit }, { isPublic, publicAuthToken = null }) {
+    commit('SET_PUBLIC', { isPublic, publicAuthToken })
   },
 }
 
@@ -1870,6 +2078,9 @@ export const getters = {
   },
   isPublic(state) {
     return state.public
+  },
+  getPublicAuthToken(state) {
+    return state.publicAuthToken
   },
   getLastGridId(state) {
     return state.lastGridId
@@ -1982,12 +2193,18 @@ export const getters = {
       ),
     ]
   },
+  getMultiSelectHeadFieldIndex(state) {
+    return state.multiSelectHeadFieldIndex
+  },
+  getMultiSelectHeadRowIndex(state) {
+    return state.multiSelectHeadRowIndex
+  },
   // Get the index of a row given it's row id.
   // This will calculate the row index from the current buffer position and offset.
-  getMultiSelectRowIndexById: (state) => (rowId) => {
+  getRowIndexById: (state, getters) => (rowId) => {
     const bufferIndex = state.rows.findIndex((r) => r.id === rowId)
     if (bufferIndex !== -1) {
-      return state.bufferStartIndex + bufferIndex
+      return getters.getBufferStartIndex + bufferIndex
     }
     return -1
   },
@@ -1996,8 +2213,8 @@ export const getters = {
     const [minRow, maxRow] = getters.getMultiSelectRowIndexSorted
 
     return (
-      minRow >= state.bufferStartIndex &&
-      maxRow <= state.bufferStartIndex + state.bufferRequestSize
+      minRow >= getters.getBufferStartIndex &&
+      maxRow <= getters.getBufferEndIndex
     )
   },
   // Return all rows within a multi-select grid if they are within the current row buffer

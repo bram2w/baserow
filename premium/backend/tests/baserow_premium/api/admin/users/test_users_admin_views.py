@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_201_CREATED,
     HTTP_402_PAYMENT_REQUIRED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
@@ -781,3 +782,158 @@ def test_admin_getting_view_users_only_runs_two_queries_instead_of_n(
         )
     assert response.status_code == HTTP_200_OK
     assert response.json()["count"] == 21
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_impersonate_user_without_premium_license(
+    api_client, premium_data_fixture
+):
+    staff_user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": 0},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_impersonate_not_existing_user(api_client, premium_data_fixture):
+    _, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        has_active_premium_license=True,
+    )
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": 0},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["user"][0].startswith("Invalid pk")
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_impersonate_user_as_normal_user(api_client, premium_data_fixture):
+    _, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=False,
+        is_superuser=False,
+        has_active_premium_license=True,
+    )
+    user_to_impersonate = premium_data_fixture.create_user(
+        email="specific_user@test.nl", password="password", first_name="Test1"
+    )
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": user_to_impersonate.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_impersonate_user(api_client, premium_data_fixture):
+    _, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        has_active_premium_license=True,
+    )
+    user_to_impersonate = premium_data_fixture.create_user(
+        email="specific_user@test.nl", password="password", first_name="Test1"
+    )
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": user_to_impersonate.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_201_CREATED
+    response_json = response.json()
+    assert "token" in response_json
+    assert "password" not in response_json["user"]
+    assert response_json["user"]["username"] == "specific_user@test.nl"
+    assert response_json["user"]["first_name"] == "Test1"
+    assert response_json["user"]["is_staff"] is False
+    assert response_json["user"]["id"] == user_to_impersonate.id
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_impersonate_staff_or_superuser(api_client, premium_data_fixture):
+    _, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        has_active_premium_license=True,
+    )
+    user_to_impersonate_superuser = premium_data_fixture.create_user(
+        email="specific_user@test.nl",
+        password="password",
+        first_name="Test1",
+        is_superuser=True,
+    )
+    user_to_impersonate_staff = premium_data_fixture.create_user(
+        email="specific_user2@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+    )
+    user_to_impersonate_superuser_staff = premium_data_fixture.create_user(
+        email="specific_user3@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_superuser=True,
+    )
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": user_to_impersonate_superuser.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["user"][0].startswith("Invalid pk")
+
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": user_to_impersonate_staff.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["user"][0].startswith("Invalid pk")
+
+    response = api_client.post(
+        reverse("api:premium:admin:users:impersonate"),
+        {"user": user_to_impersonate_superuser_staff.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["user"][0].startswith("Invalid pk")

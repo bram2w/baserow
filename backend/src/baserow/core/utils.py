@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import csv
-import os
-import re
-import random
-import string
 import hashlib
 import math
-from itertools import islice
-from decimal import Decimal
-
+import os
+import random
+import re
+import string
 from collections import namedtuple
+from decimal import Decimal
+from itertools import islice
 from typing import List, Optional, Iterable
 
 from django.db.models import ForeignKey
@@ -84,6 +83,19 @@ def set_allowed_attrs(values, allowed_fields, instance):
             setattr(instance, field, values[field])
 
     return instance
+
+
+def get_non_unique_values(values: List) -> List:
+    """
+    Assembles all values that are not unique in the provided list
+    """
+    unique_values = set()
+    non_unique_values = set()
+    for value in values:
+        if value in unique_values:
+            non_unique_values.add(value)
+        unique_values.add(value)
+    return list(non_unique_values)
 
 
 def to_pascal_case(value):

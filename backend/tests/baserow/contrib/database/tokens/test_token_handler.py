@@ -1,8 +1,10 @@
 import pytest
 import string
+
 from pytz import timezone
 from freezegun import freeze_time
 from datetime import datetime
+from pytest_unordered import unordered
 
 from django.http import HttpRequest
 from rest_framework.request import Request
@@ -97,7 +99,6 @@ def test_generate_token(data_fixture):
 @pytest.mark.django_db
 def test_create_token(data_fixture):
     user = data_fixture.create_user()
-    data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
     group_2 = data_fixture.create_group()
 
@@ -117,25 +118,14 @@ def test_create_token(data_fixture):
     permissions = TokenPermission.objects.all()
     assert permissions.count() == 4
 
-    assert permissions[0].token_id == token.id
-    assert permissions[0].type == "create"
-    assert permissions[0].database_id is None
-    assert permissions[0].table_id is None
+    permissions_types = []
+    for perm in permissions:
+        assert perm.token_id == token.id
+        assert perm.database_id is None
+        assert perm.table_id is None
+        permissions_types.append(perm.type)
 
-    assert permissions[1].token_id == token.id
-    assert permissions[1].type == "read"
-    assert permissions[1].database_id is None
-    assert permissions[1].table_id is None
-
-    assert permissions[2].token_id == token.id
-    assert permissions[2].type == "update"
-    assert permissions[2].database_id is None
-    assert permissions[2].table_id is None
-
-    assert permissions[3].token_id == token.id
-    assert permissions[3].type == "delete"
-    assert permissions[3].database_id is None
-    assert permissions[3].table_id is None
+    assert permissions_types == unordered(["create", "read", "update", "delete"])
 
 
 @pytest.mark.django_db

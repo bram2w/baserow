@@ -24,6 +24,7 @@
         "retry": "Wiederholen",
         "search": "Suche",
         "copy": "Kopieren",
+        "paste": "Einfügen",
         "activate": "Aktivieren",
         "deactivate": "Deaktivieren"
     },
@@ -135,7 +136,8 @@
         "inThisYear": "in diesem Jahr",
         "lowerThan": "niedriger als",
         "lengthIsLowerThan": "Länge ist niedriger als",
-        "hasFileType": "hat Dateityp"
+        "hasFileType": "hat Dateityp",
+        "isDaysAgo": "ist Tage alt"
     },
     "viewType": {
         "grid": "Gitternetz",
@@ -154,7 +156,8 @@
         "application": "Applikation",
         "table": "Tabelle",
         "field": "Feld",
-        "row": "Zeile"
+        "row": "Zeile",
+        "view": "Ansicht"
     },
     "webhook": {
         "request": "Anfrage",

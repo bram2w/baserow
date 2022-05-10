@@ -1,6 +1,6 @@
 <template>
   <form class="context__form" @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('value')" class="control">
       <label class="control__label">{{
         $t('kanbanViewOptionForm.selectOption')
       }}</label>
@@ -26,16 +26,16 @@
             <input
               v-model="values.value"
               class="input select-options__value"
-              :class="{ 'input--error': $v.values.value.$error }"
+              :class="{ 'input--error': fieldHasErrors('value') }"
               @blur="$v.values.value.$touch()"
             />
           </div>
         </div>
       </div>
-      <div v-if="$v.values.value.$error" class="error">
+      <div v-if="fieldHasErrors('value')" class="error">
         {{ $t('error.requiredField') }}
       </div>
-    </div>
+    </FormElement>
     <slot></slot>
     <ColorSelectContext
       ref="colorContext"

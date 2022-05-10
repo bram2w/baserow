@@ -40,6 +40,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
             >
               <div
                 class="dropdown"
+                tabindex="0"
               >
                 <a
                   class="dropdown__selected"
@@ -66,12 +67,14 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                     <input
                       class="select__search-input"
                       placeholder="action.search"
+                      tabindex="0"
                       type="text"
                     />
                   </div>
                    
                   <ul
                     class="select__items"
+                    tabindex=""
                   >
                     <li
                       class="select__item active hover"
@@ -176,6 +179,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
               >
                 <div
                   class="dropdown"
+                  tabindex="0"
                 >
                   <a
                     class="dropdown__selected"
@@ -202,12 +206,14 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       <input
                         class="select__search-input"
                         placeholder="action.search"
+                        tabindex="0"
                         type="text"
                       />
                     </div>
                      
                     <ul
                       class="select__items"
+                      tabindex=""
                     >
                       <li
                         class="select__item active"
@@ -346,6 +352,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
               >
                 <div
                   class="dropdown"
+                  tabindex="0"
                 >
                   <a
                     class="dropdown__selected"
@@ -372,12 +379,14 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       <input
                         class="select__search-input"
                         placeholder="action.search"
+                        tabindex="0"
                         type="text"
                       />
                     </div>
                      
                     <ul
                       class="select__items"
+                      tabindex=""
                     >
                       <li
                         class="select__item active"
@@ -1108,6 +1117,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
             >
               <div
                 class="dropdown"
+                tabindex="0"
               >
                 <a
                   class="dropdown__selected"
@@ -1131,12 +1141,14 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                     <input
                       class="select__search-input"
                       placeholder="action.search"
+                      tabindex="0"
                       type="text"
                     />
                   </div>
                    
                   <ul
                     class="select__items"
+                    tabindex=""
                   >
                     <li
                       class="select__item hover"
@@ -1241,6 +1253,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
               >
                 <div
                   class="dropdown"
+                  tabindex="0"
                 >
                   <a
                     class="dropdown__selected"
@@ -1267,12 +1280,14 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       <input
                         class="select__search-input"
                         placeholder="action.search"
+                        tabindex="0"
                         type="text"
                       />
                     </div>
                      
                     <ul
                       class="select__items"
+                      tabindex=""
                     >
                       <li
                         class="select__item active"
@@ -1411,6 +1426,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
               >
                 <div
                   class="dropdown"
+                  tabindex="0"
                 >
                   <a
                     class="dropdown__selected"
@@ -1437,12 +1453,14 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       <input
                         class="select__search-input"
                         placeholder="action.search"
+                        tabindex="0"
                         type="text"
                       />
                     </div>
                      
                     <ul
                       class="select__items"
+                      tabindex=""
                     >
                       <li
                         class="select__item active"

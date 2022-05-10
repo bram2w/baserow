@@ -2,28 +2,28 @@
     "common": {
         "yes": "ano",
         "no": "ne",
-        "wrong": "",
-        "none": ""
+        "wrong": "Nastala chyba",
+        "none": "Žádný"
     },
     "action": {
         "upload": "Nahrát",
         "back": "Zpět",
         "backToLogin": "Zpět na přihlášení",
-        "signUp": "",
+        "signUp": "Zaregistrovat se",
         "signIn": "Přihlásit se",
-        "createNew": "",
-        "create": "",
+        "createNew": "Vytvořit nový",
+        "create": "Vytvořit",
         "edit": "Změnit",
         "change": "Změnit",
         "delete": "Smazat",
         "rename": "Přejmenovat",
         "add": "Přidat",
-        "makeChoice": "",
+        "makeChoice": "Vyberte",
         "cancel": "Zrušit",
-        "save": "",
-        "retry": "",
-        "search": "",
-        "copy": "",
+        "save": "Uložit",
+        "retry": "Zkusit znovu",
+        "search": "Vyhledat",
+        "copy": "Kopírovat",
         "activate": "Aktivovat",
         "deactivate": "Deaktivovat"
     },
@@ -32,13 +32,13 @@
     },
     "applicationType": {
         "database": "Databáze",
-        "cantSelectTableTitle": "",
-        "cantSelectTableDescription": ""
+        "cantSelectTableTitle": "Nešlo vybrat databázi.",
+        "cantSelectTableDescription": "Databáze nešla vybrat protože nemá žádné tabulky. V postranním panelu vytvořte novou."
     },
     "settingType": {
         "account": "Účet",
         "password": "Heslo",
-        "tokens": ""
+        "tokens": "API Tokeny"
     },
     "userFileUploadType": {
         "file": "moje zařízení",
@@ -48,16 +48,16 @@
         "emailAddress": "E-mailová adresa"
     },
     "error": {
-        "invalidEmail": "",
-        "notMatchingPassword": "",
-        "minLength": "",
-        "maxLength": "",
-        "minMaxLength": "",
-        "requiredField": ""
+        "invalidEmail": "Prosím zadejte platnou emailovou adresu.",
+        "notMatchingPassword": "Toto pole musí souhlasit s polem hesla.",
+        "minLength": "Tady je vyžadováno alespoň {min} znaků.",
+        "maxLength": "Tady je dovoleno {max} maximálně znaků.",
+        "minMaxLength": "Tady je povoleno minimálně {min} a maximálně {max} znaků.",
+        "requiredField": "Toto pole je povinné."
     },
     "permission": {
-        "admin": "",
-        "adminDescription": "",
+        "admin": "Administrativa",
+        "adminDescription": "Může plně nastavovat a měnit skupiny a aplikace.",
         "member": "Člen",
         "memberDescription": "Může plně nastavovat a měnit aplikace."
     },
@@ -69,27 +69,27 @@
         "rating": "Hodnocení",
         "boolean": "",
         "date": "Datum",
-        "lastModified": "",
-        "createdOn": "",
+        "lastModified": "Naposledy změněno",
+        "createdOn": "Vytvořeno dne",
         "url": "URL",
         "email": "Email",
         "file": "Soubor",
-        "singleSelect": "",
-        "multipleSelect": "",
+        "singleSelect": "Jediný výběr",
+        "multipleSelect": "Vícenásobný výběr",
         "phoneNumber": "Telefonní číslo",
-        "formula": "",
-        "lookup": ""
+        "formula": "Vzorec",
+        "lookup": "Vyhledat"
     },
     "fieldErrors": {
-        "invalidNumber": "",
-        "maxDigits": "",
-        "invalidUrl": "",
-        "max254Chars": "",
-        "invalidEmail": "",
-        "invalidPhoneNumber": ""
+        "invalidNumber": "Neplatné číslo",
+        "maxDigits": "Dovoleno maximálně {max} číslic.",
+        "invalidUrl": "Neplatné URL",
+        "max254Chars": "Maximálně 254 znaků",
+        "invalidEmail": "Neplatný email",
+        "invalidPhoneNumber": "Neplatné telefonní číslo"
     },
     "fieldDocs": {
-        "readOnly": "",
+        "readOnly": "Toto je pole pouze pro čtení.",
         "text": "",
         "longText": "",
         "linkRow": "",
@@ -154,7 +154,8 @@
         "application": "",
         "table": "",
         "field": "",
-        "row": ""
+        "row": "",
+        "view": ""
     },
     "webhook": {
         "request": "",

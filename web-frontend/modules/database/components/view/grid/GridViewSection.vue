@@ -49,10 +49,10 @@
           ></GridViewPlaceholder>
           <GridViewRows
             ref="rows"
-            :table="table"
             :view="view"
             :fields="fieldsToRender"
-            :all-field-ids="allFieldIds"
+            :all-fields="fields"
+            :all-table-fields="allTableFields"
             :left-offset="fieldsLeftOffset"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
@@ -127,6 +127,10 @@ export default {
       type: Array,
       required: true,
     },
+    allTableFields: {
+      type: Array,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
@@ -190,9 +194,6 @@ export default {
       }
 
       return width
-    },
-    allFieldIds() {
-      return this.fields.map((field) => field.id)
     },
   },
   watch: {

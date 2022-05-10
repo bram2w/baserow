@@ -291,6 +291,8 @@ export default function ({ store, app }, inject) {
     if (store.getters['auth/isAuthenticated']) {
       const token = store.getters['auth/token']
       config.headers.Authorization = `JWT ${token}`
+      config.headers.ClientSessionId =
+        store.getters['auth/getUntrustedClientSessionId']
     }
     if (store.getters['auth/webSocketId'] !== null) {
       const webSocketId = store.getters['auth/webSocketId']
@@ -314,16 +316,18 @@ export default function ({ store, app }, inject) {
       )
 
       // Add the error message in the response to the error object.
-      if (
-        error.response &&
-        typeof error.response.data === 'object' &&
-        'error' in error.response.data &&
-        'detail' in error.response.data
+      const rspCode = error.response?.status
+      const rspData = error.response?.data
+
+      if (rspCode === 401) {
+        store.dispatch('notification/setAuthorizationError', true)
+        error.handler.handled()
+      } else if (
+        typeof rspData === 'object' &&
+        'error' in rspData &&
+        'detail' in rspData
       ) {
-        error.handler.setError(
-          error.response.data.error,
-          error.response.data.detail
-        )
+        error.handler.setError(rspData.error, rspData.detail)
       }
 
       return Promise.reject(error)

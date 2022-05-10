@@ -12,9 +12,7 @@ from rest_framework.status import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.table.cache import (
-    invalidate_table_model_cache_and_related_models,
-)
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
 
@@ -224,7 +222,7 @@ def test_list_rows(api_client, data_fixture):
     number_field_type = field_type_registry.get("number")
     old_can_order_by = number_field_type._can_order_by
     number_field_type._can_order_by = False
-    invalidate_table_model_cache_and_related_models(table.id)
+    invalidate_table_in_model_cache(table.id, invalidate_related_tables=True)
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
         f"{url}?order_by=-field_{field_2.id}",
@@ -239,7 +237,7 @@ def test_list_rows(api_client, data_fixture):
         f"number does not support filtering."
     )
     number_field_type._can_order_by = old_can_order_by
-    invalidate_table_model_cache_and_related_models(table.id)
+    invalidate_table_in_model_cache(table.id, invalidate_related_tables=True)
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
@@ -545,40 +543,37 @@ def test_create_row(api_client, data_fixture):
     assert model.objects.all().count() == 5
     rows = model.objects.all()
 
-    row_1 = rows[0]
+    row_1, row_2, row_5, row_3, row_4 = rows
+
     assert row_1.id == response_json_row_1["id"]
     assert getattr(row_1, f"field_{text_field.id}") == "white"
     assert getattr(row_1, f"field_{number_field.id}") is None
     assert getattr(row_1, f"field_{boolean_field.id}") is False
     assert getattr(row_1, f"field_{text_field_2.id}") is None
 
-    row_2 = rows[1]
     assert row_2.id == response_json_row_2["id"]
     assert getattr(row_2, f"field_{text_field.id}") == "white"
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
     assert getattr(row_2, f"field_{text_field_2.id}") == ""
 
-    row_5 = rows[2]
-    assert row_5.id == response_json_row_5["id"]
-    assert getattr(row_5, f"field_{text_field.id}") == "Red"
-    assert getattr(row_5, f"field_{number_field.id}") == 480
-    assert getattr(row_5, f"field_{boolean_field.id}") is False
-    assert getattr(row_5, f"field_{text_field_2.id}") == ""
-
-    row_3 = rows[3]
     assert row_3.id == response_json_row_3["id"]
     assert getattr(row_3, f"field_{text_field.id}") == "Green"
     assert getattr(row_3, f"field_{number_field.id}") == 120
     assert getattr(row_3, f"field_{boolean_field.id}") is True
     assert getattr(row_3, f"field_{text_field_2.id}") == "Not important"
 
-    row_4 = rows[4]
     assert row_4.id == response_json_row_4["id"]
     assert getattr(row_4, f"field_{text_field.id}") == "Purple"
     assert getattr(row_4, f"field_{number_field.id}") == 240
     assert getattr(row_4, f"field_{boolean_field.id}") is True
     assert getattr(row_4, f"field_{text_field_2.id}") == ""
+
+    assert row_5.id == response_json_row_5["id"]
+    assert getattr(row_5, f"field_{text_field.id}") == "Red"
+    assert getattr(row_5, f"field_{number_field.id}") == 480
+    assert getattr(row_5, f"field_{boolean_field.id}") is False
+    assert getattr(row_5, f"field_{text_field_2.id}") == ""
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
 
@@ -1181,7 +1176,7 @@ def test_move_row(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_row(api_client, data_fixture):
+def test_delete_row_by_id(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
@@ -1555,3 +1550,170 @@ def test_list_rows_returns_https_next_url(api_client, data_fixture, settings):
         response_json["next"] == "https://testserver:80/api/database/rows/table/"
         f"{table.id}/?page=2"
     )
+
+
+@pytest.mark.django_db
+def test_list_row_names(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(name="Name", table=table, primary=True)
+
+    # A table for another user
+    table_off = data_fixture.create_database_table()
+
+    # A table in the same database
+    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    data_fixture.create_text_field(name="Name", table=table_2, primary=True)
+
+    # A table in another database
+    table_3 = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(name="Name", table=table_3, primary=True)
+
+    token = TokenHandler().create_token(user, table.database.group, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    TokenHandler().update_token_permissions(user, wrong_token, True, False, True, True)
+
+    model = table.get_model(attribute_names=True)
+    model.objects.create(name="Alpha")
+    model.objects.create(name="Beta")
+    model.objects.create(name="Gamma")
+    model.objects.create(name="Omega")
+
+    model_2 = table_2.get_model(attribute_names=True)
+    model_2.objects.create(name="Monday")
+    model_2.objects.create(name="Tuesday")
+
+    model_3 = table_3.get_model(attribute_names=True)
+    model_3.objects.create(name="January")
+
+    url = reverse("api:database:rows:names")
+    response = api_client.get(
+        f"{url}?table__99999=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3&table__99999=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        f"{url}?table__{table_off.id}=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION="Token abc123",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_TOKEN_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {wrong_token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
+
+    user.is_active = False
+    user.save()
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_USER_NOT_ACTIVE"
+    user.is_active = True
+    user.save()
+
+    response = api_client.get(
+        f"{url}?tabble__{table.id}=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert (
+        response.json()["detail"]
+        == 'Only table Id prefixed by "table__" are allowed as parameter.'
+    )
+
+    response = api_client.get(
+        f"{url}?table__12i=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert response.json()["detail"] == 'Failed to parse table id in "table__12i".'
+
+    response = api_client.get(
+        f"{url}?table__23=1p,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert (
+        response.json()["detail"]
+        == 'Failed to parse row ids in "1p,2,3" for "table__23" parameter.'
+    )
+
+    response = api_client.get(
+        f"{url}?table__{table.id}=1",
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # One query one table
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {str(table.id): {"1": "Alpha", "2": "Beta", "3": "Gamma"}}
+
+    # 2 tables, one database
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3&table__{table_2.id}=1,2",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {
+        str(table.id): {"1": "Alpha", "2": "Beta", "3": "Gamma"},
+        str(table_2.id): {"1": "Monday", "2": "Tuesday"},
+    }
+
+    # Two tables, two databases
+    response = api_client.get(
+        f"{url}?table__{table.id}=1,2,3&table__{table_3.id}=1",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"

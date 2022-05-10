@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 from baserow.core.mixins import ParentGroupTrashableModelMixin
 from baserow.core.models import Group
@@ -47,6 +48,20 @@ class Token(ParentGroupTrashableModelMixin, models.Model):
         ordering = ("id",)
 
 
+class TokenPermissionManager(models.Manager):
+    """
+    This manager is needed to avoid problems with tokens of trashed
+    but not already deleted databases and tables.
+    After 3 days (default) trashed databases and tables are deleted permanently,
+    and so are relative token permissions (because of the CASCADE option).
+    In the meanwhile, we need to filter out the trashed databases and tables.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(database__trashed=True) | Q(table__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
 class TokenPermission(models.Model):
     """
     The existence of a permission indicates that the token has access to a table. If
@@ -55,6 +70,8 @@ class TokenPermission(models.Model):
     token has access to all the tables in the database. If a table is provided then it
     means that the token has access to that table.
     """
+
+    objects = TokenPermissionManager()
 
     token = models.ForeignKey("database.Token", on_delete=models.CASCADE)
     type = models.CharField(

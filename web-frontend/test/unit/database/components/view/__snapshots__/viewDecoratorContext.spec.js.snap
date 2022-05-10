@@ -1,0 +1,898 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GridViewRows component with decoration Default component 1`] = `
+<div
+  class="context"
+>
+  <div
+    class="decorator-list"
+  >
+    <div
+      class="decorator-list__item"
+    >
+      <div
+        class="decorator-item"
+      >
+        <img
+          class="decorator-item__image"
+          src="fake/url.png"
+        />
+         
+        <div
+          class="decorator-item__content"
+        >
+          <div
+            class="decorator-item__title"
+          >
+            
+      Fake decorator
+    
+          </div>
+           
+          <div
+            class="decorator-item__description"
+          >
+            
+      Fake decorator description
+    
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`GridViewRows component with decoration Should show can add decorator tooltip 1`] = `
+<body>
+  <div
+    class="tooltip tooltip--body tooltip--center"
+    style="top: 4px; left: 0px;"
+  >
+    <div
+      class="tooltip__content"
+    >
+      can't be added reason
+    </div>
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-list"
+    >
+      <div
+        class="decorator-list__item decorator-list__item--disabled"
+      >
+        <div
+          class="decorator-item"
+        >
+          <img
+            class="decorator-item__image"
+            src="fake/url.png"
+          />
+           
+          <div
+            class="decorator-item__content"
+          >
+            <div
+              class="decorator-item__title"
+            >
+              
+      Fake decorator
+    
+            </div>
+             
+            <div
+              class="decorator-item__description"
+            >
+              
+      Fake decorator description
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="tooltip tooltip--body tooltip--center"
+    style="top: 4px; left: 0px;"
+  >
+    <div
+      class="tooltip__content"
+    >
+      unavailability reason
+    </div>
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-list"
+    >
+      <div
+        class="decorator-list__item decorator-list__item--disabled"
+      >
+        <div
+          class="decorator-item"
+        >
+          <img
+            class="decorator-item__image"
+            src="fake/url.png"
+          />
+           
+          <div
+            class="decorator-item__content"
+          >
+            <div
+              class="decorator-item__title"
+            >
+              
+      Fake decorator
+    
+            </div>
+             
+            <div
+              class="decorator-item__description"
+            >
+              
+      Fake decorator description
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-context"
+    >
+      <div
+        class="decorator-context__list"
+      >
+        <div
+          class="decorator-context__decorator"
+        >
+          <div
+            class="decorator-context__decorator-header"
+          >
+            <div
+              class="decorator-context__decorator-header-info"
+            >
+              <div
+                class="decorator-item"
+              >
+                <img
+                  class="decorator-item__image"
+                  src="fake/url.png"
+                />
+                 
+                <div
+                  class="decorator-item__content"
+                >
+                  <div
+                    class="decorator-item__title"
+                  >
+                    
+      Fake decorator
+    
+                  </div>
+                   
+                  <div
+                    class="decorator-item__description"
+                  >
+                    
+      Fake decorator description
+    
+                  </div>
+                </div>
+              </div>
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-select"
+            >
+              <div
+                class="dropdown"
+              >
+                <a
+                  class="dropdown__selected"
+                >
+                  <i
+                    class="dropdown__selected-icon fas fa-filter"
+                  />
+                  
+    Fake value provider
+    
+                  <i
+                    class="dropdown__toggle-icon fas fa-caret-down"
+                  />
+                </a>
+                 
+              </div>
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-trash"
+            >
+              <a
+                class="decorator-context__decorator-header-trash-link"
+              >
+                <i
+                  class="fa fa-trash"
+                />
+              </a>
+            </div>
+          </div>
+           
+          <div>
+            fake_value_provider_form
+          </div>
+        </div>
+        <div
+          class="decorator-context__decorator"
+        >
+          <div
+            class="decorator-context__decorator-header"
+          >
+            <div
+              class="decorator-context__decorator-header-info"
+            >
+              <div
+                class="decorator-item"
+              >
+                <img
+                  class="decorator-item__image"
+                  src="fake/url.png"
+                />
+                 
+                <div
+                  class="decorator-item__content"
+                >
+                  <div
+                    class="decorator-item__title"
+                  >
+                    
+      Fake decorator
+    
+                  </div>
+                   
+                  <div
+                    class="decorator-item__description"
+                  >
+                    
+      Fake decorator description
+    
+                  </div>
+                </div>
+              </div>
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-select"
+              style="display: none;"
+            >
+              <!---->
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-trash"
+            >
+              <a
+                class="decorator-context__decorator-header-trash-link"
+              >
+                <i
+                  class="fa fa-trash"
+                />
+              </a>
+            </div>
+          </div>
+           
+          <div
+            class="value-provider-list value-provider-list--row"
+          >
+            <div
+              class="value-provider-list__item"
+            >
+              <div
+                class="value-provider-item"
+              >
+                <div
+                  class="value-provider-item__title"
+                >
+                  <i
+                    class="fa fa-fw fa-filter value-provider-item__icon"
+                  />
+                  
+    Fake value provider
+  
+                </div>
+                 
+                <div
+                  class="value-provider-item__description"
+                >
+                  
+    Fake value provider description.
+  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+      <div
+        class="decorator-context__footer"
+      >
+        <a
+          class="decorator-context__add"
+        >
+          <i
+            class="fas fa-plus"
+          />
+          
+        viewDecoratorContext.addDecorator
+      
+        </a>
+         
+      </div>
+    </div>
+  </div>
+  <div
+    class="context visibility-hidden"
+  >
+    <!---->
+  </div>
+  <div
+    class="context picker__context visibility-hidden"
+  >
+    <!---->
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-list"
+    >
+      <div
+        class="decorator-list__item"
+      >
+        <div
+          class="decorator-item"
+        >
+          <img
+            class="decorator-item__image"
+            src="fake/url.png"
+          />
+           
+          <div
+            class="decorator-item__content"
+          >
+            <div
+              class="decorator-item__title"
+            >
+              
+      Fake decorator
+    
+            </div>
+             
+            <div
+              class="decorator-item__description"
+            >
+              
+      Fake decorator description
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+`;
+
+exports[`GridViewRows component with decoration Should show unavailable decorator tooltip 1`] = `
+<body>
+  <div
+    class="tooltip tooltip--body tooltip--center"
+    style="top: 4px; left: 0px;"
+  >
+    <div
+      class="tooltip__content"
+    >
+      unavailability reason
+    </div>
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-list"
+    >
+      <div
+        class="decorator-list__item decorator-list__item--disabled"
+      >
+        <div
+          class="decorator-item"
+        >
+          <img
+            class="decorator-item__image"
+            src="fake/url.png"
+          />
+           
+          <div
+            class="decorator-item__content"
+          >
+            <div
+              class="decorator-item__title"
+            >
+              
+      Fake decorator
+    
+            </div>
+             
+            <div
+              class="decorator-item__description"
+            >
+              
+      Fake decorator description
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-context"
+    >
+      <div
+        class="decorator-context__list"
+      >
+        <div
+          class="decorator-context__decorator"
+        >
+          <div
+            class="decorator-context__decorator-header"
+          >
+            <div
+              class="decorator-context__decorator-header-info"
+            >
+              <div
+                class="decorator-item"
+              >
+                <img
+                  class="decorator-item__image"
+                  src="fake/url.png"
+                />
+                 
+                <div
+                  class="decorator-item__content"
+                >
+                  <div
+                    class="decorator-item__title"
+                  >
+                    
+      Fake decorator
+    
+                  </div>
+                   
+                  <div
+                    class="decorator-item__description"
+                  >
+                    
+      Fake decorator description
+    
+                  </div>
+                </div>
+              </div>
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-select"
+            >
+              <div
+                class="dropdown"
+              >
+                <a
+                  class="dropdown__selected"
+                >
+                  <i
+                    class="dropdown__selected-icon fas fa-filter"
+                  />
+                  
+    Fake value provider
+    
+                  <i
+                    class="dropdown__toggle-icon fas fa-caret-down"
+                  />
+                </a>
+                 
+              </div>
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-trash"
+            >
+              <a
+                class="decorator-context__decorator-header-trash-link"
+              >
+                <i
+                  class="fa fa-trash"
+                />
+              </a>
+            </div>
+          </div>
+           
+          <div>
+            fake_value_provider_form
+          </div>
+        </div>
+        <div
+          class="decorator-context__decorator"
+        >
+          <div
+            class="decorator-context__decorator-header"
+          >
+            <div
+              class="decorator-context__decorator-header-info"
+            >
+              <div
+                class="decorator-item"
+              >
+                <img
+                  class="decorator-item__image"
+                  src="fake/url.png"
+                />
+                 
+                <div
+                  class="decorator-item__content"
+                >
+                  <div
+                    class="decorator-item__title"
+                  >
+                    
+      Fake decorator
+    
+                  </div>
+                   
+                  <div
+                    class="decorator-item__description"
+                  >
+                    
+      Fake decorator description
+    
+                  </div>
+                </div>
+              </div>
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-select"
+              style="display: none;"
+            >
+              <!---->
+            </div>
+             
+            <div
+              class="decorator-context__decorator-header-trash"
+            >
+              <a
+                class="decorator-context__decorator-header-trash-link"
+              >
+                <i
+                  class="fa fa-trash"
+                />
+              </a>
+            </div>
+          </div>
+           
+          <div
+            class="value-provider-list value-provider-list--row"
+          >
+            <div
+              class="value-provider-list__item"
+            >
+              <div
+                class="value-provider-item"
+              >
+                <div
+                  class="value-provider-item__title"
+                >
+                  <i
+                    class="fa fa-fw fa-filter value-provider-item__icon"
+                  />
+                  
+    Fake value provider
+  
+                </div>
+                 
+                <div
+                  class="value-provider-item__description"
+                >
+                  
+    Fake value provider description.
+  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+      <div
+        class="decorator-context__footer"
+      >
+        <a
+          class="decorator-context__add"
+        >
+          <i
+            class="fas fa-plus"
+          />
+          
+        viewDecoratorContext.addDecorator
+      
+        </a>
+         
+      </div>
+    </div>
+  </div>
+  <div
+    class="context visibility-hidden"
+  >
+    <!---->
+  </div>
+  <div
+    class="context picker__context visibility-hidden"
+  >
+    <!---->
+  </div>
+  <div
+    class="context"
+  >
+    <div
+      class="decorator-list"
+    >
+      <div
+        class="decorator-list__item"
+      >
+        <div
+          class="decorator-item"
+        >
+          <img
+            class="decorator-item__image"
+            src="fake/url.png"
+          />
+           
+          <div
+            class="decorator-item__content"
+          >
+            <div
+              class="decorator-item__title"
+            >
+              
+      Fake decorator
+    
+            </div>
+             
+            <div
+              class="decorator-item__description"
+            >
+              
+      Fake decorator description
+    
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+`;
+
+exports[`GridViewRows component with decoration View with decoration configured 1`] = `
+<div
+  class="context"
+>
+  <div
+    class="decorator-context"
+  >
+    <div
+      class="decorator-context__list"
+    >
+      <div
+        class="decorator-context__decorator"
+      >
+        <div
+          class="decorator-context__decorator-header"
+        >
+          <div
+            class="decorator-context__decorator-header-info"
+          >
+            <div
+              class="decorator-item"
+            >
+              <img
+                class="decorator-item__image"
+                src="fake/url.png"
+              />
+               
+              <div
+                class="decorator-item__content"
+              >
+                <div
+                  class="decorator-item__title"
+                >
+                  
+      Fake decorator
+    
+                </div>
+                 
+                <div
+                  class="decorator-item__description"
+                >
+                  
+      Fake decorator description
+    
+                </div>
+              </div>
+            </div>
+          </div>
+           
+          <div
+            class="decorator-context__decorator-header-select"
+          >
+            <div
+              class="dropdown"
+            >
+              <a
+                class="dropdown__selected"
+              >
+                <i
+                  class="dropdown__selected-icon fas fa-filter"
+                />
+                
+    Fake value provider
+    
+                <i
+                  class="dropdown__toggle-icon fas fa-caret-down"
+                />
+              </a>
+               
+            </div>
+          </div>
+           
+          <div
+            class="decorator-context__decorator-header-trash"
+          >
+            <a
+              class="decorator-context__decorator-header-trash-link"
+            >
+              <i
+                class="fa fa-trash"
+              />
+            </a>
+          </div>
+        </div>
+         
+        <div>
+          fake_value_provider_form
+        </div>
+      </div>
+      <div
+        class="decorator-context__decorator"
+      >
+        <div
+          class="decorator-context__decorator-header"
+        >
+          <div
+            class="decorator-context__decorator-header-info"
+          >
+            <div
+              class="decorator-item"
+            >
+              <img
+                class="decorator-item__image"
+                src="fake/url.png"
+              />
+               
+              <div
+                class="decorator-item__content"
+              >
+                <div
+                  class="decorator-item__title"
+                >
+                  
+      Fake decorator
+    
+                </div>
+                 
+                <div
+                  class="decorator-item__description"
+                >
+                  
+      Fake decorator description
+    
+                </div>
+              </div>
+            </div>
+          </div>
+           
+          <div
+            class="decorator-context__decorator-header-select"
+            style="display: none;"
+          >
+            <!---->
+          </div>
+           
+          <div
+            class="decorator-context__decorator-header-trash"
+          >
+            <a
+              class="decorator-context__decorator-header-trash-link"
+            >
+              <i
+                class="fa fa-trash"
+              />
+            </a>
+          </div>
+        </div>
+         
+        <div
+          class="value-provider-list value-provider-list--row"
+        >
+          <div
+            class="value-provider-list__item"
+          >
+            <div
+              class="value-provider-item"
+            >
+              <div
+                class="value-provider-item__title"
+              >
+                <i
+                  class="fa fa-fw fa-filter value-provider-item__icon"
+                />
+                
+    Fake value provider
+  
+              </div>
+               
+              <div
+                class="value-provider-item__description"
+              >
+                
+    Fake value provider description.
+  
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="decorator-context__footer"
+    >
+      <a
+        class="decorator-context__add"
+      >
+        <i
+          class="fas fa-plus"
+        />
+        
+        viewDecoratorContext.addDecorator
+      
+      </a>
+       
+    </div>
+  </div>
+</div>
+`;

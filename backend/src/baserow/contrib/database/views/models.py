@@ -1,7 +1,9 @@
 import secrets
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
+from django.db.models import Q
 
 from baserow.core.utils import get_model_reference_field_name
 from baserow.core.models import UserFile
@@ -9,6 +11,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
 )
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
@@ -18,10 +21,6 @@ from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
-)
-from baserow.contrib.database.mixins import (
-    ParentTableTrashableModelMixin,
-    ParentFieldTrashableModelMixin,
 )
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
@@ -44,7 +43,7 @@ def get_default_view_content_type():
 
 
 class View(
-    ParentTableTrashableModelMixin,
+    TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
@@ -82,9 +81,70 @@ class View(
         help_text="Indicates whether the view is publicly accessible to visitors.",
         db_index=True,
     )
+    public_view_password = models.CharField(
+        max_length=128,
+        blank=True,
+        help_text="The password required to access the public view URL.",
+    )
+
+    @property
+    def public_view_has_password(self) -> bool:
+        """
+        Indicates whether the public view is password protected or not.
+
+        :return: True if the public view is password protected, False otherwise.
+        """
+
+        return self.public_view_password != ""
 
     def rotate_slug(self):
+        """
+        Rotates the slug used to address this view.
+        """
+
         self.slug = secrets.token_urlsafe()
+
+    @staticmethod
+    def create_new_slug() -> str:
+        """
+        Create a new slug for a view.
+
+        :return: The new slug.
+        """
+
+        return secrets.token_urlsafe()
+
+    @staticmethod
+    def make_password(password: str) -> str:
+        """
+        Makes a password hash from the given password.
+
+        :param password: The password to hash.
+        :return: The hashed password.
+        """
+
+        return make_password(password)
+
+    def set_password(self, password: str):
+        """
+        Sets the public view password.
+
+        :param password: The password to set.
+        """
+
+        self.public_view_password = View.make_password(password)
+
+    def check_public_view_password(self, password: str) -> bool:
+        """
+        Checks if the given password matches the public view password.
+
+        :param password: The password to check.
+        :return: True if the password matches, False otherwise.
+        """
+
+        if not self.public_view_has_password:
+            return True
+        return check_password(password, self.public_view_password)
 
     class Meta:
         ordering = ("order",)
@@ -177,7 +237,21 @@ class View(
         return field_options
 
 
-class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
+class ViewFilterManager(models.Manager):
+    """
+    Manager for the ViewFilter model.
+    The View can be trashed and the filters are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewFilter(models.Model):
+    objects = ViewFilterManager()
+
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -209,7 +283,77 @@ class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
         return view_filter_type_registry.get(self.type).get_preload_values(self)
 
 
-class ViewSort(ParentFieldTrashableModelMixin, models.Model):
+class ViewDecorationManager(models.Manager):
+    """
+    Manager for the ViewDecoration model.
+    The View can be trashed and the decorations are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewDecoration(OrderableMixin, models.Model):
+    objects = ViewDecorationManager()
+
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text="The view to which the decoration applies. Each view can have his own "
+        "decorations.",
+    )
+    type = models.CharField(
+        max_length=255,
+        help_text=(
+            "The decorator type. This is then interpreted by the frontend to "
+            "display the decoration."
+        ),
+    )
+    value_provider_type = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="The value provider type that gives the value to the decorator.",
+    )
+    value_provider_conf = models.JSONField(
+        default=dict,
+        help_text="The configuration consumed by the value provider.",
+    )
+    # The default value is the maximum value of the small integer field because a newly
+    # created decoration must always be last.
+    order = models.SmallIntegerField(
+        default=32767,
+        help_text="The position of the decorator has within the view, lowest first. If "
+        "there is another decorator with the same order value then the decorator "
+        "with the lowest id must be shown first.",
+    )
+
+    @classmethod
+    def get_last_order(cls, view):
+        queryset = ViewDecoration.objects.filter(view=view)
+        return cls.get_highest_order_of_queryset(queryset) + 1
+
+    class Meta:
+        ordering = ("order", "id")
+
+
+class ViewSortManager(models.Manager):
+    """
+    Manager for the ViewSort model.
+    The View can be trashed and the sorts are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewSort(models.Model):
+    objects = ViewSortManager()
+
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -237,7 +381,22 @@ class GridView(View):
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
 
 
-class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class GridViewFieldOptionsManager(models.Manager):
+    """
+    Manager for the GridViewFieldOptions model.
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(grid_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class GridViewFieldOptions(models.Model):
+    objects = GridViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     # The defaults should match the ones in `afterFieldCreated` of the `GridViewType`
@@ -305,7 +464,21 @@ class GalleryView(View):
     )
 
 
-class GalleryViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class GalleryViewFieldOptionsManager(models.Manager):
+    """
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(gallery_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class GalleryViewFieldOptions(models.Model):
+    objects = GalleryViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     gallery_view = models.ForeignKey(GalleryView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     hidden = models.BooleanField(
@@ -384,7 +557,21 @@ class FormView(View):
         )
 
 
-class FormViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class FormViewFieldOptionsManager(models.Manager):
+    """
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(form_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class FormViewFieldOptions(models.Model):
+    objects = FormViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     form_view = models.ForeignKey(FormView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     name = models.CharField(

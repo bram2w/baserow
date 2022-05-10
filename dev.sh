@@ -27,6 +27,11 @@ new_tab() {
     if [ -x "$(command -v gnome-terminal)" ]; then
       gnome-terminal \
       --tab --title="$TAB_NAME" --working-directory="$(pwd)" -- /bin/bash -c "$COMMAND"
+    elif [ -x "$(command -v konsole)" ]; then
+      ktab=$(qdbus $KONSOLE_DBUS_SERVICE $KONSOLE_DBUS_WINDOW newSession)
+      qdbus $KONSOLE_DBUS_SERVICE /Sessions/$(($ktab)) setTitle 1 "$TAB_NAME"
+      qdbus $KONSOLE_DBUS_SERVICE /Sessions/$(($ktab)) runCommand "cd $(pwd); $COMMAND"
+      qdbus $KONSOLE_DBUS_SERVICE $KONSOLE_DBUS_WINDOW prevSession
     else
       if $PRINT_WARNING; then
           echo -e "\n${YELLOW}./dev.sh WARNING${NC}: gnome-terminal is the only currently supported way of opening

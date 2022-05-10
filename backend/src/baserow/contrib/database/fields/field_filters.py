@@ -109,13 +109,8 @@ def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
     # If an empty value has been provided we do not want to filter at all.
     if value == "":
         return Q()
-    # Check if the model_field accepts the value.
-    # noinspection PyBroadException
-    try:
-        model_field.get_prep_value(value)
-        return Q(**{f"{field_name}__icontains": value})
-    except Exception:
-        return Q()
+    model_field.get_prep_value(value)
+    return Q(**{f"{field_name}__icontains": value})
 
 
 def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotatedQ:

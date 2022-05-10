@@ -1,8 +1,8 @@
 from django.db import models
+from django.db.models import Q
 
 from baserow.contrib.database.fields.models import Field, FileField, SingleSelectField
 from baserow.contrib.database.views.models import View
-from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 
 
 class KanbanView(View):
@@ -30,7 +30,21 @@ class KanbanView(View):
         db_table = "database_kanbanview"
 
 
-class KanbanViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class KanbanViewFieldOptionsManager(models.Manager):
+    """
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(kanban_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class KanbanViewFieldOptions(models.Model):
+    objects = KanbanViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     kanban_view = models.ForeignKey(KanbanView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     hidden = models.BooleanField(

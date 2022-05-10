@@ -1,6 +1,10 @@
 import logging
+from copy import deepcopy
+from typing import Dict
 
+from django.conf import settings
 from rest_framework import serializers
+from django.db.models.base import ModelBase
 
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
@@ -27,6 +31,8 @@ def get_row_serializer_class(
     field_names_to_include=None,
     user_field_names=False,
     field_kwargs=None,
+    include_id=False,
+    required_fields=None,
 ):
     """
     Generates a Django rest framework model serializer based on the available fields
@@ -56,6 +62,11 @@ def get_row_serializer_class(
     :param field_kwargs: A dict containing additional kwargs per field. The key must
         be the field name and the value a dict containing the kwargs.
     :type field_kwargs: dict
+    :param include_id: Whether the generated serializer should contain the id field
+    :type include_id: bool
+    :param required_fields: List of field names that should be present even when
+        performing partial validation.
+    :type required_fields: list[str]
     :return: The generated serializer.
     :rtype: ModelSerializer
     """
@@ -96,17 +107,55 @@ def get_row_serializer_class(
             field_overrides[name] = serializer
             field_names.append(name)
 
-    return get_serializer_class(model, field_names, field_overrides, base_class)
+    if include_id:
+        field_names.append("id")
+        field_overrides["id"] = serializers.IntegerField()
+
+    return get_serializer_class(
+        model,
+        field_names,
+        field_overrides,
+        base_class,
+        required_fields=required_fields,
+    )
 
 
-def get_example_row_serializer_class(add_id=False, user_field_names=False):
+def get_batch_row_serializer_class(row_serializer_class):
+    class_name = "BatchRowSerializer"
+
+    def validate(self, value):
+        if "items" not in value:
+            raise serializers.ValidationError({"items": "This field is required."})
+        return value
+
+    fields = {
+        "items": serializers.ListField(
+            child=row_serializer_class(),
+            min_length=1,
+            max_length=settings.BATCH_ROWS_SIZE_LIMIT,
+        ),
+        "validate": validate,
+    }
+
+    class_object = type(class_name, (serializers.Serializer,), fields)
+    return class_object
+
+
+class BatchDeleteRowsSerializer(serializers.Serializer):
+    items = serializers.ListField(
+        child=serializers.IntegerField(),
+        min_length=1,
+        max_length=settings.BATCH_ROWS_SIZE_LIMIT,
+    )
+
+
+def get_example_row_serializer_class(example_type="get", user_field_names=False):
     """
     Generates a serializer containing a field for each field type. It is only used for
     example purposes in the openapi documentation.
 
-    :param add_id: Indicates whether the id field should be added. This could for
-        example differ for request or response documentation.
-    :type add_id: bool
+    :param example_type: Sets various parameters. Can be get, post, patch.
+    :type example_type: str
     :param user_field_names: Whether this example serializer help text should indicate
         the fields names can be switched using the `user_field_names` GET parameter.
     :type user_field_names: bool
@@ -114,12 +163,41 @@ def get_example_row_serializer_class(add_id=False, user_field_names=False):
     :rtype: Serializer
     """
 
+    config = {
+        "get": {
+            "class_name": "ExampleRowResponseSerializer",
+            "add_id": True,
+            "add_order": True,
+            "read_only_fields": True,
+        },
+        "post": {
+            "class_name": "ExampleRowRequestSerializer",
+            "add_id": False,
+            "add_order": False,
+            "read_only_fields": False,
+        },
+        "patch": {
+            "class_name": "ExampleUpdateRowRequestSerializer",
+            "add_id": False,
+            "add_order": False,
+            "read_only_fields": False,
+        },
+        "patch_batch": {
+            "class_name": "ExampleBatchUpdateRowRequestSerializer",
+            "add_id": True,
+            "add_order": False,
+            "read_only_fields": False,
+        },
+    }
+
+    class_name = config[example_type]["class_name"]
+    add_id = config[example_type]["add_id"]
+    add_order = config[example_type]["add_order"]
+    add_readonly_fields = config[example_type]["read_only_fields"]
+    is_response_example = add_readonly_fields
+
     if not hasattr(get_example_row_serializer_class, "cache"):
         get_example_row_serializer_class.cache = {}
-
-    class_name = (
-        "ExampleRowResponseSerializer" if add_id else "ExampleRowRequestSerializer"
-    )
 
     if user_field_names:
         class_name += "WithUserFieldNames"
@@ -131,8 +209,10 @@ def get_example_row_serializer_class(add_id=False, user_field_names=False):
 
     if add_id:
         fields["id"] = serializers.IntegerField(
-            read_only=True, help_text="The unique identifier of the row in the table."
+            read_only=False, help_text="The unique identifier of the row in the table."
         )
+
+    if add_order:
         fields["order"] = serializers.DecimalField(
             max_digits=40,
             decimal_places=20,
@@ -157,6 +237,8 @@ def get_example_row_serializer_class(add_id=False, user_field_names=False):
         )
 
     for i, field_type in enumerate(field_types):
+        if field_type.read_only and not add_readonly_fields:
+            continue
         instance = field_type.model_class()
         kwargs = {
             "help_text": f"This field represents the `{field_type.type}` field. The "
@@ -165,7 +247,9 @@ def get_example_row_serializer_class(add_id=False, user_field_names=False):
             f"{field_type.get_serializer_help_text(instance)}"
         }
         get_field_method = (
-            "get_response_serializer_field" if add_id else "get_serializer_field"
+            "get_response_serializer_field"
+            if is_response_example
+            else "get_serializer_field"
         )
         serializer_field = getattr(field_type, get_field_method)(instance, **kwargs)
         fields[f"field_{i + 1}"] = serializer_field
@@ -207,8 +291,25 @@ def get_example_row_metadata_field_serializer():
     )
 
 
+def remap_serialized_row_to_user_field_names(serialized_row: Dict, model: ModelBase):
+    """
+    Remap the values of a row from field ids to the user defined field names.
+
+    :param serialized_row: The row whose fields to remap.
+    :param model: The model for which to generate a serializer.
+    """
+
+    new_row = deepcopy(serialized_row)
+    for field_id, field_object in model._field_objects.items():
+        name = f"field_{field_id}"
+        if name in new_row:
+            new_name = field_object["field"].name
+            new_row[new_name] = new_row.pop(name)
+    return new_row
+
+
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
-    get_example_row_serializer_class(True, user_field_names=True)
+    get_example_row_serializer_class(example_type="get", user_field_names=True)
 )
 
 
@@ -220,6 +321,10 @@ class CreateRowQueryParamsSerializer(serializers.Serializer):
     before = serializers.IntegerField(required=False)
 
 
+class BatchCreateRowsQueryParamsSerializer(serializers.Serializer):
+    before = serializers.IntegerField(required=False)
+
+
 class ListRowsQueryParamsSerializer(serializers.Serializer):
     user_field_names = serializers.BooleanField(required=False, default=False)
     search = serializers.CharField(required=False)
@@ -227,3 +332,35 @@ class ListRowsQueryParamsSerializer(serializers.Serializer):
     include = serializers.CharField(required=False)
     exclude = serializers.CharField(required=False)
     filter_type = serializers.CharField(required=False, default="")
+
+
+class BatchUpdateRowsSerializer(serializers.Serializer):
+    items = serializers.ListField(
+        child=RowSerializer(),
+        min_length=1,
+        max_length=settings.BATCH_ROWS_SIZE_LIMIT,
+    )
+
+
+def get_example_batch_rows_serializer_class(example_type="get", user_field_names=False):
+    config = {
+        "get": {
+            "class_name": "ExampleBatchRowsResponseSerializer",
+        },
+        "post": {
+            "class_name": "ExampleBatchRowsRequestSerializer",
+        },
+        "patch_batch": {"class_name": "ExampleBatchUpdateRowsRequestSerializer"},
+    }
+    class_name = config[example_type]["class_name"]
+    fields = {
+        "items": serializers.ListField(
+            child=get_example_row_serializer_class(
+                example_type=example_type, user_field_names=user_field_names
+            )(),
+            min_length=1,
+            max_length=settings.BATCH_ROWS_SIZE_LIMIT,
+        )
+    }
+    class_object = type(class_name, (serializers.Serializer,), fields)
+    return class_object

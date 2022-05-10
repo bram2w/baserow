@@ -1,6 +1,7 @@
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.fields import empty
@@ -13,12 +14,19 @@ from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     get_example_row_serializer_class,
 )
-from baserow.contrib.database.views.exceptions import ViewDoesNotExist
+from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
+from baserow.contrib.database.views.exceptions import (
+    NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView
 from baserow.contrib.database.views.validators import required_validator
 
-from .errors import ERROR_FORM_DOES_NOT_EXIST
+from .errors import (
+    ERROR_FORM_DOES_NOT_EXIST,
+    ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
+)
 from .serializers import PublicFormViewSerializer, FormViewSubmittedSerializer
 
 
@@ -44,17 +52,22 @@ class SubmitFormViewView(APIView):
         ),
         responses={
             200: PublicFormViewSerializer,
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM"]),
             404: get_error_schema(["ERROR_FORM_DOES_NOT_EXIST"]),
         },
     )
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_FORM_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
         }
     )
-    def get(self, request, slug):
+    def get(self, request: Request, slug: str) -> Response:
         form = ViewHandler().get_public_view_by_slug(
-            request.user, slug, view_model=FormView
+            request.user,
+            slug,
+            view_model=FormView,
+            authorization_token=get_public_view_authorization_token(request),
         )
         serializer = PublicFormViewSerializer(form)
         return Response(serializer.data)
@@ -77,21 +90,29 @@ class SubmitFormViewView(APIView):
             "on the fields that are in the form and the rules per field. If valid, "
             "a new row will be created in the table."
         ),
-        request=get_example_row_serializer_class(False),
+        request=get_example_row_serializer_class(example_type="post"),
         responses={
             200: FormViewSubmittedSerializer,
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM"]),
             404: get_error_schema(["ERROR_FORM_DOES_NOT_EXIST"]),
         },
     )
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_FORM_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
         }
     )
     @transaction.atomic
-    def post(self, request, slug):
+    def post(self, request: Request, slug: str) -> Response:
+
         handler = ViewHandler()
-        form = handler.get_public_view_by_slug(request.user, slug, view_model=FormView)
+        form = handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            view_model=FormView,
+            authorization_token=get_public_view_authorization_token(request),
+        )
         model = form.table.get_model()
 
         options = form.active_field_options

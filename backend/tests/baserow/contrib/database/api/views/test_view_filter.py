@@ -9,6 +9,7 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import ViewFilter
 from baserow.contrib.database.views.registries import (
     view_type_registry,
@@ -522,3 +523,40 @@ def test_list_views_including_filters(api_client, data_fixture):
     assert response_json[0]["filters"][1]["id"] == filter_2.id
     assert len(response_json[1]["filters"]) == 1
     assert response_json[1]["filters"][0]["id"] == filter_3.id
+
+
+@pytest.mark.django_db
+def test_cant_update_view_filter_when_view_trashed(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user)
+    view_filter = data_fixture.create_view_filter(user=user, view=grid_view)
+
+    ViewHandler().delete_view(user, grid_view)
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:filter_item", kwargs={"view_filter_id": view_filter.id}
+        ),
+        data={"value": "new value"},
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_cant_delete_view_filter_when_view_trashed(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user)
+    view_filter = data_fixture.create_view_filter(user=user, view=grid_view)
+
+    ViewHandler().delete_view(user, grid_view)
+
+    response = api_client.delete(
+        reverse(
+            "api:database:views:filter_item", kwargs={"view_filter_id": view_filter.id}
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND

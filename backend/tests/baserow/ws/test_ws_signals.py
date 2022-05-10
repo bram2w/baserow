@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.db import transaction
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
@@ -73,7 +74,9 @@ def test_group_updated(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()
     user.web_socket_id = "test"
     group = data_fixture.create_group(user=user)
-    group = CoreHandler().update_group(user=user, group=group, name="Test")
+    with transaction.atomic():
+        group = CoreHandler().get_group_for_update(group.id)
+        group = CoreHandler().update_group(user=user, group=group, name="Test")
 
     mock_broadcast_to_group.delay.assert_called_once()
     args = mock_broadcast_to_group.delay.call_args
@@ -90,7 +93,9 @@ def test_group_deleted(mock_broadcast_to_users, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     group_id = group.id
-    CoreHandler().delete_group(user=user, group=group)
+    with transaction.atomic():
+        group = CoreHandler().get_group_for_update(group_id)
+        CoreHandler().delete_group(user=user, group=group)
 
     mock_broadcast_to_users.delay.assert_called_once()
     args = mock_broadcast_to_users.delay.call_args
@@ -136,6 +141,25 @@ def test_group_user_deleted(mock_broadcast_to_users, data_fixture):
     assert args[0][0] == [user_1.id]
     assert args[0][1]["type"] == "group_deleted"
     assert args[0][1]["group_id"] == group.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.signals.broadcast_to_users")
+def test_groups_reordered(mock_broadcast_to_users, data_fixture):
+    user = data_fixture.create_user()
+    group_1 = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group(user=user)
+    group_3 = data_fixture.create_group(user=user)
+
+    CoreHandler().order_groups(
+        user=user, group_ids=[group_1.id, group_2.id, group_3.id]
+    )
+
+    mock_broadcast_to_users.delay.assert_called_once()
+    args = mock_broadcast_to_users.delay.call_args
+    assert args[0][0] == [user.id]
+    assert args[0][1]["type"] == "groups_reordered"
+    assert args[0][1]["group_ids"] == [group_1.id, group_2.id, group_3.id]
 
 
 @pytest.mark.django_db(transaction=True)

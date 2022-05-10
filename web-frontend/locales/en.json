@@ -24,6 +24,7 @@
         "retry": "Retry",
         "search": "Search",
         "copy": "Copy",
+        "paste": "Paste",
         "activate": "Activate",
         "deactivate": "Deactivate"
     },
@@ -131,6 +132,7 @@
         "isAfterDate": "is after date",
         "isNotDate": "is not date",
         "isToday": "is today",
+        "isDaysAgo": "is days ago",
         "inThisMonth": "in this month",
         "inThisYear": "in this year",
         "lowerThan": "lower than",
@@ -154,7 +156,9 @@
         "application": "application",
         "table": "table",
         "field": "field",
-        "row": "row"
+        "row": "row",
+        "rows": "rows",
+        "view": "view"
     },
     "webhook": {
         "request": "Request",

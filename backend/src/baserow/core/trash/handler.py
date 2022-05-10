@@ -82,15 +82,9 @@ class TrashHandler:
                         trash_item_type=trash_item_type.type,
                         trash_item_id=trash_item.id,
                         name=trash_item_type.get_name(trash_item),
+                        names=trash_item_type.get_names(trash_item),
                         parent_name=parent_name,
                         parent_trash_item_id=parent_id,
-                        # If we ever introduce the ability to trash many rows at once
-                        # this call will generate a model per row currently, instead
-                        # a model cache should be added so generated models can be
-                        # shared.
-                        extra_description=trash_item_type.get_extra_description(
-                            trash_item, parent
-                        ),
                     )
                 except IntegrityError as e:
                     if "unique constraint" in e.args[0]:

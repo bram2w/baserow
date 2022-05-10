@@ -1,8 +1,8 @@
 import datetime
 import os
 from urllib.parse import urlparse, urljoin
-import dj_database_url
 
+import dj_database_url
 from corsheaders.defaults import default_headers
 
 from baserow.version import VERSION
@@ -17,7 +17,8 @@ if "SECRET_KEY" in os.environ:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("BASEROW_BACKEND_DEBUG", "off") == "on"
 
-ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS += os.getenv("BASEROW_EXTRA_ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -206,6 +207,8 @@ LANGUAGES = [
     ("fr", "French"),
     ("nl", "Dutch"),
     ("de", "German"),
+    ("es", "Spanish"),
+    ("it", "Italian"),
 ]
 
 TIME_ZONE = "UTC"
@@ -231,9 +234,16 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "baserow.api.openapi.AutoSchema",
 }
 
+PUBLIC_VIEW_AUTHORIZATION_HEADER = "Baserow-View-Authorization"
+
 CORS_ORIGIN_ALLOW_ALL = True
+CLIENT_SESSION_ID_HEADER = "ClientSessionId"
+MAX_CLIENT_SESSION_ID_LENGTH = 256
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "WebSocketId",
+    PUBLIC_VIEW_AUTHORIZATION_HEADER,
+    CLIENT_SESSION_ID_HEADER,
 ]
 
 
@@ -253,7 +263,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.9.1",
+    "VERSION": "1.10.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -269,6 +279,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table views"},
         {"name": "Database table view filters"},
         {"name": "Database table view sortings"},
+        {"name": "Database table view decorations"},
         {"name": "Database table grid view"},
         {"name": "Database table gallery view"},
         {"name": "Database table form view"},
@@ -281,7 +292,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
-        "NumberDecimalPlacesB02Enum": [
+        "NumberDecimalPlacesEnum": [
             (0, "1"),
             (1, "1.0"),
             (2, "1.00"),
@@ -289,13 +300,61 @@ SPECTACULAR_SETTINGS = {
             (4, "1.0000"),
             (5, "1.00000"),
         ],
-        "NumberDecimalPlaces0c0Enum": [
-            (1, "1.0"),
-            (2, "1.00"),
-            (3, "1.000"),
-            (4, "1.0000"),
-            (5, "1.00000"),
+        "ViewTypesEnum": [
+            "grid",
+            "gallery",
+            "form",
+            "kanban",
         ],
+        "FieldTypesEnum": [
+            "text",
+            "long_text",
+            "url",
+            "email",
+            "number",
+            "rating",
+            "boolean",
+            "date",
+            "last_modified",
+            "created_on",
+            "link_row",
+            "file",
+            "single_select",
+            "multiple_select",
+            "phone_number",
+            "formula",
+            "lookup",
+        ],
+        "ViewFilterTypesEnum": [
+            "equal",
+            "not_equal",
+            "filename_contains",
+            "has_file_type",
+            "contains",
+            "contains_not",
+            "length_is_lower_than",
+            "higher_than",
+            "lower_than",
+            "date_equal",
+            "date_before",
+            "date_after",
+            "date_not_equal",
+            "date_equals_today",
+            "date_equals_days_ago",
+            "date_equals_month",
+            "date_equals_day_of_month",
+            "date_equals_year",
+            "single_select_equal",
+            "single_select_not_equal",
+            "link_row_has",
+            "link_row_has_not",
+            "boolean",
+            "empty",
+            "not_empty",
+            "multiple_select_has",
+            "multiple_select_has_not",
+        ],
+        "EventTypesEnum": ["row.created", "row.updated", "row.deleted"],
     },
 }
 
@@ -323,9 +382,8 @@ if os.getenv("AWS_S3_ENDPOINT_URL", "") != "":
 if os.getenv("AWS_S3_CUSTOM_DOMAIN", "") != "":
     AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
-EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING = []
-if "BASEROW_PUBLIC_URL" in os.environ:
-    BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
+BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
+if BASEROW_PUBLIC_URL:
     PUBLIC_BACKEND_URL = BASEROW_PUBLIC_URL
     PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
     if BASEROW_PUBLIC_URL == "http://localhost":
@@ -370,25 +428,18 @@ if PUBLIC_BACKEND_HOSTNAME:
 if PRIVATE_BACKEND_HOSTNAME:
     ALLOWED_HOSTS.append(PRIVATE_BACKEND_HOSTNAME)
 
-for extra_host in EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING:
-    try:
-        hostname = urlparse(extra_host).hostname
-        if hostname is not None:
-            ALLOWED_HOSTS.append(hostname)
-    except ValueError:
-        hostname = None
-    if hostname is None:
-        print(
-            f"Not adding {extra_host} as an ALLOWED_HOST as it is not a valid url, "
-            f"this is expected and OK for extra PUBLIC_BASEROW_URLS used to "
-            f"configure caddy."
-        )
-
 FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@localhost")
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
-ROW_PAGE_SIZE_LIMIT = 200  # How many rows can be requested at once.
+
+ROW_PAGE_SIZE_LIMIT = int(os.getenv("BASEROW_ROW_PAGE_SIZE_LIMIT", 200))
+BATCH_ROWS_SIZE_LIMIT = int(
+    os.getenv("BATCH_ROWS_SIZE_LIMIT", 200)
+)  # How many rows can be modified at once.
+
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
 ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
+# How many unique row values can be requested at once.
+UNIQUE_ROW_VALUES_SIZE_LIMIT = 50
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None
@@ -494,6 +545,14 @@ BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
     os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
 )
 
+# A comma separated list of feature flags used to enable in-progress or not ready
+# features for developers. See docs/development/feature-flags.md for more info.
+FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
+
+OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
+    "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
+)
+MINUTES_UNTIL_ACTION_CLEANED_UP = os.getenv("MINUTES_UNTIL_ACTION_CLEANED_UP", "120")
 
 LOGGING = {
     "version": 1,

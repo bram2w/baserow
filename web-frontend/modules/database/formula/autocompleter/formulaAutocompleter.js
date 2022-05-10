@@ -14,9 +14,9 @@
  * calculateFilteredFunctionsAndFieldsBasedOnCursorLocation which does step 1 and
  * autocompleteFormula which does step 2 given the results of step 1.
  */
-import { BaserowFormula } from '@baserow/modules/database/formula/parser/generated/BaserowFormula'
+import BaserowFormula from '@baserow/modules/database/formula/parser/generated/BaserowFormula'
 import { getTokenStreamForFormula } from '@baserow/modules/database/formula/parser/parser'
-import { BaserowFormulaLexer } from '@baserow/modules/database/formula/parser/generated/BaserowFormulaLexer'
+import BaserowFormulaLexer from '@baserow/modules/database/formula/parser/generated/BaserowFormulaLexer'
 
 function _countRemainingOpenBrackets(i, stop, stream, numOpenBrackets) {
   for (let k = i; k < stop; k++) {

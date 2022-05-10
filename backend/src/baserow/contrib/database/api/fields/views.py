@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.conf import settings
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import permission_classes as method_permission_classes
@@ -6,9 +7,13 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body_custom_fields, map_exceptions
+from baserow.api.decorators import (
+    validate_body_custom_fields,
+    map_exceptions,
+    validate_query_parameters,
+)
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema
+from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
@@ -22,6 +27,7 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_INVALID_BASEROW_FIELD_NAME,
     ERROR_FIELD_SELF_REFERENCE,
     ERROR_FIELD_CIRCULAR_REFERENCE,
+    ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
 )
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
@@ -34,6 +40,7 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     FieldWithSameNameAlreadyExists,
     InvalidBaserowFieldName,
+    IncompatibleFieldTypeForUniqueValues,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
@@ -42,6 +49,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .serializers import (
@@ -50,10 +58,17 @@ from .serializers import (
     UpdateFieldSerializer,
     FieldSerializerWithRelatedFields,
     RelatedFieldsSerializer,
+    UniqueRowValueParamsSerializer,
+    UniqueRowValuesSerializer,
 )
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
+)
+from baserow.contrib.database.fields.actions import (
+    UpdateFieldActionType,
+    CreateFieldTypeAction,
+    DeleteFieldTypeAction,
 )
 
 
@@ -135,7 +150,8 @@ class FieldsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates a new field for the provided table related to the "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="create_database_table_field",
@@ -149,7 +165,8 @@ class FieldsView(APIView):
             "response key."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
-            field_type_registry, CreateFieldSerializer
+            field_type_registry,
+            CreateFieldSerializer,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -204,9 +221,9 @@ class FieldsView(APIView):
         # field we need to be able to map those to the correct API exceptions which are
         # defined in the type.
         with field_type.map_api_exceptions():
-            field, updated_fields = FieldHandler().create_field(
-                request.user, table, type_name, return_updated_fields=True, **data
-            )
+            field, updated_fields = action_type_registry.get_by_type(
+                CreateFieldTypeAction
+            ).do(request.user, table, type_name, return_updated_fields=True, **data)
 
         serializer = field_type_registry.get_serializer(
             field, FieldSerializerWithRelatedFields, related_fields=updated_fields
@@ -262,7 +279,8 @@ class FieldView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the field related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="update_database_table_field",
@@ -316,11 +334,7 @@ class FieldView(APIView):
     def patch(self, request, field_id):
         """Updates the field if the user belongs to the group."""
 
-        field = (
-            FieldHandler()
-            .get_field(field_id, base_queryset=Field.objects.select_for_update())
-            .specific
-        )
+        field = FieldHandler().get_specific_field_for_update(field_id)
         type_name = type_from_data_or_registry(request.data, field_type_registry, field)
         field_type = field_type_registry.get(type_name)
         data = validate_data_custom_fields(
@@ -334,9 +348,9 @@ class FieldView(APIView):
         # field we need to be able to map those to the correct API exceptions which are
         # defined in the type.
         with field_type.map_api_exceptions():
-            field, related_fields = FieldHandler().update_field(
-                request.user, field, type_name, return_updated_fields=True, **data
-            )
+            field, related_fields = action_type_registry.get_by_type(
+                UpdateFieldActionType
+            ).do(request.user, field, type_name, **data)
 
         serializer = field_type_registry.get_serializer(
             field, FieldSerializerWithRelatedFields, related_fields=related_fields
@@ -350,7 +364,8 @@ class FieldView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the field related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="delete_database_table_field",
@@ -390,6 +405,68 @@ class FieldView(APIView):
         field = FieldHandler().get_field(field_id)
         field_type = field_type_registry.get_by_model(field.specific_class)
         with field_type.map_api_exceptions():
-            updated_fields = FieldHandler().delete_field(request.user, field)
+            updated_fields = action_type_registry.get_by_type(DeleteFieldTypeAction).do(
+                request.user, field
+            )
 
         return Response(RelatedFieldsSerializer({}, related_fields=updated_fields).data)
+
+
+class UniqueRowValueFieldView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="field_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns the values related to the provided field.",
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines how many values should be returned.",
+            ),
+            OpenApiParameter(
+                name="split_comma_separated",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description="Indicates whether the original column values must be "
+                "splitted by comma.",
+            ),
+        ],
+        tags=["Database table fields"],
+        operation_id="get_database_field_unique_row_values",
+        description=(
+            "Returns a list of all the unique row values for an existing field, sorted "
+            "in order of frequency."
+        ),
+        responses={
+            200: UniqueRowValuesSerializer,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            IncompatibleFieldTypeForUniqueValues: ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
+        }
+    )
+    @validate_query_parameters(UniqueRowValueParamsSerializer)
+    def get(self, request, field_id, query_params):
+        field = FieldHandler().get_field(field_id)
+        limit = query_params.get("limit")
+        split_comma_separated = query_params.get("split_comma_separated")
+
+        if not limit or limit > settings.UNIQUE_ROW_VALUES_SIZE_LIMIT:
+            limit = settings.UNIQUE_ROW_VALUES_SIZE_LIMIT
+
+        values = FieldHandler().get_unique_row_values(
+            field, limit, split_comma_separated=split_comma_separated
+        )
+
+        return Response(UniqueRowValuesSerializer({"values": values}).data)

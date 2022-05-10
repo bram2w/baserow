@@ -1,245 +1,271 @@
 {
     "paginator": {
-        "page": "",
-        "of": ""
+        "page": "página",
+        "of": "de {pages}"
     },
     "copied": {
-        "label": ""
+        "label": "¡Copiado!"
     },
     "sidebarApplication": {
-        "renameApplication": "",
-        "viewTrash": "",
-        "deleteApplication": ""
+        "renameApplication": "Renombrar {type}",
+        "viewTrash": "ver papelera",
+        "deleteApplication": "Borrar {type}"
     },
     "sidebar": {
-        "createGroup": "",
-        "inviteOthers": "",
-        "logoff": "",
-        "errorNoGroup": "",
-        "admin": "",
-        "dashboard": "",
-        "trash": "",
-        "settings": ""
+        "createGroup": "Crea un grupo",
+        "inviteOthers": "Invitar a otros",
+        "logoff": "Desconectarse",
+        "errorNoGroup": "No tienes ningún grupo.",
+        "admin": "Admin",
+        "dashboard": "Tablero",
+        "trash": "Papelera",
+        "settings": "Ajustes"
     },
     "accountForm": {
-        "nameLabel": "",
-        "languageLabel": ""
+        "nameLabel": "Tu nombre",
+        "languageLabel": "Lenguaje de interfaz"
     },
     "accountSettings": {
-        "title": "",
-        "changedTitle": "",
-        "changedDescription": "",
-        "submitButton": ""
+        "title": "Cuenta",
+        "changedTitle": "Cambiado",
+        "changedDescription": "La información de su cuenta ha sido modificada.",
+        "submitButton": "Actualizar cuenta"
     },
     "settingsModal": {
-        "title": ""
+        "title": "Ajustes"
     },
     "passwordSettings": {
-        "title": "",
-        "changedTitle": "",
-        "changedDescription": "",
-        "oldPasswordLabel": "",
-        "oldPasswordRequiredError": "",
-        "newPasswordLabel": "",
-        "repeatNewPasswordLabel": "",
-        "repeatNewPasswordMatchError": "",
-        "submitButton": "",
-        "errorInvalidOldPasswordTitle": "",
-        "errorInvalidOldPasswordMessage": ""
+        "title": "Cambia la contraseña",
+        "changedTitle": "contraseña cambiada",
+        "changedDescription": "Tu contraseña ha sido cambiada. La próxima vez que desee iniciar sesión, deberá utilizar su nueva contraseña.",
+        "oldPasswordLabel": "Contraseña anterior",
+        "oldPasswordRequiredError": "Se requiere contraseña anterior.",
+        "newPasswordLabel": "Nueva contraseña",
+        "repeatNewPasswordLabel": "repita la nueva contraseña",
+        "repeatNewPasswordMatchError": "Este campo debe coincidir con su nuevo campo de contraseña.",
+        "submitButton": "Cambia la contraseña",
+        "errorInvalidOldPasswordTitle": "Contraseña invalida",
+        "errorInvalidOldPasswordMessage": "No se pudo cambiar su contraseña porque su contraseña anterior no es válida."
     },
     "error": {
-        "alreadyExistsTitle": "",
-        "alreadyExistsMessage": "",
-        "passwordRequired": "",
-        "invalidEmail": "",
-        "disabledAccountTitle": "",
-        "disabledAccountMessage": "",
-        "incorrectCredentialTitle": "",
-        "incorrectCredentialMessage": "",
-        "inputRequired": ""
+        "alreadyExistsTitle": "El usuario ya existe",
+        "alreadyExistsMessage": "Ya existe un usuario con la dirección de correo electrónico proporcionada.",
+        "passwordRequired": "Se requiere una contraseña.",
+        "invalidEmail": "Por favor, introduce una dirección de correo electrónico válida.",
+        "disabledAccountTitle": "Cuenta deshabilitada",
+        "disabledAccountMessage": "Esta cuenta de usuario ha sido deshabilitada.",
+        "incorrectCredentialTitle": "credenciales incorrectas",
+        "incorrectCredentialMessage": "La dirección de correo electrónico o la contraseña proporcionadas son incorrectas.",
+        "inputRequired": "Se requiere entrada."
     },
     "field": {
-        "language": "",
-        "emailAddress": "",
-        "name": "",
-        "password": "",
-        "passwordRepeat": ""
+        "language": "Idioma",
+        "emailAddress": "Dirección de E-mail",
+        "name": "Tu nombre",
+        "password": "Contraseña",
+        "passwordRepeat": "Repita la contraseña"
     },
-    "invitationTitle": "",
-    "invitationMessage": "",
+    "invitationTitle": "Invitación",
+    "invitationMessage": "{invitedBy} te ha invitado a unirte a {group}.",
     "groupForm": {
-        "nameLabel": ""
+        "nameLabel": "Nombre"
     },
     "leaveGroupModal": {
-        "title": "",
-        "message": "",
-        "leave": ""
+        "title": "Abandonar {group}",
+        "message": "¿Está seguro de que desea abandonar el grupo {group}? Ya no podrá acceder a las aplicaciones relacionadas y, si desea recuperar el acceso, uno de los administradores debe invitarlo nuevamente. Si abandona el grupo, no se eliminará. Todos los demás miembros seguirán teniendo acceso a él. No es posible abandonar un grupo si eres el último administrador porque eso lo dejará sin mantenimiento.",
+        "leave": "Dejar grupo"
     },
     "dashboardGroup": {
-        "showMembers": "",
-        "createApplication": ""
+        "showMembers": "Miembros",
+        "createApplication": "Crear nuevo"
     },
     "groupInvitation": {
-        "title": "",
-        "message": "",
-        "reject": "",
-        "accept": ""
+        "title": "Invitación",
+        "message": "{by} te ha invitado a unirte a {group}.",
+        "reject": "Rechazar",
+        "accept": "Aceptar"
     },
     "groupMemberModal": {
-        "membersModalTitle": "",
-        "userDescription": "",
-        "invitationDescription": "",
-        "sendInvite": "",
-        "userAlreadyInGroupTitle": "",
-        "userAlreadyInGroupText": ""
+        "membersModalTitle": "{group} miembros",
+        "userDescription": "{user} - se unió hace {since}",
+        "invitationDescription": "invitado {since} hace",
+        "sendInvite": "Enviar invitación",
+        "userAlreadyInGroupTitle": "El usuario ya está en el grupo.",
+        "userAlreadyInGroupText": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo."
     },
     "groupInviteForm": {
-        "invitationFormTitle": "",
-        "optionalMessagePlaceholder": "",
-        "errorInvalidEmail": ""
+        "invitationFormTitle": "Invitar por correo electrónico",
+        "optionalMessagePlaceholder": "Mensaje opcional",
+        "errorInvalidEmail": "Por favor, introduce una dirección de correo electrónico válida."
     },
     "groupsContext": {
-        "search": "",
-        "noResults": "",
-        "createGroup": ""
+        "search": "Buscar grupos",
+        "noResults": "No se han encontrado resultados",
+        "createGroup": "Crea un grupo"
     },
     "groupContext": {
-        "renameGroup": "",
-        "members": "",
-        "viewTrash": "",
-        "leaveGroup": "",
-        "deleteGroup": ""
+        "renameGroup": "Renombrar grupo",
+        "members": "Miembros",
+        "viewTrash": "Ver papelera",
+        "leaveGroup": "Dejar grupo",
+        "deleteGroup": "Eliminar grupo"
     },
     "createGroupModal": {
-        "createNew": "",
-        "add": ""
+        "createNew": "Crear grupo nuevo",
+        "add": "Añadir grupo"
     },
     "templateCategories": {
-        "search": "",
-        "title": ""
+        "search": "Buscar plantillas",
+        "title": "Plantillas"
     },
     "templateHeader": {
-        "use": ""
+        "use": "Usar esta plantilla"
     },
     "trashSidebar": {
-        "title": "",
-        "unnamedGroup": ""
+        "title": "Papelera",
+        "unnamedGroup": "Grupo sin nombre {id}"
     },
     "trashContents": {
-        "message": "",
-        "empty": "",
-        "emptyButtonTrashed": "",
-        "emptyButtonNotTrashed": "",
-        "unnamed": ""
+        "message": "Restaurar elementos eliminados del pasado {duration}",
+        "empty": "No se ha eliminado nada en los últimos tres días.",
+        "emptyButtonTrashed": "Eliminar {type} permanentemente",
+        "emptyButtonNotTrashed": "Vaciar la papelera de {type}",
+        "unnamed": "{type} {id} sin nombre"
     },
     "trashEmptyModal": {
-        "titleIsTrashed": "",
-        "titleIsNotTrashed": "",
-        "messageIsTrashed": "",
-        "messageIsNotTrashed": "",
-        "buttonIsTrashed": "",
-        "buttonIsNotTrashed": ""
+        "titleIsTrashed": "¿Estás seguro de que quieres eliminar permanentemente {name}?",
+        "titleIsNotTrashed": "¿Estás seguro de que quieres vaciar la papelera de {name}?",
+        "messageIsTrashed": "Esto lo eliminará permanentemente junto con todo su contenido. Después de lo cual no se pueden recuperar.",
+        "messageIsNotTrashed": "Esto eliminará permanentemente los elementos enumerados. Después de lo cual no se pueden recuperar.",
+        "buttonIsTrashed": "Borrar permanentemente",
+        "buttonIsNotTrashed": "Vacío"
     },
     "trashEntry": {
-        "deletedUser": "",
-        "fromParent": "",
-        "name": "",
-        "restore": "",
-        "unnamed": ""
+        "deletedUser": "Un usuario eliminado",
+        "fromParent": "de {parent}",
+        "name": "{user} eliminó {type} {title} {parent}",
+        "restore": "Restaurar",
+        "unnamed": "{type} {id} sin nombre"
     },
     "trashModal": {
-        "emptyTitle": "",
-        "emptyMessage": ""
+        "emptyTitle": "No se encontraron grupos",
+        "emptyMessage": "No eres miembro de ningún grupo. Las aplicaciones, como las bases de datos, pertenecen a un grupo, por lo que, para crearlas, debe crear un grupo."
     },
     "uploadViaURLUserFileUpload": {
-        "title": "",
-        "urlLabel": "",
-        "urlError": ""
+        "title": "Subir desde una URL",
+        "urlLabel": "URL",
+        "urlError": "Se requiere una URL válida."
     },
     "userFilesModal": {
-        "title": ""
+        "title": "Subir desde"
     },
     "uploadFileUserFileUpload": {
-        "title": "",
-        "drop": "",
-        "clickOrDrop": "",
-        "retry": ""
+        "title": "Subir desde mi dispositivo",
+        "drop": "Dejar aquí",
+        "clickOrDrop": "Haga clic o suelte sus archivos aquí",
+        "retry": "Volver a intentar"
     },
     "createApplicationContext": {
-        "fromTemplate": ""
+        "fromTemplate": "De la plantilla"
     },
     "applicationForm": {
-        "nameLabel": ""
+        "nameLabel": "Nombre"
     },
     "connectingNotification": {
-        "title": "",
-        "content": ""
+        "title": "Reconectando",
+        "content": "Reconectando con el servidor."
     },
     "failedConnectingNotification": {
-        "title": "",
-        "content": "",
-        "action": ""
+        "title": "Fallido",
+        "content": "La conexión con el servidor ha fallado. Actualice la página.",
+        "action": "Actualizar página"
     },
     "restoreNotification": {
-        "restore": ""
+        "restore": "Restaurar {type} eliminado"
     },
     "errorLayout": {
-        "notFound": "",
-        "error": "",
-        "backDashboard": "",
-        "backLogin": "",
-        "wrong": ""
+        "notFound": "La página que busca no ha sido encontrada. Esto puede deberse a que la URL es incorrecta o que no tiene permiso para ver esta página.",
+        "error": "Algo salió mal al cargar la página. Nuestros desarrolladores han sido notificados del problema. Intente actualizar o volver al panel de control.",
+        "backDashboard": "Volver al tablero",
+        "backLogin": "Atrás para iniciar sesión",
+        "wrong": "Algo salió mal"
     },
     "dashboard": {
-        "title": "",
-        "alertTitle": "",
-        "alertText": "",
-        "tweetContent": "",
-        "redditTitle": "",
-        "noGroupTitle": "",
-        "noGroupText": "",
-        "createGroup": "",
-        "becomeGithubSponsor": "",
-        "starOnGitlab": "",
-        "shareOnTwitter": "",
-        "shareOnReddit": "",
-        "shareOnFacebook": "",
-        "shareOnLinkedIn": ""
+        "title": "Tablero",
+        "alertTitle": "¡Necesitamos tu ayuda!",
+        "alertText": "Si considera que Baserow es útil, le agradecemos enormemente que nos patrocine, protagonice o comparta. ¡Al patrocinarnos en GitHub, obtendrá acceso temprano a las funciones premium!",
+        "tweetContent": "¡Eche un vistazo a @baserow, una herramienta de base de datos sin código de código abierto y una alternativa a Airtable!",
+        "redditTitle": "'Baserow: una base de datos sin código de código abierto",
+        "noGroupTitle": "No se encontraron grupos",
+        "noGroupText": "No eres miembro de ningún grupo. Las aplicaciones, como las bases de datos, pertenecen a un grupo, por lo que, para crearlas, debe crear un grupo.",
+        "createGroup": "Crea un grupo",
+        "becomeGithubSponsor": "Conviértase en un patrocinador de GitHub",
+        "starOnGitlab": "Destacarnos en Gitlab",
+        "shareOnTwitter": "Tuitea sobre Baserow",
+        "shareOnReddit": "Compartir en Reddit",
+        "shareOnFacebook": "Compartir en Facebook",
+        "shareOnLinkedIn": "Compartir en LinkedIn"
     },
     "login": {
-        "title": "",
-        "forgotPassword": ""
+        "title": "Acceso",
+        "forgotPassword": "Olvidó contraseña"
     },
     "resetPassword": {
-        "title": "",
-        "newPassword": "",
-        "repeatNewPassword": "",
-        "submit": "",
-        "changed": "",
-        "errorInvalidLinkTitle": "",
-        "errorInvalidLinkMessage": "",
-        "errorLinkExpiredTitle": "",
-        "errorLinkExpiredMessage": ""
+        "title": "Restablecer la contraseña",
+        "newPassword": "Nueva contraseña",
+        "repeatNewPassword": "repita la nueva contraseña",
+        "submit": "Cambia la contraseña",
+        "changed": "Contraseña cambiada",
+        "errorInvalidLinkTitle": "Link inválido",
+        "errorInvalidLinkMessage": "No se pudo restablecer la contraseña porque el enlace no es válido.",
+        "errorLinkExpiredTitle": "Enlace expirado",
+        "errorLinkExpiredMessage": "El enlace de restablecimiento de contraseña ha caducado. Solicite otro."
     },
     "signup": {
-        "headTitle": "",
-        "title": "",
-        "disabled": "",
-        "disabledMessage": ""
+        "headTitle": "Crear una nueva cuenta",
+        "title": "Inscribirse",
+        "disabled": "Registro está deshabilitado",
+        "disabledMessage": "No es posible crear una cuenta porque ha sido deshabilitada."
     },
     "forgotPassword": {
-        "title": "",
-        "message": "",
-        "submit": "",
-        "confirmation": ""
+        "title": "Se te olvidó tu contraseña",
+        "message": "Por favor, introduzca su dirección de correo electrónico en el formulario. Si encontramos una cuenta, le enviaremos un correo electrónico con un enlace para restablecer su contraseña.",
+        "submit": "Enviar enlace",
+        "confirmation": "Si su dirección de correo electrónico existe en nuestra base de datos, recibirá un enlace de restablecimiento de contraseña en su dirección de correo electrónico en unos minutos."
     },
     "settings": {
-        "settingsTitle": "",
-        "baserowInstanceId": "",
-        "instanceIdDescription": "",
-        "groupSignupRestrictions": "",
-        "settingAllowNewAccountsName": "",
-        "settingAllowNewAccountsDescription": "",
-        "enabled": ""
+        "settingsTitle": "Configuración de administrador",
+        "baserowInstanceId": "ID de instancia",
+        "instanceIdDescription": "El ID de instancia es el identificador único de su copia de Baserow.",
+        "groupSignupRestrictions": "Restricciones de registro",
+        "settingAllowNewAccountsName": "Permitir crear nuevas cuentas",
+        "settingAllowNewAccountsDescription": "De forma predeterminada, cualquier usuario que visite su dominio de Baserow puede registrarse para obtener una nueva cuenta.",
+        "enabled": "activado",
+        "settingAllowSignupsViaGroupInvitationsName": "Permitir suscripciones a través de invitaciones grupales",
+        "settingAllowSignupsViaGroupInvitationDescription": "Incluso si la creación de nuevas cuentas está deshabilitada, esta opción permite que los usuarios invitados directamente sigan creando una cuenta."
+    },
+    "copyingNotification": {
+        "title": "Copiando...",
+        "content": "Preparando tus datos"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Deshaciendo...",
+        "undoingText": "Deshaciendo tu acción",
+        "redoingText": "Rehaciendo tu acción",
+        "redoneTitle": "Rehecho",
+        "redoneText": "La acción es rehecha",
+        "noMoreRedo": "No hay más acciones que rehacer",
+        "skippingRedoDueToError": "Rehacer falló por un error desconocido, saltándolo.",
+        "failed": "Fallido",
+        "undoneTitle": "Deshecho",
+        "undoneText": "La acción es deshecha",
+        "noMoreUndo": "No hay más acciones que deshacer",
+        "skippingUndoDueToError": "Deshacer falló por un error desconocido, saltándolo.",
+        "redoingTitle": "Rehaciendo..."
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Error de autorización",
+        "content": "Parece que no tienes permisos para ver este recurso.",
+        "action": "Refrescar página"
     }
 }

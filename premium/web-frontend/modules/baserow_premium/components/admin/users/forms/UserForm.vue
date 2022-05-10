@@ -1,60 +1,60 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('name')" class="control">
       <label class="control__label">{{ $t('userForm.fullName') }}</label>
       <div class="control__elements">
         <input
           ref="name"
           v-model="values.name"
-          :class="{ 'input--error': $v.values.name.$error }"
+          :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input input--large"
           :disabled="loading"
           @blur="$v.values.name.$touch()"
         />
-        <div v-if="$v.values.name.$error" class="error">
+        <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('userForm.error.invalidName') }}
         </div>
       </div>
-    </div>
-    <label class="control__label">{{ $t('userForm.email') }}</label>
-    <div class="control">
+    </FormElement>
+    <FormElement :error="fieldHasErrors('username')" class="control">
+      <label class="control__label">{{ $t('userForm.email') }}</label>
       <div class="control__elements">
         <input
           ref="email"
           v-model="values.username"
-          :class="{ 'input--error': $v.values.username.$error }"
+          :class="{ 'input--error': fieldHasErrors('username') }"
           type="text"
           class="input input--large"
           :disabled="loading"
           @blur="$v.values.username.$touch()"
         />
-        <div v-show="$v.values.username.$error" class="error">
+        <div v-show="fieldHasErrors('username')" class="error">
           {{ $t('userForm.error.invalidEmail') }}
         </div>
         <div v-show="values.username !== user.username" class="warning">
           {{ $t('userForm.warning.changeEmail') }}
         </div>
       </div>
-    </div>
-    <label class="control__label">{{ $t('userForm.isActive') }}</label>
-    <div class="control">
+    </FormElement>
+    <FormElement class="control">
+      <label class="control__label">{{ $t('userForm.isActive') }}</label>
       <div class="control__elements">
         <Checkbox v-model="values.is_active" :disabled="loading"></Checkbox>
       </div>
       <div v-show="!values.is_active" class="warning">
         {{ $t('userForm.warning.inactiveUser') }}
       </div>
-    </div>
-    <label class="control__label">{{ $t('premium.user.isStaff') }}</label>
-    <div class="control">
+    </FormElement>
+    <FormElement class="control">
+      <label class="control__label">{{ $t('premium.user.isStaff') }}</label>
       <div class="control__elements">
         <Checkbox v-model="values.is_staff" :disabled="loading"></Checkbox>
       </div>
       <div v-show="values.is_staff" class="warning">
         {{ $t('userForm.warning.userStaff') }}
       </div>
-    </div>
+    </FormElement>
     <div class="actions">
       <slot></slot>
       <div class="align-right">

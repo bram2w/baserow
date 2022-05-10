@@ -41,13 +41,15 @@ import RowService from '@baserow/modules/database/services/row'
  * ```
  */
 export default ({ service, customPopulateRow }) => {
-  let lastRequestSource = null
+  let lastRequestController = null
 
   const populateRow = (row) => {
     if (customPopulateRow) {
       customPopulateRow(row)
     }
-    row._ ??= {}
+    if (row._ == null) {
+      row._ = {}
+    }
     // Matching rows for front-end only search is not yet properly
     // supported and tested in this store mixin. Only server-side search
     // implementation is finished.
@@ -203,13 +205,16 @@ export default ({ service, customPopulateRow }) => {
     },
     ADD_FIELD_TO_ALL_ROWS(state, { field, value }) {
       const name = `field_${field.id}`
-      state.rows.forEach((row) => {
+      // We have to replace all the rows by using the map function to make it
+      // reactive and update immediately. If we don't do this, the value in the
+      // field components of the grid and modal don't always have the correct value
+      // binding.
+      state.rows = state.rows.map((row) => {
         if (row !== null && !Object.prototype.hasOwnProperty.call(row, name)) {
-          // We have to use the Vue.set function here to make it reactive immediately.
-          // If we don't do this the value in the field components of the view and modal
-          // don't have the correct value and will act strange.
-          Vue.set(row, name, value)
+          row[`field_${field.id}`] = value
+          return { ...row }
         }
+        return row
       })
     },
     START_ROW_DRAG(state, { index }) {
@@ -318,17 +323,17 @@ export default ({ service, customPopulateRow }) => {
         return
       }
 
-      // We can only make one request at the same time, so we're going to to set the
+      // We can only make one request at the same time, so we're going to set the
       // fetching state to `true` to prevent multiple requests being fired
       // simultaneously.
       commit('SET_FETCHING', true)
-      lastRequestSource = axios.CancelToken.source()
+      lastRequestController = new AbortController()
       try {
         const { data } = await service(this.$client).fetchRows({
           viewId: getters.getViewId,
           offset: rangeToFetch.offset,
           limit: rangeToFetch.limit,
-          cancelToken: lastRequestSource.token,
+          signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
         })
         commit('UPDATE_ROWS', {
@@ -339,7 +344,7 @@ export default ({ service, customPopulateRow }) => {
         if (axios.isCancel(error)) {
           throw new RefreshCancelledError()
         } else {
-          lastRequestSource = null
+          lastRequestController = null
           throw error
         }
       } finally {
@@ -366,11 +371,11 @@ export default ({ service, customPopulateRow }) => {
       // If another refresh or fetch request is currently running, we need to cancel
       // it because the response is most likely going to be outdated and we don't
       // need it anymore.
-      if (lastRequestSource !== null) {
-        lastRequestSource.cancel('Cancelled in favor of new request')
+      if (lastRequestController !== null) {
+        lastRequestController.abort()
       }
 
-      lastRequestSource = axios.CancelToken.source()
+      lastRequestController = new AbortController()
 
       try {
         // We first need to fetch the count of all rows because we need to know how
@@ -381,7 +386,7 @@ export default ({ service, customPopulateRow }) => {
           data: { count },
         } = await service(this.$client).fetchCount({
           viewId: getters.getViewId,
-          cancelToken: lastRequestSource.token,
+          signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
         })
 
@@ -421,7 +426,7 @@ export default ({ service, customPopulateRow }) => {
             offset: rangeToFetch.offset,
             limit: rangeToFetch.limit,
             includeFieldOptions,
-            cancelToken: lastRequestSource.token,
+            signal: lastRequestController.signal,
             search: getters.getServerSearchTerm,
           })
 
@@ -436,7 +441,7 @@ export default ({ service, customPopulateRow }) => {
         if (axios.isCancel(error)) {
           throw new RefreshCancelledError()
         } else {
-          lastRequestSource = null
+          lastRequestController = null
           throw error
         }
       } finally {
@@ -667,9 +672,6 @@ export default ({ service, customPopulateRow }) => {
         const currentFieldValue = row[fieldToCallName]
         const optimisticFieldValue = fieldType.onRowChange(
           row,
-          field,
-          value,
-          oldValue,
           fieldToCall,
           currentFieldValue
         )
@@ -703,6 +705,7 @@ export default ({ service, customPopulateRow }) => {
           row,
           values: oldValues,
         })
+        dispatch('fetchAllFieldAggregationData', { view })
         throw error
       }
     },

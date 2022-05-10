@@ -3,7 +3,10 @@ import json
 import hashlib
 from io import BytesIO
 from pathlib import Path
+from typing import NewType, cast, List
 from urllib.parse import urlparse, urljoin
+
+from django.contrib.auth.models import AbstractUser
 from itsdangerous import URLSafeSerializer
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -12,8 +15,11 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q, Count
 from django.core.files.storage import default_storage
 from django.utils import translation
+from tqdm import tqdm
 
-from baserow.core.utils import ChildProgressBuilder
+from baserow.core.utils import (
+    ChildProgressBuilder,
+)
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
@@ -43,7 +49,7 @@ from .exceptions import (
     TemplateDoesNotExist,
 )
 from .trash.handler import TrashHandler
-from .utils import extract_allowed, set_allowed_attrs
+from .utils import set_allowed_attrs
 from .registries import application_type_registry
 from .signals import (
     application_created,
@@ -55,11 +61,13 @@ from .signals import (
     group_deleted,
     group_user_updated,
     group_user_deleted,
+    groups_reordered,
 )
 from .emails import GroupInvitationEmail
 
-
 User = get_user_model()
+
+GroupForUpdate = NewType("GroupForUpdate", Group)
 
 
 class CoreHandler:
@@ -106,7 +114,13 @@ class CoreHandler:
         settings_instance.save()
         return settings_instance
 
-    def get_group(self, group_id, base_queryset=None):
+    def get_group_for_update(self, group_id: int) -> GroupForUpdate:
+        return cast(
+            GroupForUpdate,
+            self.get_group(group_id, base_queryset=Group.objects.select_for_update()),
+        )
+
+    def get_group(self, group_id, base_queryset=None) -> Group:
         """
         Selects a group with a given id from the database.
 
@@ -130,18 +144,16 @@ class CoreHandler:
 
         return group
 
-    def create_group(self, user, **kwargs):
+    def create_group(self, user: User, name: str) -> GroupUser:
         """
         Creates a new group for an existing user.
 
         :param user: The user that must be in the group.
-        :type user: User
+        :param name: The name of the group.
         :return: The newly created GroupUser object
-        :rtype: GroupUser
         """
 
-        group_values = extract_allowed(kwargs, ["name"])
-        group = Group.objects.create(**group_values)
+        group = Group.objects.create(name=name)
         last_order = GroupUser.get_last_order(user)
         group_user = GroupUser.objects.create(
             group=group,
@@ -154,25 +166,24 @@ class CoreHandler:
 
         return group_user
 
-    def update_group(self, user, group, **kwargs):
+    def update_group(
+        self, user: AbstractUser, group: GroupForUpdate, name: str
+    ) -> Group:
         """
-        Updates the values of a group if the user on whose behalf the request is made
-        has admin permissions to the group.
+        Updates the values of a group if the user has admin permissions to the group.
 
         :param user: The user on whose behalf the change is made.
-        :type user: User
         :param group: The group instance that must be updated.
-        :type group: Group
+        :param name: The new name to give the group.
         :raises ValueError: If one of the provided parameters is invalid.
         :return: The updated group
-        :rtype: Group
         """
 
         if not isinstance(group, Group):
             raise ValueError("The group is not an instance of Group.")
 
         group.has_user(user, "ADMIN", raise_error=True)
-        group = set_allowed_attrs(kwargs, ["name"], group)
+        group.name = name
         group.save()
 
         group_updated.send(self, group=group, user=user)
@@ -220,7 +231,20 @@ class CoreHandler:
             self, group_user_id=group_user_id, group_user=group_user, user=user
         )
 
-    def delete_group(self, user, group):
+    def delete_group_by_id(self, user: AbstractUser, group_id: int):
+        """
+        Deletes a group by id and it's related applications instead of using an
+        instance. Only if the user has admin permissions for the group.
+
+        :param user: The user on whose behalf the delete is done.
+        :param group_id: The group id that must be deleted.
+        :raises ValueError: If one of the provided parameters is invalid.
+        """
+
+        locked_group = self.get_group_for_update(group_id)
+        self.delete_group(user, locked_group)
+
+    def delete_group(self, user: AbstractUser, group: GroupForUpdate):
         """
         Deletes an existing group and related applications if the user has admin
         permissions for the group. The group can be restored after deletion using the
@@ -249,20 +273,32 @@ class CoreHandler:
             self, group_id=group_id, group=group, group_users=group_users, user=user
         )
 
-    def order_groups(self, user, group_ids):
+    def order_groups(self, user: AbstractUser, group_ids: List[int]):
         """
         Changes the order of groups for a user.
 
         :param user: The user on whose behalf the ordering is done.
-        :type: user: User
         :param group_ids: A list of group ids ordered the way they need to be ordered.
-        :type group_ids: List[int]
         """
 
         for index, group_id in enumerate(group_ids):
             GroupUser.objects.filter(user=user, group_id=group_id).update(
                 order=index + 1
             )
+        groups_reordered.send(self, user=user, group_ids=group_ids)
+
+    def get_groups_order(self, user: AbstractUser) -> List[int]:
+        """
+        Returns the order of groups for a user.
+
+        :param user: The user on whose behalf the ordering is done.
+        :return: A list of group ids ordered the way they need to be ordered.
+        """
+
+        return [
+            group_user.group_id
+            for group_user in GroupUser.objects.filter(user=user).order_by("order")
+        ]
 
     def get_group_user(self, group_user_id, base_queryset=None):
         """
@@ -642,21 +678,18 @@ class CoreHandler:
 
         return application
 
-    def create_application(self, user, group, type_name, **kwargs):
+    def create_application(
+        self, user: AbstractUser, group: Group, type_name: str, name: str
+    ) -> Application:
         """
         Creates a new application based on the provided type.
 
         :param user: The user on whose behalf the application is created.
-        :type user: User
         :param group: The group that the application instance belongs to.
-        :type group: Group
         :param type_name: The type name of the application. ApplicationType can be
             registered via the ApplicationTypeRegistry.
-        :type type_name: str
-        :param kwargs: The fields that need to be set upon creation.
-        :type kwargs: object
+        :param name: The name of the application.
         :return: The created application instance.
-        :rtype: Application
         """
 
         group.has_user(user, raise_error=True)
@@ -664,62 +697,54 @@ class CoreHandler:
         # Figure out which model is used for the given application type.
         application_type = application_type_registry.get(type_name)
         model = application_type.model_class
-        application_values = extract_allowed(kwargs, ["name"])
         last_order = model.get_last_order(group)
 
-        instance = model.objects.create(
-            group=group, order=last_order, **application_values
-        )
+        instance = model.objects.create(group=group, order=last_order, name=name)
 
         application_created.send(self, application=instance, user=user)
 
         return instance
 
-    def update_application(self, user, application, **kwargs):
+    def update_application(
+        self, user: AbstractUser, application: Application, name: str
+    ) -> Application:
         """
         Updates an existing application instance.
 
         :param user: The user on whose behalf the application is updated.
-        :type user: User
         :param application: The application instance that needs to be updated.
-        :type application: Application
-        :param kwargs: The fields that need to be updated.
-        :type kwargs: object
-        :raises ValueError: If one of the provided parameters is invalid.
+        :param name: The new name of the application.
         :return: The updated application instance.
-        :rtype: Application
         """
-
-        if not isinstance(application, Application):
-            raise ValueError("The application is not an instance of Application.")
 
         application.group.has_user(user, raise_error=True)
 
-        application = set_allowed_attrs(kwargs, ["name"], application)
+        application.name = name
+
         application.save()
 
         application_updated.send(self, application=application, user=user)
 
         return application
 
-    def order_applications(self, user, group, order):
+    def order_applications(
+        self, user: User, group: Group, order: List[int]
+    ) -> List[int]:
         """
         Updates the order of the applications in the given group. The order of the
         applications that are not in the `order` parameter set set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
-        :type user: User
         :param group: The group of which the applications must be updated.
-        :type group: Group
         :param order: A list containing the application ids in the desired order.
-        :type order: list
         :raises ApplicationNotInGroup: If one of the applications ids in the order does
             not belong to the database.
+        :return: The old order of application ids.
         """
 
         group.has_user(user, raise_error=True)
 
-        queryset = Application.objects.filter(group_id=group.id)
+        queryset = Application.objects.filter(group_id=group.id).order_by("order")
         application_ids = queryset.values_list("id", flat=True)
 
         for application_id in order:
@@ -729,15 +754,15 @@ class CoreHandler:
         Application.order_objects(queryset, order)
         applications_reordered.send(self, group=group, order=order, user=user)
 
-    def delete_application(self, user, application):
+        return application_ids
+
+    def delete_application(self, user: AbstractUser, application: Application):
         """
         Deletes an existing application instance if the user has access to the
         related group. The `application_deleted` signal is also called.
 
         :param user: The user on whose behalf the application is deleted.
-        :type user: User
         :param application: The application instance that needs to be deleted.
-        :type application: Application
         :raises ValueError: If one of the provided parameters is invalid.
         """
 
@@ -900,7 +925,11 @@ class CoreHandler:
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
         templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
-        for template_file_path in templates:
+        for template_file_path in tqdm(
+            templates,
+            desc="Syncing Baserow templates. Disable this on startup by setting the "
+            "env variable SYNC_TEMPLATES_ON_STARTUP=false",
+        ):
             content = Path(template_file_path).read_text()
             parsed_json = json.loads(content)
 

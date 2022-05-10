@@ -29,8 +29,13 @@
   background-color: $color-neutral-100;
   border-radius: 3px;
   display: flex;
+  color: $color-primary-900;
 
   @include fixed-height(22px, 13px);
+
+  &:hover {
+    text-decoration: none;
+  }
 
   .grid-field-many-to-many__cell.active & {
     background-color: $color-primary-100;
@@ -63,6 +68,12 @@
   @extend %ellipsis;
 
   max-width: 140px;
+}
+
+.grid-field-many-to-many__loading {
+  margin: 5px 0 0 4px;
+
+  @include loading(12px);
 }
 
 .grid-field-many-to-many__remove {

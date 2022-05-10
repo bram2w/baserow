@@ -357,13 +357,17 @@ class WebhookHandler:
         event_id = str(uuid.uuid4())
         model = table.get_model()
         row = model(id=0, order=0)
-        payload = webhook_event_type_registry.get(event_type).get_payload(
+        event = webhook_event_type_registry.get(event_type)
+        before_return = event.get_test_call_before_return(
+            table=table, row=row, model=model
+        )
+        payload = event.get_payload(
             event_id=event_id,
             webhook=webhook,
             model=model,
             table=table,
             row=row,
-            before_return=row,
+            before_return=before_return,
         )
         headers.update(self.get_headers(event_type, event_id))
 
@@ -381,7 +385,7 @@ class WebhookHandler:
         return "{}\r\n{}\r\n\r\n{}".format(
             request.method + " " + request.url,
             "\r\n".join("{}: {}".format(k, v) for k, v in request.headers.items()),
-            json.dumps(json.loads(request.body), indent=4),
+            json.dumps(json.loads(request.body or "{}"), indent=4),
         )
 
     def format_response(self, response: Response) -> str:

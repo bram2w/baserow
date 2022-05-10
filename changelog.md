@@ -2,6 +2,104 @@
 
 ## Unreleased
 
+## Released (2022-10-05 1.10.0)
+
+* Added batch create/update/delete rows endpoints. These endpoints make it possible to
+  modify multiple rows at once. Currently, row created, row updated, and row deleted 
+  webhooks are not triggered when using these endpoints.
+* Fixed translations in emails sent by Baserow.
+* Fixed invalid `first_name` validation in the account form modal.
+* Shared public forms now don't allow creating new options
+  for single and multiple select fields.
+* Fixed bug where the arrow keys of a selected cell didn't work when they were not
+  rendered.
+* Select new view immediately after creation.
+* Added group context menu to sidebar.
+* Fixed Airtable import bug where the import would fail if a row is empty.
+* Fixed occasional UnpicklingError error when getting a value from the model cache. 
+* Fixed a problem where a form view with link row fields sends duplicate lookup requests.
+* Pin backend python dependencies using pip-tools.
+* Fixed the reactivity of the row values of newly created fields in some cases.
+* Made it possible to impersonate another user as premium admin.
+* Added `is days ago` filter to date field.
+* Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
+* Allow the setting of max request page size via environment variable.
+* Added select option suggestions when converting to a select field.
+* Introduced read only lookup of foreign row by clicking on a link row relationship in 
+  the grid view row modal.
+* Boolean field converts the word `checked` to `True` value.
+* Fixed a bug where the backend would fail hard updating token permissions for deleted tables.
+* Fixed the unchecked percent aggregation calculation
+* Raise Airtable import task error and fixed a couple of minor import bugs.
+* Add loading bar when syncing templates to make it obvious Baserow is still loading.
+* Fixed bug where old values are missing in the update trigger of the webhook.
+* Scroll to the first error message if the form submission fail
+* Improved backup_baserow spltting multiselect through tables in separate batches.
+* Fixed a bug that truncated characters for email in the sidebar
+* **breaking change** The API endpoint `/api/database/formula/<field_id>/type/` now requires
+  `table_id` instead of `field_id`, and also `name` in the request body.
+* Added support in dev.sh for KDE's Konsole terminal emulator.
+* Fixed a bug that would sometimes cancel multi-cell selection.
+* Upgraded node runtime to v16.14.0
+* Cache aggregation values to improve performances
+* Added new endpoint to get all configured aggregations for a grid view
+* Fixed DONT_UPDATE_FORMULAS_AFTER_MIGRATION env var not working correctly.
+* Stopped the generated model cache clear operation also deleting all other redis keys.
+* Added Spanish and Italian languages.
+* Added undo/redo.
+* Fixed bug where the link row field `link_row_relation_id` could fail when two 
+  simultaneous requests are made.
+* Added password protection for publicly shared grids and forms.
+* Added multi-cell pasting.
+* Made views trashable.
+* Fixed bug where a cell value was not reverted when the request to the backend fails.
+* **Premium** Added row coloring.
+* Fixed row coloring bug when the table doesn't have any single select field.
+* Dropdown can now be focused with tab key
+* Added 0.0.0.0 and 127.0.0.1 as ALLOWED_HOSTS for connecting to the Baserow backend
+* Added a new BASEROW_EXTRA_ALLOWED_HOSTS optional comma separated environment variable
+  for configuring ALLOWED_HOSTS.
+* Fixed a bug for some number filters that causes all rows to be returned when text is entered.
+* Fixed webhook test call failing when request body is empty.
+* Fixed a bug where making a multiple cell selection starting from an 
+  empty `link_row` or `formula` field was not possible in Firefox.
+* New templates:
+  * Brand Assets Manager
+  * Business Conference
+  * Car Hunt
+  * Company Blog Management
+  * Event Staffing
+  * Hotel Bookings
+  * Nonprofit Grant Tracker
+  * Performance Reviews
+  * Product Roadmap
+  * Public Library Inventory
+  * Remote Team Hub
+  * Product Roadmap
+  * Hotel Bookings
+* Updated templates:
+  * Book writing guide
+  * Bucket List
+  * Call Center Log
+  * Company Asset Tracker
+  * Email Marketing Campaigns
+  * Home Inventory
+  * House Search
+  * Job Search
+  * Nonprofit Organization Management
+  * Personal Task Manager
+  * Political Campaign Contributions
+  * Project Tracker
+  * Recipe Book
+  * Restaurant Management
+  * Single Trip Planner
+  * Software Application Bug Tracker
+  * Student Planner
+  * Teacher Lesson Plans
+  * Team Check-ins
+  * University Admissions Management
+  * Wedding Client Planner
+
 ## Released (2022-03-03 1.9.1)
 
 * Fixed bug when importing a formula or lookup field with an incorrect empty value.
@@ -23,6 +121,7 @@
 * Upgraded `drf-spectacular`. Flag-style query parameters like `count` will now be displayed
   as `boolean` instead of `any` in the OpenAPI documentation. However, the behavior of these 
   flags is still the same.
+* Fixed API docs enum warnings. Removed `number_type` is no longer displayed in the API docs.
 * Fix the Baserow Heroku install filling up the hobby postgres by disabling template 
   syncing by default.
 
@@ -243,6 +342,7 @@
   * Book Catalog
   * Applicant Tracker
   * Project Tracker
+* Fixed earliest and latest date aggregations
 
 ## Released (2021-07-16)
 

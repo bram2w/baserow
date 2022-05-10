@@ -1,0 +1,574 @@
+{
+    "webhookModal": {
+        "title": "{name} webhooks",
+        "createWebhook": "Crear webhook",
+        "backToList": "volver a la lista"
+    },
+    "deleteWebhookModal": {
+        "title": "Eliminar {webhookName}",
+        "deleteButton": "Eliminar webhook",
+        "body": "¿Está seguro de que desea eliminar este webhook? No podrá restaurarlo más tarde."
+    },
+    "webhookList": {
+        "noWebhooksMessage": "Aún no ha creado ningún webhook. Los webhooks se pueden usar para informar a los sistemas de terceros cuando se ha creado, actualizado o eliminado una fila en Baserow."
+    },
+    "testWebhookModal": {
+        "title": "Webhook de prueba",
+        "unreachable": "Servidor inalcanzable"
+    },
+    "webhookForm": {
+        "inputLabels": {
+            "name": "Nombre",
+            "value": "Valor",
+            "requestMethod": "Metodo",
+            "url": "URL",
+            "userFieldNames": "Nombres de campo de usuario",
+            "events": "¿Qué eventos deberían desencadenar este webhook?",
+            "headers": "Encabezados adicionales",
+            "example": "Ejemplo de carga útil"
+        },
+        "errors": {
+            "urlField": "Este campo es obligatorio y debe ser una URL válida.",
+            "invalidHeaders": "Uno de los encabezados no es válido."
+        },
+        "checkbox": {
+            "sendUserFieldNames": "Usar nombre de campo en lugar de id"
+        },
+        "radio": {
+            "allEvents": "Envíame todo",
+            "customEvents": "Déjame seleccionar eventos individuales"
+        },
+        "triggerButton": "Activar webhook de prueba",
+        "deactivated": {
+            "title": "El webhook está desactivado",
+            "content": "Este webhook se ha desactivado porque ha habido demasiados errores consecutivos. Consulte el registro de llamadas para obtener más detalles. Haga clic en el botón de abajo para activarlo de nuevo. No olvide guardar el webhook después de activarlo.",
+            "activate": "Activar"
+        }
+    },
+    "webhook": {
+        "details": "detalles",
+        "lastCall": "Última llamada: {lastCallTime}",
+        "noCalls": "No se hicieron llamadas",
+        "callLog": "registro de llamadas",
+        "triggerDescription": "Disparadores en cada evento | Se activa el evento {count} | Disparadores en {count} eventos"
+    },
+    "createWebhook": {
+        "errorTableWebhookMaxLimitExceededTitle": "Max webhooks excedidos",
+        "errorTableWebhookMaxLimitExceededDescription": "No se puede crear el webhook porque se excedió la cantidad máxima de webhooks por tabla."
+    },
+    "sidebar": {
+        "viewAPI": "Ver documentos API",
+        "createTable": "Crear tabla"
+    },
+    "sidebarItem": {
+        "exportTable": "Exportar tabla"
+    },
+    "apiToken": {
+        "create": "crear",
+        "read": "leer",
+        "update": "actualizar",
+        "delete": "eliminar",
+        "tokenPrefix": "Token:",
+        "viewAPIDocs": "Ver la documentación de la API",
+        "generateNewToken": "Generar nuevo token",
+        "showOrHide": "Mostrar u ocultar el token",
+        "copyToClipboard": "Copiar al portapapeles",
+        "showDatabases": "mostrar bases de datos"
+    },
+    "apiTokenSettings": {
+        "title": "Tokens de API personales",
+        "createToken": "Crear token",
+        "noTokensMessage": "Aún no ha creado un token de API. Puede usar tokens de API para autenticarse con los puntos finales de la API REST donde puede crear, leer, actualizar y eliminar filas. Es posible establecer permisos a nivel de tabla.",
+        "hasFullPermissions": "Tiene permisos completos, también para todos los niños.",
+        "hasOnlySelectedPermissions": "Solo tiene permisos para los niños seleccionados.",
+        "noPermissions": "No tiene permisos.",
+        "createNewTitle": "Crear nuevo token de API",
+        "backToOverview": "De regreso a la visión general"
+    },
+    "apiTokenForm": {
+        "nameLabel": "Nombre",
+        "groupLabel": "Grupo"
+    },
+    "apiDocsSelectDatabase": {
+        "needOneDatabase": "Debe tener al menos una base de datos para ver la documentación de la API."
+    },
+    "apiDocsExample": {
+        "requestSample": "Solicitar muestra",
+        "responseSample": "Muestra de respuesta",
+        "userFieldNames": "Nombres de campo de usuario"
+    },
+    "apiDocsParameter": {
+        "optional": "Opcional",
+        "defaultValue": "Default: {value}"
+    },
+    "apiDocsTableGetRow": {
+        "description": "Obtenga una sola fila {name}.",
+        "rowId": "El identificador único de la fila que se solicita."
+    },
+    "apiDocsErrors": {
+        "errorCode": "Código de error",
+        "name": "Nombre",
+        "description": "Descripción",
+        "okDescription": "Solicitud completada con éxito.",
+        "badRequestDescription": "La solicitud contiene valores no válidos o no se pudo analizar el JSON.",
+        "unauthorizedDescription": "Cuando intenta acceder a un punto final sin un token válido.",
+        "notFoundDescription": "No se encuentra la fila o la tabla.",
+        "requestEntityTooLargeDescription": "La solicitud superó el tamaño de carga útil máximo permitido.",
+        "internalErrorDescription": "El servidor encontró una condición inesperada.",
+        "badGatewayDescription": "Baserow se está reiniciando o hay una interrupción inesperada en curso.",
+        "unavailableDescription": "El servidor no pudo procesar su solicitud a tiempo."
+    },
+    "apiDocsTableFields": {
+        "tableTitle": "{name} tabla",
+        "tableId": "El ID de esta tabla es:",
+        "description": "Cada fila de la tabla {name} contiene los siguientes campos.",
+        "id": "ID",
+        "name": "Nombre",
+        "type": "Tipo",
+        "compatibleFilters": "Filtros compatibles"
+    },
+    "apiDocsTableListRows": {
+        "description": "Para enumerar las filas en la tabla *{name}*, se debe realizar una solicitud `GET` al extremo *{name}*. La respuesta está paginada y, de forma predeterminada, se devuelve la primera página. La página correcta se puede obtener proporcionando los parámetros de consulta `página` y `tamaño`.",
+        "page": "Define qué página de filas debe devolverse.",
+        "size": "Define cuántas filas se deben devolver por página.",
+        "userFieldNames": "Cuando se proporciona cualquier valor para el parámetro GET `user_field_names`, los nombres de campo devueltos por este extremo serán los nombres reales de los campos.\n\n Si no se proporciona el parámetro GET `user_field_names`, todos los nombres de campo devueltos serán `field_` seguidos de la identificación del campo. Por ejemplo, `field_1` se refiere al campo con una identificación de `1`.\n\n Además, cuando se establece `user_field_names`, cambia el comportamiento de los otros parámetros GET `order_by`, `include` y `exclude`. En su lugar, esperan listas separadas por comas de los nombres de campo reales.",
+        "search": "Si se proporcionan, solo se devolverán las filas con datos que coincidan con la consulta de búsqueda.",
+        "orderBy": "Opcionalmente se pueden ordenar las filas por campos separados por coma. De forma predeterminada o si se antepone un '+', un campo se ordena en orden ascendente (A-Z), pero al anteponer el campo con un '-' se puede ordenar de forma descendente (Z-A).\n\n #### Con `user_field_names`:\n\n `order_by` debe ser una lista separada por comas de los nombres de los campos por ordenar. Por ejemplo, si proporciona el siguiente parámetro GET `order_by=My Field,-My Field 2`, las filas se ordenarán por el campo llamado `My Field` en orden ascendente. Si algunos campos tienen el mismo valor, ese subconjunto se ordenará por el campo llamado `Mi campo 2` en orden descendente.\n\n Asegúrese de que los campos con nombres que comienzan con `+` o `-` estén explícitamente precedidos por otro `+` o `-`. Por ejemplo, `+-Nombre`.\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n#### Sin `user_field_names`:\n\n `order_by` debe ser una lista separada por comas de `field_` seguida de la identificación del campo por el que ordenar. Por ejemplo, si proporciona el siguiente parámetro GET `order_by=field_1,-field_2`, las filas se ordenarán por `field_1` en orden ascendente. Si algunos campos tienen el mismo valor, ese subconjunto se ordenará por `field_2` en orden descendente.",
+        "filter": "Las filas se pueden filtrar opcionalmente por los mismos filtros de vista disponibles para las vistas. Se pueden proporcionar múltiples filtros si siguen el mismo formato. Las variables `field` y `filter` indican cómo filtrar y el valor indica dónde filtrar.\n\n Por ejemplo, si proporciona el siguiente parámetro GET `filter__field_1__equal=test`, solo se devolverán las filas donde el valor de field_1 es igual a test.",
+        "filterLink": "Puede encontrar una lista de todos los filtros aquí.",
+        "filterType": "- `Y`: Indica que las filas deben coincidir con todos los filtros proporcionados.\n- `OR`: Indica que las filas solo tienen que coincidir con uno de los filtros.\n\n Esto funciona solo si se proporcionan dos o más filtros.",
+        "include": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para incluir proporcionando el parámetro de consulta de inclusión.\n\n #### Con `user_field_names`:\n\n `include` debe ser una lista separada por comas de nombres de campos que se incluirán en los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `include=My Field,-My Field 2`, solo se incluirán esos campos (a menos que se excluyan explícitamente).\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `include` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para incluir en los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` solo se incluirán esos campos (a menos que se excluyan explícitamente).",
+        "exclude": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para excluir proporcionando el parámetro de consulta de exclusión.\n\n #### Con `user_field_names`:\n\n `excluir` debe ser una lista separada por comas de nombres de campos que se excluirán de los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `exclude=My Field,-My Field 2`, esos campos se excluirán.\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `exclude` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para excluir de los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` se excluirán."
+    },
+    "apiDocsIntro": {
+        "intro": "La base de datos {name} proporciona una manera fácil de integrar los datos con cualquier sistema externo. La API sigue la semántica REST, utiliza JSON para codificar objetos y se basa en códigos HTTP estándar, errores de lectura humana y mecánica para señalar los resultados de las operaciones.",
+        "autoDocDescription": "Esta documentación se genera automáticamente en base a las tablas y campos que se encuentran en su base de datos. Si realiza cambios en su base de datos, tabla o campos, es posible que la interfaz API también haya cambiado. Por lo tanto, asegúrese de actualizar la implementación de su API en consecuencia.",
+        "databaseId": "El ID de esta base de datos es:",
+        "jsClient": "Cliente API de ejemplo de Javascript:",
+        "pythonClient": "Cliente API de ejemplo de Python:"
+    },
+    "apiDocsTableListFields": {
+        "description": "Para enumerar los campos de la tabla {name}, se debe realizar una solicitud `GET` al extremo de los campos {name}. Solo es posible listar los campos si el token tiene permisos de lectura, creación o actualización.",
+        "resultFieldProperties": "Propiedades del campo de resultado",
+        "id": "Clave principal del campo. Se puede usar para generar el nombre de la columna de la base de datos agregando el prefijo `field_`.",
+        "name": "Nombre del campo.",
+        "tableId": "ID de tabla relacionada.",
+        "order": "Orden de campos en la tabla. 0 para el primer campo.",
+        "primary": "Indica si el campo es un campo principal. Si es `verdadero`, el campo no se puede eliminar y el valor debe representar la fila completa.",
+        "type": "Tipo definido para este campo.",
+        "extraProps": "Algunas propiedades adicionales no se describen aquí porque son específicas del tipo."
+    },
+    "apiDocsTableDeleteRow": {
+        "description": "Elimina una fila {name} existente.",
+        "rowId": "El identificador único de la fila que debe eliminarse."
+    },
+    "apiDocsTableMoveRow": {
+        "description": "Mueve una fila {name} existente antes de otra fila. Si no se proporciona `before_id`, la fila se moverá al final de la tabla.",
+        "rowId": "Mueve la fila relacionada con el valor.",
+        "before": "Mueve la fila relacionada con el `row_id` dado antes de la fila relacionada con el valor proporcionado. Si no se proporciona, la fila se moverá al final."
+    },
+    "apiDocsTableUpdateRow": {
+        "description": "Actualiza una fila {name} existente.",
+        "rowId": "El identificador único de la fila que debe actualizarse.",
+        "before": "Si se proporciona, la fila recién creada se colocará antes de la fila con la identificación proporcionada."
+    },
+    "apiDocsTableCreateRow": {
+        "description": "Crear una nueva fila {name}.",
+        "before": "Si se proporciona, la fila recién creada se colocará antes de la fila con la identificación proporcionada."
+    },
+    "apiDocsAuth": {
+        "description": "Baserow utiliza una autenticación basada en token simple. Debe generar al menos un token de API en su {settingsLink} para usar los puntos finales que se describen a continuación. Es posible otorgar permisos de creación, lectura, actualización y eliminación hasta el nivel de la tabla por token. Puede autenticarse en la API proporcionando su token de API en el encabezado del token del portador de autorización HTTP. Todas las solicitudes de API deben autenticarse y realizarse a través de HTTPS.",
+        "settingsLink": "ajustes"
+    },
+    "apiDocsFilters": {
+        "filter": "Filtro",
+        "exampleValue": "Valor de ejemplo",
+        "example": "Ejemplo completo",
+        "field": "campo {name}"
+    },
+    "fieldTextSubForm": {
+        "placeholder": "Texto predeterminado"
+    },
+    "fieldSingleSelectSubForm": {
+        "optionsLabel": "Opciones"
+    },
+    "fieldSingleSelectDropdown": {
+        "notFound": "Opción no encontrada"
+    },
+    "fieldDateSubForm": {
+        "dateFormatLabel": "Formato de fecha",
+        "dateFormatEuropean": "Europeo",
+        "dateFormatUS": "EUA",
+        "dateFormatISO": "ISO",
+        "includeTimeLabel": "Incluir tiempo",
+        "timeFormatLabel": "Formato de tiempo",
+        "24Hour": "24 horas",
+        "12Hour": "12 horas"
+    },
+    "fieldLinkRowSubForm": {
+        "noTable": "Necesita al menos otra tabla en la misma base de datos para vincular.",
+        "selectTableLabel": "Seleccione una tabla para vincular"
+    },
+    "fieldSelectOptions": {
+        "add": "Añadir una opción"
+    },
+    "fieldNumberSubForm": {
+        "typeLabel": "Tipo de número",
+        "integer": "Entero",
+        "decimal": "Decimal",
+        "decimalPlacesLabel": "Lugares decimales",
+        "allowNegative": "Permitir negativo"
+    },
+    "fieldContext": {
+        "editField": "Editar campo",
+        "deleteField": "Eliminar campo"
+    },
+    "fieldForm": {
+        "name": "Nombre",
+        "fieldAlreadyExists": "Ya existe un campo con este nombre.",
+        "nameNotAllowed": "Este nombre de campo no está permitido.",
+        "nameTooLong": "Este nombre de campo es demasiado largo."
+    },
+    "fieldLookupSubForm": {
+        "noTable": "Necesita al menos un campo de fila de vínculo para crear un campo de búsqueda.",
+        "selectThroughFieldLabel": "Seleccione un campo de fila de enlace",
+        "selectTargetFieldLabel": "Seleccione un campo para buscar"
+    },
+    "fieldFormulaNumberSubForm": {
+        "typeLabel": "Tipo de número",
+        "integer": "Entero",
+        "decimal": "Decimal",
+        "decimalPlacesLabel": "Lugares decimales",
+        "allowNegative": "Permitir negativo"
+    },
+    "fieldRatingSubForm": {
+        "maxValue": "Max",
+        "color": "Color",
+        "style": "Estilo"
+    },
+    "rowCreateModal": {
+        "addField": "Agregue campo"
+    },
+    "selectRowContent": {
+        "search": "Filas de búsqueda"
+    },
+    "rowEditModal": {
+        "addField": "Agregue campo"
+    },
+    "rowEditFieldMultipleSelect": {
+        "addOption": "Añadir otra opción"
+    },
+    "rowEditFieldFile": {
+        "addFile": "Agregar un archivo",
+        "sizes": {
+            "0": "Bytes",
+            "1": "KB",
+            "2": "MB",
+            "3": "GB",
+            "4": "TB",
+            "5": "PB"
+        }
+    },
+    "rowEditFieldLinkRow": {
+        "addLink": "Añadir otro enlace"
+    },
+    "tableCSVImporter": {
+        "chooseFileLabel": "Elija el archivo CSV",
+        "chooseFileDescription": "Puede importar un CSV existente cargando el archivo .CSV con datos tabulares. La mayoría de las aplicaciones de hojas de cálculo le permitirán exportar su hoja de cálculo como un archivo .CSV.",
+        "chooseFile": "Elija el archivo CSV",
+        "columnSeparator": "Separador de columnas",
+        "recordSeparator": "separador de registros",
+        "unitSeparator": "Separador de unidades",
+        "encoding": "Codificación",
+        "firstRowHeader": "La primera fila es el encabezado",
+        "limitFileSize": "El tamaño máximo de archivo es {limit} MB.",
+        "limitError": "No es posible importar más de {limit} filas.",
+        "emptyCSV": "Este archivo CSV está vacío."
+    },
+    "tableForm": {
+        "name": "Nombre"
+    },
+    "tableImporterPreview": {
+        "label": "Vista previa rápida",
+        "remaining": "{remaining} otras filas"
+    },
+    "tableXMLImporter": {
+        "fileLabel": "Elija el archivo XML",
+        "fileDescription": "Puede importar un XML existente cargando el archivo .XML con datos tabulares, es decir:",
+        "chooseButton": "Elija el archivo XML",
+        "processingError": "Ocurrió un error al procesar XML: {errors}",
+        "emptyError": "Este archivo XML está vacío.",
+        "limitFileSize": "El tamaño máximo de archivo es {limit} MB.",
+        "limitError": "No es posible importar más de {limit} filas."
+    },
+    "tableJSONImporter": {
+        "fileLabel": "Elija el archivo JSON",
+        "fileDescription": "Puede importar un archivo JSON existente cargando el archivo .json con datos tabulares, es decir:",
+        "chooseButton": "Elija el archivo JSON",
+        "encodingLabel": "Codificación",
+        "processingError": "Ocurrió un error al analizar JSON: {error}",
+        "arrayError": "El archivo JSON no es una matriz.",
+        "emptyError": "Este archivo JSON está vacío.",
+        "limitFileSize": "El tamaño máximo de archivo es {limit} MB.",
+        "limitError": "No es posible importar más de {limit} filas."
+    },
+    "tablePasteImporter": {
+        "pasteLabel": "Pegar los datos de la tabla",
+        "pasteDescription": "Puede copiar las celdas de una hoja de cálculo y pegarlas a continuación.",
+        "firstRowHeader": "La primera fila es el encabezado",
+        "limitError": "No es posible importar más de {limit} filas."
+    },
+    "createTableModal": {
+        "title": "Crear nueva tabla",
+        "importLabel": "¿Le gustaría importar datos existentes?",
+        "newTable": "Comenzar con una nueva tabla",
+        "addButton": "Agregar tabla"
+    },
+    "formulaAdvancedEditContext": {
+        "textAreaFormulaInputPlaceholder": "Haga clic para editar la fórmula",
+        "fields": "Campo",
+        "functions": "Funciones",
+        "operators": "Operadores",
+        "fieldType": "Un campo {type}"
+    },
+    "fieldFormulaInitialSubForm": {
+        "formulaInputPlaceholder": "Haga clic para editar la fórmula",
+        "refreshFormulaOptions": "Actualizar opciones de fórmula"
+    },
+    "formulaFieldItemDescription": {
+        "syntax": "Sintaxis",
+        "examples": "Ejemplos"
+    },
+    "viewSearchContext": {
+        "searchInRows": "Buscar en todas las filas",
+        "hideNotMatching": "ocultar filas que no coinciden"
+    },
+    "viewsContext": {
+        "searchView": "Buscar vistas",
+        "noViews": "No se encontraron vistas"
+    },
+    "viewFilterTypeLinkRow": {
+        "unnamed": "fila sin nombre {value}",
+        "choose": "elegir fila"
+    },
+    "viewFilterContext": {
+        "addFilter": "Añadir filtro",
+        "disableAllFilters": "Todo impedido",
+        "noFilterTitle": "Aún no has creado un filtro.",
+        "noFilterText": "Los filtros le permiten mostrar filas que se aplican a sus condiciones.",
+        "where": "Donde",
+        "and": "Y",
+        "or": "O"
+    },
+    "viewFilterTypeFileTypeDropdown": {
+        "image": "imagen",
+        "document": "documento"
+    },
+    "createViewModal": {
+        "createNew": "Crear nueva {view}",
+        "add": "Añadir {view}"
+    },
+    "shareViewLink": {
+        "shareView": "Compartir {viewTypeSharingLinkName}",
+        "shareViewTitle": "Cree un enlace compartido privado a {viewTypeSharingLinkName}",
+        "sharedViewTitle": "Este {viewTypeSharingLinkName} se comparte actualmente a través de un enlace privado",
+        "sharedViewDescription": "Las personas que tienen el enlace pueden ver {viewTypeSharingLinkName}.",
+        "disableLink": "deshabilitar enlace compartido",
+        "generateNewUrl": "generar nueva url",
+        "copyURL": "copiar URL",
+        "EnablePassword": "Restringir acceso con una contraseña",
+        "DisablePassword": "El acceso está protegido con contraseña",
+        "ChangePassword": "Cambiar"
+    },
+    "viewSortContext": {
+        "noSortTitle": "Todavía no has creado una clasificación",
+        "noSortText": "Ordenar le permite ordenar filas por un campo.",
+        "sortBy": "Ordenar por",
+        "thenBy": "Ordenar por",
+        "addSort": "elegir un campo para ordenar por"
+    },
+    "viewSort": {
+        "sort": "Ordenar | 1 Ordenar | {count} clasifica"
+    },
+    "viewRotateSlugModal": {
+        "title": "Actualizar URL",
+        "refreshWarning": "¿Está seguro de que desea actualizar la URL de {viewName}? Después de actualizar, se generará una nueva URL y no será posible acceder a {viewTypeSharingLinkName} a través de la antigua URL. Todas las personas con las que haya compartido la URL no podrán acceder a {viewTypeSharingLinkName}.",
+        "generateNewURL": "Generar nueva URL"
+    },
+    "viewFieldsContext": {
+        "coverField": "campo de cobertura",
+        "noCover": "Sin cobertura",
+        "search": "Buscar campos",
+        "hideAll": "Esconder todo",
+        "showAll": "Mostrar todo"
+    },
+    "viewFilterTypeBoolean": {
+        "selected": "Seleccionado"
+    },
+    "viewFilter": {
+        "filter": "Filtro | 1 filtro | {count} filtros"
+    },
+    "viewContext": {
+        "exportView": "Exportar vista",
+        "renameView": "Renombrar vista",
+        "webhooks": "Webhooks",
+        "deleteView": "Eliminar vista"
+    },
+    "deleteViewModal": {
+        "title": "Eliminar {name}",
+        "description": "¿Está seguro de que desea eliminar la vista {nombre}? Los datos de la tabla se conservarán, pero se eliminarán los filtros, clasificaciones y anchos de campo relacionados con la vista.",
+        "delete": "Eliminar vista"
+    },
+    "viewForm": {
+        "name": "Nombre"
+    },
+    "galleryViewHeader": {
+        "customizeCards": "Personalizar tarjetas"
+    },
+    "gridViewHide": {
+        "hideField": "Ocultar campos | 1 campo oculto | {count} campos ocultos"
+    },
+    "gridViewFieldType": {
+        "insertLeft": "Insertar a la izquierda",
+        "insertRight": "Insertar a la derecha",
+        "createFilter": "Crear filtro",
+        "sortField": "Clasificar",
+        "hideField": "Ocultar campo"
+    },
+    "gridViewRow": {
+        "rowNotMatchingFilters": "La fila no coincide con los filtros",
+        "rowNotMatchingSearch": "La fila no coincide con la búsqueda",
+        "rowHasMoved": "La fila se ha movido"
+    },
+    "gridView": {
+        "insertRowAbove": "Insertar fila arriba",
+        "insertRowBelow": "Insertar fila debajo",
+        "enlargeRow": "Ampliar fila",
+        "deleteRow": "Borrar fila",
+        "rowCount": "Sin filas | 1 fila | {count} filas"
+    },
+    "gridViewFieldLinkRow": {
+        "unnamed": "fila sin nombre {value}"
+    },
+    "previewAny": {
+        "externalWarning": "Abrir su archivo a través de un servicio externo expone su archivo a sus servidores."
+    },
+    "exportTableModal": {
+        "failedTitle": "Exportación fallida",
+        "failedDescription": "La exportación falló debido a un error del servidor.",
+        "cancelledTitle": "Exportación cancelada",
+        "cancelledDescription": "La exportación fue cancelada."
+    },
+    "exporterTypeChoices": {
+        "formatLabel": "¿A qué formato le gustaría exportar?"
+    },
+    "exportTableForm": {
+        "viewLabel": "Seleccione la vista para exportar:",
+        "typeError": "No hay ningún tipo de exportador disponible, seleccione una vista diferente o la tabla completa."
+    },
+    "exportTableLoadingBar": {
+        "export": "Exportar",
+        "download": "Descargar"
+    },
+    "exportTableDropdown": {
+        "exportEntireTable": "Exportar toda la tabla"
+    },
+    "tableCSVExporter": {
+        "columnSeparatorLabel": "Separador de columnas",
+        "recordSeparator": "separador de registros",
+        "unitSeparator": "Separador de unidades",
+        "encodingLabel": "Codificación",
+        "firstRowIsHeaderLabel": "La primera fila es el encabezado"
+    },
+    "apiDocsDatabase": {
+        "pageTitle": "Documentación de la API de la base de datos de {name}",
+        "back": "volver al tablero",
+        "openDatabase": "base de datos abierta"
+    },
+    "apiDocsComponent": {
+        "title": "REST API",
+        "intro": "Una vez que haya creado el esquema de su base de datos y la clave API en {settingsLink}, su base de datos Baserow proporciona sus propios puntos finales de API REST para crear, leer, actualizar y eliminar filas.",
+        "settings": "ajustes",
+        "selectApplicationTitle": "¿Para qué base de datos desea ver la documentación?",
+        "signIn": "inicia sesión para empezar",
+        "back": "volver al tablero"
+    },
+    "viewAggregationType": {
+        "emptyCount": "Vacio",
+        "notEmptyCount": "Lleno",
+        "emptyPercentage": "Porcentaje vacío",
+        "notEmptyPercentage": "Porcentaje lleno",
+        "checkedCount": "Comprobado",
+        "notCheckedCount": "Desenfrenado",
+        "checkedPercentage": "Porcentaje marcado",
+        "notCheckedPercentage": "Porcentaje sin marcar",
+        "min": "Min",
+        "max": "Max",
+        "earliestDate": "Fecha más temprana",
+        "earliestDateShort": "Más temprano",
+        "latestDate": "fecha más reciente",
+        "latestDateShort": "Más reciente",
+        "uniqueCount": "Único",
+        "sum": "Sum",
+        "average": "Promedio",
+        "median": "Median",
+        "stdDev": "Desviación Estándar",
+        "stdDevShort": "Std dev",
+        "variance": "Diferencia"
+    },
+    "databaseForm": {
+        "importLabel": "¿Le gustaría importar datos existentes?",
+        "emptyLabel": "Empezar desde el principio",
+        "airtableLabel": "Importar desde Airtable (beta)"
+    },
+    "importFromAirtable": {
+        "airtableShareLinkTitle": "Comparte un enlace a tu Base",
+        "airtableShareLinkDescription": "Para importar su base Airtable, debe tener un enlace compartido a toda su base. En Airtable, haz clic en el botón de compartir en la esquina superior derecha después de abrir tu base. Luego de eso debes elegir la opción \"Acceso a la base\". En el modal de compartir, puede hacer clic en el botón \"Crear un enlace compartido para toda la base\" y luego en \"Enlace privado de solo lectura\". Copie el enlace público y péguelo en la entrada a continuación.",
+        "airtableShareLinkBeta": "Tenga en cuenta que esta función está en versión beta, sus tablas, campos (excepto fórmula, búsqueda y recuento) y datos se importarán. Sus vistas no se importarán.",
+        "airtableShareLinkPaste": "Pega el enlace aquí",
+        "importButtonLabel": "Importar desde Airtable",
+        "openButtonLabel": "Abrir base de datos importada",
+        "importError": "Algo salió mal",
+        "statePending": "Esperando para empezar",
+        "stateFailed": "Fallido",
+        "stateFinished": "Terminado",
+        "stateDownloadingBase": "Descargando el esquema base",
+        "stateConverting": "Conversión a Baserow",
+        "stateDownloadingFiles": "Descargando archivos",
+        "stateImporting": "Importando",
+        "stateImportingTable": "Importando tabla {table}",
+        "errorJobAlreadyRunningTitle": "Ya corriendo",
+        "errorJobAlreadyRunningDescription": "Ya se está ejecutando otro trabajo de importación. Tienes que esperar a que termine antes de empezar otro."
+    },
+    "viewDecorator": {
+        "decorator": "Color | 1 Color | {recuento} Colores"
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "añadir campo de selección individual"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "añadir decorador"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Introduce una contraseña",
+        "newPasswordDescription": "El enlace público sólo será accesible después de introducir la contraseña. Esta contraseña se guardará encriptada.",
+        "changePasswordTitle": "Cambiar contraseña",
+        "changePasswordDescription": "Al cambiar la contraseña, la anterior dejará de funcionar. Esta contraseña se guardará encriptada.",
+        "changePasswordSave": "Cambiar contraseña",
+        "newPasswordSave": "Establecer contraseña"
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Desactivar la protección de contraseña",
+        "description": "¿Estás seguro que quieres desactivar la protección por contraseña de este enlace público? Al desactivarla, la contraseña se borrará y no será posible recuperarla",
+        "disable": "Desactivar"
+    },
+    "publicViewAuthLogin": {
+        "title": "Esta página está protegida por contraseña",
+        "description": "Introduce la contraseña correcta para acceder a la página.",
+        "enter": "Entrar",
+        "error": {
+            "incorrectPasswordTitle": "Contraseña incorrecta",
+            "incorrectPasswordText": "La contraseña proporcionada es incorrecta."
+        }
+    }
+}

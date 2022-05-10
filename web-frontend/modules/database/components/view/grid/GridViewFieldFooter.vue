@@ -75,9 +75,15 @@ export default {
       required: true,
     },
   },
+  data() {
+    return { pendingValueUpdate: false }
+  },
   computed: {
     aggregationType() {
       return this.fieldOptions[this.field.id]?.aggregation_type
+    },
+    aggregationRawType() {
+      return this.fieldOptions[this.field.id]?.aggregation_raw_type
     },
     value() {
       if (this.fieldAggregationData[this.field.id] !== undefined) {
@@ -111,21 +117,19 @@ export default {
     },
   },
   watch: {
-    aggregationType(value) {
+    aggregationRawType(value) {
       if (!value) {
         return
       }
-      this.$store.dispatch(
-        this.storePrefix + 'view/grid/fetchFieldAggregationData',
-        {
-          view: this.view,
-          fieldId: this.field.id,
-          options: {
-            aggregation_raw_type: this.viewAggregationType.getRawType(),
-            aggregation_type: this.viewAggregationType.getType(),
-          },
-        }
-      )
+      // If an update is already pending, we don't need this one.
+      if (!this.pendingValueUpdate) {
+        this.$store.dispatch(
+          this.storePrefix + 'view/grid/fetchAllFieldAggregationData',
+          {
+            view: this.view,
+          }
+        )
+      }
     },
   },
   beforeCreate() {
@@ -159,13 +163,19 @@ export default {
         values.aggregation_raw_type = selectedAggregation.getRawType()
       }
 
-      await this.$store.dispatch(
-        this.storePrefix + 'view/grid/updateFieldOptionsOfField',
-        {
-          field: this.field,
-          values,
-        }
-      )
+      // Prevent the watcher to trigger while value is not yet saved on server
+      this.pendingValueUpdate = true
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          {
+            field: this.field,
+            values,
+          }
+        )
+      } finally {
+        this.pendingValueUpdate = false
+      }
     },
   },
 }

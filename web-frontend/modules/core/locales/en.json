@@ -180,12 +180,36 @@
         "content": "Connection to the server has failed. Please refresh the page.",
         "action": "Refresh page"
     },
+    "AuthorizationErrorNotification": {
+        "title": "Authorization error",
+        "content": "It looks like you do not have the permissions to see this resource.",
+        "action": "Refresh page"
+    },
     "restoreNotification": {
         "restore": "Restore deleted {type}"
     },
     "copyingNotification": {
         "title": "Copying...",
         "content": "Preparing your data"
+    },
+    "pastingNotification": {
+        "title": "Pasting...",
+        "content": "Preparing your data"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Undoing...",
+        "undoingText": "Undoing your action",
+        "undoneTitle": "Undone",
+        "undoneText": "Action is undone",
+        "noMoreUndo": "No more actions to undo",
+        "skippingUndoDueToError": "Undo failed due to unknown error, skipping it.",
+        "redoingTitle": "Redoing...",
+        "redoingText": "Redoing your action",
+        "redoneTitle": "Redone",
+        "redoneText": "Action is redone",
+        "noMoreRedo": "No more actions to redo",
+        "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
+        "failed": "Failed"
     },
     "errorLayout": {
         "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",

@@ -41,6 +41,7 @@ import {
   EmptyViewFilterType,
   NotEmptyViewFilterType,
   DateEqualsTodayViewFilterType,
+  DateEqualsDaysAgoViewFilterType,
   DateEqualsCurrentMonthViewFilterType,
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
@@ -78,6 +79,7 @@ import gridStore from '@baserow/modules/database/store/view/grid'
 import galleryStore from '@baserow/modules/database/store/view/gallery'
 import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
+import publicStore from '@baserow/modules/database/store/view/public'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -177,6 +179,8 @@ import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
 import nl from '@baserow/modules/database/locales/nl.json'
 import de from '@baserow/modules/database/locales/de.json'
+import es from '@baserow/modules/database/locales/es.json'
+import it from '@baserow/modules/database/locales/it.json'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -188,6 +192,8 @@ export default (context) => {
     i18n.mergeLocaleMessage('fr', fr)
     i18n.mergeLocaleMessage('nl', nl)
     i18n.mergeLocaleMessage('de', de)
+    i18n.mergeLocaleMessage('es', es)
+    i18n.mergeLocaleMessage('it', it)
   }
 
   store.registerModule('table', tableStore)
@@ -197,9 +203,13 @@ export default (context) => {
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)
+  store.registerModule('page/view/public', publicStore)
   store.registerModule('template/view/grid', gridStore)
   store.registerModule('template/view/gallery', galleryStore)
   store.registerModule('template/view/form', formStore)
+
+  app.$registry.registerNamespace('viewDecorator')
+  app.$registry.registerNamespace('decoratorValueProvider')
 
   app.$registry.register('application', new DatabaseApplicationType(context))
   app.$registry.register('view', new GridViewType(context))
@@ -212,6 +222,10 @@ export default (context) => {
   app.$registry.register(
     'viewFilter',
     new DateEqualsTodayViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsDaysAgoViewFilterType(context)
   )
   app.$registry.register(
     'viewFilter',

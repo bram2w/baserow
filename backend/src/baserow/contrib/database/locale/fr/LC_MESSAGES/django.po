@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"POT-Creation-Date: 2022-04-22 08:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,20 +18,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: src/baserow/contrib/database/plugins.py:44
+#: src/baserow/contrib/database/plugins.py:45
 #, python-format
 msgid "%(first_name)s's company"
 msgstr "Entreprise de %(first_name)s"
 
-#: src/baserow/contrib/database/plugins.py:48
-msgid "Customers"
-msgstr "Clients"
+#~ msgid "Customers"
+#~ msgstr "Clients"
 
-#: src/baserow/contrib/database/plugins.py:50
-#: src/baserow/contrib/database/plugins.py:85
-msgid "Grid"
-msgstr "Grille"
+#~ msgid "Grid"
+#~ msgstr "Grille"
 
-#: src/baserow/contrib/database/plugins.py:83
-msgid "Projects"
-msgstr "Projets"
+#~ msgid "Projects"
+#~ msgstr "Projets"

@@ -2,10 +2,12 @@ import pytest
 import random
 from decimal import Decimal
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.contrib.database.views.exceptions import FieldAggregationNotSupported
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.core.trash.handler import TrashHandler
 
 from baserow.test_utils.helpers import setup_interesting_test_table
 
@@ -59,20 +61,30 @@ def test_view_empty_count_aggregation(data_fixture):
                 "empty_count",
             ),
             (
+                boolean_field,
+                "empty_count",
+            ),
+            (
+                number_field,
+                "empty_count",
+            ),
+        ],
+    )
+
+    assert result[f"field_{text_field.id}"] == 2
+    assert result[f"field_{boolean_field.id}"] == 2
+    assert result[f"field_{number_field.id}"] == 1
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
+            (
                 text_field,
                 "not_empty_count",
             ),
             (
                 boolean_field,
-                "empty_count",
-            ),
-            (
-                boolean_field,
                 "not_empty_count",
-            ),
-            (
-                number_field,
-                "empty_count",
             ),
             (
                 number_field,
@@ -80,15 +92,9 @@ def test_view_empty_count_aggregation(data_fixture):
             ),
         ],
     )
-
-    assert result[f"field_{text_field.id}__empty_count"] == 2
-    assert result[f"field_{text_field.id}__not_empty_count"] == 2
-
-    assert result[f"field_{boolean_field.id}__empty_count"] == 2
-    assert result[f"field_{boolean_field.id}__not_empty_count"] == 2
-
-    assert result[f"field_{number_field.id}__empty_count"] == 1
-    assert result[f"field_{number_field.id}__not_empty_count"] == 3
+    assert result[f"field_{text_field.id}"] == 2
+    assert result[f"field_{boolean_field.id}"] == 2
+    assert result[f"field_{number_field.id}"] == 3
 
     result = view_handler.get_field_aggregations(
         grid_view,
@@ -123,6 +129,13 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
             )
         )
 
+    result_empty = view_handler.get_field_aggregations(
+        grid_view, aggregation_query, model=model, with_total=True
+    )
+
+    aggregation_query = []
+    for field in model._field_objects.values():
+
         aggregation_query.append(
             (
                 field["field"],
@@ -130,16 +143,15 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
             )
         )
 
-    result = view_handler.get_field_aggregations(
-        grid_view, aggregation_query, model=model, with_total=True
+    result_not_emtpy = view_handler.get_field_aggregations(
+        grid_view, aggregation_query, model=model
     )
 
     for field in model._field_objects.values():
-        field_id = field["field"].id
         assert (
-            result[f"field_{field_id}__empty_count"]
-            + result[f"field_{field_id}__not_empty_count"]
-            == result["total"]
+            result_empty[field["field"].db_column]
+            + result_not_emtpy[field["field"].db_column]
+            == result_empty["total"]
         )
 
 
@@ -178,9 +190,9 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
             field_type = field["type"].type
 
             if field_type in ["url", "email", "rating", "phone_number"]:
-                assert result[f"field_{field_id}__unique_count"] == 2
+                assert result[f"field_{field_id}"] == 2
             else:
-                assert result[f"field_{field_id}__unique_count"] == 1
+                assert result[f"field_{field_id}"] == 1
 
 
 @pytest.mark.django_db
@@ -199,13 +211,13 @@ def test_view_number_aggregation(data_fixture):
     for i in range(30):
         model.objects.create(
             **{
-                f"field_{number_field.id}": random.randint(0, 100),
+                number_field.db_column: random.randint(0, 100),
             }
         )
 
     model.objects.create(
         **{
-            f"field_{number_field.id}": None,
+            number_field.db_column: None,
         }
     )
 
@@ -216,45 +228,87 @@ def test_view_number_aggregation(data_fixture):
                 number_field,
                 "min",
             ),
+        ],
+    )
+    assert result[number_field.db_column] == 1
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "max",
             ),
+        ],
+    )
+    assert result[number_field.db_column] == 94
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "sum",
             ),
+        ],
+    )
+
+    assert result[number_field.db_column] == 1546
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "average",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("51.53")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "median",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("52.5")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "std_dev",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("26.73")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "variance",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("714.72")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "decile",
             ),
         ],
     )
-
-    assert result[f"field_{number_field.id}__min"] == 1
-    assert result[f"field_{number_field.id}__max"] == 94
-    assert result[f"field_{number_field.id}__sum"] == 1546
-    assert round(result[f"field_{number_field.id}__median"], 2) == Decimal("52.5")
-    assert round(result[f"field_{number_field.id}__average"], 2) == Decimal("51.53")
-    assert round(result[f"field_{number_field.id}__std_dev"], 2) == Decimal("26.73")
-    assert round(result[f"field_{number_field.id}__variance"], 2) == Decimal("714.72")
-    assert result[f"field_{number_field.id}__decile"] == [
+    assert result[number_field.db_column] == [
         19.5,
         22.8,
         33.7,
@@ -301,3 +355,79 @@ def test_view_aggregation_errors(data_fixture):
                 ),
             ],
         )
+
+
+@pytest.mark.django_db
+def test_aggregation_is_updated_when_view_is_trashed(data_fixture):
+    """
+    Test that aggregation is updated when view is trashed
+
+    The following scenario is tested:
+    - Create two views
+    - Creat a field in both views
+    - Create and aggregation in both views
+    - Trash that view
+    - Change the field type to a different type that is
+      incompatible with the aggregation
+    - Restore the view
+    - Check that the aggregation is updated
+    """
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view_one = data_fixture.create_grid_view(table=table)
+    grid_view_two = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_number_field(user=user, table=table)
+    application = table.database
+
+    view_handler = ViewHandler()
+
+    model = table.get_model()
+
+    model.objects.create(**{field.db_column: 1})
+    model.objects.create(**{field.db_column: 2})
+
+    view_handler.update_field_options(
+        view=grid_view_one,
+        field_options={
+            field.id: {
+                "aggregation_type": "sum",
+                "aggregation_raw_type": "sum",
+            }
+        },
+    )
+
+    view_handler.update_field_options(
+        view=grid_view_two,
+        field_options={
+            field.id: {
+                "aggregation_type": "sum",
+                "aggregation_raw_type": "sum",
+            }
+        },
+    )
+
+    # Verify both views have an aggregation
+    aggregations_view_one = view_handler.get_view_field_aggregations(grid_view_one)
+    aggregations_view_two = view_handler.get_view_field_aggregations(grid_view_two)
+
+    assert field.db_column in aggregations_view_one
+    assert field.db_column in aggregations_view_two
+
+    # Trash the view and verify that the aggregation is not retreivable anymore
+    TrashHandler().trash(user, application.group, application, trash_item=grid_view_one)
+    aggregations = view_handler.get_view_field_aggregations(grid_view_one)
+    assert field.db_column not in aggregations
+
+    # Update the field and verify that the aggregation is removed from the
+    # not trashed view
+    FieldHandler().update_field(user, field, new_type_name="text")
+    aggregations_not_trashed_view = view_handler.get_view_field_aggregations(
+        grid_view_two
+    )
+    assert field.db_column not in aggregations_not_trashed_view
+
+    # Restore the view and verify that the aggregation
+    # is also removed from the restored view
+    TrashHandler().restore_item(user, "view", grid_view_one.id)
+    aggregations_restored_view = view_handler.get_view_field_aggregations(grid_view_one)
+    assert field.db_column not in aggregations_restored_view

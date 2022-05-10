@@ -210,6 +210,16 @@ export default {
       )
     },
   },
+  watch: {
+    databases: {
+      handler() {
+        // if databases or tables change, we need to ensure that token permissions
+        // are still valid
+        this.removeInvalidPermissions()
+      },
+      deep: true,
+    },
+  },
   methods: {
     copyTokenToClipboard() {
       copyToClipboard(this.token.key)
@@ -354,6 +364,42 @@ export default {
         this.exists(operation, 'database', database.id) ||
         this.exists(operation, 'table', table.id)
       )
+    },
+    /**
+     * Indicates if the permission refer to a database or table still existent.
+     * This fixes the problem that arises when user deletes a database or table from
+     * another browser tab while this form is opened.
+     * We need to delete the permissions that are pointing to the deleted database
+     * before sending updates to the backend if we want to avoid errors.
+     */
+    removeInvalidPermissions() {
+      const tokenPermissions = JSON.parse(
+        JSON.stringify(this.token.permissions)
+      )
+      for (const [operation, permissions] of Object.entries(tokenPermissions)) {
+        if (!Array.isArray(permissions)) {
+          continue
+        }
+        permissions.forEach((permission) => {
+          if (!this.isPermissionValid(permission)) {
+            const [permType, permId] = permission
+            this.remove(operation, permType, permId)
+          }
+        })
+      }
+    },
+    isPermissionValid(permission) {
+      const databases = this.databases
+      const [permType, permId] = permission
+      if (permType === 'database') {
+        const database = databases.find((database) => database.id === permId)
+        return database !== undefined
+      } else if (permType === 'table') {
+        return databases.find((database) => {
+          const table = database.tables.find((table) => table.id === permId)
+          return table !== undefined
+        })
+      }
     },
     /**
      * Changes the token permission state of all databases and tables of the given

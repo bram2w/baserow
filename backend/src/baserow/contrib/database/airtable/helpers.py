@@ -24,7 +24,12 @@ def import_airtable_choices(type_options: dict) -> List[SelectOption]:
         SelectOption(
             id=choice["id"],
             value=choice["name"],
-            color=AIRTABLE_BASEROW_COLOR_MAPPING.get(choice["color"], "blue"),
+            color=AIRTABLE_BASEROW_COLOR_MAPPING.get(
+                # The color isn't always provided, hence the fallback to an empty
+                # color, which will fallback on the blue color.
+                choice.get("color", ""),
+                "blue",
+            ),
             order=order.index(choice["id"]),
         )
         for choice in choices.values()

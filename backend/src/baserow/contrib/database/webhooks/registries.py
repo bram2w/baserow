@@ -39,6 +39,9 @@ class WebhookEventType(Instance):
         super().__init__()
         self.signal.connect(self.listener)
 
+    def get_test_call_before_return(self, **kwargs):
+        """Prepare a `before_return` value for a webhook event."""
+
     def get_payload(self, event_id, webhook, **kwargs):
         """
         The default payload of the event type. This method can be overwritten in

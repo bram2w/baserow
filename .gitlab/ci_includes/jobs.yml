@@ -434,6 +434,11 @@
           exit 1
       fi
 
+      if [[ -z "$PROJECT_READ_ONLY_API_TOKEN" && "$ENABLE_JOB_SKIPPING" = "true" ]]; then
+        echo -e "$RED Disabling job skipping as PROJECT_READ_ONLY_API_TOKEN env variable not set. $CLEAR"
+        ENABLE_JOB_SKIPPING=false
+      fi
+
       # If we are doing a full rebuild then force run all the linting and tests.
       # Always do this on master as we are always doing a full image rebuild and hence
       # always need to run the tests.
@@ -448,7 +453,7 @@
           if [[ "$COMMIT_GITLAB_JOBS" ]]; then
             echo -e "\e[0Ksection_start:`date +%s`:$COMMIT_HASH$JOB_NAME[collapsed=true]\r\e[0KRaw job status download for $JOB_NAME and $COMMIT_HASH"
             echo "Got these job statuses: $COMMIT_GITLAB_JOBS"
-            JOB_ID=$(echo $COMMIT_GITLAB_JOBS| jq "[.[] | select(.status == \"success\")][0].id")
+            JOB_ID=$(echo $COMMIT_GITLAB_JOBS| jq "[.[] | select(.status == \"success\")][0].id" || '')
             echo -e "\e[0Ksection_end:`date +%s`:$COMMIT_HASH$JOB_NAME\r\e[0K"
             # Check if JOB_ID is an integer (POSIX compliant way)
 

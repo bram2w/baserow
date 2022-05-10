@@ -21,36 +21,39 @@
   font-size: 13px;
 }
 
+.filters__items {
+  min-width: 540px;
+}
+
 .filters__item {
   position: relative;
-  display: flex;
+  display: grid;
   align-items: center;
+  // 142px = 20 + 72 + 10 * 4 (gaps)
+  grid-template-columns: 20px 72px calc(50% - 132px) 22% 28%;
   padding: 6px 0;
   border-radius: 3px;
+  margin-left: 5px;
+  column-gap: 10px;
 
   &:not(:last-child) {
     margin-bottom: 6px;
   }
 
   &.filters__item--loading {
-    padding-left: 32px;
-
     &::before {
       content: '';
       margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(50%, auto, 0, 10px);
+      @include absolute(50%, auto, 0, -2px);
     }
   }
 }
 
 .filters__remove {
-  flex: 0 0 32px;
-  width: 32px;
   color: $color-primary-900;
   line-height: 30px;
-  text-align: center;
 
   &:hover {
     text-decoration: none;
@@ -58,50 +61,40 @@
   }
 
   .filters__item--loading & {
-    display: none;
+    visibility: hidden;
   }
 }
 
-.filters__operator {
-  flex: 0 0 72px;
-  width: 72px;
-  margin-right: 10px;
-
-  span {
-    padding-left: 12px;
-  }
-}
-
-.filters__field {
-  margin-right: 10px;
-
-  @include filter-dropdown-width(100px);
-}
-
-.filters__type {
-  margin-right: 10px;
-
-  @include filter-dropdown-width(100px);
+.filters__operator span {
+  padding-left: 12px;
 }
 
 .filters__value {
   flex: 0 0;
 }
 
+.filters__multi-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-direction: row;
+}
+
 .filters__value-input {
-  width: 130px;
   padding-top: 0;
   padding-bottom: 0;
   line-height: 30px;
 }
 
+.filters__combined_value-input {
+  &.filters__value-input--small {
+    width: 50px;
+  }
+}
+
 .filters__value-timezone {
   font-size: 11px;
   color: $color-neutral-400;
-}
-
-.filters__value-dropdown {
-  width: 130px;
 }
 
 .filters__value-rating {
@@ -115,13 +108,13 @@
 
   display: block;
   position: relative;
-  width: 130px;
   color: $color-primary-900;
   line-height: 30px;
   height: 30px;
   border: solid 1px $color-neutral-400;
   border-radius: 3px;
   padding: 0 10px;
+  background-color: $white;
 
   &:hover {
     text-decoration: none;
@@ -135,6 +128,16 @@
     &:hover {
       cursor: inherit;
       border-color: $color-neutral-400;
+    }
+  }
+
+  &.filters__value-link-row--loading {
+    &::before {
+      content: '';
+      margin-top: -7px;
+
+      @include loading(14px);
+      @include absolute(50%, auto, 0, calc(50% - 7px));
     }
   }
 }

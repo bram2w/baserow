@@ -18,6 +18,11 @@ view_filter_deleted = Signal()
 view_sort_created = Signal()
 view_sort_updated = Signal()
 view_sort_deleted = Signal()
+
+view_decoration_created = Signal()
+view_decoration_updated = Signal()
+view_decoration_deleted = Signal()
+
 view_field_options_updated = Signal()
 
 
@@ -27,3 +32,13 @@ def field_deleted(sender, field, **kwargs):
         GalleryView.objects.filter(card_cover_image_field_id=field.id).update(
             card_cover_image_field_id=None
         )
+
+    from baserow.contrib.database.views.registries import (
+        decorator_value_provider_type_registry,
+    )
+
+    # Call value provider type hooks
+    for (
+        decorator_value_provider_type
+    ) in decorator_value_provider_type_registry.get_all():
+        decorator_value_provider_type.after_field_delete(field)

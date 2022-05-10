@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.db.models import UniqueConstraint, Q
+from django.contrib.postgres.fields import ArrayField
 
 from rest_framework.exceptions import NotAuthenticated
 
@@ -18,6 +19,7 @@ from .mixins import (
     ParentGroupTrashableModelMixin,
 )
 from .exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
+from .action.models import Action
 
 
 __all__ = [
@@ -31,6 +33,7 @@ __all__ = [
     "UserLogEntry",
     "TrashEntry",
     "UserFile",
+    "Action",
 ]
 
 
@@ -366,6 +369,10 @@ class TrashEntry(models.Model):
     # of trashed items are simple and do not require joining to many different tables
     # to simply get these details.
     name = models.TextField()
+    # If multiple items have been deleted via one trash entry, for example with a
+    # batch update, the names can be provided here. The client can then visualize
+    # this differently.
+    names = ArrayField(base_field=models.TextField(), null=True)
     parent_name = models.TextField(null=True, blank=True)
     extra_description = models.TextField(null=True, blank=True)
 

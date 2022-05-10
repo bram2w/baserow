@@ -135,7 +135,8 @@
         "inThisYear": "in dit jaar",
         "lowerThan": "lager dan",
         "lengthIsLowerThan": "lengte is minder dan",
-        "hasFileType": "heeft bestandstype"
+        "hasFileType": "heeft bestandstype",
+        "isDaysAgo": "is dagen geleden"
     },
     "viewType": {
         "grid": "Raster",
@@ -154,7 +155,8 @@
         "application": "applicatie",
         "table": "tabel",
         "field": "veld",
-        "row": "rij"
+        "row": "rij",
+        "view": "weergave"
     },
     "webhook": {
         "request": "Verzoek",

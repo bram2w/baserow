@@ -10,8 +10,11 @@ from .views import (
     ViewFilterView,
     ViewSortingsView,
     ViewSortView,
+    ViewDecorationsView,
+    ViewDecorationView,
     ViewFieldOptionsView,
     RotateViewSlugView,
+    PublicViewAuthView,
     PublicViewLinkRowFieldLookupView,
 )
 
@@ -36,6 +39,11 @@ urlpatterns = view_type_registry.api_urls + [
     re_path(
         r"sort/(?P<view_sort_id>[0-9]+)/$", ViewSortView.as_view(), name="sort_item"
     ),
+    re_path(
+        r"decoration/(?P<view_decoration_id>[0-9]+)/$",
+        ViewDecorationView.as_view(),
+        name="decoration_item",
+    ),
     re_path(r"(?P<view_id>[0-9]+)/$", ViewView.as_view(), name="item"),
     re_path(
         r"(?P<view_id>[0-9]+)/filters/$", ViewFiltersView.as_view(), name="list_filters"
@@ -46,6 +54,11 @@ urlpatterns = view_type_registry.api_urls + [
         name="list_sortings",
     ),
     re_path(
+        r"(?P<view_id>[0-9]+)/decorations/$",
+        ViewDecorationsView.as_view(),
+        name="list_decorations",
+    ),
+    re_path(
         r"(?P<view_id>[0-9]+)/field-options/$",
         ViewFieldOptionsView.as_view(),
         name="field_options",
@@ -54,5 +67,10 @@ urlpatterns = view_type_registry.api_urls + [
         r"(?P<view_id>[0-9]+)/rotate-slug/$",
         RotateViewSlugView.as_view(),
         name="rotate_slug",
+    ),
+    re_path(
+        r"(?P<slug>[-\w]+)/public/auth/$",
+        PublicViewAuthView.as_view(),
+        name="public_auth",
     ),
 ]

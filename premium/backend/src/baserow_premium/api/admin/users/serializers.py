@@ -5,6 +5,7 @@ from rest_framework.fields import (
     EmailField,
 )
 from rest_framework.serializers import ModelSerializer
+from rest_framework_jwt.serializers import ImpersonateAuthTokenSerializer
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.core.models import GroupUser
@@ -83,3 +84,10 @@ class UserAdminUpdateSerializer(
         extra_kwargs = {
             **_USER_ADMIN_SERIALIZER_API_DOC_KWARGS,
         }
+
+
+class BaserowImpersonateAuthTokenSerializer(ImpersonateAuthTokenSerializer):
+    # It's not allowed to impersonate a superuser or staff.
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(is_superuser=False, is_staff=False)
+    )

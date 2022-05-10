@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="control">
+    <FormElement class="control">
       <label class="control__label">
         {{ $t('databaseForm.importLabel') }}
       </label>
@@ -28,9 +28,9 @@
           </li>
         </ul>
       </div>
-    </div>
+    </FormElement>
     <template v-if="importType !== 'airtable'">
-      <div class="control">
+      <FormElement :error="fieldHasErrors('name')" class="control">
         <label class="control__label">
           <i class="fas fa-font"></i>
           {{ $t('applicationForm.nameLabel') }}
@@ -39,17 +39,17 @@
           <input
             ref="name"
             v-model="values.name"
-            :class="{ 'input--error': $v.values.name.$error }"
+            :class="{ 'input--error': fieldHasErrors('name') }"
             type="text"
             class="input input--large"
             @blur="$v.values.name.$touch()"
           />
-          <div v-if="$v.values.name.$error" class="error">
+          <div v-if="fieldHasErrors('name')" class="error">
             {{ $t('error.requiredField') }}
           </div>
         </div>
         <slot></slot>
-      </div>
+      </FormElement>
     </template>
     <ImportFromAirtable
       v-else

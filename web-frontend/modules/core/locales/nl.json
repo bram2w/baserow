@@ -247,5 +247,25 @@
     "copyingNotification": {
         "title": "Kopiëren...",
         "content": "Uw gegevens voorbereiden"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Ongedaan maken...",
+        "undoingText": "Je actie ongedaan maken",
+        "redoneTitle": "Opnieuw gedaan",
+        "skippingRedoDueToError": "Opnieuw uitvoeren mislukt vanwege onbekende fout, overslaan.",
+        "redoingTitle": "Opnieuw doen...",
+        "redoingText": "Je actie overnieuw doen",
+        "redoneText": "Actie wordt opnieuw gedaan",
+        "noMoreRedo": "Geen acties meer om opnieuw te doen",
+        "skippingUndoDueToError": "Ongedaan maken mislukt door onbekende fout, overslaan.",
+        "failed": "Mislukt",
+        "undoneText": "Actie is ongedaan gemaakt",
+        "undoneTitle": "Ongedaan gemaakt",
+        "noMoreUndo": "Geen acties meer om ongedaan te maken"
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Autorisatiefout",
+        "content": "Het lijkt erop dat je niet de rechten hebt om deze bron te zien.",
+        "action": "Pagina vernieuwen"
     }
 }

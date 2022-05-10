@@ -1,7 +1,6 @@
 import antlr4 from 'antlr4'
-import { BufferedTokenStream } from 'antlr4/BufferedTokenStream'
-import { BaserowFormulaLexer } from '@baserow/modules/database/formula/parser/generated/BaserowFormulaLexer'
-import { BaserowFormula } from '@baserow/modules/database/formula/parser/generated/BaserowFormula'
+import BaserowFormulaLexer from '@baserow/modules/database/formula/parser/generated/BaserowFormulaLexer'
+import BaserowFormula from '@baserow/modules/database/formula/parser/generated/BaserowFormula'
 import BaserowFormulaParserError from '@baserow/modules/database/formula/parser/errors'
 
 /**
@@ -30,7 +29,7 @@ export default function parseBaserowFormula(formula) {
 export function getTokenStreamForFormula(formula) {
   const chars = new antlr4.InputStream(formula)
   const lexer = new BaserowFormulaLexer(chars)
-  const stream = new BufferedTokenStream(lexer)
+  const stream = new antlr4.CommonTokenStream(lexer)
   stream.lazyInit()
   stream.fill()
   return stream

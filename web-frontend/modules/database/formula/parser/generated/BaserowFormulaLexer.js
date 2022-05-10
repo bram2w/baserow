@@ -1,13 +1,13 @@
-// Generated from BaserowFormulaLexer.g4 by ANTLR 4.8
+// Generated from BaserowFormulaLexer.g4 by ANTLR 4.9
 // jshint ignore: start
-var antlr4 = require('antlr4/index');
+import antlr4 from 'antlr4';
 
 
 
-var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
-    "\u0002U\u028b\b\u0001\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004",
-    "\u0004\t\u0004\u0004\u0005\t\u0005\u0004\u0006\t\u0006\u0004\u0007\t",
-    "\u0007\u0004\b\t\b\u0004\t\t\t\u0004\n\t\n\u0004\u000b\t\u000b\u0004",
+const serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786",
+    "\u5964\u0002U\u028b\b\u0001\u0004\u0002\t\u0002\u0004\u0003\t\u0003",
+    "\u0004\u0004\t\u0004\u0004\u0005\t\u0005\u0004\u0006\t\u0006\u0004\u0007",
+    "\t\u0007\u0004\b\t\b\u0004\t\t\t\u0004\n\t\n\u0004\u000b\t\u000b\u0004",
     "\f\t\f\u0004\r\t\r\u0004\u000e\t\u000e\u0004\u000f\t\u000f\u0004\u0010",
     "\t\u0010\u0004\u0011\t\u0011\u0004\u0012\t\u0012\u0004\u0013\t\u0013",
     "\u0004\u0014\t\u0014\u0004\u0015\t\u0015\u0004\u0016\t\u0016\u0004\u0017",
@@ -408,24 +408,80 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0002"].join("");
 
 
-var atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
+const atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
 
-var decisionsToDFA = atn.decisionToState.map( function(ds, index) { return new antlr4.dfa.DFA(ds, index); });
+const decisionsToDFA = atn.decisionToState.map( (ds, index) => new antlr4.dfa.DFA(ds, index) );
 
-function BaserowFormulaLexer(input) {
-	antlr4.Lexer.call(this, input);
-    this._interp = new antlr4.atn.LexerATNSimulator(this, atn, decisionsToDFA, new antlr4.PredictionContextCache());
-    return this;
+export default class BaserowFormulaLexer extends antlr4.Lexer {
+
+    static grammarFileName = "BaserowFormulaLexer.g4";
+    static channelNames = [ "DEFAULT_TOKEN_CHANNEL", "HIDDEN" ];
+	static modeNames = [ "DEFAULT_MODE" ];
+	static literalNames = [ null, null, null, null, null, null, null, null, 
+                         null, "','", "':'", "'::'", "'$'", "'$$'", "'*'", 
+                         "'('", "')'", "'['", "']'", null, null, null, null, 
+                         null, "'.'", null, null, null, null, "'&'", "'&&'", 
+                         "'&<'", "'@@'", "'@>'", "'@'", "'!'", "'!!'", "'!='", 
+                         "'^'", "'='", "'=>'", "'>'", "'>='", "'>>'", "'#'", 
+                         "'#='", "'#>'", "'#>>'", "'##'", "'->'", "'->>'", 
+                         "'-|-'", "'<'", "'<='", "'<@'", "'<^'", "'<>'", 
+                         "'<->'", "'<<'", "'<<='", "'<?>'", "'-'", "'%'", 
+                         "'|'", "'||'", "'||/'", "'|/'", "'+'", "'?'", "'?&'", 
+                         "'?#'", "'?-'", "'?|'", "'/'", "'~'", "'~='", "'~>=~'", 
+                         "'~>~'", "'~<=~'", "'~<~'", "'~*'", "'~~'", "';'" ];
+	static symbolicNames = [ null, "BLOCK_COMMENT", "LINE_COMMENT", "WHITESPACE", 
+                          "TRUE", "FALSE", "FIELD", "FIELDBYID", "LOOKUP", 
+                          "COMMA", "COLON", "COLON_COLON", "DOLLAR", "DOLLAR_DOLLAR", 
+                          "STAR", "OPEN_PAREN", "CLOSE_PAREN", "OPEN_BRACKET", 
+                          "CLOSE_BRACKET", "BIT_STRING", "REGEX_STRING", 
+                          "NUMERIC_LITERAL", "INTEGER_LITERAL", "HEX_INTEGER_LITERAL", 
+                          "DOT", "SINGLEQ_STRING_LITERAL", "DOUBLEQ_STRING_LITERAL", 
+                          "IDENTIFIER", "IDENTIFIER_UNICODE", "AMP", "AMP_AMP", 
+                          "AMP_LT", "AT_AT", "AT_GT", "AT_SIGN", "BANG", 
+                          "BANG_BANG", "BANG_EQUAL", "CARET", "EQUAL", "EQUAL_GT", 
+                          "GT", "GTE", "GT_GT", "HASH", "HASH_EQ", "HASH_GT", 
+                          "HASH_GT_GT", "HASH_HASH", "HYPHEN_GT", "HYPHEN_GT_GT", 
+                          "HYPHEN_PIPE_HYPHEN", "LT", "LTE", "LT_AT", "LT_CARET", 
+                          "LT_GT", "LT_HYPHEN_GT", "LT_LT", "LT_LT_EQ", 
+                          "LT_QMARK_GT", "MINUS", "PERCENT", "PIPE", "PIPE_PIPE", 
+                          "PIPE_PIPE_SLASH", "PIPE_SLASH", "PLUS", "QMARK", 
+                          "QMARK_AMP", "QMARK_HASH", "QMARK_HYPHEN", "QMARK_PIPE", 
+                          "SLASH", "TIL", "TIL_EQ", "TIL_GTE_TIL", "TIL_GT_TIL", 
+                          "TIL_LTE_TIL", "TIL_LT_TIL", "TIL_STAR", "TIL_TIL", 
+                          "SEMI", "ErrorCharacter" ];
+	static ruleNames = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", 
+                      "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", 
+                      "U", "V", "W", "X", "Y", "Z", "UNDERSCORE", "HEX_DIGIT", 
+                      "DEC_DIGIT", "DQUOTA_STRING", "SQUOTA_STRING", "BQUOTA_STRING", 
+                      "BLOCK_COMMENT", "LINE_COMMENT", "WHITESPACE", "TRUE", 
+                      "FALSE", "FIELD", "FIELDBYID", "LOOKUP", "COMMA", 
+                      "COLON", "COLON_COLON", "DOLLAR", "DOLLAR_DOLLAR", 
+                      "STAR", "OPEN_PAREN", "CLOSE_PAREN", "OPEN_BRACKET", 
+                      "CLOSE_BRACKET", "BIT_STRING", "REGEX_STRING", "NUMERIC_LITERAL", 
+                      "INTEGER_LITERAL", "HEX_INTEGER_LITERAL", "DOT", "SINGLEQ_STRING_LITERAL", 
+                      "DOUBLEQ_STRING_LITERAL", "IDENTIFIER", "IDENTIFIER_UNICODE", 
+                      "AMP", "AMP_AMP", "AMP_LT", "AT_AT", "AT_GT", "AT_SIGN", 
+                      "BANG", "BANG_BANG", "BANG_EQUAL", "CARET", "EQUAL", 
+                      "EQUAL_GT", "GT", "GTE", "GT_GT", "HASH", "HASH_EQ", 
+                      "HASH_GT", "HASH_GT_GT", "HASH_HASH", "HYPHEN_GT", 
+                      "HYPHEN_GT_GT", "HYPHEN_PIPE_HYPHEN", "LT", "LTE", 
+                      "LT_AT", "LT_CARET", "LT_GT", "LT_HYPHEN_GT", "LT_LT", 
+                      "LT_LT_EQ", "LT_QMARK_GT", "MINUS", "PERCENT", "PIPE", 
+                      "PIPE_PIPE", "PIPE_PIPE_SLASH", "PIPE_SLASH", "PLUS", 
+                      "QMARK", "QMARK_AMP", "QMARK_HASH", "QMARK_HYPHEN", 
+                      "QMARK_PIPE", "SLASH", "TIL", "TIL_EQ", "TIL_GTE_TIL", 
+                      "TIL_GT_TIL", "TIL_LTE_TIL", "TIL_LT_TIL", "TIL_STAR", 
+                      "TIL_TIL", "SEMI", "ErrorCharacter" ];
+
+    constructor(input) {
+        super(input)
+        this._interp = new antlr4.atn.LexerATNSimulator(this, atn, decisionsToDFA, new antlr4.PredictionContextCache());
+    }
+
+    get atn() {
+        return atn;
+    }
 }
-
-BaserowFormulaLexer.prototype = Object.create(antlr4.Lexer.prototype);
-BaserowFormulaLexer.prototype.constructor = BaserowFormulaLexer;
-
-Object.defineProperty(BaserowFormulaLexer.prototype, "atn", {
-        get : function() {
-                return atn;
-        }
-});
 
 BaserowFormulaLexer.EOF = antlr4.Token.EOF;
 BaserowFormulaLexer.BLOCK_COMMENT = 1;
@@ -512,110 +568,5 @@ BaserowFormulaLexer.TIL_TIL = 81;
 BaserowFormulaLexer.SEMI = 82;
 BaserowFormulaLexer.ErrorCharacter = 83;
 
-BaserowFormulaLexer.prototype.channelNames = [ "DEFAULT_TOKEN_CHANNEL", "HIDDEN" ];
 
-BaserowFormulaLexer.prototype.modeNames = [ "DEFAULT_MODE" ];
-
-BaserowFormulaLexer.prototype.literalNames = [ null, null, null, null, null, 
-                                               null, null, null, null, "','", 
-                                               "':'", "'::'", "'$'", "'$$'", 
-                                               "'*'", "'('", "')'", "'['", 
-                                               "']'", null, null, null, 
-                                               null, null, "'.'", null, 
-                                               null, null, null, "'&'", 
-                                               "'&&'", "'&<'", "'@@'", "'@>'", 
-                                               "'@'", "'!'", "'!!'", "'!='", 
-                                               "'^'", "'='", "'=>'", "'>'", 
-                                               "'>='", "'>>'", "'#'", "'#='", 
-                                               "'#>'", "'#>>'", "'##'", 
-                                               "'->'", "'->>'", "'-|-'", 
-                                               "'<'", "'<='", "'<@'", "'<^'", 
-                                               "'<>'", "'<->'", "'<<'", 
-                                               "'<<='", "'<?>'", "'-'", 
-                                               "'%'", "'|'", "'||'", "'||/'", 
-                                               "'|/'", "'+'", "'?'", "'?&'", 
-                                               "'?#'", "'?-'", "'?|'", "'/'", 
-                                               "'~'", "'~='", "'~>=~'", 
-                                               "'~>~'", "'~<=~'", "'~<~'", 
-                                               "'~*'", "'~~'", "';'" ];
-
-BaserowFormulaLexer.prototype.symbolicNames = [ null, "BLOCK_COMMENT", "LINE_COMMENT", 
-                                                "WHITESPACE", "TRUE", "FALSE", 
-                                                "FIELD", "FIELDBYID", "LOOKUP", 
-                                                "COMMA", "COLON", "COLON_COLON", 
-                                                "DOLLAR", "DOLLAR_DOLLAR", 
-                                                "STAR", "OPEN_PAREN", "CLOSE_PAREN", 
-                                                "OPEN_BRACKET", "CLOSE_BRACKET", 
-                                                "BIT_STRING", "REGEX_STRING", 
-                                                "NUMERIC_LITERAL", "INTEGER_LITERAL", 
-                                                "HEX_INTEGER_LITERAL", "DOT", 
-                                                "SINGLEQ_STRING_LITERAL", 
-                                                "DOUBLEQ_STRING_LITERAL", 
-                                                "IDENTIFIER", "IDENTIFIER_UNICODE", 
-                                                "AMP", "AMP_AMP", "AMP_LT", 
-                                                "AT_AT", "AT_GT", "AT_SIGN", 
-                                                "BANG", "BANG_BANG", "BANG_EQUAL", 
-                                                "CARET", "EQUAL", "EQUAL_GT", 
-                                                "GT", "GTE", "GT_GT", "HASH", 
-                                                "HASH_EQ", "HASH_GT", "HASH_GT_GT", 
-                                                "HASH_HASH", "HYPHEN_GT", 
-                                                "HYPHEN_GT_GT", "HYPHEN_PIPE_HYPHEN", 
-                                                "LT", "LTE", "LT_AT", "LT_CARET", 
-                                                "LT_GT", "LT_HYPHEN_GT", 
-                                                "LT_LT", "LT_LT_EQ", "LT_QMARK_GT", 
-                                                "MINUS", "PERCENT", "PIPE", 
-                                                "PIPE_PIPE", "PIPE_PIPE_SLASH", 
-                                                "PIPE_SLASH", "PLUS", "QMARK", 
-                                                "QMARK_AMP", "QMARK_HASH", 
-                                                "QMARK_HYPHEN", "QMARK_PIPE", 
-                                                "SLASH", "TIL", "TIL_EQ", 
-                                                "TIL_GTE_TIL", "TIL_GT_TIL", 
-                                                "TIL_LTE_TIL", "TIL_LT_TIL", 
-                                                "TIL_STAR", "TIL_TIL", "SEMI", 
-                                                "ErrorCharacter" ];
-
-BaserowFormulaLexer.prototype.ruleNames = [ "A", "B", "C", "D", "E", "F", 
-                                            "G", "H", "I", "J", "K", "L", 
-                                            "M", "N", "O", "P", "Q", "R", 
-                                            "S", "T", "U", "V", "W", "X", 
-                                            "Y", "Z", "UNDERSCORE", "HEX_DIGIT", 
-                                            "DEC_DIGIT", "DQUOTA_STRING", 
-                                            "SQUOTA_STRING", "BQUOTA_STRING", 
-                                            "BLOCK_COMMENT", "LINE_COMMENT", 
-                                            "WHITESPACE", "TRUE", "FALSE", 
-                                            "FIELD", "FIELDBYID", "LOOKUP", 
-                                            "COMMA", "COLON", "COLON_COLON", 
-                                            "DOLLAR", "DOLLAR_DOLLAR", "STAR", 
-                                            "OPEN_PAREN", "CLOSE_PAREN", 
-                                            "OPEN_BRACKET", "CLOSE_BRACKET", 
-                                            "BIT_STRING", "REGEX_STRING", 
-                                            "NUMERIC_LITERAL", "INTEGER_LITERAL", 
-                                            "HEX_INTEGER_LITERAL", "DOT", 
-                                            "SINGLEQ_STRING_LITERAL", "DOUBLEQ_STRING_LITERAL", 
-                                            "IDENTIFIER", "IDENTIFIER_UNICODE", 
-                                            "AMP", "AMP_AMP", "AMP_LT", 
-                                            "AT_AT", "AT_GT", "AT_SIGN", 
-                                            "BANG", "BANG_BANG", "BANG_EQUAL", 
-                                            "CARET", "EQUAL", "EQUAL_GT", 
-                                            "GT", "GTE", "GT_GT", "HASH", 
-                                            "HASH_EQ", "HASH_GT", "HASH_GT_GT", 
-                                            "HASH_HASH", "HYPHEN_GT", "HYPHEN_GT_GT", 
-                                            "HYPHEN_PIPE_HYPHEN", "LT", 
-                                            "LTE", "LT_AT", "LT_CARET", 
-                                            "LT_GT", "LT_HYPHEN_GT", "LT_LT", 
-                                            "LT_LT_EQ", "LT_QMARK_GT", "MINUS", 
-                                            "PERCENT", "PIPE", "PIPE_PIPE", 
-                                            "PIPE_PIPE_SLASH", "PIPE_SLASH", 
-                                            "PLUS", "QMARK", "QMARK_AMP", 
-                                            "QMARK_HASH", "QMARK_HYPHEN", 
-                                            "QMARK_PIPE", "SLASH", "TIL", 
-                                            "TIL_EQ", "TIL_GTE_TIL", "TIL_GT_TIL", 
-                                            "TIL_LTE_TIL", "TIL_LT_TIL", 
-                                            "TIL_STAR", "TIL_TIL", "SEMI", 
-                                            "ErrorCharacter" ];
-
-BaserowFormulaLexer.prototype.grammarFileName = "BaserowFormulaLexer.g4";
-
-
-exports.BaserowFormulaLexer = BaserowFormulaLexer;
 

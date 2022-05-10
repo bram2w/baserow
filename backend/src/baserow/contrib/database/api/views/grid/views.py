@@ -3,6 +3,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -32,6 +33,7 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
     ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST,
+    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_DOES_NOT_EXIST,
@@ -40,8 +42,12 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FILTER_FIELD_NOT_FOUND,
     ERROR_FIELD_NOT_IN_TABLE,
 )
+from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.rows.registries import row_metadata_registry
-from baserow.contrib.database.views.exceptions import ViewDoesNotExist
+from baserow.contrib.database.views.exceptions import (
+    NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.registries import (
@@ -69,7 +75,10 @@ from baserow.contrib.database.fields.exceptions import (
 from baserow.core.exceptions import UserNotInGroup
 from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .serializers import GridViewFilterSerializer
-from .schemas import field_aggregation_response_schema
+from .schemas import (
+    field_aggregation_response_schema,
+    field_aggregations_response_schema,
+)
 
 
 def get_available_aggregation_type():
@@ -196,7 +205,9 @@ class GridViewView(APIView):
         ),
         responses={
             200: get_example_pagination_serializer_class(
-                get_example_row_serializer_class(add_id=True, user_field_names=False),
+                get_example_row_serializer_class(
+                    example_type="get", user_field_names=False
+                ),
                 additional_fields={
                     "field_options": FieldOptionsField(
                         serializer_class=GridViewFieldOptionsSerializer, required=False
@@ -308,9 +319,9 @@ class GridViewView(APIView):
         ),
         request=GridViewFilterSerializer,
         responses={
-            200: get_example_row_serializer_class(add_id=True, user_field_names=False)(
-                many=True
-            ),
+            200: get_example_row_serializer_class(
+                example_type="get", user_field_names=False
+            )(many=True),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -341,6 +352,98 @@ class GridViewView(APIView):
         )
         serializer = serializer_class(results, many=True)
         return Response(serializer.data)
+
+
+class GridViewFieldAggregationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+
+        return super().get_permissions()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Select the view you want the aggregations for.",
+            ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "If provided the aggregations are calculated only for matching "
+                    "rows."
+                ),
+            ),
+            OpenApiParameter(
+                name="include",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "if `include` is set to `total`, the total row count will be "
+                    "returned with the result."
+                ),
+            ),
+        ],
+        tags=["Database table grid view"],
+        operation_id="get_database_table_grid_view_field_aggregations",
+        description=(
+            "Returns all field aggregations values previously defined for this grid "
+            "view. If filters exist for this view, the aggregations are computed only "
+            "on filtered rows."
+            "You need to have read permissions on the view to request aggregations."
+        ),
+        responses={
+            200: field_aggregations_response_schema,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                ]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_GRID_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
+        }
+    )
+    @allowed_includes("total")
+    def get(self, request, view_id, total):
+        """
+        Returns the aggregation values for the specified view considering the filters
+        and the search term defined for this grid view.
+        Also returns the total count to be able to make percentage on client side if
+        asked.
+        """
+
+        search = request.GET.get("search")
+        view_handler = ViewHandler()
+        view = view_handler.get_view(view_id, GridView)
+
+        # Check permission
+        view.table.database.group.has_user(
+            request.user, raise_error=True, allow_if_template=True
+        )
+
+        # Compute aggregation
+        # Note: we can't optimize model by giving a model with just
+        # the aggregated field because we may need other fields for filtering
+        result = view_handler.get_view_field_aggregations(
+            view, with_total=total, search=search
+        )
+
+        return Response(result)
 
 
 class GridViewFieldAggregationView(APIView):
@@ -388,12 +491,11 @@ class GridViewFieldAggregationView(APIView):
         tags=["Database table grid view"],
         operation_id="get_database_table_grid_view_field_aggregation",
         description=(
-            "Computes an aggregation of all values for a specific field from the selected "
-            "grid view. You can select the aggregation type by specifying "
+            "Computes the aggregation of all the values for a specified field from the "
+            "selected grid view. You must select the aggregation type by setting "
             "the `type` GET parameter. If filters are configured for the selected "
             "view, the aggregation is calculated only on filtered rows. "
-            "The total count of rows is also always returned with the result."
-            "You need to have read permissions on the view to request aggregations."
+            "You need to have read permissions on the view to request an aggregation."
         ),
         responses={
             200: field_aggregation_response_schema,
@@ -426,7 +528,8 @@ class GridViewFieldAggregationView(APIView):
         """
         Returns the aggregation value for the specified view/field considering
         the filters configured for this grid view.
-        Also return the total count to be able to make percentage on client side.
+        Also returns the total count to be able to make percentage on client side if
+        asked.
         """
 
         view_handler = ViewHandler()
@@ -448,7 +551,7 @@ class GridViewFieldAggregationView(APIView):
         )
 
         result = {
-            "value": aggregations[f"field_{field_instance.id}__{aggregation_type}"],
+            "value": aggregations[field_instance.db_column],
         }
 
         if total:
@@ -604,7 +707,9 @@ class PublicGridViewRowsView(APIView):
         ),
         responses={
             200: get_example_pagination_serializer_class(
-                get_example_row_serializer_class(add_id=True, user_field_names=False),
+                get_example_row_serializer_class(
+                    example_type="get", user_field_names=False
+                ),
                 additional_fields={
                     "field_options": FieldOptionsField(
                         serializer_class=GridViewFieldOptionsSerializer, required=False
@@ -613,6 +718,7 @@ class PublicGridViewRowsView(APIView):
                 serializer_name="PublicPaginationSerializerWithGridViewFieldOptions",
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             404: get_error_schema(
                 ["ERROR_GRID_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
             ),
@@ -628,10 +734,11 @@ class PublicGridViewRowsView(APIView):
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }
     )
     @allowed_includes("field_options")
-    def get(self, request, slug, field_options):
+    def get(self, request: Request, slug: str, field_options: bool) -> Response:
         """
         Lists all the rows of a grid view, paginated either by a page or offset/limit.
         If the limit get parameter is provided the limit/offset pagination will be used
@@ -647,7 +754,12 @@ class PublicGridViewRowsView(APIView):
         exclude_fields = request.GET.get("exclude_fields")
 
         view_handler = ViewHandler()
-        view = view_handler.get_public_view_by_slug(request.user, slug, GridView)
+        view = view_handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            GridView,
+            authorization_token=get_public_view_authorization_token(request),
+        )
         view_type = view_type_registry.get_by_model(view)
 
         publicly_visible_field_options = view_type.get_visible_field_options_in_order(
@@ -741,6 +853,7 @@ class PublicGridViewInfoView(APIView):
         responses={
             200: PublicGridViewInfoSerializer,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
         },
     )
@@ -748,13 +861,19 @@ class PublicGridViewInfoView(APIView):
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }
     )
     @transaction.atomic
-    def get(self, request, slug):
+    def get(self, request: Request, slug: str) -> Response:
 
         handler = ViewHandler()
-        view = handler.get_public_view_by_slug(request.user, slug, view_model=GridView)
+        view = handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            view_model=GridView,
+            authorization_token=get_public_view_authorization_token(request),
+        )
         grid_view_type = view_type_registry.get_by_model(view)
         field_options = grid_view_type.get_visible_field_options_in_order(view)
 

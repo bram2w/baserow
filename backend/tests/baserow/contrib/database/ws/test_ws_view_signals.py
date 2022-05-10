@@ -176,7 +176,69 @@ def test_view_sort_deleted(mock_broadcast_to_channel_group, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_decoration_created(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    view = data_fixture.create_grid_view(user=user, table=table)
+    view_decoration = ViewHandler().create_decoration(
+        user=user,
+        view=view,
+        decorator_type_name="tmp_decorator_type_1",
+        value_provider_type_name="",
+        value_provider_conf={},
+    )
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{table.id}"
+    assert args[0][1]["type"] == "view_decoration_created"
+    assert args[0][1]["view_decoration"]["id"] == view_decoration.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_decoration_updated(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user = data_fixture.create_user()
+    view_decoration = data_fixture.create_view_decoration(user=user)
+    view_decoration = ViewHandler().update_decoration(
+        user=user,
+        view_decoration=view_decoration,
+        decorator_type_name="tmp_decorator_type_2",
+    )
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view_decoration.view.table.id}"
+    assert args[0][1]["type"] == "view_decoration_updated"
+    assert args[0][1]["view_decoration_id"] == view_decoration.id
+    assert args[0][1]["view_decoration"]["id"] == view_decoration.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_decoration_deleted(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user = data_fixture.create_user()
+    view_decoration = data_fixture.create_view_decoration(user=user)
+    view_id = view_decoration.view.id
+    view_decoration_id = view_decoration.id
+    ViewHandler().delete_decoration(user=user, view_decoration=view_decoration)
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view_decoration.view.table.id}"
+    assert args[0][1]["type"] == "view_decoration_deleted"
+    assert args[0][1]["view_id"] == view_id
+    assert args[0][1]["view_decoration_id"] == view_decoration_id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_view_field_options_updated(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table)

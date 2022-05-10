@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema
+from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.contrib.database.api.fields.errors import (
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
@@ -22,7 +22,7 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
-from baserow.contrib.database.models import Database
+from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
@@ -30,10 +30,16 @@ from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
     InitialTableDataDuplicateName,
 )
+from baserow.contrib.database.table.actions import (
+    CreateTableActionType,
+    DeleteTableActionType,
+    OrderTableActionType,
+    UpdateTableActionType,
+)
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
-from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
@@ -88,9 +94,7 @@ class TablesView(APIView):
     def get(self, request, database_id):
         """Lists all the tables of a database."""
 
-        database = CoreHandler().get_application(
-            database_id, base_queryset=Database.objects
-        )
+        database = DatabaseHandler().get_database(database_id)
         database.group.has_user(request.user, raise_error=True)
         tables = Table.objects.filter(database=database)
         serializer = TableSerializer(tables, many=True)
@@ -104,7 +108,8 @@ class TablesView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates a table for the database related to the provided "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="create_database_table",
@@ -148,12 +153,12 @@ class TablesView(APIView):
     def post(self, request, data, database_id):
         """Creates a new table in a database."""
 
-        database = CoreHandler().get_application(
-            database_id, base_queryset=Database.objects
-        )
-        table = TableHandler().create_table(
+        database = DatabaseHandler().get_database(database_id)
+
+        table = action_type_registry.get_by_type(CreateTableActionType).do(
             request.user, database, fill_example=True, **data
         )
+
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -203,7 +208,8 @@ class TableView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the table related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="update_database_table",
@@ -231,14 +237,12 @@ class TableView(APIView):
     def patch(self, request, data, table_id):
         """Updates the values a table instance."""
 
-        table = TableHandler().update_table(
+        table = action_type_registry.get_by_type(UpdateTableActionType).do(
             request.user,
-            TableHandler().get_table(
-                table_id,
-                base_queryset=Table.objects.select_for_update(),
-            ),
+            TableHandler().get_table_for_update(table_id),
             name=data["name"],
         )
+
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -249,7 +253,8 @@ class TableView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the table related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="delete_database_table",
@@ -276,7 +281,10 @@ class TableView(APIView):
     def delete(self, request, table_id):
         """Deletes an existing table."""
 
-        TableHandler().delete_table(request.user, TableHandler().get_table(table_id))
+        action_type_registry.get_by_type(DeleteTableActionType).do(
+            request.user, TableHandler().get_table_for_update(table_id)
+        )
+
         return Response(status=204)
 
 
@@ -292,6 +300,7 @@ class OrderTablesView(APIView):
                 description="Updates the order of the tables in the database related "
                 "to the provided value.",
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="order_database_tables",
@@ -322,8 +331,10 @@ class OrderTablesView(APIView):
     def post(self, request, data, database_id):
         """Updates to order of the tables in a table."""
 
-        database = CoreHandler().get_application(
-            database_id, base_queryset=Database.objects
+        database = DatabaseHandler().get_database(database_id)
+
+        action_type_registry.get_by_type(OrderTableActionType).do(
+            request.user, database, data["table_ids"]
         )
-        TableHandler().order_tables(request.user, database, data["table_ids"])
+
         return Response(status=204)

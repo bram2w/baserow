@@ -20,6 +20,7 @@ from baserow.contrib.database.airtable.constants import (
     AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING,
 )
 from baserow.contrib.database.airtable.exceptions import (
+    AirtableShareIsNotABase,
     AirtableImportJobDoesNotExist,
     AirtableImportJobAlreadyRunning,
 )
@@ -232,7 +233,7 @@ def test_to_baserow_database_export():
         "order": 1,
         "primary": False,
     }
-    assert len(baserow_database_export["tables"][0]["rows"]) == 2
+    assert len(baserow_database_export["tables"][0]["rows"]) == 3
     assert baserow_database_export["tables"][0]["rows"][0] == {
         "id": 1,
         "order": "1.00000000000000000000",
@@ -253,6 +254,12 @@ def test_to_baserow_database_export():
         "field_fldFh5wIL430N62LN6t": [2, 3, 1],
         "field_fldZBmr4L45mhjILhlA": "2",
     }
+    assert baserow_database_export["tables"][0]["rows"][2] == {
+        "id": 3,
+        "order": "3.00000000000000000000",
+        "created_on": "2022-01-17T17:59:13+00:00",
+        "updated_on": None,
+    }
     assert (
         baserow_database_export["tables"][1]["rows"][0]["field_fldEB5dp0mNjVZu0VJI"]
         == "2022-01-21T01:00:00+00:00"
@@ -267,6 +274,7 @@ def test_to_baserow_database_export():
             "filters_disabled": False,
             "filters": [],
             "sortings": [],
+            "decorations": [],
             "public": False,
             "field_options": [],
         }
@@ -412,18 +420,40 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
     assert isinstance(user_fields[0].specific, TextField)
 
     user_model = all_tables[0].get_model(attribute_names=True)
-    rows = user_model.objects.all()
-    assert rows[0].id == 1
-    assert str(rows[0].order) == "1.00000000000000000000"
-    assert rows[0].name == "Bram 1"
-    assert rows[0].email == "bram@email.com"
-    assert str(rows[0].number) == "1"
-    assert [r.id for r in rows[0].data.all()] == [1]
+    row_0, row_1, _ = user_model.objects.all()
+    assert row_0.id == 1
+    assert str(row_0.order) == "1.00000000000000000000"
+    assert row_0.name == "Bram 1"
+    assert row_0.email == "bram@email.com"
+    assert str(row_0.number) == "1"
+    assert [r.id for r in row_0.data.all()] == [1]
 
     data_model = all_tables[1].get_model(attribute_names=True)
-    rows = data_model.objects.all()
-    assert rows[0].checkbox is True
-    assert rows[1].checkbox is False
+    row_0, row_1, *_ = data_model.objects.all()
+    assert row_0.checkbox is True
+    assert row_1.checkbox is False
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
+    group = data_fixture.create_group()
+    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
+
+    with open(os.path.join(base_path, "airtable_view.html"), "rb") as file:
+        responses.add(
+            responses.GET,
+            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            status=200,
+            body=file.read(),
+            headers={"Set-Cookie": "brw=test;"},
+        )
+
+    with pytest.raises(AirtableShareIsNotABase):
+        AirtableHandler.import_from_airtable_to_group(
+            group, "shrXxmp0WmqsTkFWTzv", timezone=UTC, storage=storage
+        )
 
 
 @pytest.mark.django_db(transaction=True)

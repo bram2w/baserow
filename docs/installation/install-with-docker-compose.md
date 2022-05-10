@@ -39,8 +39,9 @@ the file from
 [https://gitlab.com/bramw/baserow/-/blob/master/docker-compose.yml](https://gitlab.com/bramw/baserow/-/blob/master/docker-compose.yml)
 and running:
 ```bash
-curl -o docker-compose.yml https://gitlab.com/bramw/baserow/-/blob/master/docker-compose.yml
-docker-compose up -f
+curl -o docker-compose.yml https://gitlab.com/bramw/baserow/-/raw/master/docker-compose.yml
+curl -o Caddyfile https://gitlab.com/bramw/baserow/-/raw/master/Caddyfile
+docker-compose up -d
 ```
 or by directly cloning our git repo so you can get updates easier:
 ```bash
@@ -53,6 +54,9 @@ docker-compose down
 git pull
 docker-compose up -d
 ```
+
+> Baserow will take a couple of minutes on your first startup before it works. This is
+> because the templates need to be installed.
 
 > There is a security flaw with docker and the ufw firewall.
 > By default docker when exposing ports on 0.0.0.0 will bypass any ufw firewall rules
@@ -86,7 +90,7 @@ You can set these variables by using docker-compose env file
 1. Copy the `.env.example` file found in the root of Baserows repository 
    (https://gitlab.com/bramw/baserow/-/blob/master/.env.example)  to `.env`:
 ```
-curl -o .env https://gitlab.com/bramw/baserow/-/blob/master/.env.example
+curl -o .env https://gitlab.com/bramw/baserow/-/raw/master/.env.example
 ```
 2. Edit `.env` and provide values for the missing environment variables.
 3. `docker-compose up`

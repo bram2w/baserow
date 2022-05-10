@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
-        "selectTableLabel": "Sélectionnez une table",
-        "dataLost": "En modifiant la table, toutes les données du champ seront supprimées."
+        "selectTableLabel": "Sélectionnez une table"
     },
     "fieldSelectOptions": {
         "add": "Ajouter une option"
@@ -376,7 +375,10 @@
         "sharedViewDescription": "Les personnes possédant le lien peuvent voir {viewTypeSharingLinkName}.",
         "disableLink": "désactivé le lien de partage",
         "generateNewUrl": "générer un nouveau lien",
-        "copyURL": "copier le lien"
+        "copyURL": "copier le lien",
+        "EnablePassword": "Restreindre l'accès avec un mot de passe",
+        "DisablePassword": "L'accès est protégé par un mot de passe",
+        "ChangePassword": "Changer"
     },
     "viewSortContext": {
         "noSortTitle": "Vous n'avez configuré aucun tri",
@@ -537,5 +539,36 @@
         "stateImportingTable": "Import de la table {table}",
         "errorJobAlreadyRunningTitle": "Déjà en cours",
         "errorJobAlreadyRunningDescription": "Une autre tâche est déjà en cours. Vous devez attendre que celle-ci finisse avant d'en démarrer une autre."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "Ajouter une liste déroulante"
+    },
+    "viewDecorator": {
+        "decorator": "Couleur | 1 Couleur | {count} Couleurs"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Entrez un mot de passe",
+        "newPasswordDescription": "Le lien public ne sera accessible qu'après avoir saisi le mot de passe. Ce mot de passe sera enregistré de manière cryptée.",
+        "newPasswordSave": "Enregistrer le mot de passe",
+        "changePasswordTitle": "Modifier le mot de passe",
+        "changePasswordDescription": "En changeant le mot de passe, le précédent ne fonctionnera plus. Ce mot de passe sera enregistré de manière cryptée.",
+        "changePasswordSave": "Modifier le mot de passe"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "ajouter un décorateur"
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Désactiver la protection par mot de passe",
+        "disable": "Désactiver",
+        "description": "Êtes-vous sûr de vouloir désactiver la protection par mot de passe de ce lien public ? En le désactivant, le mot de passe sera supprimé et il ne sera plus possible de le récupérer."
+    },
+    "publicViewAuthLogin": {
+        "title": "Cette page est protégée par un mot de passe",
+        "enter": "Valider",
+        "error": {
+            "incorrectPasswordText": "Le mot de passe fourni est invalide.",
+            "incorrectPasswordTitle": "Mot de passe invalide"
+        },
+        "description": "Saisissez un mot de passe valide pour accéder à la page."
     }
 }

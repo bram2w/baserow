@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "You need at least one other table in the same database to link to.",
-        "selectTableLabel": "Select a table to link to",
-        "dataLost": "By changing the table, all data will be lost."
+        "selectTableLabel": "Select a table to link to"
     },
     "fieldSelectOptions": {
         "add": "Add an option"
@@ -376,7 +375,10 @@
         "sharedViewDescription": "People who have the link can see the {viewTypeSharingLinkName}.",
         "disableLink": "disable shared link",
         "generateNewUrl": "generate new url",
-        "copyURL": "copy URL"
+        "copyURL": "copy URL",
+        "EnablePassword": "Restrict access with a password",
+        "DisablePassword": "Access is password-protected",
+        "ChangePassword": "Change"
     },
     "viewSortContext": {
         "noSortTitle": "You have not yet created a sort",
@@ -388,10 +390,35 @@
     "viewSort": {
         "sort": "Sort | 1 Sort | {count} Sorts"
     },
+    "viewDecorator": {
+        "decorator": "Color | 1 Color | {count} Colors"
+    },
     "viewRotateSlugModal": {
         "title": "Refresh URL",
         "refreshWarning": "Are you sure that you want to refresh the URL of {viewName}? After refreshing, a new URL will be generated and it will not be possible to access the {viewTypeSharingLinkName} via the old URL. Everyone that you have shared the URL with, won't be able to access the {viewTypeSharingLinkName}.",
         "generateNewURL": "Generate new URL"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Enter a password",
+        "newPasswordDescription": "The public link will only be accessible after entering the password. This password will be saved encrypted.",
+        "newPasswordSave": "Set password",
+        "changePasswordTitle": "Change password",
+        "changePasswordDescription": "By changing the password, the previous one will no longer work. This password will be saved encrypted.",
+        "changePasswordSave": "Change password"
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Disable password protection",
+        "description": "Are you sure you want to disable password protection for this public link? By disabling, the password will be deleted and it will not be possible to recover it",
+        "disable": "Disable"
+    },
+    "publicViewAuthLogin": {
+        "title": "This page is password protected",
+        "description": "Insert the correct password to access the page.",
+        "enter": "Enter",
+        "error": {
+            "incorrectPasswordTitle": "Incorrect password",
+            "incorrectPasswordText": "The provided password is incorrect."
+        }
     },
     "viewFieldsContext": {
         "coverField": "Cover field",
@@ -537,5 +564,11 @@
         "stateImportingTable": "Importing table {table}",
         "errorJobAlreadyRunningTitle": "Already running",
         "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "add single select field"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "add decorator"
     }
 }

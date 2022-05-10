@@ -1,6 +1,11 @@
 <template>
   <div class="sidebar">
     <div class="sidebar__inner">
+      <component
+        :is="component"
+        v-for="(component, index) in sidebarTopComponents"
+        :key="index"
+      ></component>
       <a
         ref="userContextAnchor"
         class="sidebar__user"
@@ -100,7 +105,7 @@
           </li>
           <template v-if="hasSelectedGroup && !isCollapsed">
             <li class="tree__item margin-top-2">
-              <div class="tree__action">
+              <div class="tree__action tree__action--has-options">
                 <a
                   ref="groupSelectToggle"
                   class="tree__link tree__link--group"
@@ -112,9 +117,33 @@
                       0
                     )
                   "
-                  >{{ selectedGroup.name }}</a
                 >
+                  <Editable
+                    ref="rename"
+                    :value="selectedGroup.name"
+                    @change="renameGroup(selectedGroup, $event)"
+                  ></Editable
+                ></a>
+                <a
+                  ref="contextLink"
+                  class="tree__options"
+                  @click="
+                    $refs.context.toggle(
+                      $refs.contextLink,
+                      'bottom',
+                      'right',
+                      0
+                    )
+                  "
+                >
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
                 <GroupsContext ref="groupSelect"></GroupsContext>
+                <GroupContext
+                  ref="context"
+                  :group="selectedGroup"
+                  @rename="enableRename()"
+                ></GroupContext>
               </div>
             </li>
             <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
@@ -193,7 +222,7 @@
           </template>
         </ul>
       </div>
-      <div class="sidebar__foot">
+      <div class="sidebar__foot sidebar__foot--with-undo-redo">
         <div class="sidebar__logo">
           <img
             height="14"
@@ -201,18 +230,38 @@
             alt="Baserow logo"
           />
         </div>
-        <a
-          class="sidebar__collapse-link"
-          @click="$store.dispatch('sidebar/toggleCollapsed')"
-        >
-          <i
-            class="fas"
+        <div class="sidebar__foot-links">
+          <a
+            class="sidebar__foot-link"
             :class="{
-              'fa-angle-double-right': isCollapsed,
-              'fa-angle-double-left': !isCollapsed,
+              'sidebar__foot-link--loading': undoLoading,
             }"
-          ></i>
-        </a>
+            @click="undo(false)"
+          >
+            <i class="fas fa-undo-alt"></i>
+          </a>
+          <a
+            class="sidebar__foot-link"
+            :class="{
+              'sidebar__foot-link--loading': redoLoading,
+            }"
+            @click="redo(false)"
+          >
+            <i class="fas fa-redo-alt"></i>
+          </a>
+          <a
+            class="sidebar__foot-link"
+            @click="$store.dispatch('sidebar/toggleCollapsed')"
+          >
+            <i
+              class="fas"
+              :class="{
+                'fa-angle-double-right': isCollapsed,
+                'fa-angle-double-left': !isCollapsed,
+              }"
+            ></i>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -227,10 +276,12 @@ import SidebarAdminItem from '@baserow/modules/core/components/sidebar/SidebarAd
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
+import GroupContext from '@baserow/modules/core/components/group/GroupContext'
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
-
+import editGroup from '@baserow/modules/core/mixins/editGroup'
+import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 export default {
   name: 'Sidebar',
   components: {
@@ -239,10 +290,12 @@ export default {
     SidebarAdminItem,
     SidebarApplication,
     GroupsContext,
+    GroupContext,
     CreateGroupModal,
     GroupMembersModal,
     TrashModal,
   },
+  mixins: [editGroup, undoRedo],
   computed: {
     /**
      * Because all the applications that belong to the user are in the store we will
@@ -260,6 +313,11 @@ export default {
       return Object.values(this.adminTypes)
         .slice()
         .sort((a, b) => a.getOrder() - b.getOrder())
+    },
+    sidebarTopComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getSidebarTopComponent())
+        .filter((component) => component !== null)
     },
     /**
      * Indicates whether the current user is visiting an admin page.

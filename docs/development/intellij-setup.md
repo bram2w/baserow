@@ -61,7 +61,7 @@ automatic style fixers to make your life as easy as possible.
 1. Now lets set up your frontend dev by changing directory to `baserow/web-frontend`
 1. Now run `yarn install` (if you do not have yarn available check out and install a
    node version manager like [nvm](https://github.com/nvm-sh/nvm) , baserow currently
-   uses node 12)
+   uses node 16)
 1. Select "Trust Project" if you see an IntelliJ popup after running yarn install
 1. Open your settings, search for and open the `Node.js and NPM` category and ensure the
    Node interpreter is pointing to the desired node executable

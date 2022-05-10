@@ -1,8 +1,9 @@
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
 
 from django.db.models import Q
 
-from baserow.contrib.database.fields import models as field_models
+if TYPE_CHECKING:
+    from baserow.contrib.database.fields import models as field_models
 from baserow.contrib.database.fields.dependencies.circular_reference_checker import (
     will_cause_circular_dep,
 )
@@ -199,45 +200,3 @@ def rebuild_field_dependencies(
     # remaining ones are old dependencies which should no longer exist. Delete them.
     delete_ids = [dep.id for dep in current_deps_by_str.values()]
     FieldDependency.objects.filter(pk__in=delete_ids).delete()
-
-
-def check_for_circular(
-    field_instance,
-    field_lookup_cache: FieldCache,
-):
-    from baserow.contrib.database.fields.registries import field_type_registry
-
-    field_type = field_type_registry.get_by_model(field_instance)
-    field_dependencies = field_type.get_field_dependencies(
-        field_instance, field_lookup_cache
-    )
-    if field_dependencies is not None:
-        for dependency in field_dependencies:
-            dependency_field = _get_dependency_field(
-                dependency, field_instance, field_lookup_cache
-            )
-            if dependency_field is not None:
-                if field_instance.name == dependency_field.name:
-                    raise SelfReferenceFieldDependencyError()
-
-                if will_cause_circular_dep(field_instance, dependency_field):
-                    raise CircularFieldDependencyError()
-
-
-def _get_dependency_field(dependency, field_instance, field_lookup_cache):
-    if isinstance(dependency, Tuple):
-        (
-            via_field_name,
-            dependency,
-        ) = dependency
-        via_field = field_lookup_cache.lookup_by_name(
-            field_instance.table, via_field_name
-        )
-        if via_field is not None:
-            return field_lookup_cache.lookup_by_name(
-                via_field.link_row_table, dependency
-            )
-        else:
-            return None
-    else:
-        return field_lookup_cache.lookup_by_name(field_instance.table, dependency)

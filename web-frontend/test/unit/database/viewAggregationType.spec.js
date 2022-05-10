@@ -57,7 +57,7 @@ const testData = {
     context: { rowCount: 100 },
   },
   max_date: {
-    inputValue: new Date(2018, 11, 24, 10, 33, 30, 0),
+    inputValue: new Date(2018, 11, 24, 10, 33, 30, 0).toISOString(),
     expectedResult: '24/12/2018',
     context: {
       rowCount: 100,
@@ -70,7 +70,7 @@ const testData = {
     },
   },
   min_date: {
-    inputValue: new Date(2018, 11, 24, 10, 33, 30, 0),
+    inputValue: new Date(2018, 11, 24, 10, 33, 30, 0).toISOString(),
     expectedResult: '24/12/2018',
     context: {
       rowCount: 100,
@@ -193,6 +193,164 @@ const testData = {
   ],
 }
 
+const testDataError = {
+  empty_count: {
+    inputValue: 'test',
+    expectedResult: null,
+    context: {},
+  },
+  checked_count: {
+    inputValue: undefined,
+    expectedResult: null,
+    context: { rowCount: 100 },
+  },
+  min: {
+    inputValue: null,
+    expectedResult: null,
+    context: { rowCount: 100 },
+  },
+  max: {
+    inputValue: null,
+    expectedResult: null,
+    context: { rowCount: 100 },
+  },
+  max_date: {
+    inputValue: 0,
+    expectedResult: null,
+    context: {
+      rowCount: 100,
+      field: {
+        timezone: 'Europe/London',
+        date_format: 'EU',
+        date_include_time: false,
+      },
+      fieldType: new DateFieldType(),
+    },
+  },
+  min_date: {
+    inputValue: 0,
+    expectedResult: null,
+    context: {
+      rowCount: 100,
+      field: {
+        timezone: 'Europe/London',
+        date_format: 'EU',
+        date_include_time: false,
+      },
+      fieldType: new DateFieldType(),
+    },
+  },
+  sum: {
+    inputValue: null,
+    expectedResult: null,
+    context: { rowCount: 100 },
+  },
+  average: [
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'number',
+          number_type: 'DECIMAL',
+          number_decimal_places: 3,
+        },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'rating',
+        },
+        fieldType: new RatingFieldType(),
+      },
+    },
+  ],
+  std_dev: [
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'number',
+          number_type: 'DECIMAL',
+          number_decimal_places: 3,
+        },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'rating',
+        },
+        fieldType: new RatingFieldType(),
+      },
+    },
+  ],
+  variance: [
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'number',
+          number_type: 'DECIMAL',
+          number_decimal_places: 3,
+        },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'rating',
+        },
+        fieldType: new RatingFieldType(),
+      },
+    },
+  ],
+  unique: [
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'number',
+          number_type: 'DECIMAL',
+          number_decimal_places: 3,
+        },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: null,
+      expectedResult: null,
+      context: {
+        rowCount: 100,
+        field: {
+          type: 'rating',
+        },
+        fieldType: new RatingFieldType(),
+      },
+    },
+  ],
+}
+
 describe('View Aggregation Tests', () => {
   let testApp = null
   let store = null
@@ -212,6 +370,24 @@ describe('View Aggregation Tests', () => {
       .forEach((aggregationType) => {
         // Get test data for this aggregation type
         let dataset = testData[aggregationType.getType()]
+        if (dataset) {
+          if (!Array.isArray(dataset)) {
+            dataset = [dataset]
+          }
+          dataset.forEach(({ inputValue, expectedResult, context }) => {
+            const actualResult = aggregationType.getValue(inputValue, context)
+            expect(actualResult).toEqual(expectedResult)
+          })
+        }
+      })
+  })
+
+  test('Test field empty value', () => {
+    store.$registry
+      .getOrderedList('viewAggregation')
+      .forEach((aggregationType) => {
+        // Get test data for this aggregation type
+        let dataset = testDataError[aggregationType.getType()]
         if (dataset) {
           if (!Array.isArray(dataset)) {
             dataset = [dataset]

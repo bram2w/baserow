@@ -1,0 +1,8 @@
+.left-border-decorator {
+  width: 6px;
+  height: 24px;
+  margin: 0 4px;
+  border-radius: 6px;
+
+  @include add-shadow-on-same-background();
+}

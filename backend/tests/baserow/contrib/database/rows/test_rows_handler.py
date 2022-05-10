@@ -1,5 +1,8 @@
 from decimal import Decimal
 from unittest.mock import patch
+from freezegun import freeze_time
+from datetime import datetime
+from pytz import UTC
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -163,7 +166,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
 
-    row_3 = handler.create_row(user=user, table=table, before=row_2)
+    row_3 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
@@ -171,7 +174,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_3.order == Decimal("1.99999999999999999999")
     assert send_mock.call_args[1]["before"].id == row_2.id
 
-    row_4 = handler.create_row(user=user, table=table, before=row_2)
+    row_4 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -180,7 +183,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_3.order == Decimal("1.99999999999999999998")
     assert row_4.order == Decimal("1.99999999999999999999")
 
-    row_5 = handler.create_row(user=user, table=table, before=row_3)
+    row_5 = handler.create_row(user=user, table=table, before_row=row_3)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -191,7 +194,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_4.order == Decimal("1.99999999999999999999")
     assert row_5.order == Decimal("1.99999999999999999997")
 
-    row_6 = handler.create_row(user=user, table=table, before=row_2)
+    row_6 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -204,7 +207,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_5.order == Decimal("1.99999999999999999996")
     assert row_6.order == Decimal("1.99999999999999999999")
 
-    row_7 = handler.create_row(user, table=table, before=row_1)
+    row_7 = handler.create_row(user, table=table, before_row=row_1)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -226,13 +229,14 @@ def test_create_row(send_mock, data_fixture):
 
     rows = model.objects.all()
     assert len(rows) == 7
-    assert rows[0].id == row_7.id
-    assert rows[1].id == row_1.id
-    assert rows[2].id == row_5.id
-    assert rows[3].id == row_3.id
-    assert rows[4].id == row_4.id
-    assert rows[5].id == row_6.id
-    assert rows[6].id == row_2.id
+    rows_0, rows_1, rows_2, rows_3, rows_4, rows_5, rows_6 = rows
+    assert rows_0.id == row_7.id
+    assert rows_1.id == row_1.id
+    assert rows_2.id == row_5.id
+    assert rows_3.id == row_3.id
+    assert rows_4.id == row_4.id
+    assert rows_5.id == row_6.id
+    assert rows_6.id == row_2.id
 
     row_2.delete()
     row_8 = handler.create_row(user, table=table)
@@ -305,20 +309,20 @@ def test_update_row(send_mock, data_fixture):
     row = handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroup):
-        handler.update_row(user=user_2, table=table, row_id=row.id, values={})
+        handler.update_row_by_id(user=user_2, table=table, row_id=row.id, values={})
 
     with pytest.raises(RowDoesNotExist):
-        handler.update_row(user=user, table=table, row_id=99999, values={})
+        handler.update_row_by_id(user=user, table=table, row_id=99999, values={})
 
     with pytest.raises(ValidationError):
-        handler.update_row(
+        handler.update_row_by_id(
             user=user, table=table, row_id=row.id, values={price_field.id: -10.99}
         )
 
     with patch(
         "baserow.contrib.database.rows.signals.before_row_update.send"
     ) as before_send_mock:
-        handler.update_row(
+        handler.update_row_by_id(
             user=user,
             table=table,
             row_id=row.id,
@@ -349,6 +353,40 @@ def test_update_row(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_rows_created_on_and_last_modified(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    handler = RowHandler()
+
+    with freeze_time("2020-01-01 12:00"):
+        rows = handler.create_rows(user=user, table=table, rows_values=[{}])
+        row = rows[0]
+        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+        assert row.updated_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.django_db
+def test_update_rows_created_on_and_last_modified(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    handler = RowHandler()
+
+    with freeze_time("2020-01-01 12:00"):
+        row = table.get_model().objects.create()
+
+    with freeze_time("2020-01-02 12:00"):
+        rows = handler.update_rows(
+            user=user,
+            table=table,
+            rows=[{"id": row.id, f"field_" f"{field.id}": "Test"}],
+        )
+        row = rows[0]
+        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+        assert row.updated_on == datetime(2020, 1, 2, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.row_updated.send")
 @patch("baserow.contrib.database.rows.signals.before_row_update.send")
 def test_move_row(before_send_mock, send_mock, data_fixture):
@@ -362,12 +400,12 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     row_3 = handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroup):
-        handler.move_row(user=user_2, table=table, row_id=row_1.id)
+        handler.move_row_by_id(user=user_2, table=table, row_id=row_1.id)
 
     with pytest.raises(RowDoesNotExist):
-        handler.move_row(user=user, table=table, row_id=99999)
+        handler.move_row_by_id(user=user, table=table, row_id=99999)
 
-    handler.move_row(user=user, table=table, row_id=row_1.id)
+    handler.move_row_by_id(user=user, table=table, row_id=row_1.id)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -388,7 +426,7 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
 
-    handler.move_row(user=user, table=table, row_id=row_1.id, before=row_3)
+    handler.move_row_by_id(user=user, table=table, row_id=row_1.id, before_row=row_3)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -417,13 +455,13 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroup):
-        handler.delete_row(user=user_2, table=table, row_id=row.id)
+        handler.delete_row_by_id(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
-        handler.delete_row(user=user, table=table, row_id=99999)
+        handler.delete_row_by_id(user=user, table=table, row_id=99999)
 
     row_id = row.id
-    handler.delete_row(user=user, table=table, row_id=row.id)
+    handler.delete_row_by_id(user=user, table=table, row_id=row.id)
     assert model.objects.all().count() == 1
     assert model.trash.all().count() == 1
     row.refresh_from_db()
@@ -474,7 +512,7 @@ def test_restore_row(send_mock, data_fixture):
         },
     )
 
-    handler.delete_row(user, table, row_1.id)
+    handler.delete_row_by_id(user, table, row_1.id)
     TrashHandler.restore_item(user, "row", row_1.id, parent_trash_item_id=table.id)
 
     assert len(send_mock.call_args) == 2

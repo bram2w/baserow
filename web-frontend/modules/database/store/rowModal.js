@@ -1,70 +1,123 @@
-import Vue from 'vue'
-
 /**
  * This store exists to always keep a copy of the row that's being edited via the
  * row edit modal. It sometimes happen that row from the original source, where it was
  * reactive with doesn't exist anymore. To make sure the modal still works in that
  * case, we always store a copy here and if it doesn't exist in the original data
- * source it accepts real time updates.
+ * source it accepts real time updates. This store can handle multiple row edit
+ * modals being open because the rows are divided by the unique component id.
  */
 export const state = () => ({
-  id: -1,
-  exists: false,
-  row: {},
+  // The key of the rows property is the unique component id indicating to which row
+  // edit modal the entry is related to. The value looks like:
+  // {
+  //   tableId: -1,
+  //   // row id
+  //   id: -1,
+  //   // Indicates whether the row exists in the `rows` property in the row edit modal.
+  //   exists: true,
+  //   // The values of the row.
+  //   row: {}
+  // }
+  rows: {},
 })
 
 export const mutations = {
-  CLEAR(state) {
-    state.id = -1
-    state.exists = false
-    state.row = {}
+  CLEAR(state, componentId) {
+    delete state.rows[componentId]
   },
-  OPEN(state, { id, exists, row }) {
-    state.id = id
-    state.exists = exists
-    state.row = row
+  OPEN(state, { componentId, tableId, id, exists, row }) {
+    state.rows = {
+      ...state.rows,
+      ...{
+        [componentId]: {
+          tableId,
+          id,
+          exists,
+          row,
+        },
+      },
+    }
   },
-  SET_EXISTS(state, value) {
-    state.exists = value
+  SET_EXISTS(state, { componentId, value }) {
+    state.rows[componentId] = {
+      ...state.rows[componentId],
+      ...{ exists: value },
+    }
   },
-  REPLACE_ROW(state, row) {
-    Vue.set(state, 'row', row)
+  REPLACE_ROW(state, { componentId, row }) {
+    state.rows[componentId] = {
+      ...state.rows[componentId],
+      ...{ row },
+    }
   },
-  UPDATE_ROW(state, row) {
-    Object.assign(state.row, row)
+  UPDATE_ROW(state, { componentId, row }) {
+    Object.assign(state.rows[componentId].row, row)
   },
 }
 
 export const actions = {
-  clear({ commit }) {
-    commit('CLEAR')
+  clear({ commit }, { componentId }) {
+    commit('CLEAR', componentId)
   },
-  open({ commit }, { id, exists, row }) {
-    commit('OPEN', { id, exists, row })
+  /**
+   * Is called when the row edit modal is being opened. It will register the row
+   * values in this store so that it can also receive real time updates if it's
+   * managed by the `rows` prop in the row edit modal.
+   */
+  open({ commit }, { componentId, tableId, id, exists, row }) {
+    commit('OPEN', { componentId, tableId, id, exists, row })
   },
-  doesNotExist({ commit }) {
-    commit('SET_EXISTS', false)
+  /**
+   * Marking the row as does not exist makes it managed by this store instead of the
+   * provided rows. This will make sure that it accepts real time update events.
+   */
+  doesNotExist({ commit }, { componentId }) {
+    commit('SET_EXISTS', { componentId, value: false })
   },
-  doesExist({ commit }, { row }) {
-    commit('SET_EXISTS', true)
-    commit('REPLACE_ROW', row)
+  doesExist({ commit }, { componentId, row }) {
+    commit('SET_EXISTS', { componentId, value: true })
+    commit('REPLACE_ROW', { componentId, row })
   },
-  updated({ commit, getters }, { values }) {
-    if (values.id === getters.id && !getters.exists) {
-      commit('UPDATE_ROW', values)
-    }
+  replace({ commit }, { componentId, row }) {
+    commit('REPLACE_ROW', { componentId, row })
+  },
+  /**
+   * Called when we receive a real time row update event. It loops over all the rows
+   * we have in memory here and checks if the updated row exists and if it's not
+   * managed by the `rows` prop in the row edit modal. If so, it will make the
+   * update. If the row is managed by the `rows` prop we don't have to do the update
+   * because it will be done via `rows` property.
+   */
+  updated({ commit, getters }, { tableId, values }) {
+    const rows = getters.getRows
+    Object.keys(rows).forEach((key) => {
+      const value = rows[key]
+      if (
+        value.tableId === tableId &&
+        value.id === values.id &&
+        !value.exists
+      ) {
+        commit('UPDATE_ROW', { componentId: key, row: values })
+      }
+    })
   },
 }
 
 export const getters = {
-  id: (state) => {
-    return state.id
+  getRows(state) {
+    return state.rows
   },
-  exists: (state) => {
-    return state.exists
-  },
-  row: (state) => {
-    return state.row
+  get: (state) => (componentId) => {
+    if (!Object.prototype.hasOwnProperty.call(state.rows, componentId)) {
+      return {
+        id: -1,
+        tableId: -1,
+        exists: false,
+        row: {},
+      }
+    }
+
+    return state.rows[componentId]
   },
 }
 

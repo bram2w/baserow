@@ -90,6 +90,7 @@
   @extend %ellipsis;
 
   font-size: 12px;
+  line-height: 1.25;
   color: $color-neutral-600;
 }
 
@@ -130,9 +131,26 @@
     height: 56px;
     padding: 0 8px 8px 8px;
   }
+
+  // Is needed temporarily while the undo redo functionality is behind the
+  // `undo` feature flag.
+  &.sidebar__foot--with-undo-redo {
+    .layout--collapsed & {
+      height: 114px;
+    }
+  }
 }
 
-.sidebar__collapse-link {
+.sidebar__foot-links {
+  display: flex;
+
+  .layout--collapsed & {
+    flex-direction: column;
+  }
+}
+
+.sidebar__foot-link {
+  position: relative;
   color: $color-neutral-700;
   border-radius: 3px;
 
@@ -142,6 +160,34 @@
     display: inline-block;
     text-decoration: none;
     background-color: $color-neutral-100;
+  }
+
+  &:not(:first-child) {
+    margin-left: 6px;
+
+    .layout--collapsed & {
+      margin-left: auto;
+      margin-top: 8px;
+    }
+  }
+
+  &.sidebar__foot-link--loading {
+    color: transparent;
+
+    &:hover {
+      cursor: inherit;
+      background-color: transparent;
+    }
+
+    &::before {
+      content: '';
+      z-index: 1;
+      margin-top: -6px;
+      margin-left: -6px;
+
+      @include loading(12px);
+      @include absolute(50%, auto, auto, 50%);
+    }
   }
 }
 

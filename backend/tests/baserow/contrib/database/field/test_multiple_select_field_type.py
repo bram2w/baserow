@@ -288,7 +288,7 @@ def test_multiple_select_field_type_rows(data_fixture, django_assert_num_queries
     row.refresh_from_db()
     assert len(getattr(row, f"field_{field.id}").all()) == 0
 
-    row_4 = row_handler.update_row(
+    row_4 = row_handler.update_row_by_id(
         user=user, table=table, row_id=row_4.id, values={f"field_{field.id}": []}
     )
     assert len(getattr(row_4, f"field_{field.id}").all()) == 0
@@ -775,20 +775,21 @@ def test_conversion_single_select_to_multiple_select_field(
     assert SingleSelectField.objects.all().count() == 0
 
     rows = list(model.objects.all().enhance_by_fields())
+    row_0, row_1, *_, row_7 = rows
     # Check first row
-    row_multi_select_field_list_0 = getattr(rows[0], f"field_{field.id}").all()
+    row_multi_select_field_list_0 = getattr(row_0, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_0) == 1
     assert row_multi_select_field_list_0[0].id == select_options[0].id
     assert row_multi_select_field_list_0[0].value == select_options[0].value
 
     # Check second row
-    row_multi_select_field_list_1 = getattr(rows[1], f"field_{field.id}").all()
+    row_multi_select_field_list_1 = getattr(row_1, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_1) == 1
     assert row_multi_select_field_list_1[0].id == select_options[1].id
     assert row_multi_select_field_list_1[0].value == select_options[1].value
 
     # Check empty row
-    row_multi_select_field_list_7 = getattr(rows[6], f"field_{field.id}").all()
+    row_multi_select_field_list_7 = getattr(row_7, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_7) == 0
 
 
@@ -874,32 +875,33 @@ def test_conversion_multiple_select_to_single_select_field(data_fixture):
 
     # Check first row
     rows = list(model.objects.all().enhance_by_fields())
-    row_single_select_field_list_0 = getattr(rows[0], f"field_{field.id}")
+    row_0, row_1, row_2, row_3, row_4, row_5 = rows
+    row_single_select_field_list_0 = getattr(row_0, f"field_{field.id}")
     assert row_single_select_field_list_0.id == select_options[0].id
     assert row_single_select_field_list_0.value == select_options[0].value
 
     # Check second row
-    row_single_select_field_list_1 = getattr(rows[1], f"field_{field.id}")
+    row_single_select_field_list_1 = getattr(row_1, f"field_{field.id}")
     assert row_single_select_field_list_1.id == select_options[1].id
     assert row_single_select_field_list_1.value == select_options[1].value
 
     # Check third row
-    row_single_select_field_list_2 = getattr(rows[2], f"field_{field.id}")
+    row_single_select_field_list_2 = getattr(row_2, f"field_{field.id}")
     assert row_single_select_field_list_2.id == select_options[2].id
     assert row_single_select_field_list_2.value == select_options[2].value
 
     # Check fourth row
-    row_single_select_field_list_3 = getattr(rows[3], f"field_{field.id}")
+    row_single_select_field_list_3 = getattr(row_3, f"field_{field.id}")
     assert row_single_select_field_list_3.id == select_options[1].id
     assert row_single_select_field_list_3.value == select_options[1].value
 
     # Check fifth row
-    row_single_select_field_list_4 = getattr(rows[4], f"field_{field.id}")
+    row_single_select_field_list_4 = getattr(row_4, f"field_{field.id}")
     assert row_single_select_field_list_4.id == select_options[2].id
     assert row_single_select_field_list_4.value == select_options[2].value
 
     # Check sixth row
-    row_single_select_field_list_5 = getattr(rows[5], f"field_{field.id}")
+    row_single_select_field_list_5 = getattr(row_5, f"field_{field.id}")
     assert row_single_select_field_list_5.id == select_options[0].id
     assert row_single_select_field_list_5.value == select_options[0].value
 
@@ -931,7 +933,7 @@ def test_converting_multiple_select_field_value(
     # We have to add option_2 in a separate request so we have the guarantee that the
     # m2m through table id for option_2 is greater than option_1 for the ordering
     # assertion to be correct later.
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,
@@ -975,19 +977,26 @@ def test_converting_multiple_select_field_value(
         [option_1.value, option_2.value]
     )
 
-    # converting back to text field should split by comma and
-    # create the necessary select_options
+    # Converting back to multiple select using the unique row values as input,
+    # should automatically add the right options.
+    unique_values = field_handler.get_unique_row_values(
+        field=text_field, limit=10, split_comma_separated=True
+    )
     multiple_select_field = field_handler.update_field(
-        user=user, field=text_field, new_type_name="multiple_select"
+        user=user,
+        field=text_field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
     model = table.get_model()
     rows = model.objects.all()
     assert len(SelectOption.objects.all()) == 3
-    cell_1 = getattr(rows[0], f"field_{multiple_select_field.id}")
-    cell_2 = getattr(rows[1], f"field_{multiple_select_field.id}")
-    cell_3 = getattr(rows[2], f"field_{multiple_select_field.id}")
-    cell_4 = getattr(rows[3], f"field_{multiple_select_field.id}")
-    cell_5 = getattr(rows[4], f"field_{multiple_select_field.id}")
+    row_0, row_1, row_2, row_3, row_4 = rows
+    cell_1 = getattr(row_0, f"field_{multiple_select_field.id}")
+    cell_2 = getattr(row_1, f"field_{multiple_select_field.id}")
+    cell_3 = getattr(row_2, f"field_{multiple_select_field.id}")
+    cell_4 = getattr(row_3, f"field_{multiple_select_field.id}")
+    cell_5 = getattr(row_4, f"field_{multiple_select_field.id}")
     assert len(cell_1.all()) == 2
     assert len(cell_2.all()) == 1
     assert len(cell_3.all()) == 0
@@ -1063,7 +1072,15 @@ def test_conversion_number_to_multiple_select_field(
 
     assert NumberField.objects.all().first().id == field.id
 
-    field_handler.update_field(user=user, field=field, new_type_name="multiple_select")
+    unique_values = field_handler.get_unique_row_values(
+        field=field, limit=10, split_comma_separated=True
+    )
+    field_handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
+    )
 
     field_type = field_type_registry.get_by_model(field)
     select_options = field.select_options.all()
@@ -1072,34 +1089,36 @@ def test_conversion_number_to_multiple_select_field(
     assert len(select_options) == 6
     assert MultipleSelectField.objects.all().first().id == field.id
 
-    rows = list(model.objects.all().enhance_by_fields())
+    row_0, row_1, row_2, row_3, row_4, row_5 = list(
+        model.objects.all().enhance_by_fields()
+    )
     # Check first row
-    row_multi_select_field_list_0 = getattr(rows[0], f"field_{field.id}").all()
+    row_multi_select_field_list_0 = getattr(row_0, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_0) == 1
     assert row_multi_select_field_list_0[0].value == "1"
 
     # Check second row
-    row_multi_select_field_list_1 = getattr(rows[1], f"field_{field.id}").all()
+    row_multi_select_field_list_1 = getattr(row_1, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_1) == 1
     assert row_multi_select_field_list_1[0].value == "2"
 
     # Check third row
-    row_multi_select_field_list_2 = getattr(rows[2], f"field_{field.id}").all()
+    row_multi_select_field_list_2 = getattr(row_2, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_2) == 1
     assert row_multi_select_field_list_2[0].value == "3"
 
     # Check fourth row
-    row_multi_select_field_list_3 = getattr(rows[3], f"field_{field.id}").all()
+    row_multi_select_field_list_3 = getattr(row_3, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_3) == 1
     assert row_multi_select_field_list_3[0].value == "4"
 
     # Check fifth row
-    row_multi_select_field_list_4 = getattr(rows[4], f"field_{field.id}").all()
+    row_multi_select_field_list_4 = getattr(row_4, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_4) == 1
     assert row_multi_select_field_list_4[0].value == "5"
 
     # Check third row
-    row_multi_select_field_list_5 = getattr(rows[5], f"field_{field.id}").all()
+    row_multi_select_field_list_5 = getattr(row_5, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_5) == 1
     assert row_multi_select_field_list_5[0].value == "6"
 
@@ -1170,7 +1189,15 @@ def test_conversion_email_to_multiple_select_field(data_fixture):
 
     assert EmailField.objects.all().first().id == field.id
 
-    field_handler.update_field(user=user, field=field, new_type_name="multiple_select")
+    unique_values = field_handler.get_unique_row_values(
+        field=field, limit=10, split_comma_separated=True
+    )
+    field_handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
+    )
 
     field_type = field_type_registry.get_by_model(field)
     select_options = field.select_options.all()
@@ -1327,12 +1354,21 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         "2021-08-31 11:00",
     ]
 
-    for field in all_fields:
+    for index, field in enumerate(all_fields):
         field_handler.update_field(
-            user=user, field=field, new_type_name="multiple_select"
+            user=user,
+            field=field,
+            new_type_name="multiple_select",
+            **{
+                "type": "multiple_select",
+                "select_options": [{"value": all_results[index], "color": "red"}],
+            },
         )
 
-        field_type = field_type_registry.get_by_model(field)
+        field_model = field_handler.get_field(field.id)
+        field_type = field_type_registry.get_by_model(field_model.specific_class)
+        # Update field value after type change
+        # all_fields[index] = field_model.specific
         select_options = field.select_options.all()
         assert field_type.type == "multiple_select"
         assert len(select_options) == 1
@@ -1361,7 +1397,7 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         },
     )
 
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,
@@ -1404,18 +1440,25 @@ def test_convert_long_text_to_multiple_select(data_fixture):
     field = field_handler.create_field(
         user=user, table=table, type_name="long_text", name="Text"
     )
-
+    field_value = "This is a description, with several, commas."
     row_handler.create_row(
         user=user,
         table=table,
-        values={f"field_{field.id}": "This is a description, with several, commas."},
+        values={f"field_{field.id}": field_value},
     )
-
     multiple_select_field = field_handler.update_field(
-        user=user, field=field, new_type_name="multiple_select"
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        **{
+            "type": "multiple_select",
+            "select_options": [
+                {"value": value, "color": "red"} for value in field_value.split(", ")
+            ],
+        },
     )
 
-    assert len(SelectOption.objects.all()) == 3
+    assert len(field.select_options.all()) == 3
     model = table.get_model()
     rows = model.objects.all()
 
@@ -1498,9 +1541,7 @@ def test_convert_multiple_select_to_text(data_fixture):
     assert len(SelectOption.objects.all()) == 0
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
+    row_1, row_2 = model.objects.all()
 
     cell_1 = getattr(row_1, f"field_{field.id}")
     cell_2 = getattr(row_2, f"field_{field.id}")
@@ -1564,13 +1605,7 @@ def test_convert_multiple_select_to_text_with_comma_and_quotes(data_fixture):
     )
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
-    row_3 = rows[2]
-    row_4 = rows[3]
-    row_5 = rows[4]
-    row_6 = rows[5]
+    row_1, row_2, row_3, row_4, row_5, row_6 = model.objects.all()
 
     cell_1 = getattr(row_1, f"field_{field.id}")
     cell_2 = getattr(row_2, f"field_{field.id}")
@@ -1589,19 +1624,20 @@ def test_convert_multiple_select_to_text_with_comma_and_quotes(data_fixture):
     assert cell_6 == '"Option 3,",'
 
     # converting back to multiple select should create 'Option 3,' without quotes
+    unique_values = field_handler.get_unique_row_values(
+        field=field, limit=10, split_comma_separated=True
+    )
     field = field_handler.update_field(
-        user=user, field=field, new_type_name="multiple_select"
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
     assert len(SelectOption.objects.all()) == 4
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
-    row_3 = rows[2]
-    row_4 = rows[3]
-    row_5 = rows[4]
-    row_6 = rows[5]
+    row_1, row_2, row_3, row_4, row_5, row_6 = model.objects.all()
+
     cell_1 = getattr(row_1, f"field_{field.id}").all()
     cell_2 = getattr(row_2, f"field_{field.id}").all()
     cell_3 = getattr(row_3, f"field_{field.id}").all()
@@ -1696,23 +1732,23 @@ def test_conversion_to_multiple_select_field_with_select_options(data_fixture):
     assert len(select_options) == 2
     model = table.get_model()
 
-    rows = list(model.objects.all().enhance_by_fields())
+    row_0, row_1, row_2, row_3 = list(model.objects.all().enhance_by_fields())
     # Check first row
-    row_multi_select_field_list_0 = getattr(rows[0], f"field_{field.id}").all()
+    row_multi_select_field_list_0 = getattr(row_0, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_0) == 1
     assert row_multi_select_field_list_0[0].value == "Option 1"
 
     # Check second row
-    row_multi_select_field_list_1 = getattr(rows[1], f"field_{field.id}").all()
+    row_multi_select_field_list_1 = getattr(row_1, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_1) == 0
 
     # Check third row
-    row_multi_select_field_list_2 = getattr(rows[2], f"field_{field.id}").all()
+    row_multi_select_field_list_2 = getattr(row_2, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_2) == 1
     assert row_multi_select_field_list_2[0].value == "Option 3"
 
     # Check fourth row
-    row_multi_select_field_list_3 = getattr(rows[3], f"field_{field.id}").all()
+    row_multi_select_field_list_3 = getattr(row_3, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_3) == 0
 
 
@@ -1758,10 +1794,14 @@ def test_conversion_to_multiple_select_with_more_than_threshold_options_in_extra
         },
     )
 
+    unique_values = field_handler.get_unique_row_values(
+        field=field_1, limit=200, split_comma_separated=True
+    )
     field_handler.update_field(
         user=user,
         field=field_1,
         new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
 
     field_type = field_type_registry.get_by_model(field_1)
@@ -1903,10 +1943,16 @@ def test_conversion_to_multiple_select_with_option_value_too_large(
         },
     )
 
+    unique_values = field_handler.get_unique_row_values(
+        field=field_1, limit=10, split_comma_separated=True
+    )
     field_handler.update_field(
         user=user,
         field=field_1,
         new_type_name="multiple_select",
+        select_options=[
+            {"value": value[:255], "color": "blue"} for value in unique_values
+        ],
     )
 
     field_type = field_type_registry.get_by_model(field_1)
@@ -1915,9 +1961,7 @@ def test_conversion_to_multiple_select_with_option_value_too_large(
     assert len(select_options) == 2
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
+    row_1, row_2 = model.objects.all()
     cell_1 = getattr(row_1, f"field_{field_1.id}").all()
     cell_2 = getattr(row_2, f"field_{field_1.id}").all()
 
@@ -1962,10 +2006,14 @@ def test_conversion_to_multiple_select_with_same_option_value_on_same_row(
         },
     )
 
+    unique_values = field_handler.get_unique_row_values(
+        field=field_1, limit=10, split_comma_separated=True
+    )
     field_handler.update_field(
         user=user,
         field=field_1,
         new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
 
     field_type = field_type_registry.get_by_model(field_1)
@@ -1976,8 +2024,7 @@ def test_conversion_to_multiple_select_with_same_option_value_on_same_row(
 
     model = table.get_model()
     rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
+    row_1, row_2 = rows
     cell_1 = getattr(row_1, f"field_{field_1.id}").all()
     cell_2 = getattr(row_2, f"field_{field_1.id}").all()
 

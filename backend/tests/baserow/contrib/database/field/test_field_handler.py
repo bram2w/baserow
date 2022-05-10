@@ -18,12 +18,18 @@ from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     FieldWithSameNameAlreadyExists,
     ReservedBaserowFieldNameException,
+    IncompatibleFieldTypeForUniqueValues,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
 from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
-from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.handler import (
+    FieldHandler,
+)
+from baserow.contrib.database.fields.constants import (
+    UPSERT_OPTION_DICT_KEY,
+)
 from baserow.contrib.database.fields.models import (
     Field,
     TextField,
@@ -103,7 +109,7 @@ def test_can_convert_between_all_fields(data_fixture):
                             # Faker produces subtypes of date / datetime which baserow
                             # does not want, instead just convert to str.
                             random_value = str(random_value)
-                        row_handler.update_row(
+                        row_handler.update_row_by_id(
                             user=user,
                             table=table,
                             row_id=row.id,
@@ -393,10 +399,11 @@ def test_update_field(send_mock, data_fixture):
     assert not hasattr(field, "text_default")
 
     model = table.get_model()
-    rows = model.objects.all()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") == 100
-    assert getattr(rows[2], f"field_{field.id}") == 10
+    row_0, row_1, row_2 = model.objects.all()
+
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") == 100
+    assert getattr(row_2, f"field_{field.id}") == 10
 
     # Change the field type to a decimal and test if the values have been changed.
     field = handler.update_field(
@@ -413,10 +420,10 @@ def test_update_field(send_mock, data_fixture):
     assert field.number_negative is True
 
     model = table.get_model()
-    rows = model.objects.all()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") == Decimal("100.00")
-    assert getattr(rows[2], f"field_{field.id}") == Decimal("10.00")
+    row_0, row_1, row_2 = model.objects.all()
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") == Decimal("100.00")
+    assert getattr(row_2, f"field_{field.id}") == Decimal("10.00")
 
     # Change the field type to a boolean and test if the values have been changed.
     field = handler.update_field(
@@ -429,10 +436,10 @@ def test_update_field(send_mock, data_fixture):
     assert not hasattr(field, "number_negative")
 
     model = table.get_model()
-    rows = model.objects.all()
-    assert getattr(rows[0], f"field_{field.id}") is False
-    assert getattr(rows[1], f"field_{field.id}") is False
-    assert getattr(rows[2], f"field_{field.id}") is False
+    row_0, row_1, row_2 = model.objects.all()
+    assert getattr(row_0, f"field_{field.id}") is False
+    assert getattr(row_1, f"field_{field.id}") is False
+    assert getattr(row_2, f"field_{field.id}") is False
 
     with pytest.raises(ReservedBaserowFieldNameException):
         handler.update_field(user=user, field=field, name="order")
@@ -952,6 +959,59 @@ def test_update_select_options(data_fixture):
 
 
 @pytest.mark.django_db
+def test_can_create_single_select_options_with_specific_pk(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_single_select_field(table=table)
+
+    # Test that no changes are reported when the values passed in are the same as the
+    # existing values
+    FieldHandler().update_field_select_options(
+        field=field,
+        user=user,
+        select_options=[
+            {
+                UPSERT_OPTION_DICT_KEY: 9999,
+                # This other id should be ignored if set.
+                "id": 1,
+                "value": "Option 1 B",
+                "color": "red",
+            },
+        ],
+    )
+    created_option = SelectOption.objects.get(pk=9999)
+    assert created_option.value == "Option 1 B"
+    assert created_option.color == "red"
+
+
+@pytest.mark.django_db
+def test_can_update_single_select_options_with_upsert_key(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_single_select_field(table=table)
+
+    # Test that no changes are reported when the values passed in are the same as the
+    # existing values
+    FieldHandler().update_field_select_options(
+        field=field,
+        user=user,
+        select_options=[
+            {
+                UPSERT_OPTION_DICT_KEY: field.id,
+                # This other id should be ignored if set.
+                "id": 1,
+                "value": "Option 1 B",
+                "color": "red",
+            },
+        ],
+    )
+    created_option = SelectOption.objects.get(pk=field.id)
+    assert created_option.value == "Option 1 B"
+    assert created_option.color == "red"
+    assert SelectOption.objects.count() == 1
+
+
+@pytest.mark.django_db
 def test_find_next_free_field_name(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -1071,3 +1131,85 @@ def test_can_convert_formula_to_numeric_field(data_fixture):
     assert Field.objects.all().count() == 1
     assert NumberField.objects.all().count() == 1
     assert FormulaField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_get_unique_row_values(data_fixture):
+    table = data_fixture.create_database_table()
+    text_field = data_fixture.create_text_field(table=table, name="text")
+    file_field = data_fixture.create_file_field(table=table, name="file")
+
+    model = table.get_model(attribute_names=True)
+    model.objects.create(text="value5")
+    model.objects.create(text="value1")
+    model.objects.create(text="value1,value2")
+    model.objects.create(text="value2,value3")
+    model.objects.create(text="value4")
+    model.objects.create(text="value5")
+    model.objects.create(text="value5")
+    model.objects.create(text="value3,value5")
+    model.objects.create(text="value3,value5")
+    model.objects.create(text="")
+    model.objects.create(text=None)
+
+    handler = FieldHandler()
+
+    with pytest.raises(IncompatibleFieldTypeForUniqueValues):
+        handler.get_unique_row_values(field=file_field, limit=10)
+
+    values = list(handler.get_unique_row_values(field=text_field, limit=10))
+    assert values == [
+        "value5",
+        "value3,value5",
+        "value2,value3",
+        "value1,value2",
+        "value4",
+        "value1",
+    ]
+
+    values = list(handler.get_unique_row_values(field=text_field, limit=2))
+    assert values == ["value5", "value3,value5"]
+
+    values = list(
+        handler.get_unique_row_values(
+            field=text_field, limit=10, split_comma_separated=True
+        )
+    )
+    assert values == ["value5", "value3", "value2", "value1", "value4"]
+
+    values = list(
+        handler.get_unique_row_values(
+            field=text_field, limit=2, split_comma_separated=True
+        )
+    )
+    assert values == ["value5", "value3"]
+
+
+@pytest.mark.django_db
+def test_get_unique_row_values_single_select(data_fixture):
+    table = data_fixture.create_database_table()
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="single_select"
+    )
+    option_1 = data_fixture.create_select_option(
+        field=single_select_field, value="Option 1"
+    )
+    option_2 = data_fixture.create_select_option(
+        field=single_select_field, value="Option 2"
+    )
+
+    model = table.get_model(attribute_names=True)
+    model.objects.create(singleselect=option_1)
+    model.objects.create(singleselect=option_2)
+    model.objects.create(singleselect=option_1)
+    model.objects.create(singleselect=option_2)
+    model.objects.create(singleselect=option_2)
+    model.objects.create(singleselect=option_2)
+    model.objects.create()
+
+    handler = FieldHandler()
+
+    # By testing the single select field, we actually test if the
+    # `get_alter_column_prepare_old_value` method is being used correctly.
+    values = list(handler.get_unique_row_values(field=single_select_field, limit=10))
+    assert values == ["Option 2", "Option 1"]

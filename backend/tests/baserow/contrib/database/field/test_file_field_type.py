@@ -121,7 +121,7 @@ def test_file_field_type(data_fixture):
     assert row.file[1] == user_file_3.serialize()
     assert row.file[2] == user_file_2.serialize()
 
-    row = row_handler.update_row(
+    row = row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,
@@ -168,7 +168,7 @@ def test_file_field_type(data_fixture):
     assert results[1].file == []
     assert results[2].file == []
 
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,

@@ -9,8 +9,15 @@ from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
+    decorator_value_provider_type_registry,
+    decorator_type_registry,
 )
-from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    View,
+    ViewFilter,
+    ViewSort,
+    ViewDecoration,
+)
 
 
 class FieldOptionsField(serializers.Field):
@@ -156,11 +163,96 @@ class UpdateViewSortSerializer(serializers.ModelSerializer):
         extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
 
 
+class ViewDecorationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewDecoration
+        fields = (
+            "id",
+            "view",
+            "type",
+            "value_provider_type",
+            "value_provider_conf",
+            "order",
+        )
+        extra_kwargs = {
+            "id": {"read_only": True, "required": False},
+            "view": {"required": False},
+            "type": {"required": False},
+            "value_provider_conf": {"required": False},
+        }
+
+
+def _only_empty_dict(value):
+    if not (isinstance(value, dict) and not value):
+        raise serializers.ValidationError("This field should be an empty object.")
+
+
+class UpdateViewDecorationSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(decorator_type_registry.get_types, list)(),
+        required=False,
+        help_text=ViewDecoration._meta.get_field("type").help_text,
+    )
+    value_provider_type = serializers.ChoiceField(
+        choices=lazy(
+            lambda: [""] + decorator_value_provider_type_registry.get_types(),
+            list,
+        )(),
+        required=False,
+        help_text=ViewDecoration._meta.get_field("value_provider_type").help_text,
+    )
+    value_provider_conf = serializers.DictField(
+        required=False,
+        validators=[_only_empty_dict],
+        help_text=ViewDecoration._meta.get_field("value_provider_conf").help_text,
+    )
+
+    class Meta:
+        model = ViewDecoration
+        fields = ("type", "value_provider_type", "value_provider_conf", "order")
+        extra_kwargs = {
+            "order": {"required": False},
+        }
+
+
+class CreateViewDecorationSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(decorator_type_registry.get_types, list)(),
+        required=True,
+        help_text=ViewDecoration._meta.get_field("type").help_text,
+    )
+    value_provider_type = serializers.ChoiceField(
+        choices=lazy(
+            lambda: [""] + decorator_value_provider_type_registry.get_types(),
+            list,
+        )(),
+        default="",
+        required=False,
+        help_text=ViewDecoration._meta.get_field("value_provider_type").help_text,
+    )
+    value_provider_conf = serializers.DictField(
+        required=False,
+        default=dict,
+        validators=[_only_empty_dict],
+        help_text=ViewDecoration._meta.get_field("value_provider_conf").help_text,
+    )
+
+    class Meta:
+        model = ViewDecoration
+        fields = ("type", "value_provider_type", "value_provider_conf", "order")
+        extra_kwargs = {
+            "order": {"required": False},
+        }
+
+
 class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     table = TableSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)
+    decorations = ViewDecorationSerializer(
+        many=True, source="viewdecoration_set", required=False
+    )
 
     class Meta:
         model = View
@@ -174,29 +266,37 @@ class ViewSerializer(serializers.ModelSerializer):
             "filter_type",
             "filters",
             "sortings",
+            "decorations",
             "filters_disabled",
+            "public_view_has_password",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
+            "public_view_has_password": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):
         context = kwargs.setdefault("context", {})
         context["include_filters"] = kwargs.pop("filters", False)
         context["include_sortings"] = kwargs.pop("sortings", False)
+        context["include_decorations"] = kwargs.pop("decorations", False)
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         # We remove the fields in to_representation rather than __init__ as otherwise
-        # drf-spectacular will not know that filters and sortings exist as optional
-        # return fields. This way the fields are still dynamic and also show up in the
-        # OpenAPI specification.
+        # drf-spectacular will not know that filters, sortings and decorations exist as
+        # optional return fields.
+        # This way the fields are still dynamic and also show up in the OpenAPI
+        # specification.
         if not self.context["include_filters"]:
             self.fields.pop("filters", None)
 
         if not self.context["include_sortings"]:
             self.fields.pop("sortings", None)
+
+        if not self.context["include_decorations"]:
+            self.fields.pop("decorations", None)
 
         return super().to_representation(instance)
 
@@ -222,10 +322,30 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 
 class UpdateViewSerializer(serializers.ModelSerializer):
+    def _update_public_view_password(self, new_public_view_password):
+        """
+        An empty string disables password protection.
+        A non-empty string will be encrypted and used to check user authorization.
+        """
+
+        if new_public_view_password:
+            return View.make_password(new_public_view_password)
+        else:
+            return ""
+
+    def to_internal_value(self, data):
+        public_view_password = data.pop("public_view_password", None)
+        updated_view = super().to_internal_value(data)
+        if public_view_password is not None:
+            updated_view["public_view_password"] = self._update_public_view_password(
+                public_view_password
+            )
+        return updated_view
+
     class Meta:
         ref_name = "view_update"
         model = View
-        fields = ("name", "filter_type", "filters_disabled")
+        fields = ("name", "filter_type", "filters_disabled", "public_view_password")
         extra_kwargs = {
             "name": {"required": False},
             "filter_type": {"required": False},
@@ -237,3 +357,11 @@ class OrderViewsSerializer(serializers.Serializer):
     view_ids = serializers.ListField(
         child=serializers.IntegerField(), help_text="View ids in the desired order."
     )
+
+
+class PublicViewAuthRequestSerializer(serializers.Serializer):
+    password = serializers.CharField()
+
+
+class PublicViewAuthResponseSerializer(serializers.Serializer):
+    access_token = serializers.CharField()

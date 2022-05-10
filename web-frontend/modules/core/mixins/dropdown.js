@@ -29,6 +29,11 @@ export default {
       required: false,
       default: false,
     },
+    tabindex: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   data() {
     return {
@@ -48,6 +53,14 @@ export default {
     selectedIcon() {
       return this.getSelectedProperty(this.value, 'icon')
     },
+    realTabindex() {
+      // We don't want to be able focus if the dropdown is disabled or if we have
+      // opened it and the search input is currently focused
+      if (this.disabled || (this.open && this.showSearch)) {
+        return ''
+      }
+      return this.tabindex
+    },
   },
   watch: {
     value() {
@@ -64,6 +77,12 @@ export default {
     this.forceRefreshSelectedValue()
   },
   methods: {
+    focusout(event) {
+      // Hide only if we loose focus in profit of another element
+      if (event.relatedTarget) {
+        this.hide()
+      }
+    },
     /**
      * Toggles the open state of the dropdown menu.
      */
@@ -82,7 +101,7 @@ export default {
      * Shows the lists of choices, so a user can change the value.
      */
     show(target) {
-      if (this.disabled) {
+      if (this.disabled || this.open) {
         return
       }
 
@@ -146,6 +165,10 @@ export default {
           // dropdown is open.
           event.preventDefault()
           this.select(this.hover)
+        }
+        // Close on escape
+        if (this.open && event.code === 'Escape') {
+          this.hide()
         }
       }
       document.body.addEventListener('keydown', this.$el.keydownEvent)

@@ -65,6 +65,11 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
 export class TestApp {
   constructor(extraPluginSetupFunc = null) {
     this.mock = new MockAdapter(axios, { onNoMatch: 'throwException' })
+
+    // Fix "scrollIntoViewError is not a function error"
+    // as described here: https://github.com/jsdom/jsdom/issues/1695
+    window.HTMLElement.prototype.scrollIntoView = function () {}
+
     // In the future we can extend this stub realtime implementation to perform
     // useful testing of realtime interaction in the frontend!
     this._realtime = {
@@ -75,10 +80,17 @@ export class TestApp {
     }
     // Various stub and mock attributes which will be injected into components
     // mounted using TestApp.
+    const cookieStorage = {}
+    this.cookieStorage = cookieStorage
     this._app = {
       $realtime: this._realtime,
       $cookies: {
-        set(name, id, value) {},
+        set(name, id, value) {
+          cookieStorage[name] = value
+        },
+        get(name) {
+          return cookieStorage[name]
+        },
       },
       $env: {
         PUBLIC_WEB_FRONTEND_URL: 'https://localhost/',
@@ -90,6 +102,7 @@ export class TestApp {
       $route: {
         params: {},
       },
+      $featureFlags: { includes: () => true },
     }
     this._vueContext = bootstrapVueContext()
     this.store = _createBaserowStoreAndRegistry(

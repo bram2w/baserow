@@ -4,10 +4,13 @@
     "icon": "heart",
     "keywords": [
         "wedding",
-        "planner",
+        "wedding planning",
         "planning",
-        "clients",
-        "client"
+        "event planner",
+        "wedding planner",
+        "wedding clients",
+        "client",
+        "clients"
     ],
     "categories": [
         "Professional",
@@ -94,14 +97,14 @@
                             "name": "Estimated cost",
                             "order": 11,
                             "primary": false,
-                            "error": null,
+                            "error": "references the deleted or unknown field Avg price per unit in table Supplies, references the deleted or unknown field Cost per hr in table Venues, references the deleted or unknown field Cost per hr in table Venues, argument number 2 given to operator + was of type number but there are no possible types usable here, argument number 2 given to operator + was of type number but there are no possible types usable here",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 0,
-                            "array_formula_type": "number",
+                            "number_decimal_places": null,
+                            "array_formula_type": null,
                             "formula": "field('Supplies cost') + lookup('Venue','Cost per hr') * field('Est. duration in hrs') + lookup('Venue','Cost per hr') * field('Est. duration in hrs') + lookup('Entertainment','Price') * field('Est. duration in hrs') + lookup('Catering company','Price') * field('# of attendees')",
-                            "formula_type": "array"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 231550,
@@ -127,14 +130,14 @@
                             "name": "Supplies cost",
                             "order": 14,
                             "primary": false,
-                            "error": null,
+                            "error": "references the deleted or unknown field Avg price per unit in table Supplies",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 0,
+                            "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "sum(lookup('Supplies','Avg price per unit'))",
-                            "formula_type": "number"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 232073,
@@ -160,14 +163,14 @@
                             "name": "Over/under",
                             "order": 17,
                             "primary": false,
-                            "error": null,
+                            "error": "references the deleted or unknown field Avg price per unit in table Supplies, references the deleted or unknown field Cost per hr in table Venues, references the deleted or unknown field Cost per hr in table Venues, argument number 2 given to operator + was of type number but there are no possible types usable here, argument number 2 given to operator + was of type number but there are no possible types usable here",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 0,
-                            "array_formula_type": "number",
+                            "number_decimal_places": null,
+                            "array_formula_type": null,
                             "formula": "field('Budget')-field('Estimated cost')",
-                            "formula_type": "array"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 233283,
@@ -195,6 +198,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -202,105 +206,135 @@
                                     "field_id": 221554,
                                     "width": 255,
                                     "hidden": false,
-                                    "order": 13
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 253966,
                                     "field_id": 221555,
                                     "width": 150,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 253967,
                                     "field_id": 221556,
                                     "width": 165,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 254090,
                                     "field_id": 221621,
                                     "width": 177,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 254110,
                                     "field_id": 221643,
                                     "width": 109,
                                     "hidden": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 254111,
                                     "field_id": 221644,
                                     "width": 152,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262557,
                                     "field_id": 228403,
                                     "width": 177,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266418,
                                     "field_id": 231446,
                                     "width": 153,
                                     "hidden": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266464,
                                     "field_id": 231550,
                                     "width": 175,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266666,
                                     "field_id": 231560,
                                     "width": 419,
                                     "hidden": false,
-                                    "order": 11
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267045,
                                     "field_id": 231582,
                                     "width": 147,
                                     "hidden": true,
-                                    "order": 14
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267235,
                                     "field_id": 232073,
                                     "width": 172,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267268,
                                     "field_id": 232111,
                                     "width": 266,
                                     "hidden": false,
-                                    "order": 12
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267994,
                                     "field_id": 232642,
                                     "width": 137,
                                     "hidden": false,
-                                    "order": 10
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268893,
                                     "field_id": 233283,
                                     "width": 149,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -326,6 +360,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -333,105 +368,135 @@
                                     "field_id": 221554,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 12
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267872,
                                     "field_id": 221555,
                                     "width": 149,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267873,
                                     "field_id": 221556,
                                     "width": 170,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267874,
                                     "field_id": 221621,
                                     "width": 183,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267875,
                                     "field_id": 221643,
                                     "width": 111,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267876,
                                     "field_id": 221644,
                                     "width": 150,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267877,
                                     "field_id": 228403,
                                     "width": 178,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267878,
                                     "field_id": 231446,
                                     "width": 154,
                                     "hidden": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267879,
                                     "field_id": 231550,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267880,
                                     "field_id": 231560,
                                     "width": 308,
                                     "hidden": false,
-                                    "order": 10
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267881,
                                     "field_id": 231582,
                                     "width": 142,
                                     "hidden": true,
-                                    "order": 13
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267882,
                                     "field_id": 232073,
                                     "width": 164,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267883,
                                     "field_id": 232111,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 11
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267995,
                                     "field_id": 232642,
                                     "width": 136,
                                     "hidden": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269584,
                                     "field_id": 233283,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -457,6 +522,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -464,105 +530,135 @@
                                     "field_id": 221554,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 12
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267982,
                                     "field_id": 221555,
                                     "width": 147,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267983,
                                     "field_id": 221556,
                                     "width": 176,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267984,
                                     "field_id": 221621,
                                     "width": 175,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267985,
                                     "field_id": 221643,
                                     "width": 107,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267986,
                                     "field_id": 221644,
                                     "width": 153,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267987,
                                     "field_id": 228403,
                                     "width": 178,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267988,
                                     "field_id": 231446,
                                     "width": 151,
                                     "hidden": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267989,
                                     "field_id": 231550,
                                     "width": 173,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267990,
                                     "field_id": 231560,
                                     "width": 341,
                                     "hidden": false,
-                                    "order": 10
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267991,
                                     "field_id": 231582,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 13
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267992,
                                     "field_id": 232073,
                                     "width": 166,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267993,
                                     "field_id": 232111,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 11
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267996,
                                     "field_id": 232642,
                                     "width": 135,
                                     "hidden": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269585,
                                     "field_id": 233283,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         }
@@ -995,6 +1091,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1002,42 +1099,54 @@
                                     "field_id": 232108,
                                     "width": 151,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267264,
                                     "field_id": 232109,
                                     "width": 152,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267265,
                                     "field_id": 232110,
                                     "width": 160,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267267,
                                     "field_id": 232112,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268941,
                                     "field_id": 232541,
                                     "width": 300,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269649,
                                     "field_id": 233669,
                                     "width": 183,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         }
@@ -1299,7 +1408,7 @@
                         {
                             "id": 221559,
                             "type": "text",
-                            "name": "Location",
+                            "name": "Address",
                             "order": 2,
                             "primary": false,
                             "text_default": ""
@@ -1325,7 +1434,7 @@
                         {
                             "id": 228402,
                             "type": "number",
-                            "name": "Cost per hr",
+                            "name": "Cost per hour",
                             "order": 5,
                             "primary": false,
                             "number_decimal_places": 0,
@@ -1371,6 +1480,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1378,56 +1488,72 @@
                                     "field_id": 221557,
                                     "width": 284,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 253970,
                                     "field_id": 221559,
                                     "width": 307,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 254105,
                                     "field_id": 221617,
                                     "width": 322,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262555,
                                     "field_id": 228401,
                                     "width": 113,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262556,
                                     "field_id": 228402,
                                     "width": 132,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262582,
                                     "field_id": 228428,
                                     "width": 152,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262583,
                                     "field_id": 228429,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268451,
                                     "field_id": 232908,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -1453,6 +1579,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1460,56 +1587,72 @@
                                     "field_id": 221557,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268477,
                                     "field_id": 221559,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268478,
                                     "field_id": 221617,
                                     "width": 318,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268479,
                                     "field_id": 228401,
                                     "width": 115,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268480,
                                     "field_id": 228402,
                                     "width": 134,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268481,
                                     "field_id": 228428,
                                     "width": 154,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268482,
                                     "field_id": 228429,
                                     "width": 265,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268483,
                                     "field_id": 232908,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -1535,6 +1678,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1542,56 +1686,138 @@
                                     "field_id": 221557,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268485,
                                     "field_id": 221559,
                                     "width": 279,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268486,
                                     "field_id": 221617,
                                     "width": 319,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268487,
                                     "field_id": 228401,
                                     "width": 121,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268488,
                                     "field_id": 228402,
                                     "width": 135,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268489,
                                     "field_id": 228428,
                                     "width": 159,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268490,
                                     "field_id": 228429,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268491,
                                     "field_id": 232908,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 76694,
+                            "type": "gallery",
+                            "name": "Gallery: All venues",
+                            "order": 4,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 14467,
+                                    "field_id": 228401,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "field_options": [
+                                {
+                                    "id": 7621,
+                                    "field_id": 221557,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7622,
+                                    "field_id": 221559,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7623,
+                                    "field_id": 221617,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7624,
+                                    "field_id": 228401,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7625,
+                                    "field_id": 228402,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7626,
+                                    "field_id": 228428,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7627,
+                                    "field_id": 228429,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7628,
+                                    "field_id": 232908,
+                                    "hidden": true,
+                                    "order": 32767
                                 }
                             ]
                         }
@@ -1601,16 +1827,16 @@
                             "id": 1,
                             "order": "1.00000000000000000000",
                             "created_on": "2021-12-24T18:33:19.666022+00:00",
-                            "updated_on": "2022-01-12T14:50:55.935753+00:00",
+                            "updated_on": "2022-04-27T00:25:25.474776+00:00",
                             "field_221557": "Holiday Inn",
-                            "field_221559": "1284 W Forest Dr, Charleston IL",
+                            "field_221559": "1284 W Forest Dr, Charleston IL 60910",
                             "field_221617": [
                                 1,
                                 7
                             ],
                             "field_228401": "200",
                             "field_228402": "350",
-                            "field_228428": "374.934.3938",
+                            "field_228428": "(733) 644-2846",
                             "field_228429": [
                                 1
                             ],
@@ -1626,16 +1852,16 @@
                             "id": 2,
                             "order": "2.00000000000000000000",
                             "created_on": "2021-12-24T18:33:19.670820+00:00",
-                            "updated_on": "2022-01-12T14:51:02.535098+00:00",
+                            "updated_on": "2022-04-27T00:25:22.491812+00:00",
                             "field_221557": "Grand Presence Ballroom",
-                            "field_221559": "1937 E Bombard, Irvine CA",
+                            "field_221559": "1937 E Bombard, Irvine CA 90210",
                             "field_221617": [
                                 5,
                                 2
                             ],
                             "field_228401": "500",
                             "field_228402": "300",
-                            "field_228428": "294.294.5756",
+                            "field_228428": "(356) 606-3343",
                             "field_228429": [
                                 2
                             ],
@@ -1651,13 +1877,13 @@
                             "id": 3,
                             "order": "3.00000000000000000000",
                             "created_on": "2022-01-05T15:13:59.146906+00:00",
-                            "updated_on": "2022-01-12T14:51:07.786705+00:00",
+                            "updated_on": "2022-04-21T01:42:18.147108+00:00",
                             "field_221557": "The Plaza at Whitney Ranch",
                             "field_221559": "1057 Whitney Ranch Dr, Henderson, NV 89014",
                             "field_221617": [],
                             "field_228401": "1000",
                             "field_228402": "400",
-                            "field_228428": "403.372.1947",
+                            "field_228428": "(646) 627-8273",
                             "field_228429": [
                                 3
                             ],
@@ -1673,7 +1899,7 @@
                             "id": 4,
                             "order": "4.00000000000000000000",
                             "created_on": "2022-01-05T15:15:56.608658+00:00",
-                            "updated_on": "2022-01-12T14:51:13.562787+00:00",
+                            "updated_on": "2022-04-21T01:42:25.146606+00:00",
                             "field_221557": "The Wimbish House",
                             "field_221559": "1150 Peachtree St NE, Atlanta, GA 30309",
                             "field_221617": [
@@ -1681,7 +1907,7 @@
                             ],
                             "field_228401": "250",
                             "field_228402": "300",
-                            "field_228428": "593.027.3943",
+                            "field_228428": "(643) 306-7357",
                             "field_228429": [
                                 4
                             ],
@@ -1697,7 +1923,7 @@
                             "id": 5,
                             "order": "5.00000000000000000000",
                             "created_on": "2022-01-05T15:17:31.237109+00:00",
-                            "updated_on": "2022-01-12T14:51:19.556089+00:00",
+                            "updated_on": "2022-04-21T01:42:21.821997+00:00",
                             "field_221557": "The Victorian Belle Mansion",
                             "field_221559": "1441 N McClellan St, Portland, OR 97217",
                             "field_221617": [
@@ -1706,7 +1932,7 @@
                             ],
                             "field_228401": "450",
                             "field_228402": "350",
-                            "field_228428": "927.383.2649",
+                            "field_228428": "(490) 510-4804",
                             "field_228429": [
                                 5
                             ],
@@ -1722,7 +1948,7 @@
                             "id": 6,
                             "order": "6.00000000000000000000",
                             "created_on": "2022-01-05T15:18:22.188763+00:00",
-                            "updated_on": "2022-01-12T14:51:25.642958+00:00",
+                            "updated_on": "2022-04-21T01:42:29.332982+00:00",
                             "field_221557": "Wild Rose Manor Wedding & Event Center",
                             "field_221559": "5800 Oasis Rd, Caldwell, ID 83607",
                             "field_221617": [
@@ -1731,7 +1957,7 @@
                             ],
                             "field_228401": "300",
                             "field_228402": "290",
-                            "field_228428": "028.384.0021",
+                            "field_228428": "(543) 262-5134",
                             "field_228429": [
                                 6
                             ],
@@ -1768,7 +1994,7 @@
                         {
                             "id": 227281,
                             "type": "single_select",
-                            "name": "For the",
+                            "name": "Intention",
                             "order": 4,
                             "primary": false,
                             "select_options": [
@@ -1804,7 +2030,7 @@
                         {
                             "id": 231439,
                             "type": "number",
-                            "name": "Avg price per unit",
+                            "name": "Average price per unit",
                             "order": 6,
                             "primary": false,
                             "number_decimal_places": 0,
@@ -1836,6 +2062,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1843,42 +2070,54 @@
                                     "field_id": 221560,
                                     "width": 192,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 253972,
                                     "field_id": 221561,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 261308,
                                     "field_id": 227281,
                                     "width": 139,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266354,
                                     "field_id": 228412,
                                     "width": 319,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266438,
                                     "field_id": 231439,
                                     "width": 168,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266667,
                                     "field_id": 231559,
                                     "width": 324,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -1904,6 +2143,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1911,42 +2151,54 @@
                                     "field_id": 221560,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269093,
                                     "field_id": 221561,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269094,
                                     "field_id": 227281,
                                     "width": 131,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269095,
                                     "field_id": 228412,
                                     "width": 301,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269096,
                                     "field_id": 231439,
                                     "width": 170,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269097,
                                     "field_id": 231559,
                                     "width": 326,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -1972,6 +2224,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -1979,42 +2232,54 @@
                                     "field_id": 221560,
                                     "width": 147,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269099,
                                     "field_id": 221561,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269100,
                                     "field_id": 227281,
                                     "width": 115,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269101,
                                     "field_id": 228412,
                                     "width": 292,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269102,
                                     "field_id": 231439,
                                     "width": 172,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269103,
                                     "field_id": 231559,
                                     "width": 330,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -2040,6 +2305,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -2047,42 +2313,54 @@
                                     "field_id": 221560,
                                     "width": 145,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269105,
                                     "field_id": 221561,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269106,
                                     "field_id": 227281,
                                     "width": 124,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269107,
                                     "field_id": 228412,
                                     "width": 307,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269108,
                                     "field_id": 231439,
                                     "width": 173,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269109,
                                     "field_id": 231559,
                                     "width": 327,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -2108,6 +2386,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -2115,42 +2394,54 @@
                                     "field_id": 221560,
                                     "width": 183,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269111,
                                     "field_id": 221561,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269112,
                                     "field_id": 227281,
                                     "width": 126,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269113,
                                     "field_id": 228412,
                                     "width": 275,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269114,
                                     "field_id": 231439,
                                     "width": 172,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269115,
                                     "field_id": 231559,
                                     "width": 321,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -2176,6 +2467,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -2183,40 +2475,101 @@
                                     "field_id": 221560,
                                     "width": 189,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269579,
                                     "field_id": 221561,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269580,
                                     "field_id": 227281,
                                     "width": 137,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269581,
                                     "field_id": 228412,
                                     "width": 309,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269582,
                                     "field_id": 231439,
                                     "width": 174,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269583,
                                     "field_id": 231559,
                                     "width": 322,
+                                    "hidden": false,
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 76695,
+                            "type": "kanban",
+                            "name": "By intention",
+                            "order": 7,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "single_select_field_id": 227281,
+                            "field_options": [
+                                {
+                                    "id": 971,
+                                    "field_id": 221560,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 972,
+                                    "field_id": 221561,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 973,
+                                    "field_id": 227281,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 974,
+                                    "field_id": 228412,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 975,
+                                    "field_id": 231439,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 976,
+                                    "field_id": 231559,
                                     "hidden": false,
                                     "order": 32767
                                 }
@@ -2669,31 +3022,31 @@
                         {
                             "id": 221564,
                             "type": "single_select",
-                            "name": "Type of company",
+                            "name": "Company type",
                             "order": 1,
                             "primary": false,
                             "select_options": [
                                 {
                                     "id": 28924,
-                                    "value": "Florist \ud83d\udc90",
+                                    "value": "\ud83d\udc90 Florist",
                                     "color": "dark-blue",
                                     "order": 0
                                 },
                                 {
                                     "id": 28925,
-                                    "value": "Catering \ud83e\udd57",
+                                    "value": "\ud83e\udd57 Catering",
                                     "color": "dark-orange",
                                     "order": 1
                                 },
                                 {
                                     "id": 29073,
-                                    "value": "Entertainment \ud83c\udfb6",
+                                    "value": "\ud83c\udfb6 Entertainment",
                                     "color": "red",
                                     "order": 2
                                 },
                                 {
                                     "id": 30133,
-                                    "value": "Bakery \ud83c\udf70",
+                                    "value": "\ud83c\udf70 Bakery",
                                     "color": "dark-green",
                                     "order": 3
                                 }
@@ -2710,7 +3063,7 @@
                         {
                             "id": 221622,
                             "type": "link_row",
-                            "name": "Weddings - catering",
+                            "name": "Weddings: Catering",
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 41012,
@@ -2752,7 +3105,7 @@
                         {
                             "id": 231551,
                             "type": "link_row",
-                            "name": "Weddings - entertainment",
+                            "name": "Weddings: Entertainment",
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 41012,
@@ -2761,7 +3114,7 @@
                         {
                             "id": 232074,
                             "type": "link_row",
-                            "name": "Weddings - Florists",
+                            "name": "Weddings: Florists",
                             "order": 11,
                             "primary": false,
                             "link_row_table_id": 41012,
@@ -2770,7 +3123,7 @@
                         {
                             "id": 233284,
                             "type": "link_row",
-                            "name": "Weddings - bakeries",
+                            "name": "Weddings: Bakeries",
                             "order": 12,
                             "primary": false,
                             "link_row_table_id": 41012,
@@ -2802,6 +3155,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -2809,84 +3163,108 @@
                                     "field_id": 221563,
                                     "width": 191,
                                     "hidden": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 253975,
                                     "field_id": 221564,
                                     "width": 167,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 253976,
                                     "field_id": 221565,
                                     "width": 167,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 261309,
                                     "field_id": 221622,
                                     "width": 328,
                                     "hidden": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 261311,
                                     "field_id": 227284,
                                     "width": 155,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262566,
                                     "field_id": 227285,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262567,
                                     "field_id": 228411,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266453,
                                     "field_id": 231539,
                                     "width": 276,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 266472,
                                     "field_id": 231551,
                                     "width": 338,
                                     "hidden": true,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 267236,
                                     "field_id": 232074,
                                     "width": 223,
                                     "hidden": true,
-                                    "order": 8
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268894,
                                     "field_id": 233284,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268940,
                                     "field_id": 233285,
                                     "width": 158,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -2906,6 +3284,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -2913,84 +3292,108 @@
                                     "field_id": 221563,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268561,
                                     "field_id": 221564,
                                     "width": 170,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268562,
                                     "field_id": 221565,
                                     "width": 133,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268563,
                                     "field_id": 221622,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268564,
                                     "field_id": 227284,
                                     "width": 155,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268565,
                                     "field_id": 227285,
                                     "width": 111,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268566,
                                     "field_id": 228411,
                                     "width": 394,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268567,
                                     "field_id": 231539,
                                     "width": 306,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268568,
                                     "field_id": 231551,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268569,
                                     "field_id": 232074,
                                     "width": 323,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268895,
                                     "field_id": 233284,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 269650,
                                     "field_id": 233285,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -3010,6 +3413,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -3017,77 +3421,99 @@
                                     "field_id": 221563,
                                     "width": 162,
                                     "hidden": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268578,
                                     "field_id": 221564,
                                     "width": 168,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268579,
                                     "field_id": 221565,
                                     "width": 140,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268580,
                                     "field_id": 221622,
                                     "width": 329,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268581,
                                     "field_id": 227284,
                                     "width": 153,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268582,
                                     "field_id": 227285,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268583,
                                     "field_id": 228411,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 7
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268584,
                                     "field_id": 231539,
                                     "width": 302,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268585,
                                     "field_id": 231551,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 8
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268586,
                                     "field_id": 232074,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 9
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268896,
                                     "field_id": 233284,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -3107,6 +3533,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -3114,77 +3541,99 @@
                                     "field_id": 221563,
                                     "width": 182,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268874,
                                     "field_id": 221564,
                                     "width": 171,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268875,
                                     "field_id": 221565,
                                     "width": 158,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268876,
                                     "field_id": 221622,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268877,
                                     "field_id": 227284,
                                     "width": 155,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268878,
                                     "field_id": 227285,
                                     "width": 104,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268879,
                                     "field_id": 228411,
                                     "width": 116,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268880,
                                     "field_id": 231539,
                                     "width": 307,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268881,
                                     "field_id": 231551,
                                     "width": 339,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268882,
                                     "field_id": 232074,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268897,
                                     "field_id": 233284,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -3204,6 +3653,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -3211,76 +3661,183 @@
                                     "field_id": 221563,
                                     "width": 133,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268884,
                                     "field_id": 221564,
                                     "width": 166,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268885,
                                     "field_id": 221565,
                                     "width": 163,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268886,
                                     "field_id": 221622,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268887,
                                     "field_id": 227284,
                                     "width": 159,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268888,
                                     "field_id": 227285,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268889,
                                     "field_id": 228411,
                                     "width": 211,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268890,
                                     "field_id": 231539,
                                     "width": 283,
                                     "hidden": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268891,
                                     "field_id": 231551,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268892,
                                     "field_id": 232074,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268898,
                                     "field_id": 233284,
                                     "width": 323,
                                     "hidden": false,
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 76697,
+                            "type": "kanban",
+                            "name": "By company type",
+                            "order": 6,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "single_select_field_id": 221564,
+                            "field_options": [
+                                {
+                                    "id": 977,
+                                    "field_id": 221563,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 978,
+                                    "field_id": 221564,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 979,
+                                    "field_id": 221565,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 980,
+                                    "field_id": 221622,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 981,
+                                    "field_id": 227284,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 982,
+                                    "field_id": 227285,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 983,
+                                    "field_id": 228411,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 984,
+                                    "field_id": 231539,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 985,
+                                    "field_id": 231551,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 986,
+                                    "field_id": 232074,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 987,
+                                    "field_id": 233284,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 988,
+                                    "field_id": 233285,
+                                    "hidden": true,
                                     "order": 32767
                                 }
                             ]
@@ -3762,6 +4319,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -3769,42 +4327,54 @@
                                     "field_id": 221640,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 254107,
                                     "field_id": 221641,
                                     "width": 154,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 262585,
                                     "field_id": 228430,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268899,
                                     "field_id": 233286,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268900,
                                     "field_id": 233287,
                                     "width": 257,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268927,
                                     "field_id": 233314,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -3830,6 +4400,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -3837,42 +4408,54 @@
                                     "field_id": 221640,
                                     "width": 139,
                                     "hidden": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268929,
                                     "field_id": 221641,
                                     "width": 160,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268930,
                                     "field_id": 228430,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268931,
                                     "field_id": 233286,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268932,
                                     "field_id": 233287,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268933,
                                     "field_id": 233314,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         },
@@ -3898,6 +4481,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "public": false,
                             "field_options": [
                                 {
@@ -3905,42 +4489,54 @@
                                     "field_id": 221640,
                                     "width": 143,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268935,
                                     "field_id": 221641,
                                     "width": 152,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268936,
                                     "field_id": 228430,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 5
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268937,
                                     "field_id": 233286,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 2
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268938,
                                     "field_id": 233287,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 268939,
                                     "field_id": 233314,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 }
                             ]
                         }

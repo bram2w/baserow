@@ -1,4 +1,10 @@
+from collections import defaultdict
+from typing import Any, Dict
+
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractUser
 from django.urls import path, include
+
 from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.api.user_files.serializers import UserFileField
@@ -21,8 +27,10 @@ from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.user_files.models import UserFile
 from .exceptions import (
     FormViewFieldTypeIsNotSupported,
     GridViewAggregationDoesNotSupportField,
@@ -46,6 +54,7 @@ class GridViewType(ViewType):
     field_options_serializer_class = GridViewFieldOptionsSerializer
     can_aggregate_field = True
     can_share = True
+    can_decorate = True
     when_shared_publicly_requires_realtime_events = True
 
     api_exceptions_map = {
@@ -75,6 +84,8 @@ class GridViewType(ViewType):
                     "width": field_option.width,
                     "hidden": field_option.hidden,
                     "order": field_option.order,
+                    "aggregation_type": field_option.aggregation_type,
+                    "aggregation_raw_type": field_option.aggregation_raw_type,
                 }
             )
 
@@ -135,10 +146,24 @@ class GridViewType(ViewType):
         """
 
         fields_dict = {field.id: field for field in fields}
+
         for field_id, options in field_options.items():
             field = fields_dict.get(int(field_id), None)
             aggregation_raw_type = options.get("aggregation_raw_type")
+
             if aggregation_raw_type and field:
+
+                try:
+                    # Invalidate cache if new aggregation raw type has changed
+                    prev_options = GridViewFieldOptions.objects.only(
+                        "aggregation_raw_type"
+                    ).get(field=field, grid_view=view)
+                    if prev_options.aggregation_raw_type != aggregation_raw_type:
+                        ViewHandler().clear_aggregation_cache(view, field.db_column)
+                except GridViewFieldOptions.DoesNotExist:
+                    pass
+
+                # Checks if the aggregation raw type is compatible with the field type
                 aggregation_type = view_aggregation_type_registry.get(
                     aggregation_raw_type
                 )
@@ -152,27 +177,35 @@ class GridViewType(ViewType):
         Check field option aggregation_raw_type compatibility with the new field type.
         """
 
-        field_options = GridViewFieldOptions.objects.filter(field=field).select_related(
-            "grid_view"
+        field_options = (
+            GridViewFieldOptions.objects_and_trash.filter(field=field)
+            .exclude(aggregation_raw_type="")
+            .select_related("grid_view")
         )
 
-        for field_option in field_options:
-            raw_type = field_option.aggregation_raw_type
-            if raw_type:
-                aggregation_type = view_aggregation_type_registry.get(raw_type)
+        view_handler = ViewHandler()
 
-                if not aggregation_type.field_is_compatible(field):
-                    # The field has an aggregation and the type is not compatible with
-                    # the new field, so we need to clean the aggregation.
-                    ViewHandler().update_field_options(
-                        view=field_option.grid_view,
-                        field_options={
-                            field.id: {
-                                "aggregation_type": "",
-                                "aggregation_raw_type": "",
-                            }
-                        },
-                    )
+        for field_option in field_options:
+            aggregation_type = view_aggregation_type_registry.get(
+                field_option.aggregation_raw_type
+            )
+
+            view_handler.clear_aggregation_cache(
+                field_option.grid_view, field.db_column
+            )
+
+            if not aggregation_type.field_is_compatible(field):
+                # The field has an aggregation and the type is not compatible with
+                # the new field, so we need to clean the aggregation.
+                view_handler.update_field_options(
+                    view=field_option.grid_view,
+                    field_options={
+                        field.id: {
+                            "aggregation_type": "",
+                            "aggregation_raw_type": "",
+                        }
+                    },
+                )
 
     def get_visible_field_options_in_order(self, grid_view):
         return (
@@ -183,6 +216,58 @@ class GridViewType(ViewType):
 
     def get_hidden_field_options(self, grid_view):
         return grid_view.get_field_options(create_if_missing=False).filter(hidden=True)
+
+    def get_aggregations(self, grid_view):
+        """
+        Returns the (Field, aggregation_type) list computed from the field options for
+        the specified view.
+        """
+
+        field_options = (
+            GridViewFieldOptions.objects.filter(grid_view=grid_view)
+            .exclude(aggregation_raw_type="")
+            .select_related("field")
+        )
+        return [(option.field, option.aggregation_raw_type) for option in field_options]
+
+    def after_field_value_update(self, updated_fields):
+        """
+        When a field value change, we need to invalidate the aggregation cache for this
+        field.
+        """
+
+        to_clear = defaultdict(list)
+        view_map = {}
+
+        field_options = (
+            GridViewFieldOptions.objects.filter(field__in=updated_fields)
+            .exclude(aggregation_raw_type="")
+            .select_related("grid_view", "field")
+        )
+
+        for options in field_options:
+            to_clear[options.grid_view.id].append(options.field.db_column)
+            view_map[options.grid_view.id] = options.grid_view
+
+        view_handler = ViewHandler()
+        for view_id, names in to_clear.items():
+            view_handler.clear_aggregation_cache(view_map[view_id], names + ["total"])
+
+    def after_field_update(self, updated_fields):
+        """
+        When a field configuration is changed, we need to invalid the cache for
+        corresponding aggregations also.
+        """
+
+        self.after_field_value_update(updated_fields)
+
+    def after_filter_update(self, grid_view):
+        """
+        If the view filters change we also need to invalid the aggregation cache for all
+        fields of this view.
+        """
+
+        ViewHandler().clear_full_aggregation_cache(grid_view)
 
 
 class GalleryViewType(ViewType):
@@ -301,6 +386,19 @@ class GalleryViewType(ViewType):
             GalleryViewFieldOptions.objects.filter(id__in=ids_to_update).update(
                 hidden=False
             )
+
+    def export_prepared_values(self, view: GalleryView) -> Dict[str, Any]:
+        """
+        Add `card_cover_image_field` to the exportable fields.
+
+        :param view: The gallery view to export.
+        :return: The prepared values.
+        """
+
+        values = super().export_prepared_values(view)
+        values["card_cover_image_field"] = view.card_cover_image_field_id
+
+        return values
 
 
 class FormViewType(ViewType):
@@ -465,3 +563,57 @@ class FormViewType(ViewType):
             .filter(enabled=True)
             .order_by("-field__primary", "order", "field__id")
         )
+
+    def prepare_values(
+        self, values: Dict[str, Any], table: Table, user: AbstractUser
+    ) -> Dict[str, Any]:
+        """
+        Prepares the values for the form view.
+        If a serialized version of UserFile is found, it will be converted to a
+        UserFile object.
+
+        :param values: The values to prepare.
+        :param table: The table the form view belongs to.
+        :param user: The user that is submitting the form.
+        :raises: ValidationError if the provided value for images is not
+            compatible with UserFile.
+        :return: The prepared values.
+        """
+
+        for user_file_key in ["cover_image", "logo_image"]:
+            user_file = values.get(user_file_key, None)
+
+            if user_file is None:
+                continue
+
+            if isinstance(user_file, dict):
+                values[user_file_key] = UserFileHandler().get_user_file_by_name(
+                    user_file.get("name", None)
+                )
+
+            elif not isinstance(user_file, UserFile):
+                raise ValidationError(
+                    f"Invalid user file type. '{user_file_key}' should be a UserFile \
+                        instance or the serialized version of it."
+                )
+
+        return super().prepare_values(values, table, user)
+
+    def export_prepared_values(self, view: FormView) -> Dict[str, Any]:
+        """
+        Add form fields to the exportable fields for undo/redo.
+        This is the counterpart of prepare_values. Starting from object instances,
+        it exports data to a serialized version of the object, in a way that
+        prepare_values can be used to import it.
+
+        :param view: The gallery view to export.
+        :return: The prepared values.
+        """
+
+        values = super().export_prepared_values(view)
+
+        for field in ["cover_image", "logo_image"]:
+            user_file = getattr(view, field)
+            values[field] = user_file and user_file.serialize()
+
+        return values

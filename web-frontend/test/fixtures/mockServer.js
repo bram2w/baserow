@@ -36,10 +36,15 @@ export class MockServer {
     return { id: 1, name: 'Test Table 1' }
   }
 
-  createGridView(application, table, { filters = [], sortings = [] }) {
+  createGridView(
+    application,
+    table,
+    { filters = [], sortings = [], decorations = [] }
+  ) {
     return createGridView(this.mock, application, table, {
       filters,
       sortings,
+      decorations,
     })
   }
 
@@ -131,6 +136,33 @@ export class MockServer {
     } else {
       mock.replyOnce(200, result)
     }
+  }
+
+  getAllFieldAggregationData(viewId, result, error = false) {
+    const mock = this.mock.onGet(`/database/views/grid/${viewId}/aggregations/`)
+    if (error) {
+      mock.replyOnce(500)
+    } else {
+      mock.replyOnce(200, result)
+    }
+  }
+
+  createDecoration(view, values, result) {
+    this.mock
+      .onPost(`/database/views/${view.id}/decorations/`, values)
+      .replyOnce(200, result)
+  }
+
+  updateDecoration(decoration, values, result) {
+    this.mock
+      .onPatch(`/database/views/decoration/${decoration.id}/`, values)
+      .replyOnce(200, result)
+  }
+
+  deleteDecoration(decoration) {
+    this.mock
+      .onDelete(`/database/views/decoration/${decoration.id}/`)
+      .replyOnce(200)
   }
 
   resetMockEndpoints() {

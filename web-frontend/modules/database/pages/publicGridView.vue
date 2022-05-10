@@ -30,12 +30,24 @@ export default {
    * Fetches and prepares all the table, field and view data for the provided
    * public grid view.
    */
-  async asyncData({ store, params, error, app }) {
+  async asyncData({ store, params, error, app, redirect, route }) {
+    const slug = params.slug
+
+    // in case the view is password protected, use the token saved in the cookies (if any)
+    const publicAuthToken = await store.dispatch(
+      'page/view/public/setAuthTokenFromCookies',
+      { slug }
+    )
+
     try {
-      const viewSlug = params.slug
-      await store.dispatch('page/view/grid/setPublic', true)
+      await store.dispatch('page/view/grid/setPublic', {
+        isPublic: true,
+        publicAuthToken,
+      })
+
       const { data } = await GridService(app.$client).fetchPublicViewInfo(
-        viewSlug
+        slug,
+        publicAuthToken
       )
 
       const { applications } = await store.dispatch('application/forceSetAll', {
@@ -76,7 +88,14 @@ export default {
         startingPrimary: primary,
       }
     } catch (e) {
-      if (e.response && e.response.status === 404) {
+      const statusCode = e.response?.status
+      // password protected view requires authentication
+      if (statusCode === 401) {
+        return redirect({
+          name: 'database-public-view-auth',
+          query: { original: route.path },
+        })
+      } else if (e.response?.status === 404) {
         return error({ statusCode: 404, message: 'View not found.' })
       } else {
         return error({ statusCode: 500, message: 'Error loading view.' })
@@ -97,7 +116,9 @@ export default {
   mounted() {
     if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
       this.$realtime.connect(true, true)
-      this.$realtime.subscribe('view', { slug: this.$route.params.slug })
+
+      const token = this.$store.getters['page/view/public/getAuthToken']
+      this.$realtime.subscribe('view', { slug: this.$route.params.slug, token })
     }
   },
   beforeDestroy() {

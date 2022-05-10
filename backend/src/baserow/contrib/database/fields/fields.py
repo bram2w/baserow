@@ -6,9 +6,15 @@ from django.db.models.fields.related_descriptors import (
     ForwardManyToOneDescriptor,
     ManyToManyDescriptor,
 )
+from django.db.models.expressions import RawSQL
 from django.utils.functional import cached_property
 
+
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
+
+
+class BaserowLastModifiedField(models.DateTimeField):
+    requires_refresh_after_update = True
 
 
 class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
@@ -197,3 +203,28 @@ class BaserowExpressionField(models.Field):
                         self.expression, model_instance
                     )
                 )
+
+
+class SerialField(models.Field):
+    """
+    The serial field works very similar compared to the `AutoField` (primary key field).
+    Everytime a new row is created and the value is not set, it will automatically
+    increment a sequence and that will be set as value. It's basically an auto
+    increment column. The sequence is independent of a transaction to prevent race
+    conditions.
+    """
+
+    db_returning = True
+
+    def db_type(self, connection):
+        return "serial"
+
+    def pre_save(self, model_instance, add):
+        if add and not getattr(model_instance, self.name):
+            sequence_name = f"{model_instance._meta.db_table}_{self.name}_seq"
+            return RawSQL(  # nosec
+                f"nextval('{sequence_name}'::regclass)",
+                (),
+            )
+        else:
+            return super().pre_save(model_instance, add)

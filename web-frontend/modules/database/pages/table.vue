@@ -29,6 +29,7 @@ export default {
    * way it will not be highlighted the left sidebar.
    */
   beforeRouteLeave(to, from, next) {
+    this.$store.dispatch('view/unselect')
     this.$store.dispatch('table/unselect')
     next()
   },

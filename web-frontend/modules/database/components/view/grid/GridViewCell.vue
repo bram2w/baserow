@@ -1,5 +1,15 @@
 <template functional>
+  <!--
+    The :key property must be set here because it makes sure that the child components
+    are not re-rendered when functional component changes position in the DOM.
+  -->
   <div
+    :key="
+      'row-field-cell-' +
+      props.row.id.toString() +
+      '-' +
+      props.field.id.toString()
+    "
     ref="wrapper"
     class="grid-view__column"
     :class="{
@@ -42,8 +52,10 @@
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :selected="parent.isCellSelected(props.field.id)"
+      :store-prefix="props.storePrefix"
       :read-only="props.readOnly"
       @update="(...args) => $options.methods.update(listeners, props, ...args)"
+      @paste="(...args) => $options.methods.paste(listeners, props, ...args)"
       @edit="(...args) => $options.methods.edit(listeners, props, ...args)"
       @unselect="$options.methods.unselect(parent, props)"
       @selected="$options.methods.selected(listeners, props, $event)"
@@ -100,6 +112,15 @@ export default {
         })
       }
     },
+    paste(listeners, props, event) {
+      if (listeners.paste) {
+        listeners.paste({
+          data: event,
+          row: props.row,
+          field: props.field,
+        })
+      }
+    },
     /**
      * If the grid field components emits an edit event then the user has changed the
      * value without saving it yet. This is for example used to check in real time if
@@ -129,7 +150,6 @@ export default {
       }
     },
     cellMouseover(event, listeners) {
-      event.preventDefault()
       if (listeners['cell-mouseover']) {
         listeners['cell-mouseover']()
       }

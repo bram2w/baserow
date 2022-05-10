@@ -75,18 +75,35 @@ import FormPageField from '@baserow/modules/database/components/view/form/FormPa
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 
 export default {
-  components: { Notifications, FormPageField, FormViewPoweredBy },
-  async asyncData({ params, error, app }) {
+  components: {
+    Notifications,
+    FormPageField,
+    FormViewPoweredBy,
+  },
+  async asyncData({ params, error, app, route, redirect, store }) {
     const slug = params.slug
-    let data = null
+    const publicAuthToken = await store.dispatch(
+      'page/view/public/setAuthTokenFromCookies',
+      { slug }
+    )
 
+    let data = null
     try {
       const { data: responseData } = await FormService(
         app.$client
-      ).getMetaInformation(slug)
+      ).getMetaInformation(slug, publicAuthToken)
       data = responseData
     } catch (e) {
-      return error({ statusCode: 404, message: 'Form not found.' })
+      const statusCode = e.response?.status
+      // password protect forms require authentication
+      if (statusCode === 401) {
+        return redirect({
+          name: 'database-public-view-auth',
+          query: { original: route.path },
+        })
+      } else {
+        return error({ statusCode: 404, message: 'Form not found.' })
+      }
     }
 
     // After the form field meta data has been fetched, we need to make the values
@@ -126,6 +143,7 @@ export default {
       submit_text: data.submit_text,
       fields: data.fields,
       values,
+      publicAuthToken,
     }
   },
   data() {
@@ -191,7 +209,11 @@ export default {
 
       try {
         const slug = this.$route.params.slug
-        const { data } = await FormService(this.$client).submit(slug, values)
+        const { data } = await FormService(this.$client).submit(
+          slug,
+          values,
+          this.publicAuthToken
+        )
 
         this.submitted = true
         this.submitAction = data.submit_action
@@ -208,7 +230,6 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       }
-
       this.loading = false
     },
     /**

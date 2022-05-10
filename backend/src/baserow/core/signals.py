@@ -8,6 +8,7 @@ group_restored = Signal()
 
 group_user_updated = Signal()
 group_user_deleted = Signal()
+groups_reordered = Signal()
 
 application_created = Signal()
 application_updated = Signal()

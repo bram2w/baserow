@@ -7,13 +7,9 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from baserow.contrib.database.fields.handler import FieldHandler
-
 
 @pytest.mark.django_db
-def test_altering_value_of_referenced_field(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_altering_value_of_referenced_field(data_fixture, api_client):
     expected = "2"
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -723,7 +719,7 @@ def test_altering_type_of_underlying_causes_type_update(api_client, data_fixture
 
 
 @pytest.mark.django_db
-def test_can_compare_date_and_text(api_client, data_fixture, django_assert_num_queries):
+def test_can_compare_date_and_text(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -889,9 +885,7 @@ def test_trashing_formula_field(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_can_type_an_invalid_formula_field(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_cant_type_an_invalid_formula_field(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
@@ -910,26 +904,24 @@ def test_can_type_an_invalid_formula_field(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    formula_field_id = response.json()["id"]
+    formula_field_name = response.json()["name"]
 
     response = api_client.post(
         reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": formula_field_id}
+            "api:database:formula:type_formula",
+            kwargs={"table_id": table.id},
         ),
-        {f"formula": "1+'a'"},
+        {f"formula": "1+'a'", "name": formula_field_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
-    assert response.status_code == 200, response_json
-    assert response_json["formula_type"] == "invalid"
-    assert "argument number 2" in response_json["error"]
+    assert response.status_code == 400, response_json
+    assert response_json["error"] == "ERROR_WITH_FORMULA"
 
 
 @pytest.mark.django_db
-def test_can_type_a_valid_formula_field(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_can_type_a_valid_formula_field(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
@@ -948,13 +940,14 @@ def test_can_type_a_valid_formula_field(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    formula_field_id = response.json()["id"]
+    formula_field_name = response.json()["name"]
 
     response = api_client.post(
         reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": formula_field_id}
+            "api:database:formula:type_formula",
+            kwargs={"table_id": table.id},
         ),
-        {f"formula": "1+1"},
+        {f"formula": "1+1", "name": formula_field_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -973,9 +966,7 @@ def test_can_type_a_valid_formula_field(
 
 
 @pytest.mark.django_db
-def test_type_endpoint_returns_error_for_bad_syntax(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_type_endpoint_returns_error_for_bad_syntax(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
@@ -994,13 +985,14 @@ def test_type_endpoint_returns_error_for_bad_syntax(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    formula_field_id = response.json()["id"]
+    formula_field_name = response.json()["name"]
 
     response = api_client.post(
         reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": formula_field_id}
+            "api:database:formula:type_formula",
+            kwargs={"table_id": table.id},
         ),
-        {f"formula": "bad syntax"},
+        {f"formula": "bad syntax", "name": formula_field_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1010,9 +1002,7 @@ def test_type_endpoint_returns_error_for_bad_syntax(
 
 
 @pytest.mark.django_db
-def test_type_endpoint_returns_error_for_missing_parameters(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_type_endpoint_returns_error_for_missing_parameters(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
@@ -1031,11 +1021,11 @@ def test_type_endpoint_returns_error_for_missing_parameters(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    formula_field_id = response.json()["id"]
 
     response = api_client.post(
         reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": formula_field_id}
+            "api:database:formula:type_formula",
+            kwargs={"table_id": table.id},
         ),
         {},
         format="json",
@@ -1047,9 +1037,7 @@ def test_type_endpoint_returns_error_for_missing_parameters(
 
 
 @pytest.mark.django_db
-def test_type_endpoint_returns_error_for_missing_field(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_type_endpoint_returns_error_for_missing_table(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
@@ -1061,48 +1049,18 @@ def test_type_endpoint_returns_error_for_missing_field(
     assert response.status_code == 200, response.json()
 
     response = api_client.post(
-        reverse("api:database:formula:type_formula", kwargs={"field_id": 9999}),
-        {f"formula": "bad syntax"},
+        reverse("api:database:formula:type_formula", kwargs={"table_id": 9999}),
+        {f"formula": "bad syntax", "name": "field_name"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response_json["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+    assert response_json["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db
-def test_type_endpoint_returns_error_for_non_formula_field(
-    data_fixture, api_client, django_assert_num_queries
-):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    response = api_client.post(
-        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_decimal_places": 0},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == 200, response.json()
-    number_field_id = response.json()["id"]
-
-    response = api_client.post(
-        reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": number_field_id}
-        ),
-        {f"formula": "bad syntax"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_404_NOT_FOUND
-    assert response_json["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
-
-
-@pytest.mark.django_db
-def test_type_endpoint_returns_error_for_self_reference(
-    data_fixture, api_client, django_assert_num_queries
-):
+def test_type_endpoint_returns_error_for_self_reference(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
@@ -1112,13 +1070,14 @@ def test_type_endpoint_returns_error_for_self_reference(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    formula_field_id = response.json()["id"]
+    formula_field_name = response.json()["name"]
 
     response = api_client.post(
         reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": formula_field_id}
+            "api:database:formula:type_formula",
+            kwargs={"table_id": table.id},
         ),
-        {f"formula": "field('formula')"},
+        {f"formula": "field('formula')", "name": formula_field_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1128,35 +1087,8 @@ def test_type_endpoint_returns_error_for_self_reference(
 
 
 @pytest.mark.django_db
-def test_type_endpoint_returns_error_for_circular_reference(
-    data_fixture, api_client, django_assert_num_queries
-):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    handler = FieldHandler()
-    first_formula = handler.create_field(
-        user, table, "formula", formula="1", name="first"
-    )
-    handler.create_field(
-        user, table, "formula", formula="field('first')", name="second"
-    )
-
-    response = api_client.post(
-        reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": first_formula.id}
-        ),
-        {f"formula": "field('second')"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_FIELD_CIRCULAR_REFERENCE"
-
-
-@pytest.mark.django_db
-def test_type_endpoint_returns_error_if_not_permissioned_for_field(
-    data_fixture, api_client, django_assert_num_queries
+def test_type_endpoint_returns_error_if_not_permissioned_for_table(
+    data_fixture, api_client
 ):
     user, token = data_fixture.create_user_and_token()
     other_user, other_token = data_fixture.create_user_and_token()
@@ -1177,13 +1109,14 @@ def test_type_endpoint_returns_error_if_not_permissioned_for_field(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    formula_field_id = response.json()["id"]
+    formula_field_name = response.json()["name"]
 
     response = api_client.post(
         reverse(
-            "api:database:formula:type_formula", kwargs={"field_id": formula_field_id}
+            "api:database:formula:type_formula",
+            kwargs={"table_id": table.id},
         ),
-        {f"formula": "1+1"},
+        {f"formula": "1+1", "name": formula_field_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {other_token}",
     )

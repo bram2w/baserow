@@ -144,10 +144,14 @@ are subscribed to the page.
 * `field_deleted`
 * `field_restored`
 * `row_created`
+* `rows_created`
 * `row_updated`
+* `rows_updated`
 * `row_deleted`
 * `before_row_update`
 * `before_row_delete`
+* `before_rows_update`
+* `before_rows_delete`
 * `view_created`
 * `view_updated`
 * `view_deleted`
@@ -157,6 +161,9 @@ are subscribed to the page.
 * `view_sort_created`
 * `view_sort_updated`
 * `view_sort_deleted`
+* `view_decoration_created`
+* `view_decoration_updated`
+* `view_decoration_deleted`
 * `view_field_options_updated`
 * `views_reordered`
 

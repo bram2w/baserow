@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Sie benötigen mindestens eine weitere Tabelle in derselben Datenbank, auf die Sie verweisen können.",
-        "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung",
-        "dataLost": "Wenn Sie die Tabelle ändern, gehen alle Daten verloren."
+        "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung"
     },
     "fieldSelectOptions": {
         "add": "Eine Option hinzufügen"
@@ -376,7 +375,10 @@
         "sharedViewDescription": "Personen, die den Link haben, können den {ViewTypeSharingLinkName} sehen.",
         "disableLink": "freigegebenen Link deaktivieren",
         "generateNewUrl": "neue Url generieren",
-        "copyURL": "URL kopieren"
+        "copyURL": "URL kopieren",
+        "DisablePassword": "Zugriff ist passwortgeschützt",
+        "EnablePassword": "Beschränken Sie den Zugriff mit einem Passwort",
+        "ChangePassword": "Ändern"
     },
     "viewSortContext": {
         "noSortTitle": "Sie haben noch keine Sortierungen erstellt",
@@ -537,5 +539,36 @@
         "airtableShareLinkDescription": "Um Ihre Airtable Base zu importieren, müssen Sie einen Link zu Ihrer gesamten Base haben. Klicken Sie in Airtable auf die \"Share\" taste in der oberen rechten Ecke, nachdem Sie Ihre Base geöffnet haben. Danach müssen Sie die Option \"Access to base\" wählen. Im modal drücken Sie auf \"Create a shared link to the whole base\" und dann auf \"Private read-only link\". Kopieren Sie den Link und fügen Sie ihn in das unten stehende Feld ein.",
         "errorJobAlreadyRunningTitle": "Schon läuft",
         "errorJobAlreadyRunningDescription": "Ein weiterer Importauftrag ist bereits in Arbeit. Sie müssen abwarten, bis dieser Vorgang abgeschlossen ist, bevor Sie einen weiteren beginnen."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "einzelnes Auswahlfeld hinzufügen"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Geben Sie ein password ein",
+        "changePasswordSave": "Passwort ändern",
+        "newPasswordSave": "Passwort setzen",
+        "changePasswordTitle": "Passwort ändern",
+        "changePasswordDescription": "Durch das Ändern des Passworts funktioniert das vorherige nicht mehr. Dieses Passwort wird verschlüsselt gespeichert.",
+        "newPasswordDescription": "Der öffentliche Link ist erst nach Eingabe des Passworts zugänglich. Dieses Passwort wird verschlüsselt gespeichert."
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Passwortschutz deaktivieren",
+        "description": "Möchten Sie den Passwortschutz für diesen öffentlichen Link wirklich deaktivieren? Durch die Deaktivierung wird das Passwort gelöscht und kann nicht wiederhergestellt werden",
+        "disable": "Deaktivieren"
+    },
+    "publicViewAuthLogin": {
+        "title": "Diese Seite ist passwortgeschützt",
+        "enter": "Eingeben",
+        "error": {
+            "incorrectPasswordTitle": "Falsches Passwort",
+            "incorrectPasswordText": "Das angegebene Passwort ist falsch."
+        },
+        "description": "Geben Sie das richtige Passwort ein, um auf die Seite zuzugreifen."
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "Verzierung hinzufügen"
+    },
+    "viewDecorator": {
+        "decorator": "Farbe | 1 Farbe | {count} Farben"
     }
 }

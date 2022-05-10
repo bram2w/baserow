@@ -135,7 +135,8 @@
         "inThisYear": "est cette année",
         "lowerThan": "est plus petit que",
         "lengthIsLowerThan": "a une longueur inférieure à",
-        "hasFileType": "est de type"
+        "hasFileType": "est de type",
+        "isDaysAgo": "il y a X jours"
     },
     "viewType": {
         "grid": "Tableau",
@@ -154,7 +155,8 @@
         "application": "application",
         "table": "table",
         "field": "champ",
-        "row": "ligne"
+        "row": "ligne",
+        "view": "vue"
     },
     "webhook": {
         "request": "Requête",
@@ -271,9 +273,9 @@
         "greaterThanOrEqualDescription": "Retourne vrai si le premier argument est supérieur ou égal au second.",
         "lessThanDescription": "Retourne vrai si le premier argument et strictement inférieur au second.",
         "lessThanOrEqualDescription": "Retourne vrai si le premier argument et inférieur ou égal au second.",
-        "toDateDescription": "Retourne le premier argument converti en date selon le format définit en second argument.",
+        "toDateDescription": "Retourne le premier argument converti en date selon le format défini en second argument.",
         "dayDescription": "Retourne le jour de la date en argument en tant qu'entier compris entre 1 et 31.",
-        "dateDiffDescription": "Étant donné l'unité de mesure définit par le premier argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calcule et retourne le nombre d'unité pour aller du second argument au troisième.",
+        "dateDiffDescription": "Étant donné l'unité de mesure définie par le premier argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calcule et retourne le nombre d'unité pour aller du second argument au troisième.",
         "andDescription": "Retourne le ET logique entre le premier et le second argument. Si les deux arguments sont vrais alors le résultat est vrai, sinon le résultat est faux.",
         "orDescription": "Retourne le OU logique entre le premier et le second argument. Si au moins un des argument est vrai alors le résultat est vrai, sinon le résultat est faux.",
         "dateIntervalDescription": "Retourne l'interval de date correspondant à l'argument fourni.",
@@ -285,8 +287,8 @@
         "notEqualDescription": "Retourne vrai si les deux arguments ont des valeurs différentes.",
         "countDescription": "Retourne le nombre d'élément de son argument.",
         "containsDescription": "Retourne vrai si le premier argument contient au moins une fois le second.",
-        "leftDescription": "Permet d'extraire le nombre de caractères définit en second argument du premier argument en partant de la gauche.",
-        "rightDescription": "Permet d'extraire le nombre de caractères définit en second argument du premier argument en partant de la droite.",
+        "leftDescription": "Permet d'extraire le nombre de caractères définis en second argument du premier argument en partant de la gauche.",
+        "rightDescription": "Permet d'extraire le nombre de caractères définis en second argument du premier argument en partant de la droite.",
         "trimDescription": "Supprime tous les caractères 'espace' au début et à la fin de la chaîne en argument.",
         "regexReplaceDescription": "Remplace le texte du premier argument s'il correspond à l'expression régulière en second argument avec le texte en troisième argument.",
         "greatestDescription": "Retourne le plus grand des deux arguments.",

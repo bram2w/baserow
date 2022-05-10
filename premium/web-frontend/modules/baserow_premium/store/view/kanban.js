@@ -134,6 +134,22 @@ export const mutations = {
       state.stacks[currentStackId].results.splice(currentIndex, 1)[0]
     )
   },
+  ADD_FIELD_TO_ALL_ROWS(state, { field, value }) {
+    const name = `field_${field.id}`
+    Object.keys(state.stacks).forEach((stack) => {
+      // We have to replace all the rows by using the map function to make it
+      // reactive and update immediately. If we don't do this, the value in the
+      // field components of the grid and modal don't always have the correct value
+      // binding.
+      state.stacks[stack].results = state.stacks[stack].results.map((row) => {
+        if (row !== null && !Object.prototype.hasOwnProperty.call(row, name)) {
+          row[`field_${field.id}`] = value
+          return { ...row }
+        }
+        return row
+      })
+    })
+  },
 }
 
 export const actions = {
@@ -760,9 +776,6 @@ export const actions = {
       const currentFieldValue = row[fieldToCallName]
       const optimisticFieldValue = fieldType.onRowChange(
         row,
-        field,
-        value,
-        oldValue,
         fieldToCall,
         currentFieldValue
       )
@@ -932,6 +945,13 @@ export const actions = {
     }
 
     return deferredFieldUpdate ? doFieldUpdate : doFieldUpdate()
+  },
+  /**
+   * Adds a field with a provided value to the rows in the store. This will for
+   * example be called when a new field has been created.
+   */
+  addField({ commit }, { field, value = null }) {
+    commit('ADD_FIELD_TO_ALL_ROWS', { field, value })
   },
 }
 

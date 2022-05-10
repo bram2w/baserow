@@ -1,7 +1,10 @@
 from django.conf import settings
 from rest_framework.exceptions import NotAuthenticated
 
-from baserow.contrib.database.views.exceptions import ViewDoesNotExist
+from baserow.contrib.database.views.exceptions import (
+    NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.ws.registries import PageType
@@ -39,12 +42,14 @@ class TablePageType(PageType):
 
 class PublicViewPageType(PageType):
     type = "view"
-    parameters = ["slug"]
+    parameters = ["slug", "token"]
 
-    def can_add(self, user, web_socket_id, slug, **kwargs):
+    def can_add(self, user, web_socket_id, slug, token=None, **kwargs):
         """
-        The user should only have access to this page if the view exists and it is
-        public or they have access to the group.
+        The user should only have access to this page if the view exists and:
+        - the user have access to the group
+        - the view is public and not password protected
+        - the view is public, password protected and the token provided is valid.
         """
 
         if settings.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
@@ -55,11 +60,14 @@ class PublicViewPageType(PageType):
 
         try:
             handler = ViewHandler()
-            view = handler.get_public_view_by_slug(user, slug)
-            view_type = view_type_registry.get_by_model(view.specific_class)
-            if not view_type.when_shared_publicly_requires_realtime_events:
-                return False
-        except ViewDoesNotExist:
+            view = handler.get_public_view_by_slug(
+                user, slug, authorization_token=token
+            )
+        except (ViewDoesNotExist, NoAuthorizationToPubliclySharedView):
+            return False
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if not view_type.when_shared_publicly_requires_realtime_events:
             return False
 
         return True

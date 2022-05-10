@@ -87,7 +87,8 @@
     },
     "editUserContext": {
         "changePassword": "Wachtwoord wijzigen",
-        "delete": "Permanent verwijderen"
+        "delete": "Permanent verwijderen",
+        "impersonate": "Imiteer"
     },
     "changePasswordForm": {
         "newPassword": "Nieuw wachtwoord",
@@ -151,8 +152,7 @@
     },
     "kanbanViewStakedBy": {
         "title": "Groepsveld",
-        "chooseField": "Op welk enkelvoudig keuzeveld moeten de kaarten gestapeld worden?",
-        "addSelectField": "enkelvoudig keuzeveld toevoegen"
+        "chooseField": "Op welk enkelvoudig keuzeveld moeten de kaarten gestapeld worden?"
     },
     "kanbanViewStack": {
         "uncategorized": "Zonder categorie",
@@ -220,5 +220,27 @@
         "storeUsage": "Opslaggebruik",
         "disconnectLicense": "Licentie ontkoppelen",
         "disconnectDescription": "Als je deze licentie ontkoppelt terwijl deze actief is, hebben de toegewezen gebruikers geen toegang meer tot het relevante plan. Deze handeling zal de licentie effectief verwijderen. Neem contact op met ons support team via {contact} als je deze licentie wilt gebruiken in een andere zelf-gehoste installatie."
+    },
+    "viewDecoratorType": {
+        "leftBorderColor": "Linkerrand",
+        "leftBorderColorDescription": "Kleur de linkerrand van een rij",
+        "backgroundColorDescription": "Kleur de achtergrond van een rij",
+        "backgroundColor": "Achtergrond kleur",
+        "onlyForPremium": "Beschikbaar in de premium versie",
+        "onlyOneDecoratorPerView": "U kunt slechts één decoratie van dat type hebben voor een weergave"
+    },
+    "decoratorValueProviderType": {
+        "conditionalColor": "Voorwaarden",
+        "conditionalColorDescription": "Kleur rijen wanneer ze voldoen aan de voorwaarden",
+        "singleSelectColorDescription": "Geef rijen dezelfde kleur als een enkele selectiewaarde",
+        "singleSelectColor": "Enkele selectie"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "Met welk enkel select veld moet de rij gekleurd worden?"
+    },
+    "conditionalColorValueProviderForm": {
+        "addCondition": "voorwaarde toevoegen",
+        "colorAlwaysApply": "Deze kleur is standaard van toepassing. U kunt voorwaarden toevoegen door te klikken op de \"Voeg voorwaarde toe\" knop.",
+        "addColor": "kleur toevoegen"
     }
 }

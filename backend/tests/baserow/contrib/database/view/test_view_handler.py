@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.handler import ViewHandler, PublicViewRows
 from baserow.contrib.database.views.models import (
     View,
     GridView,
@@ -545,8 +545,8 @@ def test_update_field_options(send_mock, data_fixture):
 def test_grid_view_aggregation_type_field_option(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    grid_view = data_fixture.create_grid_view(table=table)
     field_1 = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
 
     # Fake incompatible field
     empty_count = view_aggregation_type_registry.get("empty_count")
@@ -712,8 +712,9 @@ def test_apply_filters(data_fixture):
     filter_2.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_2.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_2.id
 
     filter_2.delete()
 
@@ -731,9 +732,10 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 3
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_2.id
-    assert rows[2].id == row_3.id
+    rows_0, rows_1, rows_2 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_2.id
+    assert rows_2.id == row_3.id
 
     grid_view.filter_type = "AND"
     filter_1.value = "1"
@@ -742,8 +744,9 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_3.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_3.id
 
     grid_view.filter_type = "AND"
     filter_1.value = "1"
@@ -752,8 +755,9 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_2.id
-    assert rows[1].id == row_4.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_2.id
+    assert rows_1.id == row_4.id
 
     grid_view.filter_type = "AND"
     filter_1.value = "False"
@@ -762,16 +766,18 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_2.id
-    assert rows[1].id == row_4.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_2.id
+    assert rows_1.id == row_4.id
 
     grid_view.filters_disabled = True
     grid_view.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_2.id
-    assert rows[2].id == row_3.id
-    assert rows[3].id == row_4.id
+    rows_0, rows_1, rows_2, rows_3 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_2.id
+    assert rows_2.id == row_3.id
+    assert rows_3.id == row_4.id
 
 
 @pytest.mark.django_db
@@ -1492,6 +1498,88 @@ def test_get_public_views_which_include_row(data_fixture, django_assert_num_quer
 
 
 @pytest.mark.django_db
+def test_get_public_views_which_include_rows(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table)
+    hidden_field = data_fixture.create_text_field(table=table)
+    public_view1 = data_fixture.create_grid_view(
+        user,
+        create_options=False,
+        table=table,
+        public=True,
+        order=0,
+    )
+    public_view2 = data_fixture.create_grid_view(
+        user, table=table, public=True, order=1
+    )
+    public_view3 = data_fixture.create_grid_view(
+        user, table=table, public=True, order=2
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+    data_fixture.create_grid_view(user, table=table)
+    data_fixture.create_grid_view_field_option(public_view1, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(public_view2, hidden_field, hidden=True)
+
+    # Public View 1 has filters which match row 1
+    data_fixture.create_view_filter(
+        view=public_view1, field=visible_field, type="equal", value="Visible"
+    )
+    data_fixture.create_view_filter(
+        view=public_view1, field=hidden_field, type="equal", value="Hidden"
+    )
+
+    # Public View 2 has filters which match row 2
+    data_fixture.create_view_filter(
+        view=public_view2, field=visible_field, type="equal", value="Visible"
+    )
+    data_fixture.create_view_filter(
+        view=public_view2, field=hidden_field, type="equal", value="Not Match"
+    )
+
+    # Public View 3 has filters which match both rows
+    data_fixture.create_view_filter(
+        view=public_view2, field=visible_field, type="equal", value="Visible"
+    )
+
+    row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{visible_field.id}": "Visible",
+            f"field_{hidden_field.id}": "Hidden",
+        },
+    )
+    row2 = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{visible_field.id}": "Visible",
+            f"field_{hidden_field.id}": "Not Match",
+        },
+    )
+
+    model = table.get_model()
+    checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
+
+    assert checker.get_public_views_where_rows_are_visible([row, row2]) == [
+        PublicViewRows(
+            view=ViewHandler().get_view(public_view1.id), allowed_row_ids={1}
+        ),
+        PublicViewRows(
+            view=ViewHandler().get_view(public_view2.id), allowed_row_ids={2}
+        ),
+        PublicViewRows(
+            view=ViewHandler().get_view(public_view3.id),
+            allowed_row_ids=PublicViewRows.ALL_ROWS_ALLOWED,
+        ),
+    ]
+
+
+@pytest.mark.django_db
 def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
     data_fixture, django_assert_num_queries
 ):
@@ -1770,3 +1858,55 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view
         assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
+
+
+@pytest.mark.django_db
+def test_cant_get_view_filter_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    view_filter = data_fixture.create_view_filter(user=user, view=grid_view)
+
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewFilterDoesNotExist):
+        ViewHandler().get_filter(user, view_filter.id)
+
+
+@pytest.mark.django_db
+def test_cant_apply_sorting_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewSortDoesNotExist):
+        ViewHandler().apply_sorting(
+            grid_view,
+            grid_view.table.get_model().objects.all(),
+        )
+
+
+@pytest.mark.django_db
+def test_cant_get_sort_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    field = data_fixture.create_number_field(user, table=grid_view.table)
+
+    view_sort = ViewHandler().create_sort(user, grid_view, field, "asc")
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewSortDoesNotExist):
+        ViewHandler().get_sort(user, view_sort.id)
+
+
+@pytest.mark.django_db
+def test_cant_update_sort_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    field = data_fixture.create_number_field(user, table=grid_view.table)
+
+    view_sort = ViewHandler().create_sort(user, grid_view, field, "asc")
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewSortDoesNotExist):
+        ViewHandler().update_sort(user, view_sort, field)

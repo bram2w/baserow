@@ -26,9 +26,8 @@ export class RealTimeHandler {
     this.reconnect = reconnect
     this.anonymous = anonymous
 
-    const token = anonymous
-      ? 'anonymous'
-      : this.context.store.getters['auth/token']
+    const jwtToken = this.context.store.getters['auth/token']
+    const token = anonymous ? jwtToken || 'anonymous' : jwtToken
 
     // If the user is already connected to the web socket, we don't have to do
     // anything.
@@ -221,6 +220,10 @@ export class RealTimeHandler {
       if (group !== undefined) {
         store.dispatch('group/forceDelete', group)
       }
+    })
+
+    this.registerEvent('groups_reordered', ({ store }, data) => {
+      store.dispatch('group/forceOrder', data.group_ids)
     })
 
     this.registerEvent('application_created', ({ store }, data) => {

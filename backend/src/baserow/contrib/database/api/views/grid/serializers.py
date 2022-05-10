@@ -20,7 +20,6 @@ class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
             "aggregation_raw_type"
         ).help_text,
         required=False,
-        default="",
         allow_blank=True,
     )
 

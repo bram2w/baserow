@@ -187,6 +187,10 @@
         "title": "Kopieren...",
         "content": "Vorbereiten ihre Daten"
     },
+    "pastingNotification": {
+        "title": "Einfügen...",
+        "content": "Vorbereiten ihre Daten"
+    },
     "errorLayout": {
         "notFound": "Die Seite, die Sie suchen, wurde nicht gefunden. Dies könnte daran liegen, dass die URL nicht korrekt ist oder dass Sie keine Berechtigung haben, diese Seite anzuzeigen.",
         "error": "Beim Laden der Seite ist ein Fehler aufgetreten. Unsere Entwickler wurden über das Problem informiert. Bitte versuchen Sie, die Seite zu aktualisieren oder zum Dashboard zurückzukehren.",
@@ -247,5 +251,25 @@
         "enabled": "aktiviert",
         "settingAllowSignupsViaGroupInvitationsName": "Erlaube Registrierungen durch Gruppeneinladungen",
         "settingAllowSignupsViaGroupInvitationDescription": "Auch wenn die Erstellung von neuen Konten deaktiviert ist können Nutzer:innen durch Setzen dieser Option Nutzer:innen ein Konto erstellen."
+    },
+    "undoRedoNotification": {
+        "redoingText": "Deine Aktion wird wieder hergestellt",
+        "redoneTitle": "Wieder ausgeführt",
+        "skippingUndoDueToError": "Rückgängig machen hat aufgrund eines unbekannten Fehlers nicht funktioniert, überspringen.",
+        "redoingTitle": "Wiederherstellen...",
+        "failed": "Fehlgeschlagen",
+        "undoingTitle": "Rückgängig machen...",
+        "undoingText": "Deine Aktion rückgängig machen",
+        "undoneTitle": "Rückgängig gemacht",
+        "undoneText": "Aktion ist rückgängig gemacht",
+        "noMoreUndo": "Keine Aktionen zum rückgängig machen übrig",
+        "noMoreRedo": "Keine Aktionen zum wieder-ausführen übrig",
+        "redoneText": "Aktion wurde wieder ausgeführt",
+        "skippingRedoDueToError": "Wieder ausführen hat aufgrund eines unbekannten Fehler nicht funktioniert, überspringen."
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Autorisierungsfehler",
+        "content": "Anscheinend sind Sie nicht berechtigt, diese Ressource anzuzeigen.",
+        "action": "Seite neu laden"
     }
 }

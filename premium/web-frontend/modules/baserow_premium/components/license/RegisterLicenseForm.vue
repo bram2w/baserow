@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('license')" class="control">
       <label class="control__label">{{
         $t('registerLicenseForm.licenseKey')
       }}</label>
@@ -8,16 +8,16 @@
         <textarea
           ref="license"
           v-model="values.license"
-          :class="{ 'input--error': $v.values.license.$error }"
+          :class="{ 'input--error': fieldHasErrors('license') }"
           type="text"
           class="input input--large textarea--modal"
           @blur="$v.values.license.$touch()"
         />
-        <div v-if="$v.values.license.$error" class="error">
+        <div v-if="fieldHasErrors('license')" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
-    </div>
+    </FormElement>
     <slot></slot>
   </form>
 </template>

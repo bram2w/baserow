@@ -103,7 +103,6 @@
 </template>
 
 <script>
-import Papa from 'papaparse'
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
@@ -189,7 +188,7 @@ export default {
         return
       }
 
-      Papa.parse(decodedData, {
+      this.$papa.parse(decodedData, {
         delimiter: this.columnSeparator === 'auto' ? '' : this.columnSeparator,
         complete: (data) => {
           if (data.data.length === 0) {

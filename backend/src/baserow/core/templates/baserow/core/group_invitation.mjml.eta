@@ -4,7 +4,7 @@
   <mj-column>
     <mj-text mj-class="title">{% trans "Invitation" %}</mj-text>
     <mj-text mj-class="text">
-      {% blocktrans with invitation.invited_by.first_name as first_name and invitation.group.name as group_name %}
+      {% blocktrans trimmed with invitation.invited_by.first_name as first_name and invitation.group.name as group_name %}
         <strong>{{ first_name }}</strong> has invited you to collaborate on
         <strong>{{ group_name }}</strong>.
       {% endblocktrans %}
@@ -21,7 +21,7 @@
       {{ public_accept_url }}
     </mj-text>
     <mj-text mj-class="text">
-      {% blocktrans %}
+      {% blocktrans trimmed %}
         Baserow is an open source no-code database tool which allows you to collaborate
         on projects, customers and more. It gives you the powers of a developer without
         leaving your browser.

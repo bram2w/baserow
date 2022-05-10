@@ -24,10 +24,21 @@
   @extend %ellipsis;
 
   max-width: 200px;
+  color: $color-primary-900;
+
+  &:hover {
+    text-decoration: none;
+  }
 
   &.field-link-row__name--unnamed {
     color: $color-neutral-600;
   }
+}
+
+.field-link-row__loading {
+  margin: 5px 0 0 4px;
+
+  @include loading(12px);
 }
 
 .field-link-row__remove {

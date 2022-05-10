@@ -16,6 +16,7 @@
       ref="left"
       class="grid-view__left"
       :fields="leftFields"
+      :all-table-fields="allTableFields"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
@@ -33,6 +34,7 @@
       @cell-mouseup-left="multiSelectStop"
       @add-row="addRow()"
       @update="updateValue"
+      @paste="multiplePasteFromCell"
       @edit="editValue"
       @selected="selectedCell($event)"
       @unselected="unselectedCell($event)"
@@ -64,6 +66,7 @@
       ref="right"
       class="grid-view__right"
       :fields="visibleFields"
+      :all-table-fields="allTableFields"
       :table="table"
       :view="view"
       :include-add-field="true"
@@ -77,6 +80,7 @@
       @row-context="showRowContext($event.event, $event.row)"
       @add-row="addRow()"
       @update="updateValue"
+      @paste="multiplePasteFromCell"
       @edit="editValue"
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
@@ -182,8 +186,8 @@ import GridViewRowDragging from '@baserow/modules/database/components/view/grid/
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
-import { isElement } from '@baserow/modules/core/utils/dom'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
+import { isElement } from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'GridView',
@@ -276,6 +280,9 @@ export default {
     leftWidth() {
       return this.leftFieldsWidth + this.gridViewRowDetailsWidth
     },
+    allTableFields() {
+      return [this.primary, ...this.fields]
+    },
   },
   watch: {
     fieldOptions: {
@@ -321,7 +328,8 @@ export default {
     window.addEventListener('resize', this.$el.resizeEvent)
     window.addEventListener('keydown', this.arrowEvent)
     window.addEventListener('copy', this.exportMultiSelect)
-    window.addEventListener('click', this.cancelMultiSelect)
+    window.addEventListener('paste', this.pasteFromMultipleCellSelection)
+    window.addEventListener('click', this.cancelMultiSelectIfActive)
     window.addEventListener('mouseup', this.multiSelectStop)
     this.$refs.left.$el.addEventListener(
       'scroll',
@@ -336,14 +344,14 @@ export default {
     window.removeEventListener('resize', this.$el.resizeEvent)
     window.removeEventListener('keydown', this.arrowEvent)
     window.removeEventListener('copy', this.exportMultiSelect)
-    window.removeEventListener('click', this.cancelMultiSelect)
+    window.removeEventListener('paste', this.pasteFromMultipleCellSelection)
+    window.removeEventListener('click', this.cancelMultiSelectIfActive)
     window.removeEventListener('mouseup', this.multiSelectStop)
     this.$bus.$off('field-deleted', this.fieldDeleted)
+
     this.$store.dispatch(
-      this.storePrefix + 'view/grid/setMultiSelectActive',
-      false
+      this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
     )
-    this.$store.dispatch(this.storePrefix + 'view/grid/clearMultiSelect')
   },
   methods: {
     /**
@@ -744,10 +752,8 @@ export default {
       }
 
       this.$store.dispatch(
-        this.storePrefix + 'view/grid/setMultiSelectActive',
-        false
+        this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
       )
-      this.$store.dispatch(this.storePrefix + 'view/grid/clearMultiSelect')
 
       this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
         rowId: nextRowId,
@@ -768,57 +774,56 @@ export default {
         this.fieldsUpdated()
       })
     },
-    /*
-      Called when mouse is clicked and held on a GridViewCell component.
-      Starts multi-select by setting the head and tail index to the currently
-      selected cell.
-    */
+    /**
+     * Called when mouse is clicked and held on a GridViewCell component.
+     * Starts multi-select by setting the head and tail index to the currently
+     * selected cell.
+     */
     multiSelectStart({ event, row, field }) {
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectStart', {
         rowId: row.id,
         fieldIndex: this.visibleFields.findIndex((f) => f.id === field.id) + 1,
       })
     },
-    /*
-      Called when mouse hovers over a GridViewCell component.
-      Updates the current multi-select grid by updating the tail index
-      with the last cell hovered over.
-    */
+    /**
+     * Called when mouse hovers over a GridViewCell component.
+     * Updates the current multi-select grid by updating the tail index
+     * with the last cell hovered over.
+     */
     multiSelectHold({ event, row, field }) {
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectHold', {
         rowId: row.id,
         fieldIndex: this.visibleFields.findIndex((f) => f.id === field.id) + 1,
       })
     },
-    /*
-      Called when the mouse is unpressed over a GridViewCell component.
-      Stop multi-select.
-    */
+    /**
+     * Called when the mouse is unpressed over a GridViewCell component.
+     * Stop multi-select.
+     */
     multiSelectStop({ event, row, field }) {
       this.$store.dispatch(
         this.storePrefix + 'view/grid/setMultiSelectHolding',
         false
       )
     },
-    /*
-      Cancels multi-select if it's currently active.
-      This function checks if a mouse click event is triggered
-      outside of GridViewRows. This is done by ensuring that the
-      target element's class is either 'grid-view' or 'grid-view__rows'.
-    */
-    cancelMultiSelect(event) {
+    /**
+     * Cancels multi-select if it's currently active.
+     * This function checks if a mouse click event is triggered
+     * outside of GridViewRows.
+     */
+    cancelMultiSelectIfActive(event) {
       if (
         this.$store.getters[
           this.storePrefix + 'view/grid/isMultiSelectActive'
         ] &&
         (!isElement(this.$el, event.target) ||
-          !['grid-view__rows', 'grid-view'].includes(event.target.classList[0]))
+          !['grid-view__row', 'grid-view__rows', 'grid-view'].includes(
+            event.target.classList[0]
+          ))
       ) {
         this.$store.dispatch(
-          this.storePrefix + 'view/grid/setMultiSelectActive',
-          false
+          this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
         )
-        this.$store.dispatch(this.storePrefix + 'view/grid/clearMultiSelect')
       }
     },
     arrowEvent(event) {
@@ -833,14 +838,15 @@ export default {
           ]
         ) {
           this.$store.dispatch(
-            this.storePrefix + 'view/grid/setMultiSelectActive',
-            false
+            this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
           )
-          this.$store.dispatch(this.storePrefix + 'view/grid/clearMultiSelect')
         }
       }
     },
-    // Prepare and copy the multi-select cells into the clipboard, formatted as TSV
+    /**
+     * Prepare and copy the multi-select cells into the clipboard,
+     * formatted as TSV
+     */
     async exportMultiSelect(event) {
       try {
         this.$store.dispatch('notification/setCopying', true)
@@ -848,14 +854,83 @@ export default {
           this.storePrefix + 'view/grid/exportMultiSelect',
           this.leftFields.concat(this.visibleFields)
         )
+        // If the output is undefined, it means that there is no multiple selection.
         if (output !== undefined) {
-          navigator.clipboard.writeText(output)
+          const tsv = this.$papa.unparse(output, { delimiter: '\t' })
+          navigator.clipboard.writeText(tsv)
         }
       } catch (error) {
         notifyIf(error, 'view')
       } finally {
         this.$store.dispatch('notification/setCopying', false)
       }
+    },
+    /**
+     * Called when the @paste event is triggered from the `GridViewSection` component.
+     * This happens when the individual cell doesn't understand the pasted data and
+     * needs to emit it up. This typically happens when multiple cell values are pasted.
+     */
+    async multiplePasteFromCell({ data, field, row }) {
+      const rowIndex = this.$store.getters[
+        this.storePrefix + 'view/grid/getRowIndexById'
+      ](row.id)
+      const fieldIndex =
+        this.visibleFields.findIndex((f) => f.id === field.id) + 1
+      await this.pasteData(data, rowIndex, fieldIndex)
+    },
+    /**
+     * Called when the user pastes data without having an individual cell selected. It
+     * only works when a multiple selection is active because then we know in which
+     * cells we can paste the data.
+     */
+    async pasteFromMultipleCellSelection(event) {
+      if (!this.isMultiSelectActive) {
+        return
+      }
+
+      const parsed = await this.$papa.parsePromise(
+        event.clipboardData.getData('text'),
+        { delimiter: '\t' }
+      )
+      const data = parsed.data
+      await this.pasteData(data)
+    },
+    /**
+     * Called when data must be pasted into the grid view. It basically forwards the
+     * request to a store action which handles the actual updating of rows. It also
+     * shows a loading animation while busy, so the user knows something is while the
+     * update is in progress.
+     */
+    async pasteData(data, rowIndex, fieldIndex) {
+      // If the data is an empty array, we don't have to do anything because there is
+      // nothing to update. If the view is in read only mode, we can't paste so not
+      // doing anything.
+      if (data.length === 0 || data[0].length === 0 || this.readOnly) {
+        return
+      }
+
+      this.$store.dispatch('notification/setPasting', true)
+
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateDataIntoCells',
+          {
+            table: this.table,
+            view: this.view,
+            primary: this.primary,
+            fields: this.leftFields.concat(this.visibleFields),
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+            data,
+            rowIndex,
+            fieldIndex,
+          }
+        )
+      } catch (error) {
+        notifyIf(error)
+      }
+
+      this.$store.dispatch('notification/setPasting', false)
+      return true
     },
   },
 }

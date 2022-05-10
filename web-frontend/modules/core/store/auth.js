@@ -3,6 +3,7 @@ import jwtDecode from 'jwt-decode'
 import AuthService from '@baserow/modules/core/services/auth'
 import { setToken, unsetToken } from '@baserow/modules/core/utils/auth'
 import { unsetGroupCookie } from '@baserow/modules/core/utils/group'
+import { v4 as uuidv4 } from 'uuid'
 
 export const state = () => ({
   refreshing: false,
@@ -10,6 +11,10 @@ export const state = () => ({
   user: null,
   additional: {},
   webSocketId: null,
+  // Indicates whether a token should be set persistently as a cookie using the
+  // `setToken` function.
+  preventSetToken: false,
+  untrustedClientSessionId: uuidv4(),
 })
 
 export const mutations = {
@@ -38,6 +43,9 @@ export const mutations = {
   SET_WEB_SOCKET_ID(state, id) {
     state.webSocketId = id
   },
+  SET_PREVENT_SET_TOKEN(state, value) {
+    state.preventSetToken = value
+  },
 }
 
 export const actions = {
@@ -45,9 +53,11 @@ export const actions = {
    * Authenticate a user by his email and password. If successful commit the
    * token to the state and start the refresh timeout to stay authenticated.
    */
-  async login({ commit, dispatch }, { email, password }) {
+  async login({ commit, dispatch, getters }, { email, password }) {
     const { data } = await AuthService(this.$client).login(email, password)
-    setToken(data.token, this.app)
+    if (!getters.getPreventSetToken) {
+      setToken(data.token, this.app)
+    }
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
     return data.user
@@ -96,10 +106,12 @@ export const actions = {
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
    */
-  async refresh({ commit, state, dispatch }, token) {
+  async refresh({ commit, state, dispatch, getters }, token) {
     try {
       const { data } = await AuthService(this.$client).refresh(token)
-      setToken(data.token, this.app)
+      if (!getters.getPreventSetToken) {
+        setToken(data.token, this.app)
+      }
       commit('SET_USER_DATA', data)
       dispatch('startRefreshTimeout')
     } catch (error) {
@@ -156,6 +168,12 @@ export const actions = {
   forceUpdateUserData({ commit }, data) {
     commit('UPDATE_USER_DATA', data)
   },
+  forceSetUserData({ commit }, data) {
+    commit('SET_USER_DATA', data)
+  },
+  preventSetToken({ commit }) {
+    commit('SET_PREVENT_SET_TOKEN', true)
+  },
 }
 
 export const getters = {
@@ -186,6 +204,9 @@ export const getters = {
   isStaff(state) {
     return state.user ? state.user.is_staff : false
   },
+  getUntrustedClientSessionId(state) {
+    return state.untrustedClientSessionId
+  },
   /**
    * Returns the amount of seconds it will take before the tokes expires.
    * @TODO figure out what happens if the browser and server time are not in
@@ -197,6 +218,9 @@ export const getters = {
   },
   getAdditionalUserData(state) {
     return state.additional
+  },
+  getPreventSetToken(state) {
+    return state.preventSetToken
   },
 }
 

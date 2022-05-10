@@ -2,7 +2,7 @@ from django.db.models import Q
 from freezegun import freeze_time
 
 import pytest
-from datetime import date
+from datetime import date, timedelta
 from pytz import timezone
 
 from django.utils.timezone import make_aware, datetime
@@ -125,12 +125,11 @@ def test_equal_filter_type(data_fixture):
     assert len(ids) == 1
     assert row.id in ids
 
-    # Because the value 'test' cannot be accepted the filter is not applied so it will
-    # return all rows.
+    # Because the value 'test' cannot be accepted no results will be returned.
     view_filter.field = integer_field
     view_filter.value = "test"
     view_filter.save()
-    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
 
     view_filter.field = decimal_field
     view_filter.value = "20.20"
@@ -1024,10 +1023,11 @@ def test_higher_than_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
+    # with an invalid filter value no results are returned
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
     view_filter.value = "-5"
     view_filter.save()
@@ -1100,11 +1100,12 @@ def test_higher_than_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
+    # with an invalid filter value no results are returned
     view_filter.field = decimal_field
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -1174,10 +1175,11 @@ def test_lower_than_filter_type(data_fixture):
     assert row_3.id in ids
     assert row_4.id in ids
 
+    # with an invalid filter value no results are returned
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
     view_filter.value = "-5"
     view_filter.save()
@@ -1250,11 +1252,12 @@ def test_lower_than_filter_type(data_fixture):
     assert row_3.id in ids
     assert row_4.id in ids
 
+    # with an invalid filter value no results are returned
     view_filter.field = decimal_field
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -1421,6 +1424,177 @@ def test_last_modified_date_equal_filter_type(data_fixture):
     assert row.id in ids
     assert row_1.id not in ids
     assert row_2.id not in ids
+
+
+@pytest.mark.django_db
+def test_last_modified_datetime_equals_days_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    tzone = "Europe/Berlin"
+    last_modified_field_date = data_fixture.create_last_modified_field(
+        table=table, date_include_time=False, timezone=tzone
+    )
+    last_modified_field_datetime = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone=tzone
+    )
+
+    model = table.get_model()
+
+    days_ago = 1
+    when = datetime.utcnow().astimezone(timezone(tzone)) - timedelta(days=days_ago)
+
+    # the first and only object created with the correct amount of days ago
+    with freeze_time(when.replace(hour=4, minute=59)):
+        row = model.objects.create(**{})
+
+    # one day after the filter
+    day_after = when + timedelta(days=1)
+    with freeze_time(day_after):
+        row_2 = model.objects.create(**{})
+
+    # one day before the filter
+    with freeze_time(when - timedelta(hours=(when.hour + 1))):
+        row_3 = model.objects.create(**{})
+
+    with freeze_time(when.strftime("%Y-%m-%d")):
+        row_4 = model.objects.create(**{})
+
+    with freeze_time(day_after.strftime("%Y-%m-%d")):
+        row_5 = model.objects.create(**{})
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    def apply_filter():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_field_datetime,
+        type="date_equals_days_ago",
+        value=f"{tzone}?{days_ago}",
+    )
+
+    ids = apply_filter()
+    assert len(ids) == 2
+    assert row.id in ids
+    assert row_4.id in ids
+
+    filter.field = last_modified_field_date
+    filter.save()
+    ids = apply_filter()
+    assert len(ids) == 2
+    assert row.id in ids
+    assert row_4.id in ids
+
+    # an invalid value results in an empty filter
+    for invalid_value in ["", f"?", f"{tzone}?1?", f"{tzone}?"]:
+        filter.value = invalid_value
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 5
+        for r in [row, row_2, row_3, row_4, row_5]:
+            assert r.id in ids
+
+    # if `days_ago` value results in a BC date, no results are returned
+    max_days_ago = (datetime.utcnow() - datetime(1, 1, 1)).days
+    filter.value = f"UTC?{max_days_ago + 1}"
+    filter.save()
+    ids = apply_filter()
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
+def test_last_modified_date_equals_days_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    tzone = "Europe/Berlin"
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    test_date = date(2021, 2, 1)
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": test_date,
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 1),
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 2),
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+    row_5 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2010, 1, 1),
+        }
+    )
+
+    test_datetime = datetime.combine(test_date, datetime.min.time())
+    days_ago = (datetime.utcnow() - test_datetime).days
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    def apply_filter():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=date_field,
+        type="date_equals_days_ago",
+        value=f"{tzone}?{days_ago}",
+    )
+
+    ids = apply_filter()
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.value = f"?{days_ago + 1}"
+    filter.save()
+    ids = apply_filter()
+    assert len(ids) == 0
+
+    filter.value = f"?"
+    filter.save()
+    ids = apply_filter()
+    assert len(ids) == 5
+    for r in [row, row_2, row_3, row_4, row_5]:
+        assert r.id in ids
+
+    # an invalid value results in an empty filter
+    for invalid_value in ["", f"?", f"{tzone}?1?", f"{tzone}?"]:
+        filter.value = invalid_value
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 5
+        for r in [row, row_2, row_3, row_4, row_5]:
+            assert r.id in ids
+
+    # if `days_ago` value results in a BC date, no results are returned
+    max_days_ago = (datetime.utcnow() - datetime(1, 1, 1)).days
+    filter.value = f"UTC?{max_days_ago + 1}"
+    filter.save()
+    ids = apply_filter()
+    assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -3396,10 +3570,11 @@ def test_length_is_lower_than_filter_type(data_fixture):
     assert row_2.id in ids
     assert row_3.id in ids
 
+    # with an invalid filter value no results are returned
     view_filter.value = "a"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 3
+    assert len(ids) == 0
 
     view_filter.value = 2
     view_filter.field = long_text_field

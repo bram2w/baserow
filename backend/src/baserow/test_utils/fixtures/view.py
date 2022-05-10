@@ -1,4 +1,7 @@
+from rest_framework import serializers
+
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import (
     GridView,
     GridViewFieldOptions,
@@ -8,7 +11,53 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptions,
     ViewFilter,
     ViewSort,
+    ViewDecoration,
 )
+from baserow.contrib.database.views.exceptions import DecoratorTypeAlreadyRegistered
+from baserow.contrib.database.views.registries import (
+    decorator_type_registry,
+    decorator_value_provider_type_registry,
+    DecoratorType,
+    DecoratorValueProviderType,
+)
+
+
+class TmpDecoratorType1(DecoratorType):
+    type = "tmp_decorator_type_1"
+
+
+class TmpDecoratorType2(DecoratorType):
+    type = "tmp_decorator_type_2"
+
+
+class TmpDecoratorType3(DecoratorType):
+    type = "tmp_decorator_type_3"
+
+
+class ValueProviderSerializer1(serializers.Serializer):
+    field_id = serializers.IntegerField(allow_null=True)
+
+
+class ValueProviderSerializer2(serializers.Serializer):
+    description = serializers.CharField(required=True)
+
+
+class ValueProviderType1(DecoratorValueProviderType):
+    type = "value_provider_1"
+    compatible_decorator_types = [TmpDecoratorType1.type, TmpDecoratorType2.type]
+    value_provider_conf_serializer_class = ValueProviderSerializer1
+
+
+class ValueProviderType2(DecoratorValueProviderType):
+    type = "value_provider_2"
+    compatible_decorator_types = [TmpDecoratorType1.type, TmpDecoratorType2.type]
+    value_provider_conf_serializer_class = ValueProviderSerializer2
+
+
+class ValueProviderType3(DecoratorValueProviderType):
+    type = "value_provider_3"
+    compatible_decorator_types = []
+    value_provider_conf_serializer_class = ValueProviderSerializer1
 
 
 class ViewFixtures:
@@ -114,3 +163,61 @@ class ViewFixtures:
             kwargs["order"] = "ASC"
 
         return ViewSort.objects.create(**kwargs)
+
+    def register_temp_decorators_and_value_providers(self):
+        try:
+            decorator_type_registry.register(TmpDecoratorType1())
+            decorator_type_registry.register(TmpDecoratorType2())
+            decorator_type_registry.register(TmpDecoratorType3())
+            decorator_value_provider_type_registry.register(ValueProviderType1())
+            decorator_value_provider_type_registry.register(ValueProviderType2())
+            decorator_value_provider_type_registry.register(ValueProviderType3())
+        except DecoratorTypeAlreadyRegistered:
+            pass
+
+    def create_view_decoration(self, user=None, **kwargs):
+        self.register_temp_decorators_and_value_providers()
+
+        if "view" not in kwargs:
+            kwargs["view"] = self.create_grid_view(user)
+
+        if "type" not in kwargs:
+            kwargs["type"] = "tmp_decorator_type_1"
+
+        if "value_provider_type" not in kwargs:
+            kwargs["value_provider_type"] = "value_provider_1"
+
+        if "value_provider_conf" not in kwargs:
+            kwargs["value_provider_conf"] = {}
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        return ViewDecoration.objects.create(**kwargs)
+
+    def create_public_password_protected_grid_view(
+        self, user=None, password=None, **kwargs
+    ):
+        view = self.create_grid_view(user=user, public=True, **kwargs)
+        if password:
+            view.set_password(password)
+            view.save()
+        return view
+
+    def create_public_password_protected_grid_view_with_token(
+        self, user=None, password=None, **kwargs
+    ):
+        view = self.create_public_password_protected_grid_view(
+            user=user, password=password, **kwargs
+        )
+        token = ViewHandler().encode_public_view_token(view)
+        return view, token
+
+    def create_public_password_protected_form_view(
+        self, user=None, password=None, **kwargs
+    ):
+        view = self.create_form_view(user=user, public=True, **kwargs)
+        if password:
+            view.set_password(password)
+            view.save()
+        return view

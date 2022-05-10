@@ -165,6 +165,23 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('rows_created', (context, data) => {
+    const { app, store } = context
+    for (const viewType of Object.values(app.$registry.getAll('view'))) {
+      for (let i = 0; i < data.rows.length; i++) {
+        viewType.rowCreated(
+          context,
+          data.table_id,
+          store.getters['field/getAll'],
+          store.getters['field/getPrimary'],
+          data.rows[i],
+          data.metadata,
+          'page/'
+        )
+      }
+    }
+  })
+
   realtime.registerEvent('row_updated', async (context, data) => {
     const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
@@ -180,7 +197,36 @@ export const registerRealtimeEvents = (realtime) => {
       )
     }
 
-    store.dispatch('rowModal/updated', { values: data.row })
+    store.dispatch('rowModal/updated', {
+      tableId: data.table_id,
+      values: data.row,
+    })
+  })
+
+  realtime.registerEvent('rows_updated', async (context, data) => {
+    // TODO: Rewrite
+    // This is currently a naive implementation of batch rows updates.
+    const { app, store } = context
+    for (const viewType of Object.values(app.$registry.getAll('view'))) {
+      for (let i = 0; i < data.rows.length; i++) {
+        const row = data.rows[i]
+        const rowBeforeUpdate = data.rows_before_update[i]
+
+        await viewType.rowUpdated(
+          context,
+          data.table_id,
+          store.getters['field/getAll'],
+          store.getters['field/getPrimary'],
+          rowBeforeUpdate,
+          row,
+          data.metadata,
+          'page/'
+        )
+      }
+    }
+    for (let i = 0; i < data.rows.length; i++) {
+      store.dispatch('rowModal/updated', { values: data.rows[i] })
+    }
   })
 
   realtime.registerEvent('row_deleted', (context, data) => {
@@ -194,6 +240,23 @@ export const registerRealtimeEvents = (realtime) => {
         data.row,
         'page/'
       )
+    }
+  })
+
+  realtime.registerEvent('rows_deleted', (context, data) => {
+    const { app, store } = context
+    for (const viewType of Object.values(app.$registry.getAll('view'))) {
+      for (let i = 0; i < data.rows.length; i++) {
+        const row = data.rows[i]
+        viewType.rowDeleted(
+          context,
+          data.table_id,
+          store.getters['field/getAll'],
+          store.getters['field/getPrimary'],
+          row,
+          'page/'
+        )
+      }
     }
   })
 
@@ -364,6 +427,43 @@ export const registerRealtimeEvents = (realtime) => {
             tableId: store.getters['table/getSelectedId'],
           })
         }
+      }
+    }
+  })
+
+  realtime.registerEvent('view_decoration_created', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_decoration.view)
+    if (view !== undefined) {
+      store.dispatch('view/forceCreateDecoration', {
+        view,
+        values: data.view_decoration,
+      })
+    }
+  })
+
+  realtime.registerEvent('view_decoration_updated', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_decoration.view)
+    if (view !== undefined) {
+      const decoration = view.decorations.find(
+        (deco) => deco.id === data.view_decoration_id
+      )
+      if (decoration !== undefined) {
+        store.dispatch('view/forceUpdateDecoration', {
+          decoration,
+          values: data.view_decoration,
+        })
+      }
+    }
+  })
+
+  realtime.registerEvent('view_decoration_deleted', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== undefined) {
+      const decoration = view.decorations.find(
+        (deco) => deco.id === data.view_decoration_id
+      )
+      if (decoration !== undefined) {
+        store.dispatch('view/forceDeleteDecoration', { view, decoration })
       }
     }
   })

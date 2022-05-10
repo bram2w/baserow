@@ -10,6 +10,10 @@ from rest_framework_jwt.blacklist.exceptions import (
 )
 from rest_framework_jwt.compat import ExpiredSignature
 
+from baserow.api.sessions import (
+    set_untrusted_client_session_id_from_request_or_raise_if_invalid,
+)
+
 
 class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
     def authenticate(self, request):
@@ -57,6 +61,7 @@ class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
 
         # @TODO this should actually somehow be moved to the ws app.
         user.web_socket_id = request.headers.get("WebSocketId")
+        set_untrusted_client_session_id_from_request_or_raise_if_invalid(user, request)
 
         return user, token
 

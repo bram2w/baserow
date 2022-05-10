@@ -53,6 +53,79 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
+        from baserow.core.action.registries import (
+            action_type_registry,
+            action_scope_registry,
+        )
+
+        from .action.scopes import TableActionScopeType
+
+        action_scope_registry.register(TableActionScopeType())
+
+        from .table.actions import (
+            CreateTableActionType,
+            DeleteTableActionType,
+            OrderTableActionType,
+            UpdateTableActionType,
+        )
+
+        action_type_registry.register(CreateTableActionType())
+        action_type_registry.register(DeleteTableActionType())
+        action_type_registry.register(OrderTableActionType())
+        action_type_registry.register(UpdateTableActionType())
+
+        from .rows.actions import (
+            CreateRowActionType,
+            CreateRowsActionType,
+            DeleteRowActionType,
+            DeleteRowsActionType,
+            MoveRowActionType,
+            UpdateRowActionType,
+            UpdateRowsActionType,
+        )
+
+        action_type_registry.register(CreateRowActionType())
+        action_type_registry.register(CreateRowsActionType())
+        action_type_registry.register(DeleteRowActionType())
+        action_type_registry.register(DeleteRowsActionType())
+        action_type_registry.register(MoveRowActionType())
+        action_type_registry.register(UpdateRowActionType())
+        action_type_registry.register(UpdateRowsActionType())
+
+        from baserow.contrib.database.views.actions import (
+            CreateViewActionType,
+            DeleteViewActionType,
+            OrderViewsActionType,
+            UpdateViewActionType,
+            CreateViewFilterActionType,
+            UpdateViewFilterActionType,
+            DeleteViewFilterActionType,
+            CreateViewSortActionType,
+            UpdateViewSortActionType,
+            DeleteViewSortActionType,
+            UpdateViewFieldOptionsActionType,
+            RotateViewSlugActionType,
+            CreateDecorationActionType,
+            UpdateDecorationActionType,
+            DeleteDecorationActionType,
+        )
+
+        action_type_registry.register(CreateViewActionType())
+        action_type_registry.register(DeleteViewActionType())
+        action_type_registry.register(OrderViewsActionType())
+        action_type_registry.register(UpdateViewActionType())
+        action_type_registry.register(CreateViewFilterActionType())
+        action_type_registry.register(UpdateViewFilterActionType())
+        action_type_registry.register(DeleteViewFilterActionType())
+        action_type_registry.register(CreateViewSortActionType())
+        action_type_registry.register(UpdateViewSortActionType())
+        action_type_registry.register(DeleteViewSortActionType())
+        action_type_registry.register(RotateViewSlugActionType())
+        action_type_registry.register(UpdateViewFieldOptionsActionType())
+        action_type_registry.register(CreateDecorationActionType())
+        action_type_registry.register(UpdateDecorationActionType())
+        action_type_registry.register(DeleteDecorationActionType())
+
         from .views.registries import (
             view_type_registry,
             view_filter_type_registry,
@@ -130,6 +203,16 @@ class DatabaseConfig(AppConfig):
         )
         field_converter_registry.register(FormulaFieldConverter())
 
+        from .fields.actions import (
+            CreateFieldTypeAction,
+            DeleteFieldTypeAction,
+            UpdateFieldActionType,
+        )
+
+        action_type_registry.register(CreateFieldTypeAction())
+        action_type_registry.register(DeleteFieldTypeAction())
+        action_type_registry.register(UpdateFieldActionType())
+
         from .views.view_types import GridViewType, GalleryViewType, FormViewType
 
         view_type_registry.register(GridViewType())
@@ -146,6 +229,7 @@ class DatabaseConfig(AppConfig):
             DateAfterViewFilterType,
             DateNotEqualViewFilterType,
             DateEqualsTodayViewFilterType,
+            DateEqualsDaysAgoViewFilterType,
             DateEqualsCurrentMonthViewFilterType,
             DateEqualsCurrentYearViewFilterType,
             HigherThanViewFilterType,
@@ -179,6 +263,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateAfterViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
+        view_filter_type_registry.register(DateEqualsDaysAgoViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsDayOfMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
@@ -234,12 +319,16 @@ class DatabaseConfig(AppConfig):
         from .trash.trash_types import (
             TableTrashableItemType,
             RowTrashableItemType,
+            RowsTrashableItemType,
             FieldTrashableItemType,
+            ViewTrashableItemType,
         )
 
         trash_item_type_registry.register(TableTrashableItemType())
         trash_item_type_registry.register(FieldTrashableItemType())
         trash_item_type_registry.register(RowTrashableItemType())
+        trash_item_type_registry.register(RowsTrashableItemType())
+        trash_item_type_registry.register(ViewTrashableItemType())
 
         from .formula.ast.function_defs import register_formula_functions
 
@@ -304,7 +393,7 @@ def safely_update_formula_versions(sender, **kwargs):
     # app.ready will be called for management commands also, we only want to
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
-    if apps is not None and settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
+    if apps is not None and not settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
         from baserow.contrib.database.formula import FormulaHandler
 
         try:

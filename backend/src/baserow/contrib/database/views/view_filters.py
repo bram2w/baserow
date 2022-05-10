@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from math import floor, ceil
 
@@ -45,6 +45,9 @@ from baserow.contrib.database.formula import (
 
 
 class NotViewFilterTypeMixin:
+    def default_filter_on_exception(self):
+        return Q()
+
     def get_filter(self, *args, **kwargs):
         return ~super().get_filter(*args, **kwargs)
 
@@ -81,12 +84,11 @@ class EqualViewFilterType(ViewFilterType):
             return Q()
 
         # Check if the model_field accepts the value.
-        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
-            return Q()
+            return self.default_filter_on_exception()
 
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
@@ -161,8 +163,12 @@ class ContainsViewFilterType(ViewFilterType):
     ]
 
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
-        field_type = field_type_registry.get_by_model(field)
-        return field_type.contains_query(field_name, value, model_field, field)
+        # Check if the model_field accepts the value.
+        try:
+            field_type = field_type_registry.get_by_model(field)
+            return field_type.contains_query(field_name, value, model_field, field)
+        except Exception:
+            return self.default_filter_on_exception()
 
 
 class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
@@ -194,9 +200,7 @@ class LengthIsLowerThanViewFilterType(ViewFilterType):
                 q={f"{field_name}_len__lt": int(value)},
             )
         except ValueError:
-            pass
-
-        return Q()
+            return self.default_filter_on_exception()
 
 
 class HigherThanViewFilterType(ViewFilterType):
@@ -227,12 +231,11 @@ class HigherThanViewFilterType(ViewFilterType):
             value = floor(decimal)
 
         # Check if the model_field accepts the value.
-        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__gt": value})
         except Exception:
-            return Q()
+            return self.default_filter_on_exception()
 
 
 class LowerThanViewFilterType(ViewFilterType):
@@ -263,12 +266,11 @@ class LowerThanViewFilterType(ViewFilterType):
             value = ceil(decimal)
 
         # Check if the model_field accepts the value.
-        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__lt": value})
         except Exception:
-            return Q()
+            return self.default_filter_on_exception()
 
 
 class DateEqualViewFilterType(ViewFilterType):
@@ -475,6 +477,72 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
                 query_dict[f"{query_field_name}__month"] = now.month
             if "day" in self.query_for:
                 query_dict[f"{query_field_name}__day"] = now.day
+
+            return query_dict
+
+        if field_has_timezone:
+            tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+            return AnnotatedQ(
+                annotation={f"{tmp_field_name}": Timezone(field_name, timezone_string)},
+                q=make_query_dict(tmp_field_name),
+            )
+        else:
+            return Q(**make_query_dict(field_name))
+
+
+class DateEqualsDaysAgoViewFilterType(ViewFilterType):
+    """
+    The "number of days ago" filter checks if the field value matches with today's
+    date minus the specified number of days.
+
+    The value of the filter is expected to be a string like "Europe/Rome?1".
+    It uses character ? as separator between the timezone and the number of days.
+    """
+
+    type = "date_equals_days_ago"
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaDateType.type,
+        ),
+    ]
+    query_for = ["year", "month", "day"]
+
+    def _extract_values(self, value, separator="?"):
+        try:
+            tzone, days_ago = value.split(separator)
+            days_ago = int(days_ago)
+        except ValueError:
+            return None, None
+
+        timezone_string = tzone if tzone in all_timezones else "UTC"
+        return timezone_string, days_ago
+
+    def get_filter(self, field_name, value, model_field, field):
+        timezone_string, days_ago = self._extract_values(value)
+        if days_ago is None:
+            # invalid days_ago value will result in an empty filter
+            return Q()
+
+        timezone_object = timezone(timezone_string)
+        field_has_timezone = hasattr(field, "timezone")
+        now = datetime.utcnow().astimezone(timezone_object)
+        try:
+            when = now - timedelta(days=days_ago)
+        except OverflowError:
+            # returns nothing because dates could not be before epoch
+            return Q(pk__in=[])
+
+        def make_query_dict(query_field_name):
+            query_dict = dict()
+            if "year" in self.query_for:
+                query_dict[f"{query_field_name}__year"] = when.year
+            if "month" in self.query_for:
+                query_dict[f"{query_field_name}__month"] = when.month
+            if "day" in self.query_for:
+                query_dict[f"{query_field_name}__day"] = when.day
 
             return query_dict
 

@@ -103,7 +103,9 @@ def test_updating_many_rows_in_public_filtered_views(
     run_row_updates = 0
     for i in range(num_rows):
         for k in range(num_fields):
-            handler.update_row(user, table, rows[i].id, {f"field_{k}": 0}, model=model)
+            handler.update_row_by_id(
+                user, table, rows[i].id, {f"field_{k}": 0}, model=model
+            )
             run_row_updates += 1
             if run_row_updates >= num_row_updates_to_profile:
                 break
@@ -127,7 +129,7 @@ def test_updating_many_rows_in_public_filtered_views(
 
 
     0.018 test_updating_many_rows_in_public_filtered_views  test_public_sharing_perform
-└─ 0.018 update_row  baserow/contrib/database/rows/handler.py:426
+└─ 0.018 update_row_by_id  baserow/contrib/database/rows/handler.py:426
    ├─ 0.015 send  django/dispatch/dispatcher.py:159
    │     [2 frames hidden]  django
    │        0.015 <listcomp>  django/dispatch/dispatcher.py:180

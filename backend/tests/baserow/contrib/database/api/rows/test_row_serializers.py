@@ -6,8 +6,10 @@ from rest_framework import serializers
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     get_example_row_serializer_class,
+    remap_serialized_row_to_user_field_names,
     RowSerializer,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -181,17 +183,20 @@ def test_get_table_serializer(data_fixture):
 
 @pytest.mark.django_db
 def test_get_example_row_serializer_class():
-    request_serializer = get_example_row_serializer_class()
-    response_serializer = get_example_row_serializer_class(add_id=True)
+    request_serializer = get_example_row_serializer_class(example_type="post")
+    response_serializer = get_example_row_serializer_class(example_type="get")
 
-    assert len(request_serializer._declared_fields) == (
-        len(field_type_registry.registry.values())
+    num_request_fields = len(request_serializer._declared_fields)
+    num_response_fields = len(response_serializer._declared_fields)
+    num_readonly_fields = len(
+        [ftype for ftype in field_type_registry.registry.values() if ftype.read_only]
     )
-    assert len(response_serializer._declared_fields) == (
-        len(request_serializer._declared_fields) + 2  # fields + id + order
-    )
-    assert len(response_serializer._declared_fields) == (
-        len(field_type_registry.registry.values()) + 2  # fields + id + order
+    num_extra_response_fields = 2  # id + order
+    num_difference = num_readonly_fields + num_extra_response_fields
+
+    assert num_request_fields == num_response_fields - num_difference
+    assert num_response_fields == (
+        len(field_type_registry.registry.values()) + num_extra_response_fields
     )
 
     assert isinstance(
@@ -308,4 +313,53 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
             {"id": 2, "value": "linked_row_2"},
             {"id": 3, "value": None},
         ],
+    }
+
+
+@pytest.mark.django_db
+def test_remap_serialized_row_to_user_field_names(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+
+    text_field = data_fixture.create_text_field(
+        table=table, primary=True, name="Test 1"
+    )
+    table_2_primary_field = data_fixture.create_text_field(
+        table=table_2, name="Primary Field", primary=True
+    )
+
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+
+    lookup_model = table_2.get_model()
+    i1 = lookup_model.objects.create(
+        **{f"field_{table_2_primary_field.id}": "Lookup 1"}
+    )
+
+    grid = data_fixture.create_grid_view(table=table)
+    data_fixture.create_grid_view_field_option(grid, link_row_field, hidden=False)
+
+    model = table.get_model()
+    row = model.objects.create(**{f"field_{text_field.id}": "Test value"})
+    getattr(row, f"field_{link_row_field.id}").add(i1.id)
+
+    serialized_row = get_row_serializer_class(
+        model,
+        RowSerializer,
+        is_response=True,
+        user_field_names=False,
+    )(row).data
+
+    remaped_row = remap_serialized_row_to_user_field_names(serialized_row, model)
+    assert remaped_row == {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        "Link": [{"id": 1, "value": "Lookup 1"}],
+        "Test 1": "Test value",
     }

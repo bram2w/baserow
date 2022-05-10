@@ -21,6 +21,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
@@ -136,7 +140,8 @@ export default {
           const value = this.$registry
             .get('field', this.field.type)
             .prepareValueForCopy(this.field, rawValue)
-          copyToClipboard(value)
+          const tsv = this.$papa.unparse([[value]], { delimiter: '\t' })
+          copyToClipboard(tsv)
         }
 
         // Removes the value if the backspace/delete key is pressed.
@@ -146,7 +151,11 @@ export default {
             .get('field', this.field.type)
             .getEmptyValue(this.field)
           const oldValue = this.value
-          if (value !== oldValue && !this.readOnly) {
+          if (
+            value !== oldValue &&
+            !this.readOnly &&
+            !this.field._.type.isReadOnly
+          ) {
             this.$emit('update', value, oldValue)
           }
         }
@@ -154,23 +163,41 @@ export default {
       document.body.addEventListener('keydown', this.$el.keyDownEvent)
 
       // Updates the value of the field when a user pastes something in the field.
-      this.$el.pasteEvent = (event) => {
+      this.$el.pasteEvent = async (event) => {
         if (!this.canPaste(event)) {
           return
         }
 
-        const value = this.$registry
-          .get('field', this.field.type)
-          .prepareValueForPaste(this.field, event.clipboardData)
-        const oldValue = this.value
-        if (
-          value !== undefined &&
-          value !== oldValue &&
-          !this.readOnly &&
-          !this.field._.type.isReadOnly
-        ) {
-          this.$emit('update', value, oldValue)
-        }
+        try {
+          // Multiple values in TSV format can be provided, so we need to properly
+          // parse it using Papa.
+          const parsed = await this.$papa.parsePromise(
+            event.clipboardData.getData('text'),
+            { delimiter: '\t' }
+          )
+          const data = parsed.data
+          // A grid field cell can only handle one single value. We try to extract
+          // that from the clipboard and update the cell, otherwise we emit the
+          // paste event up.
+          if (data.length === 1 && data[0].length === 1) {
+            const value = this.$registry
+              .get('field', this.field.type)
+              .prepareValueForPaste(this.field, data[0][0])
+            const oldValue = this.value
+
+            if (
+              value !== undefined &&
+              value !== oldValue &&
+              !this.readOnly &&
+              !this.field._.type.isReadOnly
+            ) {
+              this.$emit('update', value, oldValue)
+            }
+          } else {
+            event.stopPropagation()
+            this.$emit('paste', data)
+          }
+        } catch (e) {}
       }
       document.addEventListener('paste', this.$el.pasteEvent)
 

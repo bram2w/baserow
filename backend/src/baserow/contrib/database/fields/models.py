@@ -1,3 +1,5 @@
+from typing import NewType
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.functional import cached_property
@@ -9,7 +11,7 @@ from baserow.contrib.database.fields.mixins import (
     DATE_TIME_FORMAT_CHOICES,
 )
 from baserow.contrib.database.table.cache import (
-    invalidate_table_model_cache_and_related_models,
+    invalidate_table_in_model_cache,
 )
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_CHOICES,
@@ -17,13 +19,19 @@ from baserow.contrib.database.formula import (
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
+
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
-from baserow.core.utils import to_snake_case, remove_special_characters
+from baserow.core.utils import (
+    to_snake_case,
+    remove_special_characters,
+)
+
+from .fields import SerialField
 
 
 NUMBER_MAX_DECIMAL_PLACES = 5
@@ -123,31 +131,20 @@ class Field(
         return name
 
     def invalidate_table_model_cache(self):
-        return invalidate_table_model_cache_and_related_models(self.table_id)
+        return invalidate_table_in_model_cache(
+            self.table_id, invalidate_related_tables=True
+        )
 
     def dependant_fields_with_types(
         self, field_cache, starting_via_path_to_starting_table=None
     ):
-        from baserow.contrib.database.fields.registries import field_type_registry
+        from baserow.contrib.database.fields.dependencies.handler import (
+            FieldDependencyHandler,
+        )
 
-        result = []
-        for field_dependency in self.dependants.select_related("dependant").all():
-            dependant_field = field_cache.lookup_specific(field_dependency.dependant)
-            if dependant_field is None:
-                # If somehow the dependant is trashed it will be None. We can't really
-                # trigger any updates for it so ignore it.
-                continue
-            dependant_field_type = field_type_registry.get_by_model(dependant_field)
-            if field_dependency.via is not None:
-                via_path_to_starting_table = (
-                    starting_via_path_to_starting_table or []
-                ) + [field_dependency.via]
-            else:
-                via_path_to_starting_table = starting_via_path_to_starting_table
-            result.append(
-                (dependant_field, dependant_field_type, via_path_to_starting_table)
-            )
-        return result
+        return FieldDependencyHandler.get_dependant_fields_with_type(
+            [self.id], field_cache, starting_via_path_to_starting_table
+        )
 
     def save(self, *args, **kwargs):
         kwargs.pop("field_lookup_cache", None)
@@ -293,18 +290,7 @@ class LinkRowField(Field):
         null=True,
         blank=True,
     )
-    link_row_relation_id = models.IntegerField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        """
-        Every LinkRow needs to have a unique relation id that is shared with the
-        related link row field in the other table.
-        """
-
-        if self.link_row_relation_id is None:
-            self.link_row_relation_id = self.get_new_relation_id()
-
-        super().save(*args, **kwargs)
+    link_row_relation_id = SerialField(null=True, unique=False)
 
     @property
     def through_table_name(self):
@@ -319,16 +305,6 @@ class LinkRowField(Field):
             raise ValueError("The link row field does not yet have a relation id.")
 
         return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.link_row_relation_id}"
-
-    @staticmethod
-    def get_new_relation_id():
-        last_id = (
-            LinkRowField.objects_and_trash.all().aggregate(
-                largest=models.Max("link_row_relation_id")
-            )["largest"]
-            or 0
-        )
-        return last_id + 1
 
     def get_related_primary_field(self):
         try:
@@ -500,3 +476,6 @@ class LookupField(FormulaField):
             + f"error={self.error},\n"
             + ")"
         )
+
+
+SpecificFieldForUpdate = NewType("SpecificFieldForUpdate", Field)

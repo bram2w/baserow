@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Je hebt minstens één andere tabel in dezelfde database nodig om naar te linken.",
-        "selectTableLabel": "Selecteer een tabel om naar te linken",
-        "dataLost": "Door de tabel te veranderen, gaan alle gegevens verloren."
+        "selectTableLabel": "Selecteer een tabel om naar te linken"
     },
     "fieldSelectOptions": {
         "add": "Een optie toevoegen"
@@ -376,7 +375,10 @@
         "sharedViewDescription": "Mensen die de link hebben kunnen de {viewTypeSharingLinkName} zien.",
         "disableLink": "gedeelde link uitschakelen",
         "generateNewUrl": "nieuwe url genereren",
-        "copyURL": "URL kopiëren"
+        "copyURL": "URL kopiëren",
+        "ChangePassword": "Verander",
+        "EnablePassword": "Toegang beperken met een wachtwoord",
+        "DisablePassword": "Toegang is beveiligd met een wachtwoord"
     },
     "viewSortContext": {
         "noSortTitle": "Je hebt nog geen sortering",
@@ -537,5 +539,36 @@
         "stateImportingTable": "Importeren van tabel {table}",
         "errorJobAlreadyRunningTitle": "Al bezig",
         "errorJobAlreadyRunningDescription": "Er loopt al een andere import taak. U moet wachten tot die klaar is voordat u een andere start."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "enkelvoudig keuzeveld toevoegen"
+    },
+    "viewDecorator": {
+        "decorator": "Kleur | 1 Kleur | {tellen} Kleuren"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "decoratie toevoegen"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Voer een wachtwoord in",
+        "newPasswordSave": "Stel een wachtwoord in",
+        "changePasswordTitle": "Wijzig wachtwoord",
+        "changePasswordDescription": "Door het wachtwoord te wijzigen, zal het vorige niet meer werken. Dit wachtwoord wordt versleuteld opgeslagen.",
+        "changePasswordSave": "Wijzig wachtwoord",
+        "newPasswordDescription": "De openbare link is alleen toegankelijk na het invoeren van het wachtwoord. Dit wachtwoord wordt versleuteld opgeslagen."
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Wachtwoordbeveiliging uitschakelen",
+        "description": "Weet u zeker dat u de wachtwoordbeveiliging voor deze openbare link wilt uitschakelen? Door uit te schakelen, wordt het wachtwoord verwijderd en is het niet mogelijk om het te herstellen",
+        "disable": "Uitschakelen"
+    },
+    "publicViewAuthLogin": {
+        "title": "Deze pagina is beveiligd met een wachtwoord",
+        "description": "Voer het juiste wachtwoord in om toegang te krijgen tot de pagina.",
+        "enter": "Ga naar",
+        "error": {
+            "incorrectPasswordTitle": "Onjuist wachtwoord",
+            "incorrectPasswordText": "Het opgegeven wachtwoord is onjuist."
+        }
     }
 }
