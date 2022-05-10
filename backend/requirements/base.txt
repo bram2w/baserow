@@ -40,8 +40,6 @@ botocore==1.23.54
     # via
     #   boto3
     #   s3transfer
-cached-property==1.5.2
-    # via kombu
 celery[redis]==5.2.3
     # via
     #   -r base.in
@@ -149,14 +147,6 @@ idna==3.3
     #   hyperlink
     #   requests
     #   twisted
-importlib-metadata==4.11.2
-    # via
-    #   click
-    #   jsonschema
-    #   kombu
-    #   redis
-importlib-resources==5.4.0
-    # via jsonschema
 incremental==21.3.0
     # via twisted
 inflection==0.5.1
@@ -268,15 +258,7 @@ twisted[tls]==22.1.0
 txaio==22.2.1
     # via autobahn
 typing-extensions==4.1.1
-    # via
-    #   asgiref
-    #   async-timeout
-    #   drf-spectacular
-    #   h11
-    #   importlib-metadata
-    #   jsonschema
-    #   twisted
-    #   uvicorn
+    # via twisted
 unicodecsv==0.14.1
     # via -r base.in
 uritemplate==4.1.1
@@ -304,10 +286,7 @@ websockets==10.2
 wrapt==1.13.3
     # via deprecated
 zipp==3.5.0
-    # via
-    #   -r base.in
-    #   importlib-metadata
-    #   importlib-resources
+    # via -r base.in
 zope-interface==5.4.0
     # via twisted
 

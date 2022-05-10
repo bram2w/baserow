@@ -46,7 +46,7 @@ coverage==6.2
     # via -r dev.in
 debugpy==1.5.1
     # via -r dev.in
-django==3.2.12
+django==3.2.13
     # via
     #   -c base.txt
     #   django-extensions
@@ -75,20 +75,6 @@ idna==3.3
     # via
     #   -c base.txt
     #   requests
-importlib-metadata==4.11.2
-    # via
-    #   -c base.txt
-    #   click
-    #   flake8
-    #   jsonschema
-    #   pep517
-    #   pluggy
-    #   pytest
-    #   stevedore
-importlib-resources==5.4.0
-    # via
-    #   -c base.txt
-    #   jsonschema
 iniconfig==1.1.1
     # via pytest
 jinja2==3.0.3
@@ -241,16 +227,6 @@ tomli==1.2.3
     # via
     #   black
     #   pep517
-typed-ast==1.5.2
-    # via black
-typing-extensions==4.1.1
-    # via
-    #   -c base.txt
-    #   asgiref
-    #   black
-    #   gitpython
-    #   importlib-metadata
-    #   jsonschema
 urllib3==1.26.8
     # via
     #   -c base.txt
@@ -260,12 +236,6 @@ watchdog==2.1.4
     # via -r dev.in
 wheel==0.37.1
     # via pip-tools
-zipp==3.5.0
-    # via
-    #   -c base.txt
-    #   importlib-metadata
-    #   importlib-resources
-    #   pep517
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
