@@ -51,6 +51,42 @@
 * **Premium** Added row coloring.
 * Fixed row coloring bug when the table doesn't have any single select field.
 * Dropdown can now be focused with tab key
+* New templates:
+  * Brand Assets Manager
+  * Business Conference
+  * Car Hunt
+  * Company Blog Management
+  * Event Staffing
+  * Hotel Bookings
+  * Nonprofit Grant Tracker
+  * Performance Reviews
+  * Product Roadmap
+  * Public Library Inventory
+  * Remote Team Hub
+  * Product Roadmap
+  * Hotel Bookings
+* Updated templates:
+  * Book writing guide
+  * Bucket List
+  * Call Center Log
+  * Company Asset Tracker
+  * Email Marketing Campaigns
+  * Home Inventory
+  * House Search
+  * Job Search
+  * Nonprofit Organization Management
+  * Personal Task Manager
+  * Political Campaign Contributions
+  * Project Tracker
+  * Recipe Book
+  * Restaurant Management
+  * Single Trip Planner
+  * Software Application Bug Tracker
+  * Student Planner
+  * Teacher Lesson Plans
+  * Team Check-ins
+  * University Admissions Management
+  * Wedding Client Planner
 
 ## Released (2022-03-03 1.9.1)
 
