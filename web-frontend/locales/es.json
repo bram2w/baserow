@@ -135,7 +135,8 @@
         "inThisYear": "este año",
         "lowerThan": "Más bajo que",
         "lengthIsLowerThan": "la longitud es menor que",
-        "hasFileType": "tiene tipo de archivo"
+        "hasFileType": "tiene tipo de archivo",
+        "isDaysAgo": "es hace días"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -155,7 +156,8 @@
         "table": "tabla",
         "field": "campo",
         "row": "fila",
-        "view": "vista"
+        "view": "vista",
+        "rows": "filas"
     },
     "webhook": {
         "request": "Requerimiento",

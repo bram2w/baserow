@@ -87,7 +87,8 @@
     },
     "editUserContext": {
         "changePassword": "Cambiar la contraseña",
-        "delete": "Borrar permanentemente"
+        "delete": "Borrar permanentemente",
+        "impersonate": "Suplantar"
     },
     "changePasswordForm": {
         "newPassword": "Nueva contraseña",
@@ -220,5 +221,27 @@
         "storeUsage": "Uso de almacenamiento",
         "disconnectLicense": "Desconectar licencia",
         "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada."
+    },
+    "conditionalColorValueProviderForm": {
+        "addCondition": "Añadir condición",
+        "colorAlwaysApply": "Este color se aplica por defecto. Puede añadir condiciones haciendo clic en el botón \"Añadir condición\".",
+        "addColor": "añadir color"
+    },
+    "viewDecoratorType": {
+        "leftBorderColorDescription": "Colorear el borde izquierdo de una fila",
+        "onlyForPremium": "Disponible en la versión premium",
+        "leftBorderColor": "Borde izquierdo",
+        "backgroundColor": "Color de fondo",
+        "backgroundColorDescription": "Colorear el fondo de una fila",
+        "onlyOneDecoratorPerView": "Sólo se puede tener una decoración de ese tipo para una vista"
+    },
+    "decoratorValueProviderType": {
+        "singleSelectColor": "Selección individual",
+        "singleSelectColorDescription": "Colorear las filas igual que un solo valor de selección",
+        "conditionalColor": "Condiciones",
+        "conditionalColorDescription": "Colorea las filas cuando coinciden con las condiciones"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "¿Por cual campo de selección individual debe colorearse la fila?"
     }
 }

@@ -375,7 +375,10 @@
         "sharedViewDescription": "Las personas que tienen el enlace pueden ver {viewTypeSharingLinkName}.",
         "disableLink": "deshabilitar enlace compartido",
         "generateNewUrl": "generar nueva url",
-        "copyURL": "copiar URL"
+        "copyURL": "copiar URL",
+        "EnablePassword": "Restringir acceso con una contraseña",
+        "DisablePassword": "El acceso está protegido con contraseña",
+        "ChangePassword": "Cambiar"
     },
     "viewSortContext": {
         "noSortTitle": "Todavía no has creado una clasificación",
@@ -536,5 +539,36 @@
         "stateImportingTable": "Importando tabla {table}",
         "errorJobAlreadyRunningTitle": "Ya corriendo",
         "errorJobAlreadyRunningDescription": "Ya se está ejecutando otro trabajo de importación. Tienes que esperar a que termine antes de empezar otro."
+    },
+    "viewDecorator": {
+        "decorator": "Color | 1 Color | {recuento} Colores"
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "añadir campo de selección individual"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "añadir decorador"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Introduce una contraseña",
+        "newPasswordDescription": "El enlace público sólo será accesible después de introducir la contraseña. Esta contraseña se guardará encriptada.",
+        "changePasswordTitle": "Cambiar contraseña",
+        "changePasswordDescription": "Al cambiar la contraseña, la anterior dejará de funcionar. Esta contraseña se guardará encriptada.",
+        "changePasswordSave": "Cambiar contraseña",
+        "newPasswordSave": "Establecer contraseña"
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Desactivar la protección de contraseña",
+        "description": "¿Estás seguro que quieres desactivar la protección por contraseña de este enlace público? Al desactivarla, la contraseña se borrará y no será posible recuperarla",
+        "disable": "Desactivar"
+    },
+    "publicViewAuthLogin": {
+        "title": "Esta página está protegida por contraseña",
+        "description": "Introduce la contraseña correcta para acceder a la página.",
+        "enter": "Entrar",
+        "error": {
+            "incorrectPasswordTitle": "Contraseña incorrecta",
+            "incorrectPasswordText": "La contraseña proporcionada es incorrecta."
+        }
     }
 }
