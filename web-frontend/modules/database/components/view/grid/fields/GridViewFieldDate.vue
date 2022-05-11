@@ -151,8 +151,8 @@ export default {
         return original
       }
 
-      const previous = event.keyCode === 9 && event.shiftKey
-      const next = event.keyCode === 9 && !event.shiftKey
+      const previous = event.key === 'Tab' && event.shiftKey
+      const next = event.key === 'Tab' && !event.shiftKey
       return (
         original &&
         !(next && this.$refs.date === document.activeElement) &&

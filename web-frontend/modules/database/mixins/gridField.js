@@ -115,27 +115,28 @@ export default {
         // If the tab or arrow keys are pressed we want to select the next field. This
         // is however out of the scope of this component so we emit the selectNext
         // event that the GridView can handle.
-        const { keyCode, ctrlKey, metaKey } = event
+        const { key, shiftKey, ctrlKey, metaKey } = event
         const arrowKeysMapping = {
-          37: 'selectPrevious',
-          38: 'selectAbove',
-          39: 'selectNext',
-          40: 'selectBelow',
+          ArrowLeft: 'selectPrevious',
+          ArrowUp: 'selectAbove',
+          ArrowRight: 'selectNext',
+          ArrowDown: 'selectBelow',
         }
-        if (
-          Object.keys(arrowKeysMapping).includes(keyCode.toString()) &&
-          this.canSelectNext(event)
-        ) {
-          event.preventDefault()
-          this.$emit(arrowKeysMapping[keyCode])
-        }
-        if (keyCode === 9 && this.canSelectNext(event)) {
-          event.preventDefault()
-          this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
+        if (this.canSelectNext(event)) {
+          if (Object.keys(arrowKeysMapping).includes(key)) {
+            event.preventDefault()
+            this.$emit(arrowKeysMapping[key])
+          } else if (key === 'Tab') {
+            event.preventDefault()
+            this.$emit(shiftKey ? 'selectPrevious' : 'selectNext')
+          } else if (key === 'Enter' && shiftKey) {
+            event.preventDefault()
+            this.$emit('selectBelow')
+          }
         }
 
         // Copy the value to the clipboard if ctrl/cmd + c is pressed.
-        if ((ctrlKey || metaKey) && keyCode === 67 && this.canCopy(event)) {
+        if ((ctrlKey || metaKey) && key === 'c' && this.canCopy(event)) {
           const rawValue = this.value
           const value = this.$registry
             .get('field', this.field.type)
@@ -145,7 +146,7 @@ export default {
         }
 
         // Removes the value if the backspace/delete key is pressed.
-        if ((keyCode === 46 || keyCode === 8) && this.canEmpty(event)) {
+        if ((key === 'Delete' || key === 'Backspace') && this.canEmpty(event)) {
           event.preventDefault()
           const value = this.$registry
             .get('field', this.field.type)

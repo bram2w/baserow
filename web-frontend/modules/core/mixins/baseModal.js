@@ -68,7 +68,7 @@ export default {
      * When the escape key is pressed the modal needs to be hidden.
      */
     keyup(event) {
-      if (event.keyCode === 27) {
+      if (event.key === 'Escape') {
         this.hide()
       }
     },

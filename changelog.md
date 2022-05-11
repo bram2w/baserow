@@ -97,6 +97,8 @@
   * Team Check-ins
   * University Admissions Management
   * Wedding Client Planner
+* Shift+Enter stop long text field edition
+* Shift+Enter on grid view go to field below
 
 ## Released (2022-03-03 1.9.1)
 
