@@ -304,7 +304,7 @@ export default {
       )
 
       this.$el.keydownEvent = (event) => {
-        if (event.keyCode === 27) {
+        if (event.key === 'Escape') {
           if (this.draggingRow !== null) {
             this.$store.dispatch(
               this.storePrefix + 'view/kanban/cancelRowDrag',

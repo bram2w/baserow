@@ -64,8 +64,6 @@ import {
 import FormulaFieldItemGroup from '@baserow/modules/database/components/formula/FormulaFieldItemGroup'
 import FormulaFieldItemDescription from '@baserow/modules/database/components/formula/FormulaFieldItemDescription'
 
-const TAB_KEYCODE = 9
-
 export default {
   name: 'FormulaAdvancedEditContext',
   components: {
@@ -176,7 +174,7 @@ export default {
     },
     recalcAutoComplete(event) {
       // Prevent tabs from doing anything as doAutocomplete will handle a tab instead.
-      if (event && event.keyCode === TAB_KEYCODE) {
+      if (event && event.key === 'Tab') {
         event.preventDefault()
         return
       }
@@ -207,7 +205,7 @@ export default {
     },
     doAutoCompleteAfterTab(event) {
       // Prevent tabs from doing anything
-      if (event && event.keyCode === TAB_KEYCODE) {
+      if (event && event.key === 'Tab') {
         event.preventDefault()
       }
       this.doAutoComplete(this.filteredFunctions[0], this.filteredFields[0])

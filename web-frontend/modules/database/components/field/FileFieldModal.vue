@@ -177,11 +177,11 @@ export default {
       }
 
       // If left arrow
-      if (event.keyCode === 37) {
+      if (event.key === 'ArrowLeft') {
         this.previous()
       }
       // If right arrow
-      if (event.keyCode === 39) {
+      if (event.key === 'ArrowRight') {
         this.next()
       }
       return baseModal.methods.keyup.call(this, event)

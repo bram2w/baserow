@@ -35,20 +35,26 @@ export default {
       this.$el.keydownEvent = (event) => {
         // If the tab or arrow keys are pressed we don't want to do anything because
         // the GridViewField component will select the next field.
-        const ignoredKeys = [9, 37, 38, 39, 40]
-        if (ignoredKeys.includes(event.keyCode)) {
+        const ignoredKeys = [
+          'Tab',
+          'ArrowLeft',
+          'ArrowUp',
+          'ArrowRight',
+          'ArrowDown',
+        ]
+        if (ignoredKeys.includes(event.key)) {
           return
         }
 
         // If the escape key is pressed while editing we want to cancel the current
         // input and undo the editing state.
-        if (event.keyCode === 27 && this.editing) {
+        if (event.key === 'Escape' && this.editing) {
           this.cancel()
           return
         }
 
         // If the enter key is pressed.
-        if (event.keyCode === 13) {
+        if (event.key === 'Enter') {
           if (
             this.editing &&
             this.isValid() &&
@@ -168,8 +174,7 @@ export default {
      * previous field. The tab key stays enabled.
      */
     canSelectNext(event) {
-      const arrowKeys = [37, 38, 39, 40]
-      return !this.editing || !arrowKeys.includes(event.keyCode)
+      return !this.editing || event.key === 'Tab'
     },
     /**
      * If true the value can be saved by pressing the enter key. This could for
