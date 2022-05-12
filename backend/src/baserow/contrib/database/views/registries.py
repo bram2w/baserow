@@ -348,7 +348,7 @@ class ViewType(
         return model._field_objects.values(), model
 
     def get_field_options_serializer_class(
-        self, create_if_missing: bool
+        self, create_if_missing: bool = False
     ) -> Type[Serializer]:
         """
         Generates a serializer that has the `field_options` property as a
