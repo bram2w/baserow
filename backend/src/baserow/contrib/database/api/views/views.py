@@ -1458,9 +1458,7 @@ class ViewFieldOptionsView(APIView):
         handler = ViewHandler()
         view = handler.get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
-        serializer_class = view_type.get_field_options_serializer_class(
-            create_if_missing=True
-        )
+        serializer_class = view_type.get_field_options_serializer_class()
         data = validate_data(serializer_class, request.data)
 
         with view_type.map_api_exceptions():

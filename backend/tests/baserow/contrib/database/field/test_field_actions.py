@@ -580,7 +580,7 @@ def test_can_undo_and_redo_removing_multi_select_option(
 
     assert list(
         getattr(row_a, f"field_{multi_select_field.id}").values_list("id", flat=True)
-    ) == [option_a.id, option_b.id]
+    ) == unordered([option_a.id, option_b.id])
     assert list(
         getattr(row_b, f"field_{multi_select_field.id}").values_list("id", flat=True)
     ) == [option_a.id]

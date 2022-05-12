@@ -540,7 +540,8 @@ class UpdateViewFieldOptionsActionType(ActionType):
         """
 
         original_field_options = {
-            fo["field_id"]: fo for fo in view.get_field_options().values()
+            fo["field_id"]: fo
+            for fo in view.get_field_options(create_if_missing=True).values()
         }
 
         ViewHandler().update_field_options(
