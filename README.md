@@ -37,6 +37,7 @@ how to become a contributor.
 * [**Docker Compose** ](docs/installation/install-with-docker-compose.md)
 * [**Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
 * [**Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
+* [**PikaPods**: Single-click managed Baserow hosting](https://www.pikapods.com/pods?run=baserow)
 
 ## Official documentation
 
