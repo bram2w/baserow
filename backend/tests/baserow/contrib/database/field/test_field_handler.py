@@ -44,14 +44,15 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.exceptions import UserNotInGroup
 
-# You must add --runslow to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow to additional args.
+# You must add --run-disabled-in-ci to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci to
+# additional args.
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.slow
+@pytest.mark.disabled_in_ci
 def test_can_convert_between_all_fields(data_fixture):
     """
     A nuclear option test turned off by default to help verify changes made to

@@ -6,9 +6,10 @@ from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_creating_many_rows_in_public_filtered_views(
     data_fixture, django_assert_num_queries
 ):
@@ -53,9 +54,10 @@ def test_creating_many_rows_in_public_filtered_views(
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_updating_many_rows_in_public_filtered_views(
     data_fixture, django_assert_num_queries
 ):

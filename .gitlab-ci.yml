@@ -357,13 +357,14 @@ backend-test-group-1:
     - ping -w 2 $DB_IP
     - mkdir -p reports
     - TEST_TYPE=$([[ "$ENABLE_COVERAGE" = "true" ]] && echo "ci-test" || echo "test")
+    - PYTEST_EXTRA_ARGS=$([[ "$RUN_MORNING_TESTS" = "true" ]] && echo '--run-once-per-day-in-ci' || echo "")
     - |
       docker run \
         -e PYTEST_SPLITS=3 \
         -e PYTEST_SPLIT_GROUP=$PYTEST_SPLIT_GROUP \
         --name=baserow_backend_test_container \
         --add-host="db:$DB_IP" \
-        $BACKEND_CI_DEV_IMAGE $TEST_TYPE;
+        $BACKEND_CI_DEV_IMAGE $TEST_TYPE $PYTEST_EXTRA_ARGS;
     - docker cp baserow_backend_test_container:/baserow/backend/reports .
     - docker rm baserow_backend_test_container
     - |

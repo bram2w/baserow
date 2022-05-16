@@ -277,7 +277,7 @@ case "$1" in
         exec make lint-python
     ;;
     ci-test)
-        exec make ci-test-python PYTEST_SPLITS="${PYTEST_SPLITS:-1}" PYTEST_SPLIT_GROUP="${PYTEST_SPLIT_GROUP:-1}"
+        exec make ci-test-python PYTEST_SPLITS="${PYTEST_SPLITS:-1}" PYTEST_SPLIT_GROUP="${PYTEST_SPLIT_GROUP:-1}" PYTEST_EXTRA_ARGS="${*:2}"
     ;;
     ci-check-startup)
         exec make ci-check-startup-python

@@ -1201,7 +1201,7 @@ def test_can_undo_redo_updating_single_select(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
+@pytest.mark.disabled_in_ci
 def test_can_undo_updating_field_every_type(data_fixture, django_assert_num_queries):
     session_id = "session-id"
 
