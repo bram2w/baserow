@@ -11,9 +11,10 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_speed_of_table_copy(data_fixture):
     # 2.2 seconds on AMD Ryzen 5900X, 32gb ram.
     text_field = data_fixture.create_text_field()
@@ -29,9 +30,10 @@ def test_speed_of_table_copy(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_speed_of_table_copy_via_export(data_fixture):
     # 8.84 seconds on AMD Ryzen 5900X, 32gb ram.
     text_field = data_fixture.create_text_field()
@@ -47,9 +49,10 @@ def test_speed_of_table_copy_via_export(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_updating_many_fields_doesnt_slow_down_get_rows(data_fixture, api_client):
 
     table, user, row, _ = setup_interesting_test_table(data_fixture)

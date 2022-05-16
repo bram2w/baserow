@@ -8,9 +8,10 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_getting_rows_from_large_grid_view(data_fixture, api_client):
 
     table, user, row, _ = setup_interesting_test_table(data_fixture)

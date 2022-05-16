@@ -27,6 +27,7 @@ test-parallel:
 
 PYTEST_SPLITS:=1
 PYTEST_SPLIT_GROUP:=1
+PYTEST_EXTRA_ARGS?=
 ci-test-python:
 	mkdir reports/ -p; \
 	cd ..; \
@@ -38,6 +39,7 @@ ci-test-python:
 	    --splits $(PYTEST_SPLITS) \
 	    --group $(PYTEST_SPLIT_GROUP) \
 	    --junitxml=backend/reports/report.xml \
+	    $(PYTEST_EXTRA_ARGS) \
 	    backend/tests \
 	    premium/backend/tests;
 

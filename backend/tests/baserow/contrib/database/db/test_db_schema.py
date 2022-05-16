@@ -51,9 +51,10 @@ def test_lenient_schema_editor():
 # Test provided as an example of how to trigger the django bug. However disabled from CI
 # as it will break the connection!
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_showing_how_djangos_schema_editor_is_broken(data_fixture):
     cxn = transaction.get_connection()
     starting_savepoints = list(cxn.savepoint_ids)
