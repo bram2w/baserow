@@ -296,6 +296,7 @@ class TableHandler:
         :raises ValueError: When the provided table is not an instance of Table.
         :return: The updated table instance.
         """
+
         table = self.get_table_for_update(table_id)
         return self.update_table(user, table, name)
 

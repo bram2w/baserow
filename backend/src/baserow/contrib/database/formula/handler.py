@@ -270,6 +270,7 @@ class FormulaHandler:
         :param formula_string: A string containing a formula in the Baserow Formula
             expression language.
         """
+
         return raw_formula_to_untyped_expression(formula_string)
 
     @classmethod

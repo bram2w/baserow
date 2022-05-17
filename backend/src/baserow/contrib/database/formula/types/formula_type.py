@@ -99,6 +99,7 @@ class BaserowFormulaType(abc.ABC):
         A list of valid types that this type can be compared using limit operators like
         >, >=, < or <=.
         """
+
         pass
 
     @property

@@ -97,6 +97,7 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         """
         :return: The applications for this group including any trashed applications.
         """
+
         return self.application_set(manager="objects_and_trash")
 
     def has_template(self):

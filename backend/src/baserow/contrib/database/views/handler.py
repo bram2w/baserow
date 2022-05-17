@@ -1842,6 +1842,7 @@ class CachingPublicViewRowChecker:
         :param row: A row in the checkers table.
         :return: A list of views where the row is visible for this checkers table.
         """
+
         views = []
         for view, filter_qs, can_use_cache in self._views_with_filters:
             if can_use_cache:

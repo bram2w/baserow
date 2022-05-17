@@ -21,6 +21,7 @@ class DatabaseHandler:
             does not exist.
         :return: The requested database application instance of the provided id.
         """
+
         if base_queryset is None:
             base_queryset = Database.objects
 

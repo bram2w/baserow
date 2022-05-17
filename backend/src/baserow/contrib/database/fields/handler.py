@@ -93,6 +93,7 @@ def _validate_field_name(
     :raises MaxFieldNameLengthExceeded: When a provided field name is too long.
     :return:
     """
+
     if "name" not in field_values:
         if raise_if_name_missing:
             raise InvalidBaserowFieldName()

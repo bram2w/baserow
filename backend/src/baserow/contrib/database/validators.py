@@ -63,6 +63,7 @@ class UnicodeRegexValidator:
         Validate that the input contains (or does *not* contain, if
         inverse_match is True) a match for the regular expression.
         """
+
         regex_matches = self.regex_value.search(str(value))
         invalid_input = regex_matches if self.inverse_match else not regex_matches
         if invalid_input:

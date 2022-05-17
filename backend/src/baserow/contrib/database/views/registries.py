@@ -597,6 +597,7 @@ class ViewFilterType(Instance):
 
     def default_filter_on_exception(self):
         """The default Q to use when the filter value is of an incompatible type."""
+
         return django_models.Q(pk__in=[])
 
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
@@ -851,6 +852,7 @@ class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
             updated when a new instance has been created.
         :return: The new value that will be imported.
         """
+
         return value
 
     def after_field_delete(self, deleted_field: "Field"):

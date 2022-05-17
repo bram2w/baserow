@@ -1544,6 +1544,7 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
         the regex as simple as possible and also the same behind the frontend, database
         and python code.
         """
+
         # Use a lookahead to validate entire string length does exceed max length
         # as we are matching multiple different tokens in the following regex.
         lookahead = rf"(?=^.{{3,{self.max_length}}}$)"

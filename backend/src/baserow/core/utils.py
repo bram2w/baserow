@@ -89,6 +89,7 @@ def get_non_unique_values(values: List) -> List:
     """
     Assembles all values that are not unique in the provided list
     """
+
     unique_values = set()
     non_unique_values = set()
     for value in values:
