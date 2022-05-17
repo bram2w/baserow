@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Nonprofit Grant Tracker",
-    "icon": "circle-dollar",
+    "icon": "dollar-sign",
     "keywords": [
         "grants",
         "grant management",
