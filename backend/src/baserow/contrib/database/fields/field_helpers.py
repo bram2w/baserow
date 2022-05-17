@@ -12,6 +12,7 @@ def construct_all_possible_field_kwargs(
     created. This function creates a dictionary of field type to a list of
     kwarg dicts, one for each interesting possible 'subtype' of the field.
     """
+
     all_interesting_field_kwargs = {
         "text": [{"name": "text", "primary": True}],
         "long_text": [{"name": "long_text"}],

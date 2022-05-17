@@ -992,6 +992,7 @@ class RowHandler:
         """
         Get the rows to update.
         """
+
         return cast(
             RowsForUpdate,
             model.objects.select_for_update()

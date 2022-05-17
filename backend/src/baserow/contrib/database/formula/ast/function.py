@@ -303,6 +303,7 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
 
         :return: A BaserowSingleArgumentTypeChecker
         """
+
         return [BaserowFormulaValidType]
 
     @property

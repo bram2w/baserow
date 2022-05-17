@@ -5,6 +5,7 @@ import sys
 
 def enable_debugger():
     """Enable the debugger if the environment variable is set."""
+
     debugger_enabled = bool(os.environ.get("BASEROW_BACKEND_DEBUGGER_ENABLED"))
     if debugger_enabled:
         import debugpy

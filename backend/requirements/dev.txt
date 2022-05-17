@@ -23,6 +23,8 @@ autopep8==1.5.7
     # via
     #   -r dev.in
     #   django-silk
+backports-cached-property==1.0.1
+    # via -r dev.in
 bandit==1.7.2
     # via -r dev.in
 black==21.7b0
@@ -46,7 +48,7 @@ coverage==6.2
     # via -r dev.in
 debugpy==1.5.1
     # via -r dev.in
-django==3.2.12
+django==3.2.13
     # via
     #   -c base.txt
     #   django-extensions
