@@ -1,0 +1,251 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GalleryView component with decoration Default component with first_cell decoration 1`] = `
+<div
+  class="gallery-view"
+>
+  <a
+    class="gallery-view__add"
+  >
+    <i
+      class="fas fa-plus"
+    />
+  </a>
+   
+  <div
+    class="gallery-view__scroll"
+  >
+    <div
+      class="gallery-view__cards"
+      style="height: 410px;"
+    >
+      <div
+        class="card gallery-view__card"
+        style="width: -60px; transform: translateX(30px) translateY(30px);"
+      >
+        <!---->
+         
+        <div
+          class="card__content"
+        >
+          <div>
+            fake_decoration: fake_value
+          </div>
+          <div>
+            fake_decoration: fake_value
+          </div>
+           
+          <div
+            class="card__fields"
+          >
+            <div
+              class="card__field"
+            >
+              <div
+                class="card__field-name"
+              >
+                Name
+              </div>
+               
+              <div
+                class="card__field-value"
+              >
+                <div
+                  class="card-text"
+                >
+                  
+  first
+
+                </div>
+              </div>
+            </div>
+            <div
+              class="card__field"
+            >
+              <div
+                class="card__field-name"
+              >
+                Surname
+              </div>
+               
+              <div
+                class="card__field-value"
+              >
+                <div
+                  class="card-text"
+                >
+                  
+  Bram
+
+                </div>
+              </div>
+            </div>
+            <div
+              class="card__field"
+            >
+              <div
+                class="card__field-name"
+              >
+                Address
+              </div>
+               
+              <div
+                class="card__field-value"
+              >
+                <div
+                  class="card-text"
+                >
+                  
+  
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+   
+   
+</div>
+`;
+
+exports[`GalleryView component with decoration Default component with row wrapper decoration 1`] = `
+<div
+  class="gallery-view"
+>
+  <a
+    class="gallery-view__add"
+  >
+    <i
+      class="fas fa-plus"
+    />
+  </a>
+   
+  <div
+    class="gallery-view__scroll"
+  >
+    <div
+      class="gallery-view__cards"
+      style="height: 410px;"
+    >
+      <div
+        class="card gallery-view__card"
+        style="width: -60px; transform: translateX(30px) translateY(30px);"
+      >
+        <div
+          class="test-wrapper"
+        />
+      </div>
+    </div>
+  </div>
+   
+   
+</div>
+`;
+
+exports[`GalleryView component with decoration Default component with unavailable decoration 1`] = `
+<div
+  class="gallery-view"
+>
+  <a
+    class="gallery-view__add"
+  >
+    <i
+      class="fas fa-plus"
+    />
+  </a>
+   
+  <div
+    class="gallery-view__scroll"
+  >
+    <div
+      class="gallery-view__cards"
+      style="height: 410px;"
+    >
+      <div
+        class="card gallery-view__card"
+        style="width: -60px; transform: translateX(30px) translateY(30px);"
+      >
+        <!---->
+         
+        <div
+          class="card__content"
+        >
+           
+          <div
+            class="card__fields"
+          >
+            <div
+              class="card__field"
+            >
+              <div
+                class="card__field-name"
+              >
+                Name
+              </div>
+               
+              <div
+                class="card__field-value"
+              >
+                <div
+                  class="card-text"
+                >
+                  
+  first
+
+                </div>
+              </div>
+            </div>
+            <div
+              class="card__field"
+            >
+              <div
+                class="card__field-name"
+              >
+                Surname
+              </div>
+               
+              <div
+                class="card__field-value"
+              >
+                <div
+                  class="card-text"
+                >
+                  
+  Bram
+
+                </div>
+              </div>
+            </div>
+            <div
+              class="card__field"
+            >
+              <div
+                class="card__field-name"
+              >
+                Address
+              </div>
+               
+              <div
+                class="card__field-value"
+              >
+                <div
+                  class="card-text"
+                >
+                  
+  
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+   
+   
+</div>
+`;

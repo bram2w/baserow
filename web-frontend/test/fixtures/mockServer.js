@@ -7,8 +7,12 @@ import {
 import { createFields } from '@baserow/test/fixtures/fields'
 import {
   createPublicGridViewRows,
-  createRows,
+  createGridRows,
 } from '@baserow/test/fixtures/grid'
+import {
+  createGalleryRows,
+  createGalleryView,
+} from '@baserow/test/fixtures/gallery'
 
 /**
  * MockServer is responsible for being the single place where we mock out calls to the
@@ -39,12 +43,13 @@ export class MockServer {
   createGridView(
     application,
     table,
-    { filters = [], sortings = [], decorations = [] }
+    { filters = [], sortings = [], decorations = [], ...rest }
   ) {
     return createGridView(this.mock, application, table, {
       filters,
       sortings,
       decorations,
+      ...rest,
     })
   }
 
@@ -56,12 +61,29 @@ export class MockServer {
     return createPublicGridViewRows(this.mock, viewSlug, fields, rows)
   }
 
+  createGalleryView(
+    application,
+    table,
+    { filters = [], sortings = [], decorations = [], ...rest }
+  ) {
+    return createGalleryView(this.mock, application, table, {
+      filters,
+      sortings,
+      decorations,
+      ...rest,
+    })
+  }
+
   createFields(application, table, fields) {
     return createFields(this.mock, application, table, fields)
   }
 
-  createRows(gridView, fields, rows) {
-    return createRows(this.mock, gridView, fields, rows)
+  createGridRows(gridView, fields, rows) {
+    return createGridRows(this.mock, gridView, fields, rows)
+  }
+
+  createGalleryRows(gridView, fields, rows) {
+    return createGalleryRows(this.mock, gridView, fields, rows)
   }
 
   nextSearchForTermWillReturn(searchTerm, gridView, results) {

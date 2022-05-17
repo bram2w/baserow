@@ -1,6 +1,13 @@
 import { ViewDecoratorType } from '@baserow/modules/database/viewDecorators'
 import { PremiumPlugin } from '@baserow_premium/plugins'
 
+import {
+  GridViewType,
+  GalleryViewType,
+} from '@baserow/modules/database/viewTypes'
+
+import { KanbanViewType } from './viewTypes'
+
 import leftBorderDecoratorImage from '@baserow_premium/assets/images/leftBorderDecorator.svg'
 import backgroundDecoratorImage from '@baserow_premium/assets/images/backgroundDecorator.svg'
 
@@ -71,7 +78,13 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
   isCompatible(view) {
     const { store } = this.app
 
-    return ['grid'].includes(view.type) && !store.getters['view/grid/isPublic']
+    return (
+      [
+        GridViewType.getType(),
+        GalleryViewType.getType(),
+        KanbanViewType.getType(),
+      ].includes(view.type) && !store.getters['view/grid/isPublic']
+    )
   }
 }
 
@@ -114,7 +127,13 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
   isCompatible(view) {
     const { store } = this.app
 
-    return ['grid'].includes(view.type) && !store.getters['view/grid/isPublic']
+    return (
+      [
+        GridViewType.getType(),
+        GalleryViewType.getType(),
+        KanbanViewType.getType(),
+      ].includes(view.type) && !store.getters['view/grid/isPublic']
+    )
   }
 
   getDeactivatedText() {

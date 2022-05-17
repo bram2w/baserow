@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Added row coloring for Kanban and Gallery views
+
 ## Released (2022-10-05 1.10.0)
 
 * Added batch create/update/delete rows endpoints. These endpoints make it possible to

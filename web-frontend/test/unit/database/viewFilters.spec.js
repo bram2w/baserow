@@ -54,7 +54,7 @@ describe('View Filter Tests', () => {
     })
     const fields = mockServer.createFields(application, table, [field])
 
-    mockServer.createRows(gridView, fields, [row])
+    mockServer.createGridRows(gridView, fields, [row])
     await store.dispatch('page/view/grid/fetchInitial', {
       gridId: 1,
       fields: [field],

@@ -52,6 +52,7 @@ class KanbanViewType(ViewType):
         ),
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
+    can_decorate = True
 
     def get_api_urls(self):
         from baserow_premium.api.views.kanban import urls as api_urls

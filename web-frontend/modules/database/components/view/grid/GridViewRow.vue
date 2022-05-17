@@ -128,10 +128,9 @@ export default {
       type: Array,
       required: true,
     },
-    decorations: {
-      type: Array,
-      required: false,
-      default: () => [],
+    decorationsByPlace: {
+      type: Object,
+      required: true,
     },
     allFields: {
       type: Array,
@@ -212,10 +211,10 @@ export default {
       return fields
     },
     firstCellDecorations() {
-      return this.decorations.filter(({ place }) => place === 'first_cell')
+      return this.decorationsByPlace?.first_cell || []
     },
     wrapperDecorations() {
-      return this.decorations.filter(({ place }) => place === 'wrapper')
+      return this.decorationsByPlace?.wrapper || []
     },
   },
   methods: {

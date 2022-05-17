@@ -52,7 +52,7 @@
             :view="view"
             :fields="fieldsToRender"
             :all-fields="fields"
-            :all-table-fields="allTableFields"
+            :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
@@ -127,8 +127,8 @@ export default {
       type: Array,
       required: true,
     },
-    allTableFields: {
-      type: Array,
+    decorationsByPlace: {
+      type: Object,
       required: true,
     },
     table: {
