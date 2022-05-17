@@ -290,6 +290,7 @@ class GalleryViewType(ViewType):
     api_exceptions_map = {
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
+    can_decorate = True
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.gallery import urls as api_urls

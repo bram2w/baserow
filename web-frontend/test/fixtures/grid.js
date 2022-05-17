@@ -1,4 +1,4 @@
-export function createRows(mock, gridView, fields, rows = []) {
+export function createGridRows(mock, gridView, fields, rows = []) {
   const fieldOptions = {}
   for (let i = 1; i < fields.length; i++) {
     fieldOptions[i] = {

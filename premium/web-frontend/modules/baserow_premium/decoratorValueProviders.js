@@ -107,7 +107,11 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
   getValue({ options, fields, row }) {
     const { $registry } = this.app
     for (const { color, filters, operator } of options.colors) {
-      if (matchSearchFilters($registry, operator, filters, fields, row)) {
+      if (
+        row.id !== -1 &&
+        row.id !== undefined &&
+        matchSearchFilters($registry, operator, filters, fields, row)
+      ) {
         return color
       }
     }

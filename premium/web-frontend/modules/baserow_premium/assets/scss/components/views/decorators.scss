@@ -1,8 +1,10 @@
 .left-border-decorator {
   width: 6px;
-  height: 24px;
-  margin: 0 4px;
+  align-self: stretch;
+  flex-shrink: 0;
+  flex-grow: 0;
   border-radius: 6px;
+  margin: 4px;
 
   @include add-shadow-on-same-background();
 }

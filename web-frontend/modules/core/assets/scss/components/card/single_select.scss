@@ -6,4 +6,5 @@
   @extend %ellipsis;
 
   @include select-option-style(inline-block);
+  @include add-shadow-on-same-background();
 }

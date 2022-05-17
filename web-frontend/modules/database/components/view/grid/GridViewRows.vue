@@ -13,7 +13,7 @@
       :all-fields="allFields"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
-      :decorations="augmentedDecorations"
+      :decorations-by-place="decorationsByPlace"
       :read-only="readOnly"
       :can-drag="view.sortings.length === 0"
       :store-prefix="storePrefix"
@@ -41,8 +41,8 @@ export default {
       type: Array,
       required: true,
     },
-    allTableFields: {
-      type: Array,
+    decorationsByPlace: {
+      type: Object,
       required: true,
     },
     leftOffset: {
@@ -71,42 +71,6 @@ export default {
         fieldWidths[field.id] = this.getFieldWidth(field.id)
       })
       return fieldWidths
-    },
-    augmentedDecorations() {
-      return this.view.decorations
-        .filter(({ value_provider_type: valPro }) => valPro)
-        .map((decoration) => {
-          const deco = { decoration }
-
-          deco.decorationType = this.$registry.get(
-            'viewDecorator',
-            decoration.type
-          )
-
-          deco.component = deco.decorationType.getComponent()
-          deco.place = deco.decorationType.getPlace()
-
-          deco.valueProviderType = this.$registry.get(
-            'decoratorValueProvider',
-            decoration.value_provider_type
-          )
-
-          deco.propsFn = (row) => {
-            return {
-              value: deco.valueProviderType.getValue({
-                row,
-                fields: this.allTableFields,
-                options: decoration.value_provider_conf,
-              }),
-            }
-          }
-
-          return deco
-        })
-        .filter(
-          ({ decorationType }) =>
-            !decorationType.isDeactivated({ view: this.view })
-        )
     },
   },
   beforeCreate() {

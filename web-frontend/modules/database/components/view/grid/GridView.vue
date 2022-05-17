@@ -16,7 +16,7 @@
       ref="left"
       class="grid-view__left"
       :fields="leftFields"
-      :all-table-fields="allTableFields"
+      :decorations-by-place="decorationsByPlace"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
@@ -66,7 +66,7 @@
       ref="right"
       class="grid-view__right"
       :fields="visibleFields"
-      :all-table-fields="allTableFields"
+      :decorations-by-place="decorationsByPlace"
       :table="table"
       :view="view"
       :include-add-field="true"
@@ -188,6 +188,7 @@ import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import { isElement } from '@baserow/modules/core/utils/dom'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 
 export default {
   name: 'GridView',
@@ -197,7 +198,7 @@ export default {
     GridViewRowDragging,
     RowEditModal,
   },
-  mixins: [viewHelpers, gridViewHelpers],
+  mixins: [viewHelpers, gridViewHelpers, viewDecoration],
   props: {
     primary: {
       type: Object,
@@ -279,9 +280,6 @@ export default {
     },
     leftWidth() {
       return this.leftFieldsWidth + this.gridViewRowDetailsWidth
-    },
-    allTableFields() {
-      return [this.primary, ...this.fields]
     },
   },
   watch: {

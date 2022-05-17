@@ -33,6 +33,7 @@
           :row="slot.item || {}"
           :loading="slot.item === null"
           :cover-image-field="coverImageField"
+          :decorations-by-place="decorationsByPlace"
           class="gallery-view__card"
           :style="{
             width: cardWidth + 'px',
@@ -93,11 +94,12 @@ import RowCreateModal from '@baserow/modules/database/components/row/RowCreateMo
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import bufferedRowsDragAndDrop from '@baserow/modules/database/mixins/bufferedRowsDragAndDrop'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 
 export default {
   name: 'GalleryView',
   components: { RowCard, RowCreateModal, RowEditModal },
-  mixins: [viewHelpers, bufferedRowsDragAndDrop],
+  mixins: [viewHelpers, bufferedRowsDragAndDrop, viewDecoration],
   props: {
     primary: {
       type: Object,

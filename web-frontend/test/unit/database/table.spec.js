@@ -144,7 +144,7 @@ describe('Table Component Tests', () => {
       },
     ])
 
-    mockServer.createRows(gridView, fields, [
+    mockServer.createGridRows(gridView, fields, [
       {
         id: 1,
         order: 0,

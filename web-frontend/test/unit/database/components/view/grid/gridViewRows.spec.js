@@ -67,7 +67,7 @@ describe('GridViewRows component', () => {
     const view = mockServer.createGridView(application, table, {})
     const fields = mockServer.createFields(application, table, fieldData)
 
-    mockServer.createRows(view, fields, rows)
+    mockServer.createGridRows(view, fields, rows)
     await store.dispatch('page/view/grid/fetchInitial', {
       gridId: 1,
       fields,
