@@ -1290,17 +1290,16 @@ export const actions = {
     const allFields = [primary].concat(fields)
     allFields.forEach((field) => {
       const name = `field_${field.id}`
+      const fieldType = this.$registry.get('field', field._.type.type)
       if (!(name in values)) {
-        const fieldType = this.$registry.get('field', field._.type.type)
         const empty = fieldType.getNewRowValue(field)
         values[name] = empty
-
-        // In case the fieldType is a read only field, we
-        // need to create a second values dictionary, which gets
-        // sent to the API without the fieldType.
-        if (!fieldType.isReadOnly) {
-          valuesForApiRequest[name] = empty
-        }
+      }
+      // In case the fieldType is a read only field, we need to create a second
+      // values dictionary, which gets sent to the API without the fieldType.
+      if (!fieldType.isReadOnly) {
+        const newValue = fieldType.prepareValueForUpdate(field, values[name])
+        valuesForApiRequest[name] = newValue
       }
     })
 

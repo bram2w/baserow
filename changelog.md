@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Added row coloring for Kanban and Gallery views
+* Duplicate row.
 
 ## Released (2022-10-05 1.10.0)
 
