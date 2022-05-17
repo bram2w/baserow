@@ -139,6 +139,16 @@
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
+        <li v-if="!readOnly">
+          <a
+            @click="
+              ;[addRowAfter(selectedRow, selectedRow), $refs.rowContext.hide()]
+            "
+          >
+            <i class="context__menu-icon fas fa-fw fa-clone"></i>
+            {{ $t('gridView.duplicateRow') }}
+          </a>
+        </li>
         <li>
           <a
             @click="
@@ -479,7 +489,7 @@ export default {
       $divider.classList.toggle('shadow', canScroll && left > 0)
       $right.scrollLeft = left
     },
-    async addRow(before = null) {
+    async addRow(before = null, values = {}) {
       try {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/createNewRow',
@@ -489,7 +499,7 @@ export default {
             // We need a list of all fields including the primary one here.
             fields: this.fields,
             primary: this.primary,
-            values: {},
+            values,
             before,
           }
         )
@@ -502,7 +512,7 @@ export default {
      * figure out which row is below the given row and insert before that one. If the
      * next row is not found, we can safely assume it is the last row and add it last.
      */
-    addRowAfter(row) {
+    addRowAfter(row, values = {}) {
       const rows =
         this.$store.getters[this.storePrefix + 'view/grid/getAllRows']
       const index = rows.findIndex((r) => r.id === row.id)
@@ -512,7 +522,7 @@ export default {
         nextRow = rows[index + 1]
       }
 
-      this.addRow(nextRow)
+      this.addRow(nextRow, values)
     },
     async deleteRow(row) {
       try {

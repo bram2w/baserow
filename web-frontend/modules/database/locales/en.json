@@ -468,6 +468,7 @@
     "gridView": {
         "insertRowAbove": "Insert row above",
         "insertRowBelow": "Insert row below",
+        "duplicateRow": "Duplicate row",
         "enlargeRow": "Enlarge row",
         "deleteRow": "Delete row",
         "rowCount": "No rows | 1 row | {count} rows"
