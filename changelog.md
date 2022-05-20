@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added the ability to use commas as separators in number fields
 * Added row coloring for Kanban and Gallery views
 * Duplicate row.
 

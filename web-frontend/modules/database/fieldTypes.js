@@ -854,11 +854,18 @@ export class NumberFieldType extends FieldType {
     if (value === null || value === '') {
       return null
     }
-    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+
+    // Transform any commas to dots
+    const valueWithDots =
+      typeof value === 'string'
+        ? NumberFieldType.unlocalizeString(value)
+        : value
+
+    if (isNaN(parseFloat(valueWithDots)) || !isFinite(valueWithDots)) {
       return this.app.i18n.t('fieldErrors.invalidNumber')
     }
     if (
-      value.split('.')[0].replace('-', '').length >
+      valueWithDots.split('.')[0].replace('-', '').length >
       NumberFieldType.getMaxNumberLength()
     ) {
       return this.app.i18n.t('fieldErrors.maxDigits', {
@@ -891,14 +898,28 @@ export class NumberFieldType extends FieldType {
    * they will be set to 0.
    */
   static formatNumber(field, value) {
-    if (value === '' || isNaN(value) || value === undefined || value === null) {
+    const valueWithDots =
+      typeof value === 'string'
+        ? NumberFieldType.unlocalizeString(value)
+        : value
+
+    if (
+      valueWithDots === '' ||
+      isNaN(valueWithDots) ||
+      valueWithDots === undefined ||
+      valueWithDots === null
+    ) {
       return null
     }
-    let number = new BigNumber(value)
+    let number = new BigNumber(valueWithDots)
     if (!field.number_negative && number.isLessThan(0)) {
       number = 0
     }
     return number.toFixed(field.number_decimal_places)
+  }
+
+  static unlocalizeString(value) {
+    return value.replace(/,/g, '.')
   }
 
   getDocsDataType(field) {
