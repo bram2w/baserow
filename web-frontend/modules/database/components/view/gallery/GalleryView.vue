@@ -56,24 +56,41 @@
       v-if="!readOnly"
       ref="rowCreateModal"
       :table="table"
-      :fields="fields"
       :primary="primary"
+      :primary-is-sortable="true"
+      :visible-fields="cardFields"
+      :hidden-fields="hiddenFields"
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
       @created="createRow"
+      @order-fields="orderFields"
+      @toggle-field-visibility="toggleFieldVisibility"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
     ></RowCreateModal>
     <RowEditModal
       ref="rowEditModal"
       :table="table"
-      :fields="fields"
       :primary="primary"
+      :primary-is-sortable="true"
+      :visible-fields="cardFields"
+      :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="false"
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
       @update="updateValue"
+      @order-fields="orderFields"
+      @toggle-field-visibility="toggleFieldVisibility"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
-      @field-created="fieldCreated"
-    ></RowEditModal>
+      @field-created="showFieldCreated"
+    >
+    </RowEditModal>
   </div>
 </template>
 
@@ -88,7 +105,11 @@ import {
   recycleSlots,
   orderSlots,
 } from '@baserow/modules/database/utils/virtualScrolling'
-import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
+import {
+  sortFieldsByOrderAndIdFunction,
+  filterVisibleFieldsFunction,
+  filterHiddenFieldsFunction,
+} from '@baserow/modules/database/utils/view'
 import RowCard from '@baserow/modules/database/components/card/RowCard'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
@@ -137,6 +158,7 @@ export default {
       height: 0,
       cardWidth: 0,
       buffer: [],
+      showHiddenFieldsInRowModal: false,
       dragAndDropCloneClass: 'gallery-view__card--dragging-clone',
     }
   },
@@ -159,39 +181,18 @@ export default {
      * Returns the visible field objects in the right order.
      */
     cardFields() {
+      const fieldOptions = this.fieldOptions
       return [this.primary]
         .concat(this.fields)
-        .filter((field) => {
-          const exists = Object.prototype.hasOwnProperty.call(
-            this.fieldOptions,
-            field.id
-          )
-          return !exists || (exists && !this.fieldOptions[field.id].hidden)
-        })
-        .sort((a, b) => {
-          const orderA = this.fieldOptions[a.id]
-            ? this.fieldOptions[a.id].order
-            : maxPossibleOrderValue
-          const orderB = this.fieldOptions[b.id]
-            ? this.fieldOptions[b.id].order
-            : maxPossibleOrderValue
-
-          // First by order.
-          if (orderA > orderB) {
-            return 1
-          } else if (orderA < orderB) {
-            return -1
-          }
-
-          // Then by id.
-          if (a.id < b.id) {
-            return -1
-          } else if (a.id > b.id) {
-            return 1
-          } else {
-            return 0
-          }
-        })
+        .filter(filterVisibleFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    hiddenFields() {
+      const fieldOptions = this.fieldOptions
+      return [this.primary]
+        .concat(this.fields)
+        .filter(filterHiddenFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     coverImageField() {
       const fieldId = this.view.card_cover_image_field
@@ -405,6 +406,14 @@ export default {
      */
     rowClick(row) {
       this.$refs.rowEditModal.show(row.id)
+    },
+    /**
+     * Calls the fieldCreated callback and shows the hidden fields section
+     * because new fields are hidden by default.
+     */
+    showFieldCreated({ fetchNeeded, ...context }) {
+      this.fieldCreated({ fetchNeeded, ...context })
+      this.showHiddenFieldsInRowModal = true
     },
   },
 }

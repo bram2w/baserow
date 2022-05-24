@@ -221,7 +221,9 @@
     },
     "fieldContext": {
         "editField": "Edit field",
-        "deleteField": "Delete field"
+        "deleteField": "Delete field",
+        "hideField": "Hide field",
+        "showField": "Show field"
     },
     "fieldForm": {
         "name": "Name",
@@ -253,7 +255,9 @@
         "search": "Search rows"
     },
     "rowEditModal": {
-        "addField": "add field"
+        "addField": "add field",
+        "showHiddenFields": "Show hidden fields",
+        "hideHiddenFields": "Hide hidden fields"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Add another option"
