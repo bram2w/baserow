@@ -6,7 +6,11 @@ from django.utils.functional import lazy
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.views.models import GridViewFieldOptions, ViewSort, View
+from baserow.contrib.database.views.models import (
+    GridViewFieldOptions,
+    ViewSort,
+    View,
+)
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_aggregation_type_registry,

@@ -56,6 +56,8 @@ class GridViewType(ViewType):
     can_share = True
     can_decorate = True
     when_shared_publicly_requires_realtime_events = True
+    allowed_fields = ["row_identifier_type"]
+    serializer_field_names = ["row_identifier_type"]
 
     api_exceptions_map = {
         GridViewAggregationDoesNotSupportField: ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,

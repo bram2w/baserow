@@ -450,6 +450,10 @@
     "gridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
     },
+    "gridViewIdentifierOptions": {
+        "id": "",
+        "count": "Número de filas"
+    },
     "previewAny": {
         "externalWarning": "Abrir su archivo a través de un servicio externo expone su archivo a sus servidores."
     },

@@ -192,7 +192,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 <div
                   class="grid-view__column"
                   style="width: 70px;"
-                />
+                >
+                  <!---->
+                </div>
                  
                 <div
                   class="grid-view__column"
