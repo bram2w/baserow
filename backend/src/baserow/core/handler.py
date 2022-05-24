@@ -107,7 +107,11 @@ class CoreHandler:
 
         settings_instance = set_allowed_attrs(
             kwargs,
-            ["allow_new_signups", "allow_signups_via_group_invitations"],
+            [
+                "allow_new_signups",
+                "allow_signups_via_group_invitations",
+                "allow_reset_password",
+            ],
             settings_instance,
         )
 

@@ -247,7 +247,9 @@
         "errorInvalidLinkTitle": "Invalid link",
         "errorInvalidLinkMessage": "Could not reset the password because the link is invalid.",
         "errorLinkExpiredTitle": "Link expired",
-        "errorLinkExpiredMessage": "The password reset link has expired. Please request another one."
+        "errorLinkExpiredMessage": "The password reset link has expired. Please request another one.",
+        "disabled": "Reset Password is disabled",
+        "disabledMessage": "It's not possible to reset the password because it has been disabled."
     },
     "signup": {
         "headTitle": "Create new account",
@@ -259,13 +261,18 @@
         "title": "Forgot password",
         "message": "Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.",
         "submit": "Send link",
-        "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes."
+        "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes.",
+        "disabled": "Forgot password is disabled",
+        "disabledMessage": "It's not possible to reset the password because it has been disabled."
     },
     "settings": {
         "settingsTitle": "Admin settings",
         "baserowInstanceId": "Instance ID",
         "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
-        "groupSignupRestrictions": "Signup restrictions",
+        "accountRestrictions": "Account restrictions",
+        "settingAllowResetPasswordName": "Allow resetting password",
+        "settingAllowResetPasswordDescription": "By default, users can request a password reset link.",
+        "settingAllowResetPasswordWarning": "Please note that you could lock yourself out of the system and that access can't be restored if you forget your password.",
         "settingAllowNewAccountsName": "Allow creating new accounts",
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",

@@ -238,7 +238,9 @@
         "errorInvalidLinkTitle": "Link inválido",
         "errorInvalidLinkMessage": "Não foi possível redefinir a senha porque o link é inválido.",
         "errorLinkExpiredTitle": "Link expirado",
-        "errorLinkExpiredMessage": "O link de redefinição de senha expirou. Por favor, solicite outro."
+        "errorLinkExpiredMessage": "O link de redefinição de senha expirou. Por favor, solicite outro.",
+        "disabled": "",
+        "disabledMessage": ""
     },
     "signup": {
         "headTitle": "Criar uma nova conta",
@@ -250,13 +252,18 @@
         "title": "Esqueci a senha",
         "message": "Por favor, insira seu endereço de e-mail neste formulário. Se encontrarmos uma conta, enviaremos um e-mail com um link para redefinir sua senha.",
         "submit": "Enviar link",
-        "confirmation": "Se o seu endereço de e-mail existir em nosso banco de dados, você receberá um link de redefinição de senha em seu endereço de e-mail em alguns minutos."
+        "confirmation": "Se o seu endereço de e-mail existir em nosso banco de dados, você receberá um link de redefinição de senha em seu endereço de e-mail em alguns minutos.",
+        "disabled": "Esqueci a senha está desabilitado",
+        "disabledMessage": "Não é possível recuperar a senha porque ela foi desativada."
     },
     "settings": {
         "settingsTitle": "Configurações administrativas",
         "baserowInstanceId": "Instância ID",
         "instanceIdDescription": "A instância ID é uma identificação única da cópia do seu Baserow.",
-        "groupSignupRestrictions": "Restrições ao increver-se",
+        "accountRestrictions": "Restrições ao conta",
+        "settingAllowResetPasswordName": "",
+        "settingAllowResetPasswordDescription": "",
+        "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "Permitir criar novas contas",
         "settingAllowNewAccountsDescription": "Por padrão, qualquer usuário que visite seu domínio Baserow pode se inscrever para uma nova conta.",
         "settingAllowSignupsViaGroupInvitationsName": "Permitir inscrições por meio de convites de grupo",

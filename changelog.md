@@ -10,6 +10,7 @@
 * Duplicate row.
 * Added a dropdown to the grid view that allows you to
   select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
+* Added an admin setting to disable the ability to reset a users password.
 
 ## Released (2022-10-05 1.10.0)
 

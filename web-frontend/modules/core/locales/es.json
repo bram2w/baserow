@@ -219,7 +219,9 @@
         "errorInvalidLinkTitle": "Link inválido",
         "errorInvalidLinkMessage": "No se pudo restablecer la contraseña porque el enlace no es válido.",
         "errorLinkExpiredTitle": "Enlace expirado",
-        "errorLinkExpiredMessage": "El enlace de restablecimiento de contraseña ha caducado. Solicite otro."
+        "errorLinkExpiredMessage": "El enlace de restablecimiento de contraseña ha caducado. Solicite otro.",
+        "disabled": "",
+        "disabledMessage": ""
     },
     "signup": {
         "headTitle": "Crear una nueva cuenta",
@@ -231,13 +233,18 @@
         "title": "Se te olvidó tu contraseña",
         "message": "Por favor, introduzca su dirección de correo electrónico en el formulario. Si encontramos una cuenta, le enviaremos un correo electrónico con un enlace para restablecer su contraseña.",
         "submit": "Enviar enlace",
-        "confirmation": "Si su dirección de correo electrónico existe en nuestra base de datos, recibirá un enlace de restablecimiento de contraseña en su dirección de correo electrónico en unos minutos."
+        "confirmation": "Si su dirección de correo electrónico existe en nuestra base de datos, recibirá un enlace de restablecimiento de contraseña en su dirección de correo electrónico en unos minutos.",
+        "disabled": "Se te olvidó tu contraseña",
+        "disabledMessage": "No es posible restablecer la contraseña porque ha sido deshabilitada."
     },
     "settings": {
         "settingsTitle": "Configuración de administrador",
         "baserowInstanceId": "ID de instancia",
         "instanceIdDescription": "El ID de instancia es el identificador único de su copia de Baserow.",
-        "groupSignupRestrictions": "Restricciones de registro",
+        "accountRestrictions": "Restricciones de cuenta",
+        "settingAllowResetPasswordName": "",
+        "settingAllowResetPasswordDescription": "",
+        "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "Permitir crear nuevas cuentas",
         "settingAllowNewAccountsDescription": "De forma predeterminada, cualquier usuario que visite su dominio de Baserow puede registrarse para obtener una nueva cuenta.",
         "enabled": "activado",

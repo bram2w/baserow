@@ -5,47 +5,71 @@
         <h1 class="box__head-title">{{ $t('forgotPassword.title') }}</h1>
         <LangPicker />
       </div>
-      <p>
-        {{ $t('forgotPassword.message') }}
-      </p>
-      <Error :error="error"></Error>
-      <form @submit.prevent="sendLink">
-        <div class="control">
-          <label class="control__label">{{ $t('field.emailAddress') }}</label>
-          <div class="control__elements">
-            <input
-              ref="email"
-              v-model="account.email"
-              :class="{ 'input--error': $v.account.email.$error }"
-              type="text"
-              class="input input--large"
-              :disabled="success"
-              @blur="$v.account.email.$touch()"
-            />
-            <div v-if="$v.account.email.$error" class="error">
-              {{ $t('error.invalidEmail') }}
+
+      <!-- Disabled info message -->
+      <template v-if="!settings.allow_reset_password">
+        <div class="alert alert--simple alert--error alert--has-icon">
+          <div class="alert__icon">
+            <i class="fas fa-exclamation"></i>
+          </div>
+          <div class="alert__title">{{ $t('forgotPassword.disabled') }}</div>
+          <p class="alert__content">
+            {{ $t('forgotPassword.disabledMessage') }}
+          </p>
+        </div>
+        <nuxt-link
+          :to="{ name: 'login' }"
+          class="button button--large button--primary"
+        >
+          <i class="fas fa-arrow-left"></i>
+          {{ $t('action.backToLogin') }}
+        </nuxt-link>
+      </template>
+
+      <!-- Form -->
+      <div v-else>
+        <p>
+          {{ $t('forgotPassword.message') }}
+        </p>
+        <Error :error="error"></Error>
+        <form @submit.prevent="sendLink">
+          <div class="control">
+            <label class="control__label">{{ $t('field.emailAddress') }}</label>
+            <div class="control__elements">
+              <input
+                ref="email"
+                v-model="account.email"
+                :class="{ 'input--error': $v.account.email.$error }"
+                type="text"
+                class="input input--large"
+                :disabled="success"
+                @blur="$v.account.email.$touch()"
+              />
+              <div v-if="$v.account.email.$error" class="error">
+                {{ $t('error.invalidEmail') }}
+              </div>
             </div>
           </div>
-        </div>
-        <div class="actions">
-          <ul class="action__links">
-            <li>
-              <nuxt-link :to="{ name: 'login' }">
-                <i class="fas fa-arrow-left"></i>
-                {{ $t('action.back') }}
-              </nuxt-link>
-            </li>
-          </ul>
-          <button
-            :class="{ 'button--loading': loading }"
-            class="button button--large"
-            :disabled="loading || success"
-          >
-            {{ $t('forgotPassword.submit') }}
-            <i class="fas fa-envelope"></i>
-          </button>
-        </div>
-      </form>
+          <div class="actions">
+            <ul class="action__links">
+              <li>
+                <nuxt-link :to="{ name: 'login' }">
+                  <i class="fas fa-arrow-left"></i>
+                  {{ $t('action.back') }}
+                </nuxt-link>
+              </li>
+            </ul>
+            <button
+              :class="{ 'button--loading': loading }"
+              class="button button--large"
+              :disabled="loading || success"
+            >
+              {{ $t('forgotPassword.submit') }}
+              <i class="fas fa-envelope"></i>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
     <div v-if="success" class="box__message">
       <div class="box__message-icon">
@@ -68,6 +92,7 @@ import { required, email } from 'vuelidate/lib/validators'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
+import { mapGetters } from 'vuex'
 
 export default {
   components: { LangPicker },
@@ -86,6 +111,11 @@ export default {
     return {
       title: this.$t('forgotPassword.title'),
     }
+  },
+  computed: {
+    ...mapGetters({
+      settings: 'settings/get',
+    }),
   },
   methods: {
     async sendLink() {

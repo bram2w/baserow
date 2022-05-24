@@ -219,7 +219,9 @@
         "errorInvalidLinkTitle": "Lien invalide",
         "errorInvalidLinkMessage": "Il n'est pas possible de réinitialiser le mot de passe car le lien est invalide.",
         "errorLinkExpiredTitle": "Lien expiré",
-        "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau."
+        "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau.",
+        "disabled": "",
+        "disabledMessage": ""
     },
     "signup": {
         "headTitle": "Création d'un nouveau compte",
@@ -231,13 +233,18 @@
         "title": "Mot de passe oublié",
         "message": "Veuillez saisir votre adresse email dans le formulaire. Si nous trouvons un compte correspondant, nous vous enverrons un email avec un lien pour réinitialiser votre mot de passe.",
         "submit": "Envoyer le lien",
-        "confirmation": "Si un compte correspond à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie d'ici quelques minutes."
+        "confirmation": "Si un compte correspond à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie d'ici quelques minutes.",
+        "disabled": "Mot de passe oublié desactivé",
+        "disabledMessage": "Vous ne pouvez pas réinitialiser votre mot de passe car la réinitialisation de mot de passe a été désactivée."
     },
     "settings": {
         "settingsTitle": "Paramètres",
         "baserowInstanceId": "Identifiant de l'instance de Baserow",
         "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
-        "groupSignupRestrictions": "Restriction de création des comptes",
+        "accountRestrictions": "Restriction de création de comptes",
+        "settingAllowResetPasswordName": "",
+        "settingAllowResetPasswordDescription": "",
+        "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "Autoriser la création de compte",
         "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
         "enabled": "Autoriser",

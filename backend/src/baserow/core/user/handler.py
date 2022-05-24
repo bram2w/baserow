@@ -1,4 +1,6 @@
 from urllib.parse import urlparse, urljoin
+
+from django.contrib.auth.models import AbstractUser
 from itsdangerous import URLSafeTimedSerializer
 
 from django.conf import settings
@@ -21,6 +23,7 @@ from .exceptions import (
     PasswordDoesNotMatchValidation,
     InvalidPassword,
     DisabledSignupError,
+    ResetPasswordDisabledError,
 )
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
@@ -203,17 +206,19 @@ class UserHandler:
 
         return URLSafeTimedSerializer(settings.SECRET_KEY, "user-reset-password")
 
-    def send_reset_password_email(self, user, base_url):
+    def send_reset_password_email(self, user: AbstractUser, base_url: str):
         """
         Sends an email containing a password reset url to the user.
 
         :param user: The user instance.
-        :type user: User
         :param base_url: The base url of the frontend, where the user can reset his
             password. The reset token is appended to the URL (base_url + '/TOKEN').
             Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
-        :type base_url: str
+        :raises: ResetPasswordDisabledError: If the reset password is disabled.
         """
+
+        if not CoreHandler().get_settings().allow_reset_password:
+            raise ResetPasswordDisabledError("Reset password is disabled")
 
         parsed_base_url = urlparse(base_url)
         if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
@@ -241,6 +246,7 @@ class UserHandler:
         :type token: str
         :param password: The new password of the user.
         :type password: str
+        :raises: ResetPasswordDisabledError: When resetting passwords is disabled.
         :raises BadSignature: When the provided token has a bad signature.
         :raises SignatureExpired: When the provided token's signature has expired.
         :raises UserNotFound: When a user related to the provided token has not been
@@ -250,6 +256,9 @@ class UserHandler:
         :return: The updated user instance.
         :rtype: User
         """
+
+        if not CoreHandler().get_settings().allow_reset_password:
+            raise ResetPasswordDisabledError("Reset password is disabled.")
 
         signer = self.get_reset_password_signer()
         user_id = signer.loads(token, max_age=settings.RESET_PASSWORD_TOKEN_MAX_AGE)
