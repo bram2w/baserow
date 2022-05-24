@@ -5,6 +5,8 @@
 * Added the ability to use commas as separators in number fields
 * Added row coloring for Kanban and Gallery views
 * Duplicate row.
+* Added a dropdown to the grid view that allows you to
+  select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
 
 ## Released (2022-10-05 1.10.0)
 

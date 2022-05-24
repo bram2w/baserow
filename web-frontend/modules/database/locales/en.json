@@ -476,6 +476,10 @@
     "gridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
     },
+    "gridViewIdentifierOptions": {
+        "id": "Row identifier",
+        "count": "Count"
+    },
     "previewAny": {
         "externalWarning": "Opening your file via an external service exposes your file to their servers."
     },

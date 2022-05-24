@@ -1773,6 +1773,7 @@ def test_get_public_grid_view(api_client, data_fixture):
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
             },
             "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
         },
     }
 
@@ -2653,6 +2654,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_grid_
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
             },
             "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
         },
     }
 
@@ -2678,6 +2680,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_grid_
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
             },
             "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
         },
     }
 

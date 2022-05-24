@@ -6,7 +6,7 @@
     }"
   >
     <GridViewRow
-      v-for="row in rows"
+      v-for="(row, index) in rows"
       :key="`row-${row.id}`"
       :row="row"
       :fields="fields"
@@ -17,6 +17,8 @@
       :read-only="readOnly"
       :can-drag="view.sortings.length === 0"
       :store-prefix="storePrefix"
+      :row-identifier-type="view.row_identifier_type"
+      :count="index + rowsStartIndex + bufferStartIndex + 1"
       v-on="$listeners"
     />
   </div>
@@ -79,6 +81,10 @@ export default {
       ...mapGetters({
         rows: this.$options.propsData.storePrefix + 'view/grid/getRows',
         rowsTop: this.$options.propsData.storePrefix + 'view/grid/getRowsTop',
+        rowsStartIndex:
+          this.$options.propsData.storePrefix + 'view/grid/getRowsStartIndex',
+        bufferStartIndex:
+          this.$options.propsData.storePrefix + 'view/grid/getBufferStartIndex',
       }),
     }
   },

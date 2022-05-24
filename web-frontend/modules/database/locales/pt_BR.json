@@ -450,6 +450,10 @@
     "gridViewFieldLinkRow": {
         "unnamed": ""
     },
+    "gridViewIdentifierOptions": {
+        "id": "",
+        "count": ""
+    },
     "previewAny": {
         "externalWarning": ""
     },

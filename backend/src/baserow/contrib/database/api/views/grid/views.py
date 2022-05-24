@@ -21,7 +21,9 @@ from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
 )
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
-from baserow.contrib.database.api.views.errors import ERROR_VIEW_DOES_NOT_EXIST
+from baserow.contrib.database.api.views.errors import (
+    ERROR_VIEW_DOES_NOT_EXIST,
+)
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
     PublicGridViewInfoSerializer,

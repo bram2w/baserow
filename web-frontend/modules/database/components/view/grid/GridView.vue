@@ -21,6 +21,7 @@
       :view="view"
       :include-field-width-handles="false"
       :include-row-details="true"
+      :include-grid-view-identifier-dropdown="true"
       :read-only="readOnly"
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"

@@ -378,7 +378,14 @@ class ViewSort(models.Model):
 
 
 class GridView(View):
+    class RowIdentifierTypes(models.TextChoices):
+        ID = "id"
+        count = "count"
+
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
+    row_identifier_type = models.CharField(
+        choices=RowIdentifierTypes.choices, default="id", max_length=10
+    )
 
 
 class GridViewFieldOptionsManager(models.Manager):

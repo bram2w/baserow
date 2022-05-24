@@ -19,6 +19,9 @@
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
         :include-add-field="includeAddField"
+        :include-grid-view-identifier-dropdown="
+          includeGridViewIdentifierDropdown
+        "
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @field-created="$emit('field-created', $event)"
@@ -150,6 +153,11 @@ export default {
       default: () => false,
     },
     includeAddField: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    includeGridViewIdentifierDropdown: {
       type: Boolean,
       required: false,
       default: () => false,

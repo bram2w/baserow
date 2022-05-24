@@ -450,6 +450,10 @@
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
     },
+    "gridViewIdentifierOptions": {
+        "id": "",
+        "count": ""
+    },
     "previewAny": {
         "externalWarning": "L'apertura del file tramite un servizio esterno espone il file ai server di tale servizio."
     },

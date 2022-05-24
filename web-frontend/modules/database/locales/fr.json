@@ -450,6 +450,10 @@
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
     },
+    "gridViewIdentifierOptions": {
+        "id": "",
+        "count": ""
+    },
     "previewAny": {
         "externalWarning": "Ouvrir un fichier via un service externe expose votre fichier à leurs serveurs."
     },

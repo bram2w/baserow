@@ -4,7 +4,13 @@
       v-if="includeRowDetails"
       class="grid-view__column"
       :style="{ width: gridViewRowDetailsWidth + 'px' }"
-    ></div>
+    >
+      <GridViewRowIdentifierDropdown
+        v-if="!readOnly"
+        :row-indetifier-type-selected="view.row_identifier_type"
+        @change="onChangeIdentifierDropdown"
+      ></GridViewRowIdentifierDropdown>
+    </div>
     <GridViewFieldType
       v-for="field in fields"
       :key="'field-type-' + field.id"
@@ -46,10 +52,12 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import GridViewRowIdentifierDropdown from '@baserow/modules/database/components/view/grid/GridViewRowIdentifierDropdown'
 
 export default {
   name: 'GridViewHead',
   components: {
+    GridViewRowIdentifierDropdown,
     GridViewFieldType,
     CreateFieldContext,
   },
@@ -82,6 +90,11 @@ export default {
       required: false,
       default: () => false,
     },
+    includeGridViewIdentifierDropdown: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -107,6 +120,16 @@ export default {
             order: newOrder,
           }
         )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async onChangeIdentifierDropdown(rowIdentifierType) {
+      try {
+        await this.$store.dispatch('view/update', {
+          view: this.view,
+          values: { row_identifier_type: rowIdentifierType },
+        })
       } catch (error) {
         notifyIf(error, 'view')
       }
