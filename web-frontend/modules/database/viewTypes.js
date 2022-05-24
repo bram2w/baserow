@@ -805,11 +805,18 @@ export class GalleryViewType extends BaseBufferedRowView {
     )
   }
 
-  afterFieldDeleted(context, field, fieldType, storePrefix = '') {
+  async afterFieldDeleted(context, field, fieldType, storePrefix = '') {
     // We want to loop over all gallery views that we have in the store and check if
     // they were depending on this deleted field. If that's case, we can set it to null
     // because it doesn't exist anymore.
     this._setFieldToNull(context, field, 'card_cover_image_field')
+    await context.dispatch(
+      storePrefix + 'view/' + this.getType() + '/forceDeleteFieldOptions',
+      field.id,
+      {
+        root: true,
+      }
+    )
   }
 }
 

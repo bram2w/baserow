@@ -1,5 +1,6 @@
 import { firstBy } from 'thenby'
 import BigNumber from 'bignumber.js'
+import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 
 /**
  * Generates a sort function based on the provided sortings.
@@ -32,6 +33,56 @@ export function getRowSortFunction(
   )
   sortFunction = sortFunction.thenBy((a, b) => a.id - b.id)
   return sortFunction
+}
+
+/**
+ * Generates a sort function for fields based on order and id.
+ */
+export function sortFieldsByOrderAndIdFunction(fieldOptions) {
+  return (a, b) => {
+    const orderA = fieldOptions[a.id]
+      ? fieldOptions[a.id].order
+      : maxPossibleOrderValue
+    const orderB = fieldOptions[b.id]
+      ? fieldOptions[b.id].order
+      : maxPossibleOrderValue
+
+    // First by order.
+    if (orderA > orderB) {
+      return 1
+    } else if (orderA < orderB) {
+      return -1
+    }
+
+    // Then by id.
+    if (a.id < b.id) {
+      return -1
+    } else if (a.id > b.id) {
+      return 1
+    } else {
+      return 0
+    }
+  }
+}
+
+/**
+ * Returns only fields that are visible (not hidden).
+ */
+export function filterVisibleFieldsFunction(fieldOptions) {
+  return (field) => {
+    const exists = Object.prototype.hasOwnProperty.call(fieldOptions, field.id)
+    return !exists || !fieldOptions[field.id].hidden
+  }
+}
+
+/**
+ * Returns only fields that are visible (not hidden).
+ */
+export function filterHiddenFieldsFunction(fieldOptions) {
+  return (field) => {
+    const exists = Object.prototype.hasOwnProperty.call(fieldOptions, field.id)
+    return exists && fieldOptions[field.id].hidden
+  }
 }
 
 /**

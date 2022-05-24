@@ -37,9 +37,9 @@
       @update="updateValue"
       @paste="multiplePasteFromCell"
       @edit="editValue"
-      @selected="selectedCell($event)"
-      @unselected="unselectedCell($event)"
-      @select-next="selectNextCell($event)"
+      @selected="selectedCell"
+      @unselected="unselectedCell"
+      @select-next="selectNextCell"
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, 0)"
     >
@@ -86,9 +86,9 @@
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
-      @selected="selectedCell($event)"
-      @unselected="unselectedCell($event)"
-      @select-next="selectNextCell($event)"
+      @selected="selectedCell"
+      @unselected="unselectedCell"
+      @select-next="selectNextCell"
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
@@ -175,10 +175,17 @@
       ref="rowEditModal"
       :table="table"
       :primary="primary"
-      :fields="fields"
+      :visible-fields="[primary].concat(visibleFields)"
+      :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="readOnly"
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
       @update="updateValue"
+      @toggle-field-visibility="toggleFieldVisibility"
+      @order-fields="orderFields"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
@@ -196,7 +203,11 @@ import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
-import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
+import {
+  sortFieldsByOrderAndIdFunction,
+  filterVisibleFieldsFunction,
+  filterHiddenFieldsFunction,
+} from '@baserow/modules/database/utils/view'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import { isElement } from '@baserow/modules/core/utils/dom'
 import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
@@ -240,6 +251,7 @@ export default {
     return {
       lastHoveredRow: null,
       selectedRow: null,
+      showHiddenFieldsInRowModal: false,
     }
   },
   computed: {
@@ -247,38 +259,19 @@ export default {
      * Returns only the visible fields in the correct order.
      */
     visibleFields() {
+      const fieldOptions = this.fieldOptions
       return this.fields
-        .filter((field) => {
-          const exists = Object.prototype.hasOwnProperty.call(
-            this.fieldOptions,
-            field.id
-          )
-          return !exists || (exists && !this.fieldOptions[field.id].hidden)
-        })
-        .sort((a, b) => {
-          const orderA = this.fieldOptions[a.id]
-            ? this.fieldOptions[a.id].order
-            : maxPossibleOrderValue
-          const orderB = this.fieldOptions[b.id]
-            ? this.fieldOptions[b.id].order
-            : maxPossibleOrderValue
-
-          // First by order.
-          if (orderA > orderB) {
-            return 1
-          } else if (orderA < orderB) {
-            return -1
-          }
-
-          // Then by id.
-          if (a.id < b.id) {
-            return -1
-          } else if (a.id > b.id) {
-            return 1
-          } else {
-            return 0
-          }
-        })
+        .filter(filterVisibleFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    /**
+     * Returns only the hidden fields in the correct order.
+     */
+    hiddenFields() {
+      const fieldOptions = this.fieldOptions
+      return this.fields
+        .filter(filterHiddenFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     leftFields() {
       return [this.primary]

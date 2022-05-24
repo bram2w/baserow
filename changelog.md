@@ -3,6 +3,9 @@
 ## Unreleased
 
 * Added the ability to use commas as separators in number fields
+* Shift+Enter on grid view exit from editing mode for long text field
+* Shift+Enter on grid view go to field below
+* Make fields sortable in row create/edit modal.
 * Added row coloring for Kanban and Gallery views
 * Duplicate row.
 * Added a dropdown to the grid view that allows you to
@@ -105,8 +108,7 @@
   * Team Check-ins
   * University Admissions Management
   * Wedding Client Planner
-* Shift+Enter stop long text field edition
-* Shift+Enter on grid view go to field below
+
 
 ## Released (2022-03-03 1.9.1)
 
