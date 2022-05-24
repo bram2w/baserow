@@ -15,7 +15,7 @@
             {{ $t('action.signUp') }}
           </nuxt-link>
         </li>
-        <li>
+        <li v-if="settings.allow_reset_password">
           <nuxt-link :to="{ name: 'forgot-password' }">
             {{ $t('login.forgotPassword') }}
           </nuxt-link>

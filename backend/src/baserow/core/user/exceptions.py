@@ -18,3 +18,7 @@ class DisabledSignupError(Exception):
     """
     Raised when a user account is created when the new signup setting is disabled.
     """
+
+
+class ResetPasswordDisabledError(Exception):
+    """Raised when a password reset is attempted but the password reset is disabled."""

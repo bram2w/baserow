@@ -40,6 +40,7 @@ from baserow.core.user.exceptions import (
     UserNotFound,
     InvalidPassword,
     DisabledSignupError,
+    ResetPasswordDisabledError,
 )
 from baserow.core.user.handler import UserHandler
 from baserow.api.sessions import get_untrusted_client_session_id
@@ -49,6 +50,7 @@ from .errors import (
     ERROR_INVALID_OLD_PASSWORD,
     ERROR_DISABLED_SIGNUP,
     ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
+    ERROR_DISABLED_RESET_PASSWORD,
 )
 from .exceptions import ClientSessionIdHeaderNotSetException
 from .schemas import create_user_response_schema, authenticate_user_schema
@@ -231,7 +233,12 @@ class SendResetPasswordEmailView(APIView):
     )
     @transaction.atomic
     @validate_body(SendResetPasswordEmailBodyValidationSerializer)
-    @map_exceptions({BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED})
+    @map_exceptions(
+        {
+            BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED,
+            ResetPasswordDisabledError: ERROR_DISABLED_RESET_PASSWORD,
+        }
+    )
     def post(self, request, data):
         """
         If the email is found, an email containing the password reset link is send to
@@ -282,6 +289,7 @@ class ResetPasswordView(APIView):
             BadTimeSignature: BAD_TOKEN_SIGNATURE,
             SignatureExpired: EXPIRED_TOKEN_SIGNATURE,
             UserNotFound: ERROR_USER_NOT_FOUND,
+            ResetPasswordDisabledError: ERROR_DISABLED_RESET_PASSWORD,
         }
     )
     @validate_body(ResetPasswordBodyValidationSerializer)

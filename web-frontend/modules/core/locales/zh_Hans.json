@@ -219,7 +219,9 @@
         "errorInvalidLinkTitle": "",
         "errorInvalidLinkMessage": "",
         "errorLinkExpiredTitle": "",
-        "errorLinkExpiredMessage": ""
+        "errorLinkExpiredMessage": "",
+        "disabled": "",
+        "disabledMessage": ""
     },
     "signup": {
         "headTitle": "",
@@ -231,13 +233,14 @@
         "title": "",
         "message": "",
         "submit": "",
-        "confirmation": ""
+        "confirmation": "",
+        "disabled": "",
+        "disabledMessage": ""
     },
     "settings": {
         "settingsTitle": "",
         "baserowInstanceId": "",
         "instanceIdDescription": "",
-        "groupSignupRestrictions": "",
         "settingAllowNewAccountsName": "",
         "settingAllowNewAccountsDescription": "",
         "enabled": ""
