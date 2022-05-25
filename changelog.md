@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Plugins can now include their own menu or other template in the main menu sidebar.
 * Added the ability to use commas as separators in number fields
 * Shift+Enter on grid view exit from editing mode for long text field
 * Shift+Enter on grid view go to field below

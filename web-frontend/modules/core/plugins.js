@@ -24,4 +24,11 @@ export class BaserowPlugin extends Registerable {
   getSidebarTopComponent() {
     return null
   }
+
+  /*
+   * Every registered plugin can display an item in the main sidebar menu.
+   */
+  getSidebarMainMenuComponent() {
+    return null
+  }
 }
