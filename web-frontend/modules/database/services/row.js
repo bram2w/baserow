@@ -96,5 +96,10 @@ export default (client) => {
     delete(tableId, rowId) {
       return client.delete(`/database/rows/table/${tableId}/${rowId}/`)
     },
+    batchDelete(tableId, items) {
+      return client.post(`/database/rows/table/${tableId}/batch-delete/`, {
+        items,
+      })
+    },
   }
 }
