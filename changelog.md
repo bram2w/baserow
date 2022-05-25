@@ -5,6 +5,7 @@
 * Added the ability to use commas as separators in number fields
 * Added row coloring for Kanban and Gallery views
 * Duplicate row.
+* Fix formula bug caused when arguments of `when_empty` have different types.
 
 ## Released (2022-10-05 1.10.0)
 
