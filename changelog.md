@@ -9,6 +9,7 @@
 * Make fields sortable in row create/edit modal.
 * Added row coloring for Kanban and Gallery views
 * Duplicate row.
+* Added multi-row delete.
 * Added a dropdown to the grid view that allows you to
   select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
 * Added an admin setting to disable the ability to reset a users password.

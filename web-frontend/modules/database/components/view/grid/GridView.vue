@@ -126,6 +126,15 @@
             {{ $t('action.copy') }}
           </a>
         </li>
+        <li>
+          <a
+            :class="{ 'context__menu-item--loading': deletingRow }"
+            @click.stop="deleteRowsFromMultipleCellSelection()"
+          >
+            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            {{ $t('action.delete') }}
+          </a>
+        </li>
       </ul>
       <ul v-show="!isMultiSelectActive" class="context__menu">
         <li v-if="!readOnly">
@@ -251,6 +260,7 @@ export default {
     return {
       lastHoveredRow: null,
       selectedRow: null,
+      deletingRow: false,
       showHiddenFieldsInRowModal: false,
     }
   },
@@ -328,7 +338,7 @@ export default {
     }
     this.$el.resizeEvent()
     window.addEventListener('resize', this.$el.resizeEvent)
-    window.addEventListener('keydown', this.arrowEvent)
+    window.addEventListener('keydown', this.keyDownEvent)
     window.addEventListener('copy', this.exportMultiSelect)
     window.addEventListener('paste', this.pasteFromMultipleCellSelection)
     window.addEventListener('click', this.cancelMultiSelectIfActive)
@@ -344,7 +354,7 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$el.resizeEvent)
-    window.removeEventListener('keydown', this.arrowEvent)
+    window.removeEventListener('keydown', this.keyDownEvent)
     window.removeEventListener('copy', this.exportMultiSelect)
     window.removeEventListener('paste', this.pasteFromMultipleCellSelection)
     window.removeEventListener('click', this.cancelMultiSelectIfActive)
@@ -828,21 +838,18 @@ export default {
         )
       }
     },
-    arrowEvent(event) {
+    keyDownEvent(event) {
       // Check if arrow key was pressed.
       if (
+        this.$store.getters[
+          this.storePrefix + 'view/grid/isMultiSelectActive'
+        ] &&
         ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(event.key)
       ) {
         // Cancels multi-select if it's currently active.
-        if (
-          this.$store.getters[
-            this.storePrefix + 'view/grid/isMultiSelectActive'
-          ]
-        ) {
-          this.$store.dispatch(
-            this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
-          )
-        }
+        this.$store.dispatch(
+          this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
+        )
       }
     },
     /**
@@ -932,6 +939,31 @@ export default {
       }
 
       this.$store.dispatch('notification/setPasting', false)
+      return true
+    },
+    /**
+     * Called when the delete option is selected in
+     * the context menu. Attempts to delete all the
+     * selected rows and scrolls the view accordingly.
+     */
+    async deleteRowsFromMultipleCellSelection() {
+      this.deletingRow = true
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/deleteSelectedRows',
+          {
+            table: this.table,
+            view: this.view,
+            primary: this.primary,
+            fields: this.leftFields.concat(this.visibleFields),
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+          }
+        )
+        this.$refs.rowContext.hide()
+      } catch (error) {
+        notifyIf(error)
+      }
+      this.deletingRow = false
       return true
     },
   },
