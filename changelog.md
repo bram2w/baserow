@@ -11,6 +11,7 @@
 * Added a dropdown to the grid view that allows you to
   select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
 * Added an admin setting to disable the ability to reset a users password.
+* Fix formula bug caused when arguments of `when_empty` have different types.
 
 ## Released (2022-10-05 1.10.0)
 

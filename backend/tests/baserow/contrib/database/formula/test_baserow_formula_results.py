@@ -141,6 +141,7 @@ VALID_FORMULA_TESTS = [
     ("contains('a', 'x')", False),
     ("left('a', 2)", "a"),
     ("left('abc', 2)", "ab"),
+    ("when_empty(1, 2)", "1"),
 ]
 
 
@@ -408,6 +409,11 @@ INVALID_FORMULA_TESTS = [
         "Error with formula: argument number 2 given to function left was of type "
         "number but the only usable type for this argument is a whole number with no "
         "decimal places.",
+    ),
+    (
+        "when_empty(1, 'a')",
+        "ERROR_WITH_FORMULA",
+        "Error with formula: both inputs for when_empty must be the same type.",
     ),
 ]
 
