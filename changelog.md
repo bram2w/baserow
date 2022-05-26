@@ -14,6 +14,8 @@
   select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
 * Added an admin setting to disable the ability to reset a users password.
 * Fix formula bug caused when arguments of `when_empty` have different types.
+* Formulas of type text now use textarea to show the cell value.
+* Fix a bug in public grid views that prevented expanding long-text cells.
 
 ## Released (2022-10-05 1.10.0)
 

@@ -1,12 +1,15 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
+import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
+import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
+import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldBlank from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBlank'
 import FunctionalGridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray'
@@ -105,12 +108,16 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
     return 'font'
   }
 
+  getGridViewFieldComponent() {
+    return GridViewFieldLongText
+  }
+
   getRowEditFieldComponent() {
-    return RowEditFieldText
+    return RowEditFieldLongText
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return FunctionalGridViewFieldLongText
   }
 
   getSortOrder() {

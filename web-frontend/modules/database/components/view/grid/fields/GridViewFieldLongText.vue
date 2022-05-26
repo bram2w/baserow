@@ -2,18 +2,19 @@
   <div
     ref="cell"
     class="grid-view__cell grid-field-long-text__cell active"
-    :class="{ editing: editing }"
+    :class="{ editing: opened }"
     @contextmenu="stopContextIfEditing($event)"
   >
-    <div v-show="!editing" class="grid-field-long-text">{{ value }}</div>
+    <div v-if="!opened" class="grid-field-long-text">{{ value }}</div>
     <textarea
-      v-if="editing"
+      v-else-if="editing"
       ref="input"
       v-model="copy"
       v-prevent-parent-scroll
       type="text"
       class="grid-field-long-text__textarea"
     />
+    <div v-else class="grid-field-long-text__textarea">{{ value }}</div>
   </div>
 </template>
 
