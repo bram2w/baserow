@@ -212,7 +212,9 @@ class View(
                 with transaction.atomic():
                     # Lock the view so concurrent calls to this method wont create
                     # duplicate field options.
-                    View.objects.filter(id=self.id).select_for_update().first()
+                    View.objects.filter(id=self.id).select_for_update(
+                        of=("self",)
+                    ).first()
 
                     # Invalidate the field options because they could have been
                     # changed concurrently.

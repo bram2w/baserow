@@ -190,7 +190,7 @@ class TableWebhookView(APIView):
         webhook = handler.get_table_webhook(
             request.user,
             webhook_id,
-            base_queryset=TableWebhook.objects.select_for_update(),
+            base_queryset=TableWebhook.objects.select_for_update(of=("self",)),
         )
         webhook = handler.update_table_webhook(
             user=request.user, webhook=webhook, **data
@@ -230,7 +230,7 @@ class TableWebhookView(APIView):
         webhook = handler.get_table_webhook(
             request.user,
             webhook_id,
-            base_queryset=TableWebhook.objects.select_for_update(),
+            base_queryset=TableWebhook.objects.select_for_update(of=("self",)),
         )
         handler.delete_table_webhook(webhook=webhook, user=request.user)
         return Response(status=204)

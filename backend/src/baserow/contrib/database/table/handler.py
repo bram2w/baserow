@@ -75,7 +75,9 @@ class TableHandler:
 
         return cast(
             TableForUpdate,
-            self.get_table(table_id, base_queryset=Table.objects.select_for_update()),
+            self.get_table(
+                table_id, base_queryset=Table.objects.select_for_update(of=("self",))
+            ),
         )
 
     def get_tables_order(self, database: Database) -> List[int]:

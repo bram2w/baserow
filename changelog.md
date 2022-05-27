@@ -16,6 +16,7 @@
 * Fix formula bug caused when arguments of `when_empty` have different types.
 * Formulas of type text now use textarea to show the cell value.
 * Fix a bug in public grid views that prevented expanding long-text cells.
+* Fix deadlocks and performance problems caused by un-needed accidental row locks.
 
 ## Released (2022-10-05 1.10.0)
 

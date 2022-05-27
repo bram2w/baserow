@@ -278,7 +278,8 @@ class ApplicationView(APIView):
         """Updates the application if the user belongs to the group."""
 
         application = CoreHandler().get_application(
-            application_id, base_queryset=Application.objects.select_for_update()
+            application_id,
+            base_queryset=Application.objects.select_for_update(of=("self",)),
         )
 
         application = action_type_registry.get_by_type(UpdateApplicationActionType).do(
@@ -325,7 +326,8 @@ class ApplicationView(APIView):
         """Deletes an existing application if the user belongs to the group."""
 
         application = CoreHandler().get_application(
-            application_id, base_queryset=Application.objects.select_for_update()
+            application_id,
+            base_queryset=Application.objects.select_for_update(of=("self",)),
         )
 
         action_type_registry.get_by_type(DeleteApplicationActionType).do(

@@ -761,7 +761,7 @@ class ViewFilterView(APIView):
         view_filter = handler.get_filter(
             request.user,
             view_filter_id,
-            base_queryset=ViewFilter.objects.select_for_update(),
+            base_queryset=ViewFilter.objects.select_for_update(of=("self",)),
         )
 
         if "field" in data:
@@ -1024,7 +1024,7 @@ class ViewDecorationView(APIView):
         handler = ViewHandler()
         view_decoration = handler.get_decoration(
             view_decoration_id,
-            base_queryset=ViewDecoration.objects.select_for_update(),
+            base_queryset=ViewDecoration.objects.select_for_update(of=("self",)),
         )
 
         group = view_decoration.view.table.database.group
@@ -1303,7 +1303,7 @@ class ViewSortView(APIView):
         view_sort = handler.get_sort(
             request.user,
             view_sort_id,
-            base_queryset=ViewSort.objects.select_for_update(),
+            base_queryset=ViewSort.objects.select_for_update(of=("self",)),
         )
 
         if "field" in data:
