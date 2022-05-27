@@ -303,16 +303,16 @@ else
   echo "./dev.sh Using the already set value for the env variable MIGRATE_ON_STARTUP = $MIGRATE_ON_STARTUP"
 fi
 
-if [[ -z "${SYNC_TEMPLATES_ON_STARTUP:-}" ]]; then
+if [[ -z "${BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:-}" ]]; then
 if [ "$sync_templates" = true ] ; then
-export SYNC_TEMPLATES_ON_STARTUP="true"
+export BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION="true"
 else
 # Because of the defaults set in the docker-compose file we need to explicitly turn
 # this off as just not setting it will get the default "true" value.
-export SYNC_TEMPLATES_ON_STARTUP="false"
+export BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION="false"
 fi
 else
-  echo "./dev.sh Using the already set value for the env variable SYNC_TEMPLATES_ON_STARTUP = $SYNC_TEMPLATES_ON_STARTUP"
+  echo "./dev.sh Using the already set value for the env variable BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION = $BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION"
 fi
 
 # Enable buildkit for faster builds with better caching.

@@ -1,4 +1,6 @@
 from django.apps import AppConfig
+from django.conf import settings
+from django.db.models.signals import post_migrate
 
 
 class CoreConfig(AppConfig):
@@ -47,3 +49,18 @@ class CoreConfig(AppConfig):
         action_scope_registry.register(GroupActionScopeType())
         action_scope_registry.register(ApplicationActionScopeType())
         action_scope_registry.register(ViewActionScopeType())
+
+        # Clear the key after migration so we will trigger a new template sync.
+        post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)
+
+
+# noinspection PyPep8Naming
+def start_sync_templates_task_after_migrate(sender, **kwargs):
+    from baserow.core.tasks import sync_templates_task
+
+    if settings.BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION and not settings.TESTS:
+        print(
+            "Submitting the sync templates task to run asynchronously in "
+            "celery after the migration..."
+        )
+        sync_templates_task.delay()
