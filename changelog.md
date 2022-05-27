@@ -16,6 +16,11 @@
 * Fix formula bug caused when arguments of `when_empty` have different types.
 * Formulas of type text now use textarea to show the cell value.
 * Fix a bug in public grid views that prevented expanding long-text cells.
+* Deprecate the SYNC_TEMPLATES_ON_STARTUP environment variable and no longer call the
+  sync_templates command on startup in the docker images.
+* Added BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION environment variable and now
+  do the sync_templates task in the background after migration to massively speedup 
+  first time Baserow startup speed.
 
 ## Released (2022-10-05 1.10.0)
 

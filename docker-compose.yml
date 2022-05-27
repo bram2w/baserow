@@ -142,6 +142,7 @@ x-common-backend-variables: &common-backend-variables
   <<: *common-variables
   MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}
   SYNC_TEMPLATES_ON_STARTUP: ${SYNC_TEMPLATES_ON_STARTUP:-true}
+  BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:
   DATABASE_USER: ${DATABASE_USER:-baserow}
   DATABASE_NAME: ${DATABASE_NAME:-baserow}
   ADDITIONAL_APPS:

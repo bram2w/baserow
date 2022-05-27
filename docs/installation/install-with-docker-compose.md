@@ -243,11 +243,11 @@ docker-compose exec backend /baserow/backend/docker/docker-entrypoint.sh manage 
 ### Disable automatic template syncing
 
 You can disable automatic baserow template syncing by setting the
-`SYNC_TEMPLATES_ON_STARTUP` environment variable to `false` (or any value which is
-not `true`) like so:
+`BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION` environment variable to `false` (or any
+value which is not `true`) like so:
 
 ```bash
-SYNC_TEMPLATES_ON_STARTUP=false docker-compose up -d
+BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=false docker-compose up -d
 ```
 
 ### Back-up your Baserow DB
