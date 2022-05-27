@@ -52,7 +52,7 @@ class UserAdminHandler:
         )
 
         try:
-            user = User.objects.select_for_update().get(id=user_id)
+            user = User.objects.select_for_update(of=("self",)).get(id=user_id)
         except User.DoesNotExist:
             raise UserDoesNotExistException()
 

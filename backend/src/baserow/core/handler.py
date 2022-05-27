@@ -120,7 +120,9 @@ class CoreHandler:
     def get_group_for_update(self, group_id: int) -> GroupForUpdate:
         return cast(
             GroupForUpdate,
-            self.get_group(group_id, base_queryset=Group.objects.select_for_update()),
+            self.get_group(
+                group_id, base_queryset=Group.objects.select_for_update(of=("self",))
+            ),
         )
 
     def get_group(self, group_id, base_queryset=None) -> Group:

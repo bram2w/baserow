@@ -157,7 +157,12 @@ class ViewHandler:
             view_model = View
 
         if base_queryset is None:
-            base_queryset = view_model.objects.select_for_update()
+            tables_to_lock = ("self",)
+            if view_model is not View:
+                # We are a specific type of View like a GalleryView, make sure to lock
+                # the row in the View table by adding the `view_ptr_id`.
+                tables_to_lock = ("self", "view_ptr_id")
+            base_queryset = view_model.objects.select_for_update(of=tables_to_lock)
 
         return self.get_view(view_id, view_model, base_queryset)
 

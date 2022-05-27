@@ -118,7 +118,8 @@ class GroupUserView(APIView):
         """Updates the group user if the user has admin permissions to the group."""
 
         group_user = CoreHandler().get_group_user(
-            group_user_id, base_queryset=GroupUser.objects.select_for_update()
+            group_user_id,
+            base_queryset=GroupUser.objects.select_for_update(of=("self",)),
         )
         group_user = CoreHandler().update_group_user(request.user, group_user, **data)
         return Response(GroupUserGroupSerializer(group_user).data)
@@ -158,7 +159,8 @@ class GroupUserView(APIView):
         """Deletes an existing group_user if the user belongs to the group."""
 
         group_user = CoreHandler().get_group_user(
-            group_user_id, base_queryset=GroupUser.objects.select_for_update()
+            group_user_id,
+            base_queryset=GroupUser.objects.select_for_update(of=("self",)),
         )
         CoreHandler().delete_group_user(request.user, group_user)
         return Response(status=204)

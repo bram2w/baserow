@@ -21,6 +21,7 @@
 * Added BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION environment variable and now
   do the sync_templates task in the background after migration to massively speedup 
   first time Baserow startup speed.
+* Fix deadlocks and performance problems caused by un-needed accidental row locks.
 
 ## Released (2022-10-05 1.10.0)
 
