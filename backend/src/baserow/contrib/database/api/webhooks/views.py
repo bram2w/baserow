@@ -274,8 +274,10 @@ class TableWebhookTestCallView(APIView):
         table = TableHandler().get_table(table_id)
 
         try:
-            response = WebhookHandler().trigger_test_call(request.user, table, **data)
-            data = {"response": response, "request": response.request}
+            webhook_request, response = WebhookHandler().trigger_test_call(
+                request.user, table, **data
+            )
+            data = {"response": response, "request": webhook_request}
         except RequestException as exception:
             data = {"request": exception.request}
         except UnacceptableAddressException:

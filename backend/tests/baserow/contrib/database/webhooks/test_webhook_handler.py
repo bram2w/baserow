@@ -334,7 +334,7 @@ def test_trigger_test_call(data_fixture):
 
     responses.add(responses.POST, "http://localhost", json={}, status=200)
 
-    response = handler.trigger_test_call(
+    request, response = handler.trigger_test_call(
         user=user,
         table=table,
         event_type="row.created",
@@ -344,15 +344,15 @@ def test_trigger_test_call(data_fixture):
         use_user_field_names=False,
     )
     assert response.ok
-    assert response.request.headers["Baserow-add-1"] == "Value 1"
-    assert response.request.headers["Content-type"] == "application/json"
-    assert response.request.headers["X-Baserow-Event"] == "row.created"
-    assert "X-Baserow-Delivery" in response.request.headers
+    assert request.headers["Baserow-add-1"] == "Value 1"
+    assert request.headers["Content-type"] == "application/json"
+    assert request.headers["X-Baserow-Event"] == "row.created"
+    assert "X-Baserow-Delivery" in request.headers
 
-    assert response.request.method == "POST"
-    assert response.request.url == "http://localhost/"
+    assert request.method == "POST"
+    assert request.url == "http://localhost/"
 
-    request_body = json.loads(response.request.body)
+    request_body = json.loads(request.body)
     assert request_body["table_id"] == table.id
     assert request_body["event_type"] == "row.created"
     assert request_body["row_id"] == 0

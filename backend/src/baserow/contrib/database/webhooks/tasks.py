@@ -57,8 +57,7 @@ def call_webhook(
         error = ""
 
         try:
-            response = handler.make_request(method, url, headers, payload)
-            request = response.request
+            request, response = handler.make_request(method, url, headers, payload)
             success = response.ok
         except RequestException as exception:
             request = exception.request
