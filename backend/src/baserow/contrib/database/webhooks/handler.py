@@ -291,7 +291,7 @@ class WebhookHandler:
         :param headers: The headers that must be send. The key is the name and the
             value the value.
         :param payload: The JSON pay as dict that must be send.
-        :return: The response
+        :return: The request and response as the tuple (request, response)
         """
 
         if settings.DEBUG is True:
@@ -299,13 +299,22 @@ class WebhookHandler:
         else:
             from advocate import request
 
-        return request(
+        response = request(
             method,
             url,
             headers=headers,
             json=payload,
             timeout=settings.WEBHOOKS_REQUEST_TIMEOUT_SECONDS,
         )
+
+        if response.history:
+            # If there is a redirect, response.request will point to the final request
+            # in the request chain. Make sure we get the first request.
+            first_request = response.history[0].request
+        else:
+            first_request = response.request
+
+        return first_request, response
 
     def get_headers(self, event_type: str, event_id: str):
         """Returns the default headers that must be added to every request."""
@@ -371,11 +380,7 @@ class WebhookHandler:
         )
         headers.update(self.get_headers(event_type, event_id))
 
-        response = self.make_request(
-            webhook.request_method, webhook.url, headers, payload
-        )
-
-        return response
+        return self.make_request(webhook.request_method, webhook.url, headers, payload)
 
     def format_request(self, request: PreparedRequest) -> str:
         """

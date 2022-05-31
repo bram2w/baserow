@@ -183,6 +183,7 @@ class TableWebhookTestCallResponseSerializer(serializers.Serializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_request(self, instance):
         request = instance.get("request")
+
         if request is not None:
             return WebhookHandler().format_request(request)
         return ""
