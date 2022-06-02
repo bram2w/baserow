@@ -24,6 +24,8 @@
 * Fix deadlocks and performance problems caused by un-needed accidental row locks.
 * Fixed CSV import adding an extra row with field names if the no headers option is selected.
 * Fixed bad request displayed with webhook endpoints that redirects
+* **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
+  is now a POST request instead of GET.
 
 ## Released (2022-10-05 1.10.0)
 

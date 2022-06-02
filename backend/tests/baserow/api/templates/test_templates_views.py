@@ -72,7 +72,7 @@ def test_install_template(api_client, data_fixture):
     template_2 = data_fixture.create_template(slug="does-not-exist")
     template = Template.objects.get(slug="example-template")
 
-    response = api_client.get(
+    response = api_client.post(
         reverse(
             "api:templates:install",
             kwargs={"group_id": group.id, "template_id": template_2.id},
@@ -82,7 +82,7 @@ def test_install_template(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_TEMPLATE_FILE_DOES_NOT_EXIST"
 
-    response = api_client.get(
+    response = api_client.post(
         reverse(
             "api:templates:install",
             kwargs={"group_id": group_2.id, "template_id": template.id},
@@ -92,7 +92,7 @@ def test_install_template(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
-    response = api_client.get(
+    response = api_client.post(
         reverse(
             "api:templates:install", kwargs={"group_id": 0, "template_id": template.id}
         ),
@@ -101,7 +101,7 @@ def test_install_template(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
 
-    response = api_client.get(
+    response = api_client.post(
         reverse(
             "api:templates:install", kwargs={"group_id": group.id, "template_id": 0}
         ),
@@ -110,7 +110,7 @@ def test_install_template(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
 
-    response = api_client.get(
+    response = api_client.post(
         reverse(
             "api:templates:install",
             kwargs={"group_id": group.id, "template_id": template.id},

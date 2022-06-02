@@ -4,7 +4,7 @@ export default (client) => {
       return client.get('/templates/')
     },
     install(groupId, templateId) {
-      return client.get(`/templates/install/${groupId}/${templateId}/`)
+      return client.post(`/templates/install/${groupId}/${templateId}/`)
     },
   }
 }

@@ -96,7 +96,7 @@ class InstallTemplateView(APIView):
         }
     )
     @transaction.atomic
-    def get(self, request, group_id, template_id):
+    def post(self, request, group_id, template_id):
         """Install a template into a group."""
 
         handler = CoreHandler()
