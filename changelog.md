@@ -26,6 +26,7 @@
 * Fixed bad request displayed with webhook endpoints that redirects
 * **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
   is now a POST request instead of GET.
+* Prevent the Airtable import from failing hard when an invalid date is provided.
 
 ## Released (2022-10-05 1.10.0)
 
