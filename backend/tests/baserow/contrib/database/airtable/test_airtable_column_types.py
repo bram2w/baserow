@@ -403,6 +403,46 @@ def test_airtable_import_datetime_with_different_default_timezone_column(
 
 @pytest.mark.django_db
 @responses.activate
+def test_airtable_import_datetime_edge_case_1(data_fixture, api_client):
+    airtable_field = {
+        "id": "fldEB5dp0mNjVZu0VJI",
+        "name": "Date",
+        "type": "date",
+        "typeOptions": {
+            "isDateTime": True,
+            "dateFormat": "Local",
+            "timeFormat": "24hour",
+            "timeZone": "client",
+        },
+    }
+    (
+        baserow_field,
+        airtable_column_type,
+    ) = airtable_column_type_registry.from_airtable_column_to_serialized(
+        {}, airtable_field, UTC
+    )
+    assert isinstance(baserow_field, DateField)
+    assert isinstance(airtable_column_type, DateAirtableColumnType)
+    assert baserow_field.date_format == "ISO"
+    assert baserow_field.date_include_time is True
+    assert baserow_field.date_time_format == "24"
+
+    amsterdam = timezone("Europe/Amsterdam")
+    assert (
+        airtable_column_type.to_baserow_export_serialized_value(
+            {},
+            airtable_field,
+            baserow_field,
+            "+020222-03-28T00:00:00.000Z",
+            amsterdam,
+            {},
+        )
+        is None
+    )
+
+
+@pytest.mark.django_db
+@responses.activate
 def test_airtable_import_email_column(data_fixture, api_client):
     airtable_field = {
         "id": "fldNdoAZRim39AxR9Eg",

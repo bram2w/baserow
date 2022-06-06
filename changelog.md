@@ -22,6 +22,7 @@
   do the sync_templates task in the background after migration to massively speedup 
   first time Baserow startup speed.
 * Fix deadlocks and performance problems caused by un-needed accidental row locks.
+* Prevent the Airtable import from failing hard when an invalid date is provided.
 
 ## Released (2022-10-05 1.10.0)
 
