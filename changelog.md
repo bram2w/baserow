@@ -22,6 +22,7 @@
   do the sync_templates task in the background after migration to massively speedup 
   first time Baserow startup speed.
 * Fix deadlocks and performance problems caused by un-needed accidental row locks.
+* Increased the max decimal places of a number field to 10.
 
 ## Released (2022-10-05 1.10.0)
 

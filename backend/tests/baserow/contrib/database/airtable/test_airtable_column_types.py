@@ -894,7 +894,7 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
         "type": "number",
         "typeOptions": {
             "format": "decimal",
-            "precision": 6,
+            "precision": 11,
             "negative": True,
         },
     }
@@ -906,7 +906,7 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
-    assert baserow_field.number_decimal_places == 5
+    assert baserow_field.number_decimal_places == 10
     assert baserow_field.number_negative is True
 
 
