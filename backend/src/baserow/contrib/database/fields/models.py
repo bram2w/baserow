@@ -34,7 +34,7 @@ from baserow.core.utils import (
 from .fields import SerialField
 
 
-NUMBER_MAX_DECIMAL_PLACES = 5
+NUMBER_MAX_DECIMAL_PLACES = 10
 
 NUMBER_DECIMAL_PLACES_CHOICES = [
     (0, "1"),
@@ -42,7 +42,12 @@ NUMBER_DECIMAL_PLACES_CHOICES = [
     (2, "1.00"),
     (3, "1.000"),
     (4, "1.0000"),
-    (NUMBER_MAX_DECIMAL_PLACES, "1.00000"),
+    (5, "1.00000"),
+    (6, "1.000000"),
+    (7, "1.0000000"),
+    (8, "1.00000000"),
+    (9, "1.000000000"),
+    (NUMBER_MAX_DECIMAL_PLACES, "1.0000000000"),
 ]
 
 RATING_STYLE_CHOICES = [

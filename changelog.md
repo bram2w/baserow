@@ -27,6 +27,7 @@
 * **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
   is now a POST request instead of GET.
 * Prevent the Airtable import from failing hard when an invalid date is provided.
+* Increased the max decimal places of a number field to 10.
 
 ## Released (2022-10-05 1.10.0)
 

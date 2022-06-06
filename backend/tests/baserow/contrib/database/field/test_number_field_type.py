@@ -91,6 +91,27 @@ from baserow.contrib.database.fields.registries import field_type_registry
                 "number_decimal_places": 3,
             },
         ),
+        (
+            [
+                Decimal("9223372036854775807.0000000000"),
+                Decimal("100.0000000000"),
+                Decimal("100.2200000000"),
+                Decimal("100.5999900000"),
+                Decimal("-9223372036854775808.00000000"),
+                Decimal("-100.00000000"),
+                Decimal("-100.2200000000"),
+                Decimal("-100.5999000000"),
+                None,
+                None,
+                None,
+                None,
+                None,
+            ],
+            {
+                "number_negative": True,
+                "number_decimal_places": 10,
+            },
+        ),
     ],
 )
 def test_alter_number_field_column_type(expected, field_kwargs, data_fixture):
