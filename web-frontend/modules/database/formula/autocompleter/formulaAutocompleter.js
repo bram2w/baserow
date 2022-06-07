@@ -378,7 +378,7 @@ export function _calculateAutocompleteLocationAndText(
 
 function _fieldNameToStringLiteral(doubleQuote, fieldName) {
   const quote = doubleQuote ? '"' : "'"
-  const escapedFieldName = fieldName.replace(quote, '\\' + quote)
+  const escapedFieldName = fieldName.replaceAll(quote, '\\' + quote)
   return quote + escapedFieldName + quote
 }
 

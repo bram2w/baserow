@@ -13,7 +13,7 @@ function unwrap(fields) {
   return fields.map((f) => f.value)
 }
 
-const ALL_FIELDS = ['field name a', 'double quoted "', "single quoted '"]
+const ALL_FIELDS = ['field name a', 'double quoted "a"', "single quoted '"]
 const ALL_FUNCTIONS = ['field', 'upper', 'lower', 'length']
 
 describe('Tests checking the formula autocomplete logic', () => {
@@ -23,7 +23,7 @@ describe('Tests checking the formula autocomplete logic', () => {
     ['field("$', [], ALL_FIELDS, true],
     ['field("f$', [], ['field name a'], true],
     ['field("f$")', [], ['field name a'], true],
-    ['field("d$")', [], ['double quoted "'], true],
+    ['field("d$")', [], ['double quoted "a"'], true],
     ['field("s$")', [], ["single quoted '"], true],
     ['lower()$', ALL_FUNCTIONS, ALL_FIELDS, false],
     ['$', ALL_FUNCTIONS, ALL_FIELDS, false],
@@ -70,13 +70,13 @@ describe('Tests checking the formula autocomplete logic', () => {
     ['field("field na$me a")', 'field("field na$me a")'],
     ['field("field na$")', 'field("field name a")$'],
     ["field('field na$')", "field('field name a')$"],
-    ['field("d$")', 'field("double quoted \\"")$'],
+    ['field("d$")', 'field("double quoted \\"a\\"")$'],
     ['field("s$")', 'field("single quoted \'")$'],
-    ["field('d$')", "field('double quoted \"')$"],
+    ["field('d$')", 'field(\'double quoted "a"\')$'],
     ["field('s$')", "field('single quoted \\'')$"],
-    ['field("d$', 'field("double quoted \\"")$'],
+    ['field("d$', 'field("double quoted \\"a\\"")$'],
     ['field("s$', 'field("single quoted \'")$'],
-    ["field('d$", "field('double quoted \"')$"],
+    ["field('d$", 'field(\'double quoted "a"\')$'],
     ["field('s$", "field('single quoted \\'')$"],
     ['u$', 'upper($)'],
     ['l$', 'lower($)'],
