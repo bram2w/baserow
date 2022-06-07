@@ -24,6 +24,7 @@
 * Fix deadlocks and performance problems caused by un-needed accidental row locks.
 * Fixed CSV import adding an extra row with field names if the no headers option is selected.
 * Fixed bad request displayed with webhook endpoints that redirects
+* Fix formula autocomplete for fields with multiple quotes
 
 ## Released (2022-10-05 1.10.0)
 
