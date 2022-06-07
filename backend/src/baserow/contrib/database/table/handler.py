@@ -3,6 +3,7 @@ from typing import Any, cast, NewType, List, Tuple, Optional, Type
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db.models import QuerySet
+from django.utils import timezone
 
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
@@ -386,3 +387,35 @@ class TableHandler:
         TrashHandler.trash(user, table.database.group, table.database, table)
 
         table_deleted.send(self, table_id=table_id, table=table, user=user)
+
+    @classmethod
+    def count_rows(cls):
+        """
+        Counts how many rows each user table has and stores the count
+        for later reference.
+        """
+
+        chunk_size = 200
+        tables_to_store = []
+        time = timezone.now()
+        for i, table in enumerate(
+            Table.objects.filter(database__group__template__isnull=True).iterator(
+                chunk_size=chunk_size
+            )
+        ):
+            count = table.get_model(field_ids=[]).objects.count()
+            table.row_count = count
+            table.row_count_updated_at = time
+            tables_to_store.append(table)
+
+            # This makes sure we don't pollute the memory
+            if i % chunk_size == 0:
+                Table.objects.bulk_update(
+                    tables_to_store, ["row_count", "row_count_updated_at"]
+                )
+                tables_to_store = []
+
+        if len(tables_to_store) > 0:
+            Table.objects.bulk_update(
+                tables_to_store, ["row_count", "row_count_updated_at"]
+            )

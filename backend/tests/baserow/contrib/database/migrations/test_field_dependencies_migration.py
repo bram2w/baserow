@@ -7,25 +7,52 @@ from django.db.migrations.executor import MigrationExecutor
 # noinspection PyPep8Naming
 @pytest.mark.django_db(transaction=True)
 def test_forwards_migration(data_fixture, reset_schema_after_module):
-    migrate_from = [("database", "0043_webhooks")]
+    migrate_from = [("database", "0043_webhooks"), ("core", "0012_add_trashed_indexes")]
     migrate_to = [("database", "0044_field_dependencies")]
 
     old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    other_table = data_fixture.create_database_table(user=user, database=table.database)
-    other_text_field = data_fixture.create_text_field(
-        user=user, table=other_table, name="text", primary=True
+    ContentType = old_state.apps.get_model("contenttypes", "ContentType")
+    Group = old_state.apps.get_model("core", "Group")
+    Database = old_state.apps.get_model("database", "Database")
+    Table = old_state.apps.get_model("database", "Table")
+
+    content_type = ContentType.objects.get_for_model(Database)
+    group = Group(name="group")
+    group.trashed = False
+    group.save()
+    database = Database.objects.create(
+        content_type=content_type, order=1, name="test", group=group, trashed=False
     )
-    text_field = data_fixture.create_text_field(
-        user=user, table=table, name="text", primary=True
+    table = Table.objects.create(
+        database=database, name="table", order=1, trashed=False
     )
+
+    other_table = Table.objects.create(
+        database=database, name="other table", order=1, trashed=False
+    )
+
+    TextField = old_state.apps.get_model("database", "TextField")
+    text_field_content_type = ContentType.objects.get_for_model(TextField)
+    other_text_field = TextField.objects.create(
+        name="text",
+        primary=True,
+        table=other_table,
+        order=1,
+        content_type=text_field_content_type,
+    )
+    text_field = TextField.objects.create(
+        name="text",
+        primary=True,
+        table=table,
+        order=1,
+        content_type=text_field_content_type,
+    )
+
     FormulaField = old_state.apps.get_model("database", "FormulaField")
     LinkRowField = old_state.apps.get_model("database", "LinkRowField")
-    ContentType = old_state.apps.get_model("contenttypes", "ContentType")
     formula_content_type_id = ContentType.objects.get_for_model(FormulaField).id
     link_row_content_type_id = ContentType.objects.get_for_model(LinkRowField).id
     empty_formula_field = FormulaField.objects.create(
@@ -139,16 +166,31 @@ def test_forwards_migration(data_fixture, reset_schema_after_module):
 # noinspection PyPep8Naming
 @pytest.mark.django_db(transaction=True)
 def test_backwards_migration(data_fixture, reset_schema_after_module):
-    migrate_from = [("database", "0044_field_dependencies")]
+    migrate_from = [
+        ("database", "0044_field_dependencies"),
+        ("core", "0012_add_trashed_indexes"),
+    ]
     migrate_to = [("database", "0043_webhooks")]
 
     old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
-    # it is safe to use the latest version in the test.
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.create_text_field(user=user, table=table, name="text")
+    # it is safe to use the latest version in the test
+    ContentType = old_state.apps.get_model("contenttypes", "ContentType")
+    Group = old_state.apps.get_model("core", "Group")
+    Database = old_state.apps.get_model("database", "Database")
+    Table = old_state.apps.get_model("database", "Table")
+
+    content_type = ContentType.objects.get_for_model(Database)
+    group = Group(name="group")
+    group.trashed = False
+    group.save()
+    database = Database.objects.create(
+        content_type=content_type, order=1, name="test", group=group, trashed=False
+    )
+    table = Table.objects.create(
+        database=database, name="table", order=1, trashed=False
+    )
     FormulaField = old_state.apps.get_model("database", "FormulaField")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
     content_type_id = ContentType.objects.get_for_model(FormulaField).id

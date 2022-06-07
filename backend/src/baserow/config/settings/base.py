@@ -3,6 +3,7 @@ import os
 from urllib.parse import urlparse, urljoin
 
 import dj_database_url
+from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
 from baserow.version import VERSION
@@ -98,6 +99,7 @@ CELERY_TASK_ROUTES = {
         "queue": "export"
     },
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
+    "baserow.contrib.database.table.tasks.run_row_count_job": {"queue": "export"},
 }
 CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
 CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60  # 60 seconds
@@ -453,6 +455,8 @@ EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
 
+ROW_COUNT_INTERVAL = crontab(minute=0, hour=0)  # Midnight
+
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
 if os.getenv("EMAIL_SMTP", ""):
@@ -589,6 +593,8 @@ LOGGING = {
         "level": BASEROW_BACKEND_LOG_LEVEL,
     },
 }
+
+BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
 
 # Now incorrectly named old variable, previously we would run `sync_templates` prior
 # to starting the gunicorn server in Docker. This variable would prevent that from
