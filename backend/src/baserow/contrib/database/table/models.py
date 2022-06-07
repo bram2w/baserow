@@ -349,6 +349,8 @@ class Table(
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
+    row_count = models.PositiveIntegerField(null=True)
+    row_count_updated_at = models.DateTimeField(null=True)
 
     class Meta:
         ordering = ("order",)

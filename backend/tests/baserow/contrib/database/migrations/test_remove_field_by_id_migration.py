@@ -7,18 +7,43 @@ from django.db.migrations.executor import MigrationExecutor
 # noinspection PyPep8Naming
 @pytest.mark.django_db(transaction=True)
 def test_forwards_migration(data_fixture, reset_schema_after_module):
-    migrate_from = [("database", "0039_formulafield")]
+    migrate_from = [
+        ("database", "0039_formulafield"),
+        ("core", "0010_fix_trash_constraint"),
+    ]
     migrate_to = [("database", "0040_formulafield_remove_field_by_id")]
 
     old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(user=user, table=table, name="text")
-    FormulaField = old_state.apps.get_model("database", "FormulaField")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
+    Group = old_state.apps.get_model("core", "Group")
+    Database = old_state.apps.get_model("database", "Database")
+    Table = old_state.apps.get_model("database", "Table")
+
+    content_type = ContentType.objects.get_for_model(Database)
+    group = Group(name="group")
+    group.trashed = False
+    group.save()
+    database = Database.objects.create(
+        content_type=content_type, order=1, name="test", group=group, trashed=False
+    )
+    table = Table.objects.create(
+        database=database, name="table", order=1, trashed=False
+    )
+
+    TextField = old_state.apps.get_model("database", "TextField")
+    text_field_content_type = ContentType.objects.get_for_model(TextField)
+    text_field = TextField.objects.create(
+        name="text",
+        primary=True,
+        table=table,
+        order=1,
+        content_type=text_field_content_type,
+    )
+
+    FormulaField = old_state.apps.get_model("database", "FormulaField")
     content_type_id = ContentType.objects.get_for_model(FormulaField).id
     formula_field = FormulaField.objects.create(
         table_id=table.id,
@@ -54,18 +79,43 @@ def test_forwards_migration(data_fixture, reset_schema_after_module):
 # noinspection PyPep8Naming
 @pytest.mark.django_db(transaction=True)
 def test_backwards_migration(data_fixture, reset_schema_after_module):
-    migrate_from = [("database", "0040_formulafield_remove_field_by_id")]
+    migrate_from = [
+        ("database", "0040_formulafield_remove_field_by_id"),
+        ("core", "0010_fix_trash_constraint"),
+    ]
     migrate_to = [("database", "0039_formulafield")]
 
     old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(user=user, table=table, name="text")
-    FormulaField = old_state.apps.get_model("database", "FormulaField")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
+    Group = old_state.apps.get_model("core", "Group")
+    Database = old_state.apps.get_model("database", "Database")
+    Table = old_state.apps.get_model("database", "Table")
+
+    content_type = ContentType.objects.get_for_model(Database)
+    group = Group(name="group")
+    group.trashed = False
+    group.save()
+    database = Database.objects.create(
+        content_type=content_type, order=1, name="test", group=group, trashed=False
+    )
+    table = Table.objects.create(
+        database=database, name="table", order=1, trashed=False
+    )
+
+    TextField = old_state.apps.get_model("database", "TextField")
+    text_field_content_type = ContentType.objects.get_for_model(TextField)
+    text_field = TextField.objects.create(
+        name="text",
+        primary=True,
+        table=table,
+        order=1,
+        content_type=text_field_content_type,
+    )
+
+    FormulaField = old_state.apps.get_model("database", "FormulaField")
     content_type_id = ContentType.objects.get_for_model(FormulaField).id
     formula_field = FormulaField.objects.create(
         table_id=table.id,
