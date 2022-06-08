@@ -26,6 +26,10 @@
 * Fixed bad request displayed with webhook endpoints that redirects
 * **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
   is now a POST request instead of GET.
+* The standalone `baserow/backend` image when used to run a celery service now defaults
+  to running celery with the same number of processes as the number of available cores.
+* When the BASEROW_AMOUNT_OF_WORKERS env variable is set to blank, the amount of worker
+  processes defaults to the number of available cores.
 
 ## Released (2022-10-05 1.10.0)
 
