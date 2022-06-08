@@ -1,14 +1,14 @@
-import pytest
-import responses
 import string
-
-from freezegun import freeze_time
-from PIL import Image
 from io import BytesIO
 
+import httpretty
+import pytest
+import responses
+from PIL import Image
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
+from freezegun import freeze_time
 
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import (
@@ -89,11 +89,11 @@ def test_upload_user_file(data_fixture, tmpdir):
     with pytest.raises(InvalidFileStreamError):
         handler.upload_user_file(user, "test.txt", None, storage=storage)
 
-    old_limit = settings.USER_FILE_SIZE_LIMIT
-    settings.USER_FILE_SIZE_LIMIT = 6
+    old_limit = settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = 6
     with pytest.raises(FileSizeTooLargeError):
         handler.upload_user_file(user, "test.txt", ContentFile(b"Hello World"))
-    settings.USER_FILE_SIZE_LIMIT = old_limit
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = old_limit
 
     with freeze_time("2020-01-01 12:00"):
         user_file = handler.upload_user_file(
@@ -219,24 +219,26 @@ def test_upload_user_file(data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
-@responses.activate
+@httpretty.activate(verbose=True, allow_net_connect=False)
 def test_upload_user_file_by_url(data_fixture, tmpdir):
     user = data_fixture.create_user()
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
     handler = UserFileHandler()
 
-    responses.add(
-        responses.GET,
+    httpretty.register_uri(
+        httpretty.GET,
         "https://baserow.io/test.txt",
         body=b"Hello World",
         status=200,
         content_type="text/plain",
-        stream=True,
     )
 
     responses.add(
         responses.GET,
+    )
+    httpretty.register_uri(
+        httpretty.GET,
         "https://baserow.io/not-found.pdf",
         status=404,
     )

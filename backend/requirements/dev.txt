@@ -71,6 +71,8 @@ gitpython==3.1.27
     # via bandit
 gprof2dot==2021.2.21
     # via django-silk
+httpretty==1.1.4
+    # via -r dev.in
 icdiff==2.0.4
     # via pytest-icdiff
 idna==3.3
