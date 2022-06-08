@@ -28,6 +28,7 @@
   is now a POST request instead of GET.
 * Prevent the Airtable import from failing hard when an invalid date is provided.
 * Increased the max decimal places of a number field to 10.
+* Fix slowdown in large Baserow instances as the generated model cache got large.
 
 ## Released (2022-10-05 1.10.0)
 
