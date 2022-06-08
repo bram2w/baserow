@@ -17,6 +17,7 @@ from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAM
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
+from baserow.core.db import specific_iterator
 from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_DELETE_PRIMARY_FIELD,
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
@@ -134,7 +135,11 @@ class FieldsView(APIView):
             request, ["read", "create", "update"], table, False
         )
 
-        fields = Field.objects.filter(table=table).select_related("content_type")
+        fields = specific_iterator(
+            Field.objects.filter(table=table)
+            .select_related("content_type")
+            .prefetch_related("select_options")
+        )
 
         data = [
             field_type_registry.get_serializer(field, FieldSerializer).data

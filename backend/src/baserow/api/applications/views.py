@@ -20,6 +20,7 @@ from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
 )
+from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
@@ -74,9 +75,11 @@ class AllApplicationsView(APIView):
         returned.
         """
 
-        applications = Application.objects.select_related(
-            "content_type", "group"
-        ).filter(group__users__in=[request.user], group__trashed=False)
+        applications = specific_iterator(
+            Application.objects.select_related("content_type", "group").filter(
+                group__users__in=[request.user], group__trashed=False
+            )
+        )
 
         data = [
             get_application_serializer(application).data for application in applications

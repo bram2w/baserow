@@ -2,8 +2,9 @@ import re
 from typing import Dict, Any, Union, Type
 
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q, F, QuerySet
 
+from baserow.core.db import specific_iterator
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
@@ -552,6 +553,7 @@ class Table(
         # trashed columns will be given null values by django triggering not null
         # constraints in the database.
         fields_query = self.field_set(manager="objects_and_trash").all()
+
         # If the field ids are provided we must only fetch the fields of which the
         # ids are in that list.
         if isinstance(field_ids, list):
@@ -559,6 +561,7 @@ class Table(
                 fields_query = []
             else:
                 fields_query = fields_query.filter(pk__in=field_ids)
+
         # If the field names are provided we must only fetch the fields of which the
         # user defined name is in that list.
         if isinstance(field_names, list):
@@ -566,13 +569,19 @@ class Table(
                 fields_query = []
             else:
                 fields_query = fields_query.filter(name__in=field_names)
+
+        if isinstance(fields_query, QuerySet):
+            fields_query = specific_iterator(fields_query)
+
         # Create a combined list of fields that must be added and belong to the this
         # table.
         fields = list(fields) + [field for field in fields_query]
+
         # If there are duplicate field names we have to store them in a list so we
         # know later which ones are duplicate.
         duplicate_field_names = []
         already_included_field_names = set([f.name for f in fields])
+
         # We will have to add each field to with the correct field name and model
         # field to the attribute list in order for the model to work.
         while len(fields) > 0:
@@ -630,6 +639,7 @@ class Table(
                 db_column=field.db_column,
                 verbose_name=field.name,
             )
+
         return field_attrs
 
     # Use our own custom index name as the default models.Index
