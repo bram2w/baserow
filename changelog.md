@@ -30,6 +30,10 @@
 * Increased the max decimal places of a number field to 10.
 * Fix formula autocomplete for fields with multiple quotes
 * Fix slowdown in large Baserow instances as the generated model cache got large.
+* The standalone `baserow/backend` image when used to run a celery service now defaults
+  to running celery with the same number of processes as the number of available cores.
+* When the BASEROW_AMOUNT_OF_WORKERS env variable is set to blank, the amount of worker
+  processes defaults to the number of available cores.
 
 ## Released (2022-10-05 1.10.0)
 

@@ -29,7 +29,7 @@ BASEROW_BACKEND_BIND_ADDRESS=${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}
 BASEROW_BACKEND_LOG_LEVEL=${BASEROW_BACKEND_LOG_LEVEL:-INFO}
 BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER=${BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:-}
 
-BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-1}
+BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-}
 BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-3}
 
 # Celery related variables
@@ -160,7 +160,10 @@ start_celery_worker(){
   else
     EXTRA_CELERY_ARGS=()
   fi
-  exec celery -A baserow worker --concurrency "$BASEROW_AMOUNT_OF_WORKERS" "${EXTRA_CELERY_ARGS[@]}" -l INFO "$@"
+  if [[ -n "$BASEROW_AMOUNT_OF_WORKERS" ]]; then
+    EXTRA_CELERY_ARGS+=(--concurrency "$BASEROW_AMOUNT_OF_WORKERS")
+  fi
+  exec celery -A baserow worker "${EXTRA_CELERY_ARGS[@]}" -l INFO "$@"
 }
 
 # Lets devs attach to this container running the passed command, press ctrl-c and only
