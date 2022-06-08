@@ -1,5 +1,6 @@
 import datetime
 import os
+from decimal import Decimal
 from urllib.parse import urlparse, urljoin
 
 import dj_database_url
@@ -449,7 +450,9 @@ MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/baserow/media")
 # Indicates the directory where the user files and user thumbnails are stored.
 USER_FILES_DIRECTORY = "user_files"
 USER_THUMBNAILS_DIRECTORY = "thumbnails"
-USER_FILE_SIZE_LIMIT = 1024 * 1024 * 1024 * 1024  # ~1TB
+BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
+    Decimal(os.getenv("BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB", 1024 * 1024)) * 1024 * 1024
+)  # ~1TB by default
 
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5

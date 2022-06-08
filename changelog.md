@@ -34,6 +34,8 @@
   to running celery with the same number of processes as the number of available cores.
 * When the BASEROW_AMOUNT_OF_WORKERS env variable is set to blank, the amount of worker
   processes defaults to the number of available cores.
+* Fixed bug preventing file uploads via an url for self-hosters 
+* Added new environment variable BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
 
 ## Released (2022-10-05 1.10.0)
 

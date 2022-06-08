@@ -1,15 +1,13 @@
-import pytest
-import responses
 from unittest.mock import patch
-from freezegun import freeze_time
 
+import httpretty as httpretty
+import pytest
 from PIL import Image
-
-from django.shortcuts import reverse
 from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files.storage import FileSystemStorage
-
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.shortcuts import reverse
+from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -42,15 +40,15 @@ def test_upload_file(api_client, data_fixture, tmpdir):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_INVALID_FILE"
 
-    old_limit = settings.USER_FILE_SIZE_LIMIT
-    settings.USER_FILE_SIZE_LIMIT = 6
+    old_limit = settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = 6
     response = api_client.post(
         reverse("api:user_files:upload_file"),
         data={"file": SimpleUploadedFile("test.txt", b"Hello World")},
         format="multipart",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    settings.USER_FILE_SIZE_LIMIT = old_limit
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = old_limit
     assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
     assert response.json()["error"] == "ERROR_FILE_SIZE_TOO_LARGE"
     assert response.json()["detail"] == (
@@ -146,7 +144,7 @@ def test_upload_file(api_client, data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
-@responses.activate
+@httpretty.activate(verbose=True, allow_net_connect=False)
 def test_upload_file_via_url(api_client, data_fixture, tmpdir):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -168,6 +166,11 @@ def test_upload_file_via_url(api_client, data_fixture, tmpdir):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
+    httpretty.register_uri(
+        httpretty.GET,
+        "https://baserow.io/test2.txt",
+        status=404,
+    )
     response = api_client.post(
         reverse("api:user_files:upload_via_url"),
         data={"url": "https://baserow.io/test2.txt"},
@@ -185,17 +188,16 @@ def test_upload_file_via_url(api_client, data_fixture, tmpdir):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_INVALID_FILE_URL"
 
-    responses.add(
-        responses.GET,
+    old_limit = settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = 6
+
+    httpretty.register_uri(
+        httpretty.GET,
         "http://localhost/test.txt",
-        body=b"Hello World",
+        body="Hello World",
         status=200,
         content_type="text/plain",
-        stream=True,
     )
-
-    old_limit = settings.USER_FILE_SIZE_LIMIT
-    settings.USER_FILE_SIZE_LIMIT = 6
     response = api_client.post(
         reverse("api:user_files:upload_via_url"),
         data={"url": "http://localhost/test.txt"},
@@ -203,7 +205,26 @@ def test_upload_file_via_url(api_client, data_fixture, tmpdir):
     )
     assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
     assert response.json()["error"] == "ERROR_FILE_SIZE_TOO_LARGE"
-    settings.USER_FILE_SIZE_LIMIT = old_limit
+
+    # If the content length is not specified then when streaming down the file we will
+    # check the file size.
+    httpretty.register_uri(
+        httpretty.GET,
+        "http://localhost/test2.txt",
+        body="Hello World",
+        forcing_headers={"Content-Length": None},
+        status=200,
+        content_type="text/plain",
+    )
+    response = api_client.post(
+        reverse("api:user_files:upload_via_url"),
+        data={"url": "http://localhost/test2.txt"},
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert response.json()["error"] == "ERROR_FILE_SIZE_TOO_LARGE"
+
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = old_limit
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
 
@@ -215,7 +236,7 @@ def test_upload_file_via_url(api_client, data_fixture, tmpdir):
         )
         response_json = response.json()
 
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_200_OK, response_json
     assert response_json["size"] == 11
     assert response_json["mime_type"] == "text/plain"
     assert response_json["is_image"] is False
