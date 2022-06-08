@@ -18,8 +18,9 @@ from baserow.contrib.database.fields.field_filters import (
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.cache import (
-    get_latest_cached_model_field_attrs,
+    get_cached_model_field_attrs,
     set_cached_model_field_attrs,
+    get_current_cached_model_version,
 )
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
@@ -480,9 +481,13 @@ class Table(
         )
 
         if use_cache:
-            field_attrs = get_latest_cached_model_field_attrs(self.id)
+            current_model_version = get_current_cached_model_version(self.id)
+            field_attrs = get_cached_model_field_attrs(
+                self.id, min_model_version=current_model_version
+            )
         else:
             field_attrs = None
+            current_model_version = None
 
         if field_attrs is None:
             field_attrs = self._fetch_and_generate_field_attrs(
@@ -495,7 +500,11 @@ class Table(
             )
 
             if use_cache:
-                set_cached_model_field_attrs(self.id, field_attrs)
+                set_cached_model_field_attrs(
+                    table_id=self.id,
+                    model_version=current_model_version,
+                    field_attrs=field_attrs,
+                )
 
         attrs.update(**field_attrs)
 
