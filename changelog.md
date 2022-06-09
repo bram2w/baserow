@@ -38,6 +38,7 @@
   processes defaults to the number of available cores.
 * Fixed bug preventing file uploads via an url for self-hosters 
 * Added new environment variable BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
+* Fix aggregation not updated on filter update
 
 ## Released (2022-05-10 1.10.0)
 
