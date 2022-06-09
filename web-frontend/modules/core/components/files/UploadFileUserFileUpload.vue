@@ -76,7 +76,7 @@
           <a
             v-show="file.state === 'waiting'"
             class="upload-files__state-link"
-            @click.prevent="removeFile(file.id)"
+            @click.stop.prevent="removeFile(file.id)"
           >
             <i class="fas fa-trash"></i>
           </a>
