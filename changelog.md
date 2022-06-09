@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2022-06-09 1.10.1)
+
 * Plugins can now include their own menu or other template in the main menu sidebar.
 * Added the ability to use commas as separators in number fields
 * Shift+Enter on grid view exit from editing mode for long text field
@@ -37,7 +39,7 @@
 * Fixed bug preventing file uploads via an url for self-hosters 
 * Added new environment variable BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
 
-## Released (2022-10-05 1.10.0)
+## Released (2022-05-10 1.10.0)
 
 * Added batch create/update/delete rows endpoints. These endpoints make it possible to
   modify multiple rows at once. Currently, row created, row updated, and row deleted 
