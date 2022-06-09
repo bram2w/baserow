@@ -671,6 +671,10 @@ class ViewHandler:
         view_filter.type = type_name
         view_filter.save()
 
+        # Call view type hooks
+        view_type = view_type_registry.get_by_model(view_filter.view.specific_class)
+        view_type.after_filter_update(view_filter.view)
+
         view_filter_updated.send(self, view_filter=view_filter, user=user)
 
         return view_filter
