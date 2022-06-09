@@ -2,7 +2,20 @@
 
 ## Unreleased
 
+<!--
+Ensure you add link to the gitlab issue if it exists at the end of your changelog line.
+For example:
+
+* My changelog line [(#123)](https://gitlab.com/bramw/baserow/-/issues/123)
+-->
+
+### New Features
+
+### Bug Fixes
+
 * Upload modal no longer closes when removing a file. [#569](https://gitlab.com/bramw/baserow/-/issues/569)
+
+### Breaking Changes
 
 ## Released (2022-06-09 1.10.1)
 
