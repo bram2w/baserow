@@ -190,7 +190,7 @@ class TableWebhookView(APIView):
         webhook = handler.get_table_webhook(
             request.user,
             webhook_id,
-            base_queryset=TableWebhook.objects.select_for_update(),
+            base_queryset=TableWebhook.objects.select_for_update(of=("self",)),
         )
         webhook = handler.update_table_webhook(
             user=request.user, webhook=webhook, **data
@@ -230,7 +230,7 @@ class TableWebhookView(APIView):
         webhook = handler.get_table_webhook(
             request.user,
             webhook_id,
-            base_queryset=TableWebhook.objects.select_for_update(),
+            base_queryset=TableWebhook.objects.select_for_update(of=("self",)),
         )
         handler.delete_table_webhook(webhook=webhook, user=request.user)
         return Response(status=204)
@@ -274,8 +274,10 @@ class TableWebhookTestCallView(APIView):
         table = TableHandler().get_table(table_id)
 
         try:
-            response = WebhookHandler().trigger_test_call(request.user, table, **data)
-            data = {"response": response, "request": response.request}
+            webhook_request, response = WebhookHandler().trigger_test_call(
+                request.user, table, **data
+            )
+            data = {"response": response, "request": webhook_request}
         except RequestException as exception:
             data = {"request": exception.request}
         except UnacceptableAddressException:

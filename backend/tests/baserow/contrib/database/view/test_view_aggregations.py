@@ -372,6 +372,7 @@ def test_aggregation_is_updated_when_view_is_trashed(data_fixture):
     - Restore the view
     - Check that the aggregation is updated
     """
+
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view_one = data_fixture.create_grid_view(table=table)

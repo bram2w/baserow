@@ -2,18 +2,19 @@
   <div
     ref="cell"
     class="grid-view__cell grid-field-long-text__cell active"
-    :class="{ editing: editing }"
+    :class="{ editing: opened }"
     @contextmenu="stopContextIfEditing($event)"
   >
-    <div v-show="!editing" class="grid-field-long-text">{{ value }}</div>
+    <div v-if="!opened" class="grid-field-long-text">{{ value }}</div>
     <textarea
-      v-if="editing"
+      v-else-if="editing"
       ref="input"
       v-model="copy"
       v-prevent-parent-scroll
       type="text"
       class="grid-field-long-text__textarea"
     />
+    <div v-else class="grid-field-long-text__textarea">{{ value }}</div>
   </div>
 </template>
 
@@ -26,7 +27,7 @@ export default {
   methods: {
     afterEdit(event) {
       // If the enter key is pressed we do not want to add a new line to the textarea.
-      if (event.type === 'keydown' && event.keyCode === 13) {
+      if (event.type === 'keydown' && event.key === 'Enter') {
         event.preventDefault()
       }
       this.$nextTick(() => {
@@ -34,8 +35,9 @@ export default {
         this.$refs.input.selectionStart = this.$refs.input.selectionEnd = 100000
       })
     },
-    canSaveByPressingEnter() {
-      return false
+    canSaveByPressingEnter(event) {
+      // Save only if shiftKey is pressed
+      return event.shiftKey
     },
   },
 }

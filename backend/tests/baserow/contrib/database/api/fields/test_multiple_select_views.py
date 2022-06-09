@@ -278,6 +278,7 @@ def test_batch_update_rows_multiple_select_field_maintain_relationships(
     Since we are deleting and recreating m2m relationships we want to be sure
     that already existing relationships are preserved
     """
+
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     multiple_select_field = data_fixture.create_multiple_select_field(table=table)

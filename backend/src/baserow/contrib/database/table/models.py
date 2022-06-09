@@ -2,8 +2,9 @@ import re
 from typing import Dict, Any, Union, Type
 
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q, F, QuerySet
 
+from baserow.core.db import specific_iterator
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
@@ -18,8 +19,9 @@ from baserow.contrib.database.fields.field_filters import (
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.cache import (
-    get_latest_cached_model_field_attrs,
+    get_cached_model_field_attrs,
     set_cached_model_field_attrs,
+    get_current_cached_model_version,
 )
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
@@ -349,6 +351,8 @@ class Table(
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
+    row_count = models.PositiveIntegerField(null=True)
+    row_count_updated_at = models.DateTimeField(null=True)
 
     class Meta:
         ordering = ("order",)
@@ -478,9 +482,13 @@ class Table(
         )
 
         if use_cache:
-            field_attrs = get_latest_cached_model_field_attrs(self.id)
+            current_model_version = get_current_cached_model_version(self.id)
+            field_attrs = get_cached_model_field_attrs(
+                self.id, min_model_version=current_model_version
+            )
         else:
             field_attrs = None
+            current_model_version = None
 
         if field_attrs is None:
             field_attrs = self._fetch_and_generate_field_attrs(
@@ -493,7 +501,11 @@ class Table(
             )
 
             if use_cache:
-                set_cached_model_field_attrs(self.id, field_attrs)
+                set_cached_model_field_attrs(
+                    table_id=self.id,
+                    model_version=current_model_version,
+                    field_attrs=field_attrs,
+                )
 
         attrs.update(**field_attrs)
 
@@ -550,6 +562,7 @@ class Table(
         # trashed columns will be given null values by django triggering not null
         # constraints in the database.
         fields_query = self.field_set(manager="objects_and_trash").all()
+
         # If the field ids are provided we must only fetch the fields of which the
         # ids are in that list.
         if isinstance(field_ids, list):
@@ -557,6 +570,7 @@ class Table(
                 fields_query = []
             else:
                 fields_query = fields_query.filter(pk__in=field_ids)
+
         # If the field names are provided we must only fetch the fields of which the
         # user defined name is in that list.
         if isinstance(field_names, list):
@@ -564,13 +578,19 @@ class Table(
                 fields_query = []
             else:
                 fields_query = fields_query.filter(name__in=field_names)
+
+        if isinstance(fields_query, QuerySet):
+            fields_query = specific_iterator(fields_query)
+
         # Create a combined list of fields that must be added and belong to the this
         # table.
         fields = list(fields) + [field for field in fields_query]
+
         # If there are duplicate field names we have to store them in a list so we
         # know later which ones are duplicate.
         duplicate_field_names = []
         already_included_field_names = set([f.name for f in fields])
+
         # We will have to add each field to with the correct field name and model
         # field to the attribute list in order for the model to work.
         while len(fields) > 0:
@@ -628,6 +648,7 @@ class Table(
                 db_column=field.db_column,
                 verbose_name=field.name,
             )
+
         return field_attrs
 
     # Use our own custom index name as the default models.Index

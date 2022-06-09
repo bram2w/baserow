@@ -234,7 +234,7 @@ class AdminLicenseUserView(APIView):
     )
     @transaction.atomic
     def post(self, request, id, user_id):
-        license = License.objects.select_for_update().get(pk=id)
+        license = License.objects.select_for_update(of=("self",)).get(pk=id)
         user = User.objects.get(pk=user_id)
         add_user_to_license(request.user, license, user)
         return Response(PremiumLicenseUserSerializer(user).data)
@@ -278,7 +278,7 @@ class AdminLicenseUserView(APIView):
     )
     @transaction.atomic
     def delete(self, request, id, user_id):
-        license = License.objects.select_for_update().get(pk=id)
+        license = License.objects.select_for_update(of=("self",)).get(pk=id)
         user = User.objects.get(pk=user_id)
         remove_user_from_license(request.user, license, user)
         return Response(status=204)

@@ -76,6 +76,7 @@
               v-show="slot.position != -1"
               :key="'card-' + slot.id"
               :fields="cardFields"
+              :decorations-by-place="decorationsByPlace"
               :row="slot.row"
               :cover-image-field="coverImageField"
               :style="{
@@ -138,11 +139,12 @@ import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScr
 import { populateRow } from '@baserow_premium/store/view/kanban'
 import KanbanViewStackContext from '@baserow_premium/components/views/kanban/KanbanViewStackContext'
 import { getCardHeight } from '@baserow/modules/database/utils/card'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 
 export default {
   name: 'KanbanViewStack',
   components: { InfiniteScroll, RowCard, KanbanViewStackContext },
-  mixins: [kanbanViewHelper],
+  mixins: [kanbanViewHelper, viewDecoration],
   props: {
     option: {
       validator: (prop) => typeof prop === 'object' || prop === null,
@@ -304,7 +306,7 @@ export default {
       )
 
       this.$el.keydownEvent = (event) => {
-        if (event.keyCode === 27) {
+        if (event.key === 'Escape') {
           if (this.draggingRow !== null) {
             this.$store.dispatch(
               this.storePrefix + 'view/kanban/cancelRowDrag',

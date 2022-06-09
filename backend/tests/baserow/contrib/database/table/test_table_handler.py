@@ -1,11 +1,18 @@
+import os
+import random
+
 import pytest
 from unittest.mock import patch
 
+from django.core.files.storage import FileSystemStorage
 from django.db import connection
 from django.conf import settings
 from decimal import Decimal
 
+from pyinstrument import Profiler
+
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -25,6 +32,7 @@ from baserow.contrib.database.fields.models import (
     BooleanField,
 )
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
 
@@ -496,3 +504,89 @@ def test_restoring_table_with_a_previously_trashed_field_leaves_the_field_trashe
     assert not link_field.trashed
     assert not link_field.trashed
     assert not link_field.link_row_related_field.trashed
+
+
+@pytest.mark.django_db
+def test_count_rows(data_fixture):
+    table = data_fixture.create_database_table()
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_text_field(table=table)
+    model = table.get_model()
+
+    count_expected = random.randint(0, 100)
+
+    for i in range(count_expected):
+        model.objects.create(**{f"field_{field.id}": i})
+
+    TableHandler().count_rows()
+
+    table.refresh_from_db()
+    assert table.row_count == count_expected
+
+
+@pytest.mark.django_db
+def test_count_rows_ignores_templates(data_fixture, tmpdir):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR, "../../../tests/templates"
+    )
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    # Make sure that some template tables are created
+    assert Table.objects.count() == 0
+    CoreHandler().sync_templates(storage=storage)
+    assert Table.objects.count() > 0
+
+    TableHandler.count_rows()
+
+    for table in Table.objects.all():
+        assert table.row_count is None
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+def test_counting_many_rows_in_many_tables(data_fixture):
+    table_amount = 1000
+    rows_amount = 2000
+    profiler = Profiler()
+
+    # 1000 tables
+    for i in range(table_amount):
+        table = data_fixture.create_database_table()
+        fill_table_rows(rows_amount, table)
+
+    profiler.start()
+    TableHandler.count_rows()
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))
+    profiler.reset()
+
+    # 2000 tables
+    for i in range(table_amount):
+        table = data_fixture.create_database_table()
+        fill_table_rows(rows_amount, table)
+
+    profiler.start()
+    TableHandler.count_rows()
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))
+    profiler.reset()
+
+    # 3000 tables
+    for i in range(table_amount):
+        table = data_fixture.create_database_table()
+        fill_table_rows(rows_amount, table)
+
+    profiler.start()
+    TableHandler.count_rows()
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))

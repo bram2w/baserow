@@ -123,7 +123,7 @@ export default {
       window.addEventListener('mouseup', this.$el.upEvent)
 
       this.$el.keydownEvent = (event) => {
-        if (event.keyCode === 27) {
+        if (event.key === 'Escape') {
           // When the user presses the escape key we want to cancel the action
           this.cancel(event)
         }

@@ -16,11 +16,12 @@
       ref="left"
       class="grid-view__left"
       :fields="leftFields"
-      :all-table-fields="allTableFields"
+      :decorations-by-place="decorationsByPlace"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
       :include-row-details="true"
+      :include-grid-view-identifier-dropdown="true"
       :read-only="readOnly"
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
@@ -36,9 +37,9 @@
       @update="updateValue"
       @paste="multiplePasteFromCell"
       @edit="editValue"
-      @selected="selectedCell($event)"
-      @unselected="unselectedCell($event)"
-      @select-next="selectNextCell($event)"
+      @selected="selectedCell"
+      @unselected="unselectedCell"
+      @select-next="selectNextCell"
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, 0)"
     >
@@ -66,7 +67,7 @@
       ref="right"
       class="grid-view__right"
       :fields="visibleFields"
-      :all-table-fields="allTableFields"
+      :decorations-by-place="decorationsByPlace"
       :table="table"
       :view="view"
       :include-add-field="true"
@@ -85,9 +86,9 @@
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
-      @selected="selectedCell($event)"
-      @unselected="unselectedCell($event)"
-      @select-next="selectNextCell($event)"
+      @selected="selectedCell"
+      @unselected="unselectedCell"
+      @select-next="selectNextCell"
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
@@ -125,6 +126,15 @@
             {{ $t('action.copy') }}
           </a>
         </li>
+        <li>
+          <a
+            :class="{ 'context__menu-item--loading': deletingRow }"
+            @click.stop="deleteRowsFromMultipleCellSelection()"
+          >
+            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            {{ $t('action.delete') }}
+          </a>
+        </li>
       </ul>
       <ul v-show="!isMultiSelectActive" class="context__menu">
         <li v-if="!readOnly">
@@ -137,6 +147,16 @@
           <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
+          </a>
+        </li>
+        <li v-if="!readOnly">
+          <a
+            @click="
+              ;[addRowAfter(selectedRow, selectedRow), $refs.rowContext.hide()]
+            "
+          >
+            <i class="context__menu-icon fas fa-fw fa-clone"></i>
+            {{ $t('gridView.duplicateRow') }}
           </a>
         </li>
         <li>
@@ -164,10 +184,17 @@
       ref="rowEditModal"
       :table="table"
       :primary="primary"
-      :fields="fields"
+      :visible-fields="[primary].concat(visibleFields)"
+      :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="readOnly"
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
       @update="updateValue"
+      @toggle-field-visibility="toggleFieldVisibility"
+      @order-fields="orderFields"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
@@ -185,9 +212,14 @@ import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
-import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
+import {
+  sortFieldsByOrderAndIdFunction,
+  filterVisibleFieldsFunction,
+  filterHiddenFieldsFunction,
+} from '@baserow/modules/database/utils/view'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import { isElement } from '@baserow/modules/core/utils/dom'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 
 export default {
   name: 'GridView',
@@ -197,7 +229,7 @@ export default {
     GridViewRowDragging,
     RowEditModal,
   },
-  mixins: [viewHelpers, gridViewHelpers],
+  mixins: [viewHelpers, gridViewHelpers, viewDecoration],
   props: {
     primary: {
       type: Object,
@@ -228,6 +260,8 @@ export default {
     return {
       lastHoveredRow: null,
       selectedRow: null,
+      deletingRow: false,
+      showHiddenFieldsInRowModal: false,
     }
   },
   computed: {
@@ -235,38 +269,19 @@ export default {
      * Returns only the visible fields in the correct order.
      */
     visibleFields() {
+      const fieldOptions = this.fieldOptions
       return this.fields
-        .filter((field) => {
-          const exists = Object.prototype.hasOwnProperty.call(
-            this.fieldOptions,
-            field.id
-          )
-          return !exists || (exists && !this.fieldOptions[field.id].hidden)
-        })
-        .sort((a, b) => {
-          const orderA = this.fieldOptions[a.id]
-            ? this.fieldOptions[a.id].order
-            : maxPossibleOrderValue
-          const orderB = this.fieldOptions[b.id]
-            ? this.fieldOptions[b.id].order
-            : maxPossibleOrderValue
-
-          // First by order.
-          if (orderA > orderB) {
-            return 1
-          } else if (orderA < orderB) {
-            return -1
-          }
-
-          // Then by id.
-          if (a.id < b.id) {
-            return -1
-          } else if (a.id > b.id) {
-            return 1
-          } else {
-            return 0
-          }
-        })
+        .filter(filterVisibleFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    /**
+     * Returns only the hidden fields in the correct order.
+     */
+    hiddenFields() {
+      const fieldOptions = this.fieldOptions
+      return this.fields
+        .filter(filterHiddenFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     leftFields() {
       return [this.primary]
@@ -279,9 +294,6 @@ export default {
     },
     leftWidth() {
       return this.leftFieldsWidth + this.gridViewRowDetailsWidth
-    },
-    allTableFields() {
-      return [this.primary, ...this.fields]
     },
   },
   watch: {
@@ -326,7 +338,7 @@ export default {
     }
     this.$el.resizeEvent()
     window.addEventListener('resize', this.$el.resizeEvent)
-    window.addEventListener('keydown', this.arrowEvent)
+    window.addEventListener('keydown', this.keyDownEvent)
     window.addEventListener('copy', this.exportMultiSelect)
     window.addEventListener('paste', this.pasteFromMultipleCellSelection)
     window.addEventListener('click', this.cancelMultiSelectIfActive)
@@ -342,7 +354,7 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$el.resizeEvent)
-    window.removeEventListener('keydown', this.arrowEvent)
+    window.removeEventListener('keydown', this.keyDownEvent)
     window.removeEventListener('copy', this.exportMultiSelect)
     window.removeEventListener('paste', this.pasteFromMultipleCellSelection)
     window.removeEventListener('click', this.cancelMultiSelectIfActive)
@@ -479,7 +491,7 @@ export default {
       $divider.classList.toggle('shadow', canScroll && left > 0)
       $right.scrollLeft = left
     },
-    async addRow(before = null) {
+    async addRow(before = null, values = {}) {
       try {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/createNewRow',
@@ -489,7 +501,7 @@ export default {
             // We need a list of all fields including the primary one here.
             fields: this.fields,
             primary: this.primary,
-            values: {},
+            values,
             before,
           }
         )
@@ -502,7 +514,7 @@ export default {
      * figure out which row is below the given row and insert before that one. If the
      * next row is not found, we can safely assume it is the last row and add it last.
      */
-    addRowAfter(row) {
+    addRowAfter(row, values = {}) {
       const rows =
         this.$store.getters[this.storePrefix + 'view/grid/getAllRows']
       const index = rows.findIndex((r) => r.id === row.id)
@@ -512,7 +524,7 @@ export default {
         nextRow = rows[index + 1]
       }
 
-      this.addRow(nextRow)
+      this.addRow(nextRow, values)
     },
     async deleteRow(row) {
       try {
@@ -826,21 +838,18 @@ export default {
         )
       }
     },
-    arrowEvent(event) {
+    keyDownEvent(event) {
       // Check if arrow key was pressed.
       if (
+        this.$store.getters[
+          this.storePrefix + 'view/grid/isMultiSelectActive'
+        ] &&
         ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(event.key)
       ) {
         // Cancels multi-select if it's currently active.
-        if (
-          this.$store.getters[
-            this.storePrefix + 'view/grid/isMultiSelectActive'
-          ]
-        ) {
-          this.$store.dispatch(
-            this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
-          )
-        }
+        this.$store.dispatch(
+          this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
+        )
       }
     },
     /**
@@ -930,6 +939,31 @@ export default {
       }
 
       this.$store.dispatch('notification/setPasting', false)
+      return true
+    },
+    /**
+     * Called when the delete option is selected in
+     * the context menu. Attempts to delete all the
+     * selected rows and scrolls the view accordingly.
+     */
+    async deleteRowsFromMultipleCellSelection() {
+      this.deletingRow = true
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/deleteSelectedRows',
+          {
+            table: this.table,
+            view: this.view,
+            primary: this.primary,
+            fields: this.leftFields.concat(this.visibleFields),
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+          }
+        )
+        this.$refs.rowContext.hide()
+      } catch (error) {
+        notifyIf(error)
+      }
+      this.deletingRow = false
       return true
     },
   },

@@ -15,9 +15,10 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_adding_a_formula_field_compared_to_normal_field_isnt_slow(data_fixture):
 
     table, user, row, _ = setup_interesting_test_table(data_fixture)
@@ -46,9 +47,10 @@ def test_adding_a_formula_field_compared_to_normal_field_isnt_slow(data_fixture)
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_very_nested_formula_field_change(data_fixture, django_assert_num_queries):
 
     user = data_fixture.create_user()
@@ -87,9 +89,10 @@ def test_very_nested_formula_field_change(data_fixture, django_assert_num_querie
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_creating_very_nested_formula_field(data_fixture):
 
     user = data_fixture.create_user()
@@ -114,9 +117,10 @@ def test_creating_very_nested_formula_field(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_altering_very_nested_formula_field(data_fixture, django_assert_num_queries):
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
@@ -149,9 +153,10 @@ def test_altering_very_nested_formula_field(data_fixture, django_assert_num_quer
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_getting_data_from_a_very_nested_formula_field(data_fixture, api_client):
 
     user, token = data_fixture.create_user_and_token()
@@ -182,9 +187,10 @@ def test_getting_data_from_a_very_nested_formula_field(data_fixture, api_client)
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
-# You must add --runslow -s to pytest to run this test, you can do this in intellij by
-# editing the run config for this test and adding --runslow -s to additional args.
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
 def test_getting_data_from_normal_table(data_fixture, api_client):
 
     user, token = data_fixture.create_user_and_token()
@@ -290,7 +296,7 @@ def add_fan_out_of(
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
+@pytest.mark.disabled_in_ci
 def test_fanout_one_off(data_fixture, api_client, django_assert_num_queries):
     user, token = data_fixture.create_user_and_token()
     p = Profiler()
@@ -315,7 +321,7 @@ def test_fanout_one_off(data_fixture, api_client, django_assert_num_queries):
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
+@pytest.mark.disabled_in_ci
 def test_fanout(data_fixture, api_client, django_assert_num_queries):
     results = [
         [

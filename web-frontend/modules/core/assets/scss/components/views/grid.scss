@@ -101,6 +101,18 @@
   border-bottom: 1px solid $color-neutral-200;
 }
 
+.grid-view__head-row-identifier-dropdown {
+  position: relative;
+  line-height: 32px;
+  z-index: 1;
+  padding-left: 10px;
+  color: $color-neutral-600;
+
+  &:hover {
+    color: $color-neutral-900;
+  }
+}
+
 .grid-view__body {
   position: absolute;
   left: 0;

@@ -56,6 +56,8 @@ class GridViewType(ViewType):
     can_share = True
     can_decorate = True
     when_shared_publicly_requires_realtime_events = True
+    allowed_fields = ["row_identifier_type"]
+    serializer_field_names = ["row_identifier_type"]
 
     api_exceptions_map = {
         GridViewAggregationDoesNotSupportField: ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
@@ -290,6 +292,7 @@ class GalleryViewType(ViewType):
     api_exceptions_map = {
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
+    can_decorate = True
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.gallery import urls as api_urls

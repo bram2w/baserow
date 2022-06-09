@@ -5,18 +5,42 @@
         {{ heading }}
       </h2>
       <Error :error="error"></Error>
-      <RowEditModalField
-        v-for="field in allFields"
-        :key="'row-create-field-' + field.id"
-        :ref="'field-' + field.id"
-        :field="field"
+      <RowEditModalFieldsList
+        :primary-is-sortable="primaryIsSortable"
+        :fields="visibleFields"
+        :sortable="true"
+        :hidden="false"
+        :read-only="false"
         :row="row"
         :table="table"
-        :read-only="false"
-        @update="update"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
-      ></RowEditModalField>
+        @order-fields="$emit('order-fields', $event)"
+        @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
+        @update="update"
+      ></RowEditModalFieldsList>
+      <RowEditModalHiddenFieldsSection
+        v-if="hiddenFields.length"
+        :show-hidden-fields="showHiddenFields"
+        @toggle-hidden-fields-visibility="
+          $emit('toggle-hidden-fields-visibility')
+        "
+      >
+        <RowEditModalFieldsList
+          :primary-is-sortable="primaryIsSortable"
+          :fields="hiddenFields"
+          :sortable="false"
+          :hidden="true"
+          :read-only="false"
+          :row="row"
+          :table="table"
+          @field-updated="$emit('field-updated', $event)"
+          @field-deleted="$emit('field-deleted')"
+          @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
+          @update="update"
+        >
+        </RowEditModalFieldsList>
+      </RowEditModalHiddenFieldsSection>
       <div class="actions">
         <div class="align-right">
           <button
@@ -36,12 +60,14 @@
 import Vue from 'vue'
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import RowEditModalField from '@baserow/modules/database/components/row/RowEditModalField'
+import RowEditModalFieldsList from './RowEditModalFieldsList.vue'
+import RowEditModalHiddenFieldsSection from './RowEditModalHiddenFieldsSection.vue'
 
 export default {
   name: 'RowCreateModal',
   components: {
-    RowEditModalField,
+    RowEditModalFieldsList,
+    RowEditModalHiddenFieldsSection,
   },
   mixins: [modal, error],
   props: {
@@ -54,9 +80,24 @@ export default {
       required: false,
       default: undefined,
     },
-    fields: {
+    primaryIsSortable: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    visibleFields: {
       type: Array,
       required: true,
+    },
+    hiddenFields: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
+    showHiddenFields: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {
@@ -67,10 +108,7 @@ export default {
   },
   computed: {
     allFields() {
-      return [this.primary]
-        .concat(this.fields)
-        .slice()
-        .sort((a, b) => a.order - b.order)
+      return this.visibleFields.concat(this.hiddenFields)
     },
     heading() {
       const name = `field_${this.primary.id}`

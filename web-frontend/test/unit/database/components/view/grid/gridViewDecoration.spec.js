@@ -1,5 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
-import GridViewRows from '@baserow/modules/database/components/view/grid/GridViewRows'
+import GridView from '@baserow/modules/database/components/view/grid/GridView'
 import { DecoratorValueProviderType } from '@baserow/modules/database/decoratorValueProviders'
 import { ViewDecoratorType } from '@baserow/modules/database/viewDecorators'
 
@@ -49,7 +49,48 @@ export class FakeValueProviderType extends DecoratorValueProviderType {
   }
 }
 
-describe('GridViewRows component with decoration', () => {
+const fieldData = [
+  {
+    id: 1,
+    name: 'Name',
+    order: 0,
+    type: 'text',
+    primary: true,
+    text_default: '',
+  },
+  {
+    id: 2,
+    name: 'Surname',
+    type: 'text',
+    text_default: '',
+    primary: false,
+  },
+  {
+    id: 3,
+    name: 'Address',
+    type: 'text',
+    text_default: '',
+    primary: false,
+  },
+]
+
+const rows = [
+  {
+    id: 2,
+    order: '2.00000000000000000000',
+    field_1: 'first',
+    field_2: 'Bram',
+  },
+  {
+    id: 4,
+    order: '2.50000000000000000000',
+    field_1: 'second',
+    field_2: 'foo',
+    field_3: 'bar',
+  },
+]
+
+describe('GridView component with decoration', () => {
   let testApp = null
   let mockServer = null
   let store = null
@@ -75,48 +116,8 @@ describe('GridViewRows component with decoration', () => {
   })
 
   const mountComponent = (props, slots = {}) => {
-    return testApp.mount(GridViewRows, { propsData: props, slots })
+    return testApp.mount(GridView, { propsData: props, slots })
   }
-
-  const primary = {
-    id: 1,
-    name: 'Name',
-    order: 0,
-    type: 'text',
-    primary: true,
-    text_default: '',
-    _: {
-      loading: false,
-    },
-  }
-
-  const fieldData = [
-    {
-      id: 2,
-      name: 'Surname',
-      type: 'text',
-      text_default: '',
-      primary: false,
-      _: {
-        loading: false,
-      },
-    },
-    {
-      id: 3,
-      name: 'Address',
-      type: 'text',
-      text_default: '',
-      primary: false,
-      _: {
-        loading: false,
-      },
-    },
-  ]
-
-  const rows = [
-    { id: 2, order: '2.00000000000000000000', field_2: 'Bram' },
-    { id: 4, order: '2.50000000000000000000', field_2: 'foo', field_3: 'bar' },
-  ]
 
   const populateStore = async (decorations) => {
     const table = mockServer.createTable()
@@ -124,20 +125,23 @@ describe('GridViewRows component with decoration', () => {
     const view = mockServer.createGridView(application, table, {
       decorations,
     })
-    const fields = mockServer.createFields(application, table, fieldData)
+    mockServer.createFields(application, table, fieldData)
+    await store.dispatch('field/fetchAll', table)
+    const primary = store.getters['field/getPrimary']
+    const fields = store.getters['field/getAll']
 
-    mockServer.createRows(view, fields, rows)
+    mockServer.createGridRows(view, fields, rows)
     await store.dispatch('page/view/grid/fetchInitial', {
       gridId: 1,
       fields,
       primary,
     })
     await store.dispatch('view/fetchAll', { id: 1 })
-    return { table, fields, view }
+    return { table, primary, fields, view }
   }
 
-  test('Default component with firs_cell decoration', async () => {
-    const { fields, view } = await populateStore([
+  test('Default component with first_cell decoration', async () => {
+    const { table, primary, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -157,12 +161,11 @@ describe('GridViewRows component with decoration', () => {
     store.$registry.register('decoratorValueProvider', fakeValueProvider)
 
     const wrapper1 = await mountComponent({
+      table,
       view,
+      primary,
       fields,
-      allFields: fields,
-      leftOffset: 0,
       readOnly: false,
-      includeRowDetails: true,
       storePrefix: 'page/',
     })
 
@@ -170,7 +173,7 @@ describe('GridViewRows component with decoration', () => {
   })
 
   test('Default component with row wrapper decoration', async () => {
-    const { fields, view } = await populateStore([
+    const { table, primary, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -192,7 +195,11 @@ describe('GridViewRows component with decoration', () => {
         functional: true,
 
         render(h, ctx) {
-          return h('div', { class: { testWrapper: true } }, ctx.slots().default)
+          return h(
+            'div',
+            { class: { 'test-wrapper': true } },
+            ctx.slots().default
+          )
         },
       }
       return component
@@ -202,12 +209,11 @@ describe('GridViewRows component with decoration', () => {
     store.$registry.register('decoratorValueProvider', fakeValueProvider)
 
     const wrapper1 = await mountComponent({
+      table,
       view,
+      primary,
       fields,
-      allFields: fields,
-      leftOffset: 0,
       readOnly: false,
-      includeRowDetails: false,
       storePrefix: 'page/',
     })
 
@@ -215,7 +221,7 @@ describe('GridViewRows component with decoration', () => {
   })
 
   test('Default component with unavailable decoration', async () => {
-    const { fields, view } = await populateStore([
+    const { table, primary, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -232,12 +238,11 @@ describe('GridViewRows component with decoration', () => {
     store.$registry.register('decoratorValueProvider', fakeValueProvider)
 
     const wrapper1 = await mountComponent({
+      table,
       view,
+      primary,
       fields,
-      allFields: fields,
-      leftOffset: 0,
       readOnly: false,
-      includeRowDetails: true,
       storePrefix: 'page/',
     })
 

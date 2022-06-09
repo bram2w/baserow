@@ -15,6 +15,7 @@ export default (client) => {
       orderBy = '',
       filters = {},
       includeFields = [],
+      excludeFields = [],
     }) {
       const include = []
       const params = new URLSearchParams()
@@ -46,6 +47,10 @@ export default (client) => {
 
       if (includeFields.length > 0) {
         params.append('include_fields', includeFields.join(','))
+      }
+
+      if (excludeFields.length > 0) {
+        params.append('exclude_fields', excludeFields.join(','))
       }
 
       Object.keys(filters).forEach((key) => {

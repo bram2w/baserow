@@ -212,7 +212,9 @@ class View(
                 with transaction.atomic():
                     # Lock the view so concurrent calls to this method wont create
                     # duplicate field options.
-                    View.objects.filter(id=self.id).select_for_update().first()
+                    View.objects.filter(id=self.id).select_for_update(
+                        of=("self",)
+                    ).first()
 
                     # Invalidate the field options because they could have been
                     # changed concurrently.
@@ -378,7 +380,14 @@ class ViewSort(models.Model):
 
 
 class GridView(View):
+    class RowIdentifierTypes(models.TextChoices):
+        ID = "id"
+        count = "count"
+
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
+    row_identifier_type = models.CharField(
+        choices=RowIdentifierTypes.choices, default="id", max_length=10
+    )
 
 
 class GridViewFieldOptionsManager(models.Manager):

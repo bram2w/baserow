@@ -43,7 +43,9 @@ def call_webhook(
         handler = WebhookHandler()
 
         try:
-            webhook = TableWebhook.objects.select_for_update().get(id=webhook_id)
+            webhook = TableWebhook.objects.select_for_update(of=("self",)).get(
+                id=webhook_id
+            )
         except TableWebhook.DoesNotExist:
             # If the webhook has been deleted while executing, we don't want to continue
             # trying to call the URL because we can't update the state of the webhook.
@@ -55,8 +57,7 @@ def call_webhook(
         error = ""
 
         try:
-            response = handler.make_request(method, url, headers, payload)
-            request = response.request
+            request, response = handler.make_request(method, url, headers, payload)
             success = response.ok
         except RequestException as exception:
             request = exception.request

@@ -19,6 +19,9 @@
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
         :include-add-field="includeAddField"
+        :include-grid-view-identifier-dropdown="
+          includeGridViewIdentifierDropdown
+        "
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @field-created="$emit('field-created', $event)"
@@ -52,7 +55,7 @@
             :view="view"
             :fields="fieldsToRender"
             :all-fields="fields"
-            :all-table-fields="allTableFields"
+            :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
@@ -127,8 +130,8 @@ export default {
       type: Array,
       required: true,
     },
-    allTableFields: {
-      type: Array,
+    decorationsByPlace: {
+      type: Object,
       required: true,
     },
     table: {
@@ -150,6 +153,11 @@ export default {
       default: () => false,
     },
     includeAddField: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    includeGridViewIdentifierDropdown: {
       type: Boolean,
       required: false,
       default: () => false,

@@ -1227,10 +1227,13 @@ export const actions = {
    */
   async fetchRowsByIndex(
     { getters, rootGetters },
-    { startIndex, limit, fields }
+    { startIndex, limit, fields, excludeFields }
   ) {
     if (fields !== undefined) {
       fields = fields.map((field) => `field_${field.id}`)
+    }
+    if (excludeFields !== undefined) {
+      excludeFields = excludeFields.map((field) => `field_${field.id}`)
     }
 
     const gridId = getters.getLastGridId
@@ -1244,6 +1247,7 @@ export const actions = {
       orderBy: getOrderBy(getters, rootGetters),
       filters: getFilters(getters, rootGetters),
       includeFields: fields,
+      excludeFields,
     })
     return data.results
   },
@@ -1290,17 +1294,16 @@ export const actions = {
     const allFields = [primary].concat(fields)
     allFields.forEach((field) => {
       const name = `field_${field.id}`
+      const fieldType = this.$registry.get('field', field._.type.type)
       if (!(name in values)) {
-        const fieldType = this.$registry.get('field', field._.type.type)
         const empty = fieldType.getNewRowValue(field)
         values[name] = empty
-
-        // In case the fieldType is a read only field, we
-        // need to create a second values dictionary, which gets
-        // sent to the API without the fieldType.
-        if (!fieldType.isReadOnly) {
-          valuesForApiRequest[name] = empty
-        }
+      }
+      // In case the fieldType is a read only field, we need to create a second
+      // values dictionary, which gets sent to the API without the fieldType.
+      if (!fieldType.isReadOnly) {
+        const newValue = fieldType.prepareValueForUpdate(field, values[name])
+        valuesForApiRequest[name] = newValue
       }
     })
 
@@ -1870,6 +1873,50 @@ export const actions = {
       commit('SET_ROW_LOADING', { row, value: false })
       throw error
     }
+  },
+  /**
+   * Attempt to delete all multi-selected rows.
+   */
+  async deleteSelectedRows(
+    { dispatch, getters },
+    { table, view, fields, primary, getScrollTop }
+  ) {
+    if (!getters.isMultiSelectActive) {
+      return
+    }
+    let rows = []
+    if (getters.areMultiSelectRowsWithinBuffer) {
+      rows = getters.getSelectedRows
+    } else {
+      // Rows not in buffer, fetch from backend
+      const [minRowIndex, maxRowIndex] = getters.getMultiSelectRowIndexSorted
+      const limit = maxRowIndex - minRowIndex + 1
+
+      rows = await dispatch('fetchRowsByIndex', {
+        startIndex: minRowIndex,
+        limit,
+        includeFields: fields,
+      })
+    }
+    const rowIdsToDelete = rows.map((r) => r.id)
+    await RowService(this.$client).batchDelete(table.id, rowIdsToDelete)
+
+    for (const row of rows) {
+      await dispatch('deletedExistingRow', {
+        view,
+        fields,
+        primary,
+        row,
+        getScrollTop,
+      })
+    }
+    dispatch('clearAndDisableMultiSelect', { view })
+    await dispatch('fetchByScrollTopDelayed', {
+      scrollTop: getScrollTop(),
+      fields,
+      primary,
+    })
+    dispatch('fetchAllFieldAggregationData', { view })
   },
   /**
    * Called after an existing row has been deleted, which could be by the user or

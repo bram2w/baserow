@@ -31,9 +31,9 @@ VALID_FORMULA_TESTS = [
     ("CONCAT('\ntest', '\n')", "\ntest\n"),
     ("1+1", "2"),
     ("1/0", "NaN"),
-    ("10/3", "3.33333"),
-    ("10+10/2", "15.00000"),
-    ("(10+2)/3", "4.00000"),
+    ("10/3", "3.3333333333"),
+    ("10+10/2", "15.0000000000"),
+    ("(10+2)/3", "4.0000000000"),
     ("CONCAT(1,2)", "12"),
     ("CONCAT('a',2)", "a2"),
     ("'a' = 'a'", True),
@@ -141,6 +141,7 @@ VALID_FORMULA_TESTS = [
     ("contains('a', 'x')", False),
     ("left('a', 2)", "a"),
     ("left('abc', 2)", "ab"),
+    ("when_empty(1, 2)", "1"),
 ]
 
 
@@ -408,6 +409,11 @@ INVALID_FORMULA_TESTS = [
         "Error with formula: argument number 2 given to function left was of type "
         "number but the only usable type for this argument is a whole number with no "
         "decimal places.",
+    ),
+    (
+        "when_empty(1, 'a')",
+        "ERROR_WITH_FORMULA",
+        "Error with formula: both inputs for when_empty must be the same type.",
     ),
 ]
 

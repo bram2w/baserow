@@ -229,7 +229,7 @@ class GroupInvitationView(APIView):
 
         group_invitation = CoreHandler().get_group_invitation(
             group_invitation_id,
-            base_queryset=GroupInvitation.objects.select_for_update(),
+            base_queryset=GroupInvitation.objects.select_for_update(of=("self",)),
         )
         group_invitation = CoreHandler().update_group_invitation(
             request.user, group_invitation, **data
@@ -273,7 +273,7 @@ class GroupInvitationView(APIView):
 
         group_invitation = CoreHandler().get_group_invitation(
             group_invitation_id,
-            base_queryset=GroupInvitation.objects.select_for_update(),
+            base_queryset=GroupInvitation.objects.select_for_update(of=("self",)),
         )
         CoreHandler().delete_group_invitation(request.user, group_invitation)
         return Response(status=204)

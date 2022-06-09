@@ -205,7 +205,15 @@ export default {
               data.data,
               this.values.firstRowHeader
             )
+
             this.values.data = JSON.stringify(dataWithHeader)
+            if (!this.values.firstRowHeader) {
+              // Remove first row (the genereated header)
+              // The genereated header is only needed for the preview and needs to be
+              // exluded from the data used to create the table, as the backend will
+              // generate a new header if `firstRowHeader` is set to false.
+              this.values.data = JSON.stringify(dataWithHeader.slice(1))
+            }
             this.error = ''
             this.preview = this.getPreview(dataWithHeader)
           }

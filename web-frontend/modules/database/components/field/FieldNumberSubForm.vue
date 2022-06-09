@@ -16,6 +16,11 @@
           <DropdownItem name="3 (1.000)" :value="3"></DropdownItem>
           <DropdownItem name="4 (1.0000)" :value="4"></DropdownItem>
           <DropdownItem name="5 (1.00000)" :value="5"></DropdownItem>
+          <DropdownItem name="6 (1.000000)" :value="6"></DropdownItem>
+          <DropdownItem name="7 (1.0000000)" :value="7"></DropdownItem>
+          <DropdownItem name="8 (1.00000000)" :value="8"></DropdownItem>
+          <DropdownItem name="9 (1.000000000)" :value="9"></DropdownItem>
+          <DropdownItem name="10 (1.0000000000)" :value="10"></DropdownItem>
         </Dropdown>
       </div>
     </div>

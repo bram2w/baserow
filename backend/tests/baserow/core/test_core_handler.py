@@ -967,6 +967,10 @@ def test_export_import_group_application(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.once_per_day_in_ci
+# You must add --run-once-per-day-in-ci to pytest's additional args to run this test,
+# you can do this in intellij by editing the run config for this test and adding
+# --run-once-per-day-in-ci to the additional args.
 def test_sync_and_install_all_templates(data_fixture, tmpdir):
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
     handler = CoreHandler()

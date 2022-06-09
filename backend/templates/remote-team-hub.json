@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Remote Team Hub",
-    "icon": "people-group",
+    "icon": "people-arrows",
     "keywords": [
         "remote",
         "wfh",

@@ -52,6 +52,7 @@ from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.pagination import PageNumberPagination
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.db import specific_iterator
 from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
 from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_NOT_IN_TABLE,
@@ -218,7 +219,7 @@ class ViewsView(APIView):
         table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
         )
-        views = View.objects.filter(table=table).select_related("content_type")
+        views = View.objects.filter(table=table).select_related("content_type", "table")
 
         if filters:
             views = views.prefetch_related("viewfilter_set")
@@ -228,6 +229,8 @@ class ViewsView(APIView):
 
         if decorations:
             views = views.prefetch_related("viewdecoration_set")
+
+        views = specific_iterator(views)
 
         data = [
             view_type_registry.get_serializer(
@@ -761,7 +764,7 @@ class ViewFilterView(APIView):
         view_filter = handler.get_filter(
             request.user,
             view_filter_id,
-            base_queryset=ViewFilter.objects.select_for_update(),
+            base_queryset=ViewFilter.objects.select_for_update(of=("self",)),
         )
 
         if "field" in data:
@@ -1024,7 +1027,7 @@ class ViewDecorationView(APIView):
         handler = ViewHandler()
         view_decoration = handler.get_decoration(
             view_decoration_id,
-            base_queryset=ViewDecoration.objects.select_for_update(),
+            base_queryset=ViewDecoration.objects.select_for_update(of=("self",)),
         )
 
         group = view_decoration.view.table.database.group
@@ -1303,7 +1306,7 @@ class ViewSortView(APIView):
         view_sort = handler.get_sort(
             request.user,
             view_sort_id,
-            base_queryset=ViewSort.objects.select_for_update(),
+            base_queryset=ViewSort.objects.select_for_update(of=("self",)),
         )
 
         if "field" in data:
@@ -1458,9 +1461,7 @@ class ViewFieldOptionsView(APIView):
         handler = ViewHandler()
         view = handler.get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
-        serializer_class = view_type.get_field_options_serializer_class(
-            create_if_missing=True
-        )
+        serializer_class = view_type.get_field_options_serializer_class()
         data = validate_data(serializer_class, request.data)
 
         with view_type.map_api_exceptions():

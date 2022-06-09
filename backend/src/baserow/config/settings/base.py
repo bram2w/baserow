@@ -1,14 +1,15 @@
 import datetime
 import os
+from decimal import Decimal
 from urllib.parse import urlparse, urljoin
 
 import dj_database_url
+from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
 from baserow.version import VERSION
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -99,6 +100,7 @@ CELERY_TASK_ROUTES = {
         "queue": "export"
     },
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
+    "baserow.contrib.database.table.tasks.run_row_count_job": {"queue": "export"},
 }
 CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
 CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60  # 60 seconds
@@ -134,7 +136,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -172,7 +173,6 @@ CACHES = {
     },
 }
 
-
 # Should contain the database connection name of the database where the user tables
 # are stored. This can be different than the default database because there are not
 # going to be any relations between the application schema and the user schema.
@@ -196,7 +196,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # token because the user needs to be active to use that.
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.AllowAllUsersModelBackend"]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -218,7 +217,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -246,7 +244,6 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     CLIENT_SESSION_ID_HEADER,
 ]
 
-
 JWT_AUTH = {
     "JWT_EXPIRATION_DELTA": datetime.timedelta(seconds=60 * 60),
     "JWT_ALLOW_REFRESH": True,
@@ -263,7 +260,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.10.0",
+    "VERSION": "1.10.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -453,11 +450,15 @@ MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/baserow/media")
 # Indicates the directory where the user files and user thumbnails are stored.
 USER_FILES_DIRECTORY = "user_files"
 USER_THUMBNAILS_DIRECTORY = "thumbnails"
-USER_FILE_SIZE_LIMIT = 1024 * 1024 * 1024 * 1024  # ~1TB
+BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
+    Decimal(os.getenv("BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB", 1024 * 1024)) * 1024 * 1024
+)  # ~1TB by default
 
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
+
+ROW_COUNT_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
@@ -504,7 +505,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # on it. See
 # https://docs.djangoproject.com/en/3.2/releases/3.0/#new-default-value-for-the-file-upload-permissions-setting
 FILE_UPLOAD_PERMISSIONS = None
-
 
 MAX_FORMULA_STRING_LENGTH = 10000
 MAX_FIELD_REFERENCE_DEPTH = 1000
@@ -596,3 +596,31 @@ LOGGING = {
         "level": BASEROW_BACKEND_LOG_LEVEL,
     },
 }
+
+BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
+
+# Now incorrectly named old variable, previously we would run `sync_templates` prior
+# to starting the gunicorn server in Docker. This variable would prevent that from
+# happening. Now we sync_templates in an async job triggered after migration.
+# This variable if not true will now stop the async job from being triggered.
+SYNC_TEMPLATES_ON_STARTUP = os.getenv("SYNC_TEMPLATES_ON_STARTUP", "true") == "true"
+BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION = os.getenv(
+    "BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION", None
+)
+
+if BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION is None:
+    # If the new correctly named environment variable is not set, default to using
+    # the old now incorrectly named SYNC_TEMPLATES_ON_STARTUP.
+    BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION = SYNC_TEMPLATES_ON_STARTUP
+else:
+    # The new correctly named environment variable is set, so use that instead of
+    # the old.
+    BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION = (
+        BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION == "true"
+    )
+
+BASEROW_SYNC_TEMPLATES_TIME_LIMIT = int(
+    os.getenv("BASEROW_SYNC_TEMPLATES_TIME_LIMIT", 60 * 30)
+)
+
+TESTS = False

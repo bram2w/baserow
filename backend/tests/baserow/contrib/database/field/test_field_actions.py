@@ -473,7 +473,7 @@ def test_can_undo_and_redo_converting_multi_select_to_other_type(data_fixture):
 
     assert list(
         getattr(row_a, f"field_{multi_select_field.id}").values_list("id", flat=True)
-    ) == [option_a.id, option_b.id]
+    ) == unordered([option_a.id, option_b.id])
     assert list(
         getattr(row_b, f"field_{multi_select_field.id}").values_list("id", flat=True)
     ) == [option_a.id]
@@ -580,7 +580,7 @@ def test_can_undo_and_redo_removing_multi_select_option(
 
     assert list(
         getattr(row_a, f"field_{multi_select_field.id}").values_list("id", flat=True)
-    ) == [option_a.id, option_b.id]
+    ) == unordered([option_a.id, option_b.id])
     assert list(
         getattr(row_b, f"field_{multi_select_field.id}").values_list("id", flat=True)
     ) == [option_a.id]
@@ -1201,7 +1201,7 @@ def test_can_undo_redo_updating_single_select(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.slow
+@pytest.mark.disabled_in_ci
 def test_can_undo_updating_field_every_type(data_fixture, django_assert_num_queries):
     session_id = "session-id"
 

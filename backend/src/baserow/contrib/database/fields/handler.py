@@ -93,6 +93,7 @@ def _validate_field_name(
     :raises MaxFieldNameLengthExceeded: When a provided field name is too long.
     :return:
     """
+
     if "name" not in field_values:
         if raise_if_name_missing:
             raise InvalidBaserowFieldName()
@@ -171,11 +172,12 @@ class FieldHandler:
     def get_specific_field_for_update(
         self, field_id: int, field_model: Optional[Type[T]] = None
     ) -> SpecificFieldForUpdate:
-
         return cast(
             SpecificFieldForUpdate,
             self.get_field(
-                field_id, field_model, base_queryset=Field.objects.select_for_update()
+                field_id,
+                field_model,
+                base_queryset=Field.objects.select_for_update(of=("self",)),
             ).specific,
         )
 

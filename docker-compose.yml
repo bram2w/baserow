@@ -142,6 +142,7 @@ x-common-backend-variables: &common-backend-variables
   <<: *common-variables
   MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}
   SYNC_TEMPLATES_ON_STARTUP: ${SYNC_TEMPLATES_ON_STARTUP:-true}
+  BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:
   DATABASE_USER: ${DATABASE_USER:-baserow}
   DATABASE_NAME: ${DATABASE_NAME:-baserow}
   ADDITIONAL_APPS:
@@ -155,6 +156,8 @@ x-common-backend-variables: &common-backend-variables
   DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
   MEDIA_URL:
   BASEROW_EXTRA_ALLOWED_HOSTS:
+  BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+  BASEROW_COUNT_ROWS_ENABLED:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services.
@@ -181,7 +184,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.10.0
+    image: baserow/backend:1.10.1
     restart: unless-stopped
     environment:
       <<: *common-backend-variables
@@ -194,7 +197,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.10.0
+    image: baserow/web-frontend:1.10.1
     restart: unless-stopped
     environment:
       <<: *common-variables
@@ -204,7 +207,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.10.0
+    image: baserow/backend:1.10.1
     restart: unless-stopped
     environment:
       <<: *common-backend-variables
@@ -221,7 +224,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.10.0
+    image: baserow/backend:1.10.1
     restart: unless-stopped
     command: celery-exportworker
     # The backend image's baked in healthcheck defaults to the django healthcheck
@@ -238,7 +241,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.10.0
+    image: baserow/backend:1.10.1
     restart: unless-stopped
     command: celery-beat
     # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237

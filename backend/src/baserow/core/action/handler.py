@@ -41,7 +41,7 @@ class ActionHandler:
             Action.objects.filter(user=user, undone_at__isnull=True, session=session)
             .filter(scopes_to_q_filter(scopes))
             .order_by("-created_on", "-id")
-            .select_for_update()
+            .select_for_update(of=("self",))
             .first()
         )
         if latest_not_undone_action is None:
@@ -84,7 +84,7 @@ class ActionHandler:
             Action.objects.filter(user=user, undone_at__isnull=False, session=session)
             .filter(scopes_filter)
             .order_by("-undone_at", "-id")
-            .select_for_update()
+            .select_for_update(of=("self",))
             .first()
         )
 
@@ -203,7 +203,7 @@ class ActionHandler:
                 Action.objects.filter(
                     updated_on__lte=cutoff, type__in=types_with_custom_clean_up
                 )
-                .select_for_update()
+                .select_for_update(of=("self",))
                 .order_by("updated_on", "id")
             )
             deleted_count = 0

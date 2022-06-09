@@ -8,9 +8,9 @@
 > advised however that you install the latest version of Docker available.
 > Please check that your docker is up-to date by running `docker -v`.
 
-This guide assumes you already have Docker installed and have permissions to run Docker 
-containers. See the [Install on Ubuntu](install-on-ubuntu.md) for a installation from 
-scratch instead.
+This guide assumes you already have Docker installed and have permissions to run Docker
+containers. See the [Install on Ubuntu](install-on-ubuntu.md) for an installation from
+scratch.
 
 ## Quick Start
 
@@ -27,29 +27,30 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
   external access.
 * Add `-e BASEROW_CADDY_ADDRESSES=https://YOUR_DOMAIN` to enable
-  [automatic Caddy HTTPS](https://caddyserver.com/docs/caddyfile/automatic-https#overview).
+  [automatic Caddy HTTPS](https://caddyserver.com/docs/caddyfile/automatic-https#overview)
+  .
 * Optionally add `-e DATABASE_URL=postgresql://user:pwd@host:port/db` to use an external
   Postgresql.
 * Optionally add `-e REDIS_URL=redis://user:pwd@host:port` to use an external Redis.
 
 > There is a security flaw with docker and the ufw firewall.
 > By default docker when exposing ports on 0.0.0.0 will bypass any ufw firewall rules
-> and expose the above container publicly from your machine on its network. If this 
+> and expose the above container publicly from your machine on its network. If this
 > is not intended then run with the following ports instead:
 > `-p 127.0.0.1:80:80 -p 127.0.0.1:443:443` which makes your Baserow only accessible
 > from the machine it is running on.
-> Please see https://github.com/chaifeng/ufw-docker for more information and how to 
+> Please see https://github.com/chaifeng/ufw-docker for more information and how to
 > setup ufw to work securely with docker.
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.10.0` image by default runs all of Baserow's various services in a
+The `baserow/baserow:1.10.1` image by default runs all of Baserow's various services in a
 single container for ease of use. A quick summary of its features are:
 
 * Runs a Postgres database and Redis server by default internally and stores all data in
@@ -65,7 +66,57 @@ single container for ease of use. A quick summary of its features are:
 * Provides a CLI for execing admin commands against a running Baserow container or
   running one off commands against just a Baserow data volume.
 
-## Example Commands
+## Upgrading from a previous version
+
+1. It is recommended that you backup your data before upgrading, see the Backup sections
+   below for more details on how to do this.
+2. Stop your existing Baserow container:
+
+```bash
+docker stop baserow
+```
+
+3. Bump the image version in the `docker run` command you usually use to run your
+   Baserow and start up a brand-new container:
+
+```bash
+# We haven't yet deleted the old Baserow container so you need to start this new one
+# with a different name to prevent an error like:
+# `response from daemon: Conflict. The container name "/baserow" is already in use by 
+# container` 
+
+docker run \
+  -d \
+  --name baserow_version_REPLACE_WITH_NEW_VERSION \
+  # YOUR STANDARD ARGS HERE
+  baserow/baserow:REPLACE_WITH_LATEST_VERSION
+```
+
+5. Baserow will automatically upgrade itself on startup, follow the logs to monitor it:
+
+```bash
+docker logs -f baserow_version_REPLACE_WITH_NEW_VERSION 
+```
+
+6. Once you see the following log line your Baserow upgraded and is now available again:
+
+```
+[BASEROW-WATCHER][2022-05-10 08:44:46] Baserow is now available at ...
+```
+
+7. Make sure your Baserow has been successfully upgraded by visiting it and checking
+   everything is working as expected and your data is still present.
+8. If everything works you can now remove the old Baserow container.
+
+> WARNING: If you have not been using a volume to persist the `/baserow/data` folder
+> inside the container this will delete all of your Baserow data stored in this
+> container permanently.
+
+```bash
+docker rm baserow
+```
+
+# Example Commands
 
 See [Configuring Baserow](configuration.md) for more detailed information on all the
 other environment variables you can configure.
@@ -92,7 +143,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 ### Behind a reverse proxy already handling ssl
@@ -105,7 +156,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 ### On a nonstandard HTTP port
@@ -118,7 +169,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 3001:80 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 ### With an external PostgresSQL server
@@ -137,7 +188,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 ### With an external Redis server
@@ -156,7 +207,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 ### With an external email server
@@ -176,28 +227,29 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
 ### With a Postgresql server running on the same host as the Baserow docker container
 
-This is assuming you are using the postgresql server bundled by ubuntu. If not then
-you will have to find the correct locations for the config files for your OS.
+This is assuming you are using the postgresql server bundled by ubuntu. If not then you
+will have to find the correct locations for the config files for your OS.
 
 1. Find out what version of postgresql is installed by running
-`sudo ls /etc/postgresql/`
+   `sudo ls /etc/postgresql/`
 2. Open `/etc/postgresql/YOUR_PSQL_VERSION/main/postgresql.conf` for editing as root
 3. Find the commented out `# listen_addresses` line.
 4. Change it to be:
-`listen_addresses = '*'          # what IP address(es) to listen on;`
+   `listen_addresses = '*'          # what IP address(es) to listen on;`
 5. Open `/etc/postgresql/YOUR_PSQL_VERSION/main/pg_hba.conf` for editing as root
 6. Add the following line to the end which will allow docker containers to connect.
-`host    all             all             172.17.0.0/16           md5`
+   `host    all             all             172.17.0.0/16           md5`
 7. Restart postgres to load in the config changes.
-`sudo systemctl restart postgresql`
+   `sudo systemctl restart postgresql`
 8. Check the logs do not have errors by running
-`sudo less /var/log/postgresql/postgresql-YOUR_PSQL_VERSION-main.log`
+   `sudo less /var/log/postgresql/postgresql-YOUR_PSQL_VERSION-main.log`
 9. Run Baserow like so:
+
 ```bash
 docker run \
   -d \
@@ -213,13 +265,13 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
-### Supply secrets using files 
+### Supply secrets using files
 
-The `DATABASE_PASSWORD`, `SECRET_KEY` and `REDIS_PASSWORD` environment variables
-can instead be loaded using a file by using the `*_FILE` variants:
+The `DATABASE_PASSWORD`, `SECRET_KEY` and `REDIS_PASSWORD` environment variables can
+instead be loaded using a file by using the `*_FILE` variants:
 
 ```bash
 echo "your_redis_password" > .your_redis_password
@@ -239,10 +291,10 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
-### Start just the embedded database 
+### Start just the embedded database
 
 If you want to directly access the embedded Postgresql database then you can run:
 
@@ -252,7 +304,7 @@ docker run -it \
   --name baserow \
   -p 5432:5432 \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.10.0 \
+  baserow/baserow:1.10.1 \
   start-only-db 
 # Now get the password from
 docker exec -it baserow cat /baserow/data/.pgpass
@@ -260,9 +312,9 @@ docker exec -it baserow cat /baserow/data/.pgpass
 # the password above with the username `baserow`.
 ```
 
-### Run a one off command on the database 
+### Run a one off command on the database
 
-If you want to run a one off backend command against your Baserow data volume without 
+If you want to run a one off backend command against your Baserow data volume without
 starting Baserow normally you can do so with the `backend-cmd-with-db` argument like so:
 
 ```bash 
@@ -270,17 +322,17 @@ docker run -it \
   --rm \
   --name baserow \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.10.0 \
+  baserow/baserow:1.10.1 \
   backend-cmd-with-db manage dbshell
 ```
 
 ## Backing up and Restoring Baserow
 
 Baserow stores all of its persistent data in the `/baserow/data` directory by default.
-We strongly recommend you mount a docker volume into this location to persist 
-Baserows data so you do not lose it if you accidentally delete your Baserow container.
+We strongly recommend you mount a docker volume into this location to persist Baserows
+data so you do not lose it if you accidentally delete your Baserow container.
 
-> The backup and restore operations discussed below are best done on a Baserow server 
+> The backup and restore operations discussed below are best done on a Baserow server
 > which is not being used.
 
 ### Backup all of Baserow
@@ -318,25 +370,24 @@ docker run --rm -v new_baserow_data_volume $PWD:/backup ubuntu bash -c "mkdir -p
 
 ### Backup only Baserow's Postgres database
 
-Please ensure you only back-up a Baserow database which is not actively being used 
-by a running Baserow instance or any other process which is making changes to the
-database.
+Please ensure you only back-up a Baserow database which is not actively being used by a
+running Baserow instance or any other process which is making changes to the database.
 
 Baserow stores all of its own data in Postgres. To backup just this database you can run
 the command below.
 
 ```bash 
 # First read the help message for this command
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.10.0 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.10.1 \
    backend-cmd-with-db backup
 
 # By default backs up to the backups folder in the baserow_data volume.
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.10.0 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.10.1 \
    backend-cmd-with-db backup -f /baserow/data/backups/backup.tar.gz
 
 # Or backup to a file on your host instead run something like:
 docker run -it --rm -v baserow_data:/baserow/data -v $PWD:/baserow/host \
-   baserow/baserow:1.10.0 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
+   baserow/baserow:1.10.1 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
 ```
 
 ### Restore only Baserow's Postgres Database
@@ -359,9 +410,9 @@ docker run -it --rm \
 
 ## Running healthchecks on Baserow
 
-The Dockerfile already defines a HEALTHCHECK command which will be used by software
-that supports it. However if you wish to trigger a healthcheck yourself on a running
-Baserow container then you can run:
+The Dockerfile already defines a HEALTHCHECK command which will be used by software that
+supports it. However if you wish to trigger a healthcheck yourself on a running Baserow
+container then you can run:
 
 ```bash
 docker exec baserow ./baserow.sh backend-cmd backend-healthcheck
@@ -405,17 +456,16 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.0
+  baserow/baserow:1.10.1
 ```
 
-Or you can just store it directly in the volume at `baserow_data/env` meaning it will
-be loaded whenever you mount in this data volume.
-
+Or you can just store it directly in the volume at `baserow_data/env` meaning it will be
+loaded whenever you mount in this data volume.
 
 ### Building your own image from Baserow
 
 ```dockerfile
-FROM baserow/baserow:1.10.0
+FROM baserow/baserow:1.10.1
 
 # Any .sh files found in /baserow/supervisor/env/ will be sourced and loaded at startup
 # useful for storing your own environment variable overrides.

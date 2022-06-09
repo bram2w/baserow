@@ -28,3 +28,5 @@ pip-tools==6.5.1
 autopep8==1.5.7
 pytest-unordered==0.4.1
 debugpy==1.5.1
+backports.cached-property==1.0.1
+httpretty==1.1.4

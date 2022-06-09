@@ -450,6 +450,10 @@
     "gridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
     },
+    "gridViewIdentifierOptions": {
+        "id": "Spalten Identifikator",
+        "count": "Spalten Position"
+    },
     "previewAny": {
         "externalWarning": "Wenn Sie Ihre Datei über einen externen Dienst öffnen, wird Ihre Datei auf dessen Servern veröffentlicht."
     },

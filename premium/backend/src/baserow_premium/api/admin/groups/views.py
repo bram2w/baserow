@@ -90,7 +90,7 @@ class GroupAdminView(APIView):
         """Deletes the specified group"""
 
         group = CoreHandler().get_group(
-            group_id, base_queryset=Group.objects.select_for_update()
+            group_id, base_queryset=Group.objects.select_for_update(of=("self",))
         )
         handler = GroupsAdminHandler()
         handler.delete_group(request.user, group)

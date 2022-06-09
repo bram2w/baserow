@@ -299,8 +299,10 @@ watchgod==0.7
     # via uvicorn
 wcwidth==0.2.5
     # via prompt-toolkit
-websockets==10.2
-    # via uvicorn
+websockets==10.3
+    # via
+    #   -r base.in
+    #   uvicorn
 wrapt==1.13.3
     # via deprecated
 zipp==3.5.0

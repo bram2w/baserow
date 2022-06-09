@@ -68,8 +68,13 @@
   background-position: center center;
 }
 
+.card__content {
+  display: flex;
+}
+
 .card__fields {
   padding: 16px 0;
+  overflow: auto;
 }
 
 .card__field {

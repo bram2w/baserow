@@ -221,7 +221,9 @@
     },
     "fieldContext": {
         "editField": "Edit field",
-        "deleteField": "Delete field"
+        "deleteField": "Delete field",
+        "hideField": "Hide field",
+        "showField": "Show field"
     },
     "fieldForm": {
         "name": "Name",
@@ -253,7 +255,9 @@
         "search": "Search rows"
     },
     "rowEditModal": {
-        "addField": "add field"
+        "addField": "add field",
+        "showHiddenFields": "Show hidden fields",
+        "hideHiddenFields": "Hide hidden fields"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Add another option"
@@ -468,12 +472,17 @@
     "gridView": {
         "insertRowAbove": "Insert row above",
         "insertRowBelow": "Insert row below",
+        "duplicateRow": "Duplicate row",
         "enlargeRow": "Enlarge row",
         "deleteRow": "Delete row",
         "rowCount": "No rows | 1 row | {count} rows"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
+    },
+    "gridViewIdentifierOptions": {
+        "id": "Row identifier",
+        "count": "Count"
     },
     "previewAny": {
         "externalWarning": "Opening your file via an external service exposes your file to their servers."

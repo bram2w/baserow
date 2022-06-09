@@ -298,7 +298,7 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        base_queryset = model.objects.select_for_update()
+        base_queryset = model.objects.select_for_update(of=("self",))
         if enhance_by_fields:
             base_queryset = base_queryset.enhance_by_fields()
 
@@ -992,9 +992,10 @@ class RowHandler:
         """
         Get the rows to update.
         """
+
         return cast(
             RowsForUpdate,
-            model.objects.select_for_update()
+            model.objects.select_for_update(of=("self",))
             .enhance_by_fields()
             .filter(id__in=row_ids),
         )

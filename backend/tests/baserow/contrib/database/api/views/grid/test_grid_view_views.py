@@ -848,8 +848,9 @@ def test_view_aggregations(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    filter_id = response.json()["id"]
 
-    # Cache should be invalidated on filter change
+    # Cache should be invalidated on filter creation
     assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
         "value": Decimal(1210),
         "version": 4,
@@ -881,6 +882,52 @@ def test_view_aggregations(api_client, data_fixture):
     assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
         "value": 1,
         "version": 7,
+    }
+
+    # Let's update the filter
+    api_client.patch(
+        reverse("api:database:views:filter_item", kwargs={"view_filter_id": filter_id}),
+        {"value": 5},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 6
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 8
+
+    response = api_client.get(
+        url + f"?include=total",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 1210.0,
+        boolean_field.db_column: 1,
+        "total": 2,
+    }
+
+    # Cache should also be invalidated on filter deletion
+    api_client.delete(
+        reverse("api:database:views:filter_item", kwargs={"view_filter_id": filter_id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 7
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 9
+
+    response = api_client.get(
+        url + f"?include=total",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 1210.0,
+        boolean_field.db_column: 2,
+        "total": 3,
     }
 
 
@@ -1773,6 +1820,7 @@ def test_get_public_grid_view(api_client, data_fixture):
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
             },
             "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
         },
     }
 
@@ -2653,6 +2701,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_grid_
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
             },
             "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
         },
     }
 
@@ -2678,6 +2727,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_grid_
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
             },
             "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
         },
     }
 

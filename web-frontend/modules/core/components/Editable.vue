@@ -112,7 +112,7 @@ export default {
      * to end the editing and save the value.
      */
     keydown(event) {
-      if (event.keyCode === 13 || event.keyCode === 27) {
+      if (event.key === 'Enter' || event.key === 'Escape') {
         event.preventDefault()
         this.change()
         return false

@@ -1,38 +1,27 @@
-import os
-import json
 import hashlib
+import json
+import os
 from io import BytesIO
 from pathlib import Path
 from typing import NewType, cast, List
 from urllib.parse import urlparse, urljoin
-
-from django.contrib.auth.models import AbstractUser
-from itsdangerous import URLSafeSerializer
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Q, Count
+from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
+from django.db import transaction
+from django.db.models import Q, Count
 from django.utils import translation
+from itsdangerous import URLSafeSerializer
 from tqdm import tqdm
 
+from baserow.core.user.utils import normalize_email_address
 from baserow.core.utils import (
     ChildProgressBuilder,
 )
-from baserow.core.user.utils import normalize_email_address
-
-from .models import (
-    Settings,
-    Group,
-    GroupUser,
-    GroupInvitation,
-    Application,
-    Template,
-    TemplateCategory,
-    GROUP_USER_PERMISSION_CHOICES,
-    GROUP_USER_PERMISSION_ADMIN,
-)
+from .emails import GroupInvitationEmail
 from .exceptions import (
     UserNotInGroup,
     GroupDoesNotExist,
@@ -48,8 +37,17 @@ from .exceptions import (
     TemplateFileDoesNotExist,
     TemplateDoesNotExist,
 )
-from .trash.handler import TrashHandler
-from .utils import set_allowed_attrs
+from .models import (
+    Settings,
+    Group,
+    GroupUser,
+    GroupInvitation,
+    Application,
+    Template,
+    TemplateCategory,
+    GROUP_USER_PERMISSION_CHOICES,
+    GROUP_USER_PERMISSION_ADMIN,
+)
 from .registries import application_type_registry
 from .signals import (
     application_created,
@@ -63,7 +61,8 @@ from .signals import (
     group_user_deleted,
     groups_reordered,
 )
-from .emails import GroupInvitationEmail
+from .trash.handler import TrashHandler
+from .utils import set_allowed_attrs
 
 User = get_user_model()
 
@@ -107,7 +106,11 @@ class CoreHandler:
 
         settings_instance = set_allowed_attrs(
             kwargs,
-            ["allow_new_signups", "allow_signups_via_group_invitations"],
+            [
+                "allow_new_signups",
+                "allow_signups_via_group_invitations",
+                "allow_reset_password",
+            ],
             settings_instance,
         )
 
@@ -117,7 +120,9 @@ class CoreHandler:
     def get_group_for_update(self, group_id: int) -> GroupForUpdate:
         return cast(
             GroupForUpdate,
-            self.get_group(group_id, base_queryset=Group.objects.select_for_update()),
+            self.get_group(
+                group_id, base_queryset=Group.objects.select_for_update(of=("self",))
+            ),
         )
 
     def get_group(self, group_id, base_queryset=None) -> Group:
@@ -898,6 +903,7 @@ class CoreHandler:
 
         return template
 
+    @transaction.atomic
     def sync_templates(self, storage=None):
         """
         Synchronizes the JSON template files with the templates stored in the database.
@@ -927,8 +933,8 @@ class CoreHandler:
         templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
         for template_file_path in tqdm(
             templates,
-            desc="Syncing Baserow templates. Disable this on startup by setting the "
-            "env variable SYNC_TEMPLATES_ON_STARTUP=false",
+            desc="Syncing Baserow templates. Disable by setting "
+            "BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=false.",
         ):
             content = Path(template_file_path).read_text()
             parsed_json = json.loads(content)

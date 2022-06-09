@@ -5,6 +5,7 @@
     :value="value"
     :read-only="true"
     :selected="selected"
+    :store-prefix="storePrefix"
     class="active"
   ></component>
 </template>
@@ -13,7 +14,7 @@
 import gridField from '@baserow/modules/database/mixins/gridField'
 
 export default {
-  name: 'GridViewFormulaField',
+  name: 'GridViewFieldFormula',
   mixins: [gridField],
   methods: {
     getComponent(field) {

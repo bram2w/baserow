@@ -28,7 +28,7 @@
       </div>
       <div class="admin-settings__group">
         <h2 class="admin-settings__group-title">
-          {{ $t('settings.groupSignupRestrictions') }}
+          {{ $t('settings.accountRestrictions') }}
         </h2>
         <div class="admin-settings__item">
           <div class="admin-settings__label">
@@ -68,6 +68,27 @@
               "
               >{{ $t('settings.enabled') }}</SwitchInput
             >
+          </div>
+        </div>
+        <div class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.settingAllowResetPasswordName') }}
+            </div>
+            <div class="admin-settings__description">
+              {{ $t('settings.settingAllowResetPasswordDescription') }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            <SwitchInput
+              :value="settings.allow_reset_password"
+              :large="true"
+              @input="updateSettings({ allow_reset_password: $event })"
+              >{{ $t('settings.enabled') }}</SwitchInput
+            >
+            <div v-show="!settings.allow_reset_password" class="warning">
+              {{ $t('settings.settingAllowResetPasswordWarning') }}
+            </div>
           </div>
         </div>
       </div>

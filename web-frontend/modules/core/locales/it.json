@@ -223,7 +223,9 @@
         "errorInvalidLinkTitle": "Link non valido",
         "errorInvalidLinkMessage": "Impossibile reimpostare la password perché il link non è valido.",
         "errorLinkExpiredTitle": "Link scaduto",
-        "errorLinkExpiredMessage": "Il link per la reimpostazione della password è scaduto, richiedine un altro."
+        "errorLinkExpiredMessage": "Il link per la reimpostazione della password è scaduto, richiedine un altro.",
+        "disabled": "",
+        "disabledMessage": ""
     },
     "signup": {
         "headTitle": "Crea nuovo account",
@@ -235,13 +237,18 @@
         "title": "Password dimenticata",
         "message": "Inserisci nel modulo il tuo indirizzo e-mail. Se troviamo un account corrispondente, ti invieremo un'e-mail con un link per reimpostare la password.",
         "submit": "Invia link",
-        "confirmation": "Se il tuo indirizzo e-mail è presente nel nostro database, riceverai in pochi minuti a tale indirizzo un link per la reimpostazione della password."
+        "confirmation": "Se il tuo indirizzo e-mail è presente nel nostro database, riceverai in pochi minuti a tale indirizzo un link per la reimpostazione della password.",
+        "disabled": "Password dimenticata",
+        "disabledMessage": "Non è possibile reimpostare la password perché è stato disabilitato."
     },
     "settings": {
         "settingsTitle": "Impostazioni admin",
         "baserowInstanceId": "ID istanza",
         "instanceIdDescription": "L'ID dell'istanza è l'identificatore univoco della tua copia di Baserow.",
-        "groupSignupRestrictions": "Limitazioni di registrazione",
+        "accountRestrictions": "Limitazioni account",
+        "settingAllowResetPasswordName": "",
+        "settingAllowResetPasswordDescription": "",
+        "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "Consenti la creazione di nuovi account",
         "settingAllowNewAccountsDescription": "Per impostazione predefinita, qualsiasi utente che visita il tuo dominio Baserow può registrarsi per un nuovo account.",
         "settingAllowSignupsViaGroupInvitationsName": "Consenti l'iscrizione tramite inviti di gruppo",

@@ -51,10 +51,10 @@
           >
             <div
               class="grid-view__row-count"
-              :class="{ 'grid-view__row-count--small': row.id > 9999 }"
-              :title="row.id"
+              :class="{ 'grid-view__row-count--small': rowIdentifier > 9999 }"
+              :title="rowIdentifier"
             >
-              {{ row.id }}
+              {{ rowIdentifier }}
             </div>
             <div
               v-if="!readOnly && canDrag"
@@ -128,10 +128,9 @@ export default {
       type: Array,
       required: true,
     },
-    decorations: {
-      type: Array,
-      required: false,
-      default: () => [],
+    decorationsByPlace: {
+      type: Object,
+      required: true,
     },
     allFields: {
       type: Array,
@@ -152,6 +151,14 @@ export default {
     },
     canDrag: {
       type: Boolean,
+      required: true,
+    },
+    rowIdentifierType: {
+      type: String,
+      required: true,
+    },
+    count: {
+      type: Number,
       required: true,
     },
   },
@@ -212,10 +219,18 @@ export default {
       return fields
     },
     firstCellDecorations() {
-      return this.decorations.filter(({ place }) => place === 'first_cell')
+      return this.decorationsByPlace?.first_cell || []
     },
     wrapperDecorations() {
-      return this.decorations.filter(({ place }) => place === 'wrapper')
+      return this.decorationsByPlace?.wrapper || []
+    },
+    rowIdentifier() {
+      switch (this.rowIdentifierType) {
+        case 'count':
+          return this.count
+        default:
+          return this.row.id
+      }
     },
   },
   methods: {

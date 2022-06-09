@@ -157,7 +157,12 @@ class ViewHandler:
             view_model = View
 
         if base_queryset is None:
-            base_queryset = view_model.objects.select_for_update()
+            tables_to_lock = ("self",)
+            if view_model is not View:
+                # We are a specific type of View like a GalleryView, make sure to lock
+                # the row in the View table by adding the `view_ptr_id`.
+                tables_to_lock = ("self", "view_ptr_id")
+            base_queryset = view_model.objects.select_for_update(of=tables_to_lock)
 
         return self.get_view(view_id, view_model, base_queryset)
 
@@ -665,6 +670,10 @@ class ViewHandler:
         view_filter.value = value
         view_filter.type = type_name
         view_filter.save()
+
+        # Call view type hooks
+        view_type = view_type_registry.get_by_model(view_filter.view.specific_class)
+        view_type.after_filter_update(view_filter.view)
 
         view_filter_updated.send(self, view_filter=view_filter, user=user)
 
@@ -1842,6 +1851,7 @@ class CachingPublicViewRowChecker:
         :param row: A row in the checkers table.
         :return: A list of views where the row is visible for this checkers table.
         """
+
         views = []
         for view, filter_qs, can_use_cache in self._views_with_filters:
             if can_use_cache:

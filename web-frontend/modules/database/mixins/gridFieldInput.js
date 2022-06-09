@@ -8,6 +8,10 @@ export default {
   data() {
     return {
       /**
+       * Indicates whether the cell is opened.
+       */
+      opened: false,
+      /**
        * Indicates whether the user is editing the value.
        */
       editing: false,
@@ -35,20 +39,26 @@ export default {
       this.$el.keydownEvent = (event) => {
         // If the tab or arrow keys are pressed we don't want to do anything because
         // the GridViewField component will select the next field.
-        const ignoredKeys = [9, 37, 38, 39, 40]
-        if (ignoredKeys.includes(event.keyCode)) {
+        const ignoredKeys = [
+          'Tab',
+          'ArrowLeft',
+          'ArrowUp',
+          'ArrowRight',
+          'ArrowDown',
+        ]
+        if (ignoredKeys.includes(event.key)) {
           return
         }
 
         // If the escape key is pressed while editing we want to cancel the current
         // input and undo the editing state.
-        if (event.keyCode === 27 && this.editing) {
+        if (event.key === 'Escape' && this.editing) {
           this.cancel()
           return
         }
 
         // If the enter key is pressed.
-        if (event.keyCode === 13) {
+        if (event.key === 'Enter') {
           if (
             this.editing &&
             this.isValid() &&
@@ -82,6 +92,7 @@ export default {
      * need it. We will also save the changes if the user was editing.
      */
     beforeUnSelect() {
+      this.opened = false
       if (this.editing && this.isValid()) {
         this.save()
       } else {
@@ -102,6 +113,7 @@ export default {
      * Method that can be called to initiate the edit state.
      */
     edit(value = null, event = null) {
+      this.opened = true
       if (this.readOnly) {
         return
       }
@@ -116,6 +128,7 @@ export default {
      * eventually save the changes.
      */
     save() {
+      this.opened = false
       this.editing = false
       const newValue = this.beforeSave(this.copy)
 
@@ -132,6 +145,7 @@ export default {
      * without saving.
      */
     cancel() {
+      this.opened = false
       this.editing = false
       this.copy = this.value
       this.$emit('edit', this.value, this.value)
@@ -168,8 +182,7 @@ export default {
      * previous field. The tab key stays enabled.
      */
     canSelectNext(event) {
-      const arrowKeys = [37, 38, 39, 40]
-      return !this.editing || !arrowKeys.includes(event.keyCode)
+      return !this.editing || event.key === 'Tab'
     },
     /**
      * If true the value can be saved by pressing the enter key. This could for

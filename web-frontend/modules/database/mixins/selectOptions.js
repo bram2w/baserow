@@ -45,14 +45,20 @@ export default {
       this.$el.keydownEvent = (event) => {
         // If the tab or arrow keys are pressed we don't want to do anything because
         // the GridViewField component will select the next field.
-        const ignoredKeys = [9, 37, 38, 39, 40]
-        if (ignoredKeys.includes(event.keyCode)) {
+        const ignoredKeys = [
+          'Tab',
+          'ArrowLeft',
+          'ArrowUp',
+          'ArrowRight',
+          'ArrowDown',
+        ]
+        if (ignoredKeys.includes(event.key)) {
           return
         }
 
         // When the escape key is pressed while editing the value we can hide the
         // dropdown.
-        if (event.keyCode === 27 && this.editing) {
+        if (event.key === 'Escape' && this.editing) {
           this.hideDropdown()
           return
         }
@@ -61,7 +67,7 @@ export default {
         // the value we want to show the dropdown.
         if (
           !this.editing &&
-          (event.keyCode === 13 ||
+          (event.key === 'Enter' ||
             isPrintableUnicodeCharacterKeyPress(event) ||
             event.key === 'F2')
         ) {

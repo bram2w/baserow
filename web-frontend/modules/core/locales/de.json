@@ -227,7 +227,9 @@
         "errorInvalidLinkTitle": "Ungültiger Link",
         "errorInvalidLinkMessage": "Das Passwort konnte nicht zurückgesetzt werden, da der Link ungültig ist.",
         "errorLinkExpiredTitle": "Link abgelaufen",
-        "errorLinkExpiredMessage": "Der Link zum Zurücksetzen des Passworts ist abgelaufen. Bitte fordern Sie ein neues an."
+        "errorLinkExpiredMessage": "Der Link zum Zurücksetzen des Passworts ist abgelaufen. Bitte fordern Sie ein neues an.",
+        "disabled": "Passwort-Zurücksetzung ist deaktiviert",
+        "disabledMessage": "Es ist nicht möglich, ein Passwort zurückzusetzen, da es deaktiviert wurde."
     },
     "signup": {
         "headTitle": "Neues Konto erstellen",
@@ -239,13 +241,18 @@
         "title": "Passwort vergessen",
         "message": "Bitte geben Sie Ihre E-Mail-Adresse in das Formular ein. Wenn wir ein Konto finden, senden wir Ihnen eine E-Mail mit einem Link zum Zurücksetzen Ihres Passworts.",
         "submit": "Link senden",
-        "confirmation": "Wenn Ihre E-Mail-Adresse in unserer Datenbank vorhanden ist, erhalten Sie in wenigen Minuten einen Link zum Zurücksetzen des Passworts an Ihre E-Mail-Adresse."
+        "confirmation": "Wenn Ihre E-Mail-Adresse in unserer Datenbank vorhanden ist, erhalten Sie in wenigen Minuten einen Link zum Zurücksetzen des Passworts an Ihre E-Mail-Adresse.",
+        "disabled": "Passwort-Zurücksetzung ist deaktiviert",
+        "disabledMessage": "Es ist nicht möglich, ein Passwort zurückzusetzen, da es deaktiviert wurde."
     },
     "settings": {
         "settingsTitle": "Administrator-Einstellungen",
         "baserowInstanceId": "Instanz-ID",
         "instanceIdDescription": "Die Instanz-ID ist die eindeutige Kennung Ihrer Baserow-Kopie.",
-        "groupSignupRestrictions": "Einschränkungen bei der Registrierung",
+        "accountRestrictions": "Konto-Einschränkungen",
+        "settingAllowResetPasswordName": "Erlaube das Zurücksetzen des Passworts",
+        "settingAllowResetPasswordDescription": "Standardmäßig ist das Zurücksetzen des Passworts aktiviert. Wenn Sie diese Einstellung deaktivieren, können Benutzer nicht mehr ihr Passwort via Link zurücksetzen.",
+        "settingAllowResetPasswordWarning": "Bitte beachten Sie, dass sie sich selbst aus dem System aussperren könnten und der Zugang nicht mehr hergestellt werden kann, falls sie ihr Passwort vergessen.",
         "settingAllowNewAccountsName": "Erstellen neuer Konten zulassen",
         "settingAllowNewAccountsDescription": "Standardmäßig kann sich jeder Benutzer, der Ihre Baserow-Domain besucht, für ein neues Konto anmelden.",
         "enabled": "aktiviert",

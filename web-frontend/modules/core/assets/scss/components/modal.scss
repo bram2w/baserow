@@ -7,6 +7,7 @@
   overflow: auto;
   z-index: $z-index-modal;
   background-color: rgba($color-neutral-700, 0.16);
+  scrollbar-gutter: stable;
 }
 
 .modal__box {
@@ -80,6 +81,7 @@
   padding: 32px 40px;
   min-width: 0;
   flex: 1;
+  scrollbar-gutter: stable;
 
   &.modal__box-content--scrollable {
     overflow-y: auto;

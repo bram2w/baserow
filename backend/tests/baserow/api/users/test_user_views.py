@@ -438,6 +438,17 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     assert "test@localhost.nl" in email.to
     assert email.body.index("http://localhost:3000")
 
+    user = data_fixture.create_user(is_staff=True)
+    CoreHandler().update_settings(user, allow_reset_password=False)
+
+    response = client.post(
+        reverse("api:user:send_reset_password_email"),
+        {"email": " teST@locAlhost.nl ", "base_url": "http://localhost:3000"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
 
 @pytest.mark.django_db
 def test_password_reset(data_fixture, client):
@@ -551,6 +562,17 @@ def test_password_reset(data_fixture, client):
 
     user.refresh_from_db()
     assert not user.check_password(long_password)
+
+    user = data_fixture.create_user(is_staff=True)
+    CoreHandler().update_settings(user, allow_reset_password=False)
+
+    response = client.post(
+        reverse("api:user:reset_password"),
+        {"token": token, "password": long_password},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db

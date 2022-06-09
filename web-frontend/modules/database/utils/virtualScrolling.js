@@ -48,7 +48,6 @@ export const recycleSlots = (slots, items, getPosition, min = items.length) => {
     min = items.length
   }
 
-  // Create the missing slots.
   for (let i = slots.length; i < min; i++) {
     slots.push({
       id: i,

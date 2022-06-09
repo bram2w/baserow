@@ -24,11 +24,12 @@ BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS="${BASEROW_POSTGRES_STARTUP_CHECK_ATTEMP
 # Backend server related variables
 MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
 SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=${BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:-$SYNC_TEMPLATES_ON_STARTUP}
 BASEROW_BACKEND_BIND_ADDRESS=${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}
 BASEROW_BACKEND_LOG_LEVEL=${BASEROW_BACKEND_LOG_LEVEL:-INFO}
 BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER=${BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:-}
 
-BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-1}
+BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-}
 BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-3}
 
 # Celery related variables
@@ -104,7 +105,7 @@ The available Baserow backend related commands, services and healthchecks are sh
 below:
 
 ADMIN COMMANDS:
-setup           : Runs all setup commands (migrate, update_formulas, sync_templates)
+setup           : Runs all setup commands (migrate and update_formulas)
 manage          : Manage Baserow and its database
 bash            : Start a bash shell with the correct env setup
 backup          : Backs up Baserow's database to DATA_DIR/backups by default
@@ -123,9 +124,6 @@ gunicorn            : Start Baserow backend django using a prod ready gunicorn s
                            before exiting.
                          * Automatically migrates the database on startup unless
                            MIGRATE_ON_STARTUP is set to something other than 'true'.
-                         * Automatically syncs Baserow's built in templates on startup
-                           unless SYNC_TEMPLATES_ON_STARTUP is set to something other
-                           than 'true'.
                          * Binds to BASEROW_BACKEND_BIND_ADDRESS which defaults to 0.0.0.0
 gunicorn-wsgi       : Same as gunicorn but runs a wsgi server which does not support WS
 celery-worker       : Start the celery worker queue which runs important async tasks
@@ -154,10 +152,6 @@ if [ "$MIGRATE_ON_STARTUP" = "true" ] ; then
   echo "python /baserow/backend/src/baserow/manage.py migrate"
   python /baserow/backend/src/baserow/manage.py migrate
 fi
-if [ "$SYNC_TEMPLATES_ON_STARTUP" = "true" ] ; then
-  echo "python /baserow/backend/src/baserow/manage.py sync_templates"
-  python /baserow/backend/src/baserow/manage.py sync_templates
-fi
 }
 
 start_celery_worker(){
@@ -166,7 +160,10 @@ start_celery_worker(){
   else
     EXTRA_CELERY_ARGS=()
   fi
-  exec celery -A baserow worker --concurrency "$BASEROW_AMOUNT_OF_WORKERS" "${EXTRA_CELERY_ARGS[@]}" -l INFO "$@"
+  if [[ -n "$BASEROW_AMOUNT_OF_WORKERS" ]]; then
+    EXTRA_CELERY_ARGS+=(--concurrency "$BASEROW_AMOUNT_OF_WORKERS")
+  fi
+  exec celery -A baserow worker "${EXTRA_CELERY_ARGS[@]}" -l INFO "$@"
 }
 
 # Lets devs attach to this container running the passed command, press ctrl-c and only
@@ -264,8 +261,6 @@ case "$1" in
       DONT_UPDATE_FORMULAS_AFTER_MIGRATION=yes python3 /baserow/backend/src/baserow/manage.py migrate
       echo "python3 /baserow/backend/src/baserow/manage.py update_formulas"
       python3 /baserow/backend/src/baserow/manage.py update_formulas
-      echo "python3 /baserow/backend/src/baserow/manage.py sync_templates"
-      python3 /baserow/backend/src/baserow/manage.py sync_templates
     ;;
     shell)
         exec python3 /baserow/backend/src/baserow/manage.py shell
@@ -277,7 +272,7 @@ case "$1" in
         exec make lint-python
     ;;
     ci-test)
-        exec make ci-test-python PYTEST_SPLITS="${PYTEST_SPLITS:-1}" PYTEST_SPLIT_GROUP="${PYTEST_SPLIT_GROUP:-1}"
+        exec make ci-test-python PYTEST_SPLITS="${PYTEST_SPLITS:-1}" PYTEST_SPLIT_GROUP="${PYTEST_SPLIT_GROUP:-1}" PYTEST_EXTRA_ARGS="${*:2}"
     ;;
     ci-check-startup)
         exec make ci-check-startup-python

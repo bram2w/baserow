@@ -29,5 +29,6 @@ class DatabaseSerializer(ApplicationSerializer):
         :rtype: list
         """
 
+        # @TODO do this with a prefetch related,
         tables = Table.objects.filter(database_id=instance.pk)
         return TableSerializer(tables, many=True).data

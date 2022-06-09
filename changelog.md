@@ -2,7 +2,45 @@
 
 ## Unreleased
 
-## Released (2022-10-05 1.10.0)
+## Released (2022-06-09 1.10.1)
+
+* Plugins can now include their own menu or other template in the main menu sidebar.
+* Added the ability to use commas as separators in number fields
+* Shift+Enter on grid view exit from editing mode for long text field
+* Shift+Enter on grid view go to field below
+* Make fields sortable in row create/edit modal.
+* Added row coloring for Kanban and Gallery views
+* Duplicate row.
+* Added multi-row delete.
+* Added a dropdown to the grid view that allows you to
+  select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
+* Added an admin setting to disable the ability to reset a users password.
+* Fix formula bug caused when arguments of `when_empty` have different types.
+* Formulas of type text now use textarea to show the cell value.
+* Fix a bug in public grid views that prevented expanding long-text cells.
+* Deprecate the SYNC_TEMPLATES_ON_STARTUP environment variable and no longer call the
+  sync_templates command on startup in the docker images.
+* Added BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION environment variable and now
+  do the sync_templates task in the background after migration to massively speedup 
+  first time Baserow startup speed.
+* Fix deadlocks and performance problems caused by un-needed accidental row locks.
+* Fixed CSV import adding an extra row with field names if the no headers option is selected.
+* Fixed bad request displayed with webhook endpoints that redirects
+* **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
+  is now a POST request instead of GET.
+* Prevent the Airtable import from failing hard when an invalid date is provided.
+* Increased the max decimal places of a number field to 10.
+* Fix formula autocomplete for fields with multiple quotes
+* Fix slowdown in large Baserow instances as the generated model cache got large.
+* The standalone `baserow/backend` image when used to run a celery service now defaults
+  to running celery with the same number of processes as the number of available cores.
+* When the BASEROW_AMOUNT_OF_WORKERS env variable is set to blank, the amount of worker
+  processes defaults to the number of available cores.
+* Fixed bug preventing file uploads via an url for self-hosters 
+* Added new environment variable BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
+* Fix aggregation not updated on filter update
+
+## Released (2022-05-10 1.10.0)
 
 * Added batch create/update/delete rows endpoints. These endpoints make it possible to
   modify multiple rows at once. Currently, row created, row updated, and row deleted 
@@ -99,6 +137,7 @@
   * Team Check-ins
   * University Admissions Management
   * Wedding Client Planner
+
 
 ## Released (2022-03-03 1.9.1)
 

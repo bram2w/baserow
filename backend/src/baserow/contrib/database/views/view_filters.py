@@ -375,6 +375,7 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
         Raises an error if the provided value is an empty string or cannot be parsed
         to a date object
         """
+
         value = value.strip()
 
         if value == "":

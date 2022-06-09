@@ -71,6 +71,10 @@ class Settings(models.Model):
         help_text="Indicates whether invited users can create an account when signing "
         "up, even if allow_new_signups is disabled.",
     )
+    allow_reset_password = models.BooleanField(
+        default=True,
+        help_text="Indicates whether users can request a password reset link.",
+    )
 
 
 class UserProfile(models.Model):
@@ -97,6 +101,7 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         """
         :return: The applications for this group including any trashed applications.
         """
+
         return self.application_set(manager="objects_and_trash")
 
     def has_template(self):

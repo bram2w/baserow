@@ -67,7 +67,7 @@ export default {
       window.addEventListener('mouseup', el.mouseUpEvent)
 
       el.keydownEvent = (event) => {
-        if (event.keyCode === 27) {
+        if (event.key === 'Escape') {
           // When the user presses the escape key we want to cancel the action
           binding.def.cancel(el, event)
         }

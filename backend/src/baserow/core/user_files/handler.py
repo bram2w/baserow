@@ -194,9 +194,10 @@ class UserFileHandler:
 
         size = stream_size(stream)
 
-        if size > settings.USER_FILE_SIZE_LIMIT:
+        if size > settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
             raise FileSizeTooLargeError(
-                settings.USER_FILE_SIZE_LIMIT, "The provided file is too large."
+                settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB,
+                "The provided file is too large.",
             )
 
         storage = storage or default_storage
@@ -294,10 +295,26 @@ class UserFileHandler:
                     "The response did not respond with an " "OK status code."
                 )
 
-            content = response.raw.read(
-                settings.USER_FILE_SIZE_LIMIT + 1, decode_content=True
-            )
-        except (RequestException, UnacceptableAddressException):
+            try:
+                content_length = int(response.headers.get("Content-Length", ""))
+                if content_length > settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+                    raise FileSizeTooLargeError(
+                        settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB,
+                        "The provided file is too large.",
+                    )
+            except ValueError:
+                pass
+
+            content = b""
+            for chunk in response.iter_content(chunk_size=None):
+                content += chunk
+                if len(content) > settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+                    response.close()
+                    raise FileSizeTooLargeError(
+                        settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB,
+                        "The provided file is too large.",
+                    )
+        except (RequestException, UnacceptableAddressException, ConnectionError):
             raise FileURLCouldNotBeReached("The provided URL could not be reached.")
 
         file = SimpleUploadedFile(file_name, content)

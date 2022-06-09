@@ -1,6 +1,10 @@
 <template>
   <div class="control">
     <label class="control__label">
+      <a
+        :class="{ 'row-modal__field-item-handle': sortable }"
+        data-field-handle
+      ></a>
       <i
         class="fas control__label-icon"
         :class="'fa-' + field._.type.iconClass"
@@ -21,7 +25,17 @@
       :field="field"
       @update="$emit('field-updated', $event)"
       @delete="$emit('field-deleted')"
-    ></FieldContext>
+    >
+      <li v-if="canBeHidden">
+        <a @click="$emit('toggle-field-visibility', { field })">
+          <i
+            class="context__menu-icon fas fa-fw"
+            :class="[hidden ? 'fa-eye' : 'fa-eye-slash']"
+          ></i>
+          {{ $t(hidden ? 'fieldContext.showField' : 'fieldContext.hideField') }}
+        </a>
+      </li>
+    </FieldContext>
     <component
       :is="getFieldComponent(field.type)"
       ref="field"
@@ -47,6 +61,20 @@ export default {
     field: {
       type: Object,
       required: true,
+    },
+    sortable: {
+      type: Boolean,
+      default: false,
+    },
+    canBeHidden: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    hidden: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     row: {
       type: Object,

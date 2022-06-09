@@ -158,7 +158,9 @@ class TokenView(APIView):
         """Updates the values of a token."""
 
         token = TokenHandler().get_token(
-            request.user, token_id, base_queryset=Token.objects.select_for_update()
+            request.user,
+            token_id,
+            base_queryset=Token.objects.select_for_update(of=("self",)),
         )
         permissions = data.pop("permissions", None)
         rotate_key = data.pop("rotate_key", False)

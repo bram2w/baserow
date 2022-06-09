@@ -32,6 +32,7 @@ from baserow.core.user.exceptions import (
     PasswordDoesNotMatchValidation,
     InvalidPassword,
     DisabledSignupError,
+    ResetPasswordDisabledError,
 )
 from baserow.core.user.handler import UserHandler
 
@@ -322,6 +323,18 @@ def test_send_reset_password_email_in_different_language(data_fixture, mailoutbo
     assert mailoutbox[0].subject == "Réinitialiser le mot de passe - Baserow"
 
 
+@pytest.mark.django_db(transaction=True)
+def test_send_reset_password_email_reset_password_disabled(data_fixture):
+    user = data_fixture.create_user(email="test@localhost", is_staff=True)
+
+    CoreHandler().update_settings(user, allow_reset_password=False)
+
+    with pytest.raises(ResetPasswordDisabledError):
+        UserHandler().send_reset_password_email(
+            user, "http://localhost:3000/reset-password"
+        )
+
+
 @pytest.mark.django_db
 def test_reset_password(data_fixture):
     user = data_fixture.create_user(email="test@localhost")
@@ -366,6 +379,20 @@ def test_reset_password_invalid_new_password(data_fixture, invalid_password):
 
     with pytest.raises(PasswordDoesNotMatchValidation):
         handler.reset_password(token, invalid_password)
+
+
+@pytest.mark.django_db
+def test_reset_password_reset_password_disabled(data_fixture):
+    user = data_fixture.create_user(email="test@localhost", is_staff=True)
+    handler = UserHandler()
+
+    signer = handler.get_reset_password_signer()
+    token = signer.dumps(user.id)
+
+    CoreHandler().update_settings(user, allow_reset_password=False)
+
+    with pytest.raises(ResetPasswordDisabledError):
+        handler.reset_password(token, "new_password")
 
 
 @pytest.mark.django_db
