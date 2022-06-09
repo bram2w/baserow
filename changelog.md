@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Upload modal no longer closes when removing a file. [#569](https://gitlab.com/bramw/baserow/-/issues/569)
+
 ## Released (2022-06-09 1.10.1)
 
 * Plugins can now include their own menu or other template in the main menu sidebar.
