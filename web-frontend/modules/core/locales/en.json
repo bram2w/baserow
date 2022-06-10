@@ -278,5 +278,67 @@
         "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",
         "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
         "enabled": "enabled"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "Add all",
+            "removeAll": "Remove all",
+            "addField": "Add field"
+        },
+        "fieldsDescription": "All the fields are in the form.",
+        "prefillInfoLink": "Pre-fill values dynamically",
+        "modal": {
+            "title": "Pre-fill values dynamically",
+            "descriptionPartOne": "Forms can be prefilled in order to help the user fill in the form faster.",
+            "descriptionPartTwo": "All fields which are availbale in the form can be prefilled.",
+            "howToPrefill": {
+                "title": "How to prefill a form",
+                "description": "If you want to prefill a form with data you can do so via query parameters added to the public form url. These query parameters are prefixed with `prefill` to avoid any collision with potential future query parameters."
+            },
+            "format": {
+                "title": "Format",
+                "description": "The format of the query parameters is as follows:",
+                "codeSnippet": "?prefill_<field_name>=<value>"
+            },
+            "example": {
+                "title": "Example",
+                "description": "In the example below we want to prefill a field called `Name` with the value of `Mike`",
+                "codeSnippet": "?prefill_Name=Mike"
+            },
+            "spaces": {
+                "title": "Spaces",
+                "description": "Spaces in the field name are replaced with `+` to avoid any issues with the query parameter.",
+                "codeSnippet": "?prefill_my+field=Mike"
+            },
+            "multipleValues": {
+                "title": "Multiple values",
+                "description": "If you want to prefill multiple fields you can do so by adding a `,` between the values.",
+                "codeSnippet": "?prefill_multi+select=Mike,John"
+            },
+            "specialFieldTypes": {
+                "title": "Special field types",
+                "description": "Generally the prefill value is the same as the value of the field. But there are some exceptions where the value is translated to a different value.",
+                "ratingField": {
+                    "title": "Rating field",
+                    "description": "A rating field accepts a number to indicate how many stars should be filled.",
+                    "codeSnippet": "?prefill_rating=3"
+                },
+                "linkRowField": {
+                    "title": "Link row field",
+                    "description": "A link row field can accept the value that is shown in the select dropdown.",
+                    "codeSnippet": "?prefill_link+row=Mike"
+                },
+                "selectField": {
+                    "title": "Single Select / Multiple Select field",
+                    "description": "A single select field can accept the value that is shown in the select dropdown. So does the Multiple Select field, but it can also accept multiple values.",
+                    "codeSnippet": "?prefill_single+select=Mike"
+                },
+                "dateField": {
+                    "title": "Date field",
+                    "description": "A date field can accept a date in the following formats and will use the date format of the field to parse the date.",
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
+                }
+            }
+        }
     }
 }

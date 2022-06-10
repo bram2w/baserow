@@ -278,5 +278,67 @@
         "title": "Autorisierungsfehler",
         "content": "Anscheinend sind Sie nicht berechtigt, diese Ressource anzuzeigen.",
         "action": "Seite neu laden"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "Alle hinzufügen",
+            "removeAll": "Alle entfernen",
+            "addField": "Feld hinzufügen"
+        },
+        "fieldsDescription": "Alle Felder sind im Formular",
+        "prefillInfoLink": "Werte dynamisch vorausfüllen",
+        "modal": {
+            "title": "Werte dynamisch vorausfüllen",
+            "descriptionPartOne": "Formular können vorausgefüllt werden, um dem Benutzer zu helfen das Formular schneller auszufüllen.",
+            "descriptionPartTwo": "Alle Felder die im Formular verfügbar sind, können vorausgefüllt werden.",
+            "howToPrefill": {
+                "title": "Wie man ein Formular vorausfüllt",
+                "description": "Wenn Sie ein Formular vorausfüllen wollen, können sie das mit einem Query Paremeter in der URL des Öffentlichen Formulares. Diese Query Parameter haben einen prefix von 'prefill' um potentielle Kollisionen mit anderen Query Parametern zu vermeiden."
+            },
+            "format": {
+                "title": "Format",
+                "description": "Das Format der Query Parameter is das Folgende:",
+                "codeSnippet": "?prefill_<feld_name>=<wert>"
+            },
+            "example": {
+                "title": "Beispiel",
+                "description": "In dem folgenden Beispiel wollen wir ein Feld mit dem Namen `Name` mit dem Wert `Mike` vorausfüllen",
+                "codeSnippet": "?prefill_Name=Mike"
+            },
+            "spaces": {
+                "title": "Leerzeichen",
+                "description": "Leerzeichen in Feldern werden mit einem '+' ersetzt, um Probleme mit den Query Parametern zu vermeiden.",
+                "codeSnippet": "?prefill_mein+Feld=Mike"
+            },
+            "multipleValues": {
+                "title": "Mehrere Werte",
+                "description": "Wenn Sie mehrere Werte benötigen, können Sie diese mit einem Komma getrennt angeben.",
+                "codeSnippet": "?prefill_multi+select=Mike,John"
+            },
+            "specialFieldTypes": {
+                "title": "Besondere Felder",
+                "description": "Allgemein ist der vorgefüllte Wert der selbe wie der Wert des Feldes, allerdings gibt es Ausnahmen wo der Wert erst noch konvertiert werden muss.",
+                "ratingField": {
+                    "title": "Bewertungsfeld",
+                    "description": "Ein Bewertungsfeld akzeptiert eine Nummer welche bestimmt wie viele Sterne ausgefüllt werden sollen.",
+                    "codeSnippet": "?prefill_Bewertung=3"
+                },
+                "linkRowField": {
+                    "title": "Zeilenlinkfeld",
+                    "description": "Ein Zeilenlinkfeld kann jeden Wert akzeptieren welcher im Dropdown zu sehen ist.",
+                    "codeSnippet": "?prefill_zeilenlinkfeld=Mike"
+                },
+                "selectField": {
+                    "title": "Einzel/Mehrfachauswahlfeld",
+                    "description": "Ein Einzelauswahlfeld akzeptiert jeden Wert der im Dropdown sichtbar ist. Das selbe gilt für das Mehrfachauswahlfeld, allerdings kann dieses auch mehrere Werte akzeptieren.",
+                    "codeSnippet": "?prefill_Einzelauswahlfeld=Mike"
+                },
+                "dateField": {
+                    "title": "Datumsfeld",
+                    "description": "Ein Datumsfeld kann ein Datum in den folgenden Formaten akzeptieren und wir das Datenformat des Feldes benutzen um den Wert richtig darzustellen.",
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// Generelle Formate\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
+                }
+            }
+        }
     }
 }

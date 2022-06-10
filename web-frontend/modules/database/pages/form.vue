@@ -67,12 +67,13 @@
 </template>
 
 <script>
-import { clone } from '@baserow/modules/core/utils/object'
+import { clone, isPromise } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
 import FormService from '@baserow/modules/database/services/view/form'
 import FormPageField from '@baserow/modules/database/components/view/form/FormPageField'
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
+import { getPrefills } from '@baserow/modules/database/utils/form'
 
 export default {
   components: {
@@ -109,11 +110,33 @@ export default {
     // After the form field meta data has been fetched, we need to make the values
     // object with the empty field value as initial form value.
     const values = {}
+    const prefills = getPrefills(route.query)
+    const promises = []
     data.fields.forEach((field) => {
       field._ = { touched: false }
       const fieldType = app.$registry.get('field', field.field.type)
-      values[`field_${field.field.id}`] = fieldType.getEmptyValue(field.field)
+      const setValue = (value) => {
+        values[`field_${field.field.id}`] = value
+      }
+
+      const prefill = prefills[field.name]
+      values[`field_${field.field.id}`] = fieldType.getEmptyValue(field.field) // Default value
+      if (prefill !== undefined && fieldType.canParseQueryParameter()) {
+        const result = fieldType.parseQueryParameter(field, prefill, {
+          slug,
+          client: app.$client,
+        })
+
+        if (isPromise(result)) {
+          result.then(setValue)
+          promises.push(result)
+        } else {
+          setValue(result)
+        }
+      }
     })
+
+    await Promise.all(promises)
 
     // Order the fields directly after fetching the results to make sure the form is
     // serverside rendered in the right order.

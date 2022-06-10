@@ -89,6 +89,7 @@ import GridViewFieldFormula from '@baserow/modules/database/components/view/grid
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
 import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
+import ViewService from '@baserow/modules/database/services/view'
 
 export class FieldType extends Registerable {
   /**
@@ -508,6 +509,26 @@ export class FieldType extends Registerable {
   acceptSplitCommaSeparatedSelectOptions() {
     return false
   }
+
+  /**
+   * Determines whether the field type value can be set by
+   * parsing a query parameter.
+   * @returns {boolean}
+   */
+  canParseQueryParameter() {
+    return false
+  }
+
+  /**
+   * Parse a value given by a url query parameter.
+   * @param {string} value
+   * @param field
+   * @param options Any additional information that might be needed for the parsing
+   * @returns {*}
+   */
+  parseQueryParameter(field, value, options) {
+    return value
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -578,6 +599,10 @@ export class TextFieldType extends FieldType {
   canBeReferencedByFormulaField() {
     return true
   }
+
+  canParseQueryParameter() {
+    return true
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -642,6 +667,10 @@ export class LongTextFieldType extends FieldType {
   }
 
   canBeReferencedByFormulaField() {
+    return true
+  }
+
+  canParseQueryParameter() {
     return true
   }
 }
@@ -772,6 +801,24 @@ export class LinkRowFieldType extends FieldType {
 
   shouldFetchFieldSelectOptions() {
     return false
+  }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  async parseQueryParameter(field, value, { client, slug }) {
+    const { data } = await ViewService(client).linkRowFieldLookup(
+      slug,
+      field.field.id,
+      1,
+      value,
+      1
+    )
+
+    const item = data.results.find((item) => item.value === value)
+
+    return item ? [item] : this.getEmptyValue()
   }
 }
 
@@ -954,6 +1001,14 @@ export class NumberFieldType extends FieldType {
   canBeReferencedByFormulaField() {
     return true
   }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value) {
+    return NumberFieldType.formatNumber(field.field, value)
+  }
 }
 
 export class RatingFieldType extends FieldType {
@@ -1062,6 +1117,24 @@ export class RatingFieldType extends FieldType {
   canBeReferencedByFormulaField() {
     return true
   }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value) {
+    const valueParsed = parseInt(value, 10)
+
+    if (isNaN(valueParsed) || valueParsed < 0) {
+      return this.getEmptyValue()
+    }
+
+    if (valueParsed > field.max_value) {
+      return field.max_value
+    }
+
+    return valueParsed
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -1133,6 +1206,14 @@ export class BooleanFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
+  }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value) {
+    return value === 'true'
   }
 }
 
@@ -1207,7 +1288,11 @@ class BaseDateFieldType extends FieldType {
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.toUpperCase()
+    return DateFieldType.formatDate(field, clipboardData)
+  }
+
+  static formatDate(field, dateString) {
+    const value = dateString.toUpperCase()
 
     // Formats for ISO dates
     let formats = [
@@ -1280,6 +1365,14 @@ export class DateFieldType extends BaseDateFieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldDate
+  }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value) {
+    return DateFieldType.formatDate(field.field, value)
   }
 }
 
@@ -1472,6 +1565,10 @@ export class URLFieldType extends FieldType {
   getContainsFilterFunction() {
     return genericContainsFilter
   }
+
+  canParseQueryParameter() {
+    return true
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -1554,6 +1651,10 @@ export class EmailFieldType extends FieldType {
   }
 
   canBeReferencedByFormulaField() {
+    return true
+  }
+
+  canParseQueryParameter() {
     return true
   }
 }
@@ -1824,6 +1925,18 @@ export class SingleSelectFieldType extends FieldType {
   shouldFetchFieldSelectOptions() {
     return false
   }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value) {
+    const selectedOption = field.field.select_options.find(
+      (option) => option.value === value
+    )
+
+    return selectedOption ?? this.getEmptyValue()
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -1980,6 +2093,23 @@ export class MultipleSelectFieldType extends FieldType {
   acceptSplitCommaSeparatedSelectOptions() {
     return true
   }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  /**
+   * Accepts the following format: option1,option2,option3
+   */
+  parseQueryParameter(field, value) {
+    const values = value.split(',')
+
+    const selectOptions = field.field.select_options.filter((option) =>
+      values.includes(option.value)
+    )
+
+    return selectOptions.length > 0 ? selectOptions : this.getEmptyValue()
+  }
 }
 
 export class PhoneNumberFieldType extends FieldType {
@@ -2064,6 +2194,14 @@ export class PhoneNumberFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
+  }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value) {
+    return value
   }
 }
 

@@ -79,11 +79,11 @@ export default (client) => {
     rotateSlug(viewId) {
       return client.post(`/database/views/${viewId}/rotate-slug/`)
     },
-    linkRowFieldLookup(slug, fieldId, page, search = null) {
+    linkRowFieldLookup(slug, fieldId, page, search = null, size = 100) {
       const config = {
         params: {
           page,
-          size: 100,
+          size,
         },
       }
 
