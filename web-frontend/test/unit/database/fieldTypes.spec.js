@@ -1,5 +1,18 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
-import { DateFieldType } from '@baserow/modules/database/fieldTypes'
+import {
+  BooleanFieldType,
+  DateFieldType,
+  EmailFieldType,
+  LinkRowFieldType,
+  LongTextFieldType,
+  MultipleSelectFieldType,
+  NumberFieldType,
+  PhoneNumberFieldType,
+  RatingFieldType,
+  SingleSelectFieldType,
+  TextFieldType,
+  URLFieldType,
+} from '@baserow/modules/database/fieldTypes'
 
 const mockedFields = {
   text: {
@@ -276,6 +289,147 @@ const datePrepareValueForPaste = [
   },
 ]
 
+const queryParametersForParsing = [
+  {
+    fieldType: new TextFieldType(),
+    input: { value: 'test', field: {} },
+    output: 'test',
+  },
+  {
+    fieldType: new LongTextFieldType(),
+    input: { value: 'test', field: {} },
+    output: 'test',
+  },
+  {
+    fieldType: new NumberFieldType(),
+    input: { value: '123', field: { field: { number_decimal_places: 1 } } },
+    output: '123.0',
+  },
+  {
+    fieldType: new NumberFieldType(),
+    input: {
+      value: 'a string',
+      field: { field: { number_decimal_places: 1 } },
+    },
+    output: new NumberFieldType().getEmptyValue(),
+  },
+  {
+    fieldType: new NumberFieldType(),
+    input: { value: '12.55', field: { field: { number_decimal_places: 1 } } },
+    output: '12.6',
+  },
+  {
+    fieldType: new RatingFieldType(),
+    input: { value: '3', field: {} },
+    output: 3,
+  },
+  {
+    fieldType: new RatingFieldType(),
+    input: { value: 7, field: { max_value: 5 } },
+    output: 5,
+  },
+  {
+    fieldType: new BooleanFieldType(),
+    input: { value: 'true', field: {} },
+    output: true,
+  },
+  {
+    fieldType: new BooleanFieldType(),
+    input: { value: 'a string', field: {} },
+    output: false,
+  },
+  {
+    fieldType: new BooleanFieldType(),
+    input: { value: 'false', field: {} },
+    output: false,
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: { value: '2021-12-04', field: { field: { date_format: 'EU' } } },
+    output: '2021-12-04',
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: {
+      value: '2021-12-04T22:57:00Z',
+      field: { field: { date_format: 'EU' } },
+    },
+    output: '2021-12-04',
+  },
+  {
+    fieldType: new URLFieldType(),
+    input: { value: 'http://www.example.com', field: {} },
+    output: 'http://www.example.com',
+  },
+  {
+    fieldType: new EmailFieldType(),
+    input: { value: 'test@test.com', field: {} },
+    output: 'test@test.com',
+  },
+  {
+    fieldType: new SingleSelectFieldType(),
+    input: {
+      value: 'test',
+      field: { field: { select_options: [{ value: 'test' }] } },
+    },
+    output: { value: 'test' },
+  },
+  {
+    fieldType: new SingleSelectFieldType(),
+    input: {
+      value: 'test2',
+      field: {
+        field: { select_options: [{ value: 'test' }, { value: 'test2' }] },
+      },
+    },
+    output: { value: 'test2' },
+  },
+  {
+    fieldType: new MultipleSelectFieldType(),
+    input: {
+      value: 'test,test2',
+      field: {
+        field: {
+          select_options: [{ value: 'test' }, { value: 'test2' }],
+        },
+      },
+    },
+    output: [{ value: 'test' }, { value: 'test2' }],
+  },
+  {
+    fieldType: new MultipleSelectFieldType(),
+    input: {
+      value: 'test,nonsense',
+      field: {
+        field: {
+          select_options: [{ value: 'test' }, { value: 'test2' }],
+        },
+      },
+    },
+    output: [{ value: 'test' }],
+  },
+  {
+    fieldType: new PhoneNumberFieldType(),
+    input: { value: '+1 (123) 456-7890', field: {} },
+    output: '+1 (123) 456-7890',
+  },
+]
+
+const queryParametersAsyncForParsing = [
+  {
+    fieldType: new LinkRowFieldType(),
+    data: { results: [{ value: 'test', id: 1 }] },
+    input: { value: 'test', field: { field: { id: 20 } } },
+    output: [{ id: 1, value: 'test' }],
+  },
+  {
+    fieldType: new LinkRowFieldType(),
+    data: { results: [{ value: 'some other value', id: 1 }] },
+    input: { value: 'test', field: { field: { id: 20 } } },
+    output: new LinkRowFieldType().getEmptyValue(),
+  },
+]
+
 describe('FieldType tests', () => {
   let testApp = null
   let fieldRegistry = null
@@ -330,6 +484,28 @@ describe('FieldType tests', () => {
         value.fieldValue
       )
       expect(result).toBe(value.expectedValue)
+    }
+  )
+
+  test.each(queryParametersForParsing)(
+    'Verify that parseQueryParameter returns the expected output for each field type',
+    ({ input, output, fieldType }) => {
+      expect(
+        fieldType.parseQueryParameter(input.field, input.value)
+      ).toStrictEqual(output)
+    }
+  )
+
+  test.each(queryParametersAsyncForParsing)(
+    'Verify that parseQueryParameter for async field types returns the correct output',
+    async ({ data, input, output, fieldType }) => {
+      const client = { get: jest.fn().mockReturnValue({ data }) }
+      const result = await fieldType.parseQueryParameter(
+        input.field,
+        input.value,
+        { client, slug: expect.anything() }
+      )
+      expect(result).toStrictEqual(output)
     }
   )
 })

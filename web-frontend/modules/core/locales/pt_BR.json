@@ -269,5 +269,67 @@
         "settingAllowSignupsViaGroupInvitationsName": "Permitir inscrições por meio de convites de grupo",
         "settingAllowSignupsViaGroupInvitationDescription": "Mesmo que a criação de novas contas esteja desativada, esta opção permite que usuários convidados diretamente ainda criem uma conta.",
         "enabled": "ativar"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "",
+            "removeAll": "",
+            "addField": ""
+        },
+        "fieldsDescription": "",
+        "prefillInfoLink": "",
+        "modal": {
+            "title": "",
+            "descriptionPartOne": "",
+            "descriptionPartTwo": "",
+            "howToPrefill": {
+                "title": "",
+                "description": ""
+            },
+            "format": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "example": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "spaces": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "multipleValues": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "specialFieldTypes": {
+                "title": "",
+                "description": "",
+                "ratingField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                },
+                "linkRowField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                },
+                "selectField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                },
+                "dateField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                }
+            }
+        }
     }
 }

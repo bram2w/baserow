@@ -244,5 +244,67 @@
         "settingAllowNewAccountsName": "",
         "settingAllowNewAccountsDescription": "",
         "enabled": ""
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "",
+            "removeAll": "",
+            "addField": ""
+        },
+        "fieldsDescription": "",
+        "prefillInfoLink": "",
+        "modal": {
+            "title": "",
+            "descriptionPartOne": "",
+            "descriptionPartTwo": "",
+            "howToPrefill": {
+                "title": "",
+                "description": ""
+            },
+            "format": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "example": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "spaces": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "multipleValues": {
+                "title": "",
+                "description": "",
+                "codeSnippet": ""
+            },
+            "specialFieldTypes": {
+                "title": "",
+                "description": "",
+                "ratingField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                },
+                "linkRowField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                },
+                "selectField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                },
+                "dateField": {
+                    "title": "",
+                    "description": "",
+                    "codeSnippet": ""
+                }
+            }
+        }
     }
 }

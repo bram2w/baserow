@@ -14,7 +14,7 @@
                   true
                 )
               "
-              >add all</a
+              >{{ $t('formSidebar.actions.addAll') }}</a
             >
           </li>
           <li v-show="enabledFields.length > 0">
@@ -27,7 +27,7 @@
                   true
                 )
               "
-              >remove all</a
+              >{{ $t('formSidebar.actions.removeAll') }}</a
             >
           </li>
         </ul>
@@ -50,7 +50,7 @@
         </FormViewSidebarField>
       </div>
       <p v-else class="form-view__sidebar-fields-description">
-        All the fields are in the form.
+        {{ $t('formSidebar.fieldsDescription') }}
       </p>
       <div v-if="!readOnly">
         <a
@@ -58,7 +58,7 @@
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
         >
           <i class="fas fa-plus"></i>
-          Create new field
+          {{ $t('formSidebar.actions.addField') }}
         </a>
         <CreateFieldContext
           ref="createFieldContext"
@@ -67,6 +67,13 @@
         ></CreateFieldContext>
       </div>
     </div>
+    <div class="form-view__sidebar-prefill-link">
+      <a @click="showFormPrefillModal">
+        <i class="fas fa-question-circle"></i>
+        {{ $t('formSidebar.prefillInfoLink') }}
+      </a>
+      <FormPrefillModal ref="formPrefillModal"></FormPrefillModal>
+    </div>
   </div>
 </template>
 
@@ -74,10 +81,11 @@
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
 import FormViewSidebarField from '@baserow/modules/database/components/view/form/FormViewSidebarField'
+import FormPrefillModal from '@baserow/modules/database/components/view/form/FormPrefillModal'
 
 export default {
   name: 'FormViewSidebar',
-  components: { CreateFieldContext, FormViewSidebarField },
+  components: { FormPrefillModal, CreateFieldContext, FormViewSidebarField },
   mixins: [formViewHelpers],
   props: {
     table: {
@@ -104,6 +112,9 @@ export default {
   methods: {
     order(order) {
       this.$emit('ordered-fields', order)
+    },
+    showFormPrefillModal() {
+      this.$refs.formPrefillModal.show()
     },
   },
 }

@@ -96,11 +96,16 @@ export default {
       required: false,
       default: null,
     },
+    initialDisplayName: {
+      type: [String, null],
+      required: false,
+      default: null,
+    },
   },
   data() {
     return {
       fetched: false,
-      displayName: null,
+      displayName: this.initialDisplayName,
       count: 0,
       page: 1,
       loading: false,

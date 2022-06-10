@@ -11,6 +11,8 @@ For example:
 
 ### New Features
 
+* Added prefill query parameters for forms. [#852](https://gitlab.com/bramw/baserow/-/issues/852)
+
 ### Bug Fixes
 
 * Upload modal no longer closes when removing a file. [#569](https://gitlab.com/bramw/baserow/-/issues/569)
