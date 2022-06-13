@@ -31,6 +31,10 @@
   margin: 0 20px 20px 0;
 }
 
+.api-docs__parameter-name--parent {
+  margin: 0 20px 0 0;
+}
+
 .api-docs__parameter-visible-name {
   color: $color-neutral-700;
   margin-left: 4px;
@@ -61,4 +65,8 @@
 .api-docs__parameter-content {
   margin-top: 8px;
   line-height: 140%;
+}
+
+.api-docs__parameter-content--parent {
+  margin-left: 20px;
 }
