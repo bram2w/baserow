@@ -131,3 +131,17 @@
 .api-docs__content {
   color: $color-primary-900;
 }
+
+.api-docs__heading-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+
+  @media screen and (max-width: $api-docs-breakpoint) {
+    display: block;
+  }
+}
+
+.api-docs__endpoint-type {
+  width: 100px;
+}

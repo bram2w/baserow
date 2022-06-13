@@ -79,6 +79,8 @@
           :user-field-names="exampleData.userFieldNames"
           :get-list-url="getListURL"
           :get-request-example="getRequestExample"
+          :get-batch-request-example="getBatchRequestExample"
+          :get-batch-response-item="getBatchResponseItems"
           :get-response-item="getResponseItem"
           :get-field-mapping="getFieldMapping"
         />
@@ -88,7 +90,10 @@
           :without-read-only="withoutReadOnly"
           :user-field-names="exampleData.userFieldNames"
           :get-item-url="getItemURL"
+          :get-list-url="getListURL"
           :get-request-example="getRequestExample"
+          :get-batch-request-example="getBatchRequestExample"
+          :get-batch-response-item="getBatchResponseItems"
           :get-response-item="getResponseItem"
           :get-field-mapping="getFieldMapping"
         />
@@ -104,6 +109,8 @@
           v-model="exampleData"
           :table="table"
           :get-item-url="getItemURL"
+          :get-delete-list-url="getDeleteListURL"
+          :get-batch-delete-request-example="getBatchDeleteRequestExample"
         />
       </div>
       <APIDocsFilters />
@@ -279,7 +286,7 @@ export default {
     /**
      * Generates an example request object based on the available fields of the table.
      */
-    getRequestExample(table, response = false) {
+    getRequestExample(table, response = false, includeId = false) {
       const item = {}
 
       // In case we are creating a sample response
@@ -291,6 +298,10 @@ export default {
         fieldsToLoopOver = fieldsToLoopOver.filter(
           (field) => !field._.isReadOnly
         )
+      }
+
+      if (includeId) {
+        item.id = 0
       }
 
       fieldsToLoopOver.forEach((field) => {
@@ -306,6 +317,22 @@ export default {
       return item
     },
     /**
+     * Generates an example request object when providing multiple items.
+     */
+    getBatchRequestExample(table, response = false) {
+      return {
+        items: [this.getRequestExample(table, response, true)],
+      }
+    },
+    /**
+     * Generates an example request object for deleting multiple items.
+     */
+    getBatchDeleteRequestExample(table, response = false) {
+      return {
+        items: [0],
+      }
+    },
+    /**
      * Generates an example response object based on the available fields of the table.
      */
     getResponseItem(table) {
@@ -313,7 +340,14 @@ export default {
       Object.assign(item, this.getRequestExample(table, true))
       return item
     },
-
+    /**
+     * Generates an example response object when multiple items are returned.
+     */
+    getBatchResponseItems(table) {
+      return {
+        items: [this.getResponseItem(table)],
+      }
+    },
     /**
      * Returns the mapping of the field id as key and the field name as value.
      */
@@ -328,10 +362,15 @@ export default {
       })
       return mapping
     },
-    getListURL(table, addUserFieldParam) {
+    getListURL(table, addUserFieldParam, batch = false) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${
         table.id
-      }/${addUserFieldParam ? this.userFieldNamesParam : ''}`
+      }/${batch ? 'batch/' : ''}${
+        addUserFieldParam ? this.userFieldNamesParam : ''
+      }`
+    },
+    getDeleteListURL(table) {
+      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/batch-delete/`
     },
     getItemURL(table, addUserFieldParam) {
       return (

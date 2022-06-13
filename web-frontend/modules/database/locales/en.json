@@ -162,6 +162,10 @@
         "description": "Deletes an existing {name} row.",
         "rowId": "The unique identifier of the row that needs to be deleted."
     },
+    "apiDocsTableDeleteRows": {
+        "description": "Deletes existing {name} rows.",
+        "items": "An array of row ids that should be deleted."
+    },
     "apiDocsTableMoveRow": {
         "description": "Moves an existing {name} row before another row. If no `before_id` is provided, then the row will be moved to the end of the table.",
         "rowId": "Moves the row related to the value.",
@@ -172,9 +176,17 @@
         "rowId": "The unique identifier of the row that needs to be updated.",
         "before": "If provided then the newly created row will be positioned before the row with the provided id."
     },
+    "apiDocsTableUpdateRows": {
+        "description": "Updates existing {name} rows.",
+        "id": "The row id."
+    },
     "apiDocsTableCreateRow": {
         "description": "Create a new {name} row.",
         "before": "If provided then the newly created row will be positioned before the row with the provided id."
+    },
+    "apiDocsTableCreateRows": {
+        "description": "Create new {name} rows.",
+        "before": "If provided then the newly created rows will be positioned before the row with the provided id."
     },
     "apiDocsAuth": {
         "description": "Baserow uses a simple token based authentication. You need to generate at least one API token in your {settingsLink} to use the endpoints described below. It is possible to give create, read, update and delete permissions up until table level per token. You can authenticate to the API by providing your API token in the HTTP authorization bearer token header. All API requests must be authenticated and made over HTTPS.",
