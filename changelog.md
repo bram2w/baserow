@@ -16,6 +16,7 @@ For example:
 ### Bug Fixes
 
 * Upload modal no longer closes when removing a file. [#569](https://gitlab.com/bramw/baserow/-/issues/569)
+* API returns a nicer error if URL trailing slash is missing. [798](https://gitlab.com/bramw/baserow/-/issues/798)
 
 ### Breaking Changes
 

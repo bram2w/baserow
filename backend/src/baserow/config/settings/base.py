@@ -59,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "baserow.middleware.BaserowCustomHttp404Middleware",
 ]
 
 ROOT_URLCONF = "baserow.config.urls"
@@ -622,5 +623,7 @@ else:
 BASEROW_SYNC_TEMPLATES_TIME_LIMIT = int(
     os.getenv("BASEROW_SYNC_TEMPLATES_TIME_LIMIT", 60 * 30)
 )
+
+APPEND_SLASH = False
 
 TESTS = False
