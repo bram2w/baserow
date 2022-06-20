@@ -31,6 +31,10 @@ export default {
     CreateViewModal,
   },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
@@ -45,7 +49,7 @@ export default {
       return this.viewType.getDeactivatedText()
     },
     deactivated() {
-      return this.viewType.isDeactivated()
+      return this.viewType.isDeactivated(this.database.group.id)
     },
   },
 }

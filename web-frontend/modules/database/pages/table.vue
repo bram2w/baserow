@@ -97,7 +97,7 @@ export default {
         // filled with initial data so we're going to call the fetch function here.
         const type = app.$registry.get('view', view.type)
 
-        if (type.isDeactivated()) {
+        if (type.isDeactivated(data.database.group.id)) {
           return error({ statusCode: 400, message: type.getDeactivatedText() })
         }
 

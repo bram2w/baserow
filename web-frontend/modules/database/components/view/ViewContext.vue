@@ -26,7 +26,12 @@
         </a>
       </li>
     </ul>
-    <ExportTableModal ref="exportViewModal" :table="table" :view="view" />
+    <ExportTableModal
+      ref="exportViewModal"
+      :database="database"
+      :table="table"
+      :view="view"
+    />
     <WebhookModal ref="webhookModal" :table="table" />
   </Context>
 </template>
@@ -44,6 +49,10 @@ export default {
   components: { ExportTableModal, WebhookModal },
   mixins: [context, error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: true,

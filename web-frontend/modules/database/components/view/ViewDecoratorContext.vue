@@ -2,6 +2,7 @@
   <Context>
     <ViewDecoratorList
       v-if="activeDecorations.length === 0"
+      :database="database"
       :view="view"
       @select="addDecoration($event)"
     />
@@ -92,6 +93,7 @@
         </a>
         <SelectViewDecoratorContext
           ref="selectDecoratorContext"
+          :database="database"
           :view="view"
           @select="
             ;[$refs.selectDecoratorContext.hide(), addDecoration($event)]
@@ -123,6 +125,10 @@ export default {
   },
   mixins: [context, viewDecoration],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     primary: {
       type: Object,
       required: true,

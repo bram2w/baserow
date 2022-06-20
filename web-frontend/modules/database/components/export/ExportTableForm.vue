@@ -19,6 +19,7 @@
           v-model="values.exporter_type"
           :exporter-types="exporterTypes"
           :loading="loading"
+          :database="database"
         ></ExporterTypeChoices>
         <div v-if="$v.values.exporter_type.$error" class="error">
           {{ $t('exportTableForm.typeError') }}
@@ -51,6 +52,10 @@ export default {
   },
   mixins: [form],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

@@ -30,7 +30,7 @@ export class ViewDecoratorType extends Registerable {
   /**
    * Indicates if the decorator type is disabled.
    */
-  isDeactivated({ view }) {
+  isDeactivated(groupId) {
     return false
   }
 

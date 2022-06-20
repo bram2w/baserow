@@ -51,7 +51,11 @@
           </a>
         </li>
       </ul>
-      <ExportTableModal ref="exportTableModal" :table="table" />
+      <ExportTableModal
+        ref="exportTableModal"
+        :database="database"
+        :table="table"
+      />
       <WebhookModal ref="webhookModal" :table="table" />
     </Context>
   </li>

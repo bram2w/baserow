@@ -12,7 +12,7 @@ export class FakeDecoratorType extends ViewDecoratorType {
     return 'first_cell'
   }
 
-  isDeactivated({ view }) {
+  isDeactivated(groupId) {
     return false
   }
 
@@ -138,11 +138,11 @@ describe('GalleryView component with decoration', () => {
     })
     await store.dispatch('view/fetchAll', { id: 1 })
 
-    return { table, primary, fields, view }
+    return { application, table, primary, fields, view }
   }
 
   test('Default component with first_cell decoration', async () => {
-    const { table, primary, fields, view } = await populateStore([
+    const { application, table, primary, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -162,6 +162,7 @@ describe('GalleryView component with decoration', () => {
     store.$registry.register('decoratorValueProvider', fakeValueProvider)
 
     const wrapper1 = await mountComponent({
+      database: application,
       table,
       view,
       primary,
@@ -174,7 +175,7 @@ describe('GalleryView component with decoration', () => {
   })
 
   test('Default component with row wrapper decoration', async () => {
-    const { table, primary, fields, view } = await populateStore([
+    const { application, table, primary, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -210,6 +211,7 @@ describe('GalleryView component with decoration', () => {
     store.$registry.register('decoratorValueProvider', fakeValueProvider)
 
     const wrapper1 = await mountComponent({
+      database: application,
       table,
       view,
       primary,
@@ -222,7 +224,7 @@ describe('GalleryView component with decoration', () => {
   })
 
   test('Default component with unavailable decoration', async () => {
-    const { table, primary, fields, view } = await populateStore([
+    const { application, table, primary, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -239,6 +241,7 @@ describe('GalleryView component with decoration', () => {
     store.$registry.register('decoratorValueProvider', fakeValueProvider)
 
     const wrapper1 = await mountComponent({
+      database: application,
       table,
       view,
       primary,

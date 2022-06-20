@@ -6,6 +6,7 @@
     <ExportTableForm
       ref="form"
       v-slot="{ filename }"
+      :database="database"
       :table="table"
       :view="view"
       :views="views"
@@ -39,6 +40,10 @@ export default {
   components: { ExportTableForm, ExportTableLoadingBar },
   mixins: [modal, error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
