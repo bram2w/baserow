@@ -84,6 +84,7 @@
     ></RowCreateModal>
     <RowEditModal
       ref="rowEditModal"
+      :database="database"
       :table="table"
       :primary="primary"
       :primary-is-sortable="true"

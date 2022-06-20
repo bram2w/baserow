@@ -68,6 +68,7 @@
         :row="row"
         :read-only="readOnly"
         :table="table"
+        :database="database"
       ></component>
     </template>
   </Modal>
@@ -89,6 +90,10 @@ export default {
   },
   mixins: [modal],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

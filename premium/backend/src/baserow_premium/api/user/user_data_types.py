@@ -1,6 +1,6 @@
 from baserow.api.user.registries import UserDataType
 
-from baserow_premium.license.handler import has_active_premium_license
+from baserow_premium.license.handler import has_active_premium_license_for
 
 
 class PremiumUserDataType(UserDataType):
@@ -12,4 +12,6 @@ class PremiumUserDataType(UserDataType):
         user has a valid license for the premioum version.
         """
 
-        return {"valid_license": has_active_premium_license(user)}
+        return {
+            "valid_license": has_active_premium_license_for(user),
+        }

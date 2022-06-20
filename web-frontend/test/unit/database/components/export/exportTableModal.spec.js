@@ -16,19 +16,20 @@ describe('Preview exportTableModal', () => {
 
   async function givenThereIsATableWithView() {
     const table = mockServer.createTable()
-    const database = { tables: [] }
+    const database = { tables: [], group: { id: 0 } }
     await testApp.store.dispatch('table/forceCreate', {
       database,
       data: table,
     })
     const view = mockServer.createGridView(database, table, {})
-    return { table, view }
+    return { database, table, view }
   }
 
   test('Modal with no view', async () => {
-    const { table } = await givenThereIsATableWithView()
+    const { table, database } = await givenThereIsATableWithView()
     const wrapper = await testApp.mount(ExportTableModal, {
       propsData: {
+        database,
         table,
         view: null,
       },
@@ -42,9 +43,10 @@ describe('Preview exportTableModal', () => {
   })
 
   test('Modal with view', async () => {
-    const { table, view } = await givenThereIsATableWithView()
+    const { table, view, database } = await givenThereIsATableWithView()
     const wrapper = await testApp.mount(ExportTableModal, {
       propsData: {
+        database,
         table,
         view,
       },

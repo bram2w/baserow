@@ -5,6 +5,11 @@
  */
 export default {
   props: {
+    database: {
+      type: Object,
+      required: false,
+      default: undefined,
+    },
     view: {
       type: Object,
       required: false,
@@ -57,7 +62,7 @@ export default {
         })
         .filter(
           ({ decoratorType }) =>
-            !decoratorType.isDeactivated({ view: this.view })
+            !decoratorType.isDeactivated(this.database.group.id)
         )
     },
     decorationsByPlace() {

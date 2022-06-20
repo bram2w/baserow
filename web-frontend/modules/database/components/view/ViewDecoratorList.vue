@@ -20,6 +20,10 @@ export default {
   name: 'ViewDecoratorList',
   components: { ViewDecoratorItem },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: true,
@@ -35,17 +39,12 @@ export default {
   methods: {
     isDisabled(decoratorType) {
       return (
-        decoratorType.isDeactivated({
-          view: this.view,
-        }) || !decoratorType.canAdd({ view: this.view })[0]
+        decoratorType.isDeactivated(this.database.group.id) ||
+        !decoratorType.canAdd({ view: this.view })[0]
       )
     },
     getTooltip(decoratorType) {
-      if (
-        decoratorType.isDeactivated({
-          view: this.view,
-        })
-      ) {
+      if (decoratorType.isDeactivated(this.database.group.id)) {
         return decoratorType.getDeactivatedText()
       }
       const [canAdd, disabledReason] = decoratorType.canAdd({ view: this.view })

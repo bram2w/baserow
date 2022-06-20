@@ -12,6 +12,7 @@
             :exporter-type="exporterType"
             :active="value !== null && value === exporterType.type"
             :disabled="loading"
+            :database="database"
             @selected="switchToExporterType(exporterType.type)"
           >
           </ExporterTypeChoice>
@@ -28,6 +29,10 @@ export default {
   name: 'ExporterTypeChoices',
   components: { ExporterTypeChoice },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     exporterTypes: {
       required: true,
       type: Array,

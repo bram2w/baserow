@@ -3,7 +3,7 @@ import binascii
 import hashlib
 import json
 import logging
-from typing import Union, List
+from typing import Union, List, Dict, Any
 from os.path import dirname, join
 from dateutil import parser
 
@@ -75,7 +75,7 @@ def has_active_premium_license(user: DjangoUser) -> bool:
     return False
 
 
-def check_active_premium_license(user):
+def check_active_premium_license(user: DjangoUser):
     """
     Raises the `NoPremiumLicenseError` if the user does not have an active premium
     license.
@@ -83,6 +83,35 @@ def check_active_premium_license(user):
 
     if not has_active_premium_license(user):
         raise NoPremiumLicenseError()
+
+
+def has_active_premium_license_for(
+    user: DjangoUser,
+) -> Union[bool, List[Dict[str, Any]]]:
+    """
+    Check for which objects the user has an active license. If `True` is returned it
+    means that the user has premium access to everything. If an object is returned,
+    it means that the user only has access to the specific objects. For now,
+    it's only possible to grant access to specific groups.
+
+    Example complex return value:
+
+    [
+      {
+        "type": "group",
+        "id": 1,
+      },
+      {
+        "type": "group",
+        "id": 2,
+      }
+    ]
+
+    :param user: The user for whom must be checked if it has an active license.
+    :return: To which groups the user has an active premium license for.
+    """
+
+    return has_active_premium_license(user)
 
 
 def get_public_key():

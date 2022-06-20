@@ -19,6 +19,10 @@
 export default {
   name: 'ExporterTypeChoice',
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     exporterType: {
       required: true,
       type: Object,
@@ -41,7 +45,7 @@ export default {
     deactivated() {
       return this.$registry
         .get('exporter', this.exporterType.type)
-        .isDeactivated()
+        .isDeactivated(this.database.group.id)
     },
   },
   methods: {

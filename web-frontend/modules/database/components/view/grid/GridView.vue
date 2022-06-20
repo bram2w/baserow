@@ -182,6 +182,7 @@
     </Context>
     <RowEditModal
       ref="rowEditModal"
+      :database="database"
       :table="table"
       :primary="primary"
       :visible-fields="[primary].concat(visibleFields)"

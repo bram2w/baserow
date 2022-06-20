@@ -12,9 +12,10 @@ class PremiumViewType extends ViewType {
     return this.app.i18n.t('premium.deactivated')
   }
 
-  isDeactivated() {
+  isDeactivated(groupId) {
     return !PremiumPlugin.hasValidPremiumLicense(
-      this.app.store.getters['auth/getAdditionalUserData']
+      this.app.store.getters['auth/getAdditionalUserData'],
+      groupId
     )
   }
 }

@@ -42,12 +42,12 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
     return i18n.t('viewDecoratorType.onlyForPremium')
   }
 
-  isDeactivated() {
+  isDeactivated(groupId) {
     const { store } = this.app
 
     const additionalUserData = store.getters['auth/getAdditionalUserData']
 
-    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData)) {
+    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData, groupId)) {
       return false
     }
     return true
@@ -141,12 +141,12 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
     return i18n.t('viewDecoratorType.onlyForPremium')
   }
 
-  isDeactivated() {
+  isDeactivated(groupId) {
     const { store } = this.app
 
     const additionalUserData = store.getters['auth/getAdditionalUserData']
 
-    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData)) {
+    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData, groupId)) {
       return false
     }
     return true

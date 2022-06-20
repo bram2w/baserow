@@ -2,6 +2,7 @@
   <RowEditModal
     ref="modal"
     :read-only="true"
+    :database="database"
     :table="table"
     :rows="[]"
     :visible-fields="fields"
@@ -38,6 +39,26 @@ export default {
       fields: [],
       primary: undefined,
     }
+  },
+  computed: {
+    database() {
+      const databaseType = DatabaseApplicationType.getType()
+      for (const application of this.$store.getters['application/getAll']) {
+        if (application.type !== databaseType) {
+          continue
+        }
+
+        const foundTable = application.tables.find(
+          ({ id }) => id === this.tableId
+        )
+
+        if (foundTable) {
+          return application
+        }
+      }
+
+      return undefined
+    },
   },
   methods: {
     async fetchTableAndFields() {

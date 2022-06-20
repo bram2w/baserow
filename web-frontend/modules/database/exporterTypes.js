@@ -75,7 +75,7 @@ export class TableExporterType extends Registerable {
   /**
    * Indicates if the exporter type is disabled.
    */
-  isDeactivated() {
+  isDeactivated(groupId) {
     return false
   }
 }

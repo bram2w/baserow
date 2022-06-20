@@ -17,6 +17,7 @@
     </a>
     <ViewDecoratorContext
       ref="context"
+      :database="database"
       :view="view"
       :table="table"
       :fields="fields"
@@ -34,6 +35,10 @@ export default {
   name: 'ViewDecoratorMenu',
   components: { ViewDecoratorContext },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     primary: {
       type: Object,
       required: true,
@@ -60,7 +65,7 @@ export default {
       return this.view.decorations.filter(({ type }) => {
         return !this.$registry
           .get('viewDecorator', type)
-          .isDeactivated({ view: this.view })
+          .isDeactivated(this.database.group.id)
       }).length
     },
   },
