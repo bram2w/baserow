@@ -116,7 +116,7 @@ export default {
         try {
           // Attempt to connect to the backend using the configured PUBLIC_BACKEND_URL
           // just in-case it is actually configured correctly.
-          await this.$client.get('_health')
+          await this.$client.get('_health/')
         } catch (error) {
           const publicBackendUrlWithProto =
             publicBackendUrl.protocol + '//' + publicBackendUrl.host
