@@ -27,7 +27,8 @@
         "comment": "Comment"
     },
     "rowComment": {
-        "you": "You"
+        "you": "You",
+        "anonymous": "Anonymous"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Register a license",

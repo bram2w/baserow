@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 * Added prefill query parameters for forms. [#852](https://gitlab.com/bramw/baserow/-/issues/852)
+* Added possibility to delete own user account [#880](https://gitlab.com/bramw/baserow/-/issues/880)
 
 ### Bug Fixes
 
@@ -58,7 +59,7 @@ For example:
 * Added new environment variable BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
 * Fix aggregation not updated on filter update
 
-## Released (2022-05-10 1.10.0)
+## Released (2022-10-05 1.10.0)
 
 * Added batch create/update/delete rows endpoints. These endpoints make it possible to
   modify multiple rows at once. Currently, row created, row updated, and row deleted 

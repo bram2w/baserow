@@ -1,0 +1,27 @@
+<% layout("../../base.layout.eta") %>
+
+<mj-section>
+  <mj-column>
+    <mj-text mj-class="title">{% trans "Account pending deletion" %}</mj-text>
+    <mj-text mj-class="text">
+      {% blocktrans trimmed with user.username as username and public_web_frontend_hostname as public_web_frontend_hostname %}
+        Your account ({{ username }}) on
+        Baserow ({{ public_web_frontend_hostname }}) will be permanently
+        deleted in {{ days_left }} days.
+      {% endblocktrans %}
+    </mj-text>
+    <mj-text mj-class="text" padding-bottom="20px">
+      {% blocktrans trimmed %}
+        If you've changed your mind and want to cancel your account deletion,
+        you just have to login again.
+      {% endblocktrans %}
+    </mj-text>
+    <mj-text mj-class="text">
+      {% blocktrans trimmed %}
+        Baserow is an open source no-code database tool which allows you to collaborate
+        on projects, customers and more. It gives you the powers of a developer without
+        leaving your browser.
+      {% endblocktrans %}
+    </mj-text>
+  </mj-column>
+</mj-section>

@@ -5,6 +5,7 @@ import { Registry } from '@baserow/modules/core/registry'
 import {
   AccountSettingsType,
   PasswordSettingsType,
+  DeleteAccountSettingsType,
 } from '@baserow/modules/core/settingsTypes'
 import {
   UploadFileUserFileUploadType,
@@ -51,6 +52,7 @@ export default (context, inject) => {
   registry.registerNamespace('userFileUpload')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
+  registry.register('settings', new DeleteAccountSettingsType(context))
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(
     'userFileUpload',

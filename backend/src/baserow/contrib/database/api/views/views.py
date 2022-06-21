@@ -1090,7 +1090,7 @@ class ViewDecorationView(APIView):
         responses={
             204: None,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
-            404: get_error_schema(["ERROR_VIEW_decoration_DOES_NOT_EXIST"]),
+            404: get_error_schema(["ERROR_VIEW_DECORATION_DOES_NOT_EXIST"]),
         },
     )
     @transaction.atomic

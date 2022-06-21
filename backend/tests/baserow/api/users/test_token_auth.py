@@ -110,6 +110,20 @@ def test_token_auth(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert json["non_field_errors"][0] == "User account is disabled."
 
+    # Check that a login cancel user deletion
+    user_to_be_deleted = data_fixture.create_user(
+        email="test3@test.nl", password="password", to_be_deleted=True
+    )
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"username": "test3@test.nl", "password": "password"},
+        format="json",
+    )
+
+    user_to_be_deleted.refresh_from_db()
+
+    assert user_to_be_deleted.profile.to_be_deleted is False
+
 
 @pytest.mark.django_db
 def test_token_refresh(api_client, data_fixture):

@@ -75,6 +75,13 @@ class Settings(models.Model):
         default=True,
         help_text="Indicates whether users can request a password reset link.",
     )
+    account_deletion_grace_delay = models.PositiveSmallIntegerField(
+        default=30,
+        help_text=(
+            "Number of days after the last login for an account pending deletion "
+            "to be deleted"
+        ),
+    )
 
 
 class UserProfile(models.Model):
@@ -90,6 +97,11 @@ class UserProfile(models.Model):
         default=settings.LANGUAGE_CODE,
         help_text="An ISO 639 language code (with optional variant) "
         "selected by the user. Ex: en-GB.",
+    )
+    to_be_deleted = models.BooleanField(
+        default=False,
+        help_text="True if the user is pending deletion. "
+        "An automatic task will delete the user after a grace delay.",
     )
 
 

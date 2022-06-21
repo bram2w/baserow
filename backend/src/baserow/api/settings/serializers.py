@@ -10,11 +10,13 @@ class SettingsSerializer(serializers.ModelSerializer):
             "allow_new_signups",
             "allow_signups_via_group_invitations",
             "allow_reset_password",
+            "account_deletion_grace_delay",
         )
         extra_kwargs = {
             "allow_new_signups": {"required": False},
             "allow_signups_via_group_invitations": {"required": False},
             "allow_reset_password": {"required": False},
+            "account_deletion_grace_delay": {"required": False},
         }
 
 

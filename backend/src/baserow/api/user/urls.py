@@ -2,6 +2,7 @@ from django.urls import re_path
 
 from .views import (
     AccountView,
+    ScheduleAccountDeletionView,
     UserView,
     SendResetPasswordEmailView,
     ResetPasswordView,
@@ -19,6 +20,11 @@ app_name = "baserow.api.user"
 
 urlpatterns = [
     re_path(r"^account/$", AccountView.as_view(), name="account"),
+    re_path(
+        r"^schedule-account-deletion/$",
+        ScheduleAccountDeletionView.as_view(),
+        name="schedule_account_deletion",
+    ),
     re_path(r"^token-auth/$", ObtainJSONWebToken.as_view(), name="token_auth"),
     re_path(r"^token-refresh/$", RefreshJSONWebToken.as_view(), name="token_refresh"),
     re_path(r"^token-verify/$", VerifyJSONWebToken.as_view(), name="token_verify"),
