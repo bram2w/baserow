@@ -9,7 +9,7 @@
   "icon": "file://logo.png",
   "tags": ["no-code", "nocode", "database", "data", "collaborate", "airtable"],
   "version": "1.10.1",
-  "healthCheckPath": "/api/_health",
+  "healthCheckPath": "/api/_health/",
   "httpPort": 80,
   "addons": {
     "postgresql": {},
