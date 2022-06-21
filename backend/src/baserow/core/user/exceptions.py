@@ -14,6 +14,10 @@ class InvalidPassword(Exception):
     """Raised when the provided password is incorrect."""
 
 
+class UserIsLastAdmin(Exception):
+    """Raised when a user wants to delete himself but is the last site wide admin."""
+
+
 class DisabledSignupError(Exception):
     """
     Raised when a user account is created when the new signup setting is disabled.

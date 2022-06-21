@@ -1,4 +1,5 @@
 import os
+import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 import pytest
@@ -7,6 +8,8 @@ from itsdangerous.exc import SignatureExpired, BadSignature
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth.models import update_last_login
+from django.db import connections
 
 from baserow.contrib.database.models import (
     Database,
@@ -17,6 +20,7 @@ from baserow.contrib.database.models import (
     BooleanField,
     DateField,
 )
+from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.views.models import GridViewFieldOptions
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
@@ -28,6 +32,7 @@ from baserow.core.models import Group, GroupUser
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     UserAlreadyExist,
+    UserIsLastAdmin,
     UserNotFound,
     PasswordDoesNotMatchValidation,
     InvalidPassword,
@@ -424,3 +429,161 @@ def test_change_password_invalid_new_password(data_fixture, invalid_password):
 
     user.refresh_from_db()
     assert user.check_password(validOldPW)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_schedule_user_deletion(data_fixture, mailoutbox):
+    valid_password = "aValidPassword"
+    invalid_password = "invalidPassword"
+    user = data_fixture.create_user(
+        email="test@localhost", password=valid_password, is_staff=True
+    )
+    handler = UserHandler()
+
+    with pytest.raises(UserIsLastAdmin):
+        handler.schedule_user_deletion(user, valid_password)
+
+    data_fixture.create_user(email="test_admin@localhost", is_staff=True)
+
+    with pytest.raises(InvalidPassword):
+        handler.schedule_user_deletion(user, invalid_password)
+
+    assert len(mailoutbox) == 0
+
+    handler.schedule_user_deletion(user, valid_password)
+
+    user.refresh_from_db()
+    assert user.profile.to_be_deleted is True
+
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == "Account deletion scheduled - Baserow"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cancel_user_deletion(data_fixture, mailoutbox):
+    user = data_fixture.create_user(email="test@localhost", to_be_deleted=True)
+    handler = UserHandler()
+
+    handler.cancel_user_deletion(user)
+
+    user.refresh_from_db()
+    assert user.profile.to_be_deleted is False
+
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == "Account deletion cancelled - Baserow"
+
+
+@pytest.mark.django_db(transaction=False)
+def test_delete_expired_user(
+    data_fixture, mailoutbox, django_capture_on_commit_callbacks
+):
+    user1 = data_fixture.create_user(email="test1@localhost", to_be_deleted=True)
+    user2 = data_fixture.create_user(email="test2@localhost", to_be_deleted=True)
+    user3 = data_fixture.create_user(email="test3@localhost")
+    user4 = data_fixture.create_user(email="test4@localhost")
+    user5 = data_fixture.create_user(email="test5@localhost", to_be_deleted=True)
+    user6 = data_fixture.create_user(email="test6@localhost", is_active=False)
+
+    connection = connections["default"]
+    initial_table_names = sorted(connection.introspection.table_names())
+
+    database = data_fixture.create_database_application(user=user1)
+    # The link field and the many to many table should be deleted at the end
+    table, table2, link_field = data_fixture.create_two_linked_tables(
+        user=user1, database=database
+    )
+
+    model_a = table.get_model()
+    row_a_1 = model_a.objects.create()
+    row_a_2 = model_a.objects.create()
+
+    model_b = table2.get_model()
+    row_b_1 = model_b.objects.create()
+    row_b_2 = model_b.objects.create()
+
+    getattr(row_a_1, f"field_{link_field.id}").set([row_b_1.id, row_b_2.id])
+    getattr(row_a_2, f"field_{link_field.id}").set([row_b_2.id])
+
+    # Create a multiple select field with option (creates an extra table that should
+    # be deleted at the end)
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+
+    # Only one deleted admin
+    groupuser1 = data_fixture.create_user_group(user=user1)
+
+    # With two admins that are going to be deleted and one user
+    groupuser1_2 = data_fixture.create_user_group(user=user1)
+    groupuser5_2 = data_fixture.create_user_group(user=user5, group=groupuser1_2.group)
+    groupuser3 = data_fixture.create_user_group(
+        user=user3, permissions="MEMBER", group=groupuser1_2.group
+    )
+
+    # With two admins but one non active and we delete the other
+    groupuser1_3 = data_fixture.create_user_group(user=user1)
+    groupuser6 = data_fixture.create_user_group(user=user6, group=groupuser1_3.group)
+
+    # Only one non deleted admin
+    groupuser2 = data_fixture.create_user_group(user=user2)
+
+    # Only one admin non deleted and with a deleted user
+    groupuser4 = data_fixture.create_user_group(user=user4)
+    groupuser5 = data_fixture.create_user_group(
+        user=user5, permissions="MEMBER", group=groupuser4.group
+    )
+
+    # One deleted admin with normal user
+    groupuser4_2 = data_fixture.create_user_group(user=user4, permissions="MEMBER")
+    groupuser5_3 = data_fixture.create_user_group(user=user5, group=groupuser4_2.group)
+
+    handler = UserHandler()
+
+    # Last login before max expiration date (should be deleted)
+    with freeze_time("2020-01-01 12:00"):
+        update_last_login(None, user1)
+        update_last_login(None, user3)
+        update_last_login(None, user5)
+
+    # Last login after max expiration date (shouldn't be deleted)
+    with freeze_time("2020-01-05 12:00"):
+        update_last_login(None, user2)
+        update_last_login(None, user4)
+
+    with freeze_time("2020-01-07 12:00"):
+        with django_capture_on_commit_callbacks(execute=True):
+            handler.delete_expired_users(grace_delay=datetime.timedelta(days=3))
+
+    user_ids = User.objects.values_list("pk", flat=True)
+    assert len(user_ids) == 4
+    assert user1.id not in user_ids
+    assert user5.id not in user_ids
+    assert user2.id in user_ids
+    assert user3.id in user_ids
+    assert user4.id in user_ids
+    assert user6.id in user_ids
+
+    group_ids = Group.objects.values_list("pk", flat=True)
+    assert len(group_ids) == 2
+    assert groupuser1.group.id not in group_ids
+    assert groupuser1_2.group.id not in group_ids
+    assert groupuser1_3.group.id not in group_ids
+    assert groupuser2.group.id in group_ids
+    assert groupuser4.group.id in group_ids
+    assert groupuser4_2.group.id not in group_ids
+
+    end_table_names = sorted(connection.introspection.table_names())
+
+    # Check that everything has really been deleted
+    assert Database.objects.count() == 0
+    assert Table.objects.count() == 0
+    assert SelectOption.objects.count() == 0
+    assert initial_table_names == end_table_names
+
+    # Check mail sent
+    assert len(mailoutbox) == 2
+    assert mailoutbox[0].subject == "Account permanently deleted - Baserow"

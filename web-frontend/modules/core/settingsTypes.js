@@ -1,6 +1,7 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import PasswordSettings from '@baserow/modules/core/components/settings/PasswordSettings'
 import AccountSettings from '@baserow/modules/core/components/settings/AccountSettings'
+import DeleteAccountSettings from '@baserow/modules/core/components/settings/DeleteAccountSettings'
 
 /**
  * All settings types will be added to the settings modal.
@@ -58,6 +59,10 @@ export class SettingsType extends Registerable {
       name: this.getName(),
     }
   }
+
+  getOrder() {
+    return 50
+  }
 }
 
 export class AccountSettingsType extends SettingsType {
@@ -95,5 +100,28 @@ export class PasswordSettingsType extends SettingsType {
 
   getComponent() {
     return PasswordSettings
+  }
+}
+
+export class DeleteAccountSettingsType extends SettingsType {
+  static getType() {
+    return 'delete-account'
+  }
+
+  getIconClass() {
+    return 'user-slash'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('settingType.deleteAccount')
+  }
+
+  getComponent() {
+    return DeleteAccountSettings
+  }
+
+  getOrder() {
+    return 60
   }
 }

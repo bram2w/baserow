@@ -39,7 +39,8 @@
     "settingType": {
         "account": "Account",
         "password": "Password",
-        "tokens": "API Tokens"
+        "tokens": "API Tokens",
+        "deleteAccount": "Delete account"
     },
     "userFileUploadType": {
         "file": "my device",

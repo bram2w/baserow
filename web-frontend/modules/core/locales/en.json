@@ -47,6 +47,26 @@
         "errorInvalidOldPasswordTitle": "Invalid password",
         "errorInvalidOldPasswordMessage": "Could not change your password because your old password is invalid."
     },
+    "deleteAccountSettings": {
+        "title": "Delete account",
+        "description": "You can schedule the deletion of your account by entering your current password and clicking the button. Your account will be permanently deleted after {days} days. In the meantime, if you log in again, your account deletion will be cancelled.",
+        "groupNotice": "Orphan groups will be deleted",
+        "groupNoticeDescription": "When your account is permanently deleted, all groups and associated data for which you are the last active user with Admin permissions will also be deleted. The groups shown below are the ones that will be deleted because you are the only admin. To prevent them being deleted you must first give another user admin before deleting your account.",
+        "orphanGroups": "Will also be permanently deleted after the grace time",
+        "orphanGroupMemberCount": "shared with nobody|shared with one user|shared with {count} users",
+        "password": "Password",
+        "passwordConfirm": "Repeat password",
+        "repeatPasswordMatchError": "This field must match the first password field.",
+        "submitButton": "Delete account",
+        "errorInvalidPasswordTitle": "Invalid password",
+        "errorInvalidPasswordMessage": "Could not delete your account because your password is invalid.",
+        "errorUserIsLastAdminTitle": "Last administrator",
+        "errorUserIsLastAdminMessage": "Could not delete your account because your are the last administrator of this Baserow instance.",
+        "accountDeletedSuccessTitle": "Account deletion scheduled",
+        "accountDeletedSuccessMessage": "Your account has been scheduled to be deleted.",
+        "groupLoadingError": "Groups checking has failed",
+        "groupLoadingErrorDescription": "Checking the groups to be deleted failed, please refresh the page."
+    },
     "error": {
         "alreadyExistsTitle": "User already exists",
         "alreadyExistsMessage": "A user with the provided e-mail address already exists.",
@@ -277,6 +297,10 @@
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",
         "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
+        "userDeletionGraceDelay": "User deletion",
+        "settingUserDeletionGraceDelay": "Grace delay",
+        "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
+        "invalidAccountDeletionGraceDelay": "This value is required and must be a positive integer smaller than 32000",
         "enabled": "enabled"
     },
     "formSidebar": {

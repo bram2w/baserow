@@ -49,11 +49,11 @@ class TableFixtures:
 
         return table, fields, created_rows
 
-    def create_two_linked_tables(self, user=None, **kwargs):
+    def create_two_linked_tables(self, user=None, database=None):
         if user is None:
             user = self.create_user()
 
-        if "database" not in kwargs:
+        if not database:
             database = self.create_database_application(user=user)
 
         table_a = self.create_database_table(database=database, name="table_a")

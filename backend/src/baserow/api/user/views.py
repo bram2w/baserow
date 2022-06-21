@@ -2,6 +2,7 @@ from typing import List
 
 from django.conf import settings
 from django.db import transaction
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
@@ -37,6 +38,7 @@ from baserow.core.exceptions import (
 from baserow.core.models import GroupInvitation, Template
 from baserow.core.user.exceptions import (
     UserAlreadyExist,
+    UserIsLastAdmin,
     UserNotFound,
     InvalidPassword,
     DisabledSignupError,
@@ -46,8 +48,10 @@ from baserow.core.user.handler import UserHandler
 from baserow.api.sessions import get_untrusted_client_session_id
 from .errors import (
     ERROR_ALREADY_EXISTS,
+    ERROR_USER_IS_LAST_ADMIN,
     ERROR_USER_NOT_FOUND,
     ERROR_INVALID_OLD_PASSWORD,
+    ERROR_INVALID_PASSWORD,
     ERROR_DISABLED_SIGNUP,
     ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
     ERROR_DISABLED_RESET_PASSWORD,
@@ -61,6 +65,7 @@ from .serializers import (
     SendResetPasswordEmailBodyValidationSerializer,
     ResetPasswordBodyValidationSerializer,
     ChangePasswordBodyValidationSerializer,
+    DeleteUserBodyValidationSerializer,
     NormalizedEmailWebTokenSerializer,
     DashboardSerializer,
     UndoRedoRequestSerializer,
@@ -361,13 +366,53 @@ class AccountView(APIView):
     @transaction.atomic
     @validate_body(AccountSerializer)
     def patch(self, request, data):
-        """Update editable user account information."""
+        """Updates editable user account information."""
 
         user = UserHandler().update_user(
             request.user,
             **data,
         )
         return Response(AccountSerializer(user).data)
+
+
+class ScheduleAccountDeletionView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["User"],
+        request=DeleteUserBodyValidationSerializer,
+        operation_id="schedule_account_deletion",
+        description=(
+            "Schedules the account deletion of the authenticated user. "
+            "The user will be permanently deleted after the grace delay defined "
+            "by the instance administrator."
+        ),
+        responses={
+            204: None,
+            400: get_error_schema(
+                [
+                    "ERROR_INVALID_PASSWORD",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            InvalidPassword: ERROR_INVALID_PASSWORD,
+            UserIsLastAdmin: ERROR_USER_IS_LAST_ADMIN,
+        }
+    )
+    @validate_body(DeleteUserBodyValidationSerializer)
+    def post(self, request, data):
+        """Schedules user account deletion."""
+
+        UserHandler().schedule_user_deletion(
+            request.user,
+            **data,
+        )
+        return Response(status=204)
 
 
 class DashboardView(APIView):

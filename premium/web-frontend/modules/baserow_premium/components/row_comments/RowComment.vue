@@ -5,11 +5,11 @@
   >
     <div class="row-comments__comment-head">
       <div class="row-comments__comment-head-initial">
-        {{ comment.first_name | nameAbbreviation }}
+        {{ firstName | nameAbbreviation }}
       </div>
       <div class="row-comments__comment-head-details">
         <div class="row-comments__comment-head-name">
-          {{ ownComment ? $t('rowComment.you') : comment.first_name }}
+          {{ ownComment ? $t('rowComment.you') : firstName }}
         </div>
         <div :title="localTimestamp" class="row-comments__comment-head-time">
           {{ timeAgo }}
@@ -37,6 +37,12 @@ export default {
     ...mapGetters({
       userId: 'auth/getUserId',
     }),
+    firstName() {
+      if (this.comment.user_id === null) {
+        return this.$t('rowComment.anonymous')
+      }
+      return this.comment.first_name
+    },
     ownComment() {
       return this.comment.user_id === this.userId
     },

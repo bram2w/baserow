@@ -2,7 +2,6 @@ from typing import List
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import update_last_login
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -13,8 +12,9 @@ from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.api.user.validators import password_validation, language_validation
 from baserow.core.action.models import Action
 from baserow.core.action.registries import action_scope_registry, ActionScopeStr
-from baserow.core.models import Template, UserLogEntry
+from baserow.core.models import Template
 from baserow.core.user.utils import normalize_email_address
+from baserow.core.user.handler import UserHandler
 
 User = get_user_model()
 
@@ -223,6 +223,10 @@ class ChangePasswordBodyValidationSerializer(serializers.Serializer):
     new_password = serializers.CharField(validators=[password_validation])
 
 
+class DeleteUserBodyValidationSerializer(serializers.Serializer):
+    password = serializers.CharField()
+
+
 class NormalizedEmailField(serializers.EmailField):
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -250,14 +254,8 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
             msg = "User account is disabled."
             raise serializers.ValidationError(msg)
 
-        update_last_login(None, user)
-        UserLogEntry.objects.create(actor=user, action="SIGNED_IN")
-        # Call the user_signed_in method for each plugin that is un the registry to
-        # notify all plugins that a user has signed in.
-        from baserow.core.registries import plugin_registry
+        UserHandler().user_signed_in(user)
 
-        for plugin in plugin_registry.registry.values():
-            plugin.user_signed_in(user)
         return validated_data
 
 

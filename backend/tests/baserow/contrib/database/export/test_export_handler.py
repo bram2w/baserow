@@ -528,7 +528,7 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
     assert job_which_fails.error == "Failed"
     table_exporter_registry.unregister("broken")
 
-    # We do not expect an error because canceled errors should be ignored.
+    # We do not expect an error because cancelled errors should be ignored.
     job_which_fails = handler.create_pending_export_job(
         user, table, None, {"exporter_type": "cancelled"}
     )

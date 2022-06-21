@@ -34,6 +34,7 @@ class UserFixtures:
         session_id = kwargs.pop("session_id", "default-test-user-session-id")
 
         profile_data["language"] = kwargs.pop("language", "en")
+        profile_data["to_be_deleted"] = kwargs.pop("to_be_deleted", False)
 
         user = User(**kwargs)
         user.set_password(kwargs["password"])

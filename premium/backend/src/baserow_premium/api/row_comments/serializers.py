@@ -9,7 +9,9 @@ User = get_user_model()
 
 
 class RowCommentSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(max_length=32, source="user.first_name")
+    first_name = serializers.CharField(
+        max_length=32, source="user.first_name", required=False
+    )
 
     class Meta:
         model = RowComment

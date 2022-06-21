@@ -15,6 +15,7 @@ import Copied from '@baserow/modules/core/components/Copied'
 import MarkdownIt from '@baserow/modules/core/components/MarkdownIt'
 import DownloadLink from '@baserow/modules/core/components/DownloadLink'
 import FormElement from '@baserow/modules/core/components/FormElement'
+import Alert from '@baserow/modules/core/components/Alert'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -36,6 +37,7 @@ Vue.component('DropdownItem', DropdownItem)
 Vue.component('Checkbox', Checkbox)
 Vue.component('Radio', Radio)
 Vue.component('Scrollbars', Scrollbars)
+Vue.component('Alert', Alert)
 Vue.component('Error', Error)
 Vue.component('SwitchInput', SwitchInput)
 Vue.component('Copied', Copied)
