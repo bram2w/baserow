@@ -2,9 +2,8 @@
   <div class="dashboard__group">
     <div class="dashboard__group-head">
       <div
-        ref="contextLink"
         class="dashboard__group-title"
-        :class="{ 'dashboard__group-title-link--loading': group._.loading }"
+        :class="{ 'dashboard__group-title--loading': group._.loading }"
       >
         <Editable
           ref="rename"
@@ -12,8 +11,9 @@
           @change="renameGroup(group, $event)"
         ></Editable>
         <a
+          ref="contextLink"
           class="dashboard__group-title-options"
-          @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
+          @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
         >
           <i class="dashboard__group-title-icon fas fa-caret-down"></i>
         </a>
@@ -23,13 +23,26 @@
         :group="group"
         @rename="enableRename()"
       ></GroupContext>
-      <a
-        v-if="group.permissions === 'ADMIN'"
-        class="dashboard__group-link"
-        @click="$refs.context.showGroupMembersModal()"
-        >{{ $t('dashboardGroup.showMembers') }}</a
-      >
+      <div class="dashboard__group-title-extra">
+        <component
+          :is="component"
+          v-for="(component, index) in dashboardGroupExtraComponents"
+          :key="index"
+          :group="group"
+        ></component>
+        <a
+          v-if="group.permissions === 'ADMIN'"
+          class="dashboard__group-link"
+          @click="$refs.context.showGroupMembersModal()"
+          >{{ $t('dashboardGroup.showMembers') }}</a
+        >
+      </div>
     </div>
+    <component
+      :is="component"
+      v-for="(component, index) in dashboardGroupComponents"
+      :key="index"
+    ></component>
     <ul class="dashboard__group-items">
       <li
         v-for="application in getAllOfGroup(group)"
@@ -96,6 +109,16 @@ export default {
     },
   },
   computed: {
+    dashboardGroupExtraComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getDashboardGroupExtraComponent())
+        .filter((component) => component !== null)
+    },
+    dashboardGroupComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getDashboardGroupComponent())
+        .filter((component) => component !== null)
+    },
     ...mapGetters({
       getAllOfGroup: 'application/getAllOfGroup',
     }),

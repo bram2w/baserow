@@ -12,6 +12,8 @@ For example:
 ### New Features
 
 * Added prefill query parameters for forms. [#852](https://gitlab.com/bramw/baserow/-/issues/852)
+* Made the styling of the dashboard cleaner and more efficient.
+  [#1023](https://gitlab.com/bramw/baserow/-/issues/1023)
 * Added possibility to delete own user account [#880](https://gitlab.com/bramw/baserow/-/issues/880)
 
 ### Bug Fixes
