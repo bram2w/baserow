@@ -174,6 +174,7 @@ import {
   VarianceViewAggregationType,
   MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
+import { DatabasePlugin } from '@baserow/modules/database/plugins'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -211,6 +212,7 @@ export default (context) => {
   app.$registry.registerNamespace('viewDecorator')
   app.$registry.registerNamespace('decoratorValueProvider')
 
+  app.$registry.register('plugin', new DatabasePlugin(context))
   app.$registry.register('application', new DatabaseApplicationType(context))
   app.$registry.register('view', new GridViewType(context))
   app.$registry.register('view', new GalleryViewType(context))

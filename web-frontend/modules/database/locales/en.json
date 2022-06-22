@@ -591,5 +591,8 @@
     },
     "viewDecoratorContext": {
         "addDecorator": "add decorator"
+    },
+    "databaseDashboardSidebarLinks": {
+        "apiDocumentation": "API documentation"
     }
 }

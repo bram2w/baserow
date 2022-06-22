@@ -254,6 +254,15 @@
         "shareOnFacebook": "Share on Facebook",
         "shareOnLinkedIn": "Share on LinkedIn"
     },
+    "dashboardSidebar": {
+        "groups": "Groups",
+        "links": "Links",
+        "knowledgeBase": "Knowledge base",
+        "tutorials": "Tutorials",
+        "userSettings": "User settings",
+        "trash": "Trash",
+        "logoff": "Logoff"
+    },
     "login": {
         "title": "Login",
         "forgotPassword": "Forgot password"

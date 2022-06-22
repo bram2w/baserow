@@ -31,4 +31,28 @@ export class BaserowPlugin extends Registerable {
   getSidebarMainMenuComponent() {
     return null
   }
+
+  /*
+   * Every registered plugin can display a component in the links section of the
+   * dashboard sidebar.
+   */
+  getDashboardSidebarLinksComponent() {
+    return null
+  }
+
+  /*
+   * Every registered plugin can display a component in the `DashboardGroup`
+   * component directly after the group name.
+   */
+  getDashboardGroupExtraComponent() {
+    return null
+  }
+
+  /*
+   * Every registered plugin can display a component in the `DashboardGroup`
+   * component directly below the group name.
+   */
+  getDashboardGroupComponent() {
+    return null
+  }
 }
