@@ -21,7 +21,7 @@ EOF
 cat /baserow/supervisor/STARTUP_README.md
 
 startup_echo(){
-  ./baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
+  /baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
 }
 
 # ========================
@@ -44,7 +44,7 @@ if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
     POSTGRES_USER=$DATABASE_USER \
     POSTGRES_PASSWORD=$DATABASE_PASSWORD \
     POSTGRES_DB=$DATABASE_NAME \
-    ./baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh
+    /baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh
 
   # Enable the embedded postgres by moving it into the directory from which supervisor
   # includes all .conf files it finds.

@@ -230,6 +230,12 @@ case "$1" in
         echo "Press CTRL-p CTRL-q to close this session without stopping the container."
         attachable_exec python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
     ;;
+    django-dev-no-attach)
+        wait_for_postgres
+        run_setup_commands_if_configured
+        echo "Running Development Server on 0.0.0.0:${BASEROW_BACKEND_PORT}"
+        python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
+    ;;
     gunicorn)
       run_backend_server asgi "${@:2}"
     ;;

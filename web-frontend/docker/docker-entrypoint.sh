@@ -44,6 +44,9 @@ case "$1" in
     nuxt-dev)
         attachable_exec yarn run dev
     ;;
+    nuxt-dev-no-attach)
+      exec yarn run dev
+    ;;
     nuxt)
       exec ./node_modules/.bin/nuxt start --hostname "${BASEROW_WEBFRONTEND_BIND_ADDRESS:-0.0.0.0}" --port "$BASEROW_WEBFRONTEND_PORT" "${@:2}"
     ;;

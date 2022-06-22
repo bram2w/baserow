@@ -22,6 +22,7 @@ PRINT_WARNING=true
 new_tab() {
   TAB_NAME=$1
   COMMAND=$2
+  echo "Attempting to open tab with command $GREEN$COMMAND$NC"
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
@@ -132,6 +133,7 @@ attach_all=false
 dev=true
 local=false
 all_in_one=false
+all_in_one_dev=false
 cloudron=false
 heroku=false
 env_set=false
@@ -191,6 +193,14 @@ case "${1:-noneleft}" in
         all_in_one=true
         dev=false
         build_dependencies=(local)
+        shift
+    ;;
+    all_in_one_dev)
+        echo "./dev.sh: Switching to all in one image"
+        ensure_only_one_env_selected_at_once
+        all_in_one_dev=true
+        dev=false
+        build_dependencies=(all_in_one)
         shift
     ;;
     cloudron)
@@ -352,6 +362,11 @@ if [ "$all_in_one" = true ] ; then
   OVERRIDE_FILE=()
 fi
 
+if [ "$all_in_one_dev" = true ] ; then
+  CORE_FILE=deploy/all-in-one/docker-compose.dev.yml
+  OVERRIDE_FILE=()
+fi
+
 if [ "$cloudron" = true ] ; then
   CORE_FILE=deploy/cloudron/"$CORE_FILE"
   OVERRIDE_FILE=()
@@ -403,6 +418,17 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
 
   if [ "$all_in_one" = true ]; then
     launch_tab_and_attach "baserow_all_in_one" "baserow_all_in_one"
+    launch_tab_and_attach "mailhog" "mailhog"
+  fi
+
+  if [ "$all_in_one_dev" = true ]; then
+    launch_tab_and_attach "baserow_all_in_one_dev" "baserow_all_in_one_dev"
+    launch_tab_and_exec "web frontend lint" \
+            "baserow_all_in_one_dev" \
+            "/bin/bash /baserow.sh web-frontend-cmd lint-fix"
+    launch_tab_and_exec "backend lint" \
+            "baserow_all_in_one_dev" \
+            "/bin/bash /baserow.sh backend-cmd lint-shell"
     launch_tab_and_attach "mailhog" "mailhog"
   fi
 
