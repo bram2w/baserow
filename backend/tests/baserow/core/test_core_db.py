@@ -1,18 +1,16 @@
 import pytest
-
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import Value, CharField
 from django.db.models.expressions import ExpressionWrapper
 from django.db.models.functions import Concat
 from django.test.utils import override_settings
-from django.contrib.contenttypes.models import ContentType
 
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import Field, TextField, LongTextField
+from baserow.contrib.database.views.models import View
 from baserow.core.db import LockedAtomicTransaction, specific_iterator
 from baserow.core.models import Settings
-
-from baserow.contrib.database.views.models import View
-from baserow.contrib.database.fields.models import Field, TextField, LongTextField
-from baserow.contrib.database.fields.handler import FieldHandler
 
 
 @pytest.mark.django_db
@@ -53,7 +51,7 @@ def test_specific_iterator(data_fixture, django_assert_num_queries):
             long_text_field_2.id,
             long_text_field_3.id,
         ]
-    )
+    ).order_by("id")
 
     with django_assert_num_queries(3):
         specific_objects = list(specific_iterator(base_queryset))
