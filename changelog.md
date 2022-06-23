@@ -15,6 +15,7 @@ For example:
 * Made the styling of the dashboard cleaner and more efficient.
   [#1023](https://gitlab.com/bramw/baserow/-/issues/1023)
 * Added possibility to delete own user account [#880](https://gitlab.com/bramw/baserow/-/issues/880)
+* Added new `group_user_added` signal that is called when an user accept an invitation to join a group.
 
 ### Bug Fixes
 

@@ -6,6 +6,7 @@ group_updated = Signal()
 group_deleted = Signal()
 group_restored = Signal()
 
+group_user_added = Signal()
 group_user_updated = Signal()
 group_user_deleted = Signal()
 groups_reordered = Signal()

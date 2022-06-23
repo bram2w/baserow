@@ -126,6 +126,7 @@ are subscribed to the page.
 * `group_updated`
 * `group_deleted`
 * `group_restored`
+* `group_user_added`
 * `group_user_updated`
 * `group_user_deleted`
 * `application_created`
