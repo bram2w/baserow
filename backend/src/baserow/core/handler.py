@@ -57,6 +57,7 @@ from .signals import (
     group_created,
     group_updated,
     group_deleted,
+    group_user_added,
     group_user_updated,
     group_user_deleted,
     groups_reordered,
@@ -644,6 +645,11 @@ class CoreHandler:
                 "permissions": invitation.permissions,
             },
         )
+
+        group_user_added.send(
+            self, group_user_id=group_user.id, group_user=group_user, user=user
+        )
+
         invitation.delete()
 
         return group_user

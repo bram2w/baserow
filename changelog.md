@@ -13,6 +13,7 @@ For example:
 
 * Added prefill query parameters for forms. [#852](https://gitlab.com/bramw/baserow/-/issues/852)
 * Added possibility to delete own user account [#880](https://gitlab.com/bramw/baserow/-/issues/880)
+* Added new `group_user_added` signal that is called when an user accept an invitation to join a group.
 
 ### Bug Fixes
 
