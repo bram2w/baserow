@@ -7,6 +7,7 @@ from .trash.tasks import (
     mark_old_trash_for_permanent_deletion,
     setup_period_trash_tasks,
 )
+from .usage.tasks import run_calculate_storage
 from .user.tasks import check_pending_account_deletion
 
 
@@ -28,5 +29,6 @@ __all__ = [
     "cleanup_old_actions",
     "setup_periodic_action_tasks",
     "sync_templates_task",
+    "run_calculate_storage",
     "check_pending_account_deletion",
 ]
