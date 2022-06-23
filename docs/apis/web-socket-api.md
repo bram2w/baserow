@@ -122,6 +122,7 @@ are subscribed to the page.
 * `authentication`
 * `page_add`
 * `page_discard`
+* `before_group_deleted`
 * `group_created`
 * `group_updated`
 * `group_deleted`

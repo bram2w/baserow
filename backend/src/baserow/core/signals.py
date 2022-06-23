@@ -1,6 +1,8 @@
 from django.dispatch import Signal
 
 
+before_group_deleted = Signal()
+
 group_created = Signal()
 group_updated = Signal()
 group_deleted = Signal()
