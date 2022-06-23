@@ -10,6 +10,7 @@ from baserow.core.registries import (
     application_type_registry,
 )
 from baserow.core.trash.registries import trash_item_type_registry
+from baserow.core.usage.registries import group_storage_usage_item_registry
 from baserow.ws.registries import page_registry
 
 
@@ -373,6 +374,18 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(MultilineTextAirtableColumnType())
         airtable_column_type_registry.register(MultipleAttachmentAirtableColumnType())
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
+
+        from baserow.contrib.database.table.usage_types import (
+            TableGroupStorageUsageItemType,
+        )
+
+        group_storage_usage_item_registry.register(TableGroupStorageUsageItemType())
+
+        from baserow.contrib.database.views.usage_types import (
+            FormViewGroupStorageUsageItem,
+        )
+
+        group_storage_usage_item_registry.register(FormViewGroupStorageUsageItem())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

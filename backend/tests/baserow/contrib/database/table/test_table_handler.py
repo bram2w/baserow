@@ -590,3 +590,20 @@ def test_counting_many_rows_in_many_tables(data_fixture):
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
+
+
+@pytest.mark.django_db
+def test_get_total_row_count_of_group(data_fixture):
+    group = data_fixture.create_group()
+    database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(database=database)
+    table_not_in_group = data_fixture.create_database_table()
+
+    assert TableHandler.get_total_row_count_of_group(group.id) == 0
+
+    fill_table_rows(10, table)
+    fill_table_rows(10, table_not_in_group)
+
+    TableHandler.count_rows()
+
+    assert TableHandler.get_total_row_count_of_group(group.id) == 10

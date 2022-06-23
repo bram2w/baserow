@@ -3,7 +3,7 @@ from django.conf import settings
 from baserow.config.celery import app
 
 
-@app.task
+@app.task(queue="export")
 def run_row_count_job():
     """
     Runs the row count job to keep track of how many rows

@@ -2,7 +2,7 @@ from typing import Any, cast, NewType, List, Tuple, Optional, Type
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 from django.utils import timezone
 
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
@@ -419,3 +419,19 @@ class TableHandler:
             Table.objects.bulk_update(
                 tables_to_store, ["row_count", "row_count_updated_at"]
             )
+
+    @classmethod
+    def get_total_row_count_of_group(cls, group_id: int) -> int:
+        """
+        Returns the total row count of all tables in the given group.
+
+        :param group_id: The group of which the total row count needs to be calculated.
+        :return: The total row count of all tables in the given group.
+        """
+
+        return (
+            Table.objects.filter(database__group_id=group_id).aggregate(
+                Sum("row_count")
+            )["row_count__sum"]
+            or 0
+        )

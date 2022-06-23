@@ -93,6 +93,16 @@ REDIS_URL = os.getenv(
     f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0",
 )
 
+BASEROW_GROUP_STORAGE_USAGE_ENABLED = (
+    os.getenv("BASEROW_GROUP_STORAGE_USAGE_ENABLED", "false") == "true"
+)
+
+BASEROW_GROUP_STORAGE_USAGE_QUEUE = os.getenv(
+    "BASEROW_GROUP_STORAGE_USAGE_QUEUE", "export"
+)
+
+BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
+
 CELERY_BROKER_URL = REDIS_URL
 CELERY_TASK_ROUTES = {
     "baserow.contrib.database.export.tasks.run_export_job": {"queue": "export"},
@@ -101,6 +111,7 @@ CELERY_TASK_ROUTES = {
         "queue": "export"
     },
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
+    "baserow.core.usage.tasks": {"queue": BASEROW_GROUP_STORAGE_USAGE_QUEUE},
     "baserow.contrib.database.table.tasks.run_row_count_job": {"queue": "export"},
 }
 CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
@@ -459,6 +470,8 @@ EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
 
+USAGE_CALCULATION_INTERVAL = crontab(minute=0, hour=0)  # Midnight
+
 ROW_COUNT_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
@@ -597,8 +610,6 @@ LOGGING = {
         "level": BASEROW_BACKEND_LOG_LEVEL,
     },
 }
-
-BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
 
 # Now incorrectly named old variable, previously we would run `sync_templates` prior
 # to starting the gunicorn server in Docker. This variable would prevent that from
