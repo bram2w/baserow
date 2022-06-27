@@ -24,6 +24,7 @@
   >
     <div class="kanban-view__stacks">
       <KanbanViewStack
+        :database="database"
         :table="table"
         :view="view"
         :card-fields="cardFields"
@@ -39,6 +40,7 @@
         v-for="option in existingSelectOption"
         :key="option.id"
         :option="option"
+        :database="database"
         :table="table"
         :view="view"
         :card-fields="cardFields"

@@ -156,6 +156,27 @@ def test_cannot_export_json_without_premium_license(storage_mock, premium_data_f
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
+def test_cannot_export_json_without_premium_license_for_group(
+    storage_mock, premium_data_fixture
+):
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        # Setting the group id to `0` will make sure that the user doesn't have
+        # premium access to the group.
+        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
+        with pytest.raises(NoPremiumLicenseError):
+            run_export_over_interesting_test_table(
+                premium_data_fixture,
+                storage_mock,
+                {"exporter_type": "json"},
+                user_kwargs={"has_active_premium_license": True},
+            )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@patch("baserow.contrib.database.export.handler.default_storage")
 def test_if_duplicate_field_names_json_export(storage_mock, premium_data_fixture):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     database = premium_data_fixture.create_database_application(user=user)
@@ -356,6 +377,27 @@ def test_cannot_export_xml_without_premium_license(storage_mock, premium_data_fi
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "xml"}
         )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_cannot_export_xml_without_premium_license_for_group(
+    storage_mock, premium_data_fixture
+):
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        # Setting the group id to `0` will make sure that the user doesn't have
+        # premium access to the group.
+        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
+        with pytest.raises(NoPremiumLicenseError):
+            run_export_over_interesting_test_table(
+                premium_data_fixture,
+                storage_mock,
+                {"exporter_type": "xml"},
+                user_kwargs={"has_active_premium_license": True},
+            )
 
 
 def strip_indents_and_newlines(xml):

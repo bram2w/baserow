@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from django.conf import settings
 from django.test.utils import override_settings
 from freezegun import freeze_time
@@ -101,6 +102,50 @@ def test_row_comments_api_view_without_premium_license(
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
     assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_api_view_without_premium_license_for_group(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        mock_has_active_premium_license_for.return_value = [
+            {"type": "group", "id": table.database.group.id}
+        ]
+        response = api_client.get(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
+        response = api_client.get(
+            reverse(
+                "api:premium:row_comments:item",
+                kwargs={"table_id": table.id, "row_id": rows[0].id},
+            ),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+        assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
 
 
 @pytest.mark.django_db

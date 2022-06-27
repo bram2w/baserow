@@ -22,7 +22,7 @@ from baserow.core.exceptions import UserNotInGroup
 
 from baserow_premium.views.models import KanbanView
 from baserow_premium.views.exceptions import KanbanViewHasNoSingleSelectField
-from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.license.handler import check_active_premium_license_for_group
 from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
 
 from .errors import (
@@ -128,7 +128,7 @@ class KanbanViewView(APIView):
         # We don't want to check if there is an active premium license if the group
         # is a template because that feature must then be available for demo purposes.
         if not group.has_template():
-            check_active_premium_license(request.user)
+            check_active_premium_license_for_group(request.user, group)
 
         group.has_user(request.user, raise_error=True, allow_if_template=True)
         single_select_option_field = view.single_select_field

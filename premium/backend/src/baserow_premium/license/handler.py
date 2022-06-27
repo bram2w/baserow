@@ -26,6 +26,7 @@ from rest_framework.status import HTTP_200_OK
 
 from baserow.core.exceptions import IsNotAdminError
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Group
 from baserow.ws.signals import broadcast_to_users
 
 from .models import License, LicenseUser
@@ -112,6 +113,39 @@ def has_active_premium_license_for(
     """
 
     return has_active_premium_license(user)
+
+
+def check_active_premium_license_for_group(user: DjangoUser, group: Group):
+    """
+    Checks if the provided user has premium access to the premium group.
+
+    :param user: The user for whom must be checked if it has an active license.
+    :param group: The group that the user must have active premium license for.
+    :raises NoPremiumLicenseError: if the user does not have an active premium
+        license for the provided group.
+    """
+
+    active_license_for = has_active_premium_license_for(user)
+
+    # If the `active_license_for` is True, it means that the user has premium access
+    # for every group.
+    if active_license_for is True:
+        return
+
+    # If a list is returned, it means that the user only has access to specific
+    # items. In this case we check if the matching group is is present in that list.
+    if isinstance(active_license_for, list):
+        group_ids = [
+            license_for["id"]
+            for license_for in active_license_for
+            if license_for["type"] == "group"
+        ]
+        if group.id in group_ids:
+            return
+
+    # If the user doesn't have a global or group specific premium license, we must
+    # raise an error.
+    raise NoPremiumLicenseError()
 
 
 def get_public_key():

@@ -16,6 +16,7 @@ from baserow.core.exceptions import IsNotAdminError
 from baserow_premium.license.handler import (
     has_active_premium_license,
     check_active_premium_license,
+    check_active_premium_license_for_group,
     get_public_key,
     decode_license,
     fetch_license_status_with_authority,
@@ -173,6 +174,49 @@ def test_has_active_premium_license(data_fixture):
     invalid_license = License.objects.create(license="invalid")
     LicenseUser.objects.create(license=invalid_license, user=invalid_user)
     assert not has_active_premium_license(invalid_user)
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_check_active_premium_license_for_group_with_valid_license(data_fixture):
+    user_in_license = data_fixture.create_user()
+    group = data_fixture.create_group(user=user_in_license)
+    license = License.objects.create(license=VALID_TWO_SEAT_LICENSE.decode())
+    LicenseUser.objects.create(license=license, user=user_in_license)
+
+    with freeze_time("2021-08-01 12:00"):
+        with pytest.raises(NoPremiumLicenseError):
+            check_active_premium_license_for_group(user_in_license, group)
+
+    with freeze_time("2021-09-01 12:00"):
+        check_active_premium_license_for_group(user_in_license, group)
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_check_active_premium_license_for_group_with_patched_groups(data_fixture):
+    user_in_license = data_fixture.create_user()
+    group_1 = data_fixture.create_group(user=user_in_license)
+    group_2 = data_fixture.create_group(user=user_in_license)
+    group_3 = data_fixture.create_group(user=user_in_license)
+    group_4 = data_fixture.create_group(user=user_in_license)
+
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        mock_has_active_premium_license_for.return_value = [
+            {"type": "group", "id": group_1.id},
+            {"type": "group", "id": group_2.id},
+            {"type": "something_else", "id": group_3.id},
+        ]
+        check_active_premium_license_for_group(user_in_license, group_1)
+        check_active_premium_license_for_group(user_in_license, group_2)
+
+        with pytest.raises(NoPremiumLicenseError):
+            check_active_premium_license_for_group(user_in_license, group_3)
+
+        with pytest.raises(NoPremiumLicenseError):
+            check_active_premium_license_for_group(user_in_license, group_4)
 
 
 @override_settings(DEBUG=True)
