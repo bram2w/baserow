@@ -49,6 +49,32 @@ def test_cant_create_comment_without_premium_license(premium_data_fixture):
         RowCommentHandler.create_comment(user, table.id, rows[0].id, "Test")
 
 
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_cant_create_comment_without_premium_license_for_group(premium_data_fixture):
+    user = premium_data_fixture.create_user(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        mock_has_active_premium_license_for.return_value = [
+            {"type": "group", "id": table.database.group.id}
+        ]
+        RowCommentHandler.create_comment(user, table.id, rows[0].id, "Test")
+
+    with patch(
+        "baserow_premium.license.handler.has_active_premium_license_for"
+    ) as mock_has_active_premium_license_for:
+        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
+        with pytest.raises(NoPremiumLicenseError):
+            RowCommentHandler.create_comment(user, table.id, rows[0].id, "Test")
+
+
 @pytest.mark.django_db(transaction=True)
 @override_settings(DEBUG=True)
 @patch("baserow_premium.row_comments.signals.row_comment_created.send")
