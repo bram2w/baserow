@@ -1188,6 +1188,9 @@ export class BooleanFieldType extends FieldType {
    * value is true.
    */
   prepareValueForPaste(field, clipboardData) {
+    if (!clipboardData) {
+      clipboardData = ''
+    }
     const value = clipboardData.toLowerCase().trim()
     return trueString.includes(value)
   }
@@ -1288,6 +1291,9 @@ class BaseDateFieldType extends FieldType {
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData) {
+    if (!clipboardData) {
+      clipboardData = ''
+    }
     return DateFieldType.formatDate(field, clipboardData)
   }
 
@@ -1864,6 +1870,9 @@ export class SingleSelectFieldType extends FieldType {
 
   prepareValueForPaste(field, clipboardData) {
     const rawTextValue = clipboardData
+    if (!rawTextValue) {
+      return null
+    }
 
     return (
       this._findOptionWithMatchingId(field, rawTextValue) ||

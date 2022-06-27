@@ -21,6 +21,7 @@
       ></UndoRedoNotification>
       <CopyingNotification v-if="copying"></CopyingNotification>
       <PastingNotification v-if="pasting"></PastingNotification>
+      <ClearingNotification v-if="clearing"></ClearingNotification>
       <RestoreNotification
         v-for="notification in restoreNotifications"
         :key="notification.id"
@@ -39,6 +40,7 @@ import FailedConnectingNotification from '@baserow/modules/core/components/notif
 import RestoreNotification from '@baserow/modules/core/components/notifications/RestoreNotification'
 import CopyingNotification from '@baserow/modules/core/components/notifications/CopyingNotification'
 import PastingNotification from '@baserow/modules/core/components/notifications/PastingNotification'
+import ClearingNotification from '@baserow/modules/core/components/notifications/ClearingNotification'
 import AuthorizationErrorNotification from '@baserow/modules/core/components/notifications/AuthorizationErrorNotification'
 import UndoRedoNotification from '@baserow/modules/core/components/notifications/UndoRedoNotification'
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
@@ -52,6 +54,7 @@ export default {
     FailedConnectingNotification,
     CopyingNotification,
     PastingNotification,
+    ClearingNotification,
     AuthorizationErrorNotification,
     UndoRedoNotification,
   },
@@ -71,6 +74,7 @@ export default {
       failedConnecting: (state) => state.notification.failedConnecting,
       copying: (state) => state.notification.copying,
       pasting: (state) => state.notification.pasting,
+      clearing: (state) => state.notification.clearing,
       notifications: (state) => state.notification.items,
       undoRedoState: (state) => state.notification.undoRedoState,
     }),

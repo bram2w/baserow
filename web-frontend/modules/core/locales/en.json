@@ -216,6 +216,10 @@
         "title": "Pasting...",
         "content": "Preparing your data"
     },
+    "clearingNotification": {
+        "title": "Clearing...",
+        "content": "Preparing your data"
+    },
     "undoRedoNotification": {
         "undoingTitle": "Undoing...",
         "undoingText": "Undoing your action",
