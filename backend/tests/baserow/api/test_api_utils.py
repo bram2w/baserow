@@ -3,7 +3,8 @@ import pytest
 from rest_framework import status, serializers
 from rest_framework.exceptions import APIException
 from rest_framework.serializers import CharField
-from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
+from baserow.api.registries import api_exception_registry, RegisteredException
 from baserow.api.exceptions import QueryParameterValidationException
 
 from baserow.core.models import Group
@@ -169,6 +170,31 @@ def test_map_exceptions():
             raise TemporaryException
 
     assert api_exception_3.value.detail["error"] == "BASE_TYPE_ERROR"
+
+
+def test_map_exceptions_from_registry():
+    class TestException(Exception):
+        ...
+
+    test_error = (
+        "TEST_ERROR",
+        HTTP_400_BAD_REQUEST,
+        "Test error description.",
+    )
+
+    test_registered_ex = RegisteredException(
+        exception_class=TestException, exception_error=test_error
+    )
+
+    api_exception_registry.register(test_registered_ex)
+
+    with pytest.raises(APIException) as api_exception:
+        with map_exceptions({}):
+            raise TestException
+
+    assert api_exception.value.detail["error"] == "TEST_ERROR"
+    assert api_exception.value.detail["detail"] == "Test error description."
+    assert api_exception.value.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_validate_data():
