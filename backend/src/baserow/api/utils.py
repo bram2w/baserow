@@ -82,6 +82,12 @@ def map_exceptions(mapping: ExceptionMappingType):
       # SomeException will be thrown directly if the provided callable returns None.
     """
 
+    from baserow.api.registries import api_exception_registry
+
+    registered_exceptions = api_exception_registry.get_all()
+    for ex in registered_exceptions:
+        mapping[ex.exception_class] = ex.exception_error
+
     try:
         yield
     except tuple(mapping.keys()) as e:

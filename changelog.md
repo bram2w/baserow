@@ -18,6 +18,7 @@ For example:
 * Added new `group_user_added` signal that is called when an user accept an invitation to join a group.
 * Added new `before_group_deleted` signal that is called just before a group would end up in the trash.
 * Added multi-cell clearing via backspace key (delete on Mac).
+* Added API exception registry that allows plugins to provide custom exception mappings for the REST API.
 
 ### Bug Fixes
 
