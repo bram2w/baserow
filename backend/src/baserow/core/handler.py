@@ -54,6 +54,7 @@ from .signals import (
     application_updated,
     application_deleted,
     applications_reordered,
+    before_group_deleted,
     group_created,
     group_updated,
     group_deleted,
@@ -273,6 +274,10 @@ class CoreHandler:
         # along with the signal.
         group_id = group.id
         group_users = list(group.users.all())
+
+        before_group_deleted.send(
+            self, group_id=group_id, group=group, group_users=group_users, user=user
+        )
 
         TrashHandler.trash(user, group, None, group)
 
