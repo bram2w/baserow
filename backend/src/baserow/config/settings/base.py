@@ -113,6 +113,7 @@ CELERY_TASK_ROUTES = {
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
     "baserow.core.usage.tasks": {"queue": BASEROW_GROUP_STORAGE_USAGE_QUEUE},
     "baserow.contrib.database.table.tasks.run_row_count_job": {"queue": "export"},
+    "baserow.core.jobs.tasks.clean_up_jobs": {"queue": "export"},
 }
 CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
 CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60  # 60 seconds
@@ -283,6 +284,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Templates"},
         {"name": "Trash"},
         {"name": "Applications"},
+        {"name": "Jobs"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
         {"name": "Database table views"},
@@ -297,7 +299,6 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
-        {"name": "Database airtable import"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -557,6 +558,12 @@ BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
 
 BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
     os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+)
+BASEROW_JOB_SOFT_TIME_LIMIT = int(
+    os.getenv("BASEROW_JOB_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+)
+BASEROW_JOB_CLEANUP_INTERVAL_MINUTES = int(
+    os.getenv("BASEROW_JOB_CLEANUP_INTERVAL_MINUTES", 5)  # 5 minutes
 )
 
 # A comma separated list of feature flags used to enable in-progress or not ready

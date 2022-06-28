@@ -148,7 +148,10 @@ export default {
       }
 
       const file = event.target.files[0]
-      const maxSize = 1024 * 1024 * 15
+      let maxSize = 1024 * 1024 * 15 // 15MB
+      if (this.$featureFlags.includes('async_import')) {
+        maxSize = 1024 * 1024 * 1024 // 1Gb
+      }
 
       if (file.size > maxSize) {
         this.filename = ''

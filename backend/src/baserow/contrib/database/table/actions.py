@@ -91,7 +91,7 @@ class DeleteTableActionType(ActionType):
     @classmethod
     def do(cls, user: AbstractUser, table: TableForUpdate):
         """
-        Deletes a table in the databse.
+        Deletes a table in the database.
         See baserow.contrib.database.table.handler.TableHandler.delete_table
         for further details.
         Undoing this action restore the original table from trash and redoing trash it.

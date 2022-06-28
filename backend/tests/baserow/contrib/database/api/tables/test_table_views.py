@@ -9,6 +9,7 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 from django.conf import settings
+from django.test.utils import override_settings
 
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.table.models import Table
@@ -97,6 +98,7 @@ def test_create_table(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@override_settings(FEATURE_FLAGS=[])
 def test_create_table_with_data(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user)

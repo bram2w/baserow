@@ -31,7 +31,6 @@ from .webhooks.models import (
     TableWebhookCall,
     TableWebhookHeader,
 )
-from .airtable.models import AirtableImportJob
 
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 
@@ -64,7 +63,6 @@ __all__ = [
     "TableWebhookEvent",
     "TableWebhookHeader",
     "TableWebhookCall",
-    "AirtableImportJob",
     "FieldDependency",
 ]
 

@@ -3,11 +3,12 @@ import random
 
 import pytest
 from unittest.mock import patch
+from decimal import Decimal
 
 from django.core.files.storage import FileSystemStorage
 from django.db import connection
 from django.conf import settings
-from decimal import Decimal
+from django.test.utils import override_settings
 
 from pyinstrument import Profiler
 
@@ -137,8 +138,10 @@ def test_fill_example_table_data(data_fixture):
     assert results[1].order == Decimal("2.00000000000000000000")
 
 
-@pytest.mark.django_db
-def test_fill_table_with_initial_data(data_fixture):
+@pytest.mark.django_db(transaction=True)
+@override_settings(FEATURE_FLAGS=[])
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
@@ -193,6 +196,8 @@ def test_fill_table_with_initial_data(data_fixture):
     model = table.get_model()
     results = model.objects.all()
 
+    assert results.count() == 3
+
     assert results[0].order == Decimal("1.00000000000000000000")
     assert results[1].order == Decimal("2.00000000000000000000")
     assert results[2].order == Decimal("3.00000000000000000000")
@@ -245,6 +250,19 @@ def test_fill_table_with_initial_data(data_fixture):
     assert getattr(results[2], f"field_{text_fields[0].id}") == "3-1"
     assert getattr(results[2], f"field_{text_fields[1].id}") == "3-2"
 
+    data = [
+        ["1-1"],
+        ["2-1"],
+    ]
+
+    with override_settings(FEATURE_FLAGS=["async_import"]):
+        table = table_handler.create_table(
+            user, database, name="Table 2-1", data=data, first_row_header=False
+        )
+
+    mock_run_async_job.delay.assert_called_once()
+    assert GridView.objects.all().count() == 3
+
     field_limit = settings.MAX_FIELD_LIMIT
     settings.MAX_FIELD_LIMIT = 5
     data = [
@@ -256,7 +274,7 @@ def test_fill_table_with_initial_data(data_fixture):
     )
     num_fields = table.field_set.count()
 
-    assert GridView.objects.all().count() == 3
+    assert GridView.objects.all().count() == 4
     assert num_fields == settings.MAX_FIELD_LIMIT
 
     settings.MAX_FIELD_LIMIT = field_limit

@@ -14,7 +14,7 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('table_updated', ({ store }, data) => {
+  realtime.registerEvent('table_updated', ({ store, app }, data) => {
     const database = store.getters['application/get'](data.table.database_id)
     if (database !== undefined) {
       const table = database.tables.find((table) => table.id === data.table.id)
@@ -24,6 +24,11 @@ export const registerRealtimeEvents = (realtime) => {
           table,
           values: data.table,
         })
+        if (data.force_table_refresh) {
+          app.$bus.$emit('table-refresh', {
+            tableId: data.table.id,
+          })
+        }
       }
     }
   })

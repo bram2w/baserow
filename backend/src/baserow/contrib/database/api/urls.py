@@ -8,7 +8,6 @@ from .rows import urls as row_urls
 from .tokens import urls as token_urls
 from .export import urls as export_urls
 from .formula import urls as formula_urls
-from .airtable import urls as airtable_urls
 
 
 app_name = "baserow.contrib.database.api"
@@ -22,5 +21,4 @@ urlpatterns = [
     path("tokens/", include(token_urls, namespace="tokens")),
     path("export/", include(export_urls, namespace="export")),
     path("formula/", include(formula_urls, namespace="formula")),
-    path("airtable/", include(airtable_urls, namespace="airtable")),
 ]

@@ -41,6 +41,9 @@ from baserow.contrib.database.table.models import Table
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
+from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_TABLE_NOT_IN_DATABASE,
@@ -130,6 +133,7 @@ class TablesView(APIView):
                     "ERROR_RESERVED_BASEROW_FIELD_NAME",
                     "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES",
                     "ERROR_INVALID_BASEROW_FIELD_NAME",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
                 ]
             ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
@@ -147,6 +151,7 @@ class TablesView(APIView):
             InitialTableDataDuplicateName: ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
             ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
         }
     )
     @validate_body(TableCreateSerializer)
