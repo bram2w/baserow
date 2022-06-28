@@ -167,10 +167,14 @@ class PolymorphicContentTypeMixin:
 
         all_parents_and_self = self.all_parents_and_self()
         if len(all_parents_and_self) > 1:
-            # Delete the model instance one down from the root parent to preserve the
-            # polymorphic base type whilst ensuring we delete all other sub polymorphic
-            # types and none are left hanging in model hierarchies with multiple levels.
-            all_parents_and_self[1].delete(keep_parents=True)
+            # Delete ourself and all of our parents upto the root parent. We can't just
+            # delete the parent second from the top and rely on it cascading down
+            # to all of the children due to a bug in Django which does not also pass
+            # keep_parents=True to the children. This would result in all of the things
+            # that CASCADE off the root parent itself being deleted if we didn't do it
+            # this way.
+            for parent_or_self in reversed(all_parents_and_self[1:]):
+                parent_or_self.delete(keep_parents=True)
         self.__class__ = new_model_class
         self.content_type = ContentType.objects.get_for_model(new_model_class)
 

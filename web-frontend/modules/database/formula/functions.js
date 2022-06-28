@@ -1076,6 +1076,51 @@ export class BaserowGreatest extends BaserowFunctionDefinition {
     return 'number'
   }
 }
+export class BaserowRound extends BaserowFunctionDefinition {
+  static getType() {
+    return 'round'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.roundDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['round(number, number)']
+  }
+
+  getExamples() {
+    return ['round(1.12345,2) = 1.12']
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowInt extends BaserowFunctionDefinition {
+  static getType() {
+    return 'int'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.intDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['round(int)']
+  }
+
+  getExamples() {
+    return ['int(1.49) = 1']
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
 
 export class BaserowLeast extends BaserowFunctionDefinition {
   static getType() {

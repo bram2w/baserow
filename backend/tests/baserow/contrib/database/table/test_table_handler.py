@@ -447,9 +447,14 @@ def test_deleting_table_trashes_all_fields_and_any_related_links(
     assert table_deleted_send_mock.call_args[1]["user"].id == user.id
 
     field_updated_send_mock.assert_called_once()
-    assert field_updated_send_mock.call_args[1]["field"].id == dependant_field.id
+    updated_field_id = field_updated_send_mock.call_args[1]["field"].id
+    related_updated_fields = field_updated_send_mock.call_args[1]["related_fields"]
+    assert (
+        updated_field_id == other_dependant_field.id
+        or updated_field_id == dependant_field.id
+    )
     assert field_updated_send_mock.call_args[1]["user"] is None
-    assert field_updated_send_mock.call_args[1]["related_fields"] == [
+    assert related_updated_fields == [dependant_field] or related_updated_fields == [
         other_dependant_field
     ]
 

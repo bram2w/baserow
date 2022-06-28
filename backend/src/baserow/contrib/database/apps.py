@@ -2,7 +2,7 @@ from django.apps import AppConfig
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist
 from django.db import ProgrammingError
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, pre_migrate
 
 from baserow.contrib.database.table.cache import clear_generated_model_cache
 from baserow.core.registries import (
@@ -399,7 +399,7 @@ class DatabaseConfig(AppConfig):
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
-        post_migrate.connect(clear_generated_model_cache_receiver, sender=self)
+        pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
 
 # noinspection PyPep8Naming
@@ -409,12 +409,14 @@ def clear_generated_model_cache_receiver(sender, **kwargs):
 
 # noinspection PyPep8Naming
 def safely_update_formula_versions(sender, **kwargs):
+    if settings.TESTS:
+        return
+
     apps = kwargs.get("apps", None)
     # app.ready will be called for management commands also, we only want to
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
     if apps is not None and not settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
-        from baserow.contrib.database.formula import FormulaHandler
 
         try:
             FormulaField = apps.get_model("database", "FormulaField")
@@ -438,4 +440,8 @@ def safely_update_formula_versions(sender, **kwargs):
             return
 
         print("Checking to see if formulas need updating...")
-        FormulaHandler.recalculate_formulas_according_to_version()
+        from baserow.contrib.database.formula.migrations.handler import (
+            FormulaMigrationHandler,
+        )
+
+        FormulaMigrationHandler.migrate_formulas_to_latest_version()

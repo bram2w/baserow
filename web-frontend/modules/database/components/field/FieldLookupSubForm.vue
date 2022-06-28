@@ -167,6 +167,15 @@ export default {
           )
           this.fieldsInThroughTable = data
             .filter((f) => {
+              // If we are the primary field filter out any links back to this table
+              // as it is a lookup back to ourself and hence would always cause a
+              // circular reference.
+              return (
+                !this.defaultValues.primary ||
+                this.defaultValues.table_id !== f.link_row_table
+              )
+            })
+            .filter((f) => {
               return this.$registry
                 .get('field', f.type)
                 .canBeReferencedByFormulaField()

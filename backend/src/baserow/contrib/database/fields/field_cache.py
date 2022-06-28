@@ -53,6 +53,10 @@ class FieldCache:
             field.name, None
         )
 
+    def reset_cache(self):
+        self._cached_field_by_name_per_table = defaultdict(dict)
+        self._model_cache = {}
+
     def cache_field(self, field):
         if not field.trashed:
             cached_fields = self._cached_field_by_name_per_table[field.table_id]

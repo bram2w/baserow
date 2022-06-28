@@ -1,9 +1,8 @@
-import pytest
-
 from unittest.mock import patch, call, ANY
 
+import pytest
+
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.trash.handler import TrashHandler
@@ -37,8 +36,6 @@ def test_when_field_created_public_views_are_sent_field_created_with_restricted_
         table=table, formula="field('a')", name="visible_broken"
     )
     field_cache = FieldCache()
-    FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
-    FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
     # Should not appear in any results
     data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
@@ -96,8 +93,6 @@ def test_when_field_deleted_public_views_are_field_deleted_with_restricted_relat
         table=table, formula="field('visible')", name="visible_broken"
     )
     field_cache = FieldCache()
-    FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
-    FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
     # Should not appear in any results
     data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
@@ -149,8 +144,6 @@ def test_when_field_restored_public_views_sent_event_with_restricted_related_fie
         table=table, formula="field('visible')", name="visible_broken"
     )
     field_cache = FieldCache()
-    FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
-    FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
     # Should not appear in any results
     data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
@@ -210,8 +203,6 @@ def test_when_field_updated_public_views_are_sent_event_with_restricted_related(
         table=table, formula="field('a')", name="visible_broken"
     )
     field_cache = FieldCache()
-    FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
-    FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
     # Should not appear in any results
     data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(

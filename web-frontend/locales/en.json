@@ -316,7 +316,9 @@
         "variancePopDescription": "Calculates the population variance of the values and returns the result. The population variance should be used when the provided values contain a  value for every single piece of data in the population.",
         "avgDescription": "Averages all of the values and returns the result.",
         "sumDescription": "Sums all of the values and returns the result.",
-        "filterDescription": "Filters down an expression involving a lookup/link field reference or a lookup function call."
+        "filterDescription": "Filters down an expression involving a lookup/link field reference or a lookup function call.",
+        "roundDescription": "Returns first argument rounded to the number of digits specified by the second argument.",
+        "intDescription": "Returns only the first argument converted into an integer by truncating any decimal places."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"

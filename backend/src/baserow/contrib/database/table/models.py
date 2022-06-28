@@ -4,8 +4,6 @@ from typing import Dict, Any, Union, Type
 from django.db import models
 from django.db.models import Q, F, QuerySet
 
-from baserow.core.db import specific_iterator
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
@@ -25,6 +23,7 @@ from baserow.contrib.database.table.cache import (
 )
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.core.db import specific_iterator
 from baserow.core.mixins import (
     OrderableMixin,
     CreatedAndUpdatedOnMixin,
@@ -601,6 +600,10 @@ class Table(
             field_name = field.db_column
 
             if filtered and add_dependencies:
+                from baserow.contrib.database.fields.dependencies.handler import (
+                    FieldDependencyHandler,
+                )
+
                 direct_dependencies = (
                     FieldDependencyHandler.get_same_table_dependencies(field)
                 )

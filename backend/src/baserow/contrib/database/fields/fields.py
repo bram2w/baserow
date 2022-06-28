@@ -189,6 +189,9 @@ class BaserowExpressionField(models.Field):
         else:
             return value
 
+    def select_format(self, compiler, sql, params):
+        return self.expression_field.select_format(compiler, sql, params)
+
     def pre_save(self, model_instance, add):
         if self.expression is None:
             return Value(None)
@@ -228,3 +231,16 @@ class SerialField(models.Field):
             )
         else:
             return super().pre_save(model_instance, add)
+
+
+class DurationFieldUsingPostgresFormatting(models.DurationField):
+    def to_python(self, value):
+        return value
+
+    def select_format(self, compiler, sql, params):
+        # We want to use postgres's method of converting intervals to strings instead
+        # of pythons timedelta representation. This is so lookups of date intervals
+        # which cast the interval to string inside of the database will have the
+        # same values as non lookup intervals. The postgres str representation is also
+        # more human readable.
+        return sql + "::text", params

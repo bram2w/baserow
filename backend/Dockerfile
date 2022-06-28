@@ -79,6 +79,17 @@ ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-
 
 FROM core as dev
 
+
+USER root
+RUN apt-get update &&  \
+    apt-get install -y --no-install-recommends \
+    graphviz \
+    && apt-get autoclean \
+    && apt-get clean \
+    && apt-get autoremove \
+    && rm -rf /var/lib/apt/lists/*
+USER $UID:$GID
+
 # Override virtualenv with one containing dev dependencies.
 COPY --chown=$UID:$GID --from=dev_deps /baserow/venv /baserow/venv
 
