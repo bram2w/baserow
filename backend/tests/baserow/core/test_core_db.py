@@ -131,16 +131,20 @@ def test_specific_iterator_with_annotation(data_fixture, django_assert_num_queri
     text_field_1 = data_fixture.create_text_field()
     text_field_2 = data_fixture.create_text_field()
 
-    base_queryset = Field.objects.filter(
-        id__in=[
-            text_field_1.id,
-            text_field_2.id,
-        ]
-    ).annotate(
-        tmp_test_annotation=ExpressionWrapper(
-            Concat(Value("test"), "id"),
-            output_field=CharField(),
+    base_queryset = (
+        Field.objects.filter(
+            id__in=[
+                text_field_1.id,
+                text_field_2.id,
+            ]
         )
+        .annotate(
+            tmp_test_annotation=ExpressionWrapper(
+                Concat(Value("test"), "id"),
+                output_field=CharField(),
+            )
+        )
+        .order_by("id")
     )
 
     with django_assert_num_queries(2):

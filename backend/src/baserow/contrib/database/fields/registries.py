@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, TYPE_CHECKING, NoReturn, Optional
+from typing import Any, Dict, List, TYPE_CHECKING, NoReturn, Optional, Union
 from zipfile import ZipFile
 
-from django.core.files.storage import Storage
-from django.core.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django.core.exceptions import ValidationError
+from django.core.files.storage import Storage
 from django.db import models as django_models
 from django.db.models import (
     BooleanField,
@@ -13,6 +13,7 @@ from django.db.models import (
 )
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 
+from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.core.registry import (
     Instance,
     Registry,
@@ -25,10 +26,9 @@ from baserow.core.registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
-from .dependencies.types import OptionalFieldDependencies
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
-from .constants import UPSERT_OPTION_DICT_KEY
-from .models import SelectOption, Field
+from .fields import DurationFieldUsingPostgresFormatting
+from .models import SelectOption, Field, LinkRowField
 
 if TYPE_CHECKING:
     from baserow.contrib.database.table.models import (
@@ -36,6 +36,16 @@ if TYPE_CHECKING:
         Table,
         FieldObject,
     )
+    from baserow.contrib.database.fields.dependencies.types import (
+        FieldDependencies,
+    )
+    from baserow.contrib.database.fields.dependencies.update_collector import (
+        FieldUpdateCollector,
+    )
+    from baserow.contrib.database.fields.dependencies.handler import FieldDependants
+    from baserow.contrib.database.fields.field_cache import FieldCache
+
+StartingRowType = Union["GeneratedTableModel", List["GeneratedTableModel"]]
 
 
 class FieldType(
@@ -194,7 +204,13 @@ class FieldType(
         :return: A Q filter.
         """
 
-        fs = [ManyToManyField, ForeignKey, DurationField, ArrayField]
+        fs = [
+            ManyToManyField,
+            ForeignKey,
+            DurationField,
+            ArrayField,
+            DurationFieldUsingPostgresFormatting,
+        ]
         # If the model_field is a ManyToMany field we only have to check if it is None.
         if any(isinstance(model_field, f) for f in fs):
             return Q(**{f"{field_name}": None})
@@ -703,13 +719,13 @@ class FieldType(
 
         return field
 
-    def after_import_serialized(self, field, field_cache):
+    def after_import_serialized(self, field: Field, field_cache: "FieldCache"):
         """
         Called on fields in dependency order after all fields for an application have
         been created for any final tasks that require the field graph to be present.
 
         :param field: A field instance of this field type.
-        :param field_cache: A cache should be used to lookup fields.
+        :param field_cache: A field cache to be used when fetching fields.
         """
 
         from baserow.contrib.database.fields.dependencies.handler import (
@@ -724,13 +740,20 @@ class FieldType(
         ) in field.dependant_fields_with_types(field_cache):
             dependant_field_type.after_import_serialized(dependant_field, field_cache)
 
-    def after_rows_imported(self, field, via_path_to_starting_table, update_collector):
+    def after_rows_imported(
+        self,
+        field: Field,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
+    ):
         """
         Called on fields in dependency order after all of its rows have been inserted
         after an import for any row updates required once all rows in all imported
         tables exist.
 
         :param field: A field instance of this field type.
+        :param field_cache: A field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the first rows were imported.
         :param update_collector: Any row update statements should be registered into
@@ -741,14 +764,18 @@ class FieldType(
             dependant_field,
             dependant_field_type,
             dependency_path,
-        ) in field.dependant_fields_with_types(
-            update_collector, via_path_to_starting_table
-        ):
+        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
             dependant_field_type.after_rows_imported(
-                dependant_field, dependency_path, update_collector
+                dependant_field, update_collector, field_cache, dependency_path
             )
 
-    def after_rows_created(self, field, rows, update_collector):
+    def after_rows_created(
+        self,
+        field: Field,
+        rows: List["GeneratedTableModel"],
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+    ):
         """
         Immediately after a row has been created with a field of this type this
         method is called. This is useful fields that need to register some sort of
@@ -909,24 +936,16 @@ class FieldType(
         )
 
     def get_field_dependencies(
-        self, field_instance, field_lookup_cache
-    ) -> OptionalFieldDependencies:
+        self, field_instance: Field, field_cache: "FieldCache"
+    ) -> "FieldDependencies":
         """
-        Should return a list of field dependencies that field_instance has. A field
-        dependency can either be the name of a field in the same table as
-        field_instance, or a tuple where the first value is the name of a link row field
-        in the same table and the second is the name of a field in the linked table.
-
-        If instead None is returned this field_type will be treated as if it cannot have
-        dependencies on other fields.
+        Should return a list of field dependencies that field_instance has.
 
         :param field_instance: The field_instance to get field dependencies for.
-        :type field_instance: Field
-        :param field_lookup_cache: A cache that can be used to lookup fields.
-        :type field_lookup_cache: FieldCache
+        :param field_cache: A cache that can be used to lookup fields.
         """
 
-        return None
+        return []
 
     def restore_failed(self, field_instance, restore_exception):
         """
@@ -949,10 +968,11 @@ class FieldType(
 
     def row_of_dependency_created(
         self,
-        field,
-        starting_row,
-        update_collector,
-        via_path_to_starting_table,
+        field: Field,
+        starting_row: "StartingRowType",
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
         """
         Called when a row is created in a dependency field (a field that the field
@@ -967,6 +987,7 @@ class FieldType(
         :param update_collector: Any update statements should be passed to this
             collector so they are run correctly at the right time. You should not be
             manually updating row values yourself in this method.
+        :param field_cache: A field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the row was created.
         """
@@ -975,15 +996,17 @@ class FieldType(
             field,
             starting_row,
             update_collector,
+            field_cache,
             via_path_to_starting_table,
         )
 
     def row_of_dependency_updated(
         self,
-        field,
-        starting_row,
-        update_collector,
-        via_path_to_starting_table,
+        field: Field,
+        starting_row: "StartingRowType",
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: List["LinkRowField"],
     ):
         """
         Called when a row or rows are updated in a dependency field (a field that the
@@ -1000,6 +1023,7 @@ class FieldType(
         :param update_collector: Any update statements should be passed to this
             collector so they are run correctly at the right time. You should not be
             manually updating row values yourself in this method.
+        :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the first row was changed.
         """
@@ -1008,13 +1032,12 @@ class FieldType(
             dependant_field,
             dependant_field_type,
             dependant_path_to_starting_table,
-        ) in field.dependant_fields_with_types(
-            update_collector, via_path_to_starting_table
-        ):
+        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
             dependant_field_type.row_of_dependency_updated(
                 dependant_field,
                 starting_row,
                 update_collector,
+                field_cache,
                 dependant_path_to_starting_table,
             )
 
@@ -1024,10 +1047,11 @@ class FieldType(
 
     def row_of_dependency_deleted(
         self,
-        field,
-        starting_row,
-        update_collector,
-        via_path_to_starting_table,
+        field: Field,
+        starting_row: "StartingRowType",
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
         """
         Called when a row is deleted in a dependency field (a field that the
@@ -1042,6 +1066,7 @@ class FieldType(
         :param update_collector: Any update statements should be passed to this
             collector so they are run correctly at the right time. You should not be
             manually updating row values yourself in this method.
+        :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the row was deleted.
         """
@@ -1050,15 +1075,17 @@ class FieldType(
             field,
             starting_row,
             update_collector,
+            field_cache,
             via_path_to_starting_table,
         )
 
     def row_of_dependency_moved(
         self,
-        field,
-        starting_row,
-        update_collector,
-        via_path_to_starting_table,
+        field: Field,
+        starting_row: "StartingRowType",
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
         """
         Called when a row is moved in a dependency field (a field that the
@@ -1073,6 +1100,7 @@ class FieldType(
         :param update_collector: Any update statements should be passed to this
             collector so they are run correctly at the right time. You should not be
             manually updating row values yourself in this method.
+        :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the row was moved.
         """
@@ -1081,11 +1109,17 @@ class FieldType(
             field,
             starting_row,
             update_collector,
+            field_cache,
             via_path_to_starting_table,
         )
 
     def field_dependency_created(
-        self, field, created_field, via_path_to_starting_table, update_collector
+        self,
+        field: Field,
+        created_field: Field,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
         """
         Called when a field is created which the field parameter depends on.
@@ -1101,21 +1135,28 @@ class FieldType(
             should also change has a result an update statement should be passed to
             this collector which will be run correctly at the right time.
             You should not be manually updating row values yourself in this method.
+        :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where field was created.
         """
 
         self.field_dependency_updated(
-            field, field, field, via_path_to_starting_table, update_collector
+            field,
+            field,
+            field,
+            update_collector,
+            field_cache,
+            via_path_to_starting_table,
         )
 
     def field_dependency_updated(
         self,
-        field,
-        updated_field,
-        updated_old_field,
-        via_path_to_starting_table,
-        update_collector,
+        field: Field,
+        updated_field: Field,
+        updated_old_field: Field,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
         """
         Called when a field is updated which the field parameter depends on.
@@ -1132,6 +1173,7 @@ class FieldType(
             should also change has a result an update statement should be passed to
             this collector which will be run correctly at the right time.
             You should not be manually updating row values yourself in this method.
+        :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table the first field change occurred.
         """
@@ -1140,20 +1182,19 @@ class FieldType(
             FieldDependencyHandler,
         )
 
-        FieldDependencyHandler.rebuild_dependencies(field, update_collector)
+        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
         for (
             dependant_field,
             dependant_field_type,
             dependant_path_to_starting_table,
-        ) in field.dependant_fields_with_types(
-            update_collector, via_path_to_starting_table
-        ):
+        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
             dependant_field_type.field_dependency_updated(
                 dependant_field,
                 field,
                 field,
-                dependant_path_to_starting_table,
                 update_collector,
+                field_cache,
+                dependant_path_to_starting_table,
             )
 
         from baserow.contrib.database.views.handler import ViewHandler
@@ -1161,7 +1202,12 @@ class FieldType(
         ViewHandler().field_updated(field)
 
     def field_dependency_deleted(
-        self, field, deleted_field, via_path_to_starting_table, update_collector
+        self,
+        field: Field,
+        deleted_field: Field,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
         """
         Called when a field is deleted which the field parameter depends on.
@@ -1177,12 +1223,18 @@ class FieldType(
             should also change has a result an update statement should be passed to
             this collector which will be run correctly at the right time.
             You should not be manually updating row values yourself in this method.
+        :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table the field was deleted.
         """
 
         self.field_dependency_updated(
-            field, field, field, via_path_to_starting_table, update_collector
+            field,
+            field,
+            field,
+            update_collector,
+            field_cache,
+            via_path_to_starting_table,
         )
 
     def check_can_order_by(self, field: Field) -> bool:
@@ -1251,6 +1303,24 @@ class FieldType(
         """
 
         return False
+
+    def get_dependants_which_will_break_when_field_type_changes(
+        self, field: Field, to_field_type: "FieldType", field_cache: "FieldCache"
+    ) -> "FieldDependants":
+        """
+        If this field has dependants which will have their FieldDependency deleted
+        because of a field type change to `to_field_type` this function should query for
+        and return these FieldDependencies. This hook is called immediately before
+        the field type change and the results will later have the
+        `field_dependency_updated` hook called on them.
+
+        :param field: The field which is being converted to "to_field_type"
+        :param to_field_type: The new field type field is being converted to..
+        :param field_cache: A field cache that can be used to lookup and cache fields.
+        :return: A list of field dependency tuples.
+        """
+
+        return []
 
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):

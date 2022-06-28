@@ -4,9 +4,11 @@ import pytest
 from django.db.models import Value
 
 from baserow.contrib.database.fields.dependencies.update_collector import (
-    CachingFieldUpdateCollector,
+    FieldUpdateCollector,
 )
+from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import LinkRowField
 
 
 @pytest.mark.django_db
@@ -17,9 +19,10 @@ def test_can_add_fields_with_update_statements_in_same_starting_table(
     model = field.table.get_model(attribute_names=True)
     row = model.objects.create(field="starting value")
 
-    update_collector = CachingFieldUpdateCollector(field.table)
+    update_collector = FieldUpdateCollector(field.table)
+    field_cache = FieldCache()
     update_collector.add_field_with_pending_update_statement(field, Value("other"))
-    updated_fields = update_collector.apply_updates_and_get_updated_fields()
+    updated_fields = update_collector.apply_updates_and_get_updated_fields(field_cache)
 
     assert updated_fields == [field]
     row.refresh_from_db()
@@ -35,11 +38,10 @@ def test_can_add_fields_in_same_starting_table_with_row_filter(
     row_a = model.objects.create(field="a")
     row_b = model.objects.create(field="b")
 
-    update_collector = CachingFieldUpdateCollector(
-        field.table, starting_row_id=row_a.id
-    )
+    field_cache = FieldCache()
+    update_collector = FieldUpdateCollector(field.table, starting_row_ids=[row_a.id])
     update_collector.add_field_with_pending_update_statement(field, Value("other"))
-    updated_fields = update_collector.apply_updates_and_get_updated_fields()
+    updated_fields = update_collector.apply_updates_and_get_updated_fields(field_cache)
 
     assert updated_fields == [field]
     row_a.refresh_from_db()
@@ -61,7 +63,8 @@ def test_can_only_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m(
         name="primary", primary=True, table=first_table
     )
     data_fixture.create_text_field(name="primary", primary=True, table=second_table)
-    link_row_field = FieldHandler().create_field(
+    # noinspection PyTypeChecker
+    link_row_field: LinkRowField = FieldHandler().create_field(
         user=user,
         table=first_table,
         type_name="link_row",
@@ -84,8 +87,9 @@ def test_can_only_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m(
     first_table_2_row.link.add(second_table_b_row.id)
     first_table_2_row.save()
 
-    update_collector = CachingFieldUpdateCollector(
-        second_table, starting_row_id=second_table_a_row.id
+    field_cache = FieldCache()
+    update_collector = FieldUpdateCollector(
+        second_table, starting_row_ids=[second_table_a_row.id]
     )
     update_collector.add_field_with_pending_update_statement(
         first_table_primary_field,
@@ -93,11 +97,13 @@ def test_can_only_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m(
         via_path_to_starting_table=[link_row_field],
     )
     # Cache the models so we are only asserting about the update queries
-    update_collector.cache_model(first_table.get_model())
-    update_collector.cache_model(second_table.get_model())
+    field_cache.cache_model(first_table.get_model())
+    field_cache.cache_model(second_table.get_model())
     # Only one field was updated so only one update statement is expected
     with django_assert_num_queries(1):
-        updated_fields = update_collector.apply_updates_and_get_updated_fields()
+        updated_fields = update_collector.apply_updates_and_get_updated_fields(
+            field_cache
+        )
 
     # No field in the starting table (second_table) was updated
     assert updated_fields == []
@@ -129,7 +135,8 @@ def test_can_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m_and_b
     second_table_primary_field = data_fixture.create_text_field(
         name="primary", primary=True, table=second_table
     )
-    link_row_field = FieldHandler().create_field(
+    # noinspection PyTypeChecker
+    link_row_field: LinkRowField = FieldHandler().create_field(
         user=user,
         table=first_table,
         type_name="link_row",
@@ -153,8 +160,9 @@ def test_can_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m_and_b
     first_table_2_row.link.add(second_table_b_row.id)
     first_table_2_row.save()
 
-    update_collector = CachingFieldUpdateCollector(
-        second_table, starting_row_id=second_table_a_row.id
+    field_cache = FieldCache()
+    update_collector = FieldUpdateCollector(
+        second_table, starting_row_ids=[second_table_a_row.id]
     )
     update_collector.add_field_with_pending_update_statement(
         first_table_primary_field,
@@ -170,11 +178,13 @@ def test_can_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m_and_b
         ],
     )
     # Cache the models so we are only asserting about the update queries
-    update_collector.cache_model(first_table.get_model())
-    update_collector.cache_model(second_table.get_model())
+    field_cache.cache_model(first_table.get_model())
+    field_cache.cache_model(second_table.get_model())
     # Two fields were updated with an update statement for each table
     with django_assert_num_queries(2):
-        updated_fields = update_collector.apply_updates_and_get_updated_fields()
+        updated_fields = update_collector.apply_updates_and_get_updated_fields(
+            field_cache
+        )
 
     assert updated_fields == [second_table_primary_field]
     first_table_1_row.refresh_from_db()
@@ -214,7 +224,8 @@ def test_update_statements_at_the_same_path_node_are_grouped_into_one(
     second_table_primary_field = data_fixture.create_text_field(
         name="primary", primary=True, table=second_table
     )
-    link_row_field = FieldHandler().create_field(
+    # noinspection PyTypeChecker
+    link_row_field: LinkRowField = FieldHandler().create_field(
         user=user,
         table=first_table,
         type_name="link_row",
@@ -238,8 +249,9 @@ def test_update_statements_at_the_same_path_node_are_grouped_into_one(
     first_table_2_row.link.add(second_table_b_row.id)
     first_table_2_row.save()
 
-    update_collector = CachingFieldUpdateCollector(
-        second_table, starting_row_id=second_table_a_row.id
+    field_cache = FieldCache()
+    update_collector = FieldUpdateCollector(
+        second_table, starting_row_ids=[second_table_a_row.id]
     )
     update_collector.add_field_with_pending_update_statement(
         first_table_primary_field,
@@ -260,12 +272,14 @@ def test_update_statements_at_the_same_path_node_are_grouped_into_one(
         ],
     )
     # Cache the models so we are only asserting about the update queries
-    update_collector.cache_model(first_table.get_model())
-    update_collector.cache_model(second_table.get_model())
+    field_cache.cache_model(first_table.get_model())
+    field_cache.cache_model(second_table.get_model())
     # Three fields were updated but two are in the same path node (same table) and so
     # only one update per table expected
     with django_assert_num_queries(2):
-        updated_fields = update_collector.apply_updates_and_get_updated_fields()
+        updated_fields = update_collector.apply_updates_and_get_updated_fields(
+            field_cache
+        )
 
     assert updated_fields == [second_table_primary_field]
     first_table_1_row.refresh_from_db()

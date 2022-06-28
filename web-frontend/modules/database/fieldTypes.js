@@ -1575,6 +1575,10 @@ export class URLFieldType extends FieldType {
   canParseQueryParameter() {
     return true
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -2340,10 +2344,6 @@ export class FormulaFieldType extends FieldType {
 
   getFormViewFieldComponent() {
     return null
-  }
-
-  getCanBePrimaryField() {
-    return false
   }
 
   canBeReferencedByFormulaField() {

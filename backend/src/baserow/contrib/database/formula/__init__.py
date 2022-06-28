@@ -61,6 +61,7 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaArrayType,
     BaserowFormulaSingleSelectType,
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
+    literal,
 )
 
 __all__ = [
@@ -83,4 +84,5 @@ __all__ = [
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
     BASEROW_FORMULA_TYPE_CHOICES,
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
+    literal,
 ]

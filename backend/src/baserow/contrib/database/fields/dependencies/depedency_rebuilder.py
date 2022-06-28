@@ -1,4 +1,4 @@
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from django.db.models import Q
 
@@ -9,7 +9,6 @@ from baserow.contrib.database.fields.dependencies.circular_reference_checker imp
 )
 from baserow.contrib.database.fields.dependencies.exceptions import (
     CircularFieldDependencyError,
-    SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
@@ -28,9 +27,7 @@ def break_dependencies_for_field(field):
     FieldDependency.objects.filter(dependant=field).delete()
     field.dependants.update(dependency=None, broken_reference_field_name=field.name)
     if isinstance(field, LinkRowField):
-        field.vias.update(
-            dependency=None, broken_reference_field_name=field.name, via=None
-        )
+        field.vias.all().delete()
 
 
 def update_fields_with_broken_references(field: "field_models.Field"):
@@ -65,88 +62,9 @@ def update_fields_with_broken_references(field: "field_models.Field"):
     return len(updated_deps) > 0
 
 
-def _construct_dependency(field_instance, dependency, field_lookup_cache):
-    if isinstance(dependency, Tuple):
-        (
-            via_field_name,
-            dependency,
-        ) = dependency
-    else:
-        via_field_name = None
-
-    if field_instance.name == dependency and via_field_name is None:
-        raise SelfReferenceFieldDependencyError()
-
-    table = field_instance.table
-    if via_field_name is None:
-        dependency_field = field_lookup_cache.lookup_by_name(table, dependency)
-        if dependency_field is None:
-            return [
-                FieldDependency(
-                    dependant=field_instance, broken_reference_field_name=dependency
-                )
-            ]
-        else:
-            return [
-                FieldDependency(
-                    dependant=field_instance, dependency=dependency_field, via=None
-                )
-            ]
-    else:
-        via_field = field_lookup_cache.lookup_by_name(table, via_field_name)
-        if via_field is None:
-            # We are depending on a non existent via field so we have no idea what
-            # the target table is. Just create a single broken dependency to the via
-            # field and depend on that.
-            return [
-                FieldDependency(
-                    dependant=field_instance, broken_reference_field_name=via_field_name
-                )
-            ]
-        else:
-            from baserow.contrib.database.fields.models import LinkRowField
-
-            if not isinstance(via_field, LinkRowField):
-                # Depend on the via field directly so if it is renamed/deleted/changed
-                # we get notified
-                return [FieldDependency(dependant=field_instance, dependency=via_field)]
-            else:
-                deps = []
-                if field_instance.id != via_field.id:
-                    # Depend directly on the via field also so if it is renamed or
-                    # changes we get notified.
-                    deps.append(
-                        FieldDependency(
-                            dependant=field_instance, dependency=via_field, via=None
-                        )
-                    )
-
-                target_table = via_field.link_row_table
-                target_field = field_lookup_cache.lookup_by_name(
-                    target_table, dependency
-                )
-                if target_field is None:
-                    deps.append(
-                        FieldDependency(
-                            dependant=field_instance,
-                            broken_reference_field_name=dependency,
-                            via=via_field,
-                        )
-                    )
-                else:
-                    deps.append(
-                        FieldDependency(
-                            dependant=field_instance,
-                            dependency=target_field,
-                            via=via_field,
-                        )
-                    )
-                return deps
-
-
 def rebuild_field_dependencies(
     field_instance,
-    field_lookup_cache: FieldCache,
+    field_cache: FieldCache,
 ):
     """
     Deletes all existing dependencies a field has and resets them to the ones
@@ -154,23 +72,15 @@ def rebuild_field_dependencies(
     affect any dependencies from other fields to this field.
 
     :param field_instance: The field whose dependencies to change.
-    :param field_lookup_cache: A cache which will be used to lookup the actual
+    :param field_cache: A cache which will be used to lookup the actual
         fields referenced by any provided field dependencies.
     """
 
     from baserow.contrib.database.fields.registries import field_type_registry
 
     field_type = field_type_registry.get_by_model(field_instance)
-    field_dependencies = field_type.get_field_dependencies(
-        field_instance, field_lookup_cache
-    )
+    new_dependencies = field_type.get_field_dependencies(field_instance, field_cache)
 
-    new_dependencies = []
-    if field_dependencies is not None:
-        for dependency in field_dependencies:
-            new_dependencies += _construct_dependency(
-                field_instance, dependency, field_lookup_cache
-            )
     current_dependencies = field_instance.dependencies.all()
 
     # The str of a dependency can be used to compare two dependencies to see if they

@@ -4,7 +4,7 @@ from baserow.contrib.database.formula.parser.exceptions import MaximumFormulaSiz
 from baserow.contrib.database.formula.types.visitors import FormulaTypingVisitor
 
 
-def calculate_typed_expression(formula_field, field_lookup_cache):
+def calculate_typed_expression(formula_field, field_cache):
     """
     Core algorithm used to generate the internal typed expression for a given user
     supplied formula. The resulting typed expression can be directly translated to a
@@ -12,7 +12,7 @@ def calculate_typed_expression(formula_field, field_lookup_cache):
 
     :param formula_field: The formula field to calculate the typed internal expression
         for.
-    :param field_lookup_cache: A field lookup cache that will be used to lookup fields
+    :param field_cache: A field lookup cache that will be used to lookup fields
         referenced by this field.
     :return: A typed internal expression.
     """
@@ -21,7 +21,7 @@ def calculate_typed_expression(formula_field, field_lookup_cache):
         untyped_expression = formula_field.cached_untyped_expression
 
         typed_expression = untyped_expression.accept(
-            FormulaTypingVisitor(formula_field, field_lookup_cache)
+            FormulaTypingVisitor(formula_field, field_cache)
         )
         expression_type = typed_expression.expression_type
         merged_expression_type = (

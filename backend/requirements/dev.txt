@@ -71,6 +71,8 @@ gitpython==3.1.27
     # via bandit
 gprof2dot==2021.2.21
     # via django-silk
+graphviz==0.20
+    # via -r dev.in
 httpretty==1.1.4
     # via -r dev.in
 icdiff==2.0.4
