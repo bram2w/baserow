@@ -221,7 +221,12 @@ def validate_data_custom_fields(
                 }
             )
         else:
-            serializer_kwargs = {"base_class": base_serializer_class}
+            serializer_kwargs = {
+                "base_class": base_serializer_class,
+                # We want the request serializer as we are validating date from a
+                # request
+                "request_serializer": True,
+            }
             serializer_class = type_instance.get_serializer_class(**serializer_kwargs)
 
     return validate_data(serializer_class, data, partial=partial)
@@ -381,7 +386,13 @@ class DiscriminatorCustomFieldsMappingSerializer:
     """
 
     def __init__(
-        self, registry, base_class, type_field_name="type", many=False, help_text=None
+        self,
+        registry,
+        base_class,
+        type_field_name="type",
+        many=False,
+        help_text=None,
+        request=False,
     ):
         self.read_only = False
         self.registry = registry
@@ -390,6 +401,7 @@ class DiscriminatorCustomFieldsMappingSerializer:
         self.many = many
         self.help_text = help_text
         self.partial = False
+        self.request = request
 
 
 class DiscriminatorMappingSerializer:

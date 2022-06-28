@@ -12,6 +12,7 @@ from .groups import urls as group_urls
 from .templates import urls as templates_urls
 from .applications import urls as application_urls
 from .trash import urls as trash_urls
+from .jobs import urls as jobs_urls
 
 
 app_name = "baserow.api"
@@ -36,6 +37,7 @@ urlpatterns = (
         path("templates/", include(templates_urls, namespace="templates")),
         path("applications/", include(application_urls, namespace="applications")),
         path("trash/", include(trash_urls, namespace="trash")),
+        path("jobs/", include(jobs_urls, namespace="jobs")),
         path("_health/", public_health_check, name="public_health_check"),
     ]
     + application_type_registry.api_urls

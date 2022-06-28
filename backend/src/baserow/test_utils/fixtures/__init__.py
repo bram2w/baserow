@@ -13,6 +13,8 @@ from .template import TemplateFixtures
 from .row import RowFixture
 from .webhook import TableWebhookFixture
 from .airtable import AirtableFixtures
+from .job import JobFixtures
+from .file_import import FileImportFixtures
 
 
 class Fixtures(
@@ -29,5 +31,7 @@ class Fixtures(
     RowFixture,
     TableWebhookFixture,
     AirtableFixtures,
+    JobFixtures,
+    FileImportFixtures,
 ):
     fake = Faker()

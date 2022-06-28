@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 
+from baserow.core.jobs.handler import JobHandler
+
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -155,7 +157,10 @@ class TableHandler:
             schema_editor.create_model(model)
 
         if data is not None:
-            self.fill_initial_table_data(user, table, fields, data, model)
+            if "async_import" in settings.FEATURE_FLAGS:
+                self.async_fill_initial_table_data(user, table, data)
+            else:
+                self.fill_initial_table_data(user, table, fields, data, model)
         elif fill_example:
             self.fill_example_table_data(user, table)
 
@@ -223,6 +228,26 @@ class TableHandler:
                 row.append("")
 
         return fields, data
+
+    def async_fill_initial_table_data(
+        self,
+        user: AbstractUser,
+        table: Table,
+        data: List[List[Any]],
+    ):
+        """
+        Launches the asynchronous job to fill the provided table with the normalized
+        data that needs to be created upon creation of the table.
+
+        :param user: The user on whose behalf the table is created.
+        :param table: The newly created table where the initial data has to be inserted
+            into.
+        :param data: A list containing the rows that need to be inserted.
+        """
+
+        ViewHandler().create_view(user, table, GridViewType.type, name="Grid")
+
+        JobHandler().create_and_start_job(user, "file_import", table=table, data=data)
 
     def fill_initial_table_data(
         self,

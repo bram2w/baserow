@@ -8,7 +8,7 @@ from baserow.contrib.database.airtable.models import AirtableImportJob
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("baserow.contrib.database.airtable.handler.run_import_from_airtable")
+@patch("baserow.core.jobs.handler.run_async_job")
 def test_create_airtable_import_job(
     mock_run_import_from_airtable, data_fixture, api_client
 ):
@@ -17,16 +17,21 @@ def test_create_airtable_import_job(
     group_2 = data_fixture.create_group()
 
     response = api_client.post(
-        reverse("api:database:airtable:create"),
-        {"group_id": 0, "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx"},
+        reverse("api:jobs:list"),
+        {
+            "type": "airtable",
+            "group_id": 0,
+            "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
+        },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
 
     response = api_client.post(
-        reverse("api:database:airtable:create"),
+        reverse("api:jobs:list"),
         {
+            "type": "airtable",
             "group_id": group_2.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
@@ -36,8 +41,10 @@ def test_create_airtable_import_job(
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
     response = api_client.post(
-        reverse("api:database:airtable:create"),
-        {},
+        reverse("api:jobs:list"),
+        {
+            "type": "airtable",
+        },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -53,8 +60,9 @@ def test_create_airtable_import_job(
     }
 
     response = api_client.post(
-        reverse("api:database:airtable:create"),
+        reverse("api:jobs:list"),
         {
+            "type": "airtable",
             "group_id": "not_int",
             "airtable_share_url": "https://airtable.com/test",
             "timezone": "UNKNOWN",
@@ -80,8 +88,9 @@ def test_create_airtable_import_job(
     }
 
     response = api_client.post(
-        reverse("api:database:airtable:create"),
+        reverse("api:jobs:list"),
         {
+            "type": "airtable",
             "group_id": group.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
@@ -93,6 +102,7 @@ def test_create_airtable_import_job(
     assert airtable_import_job.airtable_share_id == "shrxxxxxxxxxxxxxx"
     assert response.json() == {
         "id": airtable_import_job.id,
+        "type": "airtable",
         "group_id": group.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
@@ -105,8 +115,9 @@ def test_create_airtable_import_job(
 
     airtable_import_job.delete()
     response = api_client.post(
-        reverse("api:database:airtable:create"),
+        reverse("api:jobs:list"),
         {
+            "type": "airtable",
             "group_id": group.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
             "timezone": "Europe/Amsterdam",
@@ -119,6 +130,7 @@ def test_create_airtable_import_job(
     assert airtable_import_job.airtable_share_id == "shrxxxxxxxxxxxxxx"
     assert response.json() == {
         "id": airtable_import_job.id,
+        "type": "airtable",
         "group_id": group.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
@@ -129,15 +141,16 @@ def test_create_airtable_import_job(
     }
 
     response = api_client.post(
-        reverse("api:database:airtable:create"),
+        reverse("api:jobs:list"),
         {
+            "type": "airtable",
             "group_id": group.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_AIRTABLE_JOB_ALREADY_RUNNING"
+    assert response.json()["error"] == "ERROR_MAX_JOB_COUNT_EXCEEDED"
 
 
 @pytest.mark.django_db
@@ -148,17 +161,17 @@ def test_get_airtable_import_job(data_fixture, api_client):
 
     response = api_client.get(
         reverse(
-            "api:database:airtable:item",
+            "api:jobs:item",
             kwargs={"job_id": airtable_job_2.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_AIRTABLE_IMPORT_JOB_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_JOB_DOES_NOT_EXIST"
 
     response = api_client.get(
         reverse(
-            "api:database:airtable:item",
+            "api:jobs:item",
             kwargs={"job_id": airtable_job_1.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -167,6 +180,7 @@ def test_get_airtable_import_job(data_fixture, api_client):
     json = response.json()
     assert json == {
         "id": airtable_job_1.id,
+        "type": "airtable",
         "group_id": airtable_job_1.group_id,
         "airtable_share_id": "test",
         "progress_percentage": 0,
@@ -184,7 +198,7 @@ def test_get_airtable_import_job(data_fixture, api_client):
 
     response = api_client.get(
         reverse(
-            "api:database:airtable:item",
+            "api:jobs:item",
             kwargs={"job_id": airtable_job_1.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -193,6 +207,7 @@ def test_get_airtable_import_job(data_fixture, api_client):
     json = response.json()
     assert json == {
         "id": airtable_job_1.id,
+        "type": "airtable",
         "group_id": airtable_job_1.group_id,
         "airtable_share_id": "test",
         "progress_percentage": 50,
