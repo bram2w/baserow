@@ -377,6 +377,65 @@ def test_delete_form_view(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_created.send")
+@patch("baserow.contrib.database.views.signals.views_reordered.send")
+def test_duplicate_views(reordered_mock, created_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    grid = data_fixture.create_public_password_protected_grid_view(table=table, order=1)
+    # Add another view to challenge the insertion position of the duplicate
+    form = data_fixture.create_form_view(table=table, order=2)
+
+    field_option = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty",
+    )
+    view_filter = data_fixture.create_view_filter(
+        view=grid, field=field, value="test", type="equal"
+    )
+    view_sort = data_fixture.create_view_sort(view=grid, field=field, order="ASC")
+
+    view_decoration = data_fixture.create_view_decoration(
+        view=grid,
+        value_provider_conf={"config": 12},
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.duplicate_view(user=user_2, original_view=grid)
+
+    new_view = handler.duplicate_view(user=user, original_view=grid)
+
+    created_mock.assert_called_once()
+    assert created_mock.call_args[1]["view"].id == new_view.id
+    assert created_mock.call_args[1]["user"].id == user.id
+
+    reordered_mock.assert_called_once()
+    assert reordered_mock.call_args[1]["order"] == [grid.id, new_view.id, form.id]
+
+    grid.refresh_from_db()
+    assert new_view.name == grid.name + " 2"
+    assert new_view.id != grid.id
+    assert new_view.order == grid.order + 1
+    assert new_view.public is False
+    assert new_view.viewfilter_set.all().first().value == view_filter.value
+    assert new_view.viewsort_set.all().first().order == view_sort.order
+    assert (
+        new_view.viewdecoration_set.all()[0].value_provider_conf
+        == view_decoration.value_provider_conf
+    )
+
+    new_view2 = handler.duplicate_view(user=user, original_view=new_view)
+
+    assert new_view2.name == grid.name + " 3"
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.views_reordered.send")
 def test_order_views(send_mock, data_fixture):
     user = data_fixture.create_user()

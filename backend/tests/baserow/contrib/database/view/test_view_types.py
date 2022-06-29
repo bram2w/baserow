@@ -19,7 +19,11 @@ from baserow.contrib.database.fields.handler import FieldHandler
 @pytest.mark.django_db
 def test_import_export_grid_view(data_fixture):
     grid_view = data_fixture.create_grid_view(
-        name="Test", order=1, filter_type="AND", filters_disabled=False
+        name="Test",
+        order=1,
+        filter_type="AND",
+        filters_disabled=False,
+        row_identifier_type="count",
     )
     field = data_fixture.create_text_field(table=grid_view.table)
     imported_field = data_fixture.create_text_field(table=grid_view.table)
@@ -52,6 +56,7 @@ def test_import_export_grid_view(data_fixture):
     assert grid_view.order == imported_grid_view.order
     assert grid_view.filter_type == imported_grid_view.filter_type
     assert grid_view.filters_disabled == imported_grid_view.filters_disabled
+    assert grid_view.row_identifier_type == imported_grid_view.row_identifier_type
     assert imported_grid_view.viewfilter_set.all().count() == 1
     assert imported_grid_view.viewsort_set.all().count() == 1
 
@@ -148,7 +153,10 @@ def test_import_export_gallery_view(data_fixture, tmpdir):
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
     table = data_fixture.create_database_table(user=user)
-    gallery_view = data_fixture.create_gallery_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+    gallery_view = data_fixture.create_gallery_view(
+        table=table, card_cover_image_field=file_field
+    )
     text_field = data_fixture.create_text_field(table=table)
     field_option = data_fixture.create_gallery_view_field_option(
         gallery_view, text_field, order=1
@@ -166,14 +174,21 @@ def test_import_export_gallery_view(data_fixture, tmpdir):
     assert serialized["type"] == "gallery"
     assert serialized["name"] == gallery_view.name
     assert serialized["order"] == 0
-    assert len(serialized["field_options"]) == 1
+    assert serialized["card_cover_image_field_id"] == file_field.id
+    assert len(serialized["field_options"]) == 2
     assert serialized["field_options"][0]["id"] == field_option.id
     assert serialized["field_options"][0]["field_id"] == field_option.field_id
     assert serialized["field_options"][0]["hidden"] is True
     assert serialized["field_options"][0]["order"] == 1
 
     imported_single_select_field = data_fixture.create_text_field(table=table)
-    id_mapping = {"database_fields": {text_field.id: imported_single_select_field.id}}
+    imported_file_field = data_fixture.create_file_field(table=table)
+    id_mapping = {
+        "database_fields": {
+            text_field.id: imported_single_select_field.id,
+            file_field.id: imported_file_field.id,
+        }
+    }
 
     with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
         imported_gallery_view = gallery_view_type.import_serialized(
@@ -183,8 +198,9 @@ def test_import_export_gallery_view(data_fixture, tmpdir):
     assert gallery_view.id != imported_gallery_view.id
     assert gallery_view.name == imported_gallery_view.name
     assert gallery_view.order == imported_gallery_view.order
+    assert imported_gallery_view.card_cover_image_field.id == imported_file_field.id
     imported_field_options = imported_gallery_view.get_field_options()
-    assert len(imported_field_options) == 1
+    assert len(imported_field_options) == 2
     imported_field_option = imported_field_options[0]
     assert field_option.id != imported_field_option.id
     assert field_option.hidden == imported_field_option.hidden

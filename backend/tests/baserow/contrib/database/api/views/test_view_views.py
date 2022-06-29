@@ -186,6 +186,70 @@ def test_delete_view(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_duplicate_views(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table_1)
+    table_2 = data_fixture.create_database_table()
+    view_1 = data_fixture.create_grid_view(table=table_1, order=1)
+    view_2 = data_fixture.create_grid_view(table=table_2, order=2)
+    view_3 = data_fixture.create_grid_view(table=table_1, order=3)
+
+    field_option = data_fixture.create_grid_view_field_option(
+        grid_view=view_1,
+        field=field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty",
+    )
+    view_filter = data_fixture.create_view_filter(
+        view=view_1, field=field, value="test", type="equal"
+    )
+    view_sort = data_fixture.create_view_sort(view=view_1, field=field, order="ASC")
+
+    view_decoration = data_fixture.create_view_decoration(
+        view=view_1,
+        value_provider_conf={"config": 12},
+    )
+
+    response = api_client.post(
+        reverse("api:database:views:duplicate", kwargs={"view_id": view_2.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse("api:database:views:duplicate", kwargs={"view_id": 999999}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    assert View.objects.count() == 3
+
+    response = api_client.post(
+        reverse("api:database:views:duplicate", kwargs={"view_id": view_1.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert View.objects.count() == 4
+
+    assert response_json["id"] != view_1.id
+    assert response_json["order"] == view_1.order + 1
+    assert "sortings" in response_json
+    assert "filters" in response_json
+    assert "decorations" in response_json
+
+
+@pytest.mark.django_db
 def test_order_views(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"

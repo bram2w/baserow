@@ -40,7 +40,7 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.core.utils import extract_allowed, set_allowed_attrs, find_unused_name
 from .dependencies.handler import FieldDependencyHandler
 from .dependencies.update_collector import FieldUpdateCollector
 from .exceptions import (
@@ -755,64 +755,21 @@ class FieldHandler:
 
         max_field_name_length = Field.get_max_name_length()
 
-        # If the field_name_to_try is longer than the maximally allowed
-        # field name length the name needs to be truncated.
-        field_names_to_try = [
-            item[0:max_field_name_length] for item in field_names_to_try
-        ]
-        # Check if any of the names to try are available by finding any existing field
-        # names with the same name.
-        taken_field_names = set(
-            Field.objects.exclude(id__in=field_ids_to_ignore)
-            .filter(table=table, name__in=field_names_to_try)
-            .values("name")
-            .distinct()
-            .values_list("name", flat=True)
-        )
-        # If there are more names to try than the ones used in the table then there must
-        # be one which isn't used.
-        if len(set(field_names_to_try)) > len(taken_field_names):
-            # Loop over to ensure we maintain the ordering provided by
-            # field_names_to_try, so we always return the first available name and
-            # not any.
-            for field_name in field_names_to_try:
-                if field_name not in taken_field_names:
-                    return field_name
-
-        # None of the names in the param list are available, now using the last one lets
-        # append a number to the name until we find a free one.
-        original_field_name = field_names_to_try[-1]
-
         # Lookup any existing field names. This way we can skip these and ensure our
         # new field has a unique name.
-        existing_field_name_collisions = set(
+        existing_field_name_collisions = (
             Field.objects.exclude(id__in=field_ids_to_ignore)
             .filter(table=table)
             .order_by("name")
             .distinct()
             .values_list("name", flat=True)
         )
-        i = 2
-        while True:
-            suffix_to_append = f" {i}"
-            suffix_length = len(suffix_to_append)
-            length_of_original_field_name_plus_suffix = (
-                len(original_field_name) + suffix_length
-            )
 
-            # At this point we know, that the original_field_name can only
-            # be maximally the length of max_field_name_length. Therefore
-            # if the length_of_original_field_name_plus_suffix is longer
-            # we can further truncate the field_name by the length of the
-            # suffix.
-            if length_of_original_field_name_plus_suffix > max_field_name_length:
-                field_name = f"{original_field_name[:-suffix_length]}{suffix_to_append}"
-            else:
-                field_name = f"{original_field_name}{suffix_to_append}"
-
-            i += 1
-            if field_name not in existing_field_name_collisions:
-                return field_name
+        return find_unused_name(
+            field_names_to_try,
+            existing_field_name_collisions,
+            max_length=max_field_name_length,
+        )
 
     def restore_field(
         self,

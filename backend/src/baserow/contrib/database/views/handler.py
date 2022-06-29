@@ -1,6 +1,8 @@
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from copy import deepcopy
+from io import BytesIO
 from typing import (
     Dict,
     Any,
@@ -12,6 +14,7 @@ from typing import (
     Type,
     Union,
 )
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import jwt
 
@@ -24,6 +27,7 @@ from django.core.cache import cache
 from django.db import models as django_models
 from django.db.models import F, Count
 from django.db.models.query import QuerySet
+from django.core.files.storage import default_storage
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -38,6 +42,7 @@ from baserow.core.utils import (
     extract_allowed,
     set_allowed_attrs,
     get_model_reference_field_name,
+    find_unused_name,
 )
 from .exceptions import (
     ViewDoesNotExist,
@@ -84,8 +89,10 @@ from .signals import (
 )
 from .validators import EMPTY_VALUES
 
-
 FieldOptionsDict = Dict[int, Dict[str, Any]]
+
+
+ending_number_regex = re.compile(r"(.+) (\d+)$")
 
 
 class ViewHandler:
@@ -202,6 +209,80 @@ class ViewHandler:
         view_created.send(self, view=instance, user=user, type_name=type_name)
 
         return instance
+
+    def duplicate_view(self, user: AbstractUser, original_view: View) -> View:
+        """
+        Duplicates the given view to create a new one. The name is appended with the
+        copy number and if the original view is publicly shared, the created view
+        will not be shared anymore. The new view will be created just after the original
+        view.
+
+        :param user: The user whose ask for the duplication.
+        :param original_view: The original view to be duplicated.
+        :return: The created view instance.
+        """
+
+        group = original_view.table.database.group
+        group.has_user(user, raise_error=True)
+
+        view_type = view_type_registry.get_by_model(original_view)
+
+        storage = default_storage
+
+        fields = original_view.table.field_set.all()
+
+        files_buffer = BytesIO()
+        # Use export/import to duplicate the view easily
+        with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+            serialized = view_type.export_serialized(original_view, files_zip, storage)
+
+        existing_view_names = View.objects.filter(
+            table_id=original_view.table.id
+        ).values_list("name", flat=True)
+
+        # Change the name of the view
+        name = serialized["name"]
+        match = ending_number_regex.match(name)
+        if match:
+            name, _ = match.groups()
+        serialized["name"] = find_unused_name(
+            [name], existing_view_names, max_length=255
+        )
+
+        # The new view must not be publicly shared
+        if "public" in serialized:
+            serialized["public"] = False
+
+        id_mapping = {
+            "database_fields": {field.id: field.id for field in fields},
+            "database_field_select_options": {},
+        }
+        with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+            duplicated_view = view_type.import_serialized(
+                original_view.table, serialized, id_mapping, files_zip, storage
+            )
+
+        queryset = View.objects.filter(table_id=original_view.table.id)
+        view_ids = queryset.values_list("id", flat=True)
+
+        ordered_ids = []
+        for view_id in view_ids:
+            if view_id != duplicated_view.id:
+                ordered_ids.append(view_id)
+            if view_id == original_view.id:
+                ordered_ids.append(duplicated_view.id)
+
+        View.order_objects(queryset, ordered_ids)
+        duplicated_view.refresh_from_db()
+
+        view_created.send(
+            self, view=duplicated_view, user=user, type_name=view_type.type
+        )
+        views_reordered.send(
+            self, table=original_view.table, order=ordered_ids, user=None
+        )
+
+        return duplicated_view
 
     def update_view(
         self, user: AbstractUser, view: View, **data: Dict[str, Any]

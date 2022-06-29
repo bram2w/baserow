@@ -76,6 +76,7 @@ class GridViewType(ViewType):
         """
 
         serialized = super().export_serialized(grid, files_zip, storage)
+        serialized["row_identifier_type"] = grid.row_identifier_type
 
         serialized_field_options = []
         for field_option in grid.get_field_options():
@@ -329,6 +330,10 @@ class GalleryViewType(ViewType):
         """
 
         serialized = super().export_serialized(gallery, files_zip, storage)
+
+        if gallery.card_cover_image_field:
+            serialized["card_cover_image_field_id"] = gallery.card_cover_image_field.id
+
         serialized_field_options = []
         for field_option in gallery.get_field_options():
             serialized_field_options.append(
@@ -351,7 +356,14 @@ class GalleryViewType(ViewType):
         """
 
         serialized_copy = serialized_values.copy()
+
+        if serialized_copy.get("card_cover_image_field_id", None):
+            serialized_copy["card_cover_image_field_id"] = id_mapping[
+                "database_fields"
+            ][serialized_copy["card_cover_image_field_id"]]
+
         field_options = serialized_copy.pop("field_options")
+
         gallery_view = super().import_serialized(
             table, serialized_copy, id_mapping, files_zip, storage
         )

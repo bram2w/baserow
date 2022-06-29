@@ -8,6 +8,12 @@
         </a>
       </li>
       <li>
+        <a @click="duplicateView()">
+          <i class="context__menu-icon fas fa-fw fa-clone"></i>
+          {{ $t('viewContext.duplicateView') }}
+        </a>
+      </li>
+      <li>
         <a @click="openWebhookModal()">
           <i class="context__menu-icon fas fa-fw fa-globe"></i>
           {{ $t('viewContext.webhooks') }}
@@ -85,6 +91,29 @@ export default {
       }
 
       this.setLoading(this.view, false)
+    },
+    async duplicateView() {
+      this.setLoading(this.view, true)
+      let newView
+
+      try {
+        newView = await this.$store.dispatch('view/duplicate', this.view)
+      } catch (error) {
+        this.handleError(error, 'view')
+      }
+
+      this.$refs.context.hide()
+      this.setLoading(this.view, false)
+
+      // Redirect to the newly created view.
+      this.$nuxt.$router.push({
+        name: 'database-table',
+        params: {
+          databaseId: this.table.database_id,
+          tableId: this.table.id,
+          viewId: newView.id,
+        },
+      })
     },
     exportView() {
       this.$refs.context.hide()

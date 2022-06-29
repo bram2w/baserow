@@ -85,7 +85,7 @@ export const mutations = {
     view._.loading = value
   },
   ADD_ITEM(state, item) {
-    state.items.push(item)
+    state.items = [...state.items, item].sort((a, b) => a.order - b.order)
   },
   UPDATE_ITEM(state, { id, values }) {
     const index = state.items.findIndex((item) => item.id === id)
@@ -327,6 +327,14 @@ export const actions = {
    */
   forceUpdate({ commit }, { view, values }) {
     commit('UPDATE_ITEM', { id: view.id, values })
+  },
+  /**
+   * Duplicates an existing view.
+   */
+  async duplicate({ commit, dispatch }, view) {
+    const { data } = await ViewService(this.$client).duplicate(view.id)
+    await dispatch('forceCreate', { data })
+    return data
   },
   /**
    * Deletes an existing view with the provided id. A request to the server is first
