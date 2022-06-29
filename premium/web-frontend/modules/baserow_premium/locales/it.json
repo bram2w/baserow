@@ -184,6 +184,7 @@
         "kanbanView": "Vista Kanbab",
         "exports": "Esportazione JSON e XML",
         "admin": "Funzionalità amministratore",
+        "rowColoring": "Colore righe",
         "getLicense": "Ottieni una licenza",
         "baserowInstanceId": "Il tuo ID di istanza Baserow è:",
         "registerLicense": "Registra licenza",

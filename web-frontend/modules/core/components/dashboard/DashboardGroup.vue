@@ -29,6 +29,7 @@
           v-for="(component, index) in dashboardGroupExtraComponents"
           :key="index"
           :group="group"
+          :component-arguments="componentArguments"
         ></component>
         <a
           v-if="group.permissions === 'ADMIN'"
@@ -42,6 +43,8 @@
       :is="component"
       v-for="(component, index) in dashboardGroupComponents"
       :key="index"
+      :group="group"
+      :component-arguments="componentArguments"
     ></component>
     <ul class="dashboard__group-items">
       <li
@@ -104,6 +107,10 @@ export default {
   mixins: [editGroup],
   props: {
     group: {
+      type: Object,
+      required: true,
+    },
+    componentArguments: {
       type: Object,
       required: true,
     },

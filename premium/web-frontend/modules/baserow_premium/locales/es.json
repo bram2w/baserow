@@ -184,6 +184,7 @@
         "kanbanView": "Vista Kanban",
         "exports": "Exportación JSON y XML",
         "admin": "Funcionalidad de administración",
+        "rowColoring": "Coloración de fila",
         "getLicense": "obtener una licencia",
         "baserowInstanceId": "Su ID de instancia de Baserow es:",
         "registerLicense": "Registrar licencia",

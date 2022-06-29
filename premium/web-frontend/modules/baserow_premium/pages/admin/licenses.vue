@@ -27,6 +27,10 @@
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
           {{ $t('licenses.admin') }}
         </li>
+        <li class="licenses__feature">
+          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
+          {{ $t('licenses.rowColoring') }}
+        </li>
       </ul>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.registerModal.show()">

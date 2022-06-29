@@ -8,6 +8,10 @@ class RegisteredException(Instance):
     exception_class: Exception
     exception_error: Tuple
 
+    @property
+    def type(self):
+        return self.exception_error[0]
+
 
 class APIExceptionRegistry(Registry):
     """

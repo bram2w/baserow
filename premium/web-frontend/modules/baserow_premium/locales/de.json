@@ -183,6 +183,7 @@
         "kanbanView": "Kanban-Ansicht",
         "exports": "JSON- und XML-Export",
         "admin": "Administrationsfunktionen",
+        "rowColoring": "Zeilenfarbe",
         "getLicense": "Eine Lizenz erwerben",
         "baserowInstanceId": "Ihre Baserow-Instanz-ID lautet:",
         "registerLicense": "Lizenz registrieren",

@@ -182,6 +182,7 @@
         "kanbanView": "",
         "exports": "",
         "admin": "",
+        "rowColoring": "",
         "getLicense": "",
         "baserowInstanceId": "",
         "registerLicense": "",

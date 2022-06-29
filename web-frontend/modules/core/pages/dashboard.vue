@@ -27,6 +27,7 @@
               :ref="'group-' + group.id"
               :key="group.id"
               :group="group"
+              :component-arguments="groupComponentArguments"
             ></DashboardGroup>
             <div>
               <a
@@ -70,10 +71,22 @@ export default {
    * Fetches the data that must be shown on the dashboard, this could for example be
    * pending group invitations.
    */
-  async asyncData({ error, app }) {
+  async asyncData(context) {
+    const { error, app } = context
     try {
       const { data } = await AuthService(app.$client).dashboard()
-      return { groupInvitations: data.group_invitations }
+      let asyncData = {
+        groupInvitations: data.group_invitations,
+        groupComponentArguments: {},
+      }
+      // Loop over all the plugin and call the `fetchAsyncDashboardData` because there
+      // might be plugins that extend the dashboard and we want to fetch that async data
+      // here.
+      const plugins = Object.values(app.$registry.getAll('plugin'))
+      for (let i = 0; i < plugins.length; i++) {
+        asyncData = await plugins[i].fetchAsyncDashboardData(context, asyncData)
+      }
+      return asyncData
     } catch (e) {
       return error({ statusCode: 400, message: 'Error loading dashboard.' })
     }
