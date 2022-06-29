@@ -5,15 +5,6 @@
       {{ $t('dashboard.alertText') }}
     </p>
     <a
-      href="https://github.com/sponsors/bram2w"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="button button--primary dashboard__help-button"
-    >
-      {{ $t('dashboard.becomeGithubSponsor') }}
-      <i class="fa fa-heart"></i>
-    </a>
-    <a
       href="https://gitlab.com/bramw/baserow"
       target="_blank"
       rel="noopener noreferrer"

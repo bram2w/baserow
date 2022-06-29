@@ -14,7 +14,7 @@ export class ResponseErrorMessage {
  * register new ones. This is stored in a separate class because need to inject
  * this, so it can be used by other modules.
  */
-class ClientErrorMap {
+export class ClientErrorMap {
   constructor(app) {
     // Declare the default error messages.
     this.errorMap = {

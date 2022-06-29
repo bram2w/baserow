@@ -54,6 +54,8 @@ from .signals import (
     application_updated,
     application_deleted,
     applications_reordered,
+    before_group_user_updated,
+    before_group_user_deleted,
     before_group_deleted,
     group_created,
     group_updated,
@@ -231,6 +233,10 @@ class CoreHandler:
                 "leave it."
             )
 
+        before_group_user_deleted.send(
+            self, user=user, group=group, group_user=group_user
+        )
+
         # If the user is not the last admin, we can safely delete the user from the
         # group.
         group_user_id = group_user.id
@@ -354,6 +360,9 @@ class CoreHandler:
             raise ValueError("The group user is not an instance of GroupUser.")
 
         group_user.group.has_user(user, "ADMIN", raise_error=True)
+
+        before_group_user_updated.send(self, group_user=group_user, **kwargs)
+
         group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
         group_user.save()
 
@@ -375,6 +384,11 @@ class CoreHandler:
             raise ValueError("The group user is not an instance of GroupUser.")
 
         group_user.group.has_user(user, "ADMIN", raise_error=True)
+
+        before_group_user_deleted.send(
+            self, user=group_user.user, group=group_user.group, group_user=group_user
+        )
+
         group_user_id = group_user.id
         group_user.delete()
 

@@ -183,6 +183,7 @@
         "kanbanView": "Kanban bekijken",
         "exports": "JSON en XML uitvoer",
         "admin": "Beheerdersfunctionaliteit",
+        "rowColoring": "",
         "getLicense": "Haal een licentie",
         "baserowInstanceId": "Je Baserow instantie ID is:",
         "registerLicense": "Licentie registreren",

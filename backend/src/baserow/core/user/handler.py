@@ -15,6 +15,7 @@ from django.utils import translation
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import update_last_login, AbstractUser
 
+from baserow.core.signals import before_user_deleted
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.registries import plugin_registry
@@ -348,6 +349,8 @@ class UserHandler:
             and not User.objects.filter(is_staff=True).exclude(pk=user.pk).exists()
         ):
             raise UserIsLastAdmin("You are the last admin of the instance.")
+
+        before_user_deleted.send(self, user=user)
 
         user.profile.to_be_deleted = True
         user.profile.save()

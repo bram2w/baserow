@@ -201,7 +201,7 @@
     "dashboard": {
         "title": "Dashboard",
         "alertTitle": "Wir benötigen Ihre Hilfe!",
-        "alertText": "Wenn Sie Baserow nützlich finden, dann sind Sie herzlich eingeladen, uns zu sponsern, zu unterstützen oder zu teilen. Wenn Sie uns auf GitHub sponsern, erhalten Sie frühen Zugang zu den Premium-Funktionen!",
+        "alertText": "Wenn Sie Baserow nützlich finden, dann sind Sie herzlich eingeladen, uns einen Stern auf GitLab zu geben oder uns zu teilen. Indem Sie Baserow teilen helfen sie uns das Produkt zu verbessern und es nützlicher für Ihre Zwecke zu machen.",
         "tweetContent": "Entdecken Sie @baserow, ein Open-Source-Datenbank-Tool ohne Code und eine Alternative zu Airtable!",
         "redditTitle": "Baserow - Eine Open-Source no-code Datenbank",
         "noGroupTitle": "Keine Gruppen gefunden",

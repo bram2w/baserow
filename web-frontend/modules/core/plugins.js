@@ -55,4 +55,14 @@ export class BaserowPlugin extends Registerable {
   getDashboardGroupComponent() {
     return null
   }
+
+  /**
+   * Because the dashboard could contain dynamic `getDashboardGroupComponent` and
+   * `getDashboardGroupExtraComponent` components, it could be that additional data
+   * must be fetched from the backend when the page first loads. This method can be
+   * overwritten to do that.
+   */
+  fetchAsyncDashboardData(context, data) {
+    return data
+  }
 }

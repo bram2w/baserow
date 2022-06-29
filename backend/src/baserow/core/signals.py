@@ -1,5 +1,8 @@
 from django.dispatch import Signal
 
+before_group_user_deleted = Signal()
+before_group_user_updated = Signal()
+before_user_deleted = Signal()
 
 before_group_deleted = Signal()
 

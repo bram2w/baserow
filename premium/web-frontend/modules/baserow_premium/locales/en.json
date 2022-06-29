@@ -184,6 +184,7 @@
         "kanbanView": "Kanban view",
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
+        "rowColoring": "Row coloring",
         "getLicense": "Get a license",
         "baserowInstanceId": "Your Baserow instance ID is:",
         "registerLicense": "Register license",
