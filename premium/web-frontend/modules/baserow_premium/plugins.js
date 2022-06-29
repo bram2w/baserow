@@ -20,7 +20,6 @@ export class PremiumPlugin extends BaserowPlugin {
       : []
     return (
       validLicense === true ||
-      (Array.isArray(validLicense) && !forGroupId) ||
       (Array.isArray(validLicense) && groups.includes(forGroupId))
     )
   }

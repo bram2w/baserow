@@ -69,18 +69,18 @@ describe('Test premium Baserow plugin', () => {
       )
     ).toBe(false)
 
-    // If the user only has premium access to certain groups, he will have
+    // If the user only has premium access to certain groups, he will not have
     // access to the premium features that are not related to a group.
     expect(
       PremiumPlugin.hasValidPremiumLicense({
         premium: { valid_license: [{ type: 'group', id: 1 }] },
       })
-    ).toBe(true)
+    ).toBe(false)
     expect(
       PremiumPlugin.hasValidPremiumLicense({
         premium: { valid_license: [{ type: 'group', id: 2 }] },
       })
-    ).toBe(true)
+    ).toBe(false)
 
     // If the user only has premium access to certain groups, we expect the
     // matches group to be true.
