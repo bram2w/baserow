@@ -754,6 +754,51 @@ class CreateViewActionType(ActionType):
         TrashHandler.restore_item(user, "view", params.view_id)
 
 
+class DuplicateViewActionType(ActionType):
+    type = "duplicate_view"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+
+    @classmethod
+    def do(cls, user: AbstractUser, original_view: View) -> View:
+        """
+        Duplicate an existing view.
+
+        Undoing this action deletes the new view.
+        Redoing this action restores the view.
+
+        :param user: The user creating the view.
+        :param original_view: The view to duplicate.
+        """
+
+        view = ViewHandler().duplicate_view(
+            user,
+            original_view,
+        )
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(view.id),
+            scope=cls.scope(original_view.table.id),
+        )
+
+        return view
+
+    @classmethod
+    def scope(cls, table_id: int) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        ViewHandler().delete_view_by_id(user, params.view_id)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        TrashHandler.restore_item(user, "view", params.view_id)
+
+
 class DeleteViewActionType(ActionType):
     type = "delete_view"
 

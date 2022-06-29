@@ -95,6 +95,7 @@ class DatabaseConfig(AppConfig):
 
         from baserow.contrib.database.views.actions import (
             CreateViewActionType,
+            DuplicateViewActionType,
             DeleteViewActionType,
             OrderViewsActionType,
             UpdateViewActionType,
@@ -112,6 +113,7 @@ class DatabaseConfig(AppConfig):
         )
 
         action_type_registry.register(CreateViewActionType())
+        action_type_registry.register(DuplicateViewActionType())
         action_type_registry.register(DeleteViewActionType())
         action_type_registry.register(OrderViewsActionType())
         action_type_registry.register(UpdateViewActionType())

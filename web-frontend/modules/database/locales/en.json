@@ -451,6 +451,7 @@
     },
     "viewContext": {
         "exportView": "Export view",
+        "duplicateView": "Duplicate view",
         "renameView": "Rename view",
         "webhooks": "Webhooks",
         "deleteView": "Delete view"

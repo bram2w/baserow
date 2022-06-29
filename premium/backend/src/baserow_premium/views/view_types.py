@@ -103,7 +103,11 @@ class KanbanViewType(ViewType):
         """
 
         serialized = super().export_serialized(kanban, files_zip, storage)
-        serialized["single_select_field_id"] = kanban.single_select_field_id
+        if kanban.single_select_field_id:
+            serialized["single_select_field_id"] = kanban.single_select_field_id
+
+        if kanban.card_cover_image_field_id:
+            serialized["card_cover_image_field_id"] = kanban.card_cover_image_field_id
 
         serialized_field_options = []
         for field_option in kanban.get_field_options():
@@ -132,9 +136,16 @@ class KanbanViewType(ViewType):
         """
 
         serialized_copy = serialized_values.copy()
-        serialized_copy["single_select_field_id"] = id_mapping["database_fields"][
-            serialized_copy.pop("single_select_field_id")
-        ]
+        if "single_select_field_id" in serialized_copy:
+            serialized_copy["single_select_field_id"] = id_mapping["database_fields"][
+                serialized_copy.pop("single_select_field_id")
+            ]
+
+        if "card_cover_image_field_id" in serialized_copy:
+            serialized_copy["card_cover_image_field_id"] = id_mapping[
+                "database_fields"
+            ][serialized_copy.pop("card_cover_image_field_id")]
+
         field_options = serialized_copy.pop("field_options")
         kanban_view = super().import_serialized(
             table, serialized_copy, id_mapping, files_zip, storage

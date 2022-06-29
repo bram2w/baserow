@@ -14,6 +14,7 @@ from baserow.contrib.database.views.actions import (
     CreateViewActionType,
     DeleteViewActionType,
     OrderViewsActionType,
+    DuplicateViewActionType,
     UpdateViewActionType,
     CreateViewFilterActionType,
     DeleteViewFilterActionType,
@@ -517,6 +518,70 @@ class ViewView(APIView):
         action_type_registry.get_by_type(DeleteViewActionType).do(request.user, view)
 
         return Response(status=204)
+
+
+class DuplicateViewView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Duplicates the view related to the provided value.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table views"],
+        operation_id="duplicate_database_table_view",
+        description=(
+            "Duplicates an existing view if the user has access to it. "
+            "When a view is duplicated everthing is copied except:"
+            "\n- The name is appended with the copy number. "
+            "Ex: `View Name` -> `View Name (2)` and `View (2)` -> `View (3)`"
+            "\n- If the original view is publicly shared, the new view will not be"
+            " shared anymore"
+        ),
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                view_type_registry, ViewSerializer
+            ),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def post(self, request, view_id):
+        """Duplicates a view."""
+
+        view = ViewHandler().get_view(view_id).specific
+
+        view_type = view_type_registry.get_by_model(view)
+
+        with view_type.map_api_exceptions():
+            duplicate_view = action_type_registry.get_by_type(
+                DuplicateViewActionType
+            ).do(user=request.user, original_view=view)
+
+        serializer = view_type_registry.get_serializer(
+            duplicate_view,
+            ViewSerializer,
+            filters=True,
+            sortings=True,
+            decorations=True,
+        )
+        return Response(serializer.data)
 
 
 class OrderViewsView(APIView):

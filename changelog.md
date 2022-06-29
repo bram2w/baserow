@@ -20,6 +20,7 @@ For example:
 * Added multi-cell clearing via backspace key (delete on Mac).
 * Added API exception registry that allows plugins to provide custom exception mappings for the REST API.
 * Added formula round and int functions. [#891](https://gitlab.com/bramw/baserow/-/issues/891)
+* Views can be duplicated. [#962](https://gitlab.com/bramw/baserow/-/issues/962)
 
 ### Bug Fixes
 

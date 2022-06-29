@@ -62,6 +62,9 @@ export default (client) => {
     update(viewId, values) {
       return client.patch(`/database/views/${viewId}/`, values)
     },
+    duplicate(viewId) {
+      return client.post(`/database/views/${viewId}/duplicate/`)
+    },
     order(tableId, order) {
       return client.post(`/database/views/table/${tableId}/order/`, {
         view_ids: order,
