@@ -1,7 +1,9 @@
 import setupCore from '@baserow/modules/core/plugin'
 import axios from 'axios'
-import setupClient from '@baserow/modules/core/plugins/clientHandler'
-import { ClientErrorMap } from '@baserow/modules/core/plugins/clientHandler'
+import setupClient, {
+  ClientErrorMap,
+} from '@baserow/modules/core/plugins/clientHandler'
+
 import setupDatabasePlugin from '@baserow/modules/database/plugin'
 import { bootstrapVueContext } from '@baserow/test/helpers/components'
 import MockAdapter from 'axios-mock-adapter'
