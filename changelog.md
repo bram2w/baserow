@@ -41,6 +41,7 @@ For example:
 * Fix errors when using row_id formula function with left/right functions.
 * Fixed URL fields not being available in lookup fields. [#984](https://gitlab.com/bramw/baserow/-/issues/984)
 * Fix lookup field conversions deleting all of its old field dependencies. [#1036](https://gitlab.com/bramw/baserow/-/issues/1036)
+* Fix refresh formula options button always being shown initially. [#1037](https://gitlab.com/bramw/baserow/-/issues/1037)
 
 ### Breaking Changes
 
