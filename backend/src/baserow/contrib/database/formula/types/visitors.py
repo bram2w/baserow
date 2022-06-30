@@ -147,6 +147,8 @@ class FieldDependencyExtractingVisitor(
             if primary_field_in_other_table is None:
                 return []
             else:
+                if primary_field_in_other_table.id == source_field.id:
+                    raise SelfReferenceFieldDependencyError()
                 return [
                     FieldDependency(
                         dependant=source_field,
@@ -171,6 +173,8 @@ class FieldDependencyExtractingVisitor(
                     ),
                 ]
             else:
+                if target_field.id == source_field.id:
+                    raise SelfReferenceFieldDependencyError()
                 # We found all the fields correctly and they are valid so setup the
                 # dep to the other table via the link row field at the target field.
                 return [

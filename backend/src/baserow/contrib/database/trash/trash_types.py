@@ -350,12 +350,11 @@ class RowsTrashableItemType(TrashableItemType):
     def restore(self, trashed_item, trash_entry: TrashEntry):
         table = self._get_table(trashed_item.table_id)
         table_model = self._get_table_model(trashed_item.table_id)
-        rows_to_restore = table_model.objects_and_trash.filter(
+        rows_to_restore_queryset = table_model.objects_and_trash.filter(
             id__in=trashed_item.row_ids
-        ).enhance_by_fields()
-        for row in rows_to_restore:
-            row.trashed = False
-        table_model.objects_and_trash.bulk_update(rows_to_restore, ["trashed"])
+        )
+        rows_to_restore_queryset.update(trashed=False)
+        rows_to_restore = rows_to_restore_queryset.enhance_by_fields()
         trashed_item.delete()
 
         field_cache = FieldCache()

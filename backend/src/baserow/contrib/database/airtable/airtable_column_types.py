@@ -267,14 +267,10 @@ class ForeignKeyAirtableColumnType(AirtableColumnType):
         type_options = raw_airtable_column.get("typeOptions", {})
         foreign_table_id = type_options.get("foreignTableId")
 
-        # Only return a link row field if the foreign table id is not the same as the
-        # current table id because we're not supported link_row fields that point to
-        # the same table.
-        if raw_airtable_table["id"] != foreign_table_id:
-            return LinkRowField(
-                link_row_table_id=foreign_table_id,
-                link_row_related_field_id=type_options.get("symmetricColumnId"),
-            )
+        return LinkRowField(
+            link_row_table_id=foreign_table_id,
+            link_row_related_field_id=type_options.get("symmetricColumnId"),
+        )
 
     def to_baserow_export_serialized_value(
         self,

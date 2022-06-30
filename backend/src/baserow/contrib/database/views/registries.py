@@ -293,9 +293,9 @@ class ViewType(
                     pass
 
         if self.can_sort:
-            for view_decoration in sortings:
+            for view_sorting in sortings:
                 try:
-                    view_sort_copy = view_decoration.copy()
+                    view_sort_copy = view_sorting.copy()
                     view_sort_id = view_sort_copy.pop("id")
                     view_sort_copy["field_id"] = id_mapping["database_fields"][
                         view_sort_copy["field_id"]

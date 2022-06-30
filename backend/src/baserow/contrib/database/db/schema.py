@@ -260,6 +260,38 @@ def optional_atomic(atomic=True):
         yield
 
 
+def create_model_and_related_tables_without_duplicates(schema_editor, model):
+    """
+    Create a table and any accompanying indexes or unique constraints for
+    the given `model`.
+
+    NOTE: this method is a clone of `schema_editor.create_model` with a change:
+    it checks if the through table already exists and if it does, it does not try to
+    create it again (otherwise we'll end up with a table already exists exception).
+    In this way we can create both sides of the m2m relationship for self-referencing
+    link_rows when importing data without errors.
+    """
+
+    sql, params = schema_editor.table_sql(model)
+    # Prevent using [] as params, in the case a literal '%' is used in the definition
+    schema_editor.execute(sql, params or None)
+
+    # Add any field index and index_together's
+    schema_editor.deferred_sql.extend(schema_editor._model_indexes_sql(model))
+
+    # Make M2M tables
+    already_created_through_table_name = set()
+    for field in model._meta.local_many_to_many:
+        remote_through = field.remote_field.through
+        db_table = remote_through._meta.db_table
+        if (
+            field.remote_field.through._meta.auto_created
+            and db_table not in already_created_through_table_name
+        ):
+            schema_editor.create_model(remote_through)
+            already_created_through_table_name.add(db_table)
+
+
 @contextlib.contextmanager
 def safe_django_schema_editor(atomic=True, **kwargs):
     # django.db.backends.base.schema.BaseDatabaseSchemaEditor.__exit__ has a bug
