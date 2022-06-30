@@ -25,14 +25,14 @@ class TableFixtures:
     def build_table(self, columns, rows, user=None, **kwargs):
         table = self.create_database_table(user=user, create_table=True, **kwargs)
         fields = []
-        for name, field_type in columns:
+        for index, (name, field_type) in enumerate(columns):
             kwargs = {}
             if isinstance(field_type, dict):
                 kwargs = field_type
                 field_type = kwargs.pop("type")
             fields.append(
                 getattr(self, f"create_{field_type}_field")(
-                    name=name, table=table, **kwargs
+                    name=name, table=table, order=index, **kwargs
                 )
             )
 
@@ -41,10 +41,8 @@ class TableFixtures:
         created_rows = []
         for row in rows:
             kwargs = {}
-            i = 0
-            for field in fields:
-                kwargs[f"field_{field.id}"] = row[i]
-                i += 1
+            for index, field in enumerate(fields):
+                kwargs[f"field_{field.id}"] = row[index]
             created_rows.append(model.objects.create(**kwargs))
 
         return table, fields, created_rows

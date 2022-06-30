@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.contrib.contenttypes.models import ContentType
@@ -18,10 +17,13 @@ def get_default_job_content_type():
 
 class JobQuerySet(models.QuerySet):
     def is_running(self):
-        return self.filter(
-            ~Q(state=JOB_FINISHED),
-            ~Q(state=JOB_FAILED),
-        )
+        return self.exclude(state__in=[JOB_PENDING, JOB_FINISHED, JOB_FAILED])
+
+    def is_finished(self):
+        return self.filter(state__in=[JOB_FINISHED, JOB_FAILED])
+
+    def is_pending_or_running(self):
+        return self.exclude(state__in=[JOB_FINISHED, JOB_FAILED])
 
 
 class Job(CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin, models.Model):

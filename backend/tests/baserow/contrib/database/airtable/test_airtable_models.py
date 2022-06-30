@@ -4,7 +4,12 @@ from django.core.cache import cache
 
 from baserow.contrib.database.airtable.models import AirtableImportJob
 
-from baserow.core.jobs.constants import JOB_PENDING, JOB_FAILED, JOB_FINISHED
+from baserow.core.jobs.constants import (
+    JOB_PENDING,
+    JOB_FAILED,
+    JOB_FINISHED,
+    JOB_STARTED,
+)
 from baserow.contrib.database.airtable.constants import (
     AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES,
     AIRTABLE_EXPORT_JOB_CONVERTING,
@@ -17,10 +22,11 @@ from baserow.core.jobs.cache import job_progress_key
 def test_is_running_queryset(data_fixture):
     data_fixture.create_airtable_import_job(state=JOB_FAILED)
     data_fixture.create_airtable_import_job(state=JOB_FINISHED)
+    data_fixture.create_airtable_import_job(state=JOB_PENDING)
 
     assert AirtableImportJob.objects.is_running().count() == 0
 
-    data_fixture.create_airtable_import_job(state=JOB_PENDING)
+    data_fixture.create_airtable_import_job(state=JOB_STARTED)
     data_fixture.create_airtable_import_job(state=AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES)
     data_fixture.create_airtable_import_job(state=AIRTABLE_EXPORT_JOB_CONVERTING)
     data_fixture.create_airtable_import_job(state=AIRTABLE_EXPORT_JOB_DOWNLOADING_BASE)

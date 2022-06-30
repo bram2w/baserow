@@ -118,11 +118,12 @@ def test_batch_update_rows_single_select_field_wrong_option(api_client, data_fix
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
+
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_INVALID_SELECT_OPTION_VALUES"
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response.json()["detail"]
-        == "The provided select option ids [787] are not valid select options."
+        == "The provided select option id [787] is not a valid select option."
     )
 
 

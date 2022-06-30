@@ -41,6 +41,9 @@ GeneratedTableModelForUpdate = NewType(
 RowsForUpdate = NewType("RowsForUpdate", QuerySet)
 
 
+BATCH_SIZE = 1024
+
+
 class RowHandler:
     def prepare_values(self, fields, values):
         """
@@ -66,7 +69,7 @@ class RowHandler:
             if field_id in values or field["name"] in values
         }
 
-    def prepare_rows_in_bulk(self, fields, rows):
+    def prepare_rows_in_bulk(self, fields, rows, generate_error_report=False):
         """
         Prepares a set of values in bulk for all rows so that they can be created or
         updated in the database. It will check if the values can actually be set and
@@ -99,21 +102,29 @@ class RowHandler:
             prepared_values_by_field[
                 field_name
             ] = field_type.prepare_value_for_db_in_bulk(
-                field["field"],
-                batch_values,
+                field["field"], batch_values, continue_on_error=generate_error_report
             )
 
         # replace original values to keep ordering
         prepared_rows = []
+        failing_rows = {}
         for index, row in enumerate(rows):
             new_values = row
+            row_errors = {}
             for field_id, field in fields.items():
                 field_name = field["name"]
                 if field_name in row:
-                    new_values[field_name] = prepared_values_by_field[field_name][index]
-            prepared_rows.append(new_values)
+                    prepared_value = prepared_values_by_field[field_name][index]
+                    if isinstance(prepared_value, Exception):
+                        row_errors[field_name] = [prepared_value]
+                    else:
+                        new_values[field_name] = prepared_value
+            if not row_errors:
+                prepared_rows.append(new_values)
+            else:
+                failing_rows[index] = row_errors
 
-        return prepared_rows
+        return prepared_rows, failing_rows
 
     def extract_field_ids_from_keys(self, keys: List[str]) -> List[int]:
         """
@@ -691,6 +702,8 @@ class RowHandler:
         rows_values: List[Dict[str, Any]],
         before_row: Optional[GeneratedTableModel] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_signal=True,
+        generate_error_report=False,
     ) -> List[GeneratedTableModel]:
         """
         Creates new rows for a given table if the user
@@ -716,13 +729,20 @@ class RowHandler:
             before_row, model, amount=len(rows_values)
         )
 
-        rows = self.prepare_rows_in_bulk(model._field_objects, rows_values)
+        report = {}
+        rows, errors = self.prepare_rows_in_bulk(
+            model._field_objects,
+            rows_values,
+            generate_error_report=generate_error_report,
+        )
+        report.update({index: err for index, err in errors.items()})
 
         rows_relationships = []
         for index, row in enumerate(rows, start=-len(rows)):
             values, manytomany_values = self.extract_manytomany_values(row, model)
             values["order"] = highest_order - (step * (abs(index + 1)))
             instance = model(**values)
+
             relations = {
                 field_name: value
                 for field_name, value in manytomany_values.items()
@@ -736,7 +756,7 @@ class RowHandler:
 
         many_to_many = defaultdict(list)
         for index, row in enumerate(inserted_rows):
-            manytomany_values = rows_relationships[index][1]
+            _, manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
                 through = getattr(model, field_name).through
                 through_fields = through._meta.get_fields()
@@ -749,7 +769,7 @@ class RowHandler:
                 )
 
                 # Figure out which field in the many to many through table holds the row
-                # value and which on contains the value.
+                # value and which one contains the value.
                 for field in through_fields:
                     if type(field) is not ForeignKey:
                         continue
@@ -817,21 +837,24 @@ class RowHandler:
         updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
-        rows_to_return = list(
-            model.objects.all()
-            .enhance_by_fields()
-            .filter(id__in=[row.id for row in inserted_rows])
-        )
+        if send_signal:
+            rows_to_return = list(
+                model.objects.all()
+                .enhance_by_fields()
+                .filter(id__in=[row.id for row in inserted_rows])
+            )
 
-        rows_created.send(
-            self,
-            rows=rows_to_return,
-            before=before_row,
-            user=user,
-            table=table,
-            model=model,
-        )
+            rows_created.send(
+                self,
+                rows=rows_to_return,
+                before=before_row,
+                user=user,
+                table=table,
+                model=model,
+            )
 
+        if generate_error_report:
+            return inserted_rows, report
         return rows_to_return
 
     def update_rows(
@@ -864,7 +887,7 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        rows = self.prepare_rows_in_bulk(model._field_objects, rows)
+        rows, _ = self.prepare_rows_in_bulk(model._field_objects, rows)
         row_ids = [row["id"] for row in rows]
 
         non_unique_ids = get_non_unique_values(row_ids)

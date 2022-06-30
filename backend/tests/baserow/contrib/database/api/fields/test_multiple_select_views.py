@@ -220,7 +220,7 @@ def test_batch_update_rows_multiple_select_field_wrong_option(api_client, data_f
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_INVALID_SELECT_OPTION_VALUES"
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response.json()["detail"]
         == "The provided select option ids [787, 789] are not valid select options."
@@ -261,10 +261,10 @@ def test_batch_update_rows_multiple_select_field_null_as_id(api_client, data_fix
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_INVALID_SELECT_OPTION_VALUES"
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response.json()["detail"]
-        == "The provided select option ids [None] are not valid select options."
+        == "The provided select option id [None] is not a valid select option."
     )
 
 

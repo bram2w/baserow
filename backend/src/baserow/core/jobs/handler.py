@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 from django.core.cache import cache
 from django.db.models import QuerySet
+from django.utils import timezone
+from django.conf import settings
 
 from baserow.core.utils import Progress
 
@@ -18,6 +20,7 @@ from .models import Job
 from .tasks import run_async_job
 
 from .cache import job_progress_key
+from .constants import JOB_FAILED
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +118,9 @@ class JobHandler:
 
         # Check how many job of same type are running simultaneously. If count > max
         # we don't want to create a new one.
-        running_jobs = model_class.objects.filter(user_id=user.id).is_running()
+        running_jobs = model_class.objects.filter(
+            user_id=user.id
+        ).is_pending_or_running()
         if len(running_jobs) >= job_type.max_count:
             raise MaxJobCountExceeded(
                 f"You can only launch {job_type.max_count} {job_type_name} job(s) at "
@@ -131,8 +136,34 @@ class JobHandler:
 
     def clean_up_jobs(self):
         """
-        Execute the cleanup method of all job types.
+        Terminate running jobs after the soft limit and delete expired jobs.
         """
 
-        for job_type in job_type_registry.get_all():
-            job_type.clean_up_jobs()
+        # Delete old job
+        limit_date = timezone.now() - timezone.timedelta(
+            minutes=(settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT)
+        )
+        for job_to_delete in Job.objects.filter(
+            created_on__lte=limit_date
+        ).is_finished():
+            job_type = job_type_registry.get_by_model(job_to_delete.specific)
+            job_type.before_delete(job_to_delete.specific)
+            job_to_delete.delete()
+
+        # Expire non expired jobs
+        limit_date = timezone.now() - timezone.timedelta(
+            seconds=(settings.BASEROW_JOB_SOFT_TIME_LIMIT + 1)
+        )
+
+        (
+            Job.objects.filter(created_on__lte=limit_date)
+            .is_running()
+            .update(
+                state=JOB_FAILED,
+                human_readable_error=(
+                    "Something went wrong during the file_import job execution."
+                ),
+                error="Unknown error",
+                updated_on=timezone.now(),
+            )
+        )

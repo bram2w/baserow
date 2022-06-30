@@ -23,7 +23,6 @@ from baserow.api.exceptions import (
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
-from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
 from baserow.api.utils import validate_data
 from baserow.contrib.database.api.utils import get_include_exclude_fields
 from baserow.contrib.database.api.fields.errors import (
@@ -31,7 +30,6 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_ORDER_BY_FIELD_NOT_FOUND,
     ERROR_FILTER_FIELD_NOT_FOUND,
     ERROR_FIELD_DOES_NOT_EXIST,
-    ERROR_INVALID_SELECT_OPTION_VALUES,
 )
 from baserow.contrib.database.api.rows.errors import (
     ERROR_ROW_DOES_NOT_EXIST,
@@ -52,7 +50,6 @@ from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotPossible,
     FilterFieldNotFound,
     FieldDoesNotExist,
-    AllProvidedMultipleSelectValuesMustBeSelectOption,
 )
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
@@ -78,7 +75,6 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
-from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
     ListRowsQueryParamsSerializer,
     MoveRowQueryParamsSerializer,
@@ -379,7 +375,7 @@ class RowsView(APIView):
                 [
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
-                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                    "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -394,8 +390,6 @@ class RowsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
-            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
-            UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
         }
     )
@@ -685,7 +679,7 @@ class RowView(APIView):
                 [
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
-                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                    "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -700,9 +694,7 @@ class RowView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
-            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
-            UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
         }
     )
     def patch(self, request: Request, table_id: int, row_id: int) -> Response:
@@ -970,7 +962,7 @@ class BatchRowsView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_ROW_IDS_NOT_UNIQUE",
-                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                    "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -986,9 +978,7 @@ class BatchRowsView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
-            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
-            UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
         }
     )
     @validate_query_parameters(BatchCreateRowsQueryParamsSerializer)
@@ -1087,7 +1077,7 @@ class BatchRowsView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_ROW_IDS_NOT_UNIQUE",
-                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                    "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -1103,9 +1093,7 @@ class BatchRowsView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
-            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
-            UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
         }
     )
     def patch(self, request, table_id):

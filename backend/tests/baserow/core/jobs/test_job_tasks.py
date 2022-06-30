@@ -2,17 +2,20 @@ import pytest
 from unittest.mock import Mock, patch
 from celery.exceptions import SoftTimeLimitExceeded
 from requests.exceptions import ConnectionError
+from freezegun import freeze_time
 
 from django.core.cache import cache
+from django.utils import timezone
 
 from baserow.core.jobs.models import Job
 from baserow.core.jobs.registries import JobType
 from baserow.core.jobs.cache import job_progress_key
-from baserow.core.jobs.tasks import run_async_job
+from baserow.core.jobs.tasks import run_async_job, clean_up_jobs
 from baserow.core.jobs.constants import (
     JOB_FAILED,
     JOB_FINISHED,
     JOB_PENDING,
+    JOB_STARTED,
 )
 
 
@@ -51,7 +54,7 @@ def test_run_task(mock_get_by_model, data_fixture):
         job_copy = Job.objects.using("default-copy").get(pk=job.id)
         # Normal progress is expected to be 0
         assert job_copy.progress_percentage == 0
-        assert job_copy.state == JOB_PENDING
+        assert job_copy.state == JOB_STARTED
         # Progress stored in Redis is expected to be accurate.
         assert job_copy.get_cached_progress_percentage() == 50
         assert job_copy.get_cached_state() == "test"
@@ -68,6 +71,8 @@ def test_run_task(mock_get_by_model, data_fixture):
     with pytest.raises(Job.DoesNotExist):
         run_async_job(0)
 
+    assert job.state == JOB_PENDING
+
     run_async_job(job.id)
 
     fake_job_type.run.assert_called_once()
@@ -76,7 +81,7 @@ def test_run_task(mock_get_by_model, data_fixture):
     assert job.progress_percentage == 100
     assert job.state == JOB_FINISHED
 
-    # The cache entry will be removed when when job completes.
+    # The cache entry will be removed when job completes.
     assert cache.get(job_progress_key(job.id)) is None
 
     job_copy = Job.objects.using("default-copy").get(pk=job.id)
@@ -145,3 +150,48 @@ def test_run_task_with_exception_mapping(mock_get_by_model, data_fixture):
     assert job.state == JOB_FAILED
     assert job.error == "connection error"
     assert job.human_readable_error == "Error message"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_cleanup_file_import_job(storage_mock, data_fixture, settings):
+    now = timezone.now()
+    time_before_expiration = now - timezone.timedelta(
+        minutes=settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT + 1
+    )
+    with freeze_time(now):
+        data_fixture.create_fake_job()
+        data_fixture.create_fake_job(state=JOB_STARTED)
+        data_fixture.create_fake_job(state=JOB_FAILED)
+        data_fixture.create_fake_job(state=JOB_FINISHED)
+        data_fixture.create_fake_job(state="random")
+
+    with freeze_time(time_before_expiration):
+        data_fixture.create_fake_job()
+        data_fixture.create_fake_job(state=JOB_STARTED)
+        data_fixture.create_fake_job(state=JOB_FAILED)
+        data_fixture.create_fake_job(state=JOB_FINISHED)
+        data_fixture.create_fake_job(state="random")
+
+    assert Job.objects.count() == 10
+    assert Job.objects.is_running().count() == 4
+    assert Job.objects.is_finished().count() == 4
+    assert Job.objects.is_pending_or_running().count() == 6
+
+    # Should keep the job that has just expired as the soft time limit is exceeded
+    with freeze_time(now):
+        clean_up_jobs()
+
+    assert Job.objects.count() == 8
+    assert Job.objects.is_running().count() == 2
+    assert Job.objects.is_finished().count() == 4
+    assert Job.objects.is_pending_or_running().count() == 4
+
+    # Should delete the job that has been automatically expired by the previous cleanup
+    with freeze_time(now):
+        clean_up_jobs()
+
+    assert Job.objects.count() == 6
+    assert Job.objects.is_running().count() == 2
+    assert Job.objects.is_finished().count() == 2
+    assert Job.objects.is_pending_or_running().count() == 4

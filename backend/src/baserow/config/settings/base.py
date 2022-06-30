@@ -556,14 +556,18 @@ BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
     "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
 )
 
-BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
-    os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+
+BASEROW_JOB_EXPIRATION_TIME_LIMIT = int(
+    os.getenv("BASEROW_JOB_EXPIRATION_TIME_LIMIT", 30 * 24 * 60)  # 30 days
 )
 BASEROW_JOB_SOFT_TIME_LIMIT = int(
     os.getenv("BASEROW_JOB_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
 )
 BASEROW_JOB_CLEANUP_INTERVAL_MINUTES = int(
     os.getenv("BASEROW_JOB_CLEANUP_INTERVAL_MINUTES", 5)  # 5 minutes
+)
+BASEROW_MAX_FILE_IMPORT_ERROR_COUNT = int(
+    os.getenv("BASEROW_MAX_FILE_IMPORT_ERROR_COUNT", 30)
 )
 
 # A comma separated list of feature flags used to enable in-progress or not ready
