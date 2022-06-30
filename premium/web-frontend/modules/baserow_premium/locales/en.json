@@ -244,5 +244,9 @@
         "addCondition": "add condition",
         "colorAlwaysApply": "This color applies by default. You can add conditions by clicking on the \"Add condition\" button.",
         "addColor": "add color"
+    },
+    "redirectToBaserowModal": {
+        "title": "Redirecting to http://baserow.io",
+        "content": "You are leaving your self hosted instance and you are being redirected to http://baserow.io."
     }
 }
