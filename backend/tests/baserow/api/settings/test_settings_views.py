@@ -33,6 +33,36 @@ def test_get_settings(api_client):
 
 
 @pytest.mark.django_db
+def test_require_first_admin_user_is_false_after_admin_creation(api_client):
+    response = api_client.get(reverse("api:settings:get"))
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["show_admin_signup_page"] is True
+
+    # create the admin user
+    response = api_client.post(
+        reverse("api:user:index"),
+        {
+            "name": "admin",
+            "email": "admin@baserow.io",
+            "password": "admin1234",
+            "language": "en",
+            "authenticate": True,
+        },
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    token = response_json["token"]
+
+    response = api_client.get(
+        reverse("api:settings:get"),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response_json["show_admin_signup_page"] is False
+
+
+@pytest.mark.django_db
 def test_get_instance_id(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(is_staff=True)
     user_2, token_2 = data_fixture.create_user_and_token()

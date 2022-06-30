@@ -153,6 +153,10 @@ class UserHandler:
             # can set baserow wide settings.
             user.is_staff = True
 
+        if settings.show_admin_signup_page:
+            settings.show_admin_signup_page = False
+            settings.save()
+
         user.save()
 
         # Since there is a one-to-one relationship between the user and their

@@ -24,6 +24,7 @@ For example:
 * Link to table field can now link rows in the same table. [#798](https://gitlab.com/bramw/baserow/-/issues/798)
 * Made it clearer that you're navigating to baserow.io when clicking the "Get a license"
   button.
+* Redirect to signup instead of the login page if there are no admin users. [#1035](https://gitlab.com/bramw/baserow/-/issues/1035)
 
 ### Bug Fixes
 

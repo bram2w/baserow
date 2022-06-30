@@ -16,6 +16,9 @@ export const mutations = {
   SET_LOADED(state, value) {
     state.loaded = value
   },
+  HIDE_ADMIN_SIGNUP_PAGE(state) {
+    state.settings.show_admin_signup_page = false
+  },
 }
 
 export const actions = {
@@ -34,6 +37,9 @@ export const actions = {
       commit('SET_SETTINGS', oldValues)
       throw e
     }
+  },
+  hideAdminSignupPage({ commit }) {
+    commit('HIDE_ADMIN_SIGNUP_PAGE')
   },
 }
 
