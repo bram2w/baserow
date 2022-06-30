@@ -6,6 +6,14 @@
       </h1>
       <LangPicker />
     </div>
+    <template v-if="settings.show_admin_signup_page">
+      <div class="alert">
+        <div class="alert__title">{{ $t('signup.requireFirstUser') }}</div>
+        <p class="alert__content">
+          {{ $t('signup.requireFirstUserMessage') }}
+        </p>
+      </div>
+    </template>
     <template v-if="!isSignupEnabled">
       <div class="alert alert--simple alert--error alert--has-icon">
         <div class="alert__icon">
@@ -25,7 +33,7 @@
       </nuxt-link>
     </template>
     <AuthRegister v-else :invitation="invitation" @success="success">
-      <ul class="action__links">
+      <ul v-if="!settings.show_admin_signup_page" class="action__links">
         <li>
           <nuxt-link :to="{ name: 'login' }">
             <i class="fas fa-arrow-left"></i>
@@ -67,6 +75,9 @@ export default {
   },
   methods: {
     success() {
+      if (this.settings.show_admin_signup_page) {
+        this.$store.dispatch('settings/hideAdminSignupPage')
+      }
       this.$nuxt.$router.push({ name: 'dashboard' })
     },
   },

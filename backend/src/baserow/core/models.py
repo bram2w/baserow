@@ -82,6 +82,11 @@ class Settings(models.Model):
             "to be deleted"
         ),
     )
+    show_admin_signup_page = models.BooleanField(
+        default=True,
+        help_text="Indicates that there are no admin users in the database yet, "
+        "so in the frontend the signup form will be shown instead of the login page.",
+    )
 
 
 class UserProfile(models.Model):
