@@ -45,12 +45,13 @@ RUN apt-get update && \
     gawk \
     && \
     # ========================
-    # Install Node
+    # Install Node and Yarn
     # ========================
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install --no-install-recommends -y nodejs && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/* &&  \
+    npm install --global yarn@1.22.19 && \
     # ========================
     # Install Caddy
     # ========================

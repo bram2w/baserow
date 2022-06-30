@@ -25,6 +25,7 @@ For example:
 * Made it clearer that you're navigating to baserow.io when clicking the "Get a license"
   button.
 * Redirect to signup instead of the login page if there are no admin users. [#1035](https://gitlab.com/bramw/baserow/-/issues/1035)
+* `./dev.sh all_in_one_dev` now starts a hot reloading dev mode using the all-in-one image.
 
 ### Bug Fixes
 

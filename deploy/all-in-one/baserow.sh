@@ -61,7 +61,7 @@ file_env() {
 }
 
 startup_echo(){
-  ./baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
+  /baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
 }
 
 create_secret_env_if_missing(){
@@ -306,9 +306,11 @@ case "$1" in
       exec /baserow/supervisor/start.sh "${@:2}"
     ;;
     backend-cmd)
+      cd /baserow/backend
       docker_safe_run /baserow/backend/docker/docker-entrypoint.sh "${@:2}"
     ;;
     web-frontend-cmd)
+      cd /baserow/web-frontend
       docker_safe_run /baserow/web-frontend/docker/docker-entrypoint.sh "${@:2}"
     ;;
     *)
