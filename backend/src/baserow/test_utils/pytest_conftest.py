@@ -1,4 +1,5 @@
 import os
+import contextlib
 
 import pytest
 from django.core.management import call_command
@@ -53,6 +54,55 @@ def mutable_action_registry():
     before = action_type_registry.registry.copy()
     yield action_type_registry
     action_type_registry.registry = before
+
+
+@pytest.fixture()
+def patch_filefield_storage(tmpdir):
+    """
+    Patches all filefield storages from all models with the one given in parameter
+    or a newly created one.
+    """
+
+    from django.apps import apps
+    from django.db.models import FileField
+    from django.core.files.storage import FileSystemStorage
+
+    # Cache the storage
+    _storage = None
+
+    @contextlib.contextmanager
+    def patch(new_storage=None):
+        nonlocal _storage
+        if new_storage is None:
+            if not _storage:
+                # Create a default storage if none given
+                _storage = FileSystemStorage(
+                    location=str(tmpdir), base_url="http://localhost"
+                )
+            new_storage = _storage
+
+        previous_storages = {}
+        # Replace storage
+        for model in apps.get_models():
+            filefields = (f for f in model._meta.fields if isinstance(f, FileField))
+            for filefield in filefields:
+                previous_storages[
+                    f"{model._meta.label}_{filefield.name}"
+                ] = filefield.storage
+                filefield.storage = new_storage
+
+        yield new_storage
+
+        # Restore previous storage
+        for model in apps.get_models():
+            filefields = (f for f in model._meta.fields if isinstance(f, FileField))
+
+            for filefield in filefields:
+                filefield.storage = previous_storages[
+                    f"{model._meta.label}_{filefield.name}"
+                ]
+
+    return patch
 
 
 # We reuse this file in the premium backend folder, if you run a pytest session over

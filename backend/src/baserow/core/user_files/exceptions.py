@@ -1,4 +1,5 @@
 import math
+from django.core.exceptions import ValidationError
 
 
 class InvalidFileStreamError(Exception):
@@ -32,14 +33,15 @@ class InvalidUserFileNameError(Exception):
         super().__init__(*args, **kwargs)
 
 
-class UserFileDoesNotExist(Exception):
+class UserFileDoesNotExist(ValidationError):
     """Raised when a user file with the provided name or id does not exist."""
 
     def __init__(self, file_names_or_ids, *args, **kwargs):
         if not isinstance(file_names_or_ids, list):
             file_names_or_ids = [file_names_or_ids]
         self.file_names_or_ids = file_names_or_ids
-        super().__init__(*args, **kwargs)
+        msg = f"The user files {self.file_names_or_ids} do not exist."
+        super().__init__(msg, *args, code="missing", **kwargs)
 
 
 class MaximumUniqueTriesError(Exception):

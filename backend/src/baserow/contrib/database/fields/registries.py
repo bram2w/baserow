@@ -120,9 +120,7 @@ class FieldType(
         the value is incorrect.
 
         :param instance: The field instance.
-        :type instance: Field
         :param value: The value that needs to be inserted or updated.
-        :type value: str
         :return: The modified value that is going to be saved in the database.
         :rtype: str
         """
@@ -146,20 +144,35 @@ class FieldType(
 
         return getattr(row, field_name)
 
-    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
+    def prepare_value_for_db_in_bulk(
+        self,
+        instance: Field,
+        values_by_row: Dict[str, Any],
+        continue_on_error: bool = False,
+    ) -> Dict[str, Union[Any, Exception]]:
         """
         This method will work for every `prepare_value_for_db` that doesn't
         execute a query. Fields that do should override this method.
 
         :param instance: The field instance.
-        :type instance: Field
         :param values_by_row: The values that needs to be inserted or updated,
             indexed by row id as dict(index, values).
+        :param continue_on_error: True if you want to continue on any value validation
+            error. In this case the returned value dict can contain exception instead of
+            the prepared value.
         :return: The modified values in the same structure as it was passed in.
+            If the parameter `continue_on_error` is true, the values of the result dict
+            can be the exceptions raised during the values validation.
         """
 
         for row_index, value in values_by_row.items():
-            values_by_row[row_index] = self.prepare_value_for_db(instance, value)
+            try:
+                values_by_row[row_index] = self.prepare_value_for_db(instance, value)
+            except Exception as e:
+                if continue_on_error:
+                    values_by_row[row_index] = e
+                else:
+                    raise
 
         return values_by_row
 

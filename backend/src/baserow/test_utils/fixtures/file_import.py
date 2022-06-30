@@ -13,8 +13,11 @@ class FileImportFixtures:
             kwargs["user"] = self.create_user()
 
         if "table" not in kwargs:
-            column_count = kwargs.pop("column_count", 2)
-            columns = [(f"col__{i}", "text") for i in range(column_count)]
+            columns = kwargs.pop("columns", None)
+            if not columns:
+                column_count = kwargs.pop("column_count", 2)
+                columns = [(f"col__{i}", "text") for i in range(column_count)]
+
             table, _, _ = self.build_table(
                 columns=columns,
                 rows=[],
@@ -33,7 +36,7 @@ class FileImportFixtures:
                     row.append(f"data_{index}_{field_index}")
                 data.append(row)
         else:
-            data = kwargs["data"]
+            data = kwargs.pop("data")
 
         data_file = kwargs.get("data_file", ContentFile(json.dumps(data)))
 

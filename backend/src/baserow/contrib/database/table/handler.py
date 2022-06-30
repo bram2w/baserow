@@ -223,11 +223,18 @@ class TableHandler:
         if "" in field_name_set:
             raise InvalidBaserowFieldName()
 
+        normalized_data = []
         for row in data:
-            for i in range(len(row), largest_column_count):
-                row.append("")
+            # Convert all existing values to string
+            new_row = [str(value) for value in row]
 
-        return fields, data
+            # Fill incomplete rows with empty string
+            for i in range(len(new_row), largest_column_count):
+                new_row.append("")
+
+            normalized_data.append(new_row)
+
+        return fields, normalized_data
 
     def async_fill_initial_table_data(
         self,
@@ -276,7 +283,7 @@ class TableHandler:
             model(
                 order=index + 1,
                 **{
-                    f"field_{fields[index].id}": str(value)
+                    f"field_{fields[index].id}": value
                     for index, value in enumerate(row)
                 },
             )

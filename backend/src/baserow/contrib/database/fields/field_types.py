@@ -7,8 +7,10 @@ from random import randrange, randint, sample
 from typing import Any, Callable, Dict, List, Tuple, TYPE_CHECKING, Optional
 
 import pytz
+from pytz import timezone
 from dateutil import parser
 from dateutil.parser import ParserError
+
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
@@ -18,7 +20,7 @@ from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
-from pytz import timezone
+
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
@@ -346,7 +348,8 @@ class NumberFieldType(FieldType):
 
         if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(
-                f"The value for field {instance.id} cannot be negative."
+                f"The value for field {instance.id} cannot be negative.",
+                code="negative_not_allowed",
             )
         return value
 
@@ -478,10 +481,13 @@ class RatingFieldType(FieldType):
             return 0
 
         if value < 0:
-            raise ValidationError("Ensure this value is greater than or equal to 0.")
+            raise ValidationError(
+                "Ensure this value is greater than or equal to 0.", code="min_value"
+            )
         if value > instance.max_value:
             raise ValidationError(
-                f"Ensure this value is less than or equal to {instance.max_value}."
+                f"Ensure this value is less than or equal to {instance.max_value}.",
+                code="max_value",
             )
 
         return value
@@ -666,7 +672,8 @@ class DateFieldType(FieldType):
                 value = parser.parse(value)
             except ParserError as exc:
                 raise ValidationError(
-                    "The provided string could not converted to a" "date."
+                    "The provided string could not converted to a date.",
+                    code="invalid",
                 ) from exc
 
         if type(value) == date:
@@ -677,7 +684,8 @@ class DateFieldType(FieldType):
             return value if instance.date_include_time else value.date()
 
         raise ValidationError(
-            "The value should be a date/time string, date object or " "datetime object."
+            "The value should be a date/time string, date object or datetime object.",
+            code="invalid",
         )
 
     def get_export_value(self, value, field_object):
@@ -1675,15 +1683,6 @@ class FileFieldType(FieldType):
         # from it.
         provided_files = []
         for o in value:
-            if not isinstance(o, object) or not isinstance(o.get("name"), str):
-                raise ValidationError(
-                    "Every provided value must at least contain "
-                    "the file name as `name`."
-                )
-
-            if "visible_name" in o and not isinstance(o["visible_name"], str):
-                raise ValidationError("The provided `visible_name` must be a string.")
-
             provided_files.append(o)
         return provided_files
 
@@ -1692,7 +1691,9 @@ class FileFieldType(FieldType):
             return []
 
         if not isinstance(value, list):
-            raise ValidationError("The provided value must be a list.")
+            raise ValidationError(
+                "The provided value must be a list.", code="not_a_list"
+            )
 
         if len(value) == 0:
             return []
@@ -1721,26 +1722,43 @@ class FileFieldType(FieldType):
 
         return user_files
 
-    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
-        provided_names_by_row = defaultdict(list)
-        unique_names = set()
+    def prepare_value_for_db_in_bulk(
+        self, instance, values_by_row, continue_on_error=False
+    ):
+        provided_names_by_row = {}
+        name_map = defaultdict(list)
 
+        # Create {name -> row_indexes} map
         for row_index, value in values_by_row.items():
             provided_names_by_row[row_index] = self._extract_file_names(value)
-            unique_names.update(pn["name"] for pn in provided_names_by_row[row_index])
+            names = [pn["name"] for pn in provided_names_by_row[row_index]]
+            for name in names:
+                name_map[name].append(row_index)
 
-        if len(unique_names) == 0:
+        if not name_map:
             return values_by_row
 
+        unique_names = set(name_map.keys())
+
+        # Query the database for existing files
         files = UserFile.objects.all().name(*unique_names)
         if len(files) != len(unique_names):
             invalid_names = sorted(
                 list(unique_names - set((file.name) for file in files))
             )
-            raise UserFileDoesNotExist(invalid_names)
+            if continue_on_error:
+                for invalid_name in invalid_names:
+                    for row_index in name_map[invalid_name]:
+                        values_by_row[row_index] = UserFileDoesNotExist(invalid_name)
+            else:
+                raise UserFileDoesNotExist(invalid_names)
 
-        user_files_by_name = dict((file.name, file) for file in files)
+        # Replacing file names by the actual file field dict
+        user_files_by_name = {file.name: file for file in files}
         for row_index, value in values_by_row.items():
+            # Ignore already raised exceptions
+            if isinstance(value, Exception):
+                continue
             serialized_files = []
             for file_names in provided_names_by_row[row_index]:
                 user_file = user_files_by_name[file_names.get("name")]
@@ -1978,28 +1996,49 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
         # If the select option is not found or if it does not belong to the right field
         # then the provided value is invalid and a validation error can be raised.
-        raise ValidationError(f"The provided value is not a valid option.")
+        raise ValidationError(
+            f"The provided value is not a valid option.", code="invalid_option"
+        )
 
-    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
-        unique_values = {value for value in values_by_row.values() if value is not None}
+    def prepare_value_for_db_in_bulk(
+        self, instance, values_by_row, continue_on_error=False
+    ):
 
+        # Create a map {value -> row_indexes}
+        value_map = defaultdict(list)
+        for row_index, value in values_by_row.items():
+            if value is not None:
+                value_map[value].append(row_index)
+
+        unique_values = set(value_map.keys())
+
+        # Query database with all these gathered ids
         select_options = SelectOption.objects.filter(
             field=instance, id__in=unique_values
         )
 
-        options_by_id = {}
-        selected_ids = []
-        for option in select_options:
-            options_by_id[option.id] = option
-            selected_ids.append(option.id)
+        # Create a map {id -> option}
+        option_map = {opt.id: opt for opt in select_options}
+        found_option_ids = set(option_map.keys())
 
-        if len(selected_ids) != len(unique_values):
-            invalid_ids = sorted(list(unique_values - set(selected_ids)))
-            raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+        # Whether invalid values exists ?
+        if len(found_option_ids) != len(unique_values):
+            invalid_ids = sorted(list(unique_values - found_option_ids))
+            if not continue_on_error:
+                # Fail fast
+                raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
 
+        # Replace original values by real option object if possible
         for row_index, value in values_by_row.items():
-            if value is not None:
-                values_by_row[row_index] = options_by_id[value]
+            # Ignore empty values
+            if value is None:
+                continue
+            if continue_on_error and value not in option_map:
+                values_by_row[
+                    row_index
+                ] = AllProvidedMultipleSelectValuesMustBeSelectOption(value)
+            else:
+                values_by_row[row_index] = option_map[value]
 
         return values_by_row
 
@@ -2258,8 +2297,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if value is None:
             return value
 
-        if not all(isinstance(x, int) for x in value):
-            raise AllProvidedMultipleSelectValuesMustBeIntegers
+        for x in value:
+            if not isinstance(x, int):
+                raise AllProvidedMultipleSelectValuesMustBeIntegers(x)
 
         options = SelectOption.objects.filter(field=instance, id__in=value)
 
@@ -2268,18 +2308,37 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         return value
 
-    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
-        unique_values = set()
-        for row_index, value in values_by_row.items():
-            unique_values.update(value)
+    def prepare_value_for_db_in_bulk(
+        self, instance, values_by_row, continue_on_error=False
+    ):
+        # Create a map {value -> row_indexes}
+        value_map = defaultdict(list)
+        for row_index, values in values_by_row.items():
+            for value in values:
+                value_map[value].append(row_index)
 
+        unique_values = set(value_map.keys())
+
+        # Query database for existing options
         selected_ids = SelectOption.objects.filter(
             field=instance, id__in=unique_values
         ).values_list("id", flat=True)
 
         if len(selected_ids) != len(unique_values):
             invalid_ids = sorted(list(unique_values - set(selected_ids)))
-            raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+            if continue_on_error:
+                # Replace values by error for failling rows
+                for invalid_id in invalid_ids:
+                    for row_index in value_map[invalid_id]:
+                        values_by_row[
+                            row_index
+                        ] = AllProvidedMultipleSelectValuesMustBeSelectOption(
+                            invalid_id
+                        )
+
+            else:
+                # or fail fast
+                raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
 
         return values_by_row
 
@@ -2625,7 +2684,8 @@ class FormulaFieldType(ReadOnlyFieldType):
             return value
 
         raise ValidationError(
-            f"Field of type {self.type} is read only and should not be set manually."
+            f"Field of type {self.type} is read only and should not be set manually.",
+            code="read_only",
         )
 
     def get_export_value(self, value, field_object) -> BaserowFormulaType:
