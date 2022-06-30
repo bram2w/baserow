@@ -3,7 +3,7 @@
     <FieldFormulaInitialSubForm
       :default-values="mergedTypeOptions"
       :formula="values.formula"
-      :error="localOrServerError"
+      :error="formulaError"
       :formula-type="localOrServerFormulaType"
       :table="table"
       :loading="refreshingFormula"
@@ -19,8 +19,9 @@
       v-model="values.formula"
       :table="table"
       :fields="fieldsUsableInFormula"
-      :error="localOrServerError"
+      :error="formulaError"
       @blur="$v.values.formula.$touch()"
+      @hidden="$v.values.formula.$touch()"
     >
     </FormulaAdvancedEditContext>
   </div>
@@ -58,12 +59,10 @@ export default {
       values: {
         formula: '',
       },
-      typeOptions: {},
-      mergedTypeOptions: Object.assign({}, this.defaultValues),
+      fetchedTypeOptions: {},
+      mergedTypeOptions: { ...this.defaultValues },
       parsingError: null,
-      errorFromServer: null,
-      localFormulaType: null,
-      localArrayFormulaType: null,
+      previousValidParsedFormula: this.defaultValues.formula,
       formulaTypeRefreshNeeded: false,
       refreshingFormula: false,
     }
@@ -73,10 +72,10 @@ export default {
       rawFields: 'field/getAllWithPrimary',
     }),
     localOrServerFormulaType() {
-      return this.localFormulaType
-        ? this.localArrayFormulaType || this.localFormulaType
-        : this.defaultValues.array_formula_type ||
-            this.defaultValues.formula_type
+      return (
+        this.mergedTypeOptions.array_formula_type ||
+        this.mergedTypeOptions.formula_type
+      )
     },
     fieldsUsableInFormula() {
       return this.rawFields.filter((f) => {
@@ -87,7 +86,7 @@ export default {
         return isNotThisField && canBeReferencedByFormulaField
       })
     },
-    localOrServerError() {
+    formulaError() {
       const dirty = this.$v.values.formula.$dirty
       if (dirty && !this.$v.values.formula.required) {
         return 'Please enter a formula'
@@ -98,24 +97,19 @@ export default {
           '\n' +
           this.toHumanReadableErrorMessage(this.parsingError)
         )
-      } else if (this.errorFromServer) {
-        return this.errorFromServer
-      } else if (this.defaultValues.error) {
-        return this.defaultValues.error
+      } else if (this.mergedTypeOptions.error) {
+        return this.mergedTypeOptions.error
       } else {
         return null
       }
     },
   },
   watch: {
-    defaultValues(newValue, oldValue) {
-      this.mergedTypeOptions = Object.assign({}, newValue)
+    defaultValues(newValue) {
+      this.mergedTypeOptions = { ...newValue, ...this.fetchedTypeOptions }
     },
-    'values.formula'(newValue, oldValue) {
-      this.parseFormula(newValue)
-      if (newValue !== oldValue) {
-        this.formulaTypeRefreshNeeded = true
-      }
+    fetchedTypeOptions(newValue) {
+      this.mergedTypeOptions = { ...this.defaultValues, ...newValue }
     },
   },
   methods: {
@@ -129,6 +123,10 @@ export default {
       try {
         parseBaserowFormula(value)
         this.parsingError = null
+        if (this.previousValidParsedFormula !== value) {
+          this.formulaTypeRefreshNeeded = true
+          this.previousValidParsedFormula = value
+        }
         return true
       } catch (e) {
         this.parsingError = e
@@ -160,7 +158,8 @@ export default {
           'ERROR_FIELD_CIRCULAR_REFERENCE',
         ].includes(error.handler.code)
       ) {
-        this.errorFromServer = error.handler.detail
+        this.$set(this.fetchedTypeOptions, 'error', error.handler.detail)
+        this.formulaTypeRefreshNeeded = false
         return true
       } else {
         return false
@@ -168,9 +167,10 @@ export default {
     },
     reset() {
       const formula = this.values.formula
+      this.fetchedTypeOptions = {}
+      this.formulaTypeRefreshNeeded = false
+      Object.assign(this.mergedTypeOptions, this.defaultValues)
       form.methods.reset.call(this)
-      this.errorFromServer = null
-      this.initialFormula = formula
       this.values.formula = formula
     },
     async refreshFormulaType() {
@@ -185,24 +185,8 @@ export default {
           this.name,
           this.values.formula
         )
-        // eslint-disable-next-line camelcase
-        const { formula_type, array_formula_type, error, ...otherTypeOptions } =
-          data
 
-        this.mergedTypeOptions = Object.assign(
-          {},
-          this.mergedTypeOptions,
-          otherTypeOptions
-        )
-        if (error) {
-          this.errorFromServer = `Error with formula: ${error}.`
-        } else {
-          this.errorFromServer = null
-        }
-        // eslint-disable-next-line camelcase
-        this.localFormulaType = formula_type
-        // eslint-disable-next-line camelcase
-        this.localArrayFormulaType = array_formula_type
+        this.fetchedTypeOptions = data
         this.formulaTypeRefreshNeeded = false
       } catch (e) {
         if (!this.handleErrorByForm(e)) {
