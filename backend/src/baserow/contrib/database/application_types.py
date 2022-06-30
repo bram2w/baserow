@@ -6,7 +6,10 @@ from django.urls import path, include
 from django.utils import timezone
 
 from baserow.contrib.database.api.serializers import DatabaseSerializer
-from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.contrib.database.db.schema import (
+    create_model_and_related_tables_without_duplicates,
+    safe_django_schema_editor,
+)
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
@@ -225,7 +228,7 @@ class DatabaseApplicationType(ApplicationType):
                     add_dependencies=False,
                 )
                 table["_model"] = model
-                schema_editor.create_model(model)
+                create_model_and_related_tables_without_duplicates(schema_editor, model)
 
                 # The auto_now_add and auto_now must be disabled for all fields
                 # because the export contains correct values and we don't want them

@@ -1,25 +1,27 @@
-import pytest
-
 from io import BytesIO
 
+import pytest
+from django.apps.registry import apps
+from django.db import connections
+from django.shortcuts import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from django.shortcuts import reverse
-from django.db import connections
-from django.apps.registry import apps
-
-from baserow.core.handler import CoreHandler
-from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
 )
+from baserow.contrib.database.fields.dependencies.exceptions import (
+    SelfReferenceFieldDependencyError,
+)
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_call_apps_registry_pending_operations(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
@@ -43,6 +45,7 @@ def test_call_apps_registry_pending_operations(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_field_type(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
@@ -226,6 +229,7 @@ def test_link_row_field_type(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_field_type_rows(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
@@ -365,6 +369,7 @@ def test_link_row_field_type_rows(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_enhance_queryset(data_fixture, django_assert_num_queries):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
@@ -421,6 +426,7 @@ def test_link_row_enhance_queryset(data_fixture, django_assert_num_queries):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_field_type_api_views(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -591,6 +597,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_field_type_api_row_views(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
@@ -746,6 +753,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_import_export_link_row_field(data_fixture):
     user = data_fixture.create_user()
     imported_group = data_fixture.create_group(user=user)
@@ -817,6 +825,7 @@ def test_import_export_link_row_field(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_creating_a_linked_row_pointing_at_trashed_row_works_but_does_not_display(
     data_fixture, api_client
 ):
@@ -918,6 +927,7 @@ def test_creating_a_linked_row_pointing_at_trashed_row_works_but_does_not_displa
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_change_type_to_link_row_field_when_field_with_same_related_name_already_exists(
     data_fixture,
 ):
@@ -937,7 +947,7 @@ def test_change_type_to_link_row_field_when_field_with_same_related_name_already
     model.objects.create(**{f"field_{field.id}": "9223372036854775807"})
     model.objects.create(**{f"field_{field.id}": "100"})
 
-    # Change the field type to a number and test if the values have been changed.
+    # Change the field type to a link_row and test if names are changed corectly.
     new_link_row_field = handler.update_field(
         user=user,
         field=field,
@@ -954,6 +964,7 @@ def test_change_type_to_link_row_field_when_field_with_same_related_name_already
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_change_link_row_related_table_when_field_with_related_name_exists(
     data_fixture,
 ):
@@ -973,7 +984,7 @@ def test_change_link_row_related_table_when_field_with_related_name_exists(
         user, table, "link_row", link_row_table=first_related_table, name="Link"
     )
 
-    # Change the field type to a number and test if the values have been changed.
+    # Change the field type to a link_row and test if the name have been changed.
     handler.update_field(
         user=user,
         field=link_row,
@@ -988,3 +999,246 @@ def test_change_link_row_related_table_when_field_with_related_name_exists(
     )
     assert names == ["Table", "Table - Link"]
     assert LinkRowField.objects.count() == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_link_row_field_can_link_same_table(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user, name="Table")
+    field_handler = FieldHandler()
+    field = data_fixture.create_text_field(
+        table=table, order=1, primary=True, name="Name"
+    )
+    link_row = field_handler.create_field(
+        user, table, "link_row", link_row_table=table, name="Link"
+    )
+    link_row.refresh_from_db()
+    assert link_row.link_row_related_field is None
+    field_names = Field.objects.filter(table=table).values_list("name", flat=True)
+    assert list(field_names) == ["Name", "Link"]
+
+    row_handler = RowHandler()
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{field.id}": "Tesla",
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{field.id}": "Amazon",
+            f"field_{link_row.id}": [row_1.id],
+        },
+    )
+
+    assert getattr(row_2, f"field_{link_row.id}").count() == 1
+    assert getattr(row_2, f"field_{link_row.id}").all()[0].id == row_1.id
+
+    url = reverse(
+        "api:database:rows:item",
+        kwargs={"table_id": table.id, "row_id": row_1.id},
+    )
+    response = api_client.patch(
+        url,
+        {f"field_{link_row.id}": [row_1.id, row_2.id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f"field_{link_row.id}"] == [
+        {"id": row_1.id, "value": "Tesla"},
+        {"id": row_2.id, "value": "Amazon"},
+    ]
+
+    # can be trashed and restored
+    field_handler.delete_field(user, link_row)
+    assert link_row.trashed is True
+
+    TrashHandler().restore_item(user, "field", link_row.id)
+    link_row.refresh_from_db()
+    assert link_row.trashed is False
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_link_row_field_can_link_same_table_and_another_table(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+    grid = data_fixture.create_grid_view(user, table=table_a)
+
+    table_a_primary = data_fixture.create_text_field(
+        user, table=table_a, primary=True, name="table a pk"
+    )
+    table_b_primary = data_fixture.create_text_field(
+        user, table=table_b, primary=True, name="table a pk"
+    )
+
+    field_handler = FieldHandler()
+    table_a_self_link = field_handler.create_field(
+        user, table_a, "link_row", link_row_table=table_a, name="A->A"
+    )
+    link_field = field_handler.create_field(
+        user, table_b, "link_row", link_row_table=table_a, name="B->A"
+    )
+
+    row_handler = RowHandler()
+    table_a_row_1 = row_handler.create_row(
+        user=user,
+        table=table_a,
+        values={
+            f"field_{table_a_primary.id}": "Tesla",
+        },
+    )
+    table_a_row_2 = row_handler.create_row(
+        user=user,
+        table=table_a,
+        values={
+            f"field_{table_a_primary.id}": "Amazon",
+            f"field_{table_a_self_link.id}": [table_a_row_1.id],
+        },
+    )
+
+    table_b_row_1 = row_handler.create_row(
+        user=user,
+        table=table_b,
+        values={
+            f"field_{table_b_primary.id}": "Amazon",
+            f"field_{link_field.id}": [table_a_row_1.id],
+        },
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_link_row_can_change_link_from_same_table_to_another_table_and_back(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+    table_a_primary = data_fixture.create_text_field(
+        user, table=table_a, primary=True, name="table a pk"
+    )
+    table_b_primary = data_fixture.create_text_field(
+        user, table=table_b, primary=True, name="table b pk"
+    )
+    grid_a = data_fixture.create_grid_view(user, table=table_a)
+    grid_b = data_fixture.create_grid_view(user, table=table_b)
+
+    field_handler = FieldHandler()
+    table_a_link = field_handler.create_field(
+        user, table_a, "link_row", link_row_table=table_a, name="A->A"
+    )
+    row_handler = RowHandler()
+    table_a_row_1 = row_handler.create_row(
+        user=user,
+        table=table_a,
+        values={
+            f"field_{table_a_primary.id}": "Tesla",
+        },
+    )
+    table_a_row_2 = row_handler.create_row(
+        user=user,
+        table=table_a,
+        values={
+            f"field_{table_a_primary.id}": "Amazon",
+            f"field_{table_a_link.id}": [table_a_row_1.id],
+        },
+    )
+
+    table_b_row_1 = row_handler.create_row(
+        user=user,
+        table=table_b,
+        values={
+            f"field_{table_b_primary.id}": "Jeff",
+        },
+    )
+
+    table_a_link = field_handler.update_field(
+        user, table_a_link, link_row_table=table_b, name="A->B"
+    )
+
+    # both grid views must be accessible
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_a.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_b.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    names = list(Field.objects.filter(table=table_b).values_list("name", flat=True))
+    assert len(names) == 2
+    names = list(Field.objects.filter(table=table_a).values_list("name", flat=True))
+    assert names == ["table a pk", "A->B"]
+
+    # back to the original
+
+    table_a_link = field_handler.update_field(
+        user, table_a_link, link_row_table=table_a, name="A->A again"
+    )
+
+    # both grid views must be accessible
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_a.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_200_OK
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_b.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_200_OK
+
+    names = list(Field.objects.filter(table=table_b).values_list("name", flat=True))
+    assert names == ["table b pk"]
+    names = list(Field.objects.filter(table=table_a).values_list("name", flat=True))
+    assert names == ["table a pk", "A->A again"]
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_lookup_field_cannot_self_reference_itself_via_same_table_link_row(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user, name="Table")
+    field_handler = FieldHandler()
+    field = data_fixture.create_text_field(
+        table=table, order=1, primary=True, name="Name"
+    )
+    link_row = field_handler.create_field(
+        user, table, "link_row", link_row_table=table, name="Link"
+    )
+    lookup = field_handler.create_field(
+        user,
+        table,
+        "lookup",
+        through_field_id=link_row.id,
+        target_field_id=field.id,
+        name="Lookup",
+    )
+
+    link_row.refresh_from_db()
+    assert link_row.link_row_related_field is None
+    field_names = Field.objects.filter(table=table).values_list("name", flat=True)
+    assert list(field_names) == ["Name", "Link", "Lookup"]
+
+    with pytest.raises(SelfReferenceFieldDependencyError):
+        field_handler.update_field(
+            user,
+            lookup,
+            name="Lookup self",
+            through_field_id=link_row.id,
+            target_field_id=lookup.id,
+        )

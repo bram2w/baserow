@@ -187,6 +187,7 @@ def test_dependencies_for_triple_lookup(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_dependencies_for_link_row_link_row_self_reference(data_fixture):
     user = data_fixture.create_user()
     table_a = data_fixture.create_database_table(user=user)
@@ -199,8 +200,6 @@ def test_dependencies_for_link_row_link_row_self_reference(data_fixture):
         name="self",
         link_row_table=table_a.id,
     )
-    # todo remove once the self referencing link row field MR is merged.
-    table_a_self_link.link_row_related_field.delete()
     assert when_field_updated(table_a_primary) == causes(
         a_field_update_for(field=table_a_self_link, via=[table_a_self_link])
     )
@@ -236,6 +235,7 @@ def a_field_update_for(field, via, then=None):
 
 
 @pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_get_dependant_fields_with_type(data_fixture):
     table = data_fixture.create_database_table()
     text_field_1 = data_fixture.create_text_field(table=table)

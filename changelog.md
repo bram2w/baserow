@@ -21,6 +21,7 @@ For example:
 * Added API exception registry that allows plugins to provide custom exception mappings for the REST API.
 * Added formula round and int functions. [#891](https://gitlab.com/bramw/baserow/-/issues/891)
 * Views can be duplicated. [#962](https://gitlab.com/bramw/baserow/-/issues/962)
+* Link to table field can now link rows in the same table. [#798](https://gitlab.com/bramw/baserow/-/issues/798)
 
 ### Bug Fixes
 
@@ -42,6 +43,7 @@ For example:
 * Fix lookup field conversions deleting all of its old field dependencies. [#1036](https://gitlab.com/bramw/baserow/-/issues/1036)
 
 ### Breaking Changes
+
 
 ## Released (2022-06-09 1.10.1)
 

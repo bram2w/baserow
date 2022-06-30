@@ -3060,6 +3060,137 @@ def test_link_row_has_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_link_row_reference_same_table_has_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    primary_field = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Test",
+        link_row_table=table,
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    row_0 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 0",
+        },
+    )
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 1",
+            f"field_{link_row_field.id}": [row_0.id],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 2",
+            f"field_{link_row_field.id}": [row_0.id, row_1.id],
+        },
+    )
+    row_3 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 3",
+            f"field_{link_row_field.id}": [row_2.id],
+        },
+    )
+    row_with_all_relations = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 4",
+            f"field_{link_row_field.id}": [
+                row_0.id,
+                row_1.id,
+                row_2.id,
+                row_3.id,
+            ],
+        },
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_has",
+        value=f"",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 5
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 5
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = f"{row_0.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_with_all_relations.id in ids
+
+    view_filter.value = f"{row_2.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_3.id in ids
+    assert row_with_all_relations.id in ids
+
+    view_filter.value = f"{row_3.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_with_all_relations.id in ids
+
+    # Chaining filters should also work
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_has",
+        value=f"{row_1.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_with_all_relations.id in ids
+
+    # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_with_all_relations.id in ids
+
+
+@pytest.mark.django_db
 def test_link_row_has_not_filter_type(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)

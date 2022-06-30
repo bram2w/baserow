@@ -1000,7 +1000,9 @@ class LinkRowFieldType(FieldType):
     ]
     serializer_field_names = ["link_row_table", "link_row_related_field"]
     serializer_field_overrides = {
-        "link_row_related_field": serializers.PrimaryKeyRelatedField(read_only=True)
+        "link_row_related_field": serializers.PrimaryKeyRelatedField(
+            read_only=True, required=False
+        )
     }
     api_exceptions_map = {
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -1189,13 +1191,16 @@ class LinkRowFieldType(FieldType):
         manytomany_models[instance.table_id] = model
 
         # Check if the related table model is already in the manytomany_models.
-        related_model = manytomany_models.get(instance.link_row_table_id)
-
-        # If we do not have a related table model already we can generate a new one.
-        if not related_model:
-            related_model = instance.link_row_table.get_model(
-                manytomany_models=manytomany_models
-            )
+        is_referencing_the_same_table = instance.link_row_table_id == instance.table_id
+        if is_referencing_the_same_table:
+            related_model = model
+        else:
+            related_model = manytomany_models.get(instance.link_row_table_id)
+            # If we do not have a related table model already we can generate a new one.
+            if related_model is None:
+                related_model = instance.link_row_table.get_model(
+                    manytomany_models=manytomany_models
+                )
 
         instance._related_model = related_model
         related_name = f"reversed_field_{instance.id}"
@@ -1203,16 +1208,21 @@ class LinkRowFieldType(FieldType):
         # Try to find the related field in the related model in order to figure out what
         # the related name should be. If the related if is not found that means that it
         # has not yet been created.
-        for related_field in related_model._field_objects.values():
-            if (
+        def field_is_link_row_related_field(related_field):
+            return (
                 isinstance(related_field["field"], self.model_class)
                 and related_field["field"].link_row_related_field_id
                 and related_field["field"].link_row_related_field_id == instance.id
-            ):
-                related_name = related_field["name"]
+            )
 
-        # Note that the through model will not be registered with the apps because of
-        # the `DatabaseConfig.prevent_generated_model_for_registering` hack.
+        if not is_referencing_the_same_table:
+            for related_field in related_model._field_objects.values():
+                if field_is_link_row_related_field(related_field):
+                    related_name = related_field["name"]
+                    break
+
+        # Note that the through model will not be registered with the apps because
+        # of the `DatabaseConfig.prevent_generated_model_for_registering` hack.
         models.ManyToManyField(
             to=related_model,
             related_name=related_name,
@@ -1222,16 +1232,30 @@ class LinkRowFieldType(FieldType):
             db_constraint=False,
         ).contribute_to_class(model, field_name)
 
+        model_field = model._meta.get_field(field_name)
+        through_model = model_field.remote_field.through
+        if is_referencing_the_same_table:
+            # manually create the opposite relation on the same through_model.
+            from_field, to_field = through_model._meta.get_fields()[1:]
+            models.ManyToManyField(
+                to="self",
+                related_name=field_name,
+                null=True,
+                blank=True,
+                symmetrical=False,
+                through=through_model,
+                through_fields=(to_field.name, from_field.name),
+            ).contribute_to_class(model, related_name)
+
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
         # they are triggered when a new model is registered. Not triggering them
         # can cause a memory leak because everytime a table model is generated, it will
         # register new pending operations.
         apps = model._meta.apps
-        model_field = model._meta.get_field(field_name)
         apps.do_pending_operations(model)
         apps.do_pending_operations(related_model)
-        apps.do_pending_operations(model_field.remote_field.through)
+        apps.do_pending_operations(through_model)
         apps.clear_cache()
 
     def prepare_values(self, values, user):
@@ -1309,7 +1333,7 @@ class LinkRowFieldType(FieldType):
         table so a reversed lookup can be done by the user.
         """
 
-        if field.link_row_related_field:
+        if field.link_row_related_field or field.table == field.link_row_table:
             return
 
         related_field_name = self.find_next_unused_related_field_name(field)
@@ -1347,7 +1371,10 @@ class LinkRowFieldType(FieldType):
         to_model_field,
         user,
     ):
-        if not isinstance(to_field, self.model_class):
+        if (
+            not isinstance(to_field, self.model_class)
+            and from_field.link_row_related_field is not None
+        ):
             # If we are not going to convert to another manytomany field the
             # related field can be deleted.
             from_field.link_row_related_field.delete()
@@ -1359,13 +1386,35 @@ class LinkRowFieldType(FieldType):
             # If the table has changed we have to change the following data in the
             # related field
             related_field_name = self.find_next_unused_related_field_name(to_field)
-            from_field.link_row_related_field.name = related_field_name
-            from_field.link_row_related_field.table = to_field.link_row_table
-            from_field.link_row_related_field.link_row_table = to_field.table
-            from_field.link_row_related_field.order = self.model_class.get_last_order(
-                to_field.link_row_table
-            )
-            from_field.link_row_related_field.save()
+
+            if from_field.link_row_related_field is None:
+                # we need to create the missing link_row_related_field
+                to_field.link_row_related_field = FieldHandler().create_field(
+                    user=user,
+                    table=to_field.link_row_table,
+                    type_name=self.type,
+                    name=related_field_name,
+                    do_schema_change=False,
+                    link_row_table=to_field.table,
+                    link_row_related_field=to_field,
+                    link_row_relation_id=to_field.link_row_relation_id,
+                )
+                to_field.save()
+            elif (
+                # delete the previous field that is not needed anymore
+                # since we are referencing the same table now
+                to_field.link_row_related_field is not None
+                and to_field.table_id == to_field.link_row_table_id
+            ):
+                to_field.link_row_related_field.delete()
+            else:
+                from_field.link_row_related_field.name = related_field_name
+                from_field.link_row_related_field.table = to_field.link_row_table
+                from_field.link_row_related_field.link_row_table = to_field.table
+                from_field.link_row_related_field.order = (
+                    self.model_class.get_last_order(to_field.link_row_table)
+                )
+                from_field.link_row_related_field.save()
 
     def after_update(
         self,
@@ -1383,8 +1432,10 @@ class LinkRowFieldType(FieldType):
         field into the related table.
         """
 
-        if not isinstance(from_field, self.model_class) and isinstance(
-            to_field, self.model_class
+        if (
+            not isinstance(from_field, self.model_class)
+            and isinstance(to_field, self.model_class)
+            and to_field.table != to_field.link_row_table
         ):
             related_field_name = self.find_next_unused_related_field_name(to_field)
             to_field.link_row_related_field = FieldHandler().create_field(
@@ -1404,7 +1455,8 @@ class LinkRowFieldType(FieldType):
         After the field has been deleted we also need to delete the related field.
         """
 
-        field.link_row_related_field.delete()
+        if field.link_row_related_field is not None:
+            field.link_row_related_field.delete()
 
     def random_value(self, instance, fake, cache):
         """
@@ -1510,8 +1562,11 @@ class LinkRowFieldType(FieldType):
     ):
         getattr(row, field_name).set(value)
 
-    def get_other_fields_to_trash_restore_always_together(self, field) -> List[Any]:
-        return [field.link_row_related_field]
+    def get_other_fields_to_trash_restore_always_together(self, field) -> List[Field]:
+        fields = []
+        if field.link_row_related_field is not None:
+            fields.append(field.link_row_related_field)
+        return fields
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         primary_field = field.get_related_primary_field()

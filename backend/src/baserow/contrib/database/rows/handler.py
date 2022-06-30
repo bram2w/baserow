@@ -743,13 +743,24 @@ class RowHandler:
                 value_column = None
                 row_column = None
 
+                model_field = model._meta.get_field(field_name)
+                is_referencing_the_same_table = (
+                    model_field.model == model_field.related_model
+                )
+
                 # Figure out which field in the many to many through table holds the row
                 # value and which on contains the value.
                 for field in through_fields:
                     if type(field) is not ForeignKey:
                         continue
 
-                    if field.remote_field.model == model:
+                    if is_referencing_the_same_table:
+                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
+                        # columns for self-referencing many_to_many relations.
+                        row_column = field.get_attname_column()[1]
+                        value_column = row_column.replace("from", "to")
+                        break
+                    elif field.remote_field.model == model:
                         row_column = field.get_attname_column()[1]
                     else:
                         value_column = field.get_attname_column()[1]
@@ -939,6 +950,11 @@ class RowHandler:
                 value_column = None
                 row_column = None
 
+                model_field = model._meta.get_field(field_name)
+                is_referencing_the_same_table = (
+                    model_field.model == model_field.related_model
+                )
+
                 # Figure out which field in the many to many through table holds the row
                 # value and which one contains the value.
                 for field in through_fields:
@@ -947,7 +963,14 @@ class RowHandler:
 
                     row_ids_change_m2m_per_field[field_name].add(row.id)
 
-                    if field.remote_field.model == model:
+                    if is_referencing_the_same_table:
+                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
+                        # columns for self-referencing many_to_many relations.
+                        row_column = field.get_attname_column()[1]
+                        row_column_name = row_column
+                        value_column = row_column.replace("from", "to")
+                        break
+                    elif field.remote_field.model == model:
                         row_column = field.get_attname_column()[1]
                         row_column_name = row_column
                     else:
