@@ -22,6 +22,8 @@ For example:
 * Added formula round and int functions. [#891](https://gitlab.com/bramw/baserow/-/issues/891)
 * Views can be duplicated. [#962](https://gitlab.com/bramw/baserow/-/issues/962)
 * Link to table field can now link rows in the same table. [#798](https://gitlab.com/bramw/baserow/-/issues/798)
+* Made it clearer that you're navigating to baserow.io when clicking the "Get a license"
+  button.
 
 ### Bug Fixes
 
