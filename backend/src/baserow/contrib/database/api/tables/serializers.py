@@ -6,12 +6,19 @@ from baserow.contrib.database.table.models import Table
 class TableSerializer(serializers.ModelSerializer):
     class Meta:
         model = Table
-        fields = ("id", "name", "order", "database_id", "import_jobs")
+        fields = ("id", "name", "order", "database_id")
         extra_kwargs = {
             "id": {"read_only": True},
             "database_id": {"read_only": True},
             "order": {"help_text": "Lowest first."},
         }
+
+
+class TableWithImportJobsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Table
+        fields = TableSerializer.Meta.fields + ("import_jobs",)
+        extra_kwargs = TableSerializer.Meta.extra_kwargs
 
 
 class TableCreateSerializer(serializers.ModelSerializer):

@@ -1,4 +1,6 @@
 import pytest
+from unittest.mock import patch
+from django.db import connection
 
 from rest_framework.status import (
     HTTP_200_OK,
@@ -9,7 +11,7 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 from django.conf import settings
-from django.test.utils import override_settings
+from django.test.utils import override_settings, CaptureQueriesContext
 
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.table.models import Table
@@ -56,6 +58,32 @@ def test_list_tables(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_tables_doesnt_do_n_queries_per_tables(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    database_2 = data_fixture.create_database_application()
+    table_1 = data_fixture.create_database_table(database=database, order=2)
+    table_2 = data_fixture.create_database_table(database=database, order=1)
+    data_fixture.create_database_table(database=database_2)
+
+    with CaptureQueriesContext(connection) as query_for_n_tables:
+        url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        assert response.status_code == HTTP_200_OK
+
+    table_3 = data_fixture.create_database_table(database=database, order=1)
+
+    with CaptureQueriesContext(connection) as query_for_n_plus_one_tables:
+        url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        assert response.status_code == HTTP_200_OK
+
+    assert len(query_for_n_tables.captured_queries) == len(
+        query_for_n_plus_one_tables.captured_queries
+    )
+
+
+@pytest.mark.django_db
 def test_create_table(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user)
@@ -99,7 +127,8 @@ def test_create_table(api_client, data_fixture):
 
 @pytest.mark.django_db
 @override_settings(FEATURE_FLAGS=[])
-def test_create_table_with_data(api_client, data_fixture):
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_create_table_with_data(mock_run_async_job, api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user)
 
@@ -296,6 +325,25 @@ def test_create_table_with_data(api_client, data_fixture):
 
     assert getattr(results[2], f"field_{text_fields[0].id}") == "3-1"
     assert getattr(results[2], f"field_{text_fields[1].id}") == "3-2"
+
+    with override_settings(FEATURE_FLAGS=["async_import"]):
+        response = api_client.post(
+            url,
+            {
+                "name": "Test 22",
+                "data": [
+                    ["1-1"],
+                ],
+                "first_row_header": False,
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert "import_jobs" in response_json
+    assert len(response_json["import_jobs"]) == 1
 
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
     response = api_client.post(
