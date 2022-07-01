@@ -322,5 +322,9 @@
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "Invalid {name}",
+        "invalidUrlEnvVarDescription":"The {name} environment variable has been set to an invalid value. Your site admin must change {name} to a valid URL starting with http:// or https:// and then restart Baserow to fix this error."
     }
 }

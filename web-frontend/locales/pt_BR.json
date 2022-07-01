@@ -311,5 +311,9 @@
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": ""
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "",
+        "invalidUrlEnvVarDescription": ""
     }
 }

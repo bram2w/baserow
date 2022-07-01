@@ -15,6 +15,6 @@ import Notifications from '@baserow/modules/core/components/notifications/Notifi
 
 export default {
   components: { Notifications },
-  middleware: ['settings'],
+  middleware: ['settings', 'urlCheck'],
 }
 </script>

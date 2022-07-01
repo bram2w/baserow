@@ -312,5 +312,9 @@
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "",
+        "invalidUrlEnvVarDescription": ""
     }
 }

@@ -15,6 +15,7 @@ services:
       EMAIL_SMTP: 'yes'
       EMAIL_SMTP_HOST: 'mailhog'
       EMAIL_SMTP_PORT: '1025'
+      BASEROW_PUBLIC_URL:
     ports:
       - "80:80"
       - "443:443"
