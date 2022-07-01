@@ -1,6 +1,10 @@
-import pytest
 from unittest.mock import patch
 
+import pytest
+from django.contrib.contenttypes.models import ContentType
+from django.db import connection
+from django.shortcuts import reverse
+from django.test.utils import CaptureQueriesContext
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -8,9 +12,6 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
 )
-
-from django.shortcuts import reverse
-from django.contrib.contenttypes.models import ContentType
 
 from baserow.contrib.database.views.models import View, GridView
 from baserow.contrib.database.views.registries import (
@@ -90,6 +91,43 @@ def test_list_views(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_list_views_doesnt_do_n_queries(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table()
+    view_1 = data_fixture.create_grid_view(table=table_1, order=1)
+    view_2 = data_fixture.create_grid_view(table=table_1, order=3)
+    view_3 = data_fixture.create_grid_view(
+        table=table_1, order=2, filter_type="OR", filters_disabled=True
+    )
+    data_fixture.create_grid_view(table=table_2, order=1)
+
+    with CaptureQueriesContext(connection) as query_for_n:
+        response = api_client.get(
+            reverse("api:database:views:list", kwargs={"table_id": table_1.id}),
+            **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        )
+        assert response.status_code == HTTP_200_OK
+        response_json = response.json()
+
+    view_4 = data_fixture.create_grid_view(table=table_1, order=3)
+
+    with CaptureQueriesContext(connection) as query_for_n_plus_one:
+        response = api_client.get(
+            reverse("api:database:views:list", kwargs={"table_id": table_1.id}),
+            **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        )
+        assert response.status_code == HTTP_200_OK
+        response_json = response.json()
+
+    assert len(query_for_n.captured_queries) == len(
+        query_for_n_plus_one.captured_queries
+    )
 
 
 @pytest.mark.django_db

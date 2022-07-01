@@ -56,6 +56,7 @@ from .serializers import (
     TableCreateSerializer,
     TableUpdateSerializer,
     OrderTablesSerializer,
+    TableWithImportJobsSerializer,
 )
 
 
@@ -83,7 +84,7 @@ class TablesView(APIView):
             "endpoints."
         ),
         responses={
-            200: TableSerializer(many=True),
+            200: TableWithImportJobsSerializer(many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
         },
@@ -99,8 +100,8 @@ class TablesView(APIView):
 
         database = DatabaseHandler().get_database(database_id)
         database.group.has_user(request.user, raise_error=True)
-        tables = Table.objects.filter(database=database)
-        serializer = TableSerializer(tables, many=True)
+        tables = Table.objects.filter(database=database).prefetch_related("import_jobs")
+        serializer = TableWithImportJobsSerializer(tables, many=True)
         return Response(serializer.data)
 
     @extend_schema(
@@ -123,7 +124,7 @@ class TablesView(APIView):
         ),
         request=TableCreateSerializer,
         responses={
-            200: TableSerializer,
+            200: TableWithImportJobsSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -164,7 +165,7 @@ class TablesView(APIView):
             request.user, database, fill_example=True, **data
         )
 
-        serializer = TableSerializer(table)
+        serializer = TableWithImportJobsSerializer(table)
         return Response(serializer.data)
 
 
@@ -187,7 +188,7 @@ class TableView(APIView):
             "related database's group."
         ),
         responses={
-            200: TableSerializer,
+            200: TableWithImportJobsSerializer,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
         },
@@ -203,7 +204,7 @@ class TableView(APIView):
 
         table = TableHandler().get_table(table_id)
         table.database.group.has_user(request.user, raise_error=True)
-        serializer = TableSerializer(table)
+        serializer = TableWithImportJobsSerializer(table)
         return Response(serializer.data)
 
     @extend_schema(
