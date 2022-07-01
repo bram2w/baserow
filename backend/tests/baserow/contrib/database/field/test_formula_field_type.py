@@ -23,6 +23,7 @@ from baserow.contrib.database.formula import (
 from baserow.contrib.database.formula.ast.tree import BaserowFunctionDefinition
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.cache import (
     generated_models_cache,
@@ -1259,3 +1260,89 @@ def test_converted_reversed_link_row_field_with_formula_dependency(data_fixture)
     lookup_of_table_b_pk.refresh_from_db()
     assert lookup_of_table_b_pk.formula_type == "invalid"
     assert lookup_of_table_b_pk.error == "references the deleted or unknown field link"
+
+
+def can_query_grid_view_for(api_client, grid_view, token):
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) == 10
+
+
+@pytest.mark.django_db(transaction=True)
+def test_every_formula_sub_type_can_be_a_primary_field(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    grid_view_table_a = data_fixture.create_grid_view(user, table=table_a)
+    grid_view_table_b = data_fixture.create_grid_view(user, table=table_b)
+
+    table_b_primary_field = table_b.field_set.get(primary=True)
+    table_a_primary_field = table_a.field_set.get(primary=True).specific
+    related_link_row_field = link_field.link_row_related_field
+
+    data_fixture.create_email_field(table=table_a, name="email")
+    option_field_table_a = data_fixture.create_single_select_field(
+        table=table_a, name="single_select"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_a, value="A", color="blue"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_a, value="B", color="red"
+    )
+
+    data_fixture.create_text_field(table=table_b, name="text")
+    data_fixture.create_number_field(table=table_b, name="int", number_decimal_places=0)
+    data_fixture.create_boolean_field(table=table_b, name="bool")
+    data_fixture.create_number_field(
+        table=table_b, name="decimal", number_decimal_places=10
+    )
+    data_fixture.create_formula_field(
+        table=table_b, name="date_interval", formula='date_interval("1 day")'
+    )
+    data_fixture.create_date_field(table=table_b, name="date")
+    option_field_table_b = data_fixture.create_single_select_field(
+        table=table_b, name="single_select"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_b, value="A", color="blue"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_b, value="B", color="red"
+    )
+    data_fixture.create_email_field(table=table_b, name="email")
+
+    fill_table_rows(10, table_a)
+    fill_table_rows(10, table_b)
+
+    every_formula_type = [
+        "CONCAT('test ', UPPER('formula'))",
+        "1",
+        "true",
+        "100/3",
+        "date_interval('1 day')",
+        "todate('20200101', 'YYYYMMDD')",
+        "field('single_select')",
+        "field('email')",
+        "1/0",
+        f"lookup('{link_field.name}', 'text')",
+        f"lookup('{link_field.name}', 'int')",
+        f"lookup('{link_field.name}', 'bool')",
+        f"lookup('{link_field.name}', 'decimal')",
+        f"lookup('{link_field.name}', 'date_interval')",
+        f"lookup('{link_field.name}', 'date')",
+        f"lookup('{link_field.name}', 'single_select')",
+        f"lookup('{link_field.name}', 'email')",
+    ]
+    for f in every_formula_type:
+        primary_formula = FieldHandler().update_field(
+            user,
+            table_a_primary_field,
+            new_type_name="formula",
+            name="primary formula",
+            formula=f,
+        )
+        assert primary_formula.error is None
+        can_query_grid_view_for(api_client, grid_view_table_a, token)
+        can_query_grid_view_for(api_client, grid_view_table_b, token)

@@ -513,22 +513,17 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         if value is None:
             return []
 
-        i, field_type = self.sub_type.get_baserow_field_instance_and_type()
+        field_instance, field_type = self.sub_type.get_baserow_field_instance_and_type()
+        field_obj = {
+            "field": field_instance,
+            "type": field_type,
+            "name": field_object["name"],
+        }
 
-        field_obj = {"field": i, "type": field_type, "name": field_object["name"]}
-        result = []
-        for v in value:
-            value = v["value"]
-            if value is not None and self.sub_type.type == "date":
-                # Arrays are stored as JSON which means the dates are converted to
-                # strings, we need to reparse them back first before giving it to
-                # the date field type.
-                value = parser.isoparse(value)
-            export_value = field_type.get_export_value(value, field_obj)
-            if export_value is None:
-                export_value = ""
-            result.append(export_value)
-        return result
+        return self._map_safely_across_lookup_json_value_list(
+            lambda safe_value: field_type.get_export_value(safe_value, field_obj),
+            value,
+        )
 
     def contains_query(self, field_name, value, model_field, field):
         return Q()
@@ -540,13 +535,38 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         if value is None:
             return ""
 
-        i, field_type = self.sub_type.get_baserow_field_instance_and_type()
+        field_instance, field_type = self.sub_type.get_baserow_field_instance_and_type()
+        field_obj = {
+            "field": field_instance,
+            "type": field_type,
+            "name": field_object["name"],
+        }
 
-        export_values = self.get_export_value(value, field_object)
-        field_obj = {"field": i, "type": field_type, "name": field_object["name"]}
-        return ", ".join(
-            [field_type.get_human_readable_value(v, field_obj) for v in export_values]
+        human_readable_values = self._map_safely_across_lookup_json_value_list(
+            lambda safe_value: field_type.get_human_readable_value(
+                safe_value, field_obj
+            ),
+            value,
         )
+
+        return ", ".join(human_readable_values)
+
+    def _map_safely_across_lookup_json_value_list(
+        self, map_func, lookup_json_value_list
+    ):
+        human_readable_values = []
+        for v in lookup_json_value_list:
+            lookup_json_value_list = v["value"]
+            if lookup_json_value_list is not None and self.sub_type.type == "date":
+                # Arrays are stored as JSON which means the dates are converted to
+                # strings, we need to reparse them back first before giving it to
+                # the date field type.
+                lookup_json_value_list = parser.isoparse(lookup_json_value_list)
+            export_value = map_func(lookup_json_value_list)
+            if export_value is None:
+                export_value = ""
+            human_readable_values.append(export_value)
+        return human_readable_values
 
     def __str__(self) -> str:
         return f"array({self.sub_type})"

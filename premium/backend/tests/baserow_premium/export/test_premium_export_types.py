@@ -68,7 +68,14 @@ def test_can_export_every_interesting_different_field_to_json(
     "single_select": "",
     "multiple_select": [],
     "phone_number": "",
-    "formula": "test FORMULA",
+    "formula_text": "test FORMULA",
+    "formula_int": 1,
+    "formula_bool": true,
+    "formula_decimal": "33.3333333333",
+    "formula_dateinterval": "1 day",
+    "formula_date": "2020-01-01",
+    "formula_singleselect": "",
+    "formula_email": "",
     "lookup": []
 },
 {
@@ -131,7 +138,14 @@ def test_can_export_every_interesting_different_field_to_json(
         "E"
     ],
     "phone_number": "+4412345678",
-    "formula": "test FORMULA",
+    "formula_text": "test FORMULA",
+    "formula_int": 1,
+    "formula_bool": true,
+    "formula_decimal": "33.3333333333",
+    "formula_dateinterval": "1 day",
+    "formula_date": "2020-01-01",
+    "formula_singleselect": "A",
+    "formula_email": "test@example.com",
     "lookup": [
         "linked_row_1",
         "linked_row_2",
@@ -252,7 +266,14 @@ def test_can_export_every_interesting_different_field_to_xml(
     <single-select/>
     <multiple-select/>
     <phone-number/>
-    <formula>test FORMULA</formula>
+    <formula-text>test FORMULA</formula-text>
+    <formula-int>1</formula-int>
+    <formula-bool>true</formula-bool>
+    <formula-decimal>33.3333333333</formula-decimal>
+    <formula-dateinterval>1 day</formula-dateinterval>
+    <formula-date>2020-01-01</formula-date>
+    <formula-singleselect/>
+    <formula-email/>
     <lookup/>
 </row>
 <row>
@@ -317,7 +338,14 @@ def test_can_export_every_interesting_different_field_to_xml(
         <item>E</item>
     </multiple-select>
     <phone-number>+4412345678</phone-number>
-    <formula>test FORMULA</formula>
+    <formula-text>test FORMULA</formula-text>
+    <formula-int>1</formula-int>
+    <formula-bool>true</formula-bool>
+    <formula-decimal>33.3333333333</formula-decimal>
+    <formula-dateinterval>1 day</formula-dateinterval>
+    <formula-date>2020-01-01</formula-date>
+    <formula-singleselect>A</formula-singleselect>
+    <formula-email>test@example.com</formula-email>
     <lookup><item>linked_row_1</item><item>linked_row_2</item><item/></lookup>
 </row>
 </rows>
