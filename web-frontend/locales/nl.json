@@ -312,5 +312,9 @@
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "",
+        "invalidUrlEnvVarDescription": ""
     }
 }

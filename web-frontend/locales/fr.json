@@ -312,5 +312,9 @@
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "",
+        "invalidUrlEnvVarDescription": ""
     }
 }
