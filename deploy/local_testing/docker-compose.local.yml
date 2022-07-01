@@ -1,10 +1,7 @@
 version: "3.4"
 
-# This compose override file should be used like so:
-# docker-compose -f docker-compose.yml -f docker-compose.local.yml
-#
-# It adds build sections and overrides the image params for each service allowing the
-# Baserow individual service images to be built and tested locally.
+# This compose override runs a production version of Baserow, but builds images from
+# the local repository. It comes with a mailhog at http://localhost:8025 for testing.
 services:
 
   backend:
