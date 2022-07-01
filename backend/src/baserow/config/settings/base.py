@@ -35,9 +35,7 @@ INSTALLED_APPS = [
     "health_check",
     "health_check.db",
     "health_check.cache",
-    "health_check.storage",
     "health_check.contrib.migrations",
-    "health_check.contrib.psutil",
     "health_check.contrib.redis",
     "baserow.core",
     "baserow.api",
@@ -45,6 +43,11 @@ INSTALLED_APPS = [
     "baserow.contrib.database",
     "baserow_premium",
 ]
+
+BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
+if BASEROW_FULL_HEALTHCHECKS is not None:
+    INSTALLED_APPS += ["health_check.storage", "health_check.contrib.psutil"]
+
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", None)
 if ADDITIONAL_APPS is not None:

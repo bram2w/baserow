@@ -77,3 +77,15 @@ export BASEROW_CELERY_EXPORT_WORKER_STARTUP_COMMAND="${BASEROW_CELERY_EXPORT_WOR
 export BASEROW_CELERY_BEAT_STARTUP_COMMAND="${BASEROW_CELERY_BEAT_STARTUP_COMMAND:-$DEFAULT_CELERY_BEAT_STARTUP_COMMAND}"
 export XDG_CONFIG_HOME=/home/$DOCKER_USER/
 export HOME=/home/$DOCKER_USER/
+
+# By default we run all other sub-supervisor processes as a non root user. However for
+# now we want to default just Caddy to a root user so it can bind to the privileged
+# port of 80.
+#
+# Until the latest version of Docker engine is more available if we want
+# Caddy to be able to bind to the privileged port of 80 it must be root. It was fixed
+# in 2020 (https://github.com/moby/moby/pull/41030) but we have many users who are
+# running older versions (often packaged by other software) who hit this error.
+# Even the official Caddy image runs as root currently to get around this problem:
+# (https://github.com/caddyserver/caddy-docker/issues/104)
+export BASEROW_CADDY_USER="${BASEROW_CADDY_USER:-root}"

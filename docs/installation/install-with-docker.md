@@ -284,6 +284,7 @@ docker run \
   -e REDIS_PASSWORD_FILE=/baserow/.your_redis_password \
   -e SECRET_KEY_FILE=/baserow/.your_secret_key \
   -e DATABASE_PASSWORD_FILE=/baserow/.your_pg_password \
+  -e EMAIL_SMTP_PASSWORD_FILE=/baserow/.your_smtp_password \
   --restart unless-stopped \
   -v $PWD/.your_redis_password:/baserow/.your_redis_password \
   -v $PWD/.your_secret_key:/baserow/.your_secret_key \

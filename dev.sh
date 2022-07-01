@@ -352,7 +352,7 @@ echo "./dev.sh running docker-compose commands:
 CORE_FILE=docker-compose.yml
 
 if [ "$local" = true ] ; then
-  OVERRIDE_FILE=(-f docker-compose.local.yml)
+  OVERRIDE_FILE=(-f deploy/local_testing/docker-compose.local.yml)
 else
   OVERRIDE_FILE=(-f docker-compose.dev.yml)
 fi

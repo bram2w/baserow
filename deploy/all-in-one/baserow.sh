@@ -196,6 +196,8 @@ else
   echo "Not loading DATABASE_PASSWORD as DATABASE_URL or DISABLED_EMBEDDED_SQL is set."
 fi
 
+file_env EMAIL_SMTP_PASSWORD
+
 # ========================
 # = DATA DIR SETUP
 # ========================

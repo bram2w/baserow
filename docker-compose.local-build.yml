@@ -1,21 +1,10 @@
 version: "3.4"
-########################################################################################
-#
-# READ ME FIRST!
-#
-# Use the much simpler `docker-compose.all-in-one.yml` instead of this file
-# unless you are an advanced user! This compose file runs every service separately.
-#
-# If you wish to continue with this more advanced compose file, it is recommended that
-# you set environment variables using the .env.example file by:
-# 1. `cp .env.example .env`
-# 2. Edit .env and fill in the first 3 variables.
-# 3. Set further environment variables as you wish.
+# Runs Baserow with each service in its own container and builds the Baserow images
+# from this local repository instead of using the pre-built images from Dockerhub.
+# Otherwise, identical to docker-compose.yml.
 #
 # More documentation can be found in:
 # https://baserow.io/docs/installation%2Finstall-with-docker-compose
-#
-########################################################################################
 
 # See https://baserow.io/docs/installation%2Fconfiguration for more details on these
 # backend environment variables, their defaults if left blank etc.
@@ -124,7 +113,10 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.10.1
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -137,7 +129,10 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.10.1
+    image: baserow_web-frontend:latest
+    build:
+      dockerfile: ./web-frontend/Dockerfile
+      context: .
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -156,7 +151,10 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.10.1
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -173,7 +171,10 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.10.1
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -190,7 +191,10 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.10.1
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
     restart: unless-stopped
     command: celery-beat
     environment:
