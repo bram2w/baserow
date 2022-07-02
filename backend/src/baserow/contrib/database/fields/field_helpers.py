@@ -129,7 +129,15 @@ def construct_all_possible_field_kwargs(
         ],
         "phone_number": [{"name": "phone_number"}],
         "formula": [
-            {"name": "formula", "formula": "CONCAT('test ', UPPER('formula'))"}
+            # Make one for each Baserow formula type!
+            {"name": "formula_text", "formula": "CONCAT('test ', UPPER('formula'))"},
+            {"name": "formula_int", "formula": "1"},
+            {"name": "formula_bool", "formula": "true"},
+            {"name": "formula_decimal", "formula": "100/3"},
+            {"name": "formula_dateinterval", "formula": "date_interval('1 day')"},
+            {"name": "formula_date", "formula": "todate('20200101', 'YYYYMMDD')"},
+            {"name": "formula_singleselect", "formula": "field('single_select')"},
+            {"name": "formula_email", "formula": "field('email')"},
         ],
         "lookup": [
             {

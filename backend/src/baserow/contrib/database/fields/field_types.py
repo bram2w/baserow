@@ -2733,7 +2733,14 @@ class FormulaFieldType(ReadOnlyFieldType):
             field_instance,
             field_type,
         ) = self._get_field_instance_and_type_from_formula_field(field_object["field"])
-        return field_type.get_human_readable_value(value, field_object)
+        return field_type.get_human_readable_value(
+            value,
+            {
+                "field": field_instance,
+                "type": field_type,
+                "name": field_object["name"],
+            },
+        )
 
     def restore_failed(self, field_instance, restore_exception):
         handleable_exceptions_to_error = {

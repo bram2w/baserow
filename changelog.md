@@ -47,6 +47,7 @@ For example:
 * Fixed URL fields not being available in lookup fields. [#984](https://gitlab.com/bramw/baserow/-/issues/984)
 * Fix lookup field conversions deleting all of its old field dependencies. [#1036](https://gitlab.com/bramw/baserow/-/issues/1036)
 * Fix refresh formula options button always being shown initially. [#1037](https://gitlab.com/bramw/baserow/-/issues/1037)
+* Fix get_human_readable_value crashing for some formula types. [#1042](https://gitlab.com/bramw/baserow/-/issues/1042)
 
 ### Breaking Changes
 

@@ -152,7 +152,14 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         "single_select": SelectOption.objects.get(value="A"),
         "multiple_select": None,
         "phone_number": "+4412345678",
-        "formula": "test FORMULA",
+        "formula_text": "test FORMULA",
+        "formula_int": "1",
+        "formula_bool": "true",
+        "formula_decimal": "1.23",
+        "formula_dateinterval": "",
+        "formula_date": "2020-01-01",
+        "formula_singleselect": "",
+        "formula_email": "test@example.com",
     }
 
     missing_fields = set(name_to_field_id.keys()) - set(values.keys()) - {"lookup"}

@@ -181,15 +181,26 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
         grid_view, aggregation_query, model=model, with_total=True
     )
 
-    assert len(result.keys()) == 25
+    assert len(result.keys()) == 29
 
-    for field in model._field_objects.values():
-        if aggregation_type.field_is_compatible(field["field"]):
+    for field_obj in model._field_objects.values():
+        field = field_obj["field"]
+        if aggregation_type.field_is_compatible(field):
 
-            field_id = field["field"].id
-            field_type = field["type"].type
+            field_id = field.id
+            field_type = field_obj["type"].type
 
-            if field_type in ["url", "email", "rating", "phone_number"]:
+            if (
+                field_type
+                in [
+                    "url",
+                    "email",
+                    "rating",
+                    "phone_number",
+                ]
+                or field_type == "formula"
+                and field.formula_type == "char"
+            ):
                 assert result[f"field_{field_id}"] == 2
             else:
                 assert result[f"field_{field_id}"] == 1
