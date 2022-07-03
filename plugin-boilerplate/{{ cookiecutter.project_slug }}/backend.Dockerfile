@@ -1,5 +1,4 @@
-# TODO before merge switch back to proper dockerhub image
-FROM registry.gitlab.com/bramw/baserow/ci/backend:ci-latest-432-update-plugin-boilterplate-and-docs-to-match-new-docker-usage
+FROM baserow/backend:1.10.1
 
 USER root
 

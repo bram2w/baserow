@@ -1,9 +1,7 @@
 # This a dev image for testing your plugin when installed into the Baserow all-in-one image
+FROM baserow/baserow:1.10.1 as base
 
-# TODO before merge switch back to proper dockerhub image
-FROM registry.gitlab.com/bramw/baserow/ci/baserow:ci-latest-432-update-plugin-boilterplate-and-docs-to-match-new-docker-usage as base
-
-FROM registry.gitlab.com/bramw/baserow/ci/baserow:ci-latest-432-update-plugin-boilterplate-and-docs-to-match-new-docker-usage
+FROM baserow/baserow:1.10.1
 
 ARG PLUGIN_BUILD_UID
 ENV PLUGIN_BUILD_UID=${PLUGIN_BUILD_UID:-9999}
