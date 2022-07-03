@@ -37,6 +37,7 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
+      - ./deploy/plugins/install_plugin.sh:/baserow/plugins/install_plugin.sh
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true

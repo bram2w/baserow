@@ -75,10 +75,16 @@ docker_temp_server_stop() {
 }
 
 _main() {
+    export PGDATA="$DATA_DIR/postgres/"
+    export POSTGRES_USER=$DATABASE_USER
+    export POSTGRES_PASSWORD=$DATABASE_PASSWORD
+    export POSTGRES_DB=$DATABASE_NAME
     if [ "$(id -u)" = '0' ]; then
       # then restart script as postgres user
-      su postgres -c "${BASH_SOURCE[0]}" "$@"
-    else
+      echo "Becoming postgres superuser to run setup SQL commands:"
+      su postgres -c "${BASH_SOURCE[0]} $*"
+    elif [ "$1" == "setup" ]; then
+      shift
       ALREADY_SETUP_INDICATOR_FILE="$PGDATA/baserow_db_setup"
       if [ -f "$ALREADY_SETUP_INDICATOR_FILE" ]; then
         echo
@@ -97,6 +103,20 @@ _main() {
         echo 'PostgreSQL init process complete; ready for start up.'
         echo
       fi
+    elif [ "$1" == "run" ]; then
+      shift
+      if [[ $(pgrep -f "bin/postgres") ]]; then
+        echo "PostgreSQL is already running. Directly running SQL."
+        docker_process_sql "$@"
+      else
+        echo "No running postgresql found, starting one up..."
+        docker_temp_server_start
+        docker_process_sql "$@"
+        docker_temp_server_stop
+      fi
+    else
+      echo "Unknown argument $1 it must be either 'setup' or 'run ...'"
+      exit 1
     fi
 }
 

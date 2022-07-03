@@ -1,6 +1,8 @@
 import datetime
+import importlib
 import os
 from decimal import Decimal
+from pathlib import Path
 from urllib.parse import urlparse, urljoin
 
 import dj_database_url
@@ -10,6 +12,20 @@ from corsheaders.defaults import default_headers
 from baserow.version import VERSION
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+BASEROW_PLUGIN_DIR_PATH = Path(os.environ.get("BASEROW_PLUGIN_DIR", "/baserow/plugins"))
+
+if BASEROW_PLUGIN_DIR_PATH.exists():
+    BASEROW_PLUGIN_FOLDERS = [
+        file
+        for file in BASEROW_PLUGIN_DIR_PATH.iterdir()
+        if file.is_dir() and Path(file, "backend").exists()
+    ]
+else:
+    BASEROW_PLUGIN_FOLDERS = []
+
+BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -48,10 +64,13 @@ BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
 if BASEROW_FULL_HEALTHCHECKS is not None:
     INSTALLED_APPS += ["health_check.storage", "health_check.contrib.psutil"]
 
-
-ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", None)
+ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:
-    INSTALLED_APPS += ADDITIONAL_APPS.split(",")
+    INSTALLED_APPS += [app.strip() for app in ADDITIONAL_APPS if app.strip() != ""]
+
+if BASEROW_BACKEND_PLUGIN_NAMES:
+    print(f"Loaded backend plugins: {','.join(BASEROW_BACKEND_PLUGIN_NAMES)}")
+    INSTALLED_APPS.extend(BASEROW_BACKEND_PLUGIN_NAMES)
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -654,3 +673,25 @@ APPEND_SLASH = False
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini
 TESTS = False
+
+
+# Allows accessing and setting values on a dictionary like an object. Using this
+# we can pass plugin authors a `settings` object which can modify the settings like
+# they expect (settings.SETTING = 'test') etc.
+class AttrDict(dict):
+    def __getattr__(self, item):
+        return super().__getitem__(item)
+
+    def __setattr__(self, item, value):
+        return super().__setitem__(item, value)
+
+
+for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
+    try:
+        mod = importlib.import_module(plugin + ".config.settings.settings")
+        # The plugin should have a setup function which accepts a 'settings' object.
+        # This settings object is an AttrDict shadowing our local variables so the
+        # plugin can access the Django settings and modify them prior to startup.
+        result = mod.setup(AttrDict({k: v for k, v in vars().items() if k.isupper()}))
+    except ImportError:
+        pass

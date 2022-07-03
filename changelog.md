@@ -89,6 +89,7 @@ For example:
 * Fixed bug preventing file uploads via an url for self-hosters 
 * Added new environment variable BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
 * Fix aggregation not updated on filter update
+* Fixed plugin boilerplate guide.
 
 ## Released (2022-10-05 1.10.0)
 
