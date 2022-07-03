@@ -17,6 +17,8 @@ RUN apt-get update && \
     tini \
     nano \
     vim \
+    git \
+    gosu \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \
@@ -27,6 +29,8 @@ RUN apt-get update && \
 # If GID or UID already exist that's OK no need to stop the build.
 RUN groupmod -g ${GID} node || exit 0
 RUN usermod -u ${UID} -g ${GID} node || exit 0
+ENV DOCKER_USER=node
+ENV BASEROW_IMAGE_TYPE="web-frontend"
 
 USER $UID:$GID
 
@@ -40,7 +44,7 @@ RUN yarn install && yarn cache clean
 
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
 COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
-
+COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh

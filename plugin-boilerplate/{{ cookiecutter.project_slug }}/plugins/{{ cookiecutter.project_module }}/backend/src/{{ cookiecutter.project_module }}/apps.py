@@ -1,12 +1,11 @@
-from django.apps import AppConfig
-
 from baserow.core.registries import plugin_registry
-
-from .plugins import PluginNamePlugin
+from django.apps import AppConfig
 
 
 class PluginNameConfig(AppConfig):
-    name = '{{ cookiecutter.project_module }}'
+    name = "{{ cookiecutter.project_module }}"
 
     def ready(self):
+        from .plugins import PluginNamePlugin
+
         plugin_registry.register(PluginNamePlugin())

@@ -11,7 +11,7 @@ tool gives you the powers of a developer without leaving your browser.
   the [MIT License](https://choosealicense.com/licenses/mit/) allowing commercial and
   private use.
 * Headless and API first.
-* Uses popular frameworks and tools like [Django](https://www.djangoproject.com/), 
+* Uses popular frameworks and tools like [Django](https://www.djangoproject.com/),
   [Vue.js](https://vuejs.org/) and [PostgreSQL](https://www.postgresql.org/).
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
@@ -35,8 +35,10 @@ how to become a contributor.
 * [**Docker**](docs/installation/install-with-docker.md)
 * [**Ubuntu**](docs/installation/install-on-ubuntu.md)
 * [**Docker Compose** ](docs/installation/install-with-docker-compose.md)
-* [**Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
-* [**Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
+* [**
+  Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
+* [**
+  Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
 
 ## Official documentation
 
@@ -63,9 +65,9 @@ $ cd baserow
 $ ./dev.sh --build
 ```
 
-The Baserow development environment is now running. Visit http://localhost:3000 in your
-browser to see a working version in development mode with hot code reloading and other
-dev features enabled.
+The Baserow development environment is now running.
+Visit [http://localhost:3000](http://localhost:3000) in your browser to see a working
+version in development mode with hot code reloading and other dev features enabled.
 
 More detailed instructions and more information about the development environment can be
 found

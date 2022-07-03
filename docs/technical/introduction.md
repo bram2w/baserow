@@ -1,4 +1,4 @@
-# Baserow introduction
+# Baserow Technical Introduction
 
 ## Architecture
 

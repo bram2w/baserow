@@ -1,5 +1,4 @@
 .DS_Store
-.idea
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Node template
@@ -21,6 +20,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+html_coverage
 
 # nyc test coverage
 .nyc_output
@@ -88,3 +88,26 @@ __pycache__
 .pytest_cache
 *.log
 *.egg-info
+
+# python virtual envs
+venv/
+
+.idea/
+*.iml
+
+!intellij-config/.idea/
+!intellij-config/*.iml
+!intellij-config/**/*.iml
+
+# IntelliJ
+out/
+
+.vagrant/
+
+
+# vscode config files
+.vscode
+vetur.config.js
+
+.coverage
+junit.xml

@@ -2,20 +2,21 @@
 
 A field is an abstraction that defines how table data is stored per column. More
 information can be found on the
-[database plugin page](../technical/database-plugin.md). This is a tutorial about
-how to create your own custom table field type for Baserow via a plugin. We are going to
-create a integer field which displays as "hello world". Of course a number field with
-the more features already exists, this is just for example purposes. In the end the user
-can create an integer field that only shows a hello world message. We expect that you
-are using the [plugin boilerplate](./boilerplate.md).
+[database plugin page](../technical/database-plugin.md). This is a tutorial about how to
+create your own custom table field type for Baserow via a plugin. We are going to create
+a integer field which displays as "hello world". Of course a number field with the more
+features already exists, this is just for example purposes. In the end the user can
+create an integer field that only shows a hello world message. We expect that you are
+using the [plugin boilerplate](./boilerplate.md).
 
 ## Backend
 
 We are going to start by creating an `IntegerField` model that extends the `Field`
 model. It will have a property to indicate if a negative number is allowed which can be
-set for each field that is created. Add/modify the following files.
+set for each field that is created.
 
-plugins/my_baserow_plugin/backend/src/my_baserow_plugin/models.py
+Create `plugins/my_baserow_plugin/backend/src/my_baserow_plugin/models.py`
+
 ```python
 from django.db import models
 
@@ -35,7 +36,8 @@ type you can check the
 `backend/src/baserow/contrib/database/fields/registries.py::FieldType` class in the
 Baserow repository.
 
-plugins/my_baserow_plugin/backend/src/my_baserow_plugin/field_types.py
+Create `plugins/my_baserow_plugin/backend/src/my_baserow_plugin/field_types.py`
+
 ```python
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -66,7 +68,8 @@ class IntegerFieldType(FieldType):
         return models.IntegerField(null=True, blank=True)
 ```
 
-plugins/my_baserow_plugin/backend/src/my_baserow_plugin/config.py
+Create `plugins/my_baserow_plugin/backend/src/my_baserow_plugin/config.py`
+
 ```python
 from django.apps import AppConfig
 
@@ -85,11 +88,16 @@ class PluginNameConfig(AppConfig):
         field_type_registry.register(IntegerFieldType())
 ```
 
-Don't forget to create and apply the migrations because we have created a new model.
+Finally, lets start the dev environment and use it to apply the
+migrations because we have created a new model.
 
-```
-$ baserow makemigrations my_baserow_plugin
-$ baserow migrate
+```bash
+# Set these env vars to make sure mounting your source code into the container uses
+# the correct user and permissions.
+export PLUGIN_BUILD_UID=$(id -u)
+export PLUGIN_BUILD_GID=$(id -g)
+docker-compose run my-baserow-plugin /baserow.sh backend-cmd manage makemigrations
+docker-compose run my-baserow-plugin /baserow.sh backend-cmd manage migrate
 ```
 
 ## Web frontend
@@ -100,49 +108,51 @@ of the `integer` field type. We can add this in a similar way. Add/modify the fo
 files in the web-frontend part of the plugin.
 
 plugins/my_baserow_plugin/web-frontend/fieldTypes.js
+
 ```javascript
-import { FieldType } from '@baserow/modules/database/fieldTypes'
+import {FieldType} from '@baserow/modules/database/fieldTypes'
 
 import SubFormIntegerField from '@my-baserow-plugin/components/SubFormIntegerField'
 import GridViewIntegerField from '@my-baserow-plugin/components/GridViewIntegerField'
 import RowEditIntegerField from '@my-baserow-plugin/components/RowEditIntegerField'
 
 export class IntegerFieldType extends FieldType {
-  static getType() {
-    return 'integer'
-  }
+    static getType() {
+        return 'integer'
+    }
 
-  getIconClass() {
-    return 'list-ol'
-  }
+    getIconClass() {
+        return 'list-ol'
+    }
 
-  getName() {
-    return 'Integer'
-  }
+    getName() {
+        return 'Integer'
+    }
 
-  getFormComponent() {
-    return SubFormIntegerField
-  }
+    getFormComponent() {
+        return SubFormIntegerField
+    }
 
-  getGridViewFieldComponent() {
-    return GridViewIntegerField
-  }
+    getGridViewFieldComponent() {
+        return GridViewIntegerField
+    }
 
-  getRowEditFieldComponent() {
-    return RowEditIntegerField
-  }
+    getRowEditFieldComponent() {
+        return RowEditIntegerField
+    }
 }
 ```
 
-plugins/my_baserow_plugin/web-frontend/plugin.js
+`plugins/my_baserow_plugin/web-frontend/plugin.js`
+
 ```javascript
-import { PluginNamePlugin } from '@my-baserow-plugin/plugins'
-import { IntegerFieldType } from '@my-baserow-plugin/fieldTypes'
+import {PluginNamePlugin} from '@my-baserow-plugin/plugins'
+import {IntegerFieldType} from '@my-baserow-plugin/fieldTypes'
 
 export default (context) => {
-  const { app } = context
-  app.$registry.register('plugin', new PluginNamePlugin(context))
-  app.$registry.register('field', new IntegerFieldType(context))
+    const {app} = context
+    app.$registry.register('plugin', new PluginNamePlugin(context))
+    app.$registry.register('field', new IntegerFieldType(context))
 }
 ```
 
@@ -154,7 +164,9 @@ examples in the Baserow repository in the directory
 `web-frontend/modules/database/components/view/grid`.
 
 plugins/my_baserow_plugin/web-frontend/components/GridViewIntegerField.vue
+
 ```vue
+
 <template>
   <div class="grid-view__cell" :class="{ active: selected }">
     <div>Hello World</div>
@@ -172,13 +184,15 @@ export default {
 
 The `RowEditIntegerField` component is returned by the `getRowEditFieldComponent`
 method of the `IntegerFieldType` class which means that this component is added in the
-popup row form. This form is shown when the expand icon at the left side of row has been
-clicked by the user. For now we only add "Hello World" for example purposes, but there
+popup row form. This form is shown when the expand icon on the left side of row has been
+clicked by the user. For now, we only add "Hello World" for example purposes, but there
 are plenty of examples in the Baserow repository in the
 directory `web-frontend/modules/database/components/row`.
 
-plugins/my_baserow_plugin/web-frontend/components/RowEditIntegerField.vue
+`plugins/my_baserow_plugin/web-frontend/components/RowEditIntegerField.vue`
+
 ```vue
+
 <template>
   <div class="control__elements">
     Hello World
@@ -198,8 +212,10 @@ The `SubFormIntegerField` component will be added to the context menu form when 
 or editing a field. If there are extra properties defined in the related model in the
 backend then they can be added to the form using this component.
 
-plugins/my_baserow_plugin/web-frontend/components/SubFormIntegerField.vue
+`plugins/my_baserow_plugin/web-frontend/components/SubFormIntegerField.vue`
+
 ```vue
+
 <template>
   <div>
     <div class="control">
@@ -219,7 +235,7 @@ export default {
   data() {
     return {
       allowedValues: ['integer_negative'],
-      values: { integer_negative: false },
+      values: {integer_negative: false},
     }
   },
   methods: {

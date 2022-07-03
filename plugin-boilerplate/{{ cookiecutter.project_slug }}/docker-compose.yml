@@ -1,56 +1,17 @@
-version: "3"
-
+version: "3.4"
 services:
-  db:
-    container_name: {{ cookiecutter.project_slug }}-db
-    image: postgres:11.3
-    environment:
-      - POSTGRES_USER=baserow
-      - POSTGRES_PASSWORD=baserow
-      - POSTGRES_DB=baserow
-    ports:
-      - 5432:5432
-
-  redis:
-    container_name: {{ cookiecutter.project_slug }}-redis
-    image: redis:6.0
-    ports:
-      - 6379:6379
-
-  backend:
-    container_name: {{ cookiecutter.project_slug }}-backend
+  {{ cookiecutter.project_slug }}:
+    container_name: {{ cookiecutter.project_slug }}
+    image: {{ cookiecutter.project_slug }}
     build:
-      context: ../
-      dockerfile: {{ cookiecutter.project_slug }}/Dockerfile.backend
-    volumes:
-      - ../baserow:/baserow
-      - ./:/{{ cookiecutter.project_slug }}
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - 8001:8000
-    depends_on:
-      - db
-      - redis
+      - "80:80"
+      - "443:443"
     environment:
-      - PUBLIC_BACKEND_URL=http://localhost:8001
-      - PUBLIC_WEB_FRONTEND_URL=http://localhost:3001
-
-  web-frontend:
-    container_name: {{ cookiecutter.project_slug }}-web-frontend
-    build:
-      context: ../
-      dockerfile: {{ cookiecutter.project_slug }}/Dockerfile.web-frontend
+      BASEROW_PUBLIC_URL: http://localhost
     volumes:
-      - ../baserow:/baserow
-      - ./:/{{ cookiecutter.project_slug }}
-    ports:
-      - 3001:3000
-    depends_on:
-      - backend
-    environment:
-      - PUBLIC_BACKEND_URL=http://localhost:8001
-      - PUBLIC_WEB_FRONTEND_URL=http://localhost:3001
-
-networks:
-  default:
-    external:
-      name: baserow_plugin_default
+      - baserow_data:/baserow/data
+volumes:
+  baserow_data:

@@ -199,6 +199,9 @@ variables:
   ENABLE_RELEASES:
     value: "false"
     description: "If true then on master and develop release images will be pushed automatically"
+  BUILD_ALL_IN_ONE:
+    value: "false"
+    description: "If true then regardless of what branch we are on the all in one image will be built."
   # An image repo which is used for storing and passing images between ci pipeline jobs
   # and also speeding up ci builds by caching from the latest ci image when building.
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
@@ -534,6 +537,8 @@ build-all-in-one-image:
     variables:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+      - $BUILD_ALL_IN_ONE == "true"
+      - $CI_COMMIT_BRANCH == "432-update-plugin-boilterplate-and-docs-to-match-new-docker-usage"
   variables:
     IMAGE_NAME: $ALLINONE_IMAGE_NAME
     DOCKERFILE_PATH: $ALLINONE_DOCKERFILE_PATH
