@@ -136,7 +136,7 @@ class Field(
         return name
 
     def invalidate_table_model_cache(self):
-        return invalidate_table_in_model_cache(self.table_id)
+        invalidate_table_in_model_cache(self.table_id)
 
     def dependant_fields_with_types(
         self,

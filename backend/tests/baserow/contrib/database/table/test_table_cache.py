@@ -1,4 +1,5 @@
 import pytest
+from django.test.utils import override_settings
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.table.cache import get_cached_model_field_attrs
@@ -107,6 +108,43 @@ def test_converting_text_to_link_row_field_invalidates_its_related_tables_cache(
     assert old_table_a_version != table_a.version
     assert old_table_b_version != table_b.version
     assert old_unrelated_table_version == unrelated_table.version
+
+
+@pytest.mark.django_db
+@override_settings(BASEROW_DISABLE_MODEL_CACHE=True)
+def test_can_disable_model_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    unrelated_table = data_fixture.create_database_table(user=user)
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+    table_a_text_field = data_fixture.create_text_field(table=table_a)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+    old_unrelated_table_version = unrelated_table.version
+
+    assert get_cached_model_field_attrs(table_a) is None
+    assert get_cached_model_field_attrs(table_b) is None
+    assert get_cached_model_field_attrs(unrelated_table) is None
+
+    FieldHandler().update_field(
+        user, table_a_text_field, "link_row", link_row_table=table_b, name="new"
+    )
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    unrelated_table.refresh_from_db()
+    assert old_table_a_version == table_a.version
+    assert old_table_b_version == table_b.version
+    assert old_unrelated_table_version == unrelated_table.version
+
+    assert get_cached_model_field_attrs(table_a) is None
+    assert get_cached_model_field_attrs(table_b) is None
+    assert get_cached_model_field_attrs(unrelated_table) is None
 
 
 @pytest.mark.django_db

@@ -1,6 +1,7 @@
 import re
 from typing import Dict, Any, Union, Type
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Q, F, QuerySet
 
@@ -478,6 +479,7 @@ class Table(
             and field_ids is None
             and add_dependencies is True
             and attribute_names is False
+            and not settings.BASEROW_DISABLE_MODEL_CACHE
         )
 
         if use_cache:
