@@ -65,4 +65,21 @@ export class BaserowPlugin extends Registerable {
   fetchAsyncDashboardData(context, data) {
     return data
   }
+
+  /**
+   * Every registered plugin can display a component in the `AuthRegister` component
+   * directly at the bottom of the form. This component can be used to extend the
+   * register functionality.
+   */
+  getRegisterComponent() {
+    return null
+  }
+
+  /**
+   * Every registered plugin can display a component in the `app.vue` layout. This
+   * is the root component that's being used for every authenticated page in the app.
+   */
+  getAppLayoutComponent() {
+    return null
+  }
 }

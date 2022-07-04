@@ -8,6 +8,11 @@
       <div class="layout__col-2">
         <nuxt />
       </div>
+      <component
+        :is="component"
+        v-for="(component, index) in appLayoutComponents"
+        :key="index"
+      ></component>
     </div>
   </div>
 </template>
@@ -28,6 +33,11 @@ export default {
   mixins: [undoRedo],
   middleware: ['settings', 'authenticated', 'groupsAndApplications'],
   computed: {
+    appLayoutComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getAppLayoutComponent())
+        .filter((component) => component !== null)
+    },
     ...mapGetters({
       isCollapsed: 'sidebar/isCollapsed',
     }),
