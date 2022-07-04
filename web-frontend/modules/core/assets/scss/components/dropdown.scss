@@ -32,7 +32,8 @@
 
   .dropdown--disabled & {
     background-color: $color-neutral-50;
-    cursor: inherit;
+    color: $color-neutral-500;
+    cursor: not-allowed;
 
     &:hover {
       border-color: $color-neutral-400;

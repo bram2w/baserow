@@ -8,8 +8,5 @@ export default (client) => {
         timezone,
       })
     },
-    get(jobId) {
-      return client.get(`/jobs/${jobId}/`)
-    },
   }
 }

@@ -71,13 +71,13 @@ def test_get_database_table(data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.table.signals.table_created.send")
-def test_create_database_table(send_mock, data_fixture):
+def test_create_database_minimum_table(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
     handler = TableHandler()
-    handler.create_table(user=user, database=database, name="Test table")
+    handler.create_minimal_table(user=user, database=database, name="Test table")
 
     assert Table.objects.all().count() == 1
     assert TextField.objects.all().count() == 1
@@ -94,7 +94,7 @@ def test_create_database_table(send_mock, data_fixture):
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["table"].id == table.id
-    assert send_mock.call_args[1]["user"].id == user.id
+    assert send_mock.call_args[1]["user"] is None
 
     with pytest.raises(UserNotInGroup):
         handler.create_table(user=user_2, database=database, name="")
@@ -114,13 +114,13 @@ def test_create_database_table(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_fill_example_table_data(data_fixture):
+def test_create_example_table(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
     table_handler = TableHandler()
-    table = table_handler.create_table(
-        user, database, fill_example=True, name="Table 1"
+    job = table_handler.create_minimal_table(
+        user, database, name="Table 1", fill_example=True
     )
 
     assert Table.objects.all().count() == 1
@@ -130,41 +130,31 @@ def test_fill_example_table_data(data_fixture):
     assert BooleanField.objects.all().count() == 1
     assert GridViewFieldOptions.objects.all().count() == 2
 
-    model = table.get_model()
-    results = model.objects.all()
+    model = job.table.get_model(attribute_names=True)
 
-    assert len(results) == 2
-    assert results[0].order == Decimal("1.00000000000000000000")
-    assert results[1].order == Decimal("2.00000000000000000000")
+    assert model.objects.count() == 2
 
 
 @pytest.mark.django_db(transaction=True)
-@override_settings(FEATURE_FLAGS=[])
-@patch("baserow.core.jobs.handler.run_async_job")
-def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
+def test_fill_table_with_initial_data(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
     table_handler = TableHandler()
 
     with pytest.raises(InvalidInitialTableData):
-        table_handler.create_table(user, database, name="Table 1", data=[])
+        table_handler.create_table(user, database, name="Table 1", data=[], sync=True)
 
     with pytest.raises(InvalidInitialTableData):
-        table_handler.create_table(user, database, name="Table 1", data=[[]])
+        table_handler.create_table(user, database, name="Table 1", data=[[]], sync=True)
 
-    limit = settings.INITIAL_TABLE_DATA_LIMIT
-    settings.INITIAL_TABLE_DATA_LIMIT = 2
-
-    with pytest.raises(InitialTableDataLimitExceeded):
-        table_handler.create_table(user, database, name="Table 1", data=[[], [], []])
-
-    settings.INITIAL_TABLE_DATA_LIMIT = limit
-
-    field_limit = settings.MAX_FIELD_LIMIT
-    settings.MAX_FIELD_LIMIT = 2
-
-    with pytest.raises(MaxFieldLimitExceeded):
+    with override_settings(INITIAL_TABLE_DATA_LIMIT=2), pytest.raises(
+        InitialTableDataLimitExceeded
+    ):
+        table_handler.create_table(
+            user, database, name="Table 1", data=[[], [], []], sync=True
+        )
+    with override_settings(MAX_FIELD_LIMIT=2), pytest.raises(MaxFieldLimitExceeded):
         table_handler.create_table(
             user,
             database,
@@ -172,19 +162,17 @@ def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
             data=[["field1", "field2", "field3"], ["rows"] * 3],
         )
 
-    settings.MAX_FIELD_LIMIT = field_limit
-
     data = [
         ["A", "B", "C", "D"],
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
         ["2-1", "2-2", "2-3"],
         ["3-1", "3-2"],
     ]
-    table = table_handler.create_table(
-        user, database, name="Table 1", data=data, first_row_header=True
+    job = table_handler.create_table(
+        user, database, name="Table 1", data=data, first_row_header=True, sync=True
     )
 
-    text_fields = TextField.objects.filter(table=table)
+    text_fields = TextField.objects.filter(table=job.table)
     assert text_fields[0].name == "A"
     assert text_fields[1].name == "B"
     assert text_fields[2].name == "C"
@@ -193,7 +181,7 @@ def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
 
     assert GridView.objects.all().count() == 1
 
-    model = table.get_model()
+    model = job.table.get_model()
     results = model.objects.all()
 
     assert results.count() == 3
@@ -211,37 +199,37 @@ def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
     assert getattr(results[1], f"field_{text_fields[0].id}") == "2-1"
     assert getattr(results[1], f"field_{text_fields[1].id}") == "2-2"
     assert getattr(results[1], f"field_{text_fields[2].id}") == "2-3"
-    assert getattr(results[1], f"field_{text_fields[3].id}") == ""
-    assert getattr(results[1], f"field_{text_fields[4].id}") == ""
+    assert getattr(results[1], f"field_{text_fields[3].id}") is None
+    assert getattr(results[1], f"field_{text_fields[4].id}") is None
 
     assert getattr(results[2], f"field_{text_fields[0].id}") == "3-1"
     assert getattr(results[2], f"field_{text_fields[1].id}") == "3-2"
-    assert getattr(results[2], f"field_{text_fields[2].id}") == ""
-    assert getattr(results[2], f"field_{text_fields[3].id}") == ""
-    assert getattr(results[2], f"field_{text_fields[4].id}") == ""
+    assert getattr(results[2], f"field_{text_fields[2].id}") is None
+    assert getattr(results[2], f"field_{text_fields[3].id}") is None
+    assert getattr(results[2], f"field_{text_fields[4].id}") is None
 
     data = [
         ["1-1"],
         ["2-1", "2-2", "2-3"],
         ["3-1", "3-2"],
     ]
-    table = table_handler.create_table(
-        user, database, name="Table 2", data=data, first_row_header=False
+    job = table_handler.create_table(
+        user, database, name="Table 2", data=data, first_row_header=False, sync=True
     )
 
-    text_fields = TextField.objects.filter(table=table)
+    text_fields = TextField.objects.filter(table=job.table)
     assert text_fields[0].name == "Field 1"
     assert text_fields[1].name == "Field 2"
     assert text_fields[2].name == "Field 3"
 
     assert GridView.objects.all().count() == 2
 
-    model = table.get_model()
+    model = job.table.get_model()
     results = model.objects.all()
 
     assert getattr(results[0], f"field_{text_fields[0].id}") == "1-1"
-    assert getattr(results[0], f"field_{text_fields[1].id}") == ""
-    assert getattr(results[0], f"field_{text_fields[2].id}") == ""
+    assert getattr(results[0], f"field_{text_fields[1].id}") is None
+    assert getattr(results[0], f"field_{text_fields[2].id}") is None
 
     assert getattr(results[1], f"field_{text_fields[0].id}") == "2-1"
     assert getattr(results[1], f"field_{text_fields[1].id}") == "2-2"
@@ -251,33 +239,16 @@ def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
     assert getattr(results[2], f"field_{text_fields[1].id}") == "3-2"
 
     data = [
-        ["1-1"],
-        ["2-1"],
-    ]
-
-    with override_settings(FEATURE_FLAGS=["async_import"]):
-        table = table_handler.create_table(
-            user, database, name="Table 2-1", data=data, first_row_header=False
-        )
-
-    mock_run_async_job.delay.assert_called_once()
-    assert GridView.objects.all().count() == 3
-
-    field_limit = settings.MAX_FIELD_LIMIT
-    settings.MAX_FIELD_LIMIT = 5
-    data = [
         ["A", "B", "C", "D", "E"],
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
     ]
-    table = table_handler.create_table(
-        user, database, name="Table 3", data=data, first_row_header=True
-    )
-    num_fields = table.field_set.count()
+    with override_settings(MAX_FIELD_LIMIT=5):
+        job = table_handler.create_table(
+            user, database, name="Table 3", data=data, first_row_header=True, sync=True
+        )
 
-    assert GridView.objects.all().count() == 4
-    assert num_fields == settings.MAX_FIELD_LIMIT
-
-    settings.MAX_FIELD_LIMIT = field_limit
+    assert GridView.objects.all().count() == 3
+    assert job.table.field_set.count() == 5
 
     too_long_field_name = "x" * 256
     field_name_with_ok_length = "x" * 255
@@ -286,22 +257,20 @@ def test_fill_table_with_initial_data(mock_run_async_job, data_fixture):
         [too_long_field_name, "B", "C", "D", "E"],
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
     ]
-
     with pytest.raises(MaxFieldNameLengthExceeded):
         table_handler.create_table(
-            user, database, name="Table 3", data=data, first_row_header=True
+            user, database, name="Table 3", data=data, first_row_header=True, sync=True
         )
 
     data = [
         [field_name_with_ok_length, "B", "C", "D", "E"],
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
     ]
-    table = table_handler.create_table(
-        user, database, name="Table 3", data=data, first_row_header=True
+    job = table_handler.create_table(
+        user, database, name="Table 3", data=data, first_row_header=True, sync=True
     )
-    num_fields = table.field_set.count()
 
-    assert num_fields == 5
+    assert job.table.field_set.count() == 5
 
 
 @pytest.mark.django_db

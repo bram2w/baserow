@@ -136,5 +136,7 @@ are accepted.
 * `EMAIL_SMTP_PASSWORD` (default ``): The password of the SMTP server.
 * `HOURS_UNTIL_TRASH_PERMANENTLY_DELETED` (default 72): The number of hours to keep 
   trashed items until they are permanently deleted.
+* `BASEROW_MAX_IMPORT_FILE_SIZE_MB` (default 512Mb): The maximum file size allowed to be imported 
+  in megabytes.
 * `DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS` (default ``): If set to 'true' will 
   disable realtime events being sent to publicly shared views.

@@ -50,14 +50,7 @@
             {{ file.error }}
           </div>
           <div v-else class="upload-files__progress">
-            <div
-              class="upload-files__progress-bar"
-              :class="{
-                'upload-files__progress-bar--finished':
-                  file.state === 'finished',
-              }"
-              :style="{ width: file.percentage + '%' }"
-            ></div>
+            <ProgressBar :value="file.percentage" :show-value="false" />
           </div>
         </div>
         <div class="upload-files__state">

@@ -380,5 +380,13 @@
                 }
             }
         }
+    },
+    "job": {
+        "statePending": "Waiting to start...",
+        "stateStarted": "Started...",
+        "stateFinished": "Finished",
+        "stateFailed": "Failed",
+        "errorJobAlreadyRunningTitle": "Already running",
+        "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
     }
 }

@@ -413,7 +413,7 @@ class ViewHandler:
         ensure that the view is not trashed if they would like to exclude it from
         the update.
 
-        It is necesarry to do so, because aggregations have to be removed
+        It is necessary to do so, because aggregations have to be removed
         from trashed views as well if the field options change. Otherwise,
         you might restore a view and the aggregation is invalid on that view.
 

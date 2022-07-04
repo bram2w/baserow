@@ -591,6 +591,11 @@ BASEROW_JOB_CLEANUP_INTERVAL_MINUTES = int(
 BASEROW_MAX_FILE_IMPORT_ERROR_COUNT = int(
     os.getenv("BASEROW_MAX_FILE_IMPORT_ERROR_COUNT", 30)
 )
+# Allow this percentage of error in field type auto detection at import
+BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD = int(
+    os.getenv("BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD", 0)  # 0 to be safe
+)
+
 
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.

@@ -50,7 +50,7 @@ def run_async_job(self, job_id: int):
 
         for exception, error_message in exception_mapping.items():
             if isinstance(e, exception):
-                error = error_message
+                error = error_message.format(e=e)
                 break
 
         job.state = JOB_FAILED

@@ -152,6 +152,7 @@ services:
       HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
       DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
       FEATURE_FLAGS:
+      BASEROW_MAX_IMPORT_FILE_SIZE_MB:
     depends_on:
       - backend
     networks:

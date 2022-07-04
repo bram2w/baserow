@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-10 06:28+0000\n"
+"POT-Creation-Date: 2022-07-04 11:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,7 +126,7 @@ msgstr ""
 msgid "Account deletion cancelled - Baserow"
 msgstr ""
 
-#: src/baserow/core/user/handler.py:166
+#: src/baserow/core/user/handler.py:173
 #, python-format
 msgid "%(name)s's group"
 msgstr ""

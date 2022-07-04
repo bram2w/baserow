@@ -7,22 +7,57 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import translation
 from django.conf import settings
+from baserow.api.sessions import set_untrusted_client_session_id
+from baserow.contrib.database.table.handler import TableHandler
 from rest_framework import serializers
 
+from baserow.core.action.registries import action_type_registry
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.utils import validate_data
 from baserow.contrib.database.api.rows.serializers import get_row_serializer_class
 from baserow.core.utils import grouper
 from baserow.core.jobs.registries import JobType
-from baserow.contrib.database.table.signals import table_updated
+from baserow.contrib.database.table.signals import table_created
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
+)
+from baserow.contrib.database.table.exceptions import (
+    InvalidInitialTableData,
+    InitialTableDataLimitExceeded,
+    InitialTableDataDuplicateName,
+)
+from baserow.contrib.database.table.actions import (
+    CreateTableActionType,
+)
+
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_MAX_FIELD_COUNT_EXCEEDED,
+    ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
+    ERROR_RESERVED_BASEROW_FIELD_NAME,
+    ERROR_INVALID_BASEROW_FIELD_NAME,
+)
+
+from baserow.contrib.database.api.tables.errors import (
+    ERROR_INVALID_INITIAL_TABLE_DATA,
+    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+    ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+)
 
 from .exceptions import FileImportMaxErrorCountExceeded
 from .models import FileImportJob
-from .constants import FILE_IMPORT_IN_PROGRESS, PRE_VALIDATION_IN_PROGRESS
+from .constants import (
+    FILE_IMPORT_IN_PROGRESS,
+    PRE_VALIDATION_IN_PROGRESS,
+    TABLE_CREATION,
+)
 from .serializers import (
     ReportSerializer,
 )
+
 
 BATCH_SIZE = 1024
 
@@ -133,15 +168,36 @@ class FileImportJobType(JobType):
     job_exceptions_map = {
         FileImportMaxErrorCountExceeded: f"This file import has raised too many "
         "errors.",
+        InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA[2],
+        InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED[2],
+        MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
+        MaxFieldNameLengthExceeded: ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED[2],
+        InitialTableDataDuplicateName: ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES[2],
+        ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME[2],
+        InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME[2],
     }
 
-    serializer_field_names = ["table_id", "report"]
+    serializer_field_names = [
+        "database_id",
+        "name",
+        "table_id",
+        "first_row_header",
+        "report",
+    ]
 
     serializer_field_overrides = {
-        "table_id": serializers.IntegerField(
+        "database_id": serializers.IntegerField(
             required=True,
+            help_text="Database id where table will be created.",
+        ),
+        "table_id": serializers.IntegerField(
+            required=False,
             help_text="Table id where data will be imported.",
         ),
+        "name": serializers.CharField(
+            max_length=255, required=False, help_text="The name of the new table."
+        ),
+        "first_row_header": serializers.BooleanField(required=False, default=False),
         "report": ReportSerializer(help_text="Import error report."),
     }
 
@@ -176,8 +232,67 @@ class FileImportJobType(JobType):
 
     def on_error(self, job, error):
         if isinstance(error, FileImportMaxErrorCountExceeded):
+            job.data_file.delete(save=False)
             job.report = {"failing_rows": error.report}
-            job.save(update_fields=("report",))
+            job.save(update_fields=("report", "data_file"))
+
+    def validate_table_data(self, table, rows, progress=None):
+        if not rows:
+            return {}
+
+        if progress:
+            validation_sub_progress = progress.create_child(50, len(rows))
+            validation_sub_progress.increment(state=PRE_VALIDATION_IN_PROGRESS)
+
+        model = table.get_model()
+        validation_serializer = get_row_serializer_class(model)
+        report = {}
+        for count, chunk in enumerate(grouper(BATCH_SIZE, rows)):
+            row_start_index = count * BATCH_SIZE
+            try:
+                validate_data(validation_serializer, list(chunk), many=True)
+            except RequestBodyValidationException as e:
+                for index, err in enumerate(e.detail["detail"]):
+                    report[row_start_index + index] = err
+
+            if progress:
+                validation_sub_progress.increment(len(chunk))
+
+        return report
+
+    def import_table_data(
+        self, user, table, rows, progress=None, attribute_names=False
+    ):
+        if not rows:
+            return {}
+
+        if progress:
+            creation_sub_progress = progress.create_child(50, len(rows))
+            creation_sub_progress.increment(state=FILE_IMPORT_IN_PROGRESS)
+
+        model = table.get_model(attribute_names=attribute_names)
+        row_handler = RowHandler()
+        report = {}
+        for count, chunk in enumerate(grouper(BATCH_SIZE, rows)):
+            row_start_index = count * BATCH_SIZE
+            _, creation_report = row_handler.create_rows(
+                user=user,
+                table=table,
+                model=model,
+                rows_values=chunk,
+                generate_error_report=True,
+                send_signal=False,
+            )
+
+            for valid_index, field_errors in creation_report.items():
+                report[int(valid_index) + row_start_index] = prepare_field_errors(
+                    field_errors
+                )
+
+            if progress:
+                creation_sub_progress.increment(len(chunk))
+
+        return report
 
     def run(self, job, progress):
         """
@@ -185,18 +300,35 @@ class FileImportJobType(JobType):
         creation of the table.
         """
 
-        data = []
-
-        group = job.table.database.group
-        group.has_user(job.user, raise_error=True)
-
         with job.data_file.open("r") as fin:
             data = json.load(fin)
 
-        fields = list(job.table.field_set.all())
+        if not job.table:
+            # It's a table creation job
+            progress.increment(0, state=TABLE_CREATION)
 
-        # Here we assume the data has already been checked for shape and row length by
-        # the job initiator.
+            group = job.database.group
+            group.has_user(job.user, raise_error=True)
+            table_handler = TableHandler()
+
+            (
+                fields,
+                data,
+            ) = table_handler.normalize_initial_table_data_and_guess_types(
+                data, first_row_header=job.first_row_header
+            )
+
+            job.table = table_handler.create_table_and_fields(
+                job.user, job.database, job.name, fields
+            )
+            job.save()
+        else:
+            # The table exists already so we just need to add more rows
+            group = job.table.database.group
+            group.has_user(job.user, raise_error=True)
+
+        # Reshape data by field as expected by the import table
+        fields = list(job.table.field_set.all())
         rows = [
             {f"field_{fields[index].id}": value for index, value in enumerate(row)}
             for row in data
@@ -206,25 +338,11 @@ class FileImportJobType(JobType):
         # We want error messages to be translated with the user locale if possible
         with translation.override(job.user.profile.language):
 
-            validation_sub_progress = progress.create_child(50, len(rows))
-            validation_sub_progress.increment(state=PRE_VALIDATION_IN_PROGRESS)
-
             # STEP 1: pre-validate data with serializer
-            model = job.table.get_model()
-            validation_serializer = get_row_serializer_class(model)
-            for count, chunk in enumerate(grouper(BATCH_SIZE, rows)):
-                row_start_index = count * BATCH_SIZE
-                try:
-                    validate_data(validation_serializer, list(chunk), many=True)
-                except RequestBodyValidationException as e:
-                    # Add errors to global report
-                    for index, err in enumerate(e.detail["detail"]):
-                        error_report.add_error(row_start_index + index, err)
+            validation_report = self.validate_table_data(job.table, rows, progress)
 
-                validation_sub_progress.increment(len(chunk))
-
-            creation_sub_progress = progress.create_child(50, len(data))
-            creation_sub_progress.increment(state=FILE_IMPORT_IN_PROGRESS)
+            for index, error in validation_report.items():
+                error_report.add_error(int(index), error)
 
             (
                 valid_rows,
@@ -232,25 +350,16 @@ class FileImportJobType(JobType):
             ) = error_report.get_valid_rows_and_mapping()
 
             # STEP 2: create rows in DB
-            row_handler = RowHandler()
-            for count, chunk in enumerate(grouper(BATCH_SIZE, valid_rows)):
-                row_start_index = count * BATCH_SIZE
-                _, creation_report = row_handler.create_rows(
-                    user=job.user,
-                    table=job.table,
-                    model=model,
-                    rows_values=chunk,
-                    generate_error_report=True,
-                    send_signal=False,
-                )
-                creation_sub_progress.increment(len(chunk))
+            creation_report = self.import_table_data(
+                job.user, job.table, valid_rows, progress
+            )
 
-                # Add errors to global report
-                for valid_index, field_errors in creation_report.items():
-                    error_report.add_error(
-                        original_row_index_mapping[int(valid_index) + row_start_index],
-                        prepare_field_errors(field_errors),
-                    )
+            # Add errors to global report
+            for index, error in creation_report.items():
+                error_report.add_error(
+                    original_row_index_mapping[int(index)],
+                    error,
+                )
 
         def after_commit():
             """
@@ -264,4 +373,10 @@ class FileImportJobType(JobType):
 
         transaction.on_commit(after_commit)
 
-        table_updated.send(self, table=job.table, user=None, force_table_refresh=True)
+        if job.user_session_id:
+            set_untrusted_client_session_id(job.user, job.user_session_id)
+            action_type_registry.get_by_type(CreateTableActionType).do(
+                job.user, job.table
+            )
+
+        table_created.send(self, table=job.table, user=None)
