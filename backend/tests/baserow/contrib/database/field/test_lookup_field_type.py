@@ -529,9 +529,11 @@ def test_import_export_tables_with_lookup_fields(
     user = data_fixture.create_user()
     imported_group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, name="Placeholder")
-    table = data_fixture.create_database_table(name="Example", database=database)
+    table = data_fixture.create_database_table(
+        name="Example", database=database, order=0
+    )
     customers_table = data_fixture.create_database_table(
-        name="Customers", database=database
+        name="Customers", database=database, order=1
     )
     customer_name = data_fixture.create_text_field(table=customers_table, primary=True)
     customer_age = data_fixture.create_number_field(table=customers_table)
@@ -586,6 +588,7 @@ def test_import_export_tables_with_lookup_fields(
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()
     imported_table = imported_tables[0]
+    assert imported_table.name == table.name
 
     imported_lookup_field = imported_table.field_set.get(
         name=lookup_field.name
