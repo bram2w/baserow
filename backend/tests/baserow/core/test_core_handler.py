@@ -268,6 +268,7 @@ def test_leave_group(send_mock, data_fixture):
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
     user_4 = data_fixture.create_user()
+    user_5 = data_fixture.create_user(to_be_deleted=True)
     group_1 = data_fixture.create_group()
     group_2 = data_fixture.create_group()
     data_fixture.create_user_group(user=user_1, group=group_1, permissions="ADMIN")
@@ -275,6 +276,8 @@ def test_leave_group(send_mock, data_fixture):
         user=user_2, group=group_1, permissions="ADMIN"
     )
     data_fixture.create_user_group(user=user_3, group=group_1, permissions="USER")
+    # Add a pending deletion user
+    data_fixture.create_user_group(user=user_5, group=group_1, permissions="ADMIN")
     data_fixture.create_user_group(user=user_3, group=group_2, permissions="USER")
     data_fixture.create_user_group(user=user_4, group=group_2, permissions="USER")
 

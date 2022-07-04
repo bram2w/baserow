@@ -212,7 +212,7 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Please restore the related tables first.",
         "cannotRestoreAsRelatedTableTrashedDescription": "You cannot restore this field because it depends on other tables which are still trashed. Please restore the other related tables first.",
         "groupUserIsLastAdminTitle": "Can't leave the group",
-        "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin. Please delete the group or give another user admin permissions."
+        "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin or because other admin's accounts are pending deletion. Please delete the group or give another user admin permissions."
     },
     "importerType": {
         "csv": "Import a CSV file",

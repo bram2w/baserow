@@ -68,7 +68,9 @@ class GroupUsersView(APIView):
 
         group = CoreHandler().get_group(group_id)
         group.has_user(request.user, "ADMIN", True)
-        group_users = GroupUser.objects.filter(group=group).select_related("group")
+        group_users = GroupUser.objects.filter(group=group).select_related(
+            "group", "user", "user__profile"
+        )
         serializer = GroupUserSerializer(group_users, many=True)
         return Response(serializer.data)
 
