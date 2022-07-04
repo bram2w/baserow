@@ -111,6 +111,7 @@
         "invitationDescription": "invited {since} ago",
         "sendInvite": "Send invite",
         "userAlreadyInGroupTitle": "User is already in the group.",
+        "userDescriptionPendingDeletion": "{user} - pending deletion",
         "userAlreadyInGroupText": "It is not possible to send an invitation when the user is already a member of the group."
     },
     "groupInviteForm": {

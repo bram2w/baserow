@@ -40,6 +40,10 @@
   margin-bottom: 4px;
 }
 
+.group-member__name--to-be-deleted {
+  text-decoration: line-through;
+}
+
 .group-member__description {
   @extend %ellipsis;
 

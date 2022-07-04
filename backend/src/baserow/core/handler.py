@@ -225,7 +225,9 @@ class CoreHandler:
             group_user.permissions == GROUP_USER_PERMISSION_ADMIN
             and GroupUser.objects.filter(
                 group=group, permissions=GROUP_USER_PERMISSION_ADMIN
-            ).count()
+            )
+            .exclude(user__profile__to_be_deleted=True)
+            .count()
             == 1
         ):
             raise GroupUserIsLastAdmin(

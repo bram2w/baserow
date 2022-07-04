@@ -26,6 +26,7 @@
         :id="user.id"
         :key="'user-' + user.id"
         :name="user.name"
+        :to-be-deleted="user.to_be_deleted"
         :description="getUserDescription(user)"
         :permissions="user.permissions"
         :loading="user._.loading"
@@ -174,6 +175,11 @@ export default {
       this.$refs[name][0].highlight()
     },
     getUserDescription(user) {
+      if (user.to_be_deleted) {
+        return this.$t('groupMemberModal.userDescriptionPendingDeletion', {
+          user: user.email,
+        })
+      }
       return this.$t('groupMemberModal.userDescription', {
         user: user.email,
         since: moment(user.created_on).fromNow(true),
