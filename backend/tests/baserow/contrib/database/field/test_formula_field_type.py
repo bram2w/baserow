@@ -857,6 +857,7 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
     formula_field_type = FormulaFieldType()
     update_collector = FieldUpdateCollector(table)
     field_cache = FieldCache()
+    field_cache.cache_model(table_model)
 
     formula_field_type.row_of_dependency_updated(
         formula_field, row, update_collector, field_cache, None

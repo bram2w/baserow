@@ -55,7 +55,6 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
     literal,
 )
-from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
@@ -119,6 +118,7 @@ from .registries import (
     field_type_registry,
     StartingRowType,
 )
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 
 if TYPE_CHECKING:
     from baserow.contrib.database.table.models import GeneratedTableModel
@@ -1426,6 +1426,11 @@ class LinkRowFieldType(FieldType):
             ):
                 to_field.link_row_related_field.delete()
             else:
+
+                # We are changing the related fields table so we need to invalidate
+                # its old model cache as this will not happen automatically.
+                invalidate_table_in_model_cache(from_field.link_row_table_id)
+
                 from_field.link_row_related_field.name = related_field_name
                 from_field.link_row_related_field.table = to_field.link_row_table
                 from_field.link_row_related_field.link_row_table = to_field.table
@@ -1625,13 +1630,6 @@ class LinkRowFieldType(FieldType):
             "link_row_table", old_field.link_row_table_id
         )
         return old_field.link_row_table_id != new_link_row_table_id
-
-    # noinspection PyMethodMayBeStatic
-    def before_table_model_invalidated(
-        self,
-        field: LinkRowField,
-    ):
-        invalidate_table_in_model_cache(field.link_row_table_id)
 
     def get_dependants_which_will_break_when_field_type_changes(
         self, field: LinkRowField, to_field_type: "FieldType", field_cache: "FieldCache"

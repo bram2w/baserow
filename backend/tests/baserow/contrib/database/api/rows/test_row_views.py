@@ -222,7 +222,7 @@ def test_list_rows(api_client, data_fixture):
     number_field_type = field_type_registry.get("number")
     old_can_order_by = number_field_type._can_order_by
     number_field_type._can_order_by = False
-    invalidate_table_in_model_cache(table.id, invalidate_related_tables=True)
+    invalidate_table_in_model_cache(table.id)
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
         f"{url}?order_by=-field_{field_2.id}",
@@ -237,7 +237,7 @@ def test_list_rows(api_client, data_fixture):
         f"number does not support filtering."
     )
     number_field_type._can_order_by = old_can_order_by
-    invalidate_table_in_model_cache(table.id, invalidate_related_tables=True)
+    invalidate_table_in_model_cache(table.id)
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
