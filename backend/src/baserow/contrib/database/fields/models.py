@@ -18,9 +18,7 @@ from baserow.contrib.database.formula import (
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
-from baserow.contrib.database.table.cache import (
-    invalidate_table_in_model_cache,
-)
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
@@ -138,9 +136,7 @@ class Field(
         return name
 
     def invalidate_table_model_cache(self):
-        return invalidate_table_in_model_cache(
-            self.table_id, invalidate_related_tables=True
-        )
+        return invalidate_table_in_model_cache(self.table_id)
 
     def dependant_fields_with_types(
         self,

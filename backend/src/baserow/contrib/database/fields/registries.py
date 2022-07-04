@@ -1284,17 +1284,6 @@ class FieldType(
             option list.
         """
 
-    # noinspection PyMethodMayBeStatic
-    def before_table_model_invalidated(
-        self,
-        field: Field,
-    ):
-        """
-        Called before the table the field is in is invalidated in the model cache.
-        Usually this method should be overridden to also invalidate the cache of other
-        tables models which would be affected by this tables cache being invalidated.
-        """
-
     def should_backup_field_data_for_same_type_update(
         self, old_field: Field, new_field_attrs: Dict[str, Any]
     ) -> bool:

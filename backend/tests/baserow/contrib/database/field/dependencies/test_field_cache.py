@@ -159,9 +159,10 @@ def test_can_just_add_model_fields_to_cache(
 @pytest.mark.django_db
 def test_can_get_model_via_cache(api_client, data_fixture, django_assert_num_queries):
     field = data_fixture.create_text_field(name="field")
-    # 1st query to get all fields in the table
-    # 2nd query to lookup specific instance for the only field
-    with django_assert_num_queries(2):
+    # 1st to refresh the tables version so we can get the correct version from the cache
+    # 2nd query to get all fields in the table
+    # 3rd query to lookup specific instance for the only field
+    with django_assert_num_queries(3):
         field_cache = FieldCache()
         looked_up_model = field_cache.get_model(field.table)
     assert looked_up_model is not None

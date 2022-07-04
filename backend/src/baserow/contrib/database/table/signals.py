@@ -12,4 +12,4 @@ tables_reordered = Signal()
 
 @receiver(post_delete, sender=Table)
 def invalidate_model_cache_when_table_deleted(sender, instance, **kwargs):
-    invalidate_table_in_model_cache(instance.id, invalidate_related_tables=True)
+    invalidate_table_in_model_cache(instance.id)
