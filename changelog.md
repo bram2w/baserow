@@ -28,6 +28,8 @@ For example:
 * Redirect to signup instead of the login page if there are no admin users. [#1035](https://gitlab.com/bramw/baserow/-/issues/1035)
 * `./dev.sh all_in_one_dev` now starts a hot reloading dev mode using the all-in-one image.
 * Add startup check ensuring BASEROW_PUBLIC_URL and related variables are correct. [#1041](https://gitlab.com/bramw/baserow/-/issues/1041)
+* Made it possible to extend the register page.
+* Made it possible to extend the app layout.
 
 ### Bug Fixes
 
