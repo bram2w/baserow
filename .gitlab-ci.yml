@@ -538,7 +538,6 @@ build-all-in-one-image:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
       - $BUILD_ALL_IN_ONE == "true"
-      - $CI_COMMIT_BRANCH == "432-update-plugin-boilterplate-and-docs-to-match-new-docker-usage"
   variables:
     IMAGE_NAME: $ALLINONE_IMAGE_NAME
     DOCKERFILE_PATH: $ALLINONE_DOCKERFILE_PATH
