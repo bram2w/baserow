@@ -16,8 +16,7 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import models, OperationalError
-from django.db.models import Case, When, Q, F, Func, Value, CharField
-from django.db.models.expressions import RawSQL
+from django.db.models import Case, When, Q, F, Func, Value, CharField, DateTimeField
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -79,7 +78,11 @@ from .exceptions import (
     InvalidLookupThroughField,
     InvalidLookupTargetField,
 )
-from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
+from .field_filters import (
+    contains_filter,
+    AnnotatedQ,
+    filename_contains_filter,
+)
 from .field_sortings import AnnotatedOrder
 from .fields import (
     SingleSelectForeignKey,
@@ -888,10 +891,17 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
         return AnnotatedQ(
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
-                    RawSQL(  # nosec
-                        f"""TO_CHAR({field_name} at time zone %s,
-                        '{field.get_psql_format()}')""",
-                        [field.get_timezone()],
+                    Func(
+                        Func(
+                            Value(
+                                field.get_timezone(),
+                            ),
+                            F(field_name),
+                            function="timezone",
+                            output_field=DateTimeField(),
+                        ),
+                        Value(field.get_psql_format()),
+                        function="to_char",
                         output_field=CharField(),
                     ),
                     Value(""),
@@ -2190,47 +2200,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if value == "":
             return Q()
 
-        option_value_mappings = []
-        option_values = []
-        # We have to query for all option values here as the user table we are
-        # constructing a search query for could be in a different database from the
-        # SingleOption. In such a situation if we just tried to do a cross database
-        # join django would crash, so we must look up the values in a separate query.
-
-        for option in field.select_options.all():
-            option_values.append(option.value)
-            option_value_mappings.append(f"(lower(%s), {int(option.id)})")
-
-        # If there are no values then there is no way this search could match this
-        # field.
-        if len(option_value_mappings) == 0:
-            return Q()
-
-        # Query uses parameters to pass in option values to so no injection possible.
-        # Dynamically built parts of the query are:
-        # - option_value_mappings which only contains internal ids and no user input
-        # - field.id which is an internal id and not user input
-        # So ignoring nosec error as happy this RawSQL is safe. Please update if changes
-        # are made.
-        convert_rows_select_id_to_value_sql = f"""(
-                SELECT key FROM (
-                    VALUES {','.join(option_value_mappings)}
-                ) AS values (key, value)
-                WHERE value = "field_{field.id}"
-            )
-        """  # nosec
-
-        query = RawSQL(  # nosec
-            convert_rows_select_id_to_value_sql,
-            params=option_values,
-            output_field=models.CharField(),
-        )
-        return AnnotatedQ(
-            annotation={
-                f"select_option_value_{field_name}": Coalesce(query, Value(""))
-            },
-            q={f"select_option_value_{field_name}__icontains": value},
-        )
+        return Q(**{f"{field_name}__value__icontains": value})
 
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, files_zip, storage
@@ -2473,7 +2443,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if value == "":
             return Q()
 
-        query = StringAgg(f"{field_name}__value", "")
+        query = StringAgg(f"{field_name}__value", ",")
 
         return AnnotatedQ(
             annotation={
