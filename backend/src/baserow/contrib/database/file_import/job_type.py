@@ -216,7 +216,9 @@ class FileImportJobType(JobType):
         Save the data file for the newly created job.
         """
 
-        data_file = ContentFile(json.dumps(values["data"]))
+        data_file = ContentFile(
+            json.dumps(values["data"], ensure_ascii=False).encode("utf8")
+        )
         job.data_file.save(None, data_file)
 
     def before_delete(self, job):
