@@ -53,6 +53,10 @@
 .button--ghost {
   @include button-style($white, $color-neutral-100, $color-primary-900);
 
+  &.button--loading::after {
+    border-color: $color-neutral-900 transparent $color-neutral-900 transparent;
+  }
+
   border-color: $color-neutral-400;
 }
 

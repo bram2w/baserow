@@ -14,13 +14,6 @@ class TableSerializer(serializers.ModelSerializer):
         }
 
 
-class TableWithImportJobsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Table
-        fields = TableSerializer.Meta.fields + ("import_jobs",)
-        extra_kwargs = TableSerializer.Meta.extra_kwargs
-
-
 class TableCreateSerializer(serializers.ModelSerializer):
     data = serializers.ListField(
         min_length=1,
@@ -32,7 +25,7 @@ class TableCreateSerializer(serializers.ModelSerializer):
         default=False,
         help_text="Indicates if the first provided row is the header. If true the "
         "field names are going to be the values of the first row. Otherwise "
-        'they will be called "Column N"',
+        'they will be called "Field N"',
     )
 
     class Meta:

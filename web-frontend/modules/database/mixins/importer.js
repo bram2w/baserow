@@ -7,6 +7,17 @@ import {
 } from '@baserow/modules/database/utils/constants'
 
 export default {
+  data() {
+    return {
+      fileLoadingProgress: 0,
+      state: null,
+    }
+  },
+  computed: {
+    stateTitle() {
+      return this.$t(`importer.${this.state}`)
+    },
+  },
   methods: {
     /**
      * Adds a header of Field 1, Field 2 etc if the first row is not already a header,
@@ -23,7 +34,7 @@ export default {
      */
     ensureHeaderExistsAndIsValid(data, firstRowHeader) {
       let head = data[0]
-      const columns = Math.max(...data.map((entry) => entry.length))
+      const columns = Math.max(data.map((entry) => entry.length))
 
       // If the first row is not the header, a header containing columns named
       // 'Field N' needs to be generated.
@@ -36,7 +47,11 @@ export default {
       } else {
         // The header row might not be long enough to cover all columns, ensure it does
         // first.
-        head = this.fill(head, columns)
+
+        head = this.fill(
+          head.map((value) => `${value}`),
+          columns
+        )
         head = this.makeHeaderUniqueAndValid(head)
         data[0] = head
       }
@@ -59,7 +74,7 @@ export default {
       const head = data[0]
       const rows = data.slice(1, 4)
       const remaining = data.length - rows.length - 1
-      const columns = Math.max(...data.map((entry) => entry.length))
+      const columns = Math.max(data.map((entry) => entry.length))
 
       rows.map((row) => this.fill(row, columns))
 

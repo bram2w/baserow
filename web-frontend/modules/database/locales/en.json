@@ -301,6 +301,13 @@
         "limitError": "It is not possible to import more than {limit} rows.",
         "emptyCSV": "This CSV file is empty."
     },
+    "importer": {
+        "loading": "Loading file",
+        "decoding": "Decoding data",
+        "parsing": "Parsing data",
+        "preparing": "Preparing data",
+        "inProgress": "In progress..."
+    },
     "tableForm": {
         "name": "Name"
     },
@@ -338,7 +345,18 @@
         "title": "Create new table",
         "importLabel": "Would you like to import existing data?",
         "newTable": "Start with a new table",
-        "addButton": "Add table"
+        "addButton": "Add table",
+        "uploading": "Uploading...",
+        "preparing": "Preparing data...",
+        "importError": "Something went wrong during the file import",
+        "openCreatedTable": "Open created table",
+        "showReport": "Show error report",
+        "reportTitleFailure": "Failing rows",
+        "reportTitleSuccess": "Import successful but...",
+        "reportMessage": "The following row indexes couldn't be imported:",
+        "stateRowCreation": "Importing...",
+        "statePreValidation": "Validating data...",
+        "stateCreateTable": "Creating table..."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Click to edit the formula",
@@ -585,7 +603,8 @@
         "stateImporting": "Importing",
         "stateImportingTable": "Importing table {table}",
         "errorJobAlreadyRunningTitle": "Already running",
-        "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
+        "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another.",
+        "linkError": "The link should look like: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
         "addSelectField": "add single select field"

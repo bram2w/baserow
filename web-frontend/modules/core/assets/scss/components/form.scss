@@ -170,10 +170,12 @@
   }
 
   &.checkbox--disabled {
-    cursor: inherit;
+    cursor: not-allowed;
+    color: $color-neutral-500;
 
     &::before {
       background-color: $color-neutral-50;
+      color: $color-neutral-500;
     }
   }
 }

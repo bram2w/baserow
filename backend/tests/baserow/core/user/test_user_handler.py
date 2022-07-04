@@ -118,18 +118,20 @@ def test_create_user(data_fixture):
 
     model_1 = tables[0].get_model()
     model_1_results = model_1.objects.all()
-    assert len(model_1_results) == 4
+    assert len(model_1_results) == 5
     assert model_1_results[0].order == Decimal("1.00000000000000000000")
     assert model_1_results[1].order == Decimal("2.00000000000000000000")
     assert model_1_results[2].order == Decimal("3.00000000000000000000")
     assert model_1_results[3].order == Decimal("4.00000000000000000000")
+    assert model_1_results[4].order == Decimal("5.00000000000000000000")
 
     model_2 = tables[1].get_model()
     model_2_results = model_2.objects.all()
-    assert len(model_2_results) == 3
+    assert len(model_2_results) == 4
     assert model_2_results[0].order == Decimal("1.00000000000000000000")
     assert model_2_results[1].order == Decimal("2.00000000000000000000")
     assert model_2_results[2].order == Decimal("3.00000000000000000000")
+    assert model_2_results[3].order == Decimal("4.00000000000000000000")
 
     plugin_mock.user_created.assert_called_with(user, group, None, None)
 

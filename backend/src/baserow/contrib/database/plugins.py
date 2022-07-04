@@ -6,14 +6,12 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registries import Plugin
 
 from .table.handler import TableHandler
-from .views.handler import ViewHandler
-from .views.view_types import GridViewType
-from .fields.handler import FieldHandler
-from .fields.field_types import (
-    TextFieldType,
-    LongTextFieldType,
-    BooleanFieldType,
-    DateFieldType,
+
+
+LOREM = (
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce "
+    "dignissim, urna eget rutrum sollicitudin, sapien diam interdum nisi, "
+    "quis malesuada nibh eros a est."
 )
 
 
@@ -34,8 +32,6 @@ class DatabasePlugin(Plugin):
 
         core_handler = CoreHandler()
         table_handler = TableHandler()
-        view_handler = ViewHandler()
-        field_handler = FieldHandler()
 
         with override(user.profile.language):
             database = core_handler.create_application(
@@ -45,64 +41,44 @@ class DatabasePlugin(Plugin):
                 name=_("%(first_name)s's company") % {"first_name": user.first_name},
             )
 
-        # Creating the example customers table.
-        table = table_handler.create_table(user, database, name="Customers")
-        customers_view = view_handler.create_view(
-            user, table, GridViewType.type, name="Grid"
-        )
-        field_handler.create_field(user, table, TextFieldType.type, name="Last name")
-        notes_field = field_handler.create_field(
-            user, table, LongTextFieldType.type, name="Notes"
-        )
-        active_field = field_handler.create_field(
-            user, table, BooleanFieldType.type, name="Active"
-        )
+            # Creating the example customers table.
+            table = table_handler.create_table_and_fields(
+                user,
+                database,
+                name=_("Customers"),
+                fields=[
+                    (_("Name"), "text", {}),
+                    (_("Last name"), "text", {}),
+                    (_("Notes"), "long_text", {"field_options": {"width": 400}}),
+                    (_("Active"), "boolean", {"field_options": {"width": 100}}),
+                ],
+            )
 
-        view_handler.update_field_options(
-            user=user,
-            view=customers_view,
-            field_options={
-                notes_field.id: {"width": 400},
-                active_field.id: {"width": 100},
-            },
-            fields=[notes_field, active_field],
-        )
-        model = table.get_model(attribute_names=True)
-        model.objects.create(name="Elon", last_name="Musk", active=True, order=1)
-        model.objects.create(
-            name="Bill",
-            last_name="Gates",
-            notes=(
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce "
-                "dignissim, urna eget rutrum sollicitudin, sapien diam interdum nisi, "
-                "quis malesuada nibh eros a est."
-            ),
-            active=False,
-            order=2,
-        )
-        model.objects.create(name="Mark", last_name="Zuckerburg", active=True, order=3)
-        model.objects.create(name="Jeffrey", last_name="Bezos", active=True, order=4)
+            data = [
+                ["Ada", "Lovelace", "", True],
+                ["Alan", "Turing", LOREM, False],
+                ["Grace", "Hopper", "", True],
+                ["John", "Von Neumann", "", True],
+                ["Blaise", "Pascal", "", True],
+            ]
+            table_handler.import_table_data(user, table, data, sync=True)
 
-        # Creating the example projects table.
-        table_2 = table_handler.create_table(user, database, name="Projects")
-        projects_view = view_handler.create_view(
-            user, table_2, GridViewType.type, name="Grid"
-        )
-        field_handler.create_field(user, table_2, DateFieldType.type, name="Started")
-        active_field = field_handler.create_field(
-            user, table_2, BooleanFieldType.type, name="Active"
-        )
-        model = table_2.get_model(attribute_names=True)
-        model.objects.create(
-            name="Tesla", active=True, started=date(2020, 6, 1), order=1
-        )
-        model.objects.create(name="SpaceX", active=False, order=2)
-        model.objects.create(
-            name="Amazon", active=False, started=date(2018, 1, 1), order=3
-        )
-        view_handler.update_field_options(
-            user=user,
-            view=projects_view,
-            field_options={active_field.id: {"width": 100}},
-            fields=[active_field],
-        )
+            # Creating the example projects table.
+            table = table_handler.create_table_and_fields(
+                user,
+                database,
+                name=_("Projects"),
+                fields=[
+                    (_("Name"), "text", {}),
+                    (_("Started"), "date", {}),
+                    (_("Active"), "boolean", {"field_options": {"width": 100}}),
+                ],
+            )
+
+            data = [
+                [_("Calculator"), str(date(1642, 1, 1)), False],
+                [_("Turing machine"), str(date(1936, 6, 1)), True],
+                [_("Computer architecture"), str(date(1945, 1, 1)), False],
+                [_("Cellular Automata"), str(date(1952, 6, 1)), False],
+            ]
+            table_handler.import_table_data(user, table, data, sync=True)

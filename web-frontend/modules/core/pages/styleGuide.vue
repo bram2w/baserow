@@ -496,6 +496,7 @@
         <div class="margin-bottom-3">
           <a class="button button--large button--loading">Loading</a>
           <a class="button button--loading">Loading</a>
+          <a class="button button--ghost button--loading">Loading</a>
         </div>
         <div class="margin-bottom-3">
           <div class="tooltip margin-bottom-2">

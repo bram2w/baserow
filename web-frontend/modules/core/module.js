@@ -86,6 +86,10 @@ export default function CoreModule(options) {
           default: false,
         },
         {
+          key: 'BASEROW_MAX_IMPORT_FILE_SIZE_MB',
+          default: 512, // 512Mb
+        },
+        {
           key: 'FEATURE_FLAGS',
           default: '',
         },
@@ -164,6 +168,7 @@ export default function CoreModule(options) {
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/auth.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/featureFlags.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/papa.js') })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/ensureRender.js') })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.

@@ -6,6 +6,7 @@ import Editable from '@baserow/modules/core/components/Editable'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import DropdownItem from '@baserow/modules/core/components/DropdownItem'
 import Picker from '@baserow/modules/core/components/Picker'
+import ProgressBar from '@baserow/modules/core/components/ProgressBar'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import Radio from '@baserow/modules/core/components/Radio'
 import Scrollbars from '@baserow/modules/core/components/Scrollbars'
@@ -45,6 +46,7 @@ Vue.component('MarkdownIt', MarkdownIt)
 Vue.component('DownloadLink', DownloadLink)
 Vue.component('FormElement', FormElement)
 Vue.component('Picker', Picker)
+Vue.component('ProgressBar', ProgressBar)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)

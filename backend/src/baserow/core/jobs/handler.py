@@ -103,13 +103,15 @@ class JobHandler:
         return Job.objects.filter(user=user).select_related("content_type")
 
     def create_and_start_job(
-        self, user: AbstractUser, job_type_name: str, **kwargs
+        self, user: AbstractUser, job_type_name: str, sync=False, **kwargs
     ) -> Job:
         """
         Creates a new job and schedule the asynchronous task.
 
         :param user: The user whom launch the task.
         :param job_type_name: The job type we want to launch.
+        :param sync: True if you want to execute the job immediately.
+
         :return: The newly created job.
         """
 
@@ -131,7 +133,11 @@ class JobHandler:
         job = model_class.objects.create(user=user, **job_values)
         job_type.after_job_creation(job, kwargs)
 
-        transaction.on_commit(lambda: run_async_job.delay(job.id))
+        if sync:
+            run_async_job(job.id)
+        else:
+            transaction.on_commit(lambda: run_async_job.delay(job.id))
+
         return job
 
     def clean_up_jobs(self):

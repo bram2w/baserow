@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List, Optional
+from typing import List
 
 from django.contrib.auth.models import AbstractUser
 
@@ -24,46 +24,18 @@ class CreateTableActionType(ActionType):
     def do(
         cls,
         user: AbstractUser,
-        database: Database,
-        name: str,
-        fill_example: bool = False,
-        data: Optional[List[List[str]]] = None,
-        first_row_header: bool = True,
+        table: Table,
     ) -> Table:
         """
-        Creates a new table in the databse.
-        See baserow.contrib.database.table.handler.TableHandler.create_table
-        for further details.
+        Do nothing but register the table creation action.
         Undoing this action trashes the table and redoing restores it.
 
         :param user: The user on whose behalf the table is created.
-        :param database: The database that the table instance belongs to.
         :param name: The name of the table is created.
-        :param fill_example: Indicates whether an initial view, some fields and
-            some rows should be added. Works only if no data is provided.
-        :param data: A list containing all the rows that need to be inserted is
-            expected. All the values of the row are going to be converted to a string
-            and will be inserted in the database.
-        :param first_row_header: Indicates if the first row are the fields. The names
-            of these rows are going to be used as fields.
-        :raises MaxFieldLimitExceeded: When the data contains more columns
-            than the field limit.
-        :return: The created table instance.
         """
 
-        table = TableHandler().create_table(
-            user,
-            database,
-            name,
-            fill_example=fill_example,
-            data=data,
-            first_row_header=first_row_header,
-        )
-
         params = cls.Params(table.id)
-        cls.register_action(user, params, cls.scope(database.id))
-
-        return table
+        cls.register_action(user, params, cls.scope(table.database.id))
 
     @classmethod
     def scope(cls, database_id) -> ActionScopeStr:

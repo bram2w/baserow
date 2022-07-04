@@ -21,10 +21,9 @@ def test_can_undo_creating_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
 
-    table = action_type_registry.get_by_type(CreateTableActionType).do(
-        user, database, fill_example=True, name="test"
-    )
+    action_type_registry.get_by_type(CreateTableActionType).do(user, table)
 
     ActionHandler.undo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
@@ -38,9 +37,11 @@ def test_can_undo_redo_creating_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
 
-    table = action_type_registry.get_by_type(CreateTableActionType).do(
-        user, database, fill_example=True, name="test"
+    action_type_registry.get_by_type(CreateTableActionType).do(
+        user,
+        table,
     )
 
     ActionHandler.undo(

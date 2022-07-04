@@ -13,6 +13,11 @@ export default {
         return {}
       },
     },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {

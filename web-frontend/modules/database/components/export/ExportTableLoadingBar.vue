@@ -1,19 +1,11 @@
 <template>
   <div class="modal-progress__actions">
-    <div v-if="job !== null" class="modal-progress__loading-bar">
-      <div
-        class="modal-progress__loading-bar-inner"
-        :style="{
-          width: `${job.progress_percentage * 100}%`,
-          'transition-duration': [1, 0].includes(job.progress_percentage)
-            ? '0s'
-            : '1s',
-        }"
-      ></div>
-      <span v-if="jobIsRunning" class="modal-progress__status-text">
-        {{ job.status }}
-      </span>
-    </div>
+    <template v-if="job !== null">
+      <ProgressBar
+        :value="job.progress_percentage * 100"
+        :status="job.status"
+      />
+    </template>
     <button
       v-if="job === null || job.status !== 'complete'"
       class="button button--large button--primary modal-progress__export-button"
