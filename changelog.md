@@ -31,6 +31,7 @@ For example:
 * Made it possible to extend the register page.
 * Made it possible to extend the app layout.
 * Allow to import more than 15Mb. [949](ttps://gitlab.com/bramw/baserow/-/issues/949)
+* Add the ability to disable the model cache with the new BASEROW_DISABLE_MODEL_CACHE env variable.
 
 ### Bug Fixes
 
