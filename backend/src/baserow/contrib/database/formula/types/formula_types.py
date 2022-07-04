@@ -361,7 +361,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
 
     def unwrap_at_field_level(self, expr: "BaserowFunctionCall[BaserowFormulaType]"):
         unwrapped = super().unwrap_at_field_level(expr)
-        return expr.args[0].with_valid_type(unwrapped)
+        return expr.args[0].with_valid_type(unwrapped.expression_type)
 
     def cast_to_text(
         self,

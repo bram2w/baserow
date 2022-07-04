@@ -1347,3 +1347,27 @@ def test_every_formula_sub_type_can_be_a_primary_field(data_fixture, api_client)
         assert primary_formula.error is None
         can_query_grid_view_for(api_client, grid_view_table_a, token)
         can_query_grid_view_for(api_client, grid_view_table_b, token)
+
+
+@pytest.mark.django_db
+def test_can_have_nested_date_formulas(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_date_field(table=table, name="jaar_van")
+
+    FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="datum",
+        formula="todate(concat(totext(year(field('jaar_van'))),'-01-01'),'YYYY-MM-DD')",
+    )
+    FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="failured",
+        formula="date_diff('day', field('jaar_van'), field('datum')) + 1",
+    )
