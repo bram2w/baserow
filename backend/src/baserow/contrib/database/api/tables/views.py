@@ -11,11 +11,28 @@ from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_MAX_FIELD_COUNT_EXCEEDED,
+    ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
+    ERROR_RESERVED_BASEROW_FIELD_NAME,
+    ERROR_INVALID_BASEROW_FIELD_NAME,
+)
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
+)
+
 
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
+    InvalidInitialTableData,
+    InitialTableDataLimitExceeded,
+    InitialSyncTableDataLimitExceeded,
+    InitialTableDataDuplicateName,
 )
 from baserow.contrib.database.table.actions import (
     DeleteTableActionType,
@@ -33,6 +50,10 @@ from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_TABLE_NOT_IN_DATABASE,
+    ERROR_INVALID_INITIAL_TABLE_DATA,
+    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+    ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED,
+    ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
 )
 from .serializers import (
     TableSerializer,
@@ -100,8 +121,97 @@ class TablesView(APIView):
         tags=["Database tables"],
         operation_id="create_database_table",
         description=(
-            "Creates a new table for the database related to the provided "
-            "`database_id` parameter if the authorized user has access to the "
+            "Creates synchronously a new table for the database related to the "
+            "provided `database_id` parameter if the authorized user has access to the "
+            "database's group.\n\n"
+            "As an alternative you can use the `create_async_database_table` for "
+            "better performances and importing bigger files."
+        ),
+        request=TableCreateSerializer,
+        responses={
+            200: TableSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_INVALID_INITIAL_TABLE_DATA",
+                    "ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED",
+                    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+                    "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
+            InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+            InitialSyncTableDataLimitExceeded: ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED,
+            MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
+            MaxFieldNameLengthExceeded: ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
+            InitialTableDataDuplicateName: ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+            ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
+            InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    @validate_body(TableCreateSerializer)
+    def post(self, request, data, database_id):
+        """Creates a new table in a database."""
+
+        database = DatabaseHandler().get_database(database_id)
+
+        session = get_untrusted_client_session_id(request.user)
+
+        if not data["data"]:
+            file_import_job = TableHandler().create_minimal_table(
+                request.user,
+                database,
+                data["name"],
+                fill_example=True,
+                session=session,
+            )
+        else:
+            file_import_job = TableHandler().create_table(
+                request.user,
+                database,
+                data["name"],
+                data=data["data"],
+                first_row_header=data["first_row_header"],
+                session=session,
+                sync=True,
+            )
+
+        table = TableHandler().get_table(file_import_job.table.id)
+        serializer = TableSerializer(table)
+        return Response(serializer.data)
+
+
+class AsyncCreateTableView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="database_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Creates a table for the database related to the provided "
+                "value.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database tables"],
+        operation_id="create_async_database_table",
+        description=(
+            "Creates a job that creates a new table for the database related to the "
+            "provided `database_id` parameter if the authorized user has access to the "
             "database's group."
         ),
         request=TableCreateSerializer,

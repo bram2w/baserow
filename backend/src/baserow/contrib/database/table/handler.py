@@ -1,5 +1,6 @@
 from typing import Any, cast, NewType, List, Tuple, Optional, Dict
 from collections import defaultdict
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -29,6 +30,7 @@ from .exceptions import (
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
+    InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
 )
 from .models import Table
@@ -117,6 +119,16 @@ class TableHandler:
 
         database.group.has_user(user, raise_error=True)
 
+        if sync:
+            limit = settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT
+            if limit and len(data) > limit:
+                raise InitialSyncTableDataLimitExceeded(
+                    f"It is not possible to import more than "
+                    f"{settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT} rows "
+                    "when creating a table synchronously. Use Asynchronous "
+                    "alternative instead."
+                )
+
         job = JobHandler().create_and_start_job(
             user,
             "file_import",
@@ -127,8 +139,10 @@ class TableHandler:
             user_session_id=session,
             sync=sync,
         )
+
         if sync:
             job.refresh_from_db()
+
         return job
 
     def create_minimal_table(
@@ -346,9 +360,16 @@ class TableHandler:
             for index, value in enumerate(row):
                 if value is not None:
                     if isinstance(value, int):
-                        value_type_frequencies[index]["number_int"] += 1
+                        if len(str(value)) <= 50:
+                            value_type_frequencies[index]["number_int"] += 1
+                        else:
+                            value_type_frequencies[index]["text"] += 1
                     elif isinstance(value, float):
-                        value_type_frequencies[index]["number_float"] += 1
+                        sign, digits, exponent = Decimal(str(value)).as_tuple()
+                        if abs(exponent) <= 10 and len(digits) <= 50 + 10:
+                            value_type_frequencies[index]["number_float"] += 1
+                        else:
+                            value_type_frequencies[index]["text"] += 1
                     else:
                         value = "" if value is None else str(value)
                         if len(value) > 255:

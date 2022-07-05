@@ -22,6 +22,14 @@ ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP = (
     HTTP_400_BAD_REQUEST,
     "The provided table does not belong to the related group.",
 )
+ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED = (
+    "ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED",
+    HTTP_400_BAD_REQUEST,
+    "The initial table data limit for synchronous table creation has been exceeded. "
+    "You can provide a maximum of "
+    f"{settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT} rows."
+    "Please use asynchronous alternative for more rows.",
+)
 ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED = (
     "ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED",
     HTTP_400_BAD_REQUEST,

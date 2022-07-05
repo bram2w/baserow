@@ -22,6 +22,13 @@ class TableDoesNotBelongToGroup(Exception):
     """Raised when the table does not belong to the related group."""
 
 
+class InitialSyncTableDataLimitExceeded(Exception):
+    """
+    Raised when the initial table data limit has been exceeded when creating a new
+    table in synchronous way.
+    """
+
+
 class InitialTableDataLimitExceeded(Exception):
     """
     Raised when the initial table data limit has been exceeded when creating a new
