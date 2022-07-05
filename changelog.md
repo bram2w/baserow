@@ -67,7 +67,7 @@ For example:
 ### Breaking Changes
 
 
-## Released (2022-06-09 1.10.2)
+## Released (2022-06-09 1.10.1)
 
 * Plugins can now include their own menu or other template in the main menu sidebar.
 * Added the ability to use commas as separators in number fields
