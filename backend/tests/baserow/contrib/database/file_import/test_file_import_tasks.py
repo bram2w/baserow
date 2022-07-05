@@ -2,6 +2,7 @@ import pytest
 from pyinstrument import Profiler
 from baserow.core.exceptions import UserNotInGroup
 from freezegun import freeze_time
+from decimal import Decimal
 
 from django.utils import timezone
 from django.conf import settings
@@ -181,8 +182,8 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     assert text_fields[6].name == "/w. r/awr"
 
     data = [
-        ["1-1", 1, 1, "x" * 260, "x"],
-        ["2-1", 2, 3.445, "i", "."],
+        ["1-1", 1, 1.55, "x" * 260, "x"],
+        ["2-1", 2, 1, "i", "."],
         ["3-1", 3, 2.4, "i", "."],
         ["3-1", 3, 2.4, "x" * 260, "x" * 260],
         ["3-1", 3, 2.4, None],
@@ -195,12 +196,12 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
         ["3-1", 3, 2.4, None],
         ["3-1", 3, 2.4, None],
         ["3-1", 3, 2.4, "x" * 260],
-        ["3-1", 3, 2.4, None],
+        ["3-1", int("3" * 50), 2.4, None],
         ["3-1", 3, 2.4, "x" * 260],
         ["3-1", 3, 2.4, None],
         ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3.2, 2.4, None],
+        ["3-1", 3, 2.4888888888, None],
+        ["3-1", 3.2, 123445.12345, None],
     ]
 
     # Test type guessing but low error threshold
@@ -230,6 +231,8 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     assert field3.specific.number_decimal_places == 10
     assert isinstance(field4.specific, LongTextField)
     assert isinstance(field5.specific, LongTextField)
+
+    assert getattr(rows[0], field3.db_column) == Decimal("1.55")
 
     # Test type guessing with error threshold
     with override_settings(
@@ -330,6 +333,40 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
             "error": "Un nombre valide est requis.",
         }
     ]
+
+    data = [
+        [1.3],
+        [1.12345678901],  # this one is too long for decimal field
+    ]
+
+    with override_settings(
+        BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD=0
+    ), patch_filefield_storage():
+        job = data_fixture.create_file_import_job(data=data, first_row_header=False)
+        run_async_job(job.id)
+
+    job.refresh_from_db()
+    fields = job.table.field_set.all()
+    assert fields.count() == 1
+    field1 = fields[0]
+    assert isinstance(field1.specific, TextField)
+
+    data = [
+        [1],
+        ["1" * 51],  # Too long
+    ]
+
+    with override_settings(
+        BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD=0
+    ), patch_filefield_storage():
+        job = data_fixture.create_file_import_job(data=data, first_row_header=False)
+        run_async_job(job.id)
+
+    job.refresh_from_db()
+    fields = job.table.field_set.all()
+    assert fields.count() == 1
+    field1 = fields[0]
+    assert isinstance(field1.specific, TextField)
 
 
 @pytest.mark.django_db(transaction=True)

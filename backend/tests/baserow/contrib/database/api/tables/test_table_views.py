@@ -1,8 +1,11 @@
 import pytest
 import json
 from unittest.mock import patch
+
 from django.db import connection
-from baserow.contrib.database.file_import.models import FileImportJob
+from django.test.utils import override_settings
+from django.shortcuts import reverse
+from django.test.utils import CaptureQueriesContext
 
 from rest_framework.status import (
     HTTP_200_OK,
@@ -11,9 +14,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
-from django.test.utils import CaptureQueriesContext
-
+from baserow.contrib.database.file_import.models import FileImportJob
 from baserow.contrib.database.table.models import Table
 
 
@@ -89,21 +90,25 @@ def test_create_table(api_client, data_fixture):
     database = data_fixture.create_database_application(user=user)
     database_2 = data_fixture.create_database_application()
 
-    url = reverse("api:database:tables:list", kwargs={"database_id": database_2.id})
+    url = reverse(
+        "api:database:tables:async_create", kwargs={"database_id": database_2.id}
+    )
     response = api_client.post(
         url, {"name": "Test 1"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
-    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    url = reverse(
+        "api:database:tables:async_create", kwargs={"database_id": database.id}
+    )
     response = api_client.post(
         url, {"not_a_name": "Test 1"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
-    url = reverse("api:database:tables:list", kwargs={"database_id": 9999})
+    url = reverse("api:database:tables:async_create", kwargs={"database_id": 9999})
     response = api_client.post(
         url, {"name": "Test 1"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
@@ -111,7 +116,9 @@ def test_create_table(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
 
     # Should create an example database
-    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    url = reverse(
+        "api:database:tables:async_create", kwargs={"database_id": database.id}
+    )
     response = api_client.post(
         url, {"name": "Test 1"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
@@ -136,7 +143,9 @@ def test_create_table_with_data(
 ):
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user)
-    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    url = reverse(
+        "api:database:tables:async_create", kwargs={"database_id": database.id}
+    )
 
     response = api_client.post(
         url,
@@ -186,6 +195,82 @@ def test_create_table_with_data(
                 ["2-1", "2-2", "2-3"],
                 ["3-1", "3-2"],
             ]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_table_with_data_sync(api_client, data_fixture, patch_filefield_storage):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+
+    with override_settings(
+        BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT=2
+    ), patch_filefield_storage():
+        response = api_client.post(
+            url,
+            {
+                "name": "Test 1",
+                "data": [
+                    ["A", "B", "C", "D"],
+                    ["1-1", "1-2", "1-3", "1-4", "1-5"],
+                    ["2-1", "2-2", "2-3"],
+                    ["3-1", "3-2"],
+                ],
+                "first_row_header": True,
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED"
+
+    with patch_filefield_storage():
+        response = api_client.post(
+            url,
+            {
+                "name": "Test 1",
+                "data": [
+                    ["A", "B", "C", "D"],
+                    ["1-1", "1-2", "1-3", "1-4", "1-5"],
+                    ["2-1", "2-2", "2-3"],
+                    ["3-1", "3-2"],
+                ],
+                "first_row_header": True,
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert response_json["name"] == "Test 1"
+
+    table = Table.objects.get(id=response_json["id"])
+
+    model = table.get_model()
+    assert model.objects.count() == 3
+
+    # Test empty data
+    with patch_filefield_storage():
+        response = api_client.post(
+            url,
+            {
+                "name": "Test 2",
+                "first_row_header": True,
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert response_json["name"] == "Test 2"
+
+    table = Table.objects.get(id=response_json["id"])
+
+    model = table.get_model()
+    assert model.objects.count() == 2
 
 
 @pytest.mark.django_db

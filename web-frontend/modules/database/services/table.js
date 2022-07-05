@@ -16,7 +16,7 @@ export default (client) => {
       }
 
       return client.post(
-        `/database/tables/database/${databaseId}/`,
+        `/database/tables/database/${databaseId}/async/`,
         values,
         config
       )
