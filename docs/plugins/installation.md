@@ -1,6 +1,6 @@
 # Plugin Installation
 
-> Check out our [Plugin community sub-forum](https://community.baserow.io/c/plugins/17) 
+> Check out our [Plugin community sub-forum](https://community.baserow.io/c/plugins/17)
 > for community made plugins and further discussion.
 
 Before we begin, Baserow plugins are in **early preview** and so there are important
@@ -10,8 +10,8 @@ things to know:
   it likes. Baserow does not sandbox, isolate or perform any security checks on plugins.
 * Baserow does not yet verify or guarantee the safety of any plugins and does not take
   responsibility for any damage or loss caused by installing or using any plugins.
-* Using Baserow plugins is entirely at your own risk, make sure you trust the source
-  and make backups before using any plugin.
+* Using Baserow plugins is entirely at your own risk, make sure you trust the source and
+  make backups before using any plugin.
 * They are only recommended for use by advanced users who are comfortable with Docker,
   volumes, containers and the command line.
 * There are a number of missing plugin features, e.g. there is no UI for inspecting
@@ -29,10 +29,11 @@ build your own image based off the Baserow all-in-one image.
 1. It is highly recommended that you backup your data before installing a plugin, see
    the [Docker install guide backup section](../installation/install-with-docker.md)
    for more details on how to do this.
-2. Ensure you have `docker` installed and it is upto date.
-3. Create your own `Dockerfile` which will customize the normal Baserow image and
-   install your desired plugins, all the various ways of installing a plugin are shown
-   in the example Dockerfile below:
+2. Ensure you have [docker](https://docs.docker.com/engine/install/) installed, and it
+   is upto date.
+3. Now create a new file called `Dockerfile`. We will use this file to build a custom
+   Baserow image with your desired plugins installed.
+4. Next copy the contents shown into your `Dockerfile`
 
 ```dockerfile
 FROM baserow/baserow:1.10.2
@@ -66,9 +67,11 @@ RUN /baserow/plugins/install_plugin.sh \
     --hash hash_of_plugin_2
 ```
 
-4. Now build your custom Baserow with the plugin installed by running:
+5. Choose which of the `RUN` commands you'd like to use to install your plugins and
+   delete the rest, replace the example URLs with ones pointing to your plugin.
+6. Now build your custom Baserow with the plugin installed by running:
    `docker build -t my-customized-baserow:1.10.2 .`
-5. Finally, you can run your new customized image just like the normal Baserow image:
+7. Finally, you can run your new customized image just like the normal Baserow image:
    `docker run -p 80:80 -v baserow_data:/baserow/data my-customized-baserow:1.10.2`
 
 ### Installing in an existing Baserow all-in-one container
@@ -78,7 +81,8 @@ This method installs the plugin into an existing container, and it's data volume
 1. It is highly recommended that you backup your data before installing a plugin, see
    the [Docker install guide backup section](../installation/install-with-docker.md)
    for more details on how to do this.
-2. Now run the following command to install a plugin into your stopped container:
+2. Now run the following command to install a plugin into your stopped container (
+   replace the example URL and optional hash with your desired plugin):
 
 ```bash
 docker exec baserow \
@@ -87,7 +91,8 @@ docker exec baserow \
   --hash hash_of_plugin_1
 ```
 
-3. Now restart your Baserow server to enable the plugin - `docker restart baserow`.
+3. Finally, restart your Baserow server to enable the plugin by
+   running `docker restart baserow`.
 
 ### Using an environment variable
 
@@ -97,7 +102,7 @@ using the Baserow images to install plugins on startup.
 1. The `BASEROW_PLUGIN_GIT_REPOS` should be a comma separated list of https git repo
    urls which will be used to download and install plugins on startup.
 2. The `BASEROW_PLUGIN_URLS` should be a comma separated list of urls which will be used
-   to download and install plugins .tar.gz files on startup.
+   to download and install .tar.gz files containing Baserow plugins on startup.
 
 For example, you could start a new Baserow container with plugins installed by running:
 

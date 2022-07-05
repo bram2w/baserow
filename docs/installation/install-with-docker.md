@@ -33,7 +33,7 @@ docker run \
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
   external access.
 * Add `-e BASEROW_CADDY_ADDRESSES=https://YOUR_DOMAIN` to enable
-  [automatic Caddy HTTPS](https://caddyserver.com/docs/caddyfile/automatic-https#overview)
+  [automatic Caddy HTTPS](https://caddyserver.com/docs/automatic-https)
   .
 * Optionally add `-e DATABASE_URL=postgresql://user:pwd@host:port/db` to use an external
   Postgresql.

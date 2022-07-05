@@ -1,0 +1,24 @@
+version: "3.4"
+# This compose file is for testing our example Nginx configuration locally.
+# To test you have to add `127.0.0.1 example.localhost` to your /etc/hosts and then run
+# docker-compose up
+services:
+  nginx:
+    image: nginx
+    ports:
+      - '80:80'
+    volumes:
+      - $PWD/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [ baserow ]
+  baserow:
+    image: baserow/baserow:develop-latest
+    environment:
+      # This nginx is configured to use the docker network to reach the Baserow service.
+      # No need to use BASEROW_EXTRA_ALLOWED_HOSTS if your Nginx can access your
+      # Baserow on a normal network using localhost/127.0.0.1 .
+      BASEROW_EXTRA_ALLOWED_HOSTS: "baserow"
+      BASEROW_PUBLIC_URL: http://example.localhost
+    volumes:
+      - baserow_data:/baserow/data
+volumes:
+  baserow_data:

@@ -1,0 +1,22 @@
+version: "3.4"
+# This compose file is for testing our example Apache configuration locally.
+# To test you have to add `127.0.0.1 example.localhost` to your /etc/hosts.
+services:
+  apache:
+    build:
+      context: .
+    ports:
+      - '80:80'
+    depends_on: [baserow]
+  baserow:
+    image: baserow/baserow:develop-latest
+    environment:
+      # Apache is configured to use the docker network to reach this Baserow service.
+      # No need to use BASEROW_EXTRA_ALLOWED_HOSTS if your Apache can access your
+      # Baserow normally on a port.
+      BASEROW_EXTRA_ALLOWED_HOSTS: "baserow"
+      BASEROW_PUBLIC_URL: http://example.localhost
+    volumes:
+      - baserow_data:/baserow/data
+volumes:
+  baserow_data:
