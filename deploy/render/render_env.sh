@@ -22,3 +22,6 @@ export EMAIL_SMTP="false"
 # so we can setup the DATA_DIR.
 DOCKER_USER=$(whoami)
 export DOCKER_USER
+
+# We must run the caddy user as the docker user to prevent supervisord errors
+export BASEROW_CADDY_USER="${BASEROW_CADDY_USER:-$DOCKER_USER}"
