@@ -35,7 +35,7 @@ build your own image based off the Baserow all-in-one image.
    in the example Dockerfile below:
 
 ```dockerfile
-FROM baserow/baserow:1.10.1
+FROM baserow/baserow:1.10.2
 
 # You can install a plugin found in a git repo:
 RUN /baserow/plugins/install_plugin.sh \
@@ -67,9 +67,9 @@ RUN /baserow/plugins/install_plugin.sh \
 ```
 
 4. Now build your custom Baserow with the plugin installed by running:
-   `docker build -t my-customized-baserow:1.10.1 .`
+   `docker build -t my-customized-baserow:1.10.2 .`
 5. Finally, you can run your new customized image just like the normal Baserow image:
-   `docker run -p 80:80 -v baserow_data:/baserow/data my-customized-baserow:1.10.1`
+   `docker run -p 80:80 -v baserow_data:/baserow/data my-customized-baserow:1.10.2`
 
 ### Installing in an existing Baserow all-in-one container
 
@@ -106,7 +106,7 @@ docker run \
   -v baserow_data:/baserow/data \ 
   # ...  All your normal launch args go here
   -e BASEROW_PLUGIN_GIT_REPOS=https://example.com/example/plugin1.git,https://example.com/example/plugin2.git
-  baserow:1.10.1
+  baserow:1.10.2
 ```
 
 These variables will only trigger and installation when found on startup of the
@@ -115,7 +115,7 @@ container. To uninstall a plugin you must still manually follow the instructions
 ### Caveats when installing into an existing container
 
 If you ever delete the container you've installed plugins into at runtime and re-create
-it, the new container is created from the `baserow/baserow:1.10.1` image which does not
+it, the new container is created from the `baserow/baserow:1.10.2` image which does not
 have any plugins installed.
 
 However, when a plugin is installed at runtime or build time it is stored in the
@@ -130,7 +130,7 @@ scratch.
 
 ### Installing into standalone Baserow service images
 
-Baserow also provides `baserow/backend:1.10.1` and `baserow/web-frontend:1.10.1` images
+Baserow also provides `baserow/backend:1.10.2` and `baserow/web-frontend:1.10.2` images
 which only run the respective backend/celery/web-frontend services. These images are
 used for more advanced self-hosted deployments like a multi-service docker-compose, k8s
 etc.
@@ -140,8 +140,8 @@ used with docker run and a specified command and the plugin env vars shown above
 example:
 
 ```
-docker run --rm baserow/backend:1.10.1 install-plugin ... 
-docker run -e BASEROW_PLUGIN_GIT_REPOS=https://example.com/example/plugin1.git,https://example.com/example/plugin2.git --rm baserow/backend:1.10.1
+docker run --rm baserow/backend:1.10.2 install-plugin ... 
+docker run -e BASEROW_PLUGIN_GIT_REPOS=https://example.com/example/plugin1.git,https://example.com/example/plugin2.git --rm baserow/backend:1.10.2
 ```
 
 You can use these scripts exactly as you would in the sections above to install a plugin
@@ -164,13 +164,13 @@ associated data permanently.
    [Docker install guide backup section](../installation/install-with-docker.md)
    for more details on how to do this.
 2. Stop your Baserow server first - `docker stop baserow`
-3. `docker run --rm -v baserow_data:/baserow/data baserow:1.10.1 uninstall-plugin plugin_name`
+3. `docker run --rm -v baserow_data:/baserow/data baserow:1.10.2 uninstall-plugin plugin_name`
 4. Now the plugin has uninstalled itself and all associated data has been removed.
 5. Edit your custom `Dockerfile` and remove the plugin.
-6. Rebuild your image - `docker build -t my-customized-baserow:1.10.1 .`
+6. Rebuild your image - `docker build -t my-customized-baserow:1.10.2 .`
 7. Remove the old container using the old image - `docker rm baserow`
 8. Run your new image with the plugin removed
-    - `docker run -p 80:80 -v baserow_data:/baserow/data my-customized-baserow:1.10.1`
+    - `docker run -p 80:80 -v baserow_data:/baserow/data my-customized-baserow:1.10.2`
 9. If you fail to do this if you ever recreate the container, your custom image still
    has the plugin installed and the new container will start up again with the plugin
    re-installed.
@@ -202,7 +202,7 @@ associated data permanently.
    restart as the environment variable will still contain the old plugin. To do this you
    must:
     1. `docker stop baserow`
-    2. `docker run --rm -v baserow_data:/baserow/data baserow:1.10.1 uninstall-plugin plugin_name`
+    2. `docker run --rm -v baserow_data:/baserow/data baserow:1.10.2 uninstall-plugin plugin_name`
     3. Now the plugin has uninstalled itself and all associated data has been removed.
     4. Finally, recreate your Baserow container by using the same `docker run` command
        you launched it with, just make sure the plugin you uninstalled has been removed
@@ -217,7 +217,7 @@ check what plugins are currently installed.
 docker run \
   --rm \
   -v baserow_data:/baserow/data \ 
-  baserow:1.10.1 list-plugins 
+  baserow:1.10.2 list-plugins 
 
 # or on a running container
 
