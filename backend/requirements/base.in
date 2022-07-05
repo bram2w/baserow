@@ -1,4 +1,4 @@
-Django==3.2.13
+Django==3.2.14
 django-cors-headers==3.8.0
 djangorestframework==3.13.1
 drf-jwt==1.19.1
