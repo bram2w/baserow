@@ -91,7 +91,8 @@
         "invitationDescription": "invitato da {since}",
         "sendInvite": "Invia invito",
         "userAlreadyInGroupTitle": "Utente già nel gruppo.",
-        "userAlreadyInGroupText": "Non è possibile inviare un invito quando l'utente è già membro del gruppo."
+        "userAlreadyInGroupText": "Non è possibile inviare un invito quando l'utente è già membro del gruppo.",
+        "userDescriptionPendingDeletion": "{user} - eliminazione programmata"
     },
     "groupInviteForm": {
         "invitationFormTitle": "Invita via e-mail",
@@ -197,7 +198,7 @@
     "dashboard": {
         "title": "Dashboard",
         "alertTitle": "Aiutaci!",
-        "alertText": "Se trovi che Baserow sia utile, ci farebbe molto piacere se potessi sponsorizzarci, valutarci o condividerci. Sponsorizzandoci su GitHub avrai accesso anticipato alle funzioni premium!",
+        "alertText": "Se trovi che Baserow sia utile, ci farebbe molto piacere se potessi condividere la tua opinione. Il tuo feedback è importante per noi, perchè ci aiuta a migliorare il prodotto e a renderlo migliore per te.",
         "tweetContent": "Dai un'occhiata a @baserow, uno strumento di database open source senza codice e un'alternativa a Airtable!",
         "redditTitle": "Baserow - Un database open source senza codice",
         "noGroupTitle": "Nessun gruppo",
@@ -224,14 +225,16 @@
         "errorInvalidLinkMessage": "Impossibile reimpostare la password perché il link non è valido.",
         "errorLinkExpiredTitle": "Link scaduto",
         "errorLinkExpiredMessage": "Il link per la reimpostazione della password è scaduto, richiedine un altro.",
-        "disabled": "",
-        "disabledMessage": ""
+        "disabled": "Il reset della password è disabilitato",
+        "disabledMessage": "Non è possibile reimpostare la password perché l'opzione è stata disabilitata."
     },
     "signup": {
         "headTitle": "Crea nuovo account",
         "title": "Registrati",
         "disabled": "Registrazione disabilitata",
-        "disabledMessage": "Non è possibile creare un account perché è stato disabilitato."
+        "disabledMessage": "Non è possibile creare un account perché è stato disabilitato.",
+        "requireFirstUser": "Benvenuto su Baserow!",
+        "requireFirstUserMessage": "Per favore, riempi i campi qui sotto per creare un nuovo account con i permessi di admin."
     },
     "forgotPassword": {
         "title": "Password dimenticata",
@@ -246,14 +249,18 @@
         "baserowInstanceId": "ID istanza",
         "instanceIdDescription": "L'ID dell'istanza è l'identificatore univoco della tua copia di Baserow.",
         "accountRestrictions": "Limitazioni account",
-        "settingAllowResetPasswordName": "",
-        "settingAllowResetPasswordDescription": "",
-        "settingAllowResetPasswordWarning": "",
+        "settingAllowResetPasswordName": "Permetti il reset della password",
+        "settingAllowResetPasswordDescription": "Di default, gli utenti possono chiedere il reset della password tramite link.",
+        "settingAllowResetPasswordWarning": "Fai attenzione che potrebbe diventare impossibile eseguire l'accesso al sistema se dimentichi la password una volta disabilitata l'opzione per il reset.",
         "settingAllowNewAccountsName": "Consenti la creazione di nuovi account",
         "settingAllowNewAccountsDescription": "Per impostazione predefinita, qualsiasi utente che visita il tuo dominio Baserow può registrarsi per un nuovo account.",
         "settingAllowSignupsViaGroupInvitationsName": "Consenti l'iscrizione tramite inviti di gruppo",
         "settingAllowSignupsViaGroupInvitationDescription": "Anche se la creazione di nuovi account è disabilitata, questa opzione permette agli utenti invitati direttamente di creare un account.",
-        "enabled": "abilitato"
+        "enabled": "abilitato",
+        "userDeletionGraceDelay": "Eliminazione account",
+        "settingUserDeletionGraceDelay": "Tempo di grazia",
+        "settingUserDeletionGraceDelayDescription": "Questo è il numero di giorni dopo i quali verrà definitivamente cancellato l'account.",
+        "invalidAccountDeletionGraceDelay": "Questo campo è obbligatorio e deve essere un valore intero positivo più piccolo di 32000"
     },
     "undoRedoNotification": {
         "undoingTitle": "Annullando..",
@@ -277,64 +284,109 @@
     },
     "formSidebar": {
         "actions": {
-            "addAll": "",
-            "removeAll": "",
-            "addField": ""
+            "addAll": "Aggiungi tutti",
+            "removeAll": "Rimuovi tutto",
+            "addField": "Aggiungi campo"
         },
-        "fieldsDescription": "",
-        "prefillInfoLink": "",
+        "fieldsDescription": "Tutti i campi sono nel form.",
+        "prefillInfoLink": "Riempi i campi automaticamente",
         "modal": {
-            "title": "",
-            "descriptionPartOne": "",
-            "descriptionPartTwo": "",
+            "title": "Riempi i campi automaticamente",
+            "descriptionPartOne": "I form possono essere riempiti automaticamente per velocizzare la compilazione.",
+            "descriptionPartTwo": "Tutti i campi nel form possono essere riempiti automaticamente.",
             "howToPrefill": {
-                "title": "",
-                "description": ""
+                "title": "Come pre-riempire un form",
+                "description": "Se vuoi pre-riempire un form con alcuni dati lo puoi fare inserndo il nome del campo nell'indirizzo pubblico del form usando `prefill` come prefisso. In questo modo evitiamo potenziali conflitti con i nome dei campi."
             },
             "format": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Formato",
+                "description": "Il formato da usare è il seguente:",
+                "codeSnippet": "?prefill_<nome_campo>=<valore>"
             },
             "example": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Esempio",
+                "description": "Nell'esempio seguente vogliamo pre-riempire il campo `Nome` con il valore `Mike`",
+                "codeSnippet": "?prefill_Nome=Mike"
             },
             "spaces": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Spazi",
+                "description": "Gli spazi nel nome del campo devono essere sostituiti con il carattere `+` per evitare problemi nell'indirizzo generato.",
+                "codeSnippet": "?prefill_mio+Nome=Mike"
             },
             "multipleValues": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Valori multipli",
+                "description": "Se vuoi pre-riempire campi multipli puoi farlo aggiungendo il carattere `,` tra un valore e l'altro.",
+                "codeSnippet": "?prefill_selezionei+multipla=Mike,John"
             },
             "specialFieldTypes": {
-                "title": "",
-                "description": "",
+                "title": "Campi speciali",
+                "description": "In genere il valore da inserire per il pre-riempimento è lo stesso del campo, ma ci sono alcune eccezioni per cui è necessario scrivere un valore leggermente diverso.",
                 "ratingField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Campo punteggio",
+                    "description": "Un campo punteggio accetta un numero per indicare il punteggio.",
+                    "codeSnippet": "?prefill_punteggio=3"
                 },
                 "linkRowField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Collegamento a riga",
+                    "description": "Un collegamento a riga accetta un valore che viene mostrato in un elenco a tendina.",
+                    "codeSnippet": "?prefill_collegamento=Mike"
                 },
                 "selectField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Selezione Singola / Multipla",
+                    "description": "Un campo a selezione singola può accettare un valore che viene mostrato nel menu a tendina. Lo stesso vale per per la selezione multipla, con la differenza che può accettare più valori.",
+                    "codeSnippet": "?prefill_selezione+singola=Mike"
                 },
                 "dateField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Campo data",
+                    "description": "Una campo data può accettare una data come testo nel formato impostato per il campo.",
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
             }
         }
+    },
+    "deleteAccountSettings": {
+        "title": "Elimina account",
+        "groupNotice": "I gruppi orfani verranno cancellati",
+        "groupNoticeDescription": "Quando il tuo account verrà cancellato definitivamente, tutti i gruppi mostrati di seguito e i relativi dati verranno cancellati, in quanto il tuo account è l'unico amministratore del gruppo. Per evitare che i dati vengano persi, concedi i diritti di amministratore ad un altro utente prima di procedere alla cancellazione.",
+        "orphanGroups": "Verrà cancellato al termine del periodo di grazia",
+        "orphanGroupMemberCount": "non convidere|condividi con un utnte|condividi con {count} utenti",
+        "password": "Password",
+        "passwordConfirm": "Ripeti password",
+        "repeatPasswordMatchError": "Questo campo deve coincidere con il campo password.",
+        "submitButton": "Cancella account",
+        "errorInvalidPasswordTitle": "Password non valida",
+        "errorInvalidPasswordMessage": "Password non valida, impossibile cancellare l'account.",
+        "errorUserIsLastAdminTitle": "Ultimo amministratore",
+        "errorUserIsLastAdminMessage": "Impossibile cancellare l'account perché il tuo account è l'ultimo amministratore nel sistema.",
+        "accountDeletedSuccessMessage": "Il tuo account verrà cancellato al termine del periodo di grazia.",
+        "groupLoadingError": "Le verifiche sui gruppi sono fallite",
+        "groupLoadingErrorDescription": "I controlli sui gruppi da cancellare sono falliti, per favore aggiorna la pagina.",
+        "description": "Puoi programmare la cancellazione del tuo account inserendo la tua password e premendo il pulsante. Il tuo account verrà cancellato definitivamente dopo {days} giorni senza alcun login. Nel frattempo, ti basterà accedere nuovamente con il tuo account per fermare il processo di cancellazione.",
+        "accountDeletedSuccessTitle": "Cancellazione dell'account programmata"
+    },
+    "dashboardSidebar": {
+        "trash": "Cestino",
+        "logoff": "Esci",
+        "tutorials": "Tutorial",
+        "userSettings": "Impostazioni utente",
+        "knowledgeBase": "Documentazione",
+        "groups": "Gruppi",
+        "links": "Link"
+    },
+    "job": {
+        "statePending": "In attesa...",
+        "stateStarted": "Avviato...",
+        "stateFinished": "Finito",
+        "errorJobAlreadyRunningTitle": "In corso",
+        "stateFailed": "Fallito",
+        "errorJobAlreadyRunningDescription": "Un altro processo è già in corso. Devi attendere il termine di quello in corso per iniziarne uno nuovo."
+    },
+    "clearingNotification": {
+        "content": "Preparando i dati",
+        "title": "Pulendo..."
+    },
+    "pastingNotification": {
+        "content": "Preparando i dati",
+        "title": "Incollando..."
     }
 }

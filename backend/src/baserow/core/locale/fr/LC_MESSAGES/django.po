@@ -3,16 +3,16 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-30 13:52+0000\n"
-"PO-Revision-Date: 2022-04-22 10:05+0100\n"
+"PO-Revision-Date: 2022-07-05 11:27+0000\n"
 "Last-Translator: Jérémie Pardou-Piquemal <jrmi@jeremiez.net>\n"
-"Language-Team: French <https://hosted.weblate.org/projects/baserow/backend-"
-"core/fr/>\n"
+"Language-Team: French <https://hosted.weblate.org/projects/baserow/"
+"backend-core/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Weblate 4.13.1-dev\n"
 
 #: src/baserow/core/emails.py:96
 #, python-format
@@ -52,67 +52,52 @@ msgstr ""
 
 #: src/baserow/core/templates/baserow/core/user/account_deleted.html:146
 msgid "Account permanently deleted"
-msgstr ""
+msgstr "Compte supprimé définitivement"
 
 #: src/baserow/core/templates/baserow/core/user/account_deleted.html:151
-#, fuzzy, python-format
-#| msgid ""
-#| "A password reset was requested for your account (%(username)s) on Baserow "
-#| "(%(public_web_frontend_hostname)s). If you did not authorize this, you "
-#| "may simply ignore this email."
+#, python-format
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
 "has been permanently deleted."
 msgstr ""
-"La réinitialisation du mot de passe a été demandée pour le compte "
-"(%(username)s) sur Baserow (%(public_web_frontend_hostname)s). Si vous "
-"n'êtes pas à l'initiative de cette demande, vous pouvez simplement ignorer "
-"cet e-mail."
+"Votre compte (%(username)s) sur Baserow (%(public_web_frontend_hostname)s) a "
+"été définitivement supprimé."
 
 #: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:146
 msgid "Account deletion cancelled"
-msgstr ""
+msgstr "Suppression du compte annulée"
 
 #: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:151
-#, fuzzy, python-format
-#| msgid ""
-#| "A password reset was requested for your account (%(username)s) on Baserow "
-#| "(%(public_web_frontend_hostname)s). If you did not authorize this, you "
-#| "may simply ignore this email."
+#, python-format
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
 "was pending deletion, but you've logged in so this operation has been "
 "cancelled."
 msgstr ""
-"La réinitialisation du mot de passe a été demandée pour le compte "
-"(%(username)s) sur Baserow (%(public_web_frontend_hostname)s). Si vous "
-"n'êtes pas à l'initiative de cette demande, vous pouvez simplement ignorer "
-"cet e-mail."
+"Votre compte (%(username)s) sur Baserow (%(public_web_frontend_hostname)s) "
+"était en attente de suppression, mais vous vous êtes connecté·e donc cette "
+"opération a été annulée."
 
 #: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:146
 msgid "Account pending deletion"
-msgstr ""
+msgstr "Compte en attente de suppression"
 
 #: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:151
-#, fuzzy, python-format
-#| msgid ""
-#| "A password reset was requested for your account (%(username)s) on Baserow "
-#| "(%(public_web_frontend_hostname)s). If you did not authorize this, you "
-#| "may simply ignore this email."
+#, python-format
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
 "will be permanently deleted in %(days_left)s days."
 msgstr ""
-"La réinitialisation du mot de passe a été demandée pour le compte "
-"(%(username)s) sur Baserow (%(public_web_frontend_hostname)s). Si vous "
-"n'êtes pas à l'initiative de cette demande, vous pouvez simplement ignorer "
-"cet e-mail."
+"Votre compte (%(username)s) sur Baserow (%(public_web_frontend_hostname)s) "
+"sera définitivement supprimé dans %(days_left)s jours."
 
 #: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:156
 msgid ""
 "If you've changed your mind and want to cancel your account deletion, you "
 "just have to login again."
 msgstr ""
+"Si vous changez d’avis et que vous souhaitez annuler la suppression de votre "
+"compte, il vous suffit de vous reconnecter."
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:146
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:165
@@ -148,15 +133,15 @@ msgstr "Réinitialiser le mot de passe - Baserow"
 
 #: src/baserow/core/user/emails.py:37
 msgid "Account deletion scheduled - Baserow"
-msgstr ""
+msgstr "Suppression de compte planifiée - Baserow"
 
 #: src/baserow/core/user/emails.py:56
 msgid "Account permanently deleted - Baserow"
-msgstr ""
+msgstr "Compte supprimé définitivement - Baserow"
 
 #: src/baserow/core/user/emails.py:74
 msgid "Account deletion cancelled - Baserow"
-msgstr ""
+msgstr "Suppression du compte annulée - Baserow"
 
 #: src/baserow/core/user/handler.py:169
 #, python-format

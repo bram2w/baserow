@@ -27,7 +27,8 @@
         "comment": "Commento"
     },
     "rowComment": {
-        "you": "Tu"
+        "you": "Tu",
+        "anonymous": "Anonimo"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Registra una licenza",
@@ -244,5 +245,9 @@
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "Quale singola selezione usare per colorare le righe?"
+    },
+    "redirectToBaserowModal": {
+        "title": "Verrai reindirizzato su http://baserow.io",
+        "content": "Stai lasciando la tua installazione self-hosted e verrai indirizzato su http://baserow.io."
     }
 }
