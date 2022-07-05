@@ -11,6 +11,15 @@ For example:
 
 ### New Features
 
+### Bug Fixes
+
+### Breaking Changes
+
+
+## Released (2022-07-05 1.10.2)
+
+### New Features
+
 * Added prefill query parameters for forms. [#852](https://gitlab.com/bramw/baserow/-/issues/852)
 * Added Link Row contains filter. [874](https://gitlab.com/bramw/baserow/-/issues/874)
 * Made the styling of the dashboard cleaner and more efficient.
