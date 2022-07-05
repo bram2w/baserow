@@ -221,7 +221,9 @@
     },
     "fieldContext": {
         "editField": "Modifica campo",
-        "deleteField": "Elimina campo"
+        "deleteField": "Elimina campo",
+        "hideField": "Nascondi campo",
+        "showField": "Mostra campo"
     },
     "fieldForm": {
         "name": "Nome",
@@ -253,7 +255,9 @@
         "search": "Righe di ricerca"
     },
     "rowEditModal": {
-        "addField": "aggiungi campo"
+        "addField": "aggiungi campo",
+        "showHiddenFields": "Mostra campi nascosti",
+        "hideHiddenFields": "Nascondi campi nascosti"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Aggiungi un'altra opzione"
@@ -322,7 +326,18 @@
         "title": "Crea nuova tabella",
         "importLabel": "Vuoi importare i dati esistenti?",
         "newTable": "Inizia con una nuova tabella",
-        "addButton": "Aggiungi tabella"
+        "addButton": "Aggiungi tabella",
+        "reportTitleFailure": "Righe con errori",
+        "uploading": "Caricando...",
+        "openCreatedTable": "Apri la tabella creata",
+        "preparing": "Preparando i dati...",
+        "importError": "Qualcosa è andato storto durante l'import dei dati",
+        "showReport": "Mostra report errori",
+        "statePreValidation": "Validando i dati...",
+        "reportMessage": "Le seguenti righe non possono essere importate:",
+        "stateRowCreation": "Importando...",
+        "reportTitleSuccess": "Import riuscito ma...",
+        "stateCreateTable": "Creando la tabella..."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Clicca per modificare la formula",
@@ -412,7 +427,8 @@
         "exportView": "Esporta vista",
         "renameView": "Rinomina vista",
         "webhooks": "Webhook",
-        "deleteView": "Elimina vista"
+        "deleteView": "Elimina vista",
+        "duplicateView": "Duplica vista"
     },
     "deleteViewModal": {
         "title": "Elimina {name}",
@@ -445,14 +461,15 @@
         "insertRowBelow": "Inserisci riga sotto",
         "enlargeRow": "Allarga riga",
         "deleteRow": "Elimina riga",
-        "rowCount": "Nessuna riga | 1 riga | {conteggio} righe"
+        "rowCount": "Nessuna riga | 1 riga | {conteggio} righe",
+        "duplicateRow": "Duplica riga"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
     },
     "gridViewIdentifierOptions": {
-        "id": "",
-        "count": ""
+        "id": "Id riga",
+        "count": "Conteggio"
     },
     "previewAny": {
         "externalWarning": "L'apertura del file tramite un servizio esterno espone il file ai server di tale servizio."
@@ -542,7 +559,8 @@
         "stateImporting": "Importazione in corso",
         "stateImportingTable": "Importazione tabella {table} in corso",
         "errorJobAlreadyRunningTitle": "Già in esecuzione",
-        "errorJobAlreadyRunningDescription": "Un altro lavoro di importazione è già in esecuzione. Devi aspettare che finisca prima di iniziarne un altro."
+        "errorJobAlreadyRunningDescription": "Un altro lavoro di importazione è già in esecuzione. Devi aspettare che finisca prima di iniziarne un altro.",
+        "linkError": "Il link dovrebbe essere nel formato: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "viewDecorator": {
         "decorator": "Colore | 1 Colore | {count} Colori"
@@ -574,5 +592,27 @@
             "incorrectPasswordTitle": "Password sbagliata",
             "incorrectPasswordText": "La password inserita non è corretta."
         }
+    },
+    "apiDocsTableDeleteRows": {
+        "description": "Elimina righe esistenti {name}.",
+        "items": "Una lista di ID di right che verranno eliminate."
+    },
+    "importer": {
+        "loading": "Caricamento file",
+        "decoding": "Decodificando i dati",
+        "parsing": "Analizzando i dati",
+        "preparing": "Preparando i dati",
+        "inProgress": "In corso..."
+    },
+    "apiDocsTableCreateRows": {
+        "description": "Crea nuove {name} righe.",
+        "before": "Se fornito, le nuove righe verranno inserite prima di questo id di riga."
+    },
+    "apiDocsTableUpdateRows": {
+        "description": "Aggiorna righe esistenti {name}.",
+        "id": "L'Id di riga."
+    },
+    "databaseDashboardSidebarLinks": {
+        "apiDocumentation": "Documentazione API"
     }
 }

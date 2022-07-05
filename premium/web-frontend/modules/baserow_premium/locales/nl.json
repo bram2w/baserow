@@ -27,7 +27,8 @@
         "comment": "Opmerking"
     },
     "rowComment": {
-        "you": "Jij"
+        "you": "Jij",
+        "anonymous": "Anoniem"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Een licentie registreren",
@@ -183,7 +184,7 @@
         "kanbanView": "Kanban bekijken",
         "exports": "JSON en XML uitvoer",
         "admin": "Beheerdersfunctionaliteit",
-        "rowColoring": "",
+        "rowColoring": "Rij kleuren",
         "getLicense": "Haal een licentie",
         "baserowInstanceId": "Je Baserow instantie ID is:",
         "registerLicense": "Licentie registreren",
@@ -243,5 +244,9 @@
         "addCondition": "voorwaarde toevoegen",
         "colorAlwaysApply": "Deze kleur is standaard van toepassing. U kunt voorwaarden toevoegen door te klikken op de \"Voeg voorwaarde toe\" knop.",
         "addColor": "kleur toevoegen"
+    },
+    "redirectToBaserowModal": {
+        "title": "Doorverwijzen naar http://baserow.io",
+        "content": "U verlaat uw zelf gehoste instantie en u wordt omgeleid naar http://baserow.io."
     }
 }

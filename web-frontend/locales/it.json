@@ -25,7 +25,8 @@
         "search": "Cerca",
         "copy": "Copia",
         "activate": "Attiva",
-        "deactivate": "Disattiva"
+        "deactivate": "Disattiva",
+        "paste": "Incolla"
     },
     "adminType": {
         "settings": "Impostazioni"
@@ -38,7 +39,8 @@
     "settingType": {
         "account": "Account",
         "password": "Password",
-        "tokens": "Token API"
+        "tokens": "Token API",
+        "deleteAccount": "Elimina account"
     },
     "userFileUploadType": {
         "file": "il mio dispositivo",
@@ -156,7 +158,8 @@
         "table": "tabella",
         "field": "campo",
         "row": "riga",
-        "view": "vista"
+        "view": "vista",
+        "rows": "righe"
     },
     "webhook": {
         "request": "Richiesta",
@@ -209,7 +212,7 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Ripristina prima le tabelle relative.",
         "cannotRestoreAsRelatedTableTrashedDescription": "Non puoi ripristinare questo campo perché dipende da altre tabelle che sono ancora nel cestino. Ripristina prima le altre tabelle relative.",
         "groupUserIsLastAdminTitle": "Non è possibile lasciare il gruppo",
-        "groupUserIsLastAdminDescription": "Non è possibile lasciare il gruppo perché sei l'ultimo amministratore. Elimina il gruppo o dai le autorizzazioni di amministrazione a un altro utente."
+        "groupUserIsLastAdminDescription": "Non è possibile lasciare il gruppo perché sei l'ultimo amministratore o perché gli altri admin verranno cancellati a breve. Elimina il gruppo o dai le autorizzazioni di amministrazione a un altro utente."
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -234,7 +237,12 @@
         "queryParameters": "Parametri di ricerca",
         "pathParameters": "Parametri percorso",
         "requestBodySchema": "Richiedi schema corpo",
-        "userFieldNamesDescription": "Quando viene fornito un valore qualsiasi per il parametro GET `user_field_names`, allora i nomi dei campi restituiti da questo endpoint saranno i nomi reali dei campi.\n\n Se il parametro GET `user_field_names` non viene fornito, allora tutti i nomi dei campi restituiti saranno `field_` seguito dall'id del campo. Ad esempio `field_1` si riferisce al campo con un id di `1`."
+        "userFieldNamesDescription": "Quando viene fornito un valore qualsiasi per il parametro GET `user_field_names`, allora i nomi dei campi restituiti da questo endpoint saranno i nomi reali dei campi.\n\n Se il parametro GET `user_field_names` non viene fornito, allora tutti i nomi dei campi restituiti saranno `field_` seguito dall'id del campo. Ad esempio `field_1` si riferisce al campo con un id di `1`.",
+        "createRows": "Crea righe",
+        "deleteRows": "Cancella righe",
+        "singleRow": "Singola",
+        "batchRows": "Mulipla",
+        "updateRows": "Aggiorna righe"
     },
     "exporterType": {
         "csv": "Esporta in CSV"
@@ -308,13 +316,15 @@
         "variancePopDescription": "Calcola la varianza della popolazione dei valori e restituisce il risultato. La varianza della popolazione deve essere usata quando i valori forniti contengono un valore per ogni singolo dato della popolazione.",
         "avgDescription": "Fa la media di tutti i valori e restituisce il risultato.",
         "sumDescription": "Somma tutti i valori e restituisce il risultato.",
-        "filterDescription": "Filtra un'espressione che coinvolge un riferimento a un campo di ricerca/collegamento o una chiamata a una funzione di ricerca."
+        "filterDescription": "Filtra un'espressione che coinvolge un riferimento a un campo di ricerca/collegamento o una chiamata a una funzione di ricerca.",
+        "roundDescription": "Ritorna il primo argomento arrotondato al numero di cifre specificato nel secondo argomento.",
+        "intDescription": "Ritorna il primo argomento convertito ad intero e troncato della parte decimale."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"
     },
     "urlCheck": {
-        "invalidUrlEnvVarTitle": "",
-        "invalidUrlEnvVarDescription": ""
+        "invalidUrlEnvVarTitle": "{name} invalido",
+        "invalidUrlEnvVarDescription": "La variabile d'ambiente {name}  è stata impostata ad un valore non valido. L'admin dovrebbe cambiare {name} con un indirizzo valido, nel formato http:// o https:// e poi riavviare Baserow per sistemare l'errore."
     }
 }

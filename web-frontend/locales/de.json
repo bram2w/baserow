@@ -39,17 +39,18 @@
     "settingType": {
         "account": "Konto",
         "password": "Passwort",
-        "tokens": "API Token"
+        "tokens": "API Token",
+        "deleteAccount": "Konto löschen"
     },
     "userFileUploadType": {
         "file": "Mein Gerät",
         "url": "eine URL"
     },
     "field": {
-        "emailAddress": "E-Mail Adresse"
+        "emailAddress": "E-Mail-Adresse"
     },
     "error": {
-        "invalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein.",
+        "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
         "notMatchingPassword": "Dieses Feld muss mit dem Passwort Feld übereinstimmen.",
         "minLength": "Hier sind mindestens {min} Zeichen erforderlich.",
         "maxLength": "Maximal {max} Zeichen sind hier erlaubt.",
@@ -157,7 +158,8 @@
         "table": "Tabelle",
         "field": "Feld",
         "row": "Zeile",
-        "view": "Ansicht"
+        "view": "Ansicht",
+        "rows": "Zeilen"
     },
     "webhook": {
         "request": "Anfrage",
@@ -210,7 +212,7 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Bitte stellen Sie zuerst die zugehörigen Tabellen wieder her.",
         "cannotRestoreAsRelatedTableTrashedDescription": "Sie können dieses Feld nicht wiederherstellen, da es von anderen Tabellen abhängt, die noch nicht gelöscht sind. Bitte stellen Sie zuerst die anderen Bezugstabellen wieder her.",
         "groupUserIsLastAdminTitle": "Kann die Gruppe nicht verlassen",
-        "groupUserIsLastAdminDescription": "Es ist nicht möglich, die Gruppe zu verlassen, da Sie der letzte Administrator sind. Bitte löschen Sie die Gruppe oder geben Sie einem anderen Benutzer Administratorrechte."
+        "groupUserIsLastAdminDescription": "Es ist nicht möglich, die Gruppe zu verlassen, weil Sie der letzte Administrator sind oder weil die Konten anderer Administratoren zur Löschung anstehen. Bitte löschen Sie die Gruppe oder geben Sie einem anderen Benutzer Admin-Rechte."
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",
@@ -235,7 +237,12 @@
         "queryParameters": "Abfrage Parameter",
         "pathParameters": "Pfad-Parameter",
         "requestBodySchema": "Aufbauschema anfordern",
-        "userFieldNamesDescription": "Wenn für den GET-Parameter \"user_field_names\" ein beliebiger Wert angegeben wird, sind die von diesem Endpunkt zurückgegebenen Feldnamen die tatsächlichen Namen der Felder.\n\n Wenn der GET-Parameter \"user_field_names\" nicht angegeben wird, lauten alle zurückgegebenen Feldnamen \"field_\", gefolgt von der ID des Feldes. Zum Beispiel bezieht sich \"field_1\" auf das Feld mit der ID \"1\"."
+        "userFieldNamesDescription": "Wenn für den GET-Parameter \"user_field_names\" ein beliebiger Wert angegeben wird, sind die von diesem Endpunkt zurückgegebenen Feldnamen die tatsächlichen Namen der Felder.\n\n Wenn der GET-Parameter \"user_field_names\" nicht angegeben wird, lauten alle zurückgegebenen Feldnamen \"field_\", gefolgt von der ID des Feldes. Zum Beispiel bezieht sich \"field_1\" auf das Feld mit der ID \"1\".",
+        "singleRow": "Einzeln",
+        "deleteRows": "Zeilen löschen",
+        "updateRows": "Zeilen aktualisieren",
+        "createRows": "Zeilen erstellen",
+        "batchRows": "Charge"
     },
     "exporterType": {
         "csv": "Exportieren in CSV"
@@ -309,13 +316,15 @@
         "variancePopDescription": "Berechnet die Populationsvarianz der Werte und gibt das Ergebnis zurück. Die Populationsvarianz sollte verwendet werden, wenn die bereitgestellten Werte eine  Wert für jeden einzelnen Datensatz in der Grundgesamtheit.",
         "avgDescription": "Ermittelt den Durchschnitt aller Werte und gibt das Ergebnis zurück.",
         "sumDescription": "Summiert alle Werte und gibt das Ergebnis zurück.",
-        "filterDescription": "Filtert einen Ausdruck, der einen Verweis auf ein Nachschlage-/Verknüpfungsfeld oder einen Aufruf einer Nachschlagefunktion enthält, nach unten."
+        "filterDescription": "Filtert einen Ausdruck, der einen Verweis auf ein Nachschlage-/Verknüpfungsfeld oder einen Aufruf einer Nachschlagefunktion enthält, nach unten.",
+        "roundDescription": "Gibt das erste Argument gerundet auf die im zweiten Argument angegebene Anzahl von Ziffern zurück.",
+        "intDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
     },
     "urlCheck": {
-        "invalidUrlEnvVarTitle": "",
-        "invalidUrlEnvVarDescription": ""
+        "invalidUrlEnvVarTitle": "Ungültiger {name}",
+        "invalidUrlEnvVarDescription": "Die Umgebungsvariable {name} ist auf einen ungültigen Wert gesetzt worden. Ihr Site-Administrator muss {name} in eine gültige URL ändern, die mit http:// oder https:// beginnt, und dann Baserow neu starten, um diesen Fehler zu beheben."
     }
 }
