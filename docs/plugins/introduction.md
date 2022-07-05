@@ -1,9 +1,9 @@
 # Introduction
 
 Baserow plugins let you fully customize and extend Baserow quickly and easily. Multiple
-plugins can be installed into a new or existing Baserow installation, have full access
-to Baserow's internals for maximum customization and are straightforward develop and
-publish.
+plugins can be installed into a new or existing Baserow installation, they get full
+access to Baserow's internals for maximum customization and are straightforward develop
+and publish.
 
 Some examples of what you can do with a Baserow plugin are:
 
@@ -16,8 +16,8 @@ Some examples of what you can do with a Baserow plugin are:
 * Install custom postgres extensions, system packages, python and node dependencies
 * And much more!
 
-They are only available for self-hosted installations currently and are **experimental**
-and subject to change.
+Baserow Plugins are only available for self-hosted installations currently and are 
+**experimental** and subject to change.
 
 1. **You should always make backups of your Baserow data before installing and using any
    plugin.**

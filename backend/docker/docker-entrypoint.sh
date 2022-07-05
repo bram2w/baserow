@@ -332,7 +332,7 @@ case "$1" in
           directory_args="$directory_args -d=$i"
         done
 
-        attachable_exec watchmedo auto-restart "$directory_args" --pattern=*.py --recursive -- bash "${BASH_SOURCE[0]} ${*:2}"
+        attachable_exec watchmedo auto-restart "$directory_args" --pattern="*.py" --recursive -- bash "${BASH_SOURCE[0]} ${*:2}"
     ;;
     backup)
         if [[ -n "$DATABASE_URL" ]]; then

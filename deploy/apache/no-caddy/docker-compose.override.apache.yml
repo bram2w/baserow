@@ -1,0 +1,23 @@
+version: "3.4"
+# This compose file is for testing our example Apache configuration locally specifically
+# with the `docker-compose.no-caddy.yml` file in the root of the repo.
+
+# To test this setup you can run:
+# ```
+# cp .env.testing .env
+# docker-compose -f ../../../docker-compose.no-caddy.yml -f docker-compose.override.apache.yml up
+# ```
+
+
+# To test you have to add `127.0.0.1 example.localhost` to your /etc/hosts.
+services:
+  apache:
+    build:
+      context: $PWD
+    ports:
+      - '80:80'
+    volumes:
+      - media:/baserow/media
+    depends_on: [backend]
+    networks:
+      local:

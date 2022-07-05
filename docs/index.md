@@ -16,7 +16,7 @@ Baserow by following one the guides below:
 
 * [Install with Docker](installation/install-with-docker.md): A step-by-step guide to
   install Baserow using docker.
-* [Install with Docker Compose](installation/install-with-docker-compose.md): A 
+* [Install with Docker Compose](installation/install-with-docker-compose.md): A
   step-by-step guide to install Baserow using Docker Compose.
 * [Install using Standalone images](installation/install-using-standalone-images.md): A
   general overview on how to run the Baserow standalone service images with your own
@@ -25,18 +25,28 @@ Baserow by following one the guides below:
   install Baserow on Cloudron.
 * [Install on Heroku](installation/install-on-heroku.md): A step-by-step guide to
   install Baserow using Heroku.
-* [Install on Ubuntu](installation/install-on-ubuntu.md): Instructions on how to install 
+* [Install on Render](installation/install-on-render.md): A step-by-step guide to
+  install Baserow using Render a Heroku alternative.
+* [Install on Ubuntu](installation/install-on-ubuntu.md): Instructions on how to install
   Docker and use it to install Baserow on a fresh ubuntu install.
-* [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated 
-  and now unsupported guide on how to manually install Baserow and its required services 
+* [Install with Traefik](installation/install-with-traefik.md): How to configure Baserow
+  when using Traefik.
+* [Install with K8S](installation/install-with-k8s.md): An example performant 
+  production ready K8S configuration for use as a starting point.
+* [Install behind Nginx](installation/install-behind-nginx.md): How to configure Baserow
+  when using a Nginx reverse proxy.
+* [Install behind Apache](installation/install-behind-apache.md): How to configure Baserow
+  when using an Apache reverse proxy.
+* [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated
+  and now unsupported guide on how to manually install Baserow and its required services
   on a fresh Ubuntu install. Please use the guides above instead.
 
 ## Baserow Tutorials
 
 * [Understanding Baserow Formulas](tutorials/understanding-baserow-formulas.md): A
   tutorial explaining how to use the formula field in Baserow.
-* [Debugging Connection Issues](tutorials/debugging-connection-issues.md): A
-  tutorial explaining how to use the formula field in Baserow.
+* [Debugging Connection Issues](tutorials/debugging-connection-issues.md): A tutorial
+  explaining how to use the formula field in Baserow.
 
 ## API Usage
 
@@ -56,8 +66,8 @@ Baserow provides various APIs detailed below:
 * [Formula Technical Guide](technical/formula-technical-guide.md): A more technical
   guide about formulas aimed at developers who want to understand and work with
   internals of Baserow formulas.
-- [Undo Redo Technical Guide](technical/undo-redo-guide.md): How Baserow implements 
-  undo redo technically.
+* [Undo Redo Technical Guide](technical/undo-redo-guide.md): How Baserow implements undo
+  redo technically.
 
 ## Development
 
@@ -80,8 +90,8 @@ Everything related to contributing and developing for Baserow.
   helper script.
 * [IntelliJ setup](./development/intellij-setup.md): How to configure Intellij to work
   well with Baserow for development purposes.
-- [Feature flags](feature-flags.md): How Baserow uses basic feature flags for
-  optionally enabling unfinished or unready features.
+* [Feature flags](./development/feature-flags.md): How Baserow uses basic feature flags for optionally
+  enabling unfinished or unready features.
 
 ## Plugins
 

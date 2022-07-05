@@ -38,6 +38,8 @@ how to become a contributor.
 * [**
   Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
 * [**
+  Render**: Easily install and scale up Baserow on Render.](docs/installation/install-on-render.md)
+* [**
   Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
 
 ## Official documentation

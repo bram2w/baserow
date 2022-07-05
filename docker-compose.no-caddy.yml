@@ -1,23 +1,27 @@
 version: "3.4"
 ########################################################################################
 #
-# READ ME FIRST!
+# This compose file runs every service separately without any reverse proxy or http
+# server to serve user uploaded files. It is intended as a starting point for people
+# who want to use their own reverse proxy and run Baserow with one service per
+# container. The web-frontend service is available by default at http://localhost:3000
+# and the backend service is available by default at http://localhost:8000 .
 #
-# Use the much simpler `docker-compose.all-in-one.yml` instead of this file
-# unless you are an advanced user!
+# To use this file you need to:
+#   1. Set the PUBLIC_BACKEND_URL to the URL that the user's browser can access the
+#      backend service on.
+#   2. Set the PUBLIC_WEB_FRONTEND_URL to the URL that the user's browser can access the
+#      web-frontend service on.
+#   3. Host the media files in the media volume on a HTTP server and set the MEDIA_URL
+#      to the URL the user's browser can access the files on.
+#   4. Ensure requests sent to the backend in /ws path are upgraded to websocket
+#      connections.
 #
-# This compose file runs every service separately using a Caddy reverse proxy to route
-# requests to the backend or web-frontend, handle websockets and to serve uploaded files
-# . Even if you have your own http proxy we recommend to simply forward requests to it
-# as it is already properly configured for Baserow.
+# See the following guides for more details and example configurations:
+#   1. https://baserow.io/docs/installation%2Finstall-behind-nginx
+#   2. https://baserow.io/docs/installation%2Finstall-behind-apache
 #
-# If you wish to continue with this more advanced compose file, it is recommended that
-# you set environment variables using the .env.example file by:
-# 1. `cp .env.example .env`
-# 2. Edit .env and fill in the first 3 variables.
-# 3. Set further environment variables as you wish.
-#
-# More documentation can be found in:
+# Also More documentation can be found in:
 # https://baserow.io/docs/installation%2Finstall-with-docker-compose
 #
 ########################################################################################
@@ -29,9 +33,9 @@ x-backend-variables: &backend-variables
   SECRET_KEY: ${SECRET_KEY:?}
   DATABASE_PASSWORD: ${DATABASE_PASSWORD:?}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?}
-  # If you manually change this line make sure you also change the duplicate line in
-  # the web-frontend service.
-  BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
+
+  PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:8000}
+  PUBLIC_WEB_FRONTEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:3000}
 
   # Set these if you want to use an external postgres instead of the db service below.
   DATABASE_USER: ${DATABASE_USER:-baserow}
@@ -88,8 +92,7 @@ x-backend-variables: &backend-variables
   FEATURE_FLAGS:
 
   PRIVATE_BACKEND_URL: http://backend:8000
-  PUBLIC_BACKEND_URL:
-  PUBLIC_WEB_FRONTEND_URL:
+  BASEROW_PUBLIC_URL:
   MEDIA_URL:
   MEDIA_ROOT:
 
@@ -112,36 +115,11 @@ x-backend-variables: &backend-variables
 
 
 services:
-  # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
-  # requests to either the backend or web-frontend and also serving user uploaded files
-  # from the media volume.
-  caddy:
-    image: caddy:2.4.6
-    restart: unless-stopped
-    environment:
-      # Controls what port the Caddy server binds to inside its container.
-      BASEROW_CADDY_ADDRESSES: ${BASEROW_CADDY_ADDRESSES:-:80}
-      PRIVATE_WEB_FRONTEND_URL: ${PRIVATE_WEB_FRONTEND_URL:-http://web-frontend:3000}
-      PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
-    ports:
-      - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_PORT:-80}:80"
-      - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_SSL_PORT:-443}:443"
-    volumes:
-      - $PWD/Caddyfile:/etc/caddy/Caddyfile
-      - media:/baserow/media
-      - caddy_config:/config
-      - caddy_data:/data
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "http://localhost/caddy-health-check" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      local:
-
   backend:
     image: baserow/backend:1.10.2
     restart: unless-stopped
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
     environment:
       <<: *backend-variables
     depends_on:
@@ -155,6 +133,8 @@ services:
   web-frontend:
     image: baserow/web-frontend:1.10.2
     restart: unless-stopped
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
       PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}

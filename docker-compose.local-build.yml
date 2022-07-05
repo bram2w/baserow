@@ -29,6 +29,7 @@ x-backend-variables: &backend-variables
   REDIS_PORT:
   REDIS_PROTOCOL:
   REDIS_URL:
+  REDIS_USER:
 
   # Set these to enable Baserow to send emails.
   EMAIL_SMTP:
@@ -48,6 +49,7 @@ x-backend-variables: &backend-variables
   AWS_S3_CUSTOM_DOMAIN:
 
   # Misc settings see https://baserow.io/docs/installation%2Fconfiguration for info
+  BASEROW_AMOUNT_OF_WORKERS:
   BASEROW_ROW_PAGE_SIZE_LIMIT:
   BATCH_ROWS_SIZE_LIMIT:
   INITIAL_TABLE_DATA_LIMIT:
@@ -84,6 +86,13 @@ x-backend-variables: &backend-variables
   BASEROW_COUNT_ROWS_ENABLED:
   DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
   BASEROW_FULL_HEALTHCHECKS:
+  BASEROW_DISABLE_MODEL_CACHE:
+  BASEROW_PLUGIN_DIR:
+  BASEROW_JOB_EXPIRATION_TIME_LIMIT:
+  BASEROW_JOB_CLEANUP_INTERVAL_MINUTES:
+  BASEROW_MAX_FILE_IMPORT_ERROR_COUNT:
+  BASEROW_JOB_SOFT_TIME_LIMIT:
+  BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD:
 
 
 services:
@@ -147,6 +156,8 @@ services:
       HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
       DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
       FEATURE_FLAGS:
+      ADDITIONAL_MODULES:
+      BASEROW_MAX_IMPORT_FILE_SIZE_MB:
     depends_on:
       - backend
     networks:
