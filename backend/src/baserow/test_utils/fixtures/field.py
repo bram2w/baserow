@@ -1,4 +1,6 @@
 from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
+from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import (
     MultipleSelectField,
     TextField,
@@ -19,6 +21,7 @@ from baserow.contrib.database.fields.models import (
     FormulaField,
     LookupField,
 )
+from baserow.contrib.database.formula import FormulaHandler
 
 
 class FieldFixtures:
@@ -145,7 +148,9 @@ class FieldFixtures:
 
         return field
 
-    def create_link_row_field(self, user=None, create_field=True, **kwargs):
+    def create_link_row_field(
+        self, user=None, create_field=True, setup_dependencies=True, **kwargs
+    ):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -162,6 +167,9 @@ class FieldFixtures:
 
         if create_field:
             self.create_model_field(kwargs["table"], field)
+
+        if setup_dependencies:
+            FieldDependencyHandler().rebuild_dependencies(field, FieldCache())
 
         return field
 
@@ -313,7 +321,14 @@ class FieldFixtures:
 
         return field
 
-    def create_formula_field(self, user=None, create_field=True, **kwargs):
+    def create_formula_field(
+        self,
+        user=None,
+        create_field=True,
+        setup_dependencies=True,
+        calculate_cell_values=True,
+        **kwargs,
+    ):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -342,10 +357,21 @@ class FieldFixtures:
 
         if create_field:
             self.create_model_field(kwargs["table"], field)
+            if calculate_cell_values:
+                model = field.table.get_model()
+                expr = FormulaHandler.baserow_expression_to_update_django_expression(
+                    field.cached_typed_internal_expression, model
+                )
+                model.objects_and_trash.all().update(**{f"{field.db_column}": expr})
+
+        if setup_dependencies:
+            FieldDependencyHandler().rebuild_dependencies(field, FieldCache())
 
         return field
 
-    def create_lookup_field(self, user=None, create_field=True, **kwargs):
+    def create_lookup_field(
+        self, user=None, create_field=True, setup_dependencies=True, **kwargs
+    ):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -362,5 +388,8 @@ class FieldFixtures:
 
         if create_field:
             self.create_model_field(kwargs["table"], field)
+
+        if setup_dependencies:
+            FieldDependencyHandler().rebuild_dependencies(field, FieldCache())
 
         return field

@@ -3,13 +3,23 @@ export default (client) => {
     fetchAll(databaseId) {
       return client.get(`/database/tables/database/${databaseId}/`)
     },
-    create(databaseId, values, initialData = null, firstRowHeader = false) {
+    create(
+      databaseId,
+      values,
+      initialData = null,
+      firstRowHeader = false,
+      config = null
+    ) {
       if (initialData !== null) {
         values.data = initialData
         values.first_row_header = firstRowHeader
       }
 
-      return client.post(`/database/tables/database/${databaseId}/`, values)
+      return client.post(
+        `/database/tables/database/${databaseId}/async/`,
+        values,
+        config
+      )
     },
     get(tableId) {
       return client.get(`/database/tables/${tableId}/`)

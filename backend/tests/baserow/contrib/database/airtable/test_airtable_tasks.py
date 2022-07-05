@@ -3,21 +3,21 @@ import responses
 
 from pytz import BaseTzInfo
 from unittest.mock import patch
-from celery.exceptions import SoftTimeLimitExceeded
-from requests.exceptions import ConnectionError
 
 from django.db import connections
 from django.core.cache import cache
 
 from baserow.core.utils import ChildProgressBuilder
-from baserow.contrib.database.airtable.tasks import run_import_from_airtable
-from baserow.contrib.database.airtable.models import AirtableImportJob
-from baserow.contrib.database.airtable.constants import (
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED,
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_FINISHED,
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING,
+
+from baserow.core.jobs.models import Job
+from baserow.core.jobs.cache import job_progress_key
+from baserow.core.jobs.tasks import run_async_job
+from baserow.core.jobs.constants import (
+    JOB_FAILED,
+    JOB_FINISHED,
 )
-from baserow.contrib.database.airtable.cache import airtable_import_job_progress_key
+
+from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
 
 
@@ -38,29 +38,11 @@ def test_run_import_from_airtable(
     created_database = data_fixture.create_database_application()
 
     def update_progress_slow(*args, **kwargs):
-        nonlocal job
         nonlocal created_database
 
         progress_builder = kwargs["progress_builder"]
         progress = ChildProgressBuilder.build(progress_builder, 100)
-        progress.increment(50, "test")
-
-        # Check if the job has updated in the transaction
-        job.refresh_from_db()
-        assert job.progress_percentage == 50
-        assert job.state == "test"
-
-        # We're using the second connection to check if we can get the most recent
-        # progress value while the transaction is still active.
-        job_copy = AirtableImportJob.objects.using("default-copy").get(pk=job.id)
-        # Normal progress is expected to be 0
-        assert job_copy.progress_percentage == 0
-        assert job_copy.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING
-        # Progress stored in Redis is expected to be accurate.
-        assert job_copy.get_cached_progress_percentage() == 50
-        assert job_copy.get_cached_state() == "test"
-
-        progress.increment(50)
+        progress.increment(100)
 
         return ([created_database], {})
 
@@ -68,10 +50,10 @@ def test_run_import_from_airtable(
 
     job = data_fixture.create_airtable_import_job()
 
-    with pytest.raises(AirtableImportJob.DoesNotExist):
-        run_import_from_airtable(0)
+    with pytest.raises(Job.DoesNotExist):
+        run_async_job(0)
 
-    run_import_from_airtable(job.id)
+    run_async_job(job.id)
 
     mock_import_from_airtable_to_group.assert_called_once()
     args = mock_import_from_airtable_to_group.call_args
@@ -83,100 +65,22 @@ def test_run_import_from_airtable(
 
     job = AirtableImportJob.objects.get(pk=job.id)
     assert job.progress_percentage == 100
-    assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FINISHED
+    assert job.state == JOB_FINISHED
     assert job.database_id == created_database.id
 
     # The cache entry will be removed when when job completes.
-    assert cache.get(airtable_import_job_progress_key(job.id)) is None
+    assert cache.get(job_progress_key(job.id)) is None
 
     job_copy = AirtableImportJob.objects.using("default-copy").get(pk=job.id)
     assert job_copy.progress_percentage == 100
-    assert job_copy.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FINISHED
+    assert job_copy.state == JOB_FINISHED
     assert job_copy.get_cached_progress_percentage() == 100
-    assert job_copy.get_cached_state() == AIRTABLE_EXPORT_JOB_DOWNLOADING_FINISHED
+    assert job_copy.get_cached_state() == JOB_FINISHED
     assert job_copy.database_id == created_database.id
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application"].id == job.database_id
     assert send_mock.call_args[1]["user"] is None
-
-
-@pytest.mark.django_db(transaction=True)
-@responses.activate
-@patch(
-    "baserow.contrib.database.airtable.handler.AirtableHandler"
-    ".import_from_airtable_to_group"
-)
-def test_run_import_from_airtable_failing_import(
-    mock_import_from_airtable_to_group, data_fixture
-):
-    def update_progress_slow(*args, **kwargs):
-        raise Exception("test-1")
-
-    mock_import_from_airtable_to_group.side_effect = update_progress_slow
-
-    job = data_fixture.create_airtable_import_job()
-
-    with pytest.raises(Exception):
-        run_import_from_airtable(job.id)
-
-    job.refresh_from_db()
-    assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
-    assert job.error == "test-1"
-    assert (
-        job.human_readable_error
-        == "Something went wrong while importing the Airtable base."
-    )
-
-
-@pytest.mark.django_db(transaction=True)
-@responses.activate
-@patch(
-    "baserow.contrib.database.airtable.handler.AirtableHandler"
-    ".import_from_airtable_to_group"
-)
-def test_run_import_from_airtable_failing_time_limit(
-    mock_import_from_airtable_to_group, data_fixture
-):
-    def update_progress_slow(*args, **kwargs):
-        raise SoftTimeLimitExceeded("test")
-
-    mock_import_from_airtable_to_group.side_effect = update_progress_slow
-
-    job = data_fixture.create_airtable_import_job()
-
-    with pytest.raises(SoftTimeLimitExceeded):
-        run_import_from_airtable(job.id)
-
-    job.refresh_from_db()
-    assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
-    assert job.error == "SoftTimeLimitExceeded('test',)"
-    assert job.human_readable_error == "The import job took too long and was timed out."
-
-
-@pytest.mark.django_db(transaction=True)
-@responses.activate
-@patch(
-    "baserow.contrib.database.airtable.handler.AirtableHandler"
-    ".import_from_airtable_to_group"
-)
-def test_run_import_from_airtable_failing_connection_error(
-    mock_import_from_airtable_to_group, data_fixture
-):
-    def update_progress_slow(*args, **kwargs):
-        raise ConnectionError("connection error")
-
-    mock_import_from_airtable_to_group.side_effect = update_progress_slow
-
-    job = data_fixture.create_airtable_import_job()
-
-    with pytest.raises(ConnectionError):
-        run_import_from_airtable(job.id)
-
-    job.refresh_from_db()
-    assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
-    assert job.error == "connection error"
-    assert job.human_readable_error == "The Airtable server could not be reached."
 
 
 @pytest.mark.django_db(transaction=True)
@@ -194,10 +98,10 @@ def test_run_import_shared_view(mock_import_from_airtable_to_group, data_fixture
     job = data_fixture.create_airtable_import_job()
 
     with pytest.raises(AirtableShareIsNotABase):
-        run_import_from_airtable(job.id)
+        run_async_job(job.id)
 
     job.refresh_from_db()
-    assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
+    assert job.state == JOB_FAILED
     assert job.error == "The `shared_id` is not a base."
     assert (
         job.human_readable_error
@@ -220,10 +124,10 @@ def test_run_import_from_airtable_with_timezone(
 
     job = data_fixture.create_airtable_import_job(timezone="Europe/Amsterdam")
 
-    with pytest.raises(AirtableImportJob.DoesNotExist):
-        run_import_from_airtable(0)
+    with pytest.raises(Job.DoesNotExist):
+        run_async_job(0)
 
-    run_import_from_airtable(job.id)
+    run_async_job(job.id)
 
     mock_import_from_airtable_to_group.assert_called_once()
     args = mock_import_from_airtable_to_group.call_args

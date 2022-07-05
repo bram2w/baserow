@@ -221,7 +221,9 @@
     },
     "fieldContext": {
         "editField": "Veld bewerken",
-        "deleteField": "Veld verwijderen"
+        "deleteField": "Veld verwijderen",
+        "hideField": "Veld verbergen",
+        "showField": "Toon veld"
     },
     "fieldForm": {
         "name": "Naam",
@@ -253,7 +255,9 @@
         "search": "Zoek rijen"
     },
     "rowEditModal": {
-        "addField": "veld toevoegen"
+        "addField": "veld toevoegen",
+        "showHiddenFields": "Verborgen velden weergeven",
+        "hideHiddenFields": "Verborgen velden verbergen"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Een andere optie toevoegen"
@@ -322,7 +326,18 @@
         "title": "Nieuwe tabel maken",
         "importLabel": "Wil je bestaande gegevens importeren?",
         "newTable": "Begin met een nieuwe tabel",
-        "addButton": "Tabel toevoegen"
+        "addButton": "Tabel toevoegen",
+        "uploading": "Uploaden...",
+        "preparing": "Voorbereiden van data...",
+        "showReport": "Foutrapport tonen",
+        "reportTitleFailure": "Mislukte rijen",
+        "openCreatedTable": "Open aangemaakte tabel",
+        "reportTitleSuccess": "Import succesvol, maar...",
+        "importError": "Er is iets misgegaan tijdens het importeren van het bestand",
+        "stateRowCreation": "Importeren...",
+        "reportMessage": "De volgende rij indexen konden niet worden geïmporteerd:",
+        "stateCreateTable": "Tabel maken...",
+        "statePreValidation": "Valideren van gegevens..."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klik om de formule te bewerken",
@@ -412,7 +427,8 @@
         "exportView": "Weergave exporteren",
         "renameView": "Weergave hernoemen",
         "deleteView": "Weergave verwijderen",
-        "webhooks": "Webhooks"
+        "webhooks": "Webhooks",
+        "duplicateView": "View dupliceren"
     },
     "deleteViewModal": {
         "title": "Verwijder {name}",
@@ -445,14 +461,15 @@
         "insertRowBelow": "Voeg rij hieronder in",
         "enlargeRow": "Vergroot rij",
         "deleteRow": "Rij verwijderen",
-        "rowCount": "Geen rijen | 1 rij | {count} rijen"
+        "rowCount": "Geen rijen | 1 rij | {count} rijen",
+        "duplicateRow": "Rij dupliceren"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
     },
     "gridViewIdentifierOptions": {
-        "id": "",
-        "count": ""
+        "id": "Rij identificatie",
+        "count": "Tellen"
     },
     "previewAny": {
         "externalWarning": "Als je een bestand opent via een externe dienst, wordt je bestand blootgesteld aan hun servers."
@@ -542,7 +559,8 @@
         "stateImporting": "Importeren",
         "stateImportingTable": "Importeren van tabel {table}",
         "errorJobAlreadyRunningTitle": "Al bezig",
-        "errorJobAlreadyRunningDescription": "Er loopt al een andere import taak. U moet wachten tot die klaar is voordat u een andere start."
+        "errorJobAlreadyRunningDescription": "Er loopt al een andere import taak. U moet wachten tot die klaar is voordat u een andere start.",
+        "linkError": "De link moet er als volgt uitzien: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
         "addSelectField": "enkelvoudig keuzeveld toevoegen"
@@ -574,5 +592,27 @@
             "incorrectPasswordTitle": "Onjuist wachtwoord",
             "incorrectPasswordText": "Het opgegeven wachtwoord is onjuist."
         }
+    },
+    "apiDocsTableDeleteRows": {
+        "description": "Verwijdert bestaande {name} rijen.",
+        "items": "Een array van rij-ids die moeten worden verwijderd."
+    },
+    "apiDocsTableUpdateRows": {
+        "description": "Werkt bestaande {name} rijen bij.",
+        "id": "De rij id."
+    },
+    "apiDocsTableCreateRows": {
+        "description": "Maak nieuwe {name} rijen.",
+        "before": "Indien meegegeven dan zullen de nieuw aangemaakte rijen voor de rij met het meegegeven id geplaatst worden."
+    },
+    "importer": {
+        "decoding": "Gegevens decoderen",
+        "loading": "Bestand laden",
+        "inProgress": "In uitvoering...",
+        "parsing": "Gegevens parseren",
+        "preparing": "Gegevens voorbereiden"
+    },
+    "databaseDashboardSidebarLinks": {
+        "apiDocumentation": "API-documentatie"
     }
 }

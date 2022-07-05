@@ -1,12 +1,17 @@
 from django.urls import re_path
 
-from .views import TablesView, TableView, OrderTablesView
+from .views import TablesView, TableView, OrderTablesView, AsyncCreateTableView
 
 
 app_name = "baserow.contrib.database.api.tables"
 
 urlpatterns = [
     re_path(r"database/(?P<database_id>[0-9]+)/$", TablesView.as_view(), name="list"),
+    re_path(
+        r"database/(?P<database_id>[0-9]+)/async/$",
+        AsyncCreateTableView.as_view(),
+        name="async_create",
+    ),
     re_path(
         r"database/(?P<database_id>[0-9]+)/order/$",
         OrderTablesView.as_view(),

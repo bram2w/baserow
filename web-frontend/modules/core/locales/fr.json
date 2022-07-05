@@ -91,7 +91,8 @@
         "invitationDescription": "invité·e depuis {since}",
         "sendInvite": "Envoyer l'invitation",
         "userAlreadyInGroupTitle": "L'utilisateur est déjà dans le groupe.",
-        "userAlreadyInGroupText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le groupe."
+        "userAlreadyInGroupText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le groupe.",
+        "userDescriptionPendingDeletion": "{user} - en attente de suppression"
     },
     "groupInviteForm": {
         "invitationFormTitle": "Inviter par email",
@@ -193,7 +194,7 @@
     "dashboard": {
         "title": "Statistiques",
         "alertTitle": "Soutenez-nous !",
-        "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à nous sponsoriser, étoiler, partager. En nous sponsorisant, vous aurez un accès aux fonctionnalités premium en avance !",
+        "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à nous étoiler et à le partager avec vos relations. En partageant Baserow vous nous aidez à améliorer le produit et à le rendre encore plus utile pour vous.",
         "tweetContent": "Découvrez @baserow, une base de données no-code libre, une alternative à Airtable !",
         "redditTitle": "Baserow - Une base de données no-code libre",
         "noGroupTitle": "Aucun groupe",
@@ -220,14 +221,16 @@
         "errorInvalidLinkMessage": "Il n'est pas possible de réinitialiser le mot de passe car le lien est invalide.",
         "errorLinkExpiredTitle": "Lien expiré",
         "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau.",
-        "disabled": "",
-        "disabledMessage": ""
+        "disabled": "La réinitialisation du mot de passe est désactivée",
+        "disabledMessage": "Il n’est pas possible de réinitialiser le mot de passe car cette fonctionnalité a été désactivé."
     },
     "signup": {
         "headTitle": "Création d'un nouveau compte",
         "title": "Création de compte",
         "disabled": "Création de compte desactivée",
-        "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."
+        "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée.",
+        "requireFirstUser": "Bienvenue sur Baserow !",
+        "requireFirstUserMessage": "Veuillez remplir le formulaire ci-dessous afin de créer le compte administrateur."
     },
     "forgotPassword": {
         "title": "Mot de passe oublié",
@@ -242,14 +245,18 @@
         "baserowInstanceId": "Identifiant de l'instance de Baserow",
         "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
         "accountRestrictions": "Restriction de création de comptes",
-        "settingAllowResetPasswordName": "",
-        "settingAllowResetPasswordDescription": "",
-        "settingAllowResetPasswordWarning": "",
+        "settingAllowResetPasswordName": "Activer la réinitialisation du mot de passe",
+        "settingAllowResetPasswordDescription": "Par défaut, les utilisateurs peuvent demander un lien de réinitialisation de leur mot de passe.",
+        "settingAllowResetPasswordWarning": "Veuillez noter que vous vous bloquez également l’accès et que l'accès ne pourra pas être rétabli si vous avait oublié votre mot de passe.",
         "settingAllowNewAccountsName": "Autoriser la création de compte",
         "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
         "enabled": "Autoriser",
         "settingAllowSignupsViaGroupInvitationsName": "Autoriser la création de compte sur invitation",
-        "settingAllowSignupsViaGroupInvitationDescription": "Cette option permet aux utilisateurs invités par d'autres de créer des comptes même si la création de compte à été désactivée de manière globale."
+        "settingAllowSignupsViaGroupInvitationDescription": "Cette option permet aux utilisateurs invités par d'autres de créer des comptes même si la création de compte à été désactivée de manière globale.",
+        "userDeletionGraceDelay": "Suppression d'utilisateurs",
+        "settingUserDeletionGraceDelay": "Délai de grâce",
+        "invalidAccountDeletionGraceDelay": "Cette valeur est obligatoire et doit être un nombre entier positif inférieur à 32000",
+        "settingUserDeletionGraceDelayDescription": "Il s'agit du nombre de jours sans connexion après lequel un compte planifié pour être supprimé est définitivement supprimé."
     },
     "copyingNotification": {
         "title": "Copie en cours...",
@@ -274,5 +281,112 @@
         "content": "Vous ne semblez pas avoir la permission de visualiser cette ressource.",
         "action": "Rafraîchir la page",
         "title": "Erreur d’autorisation"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "Ajouter tout",
+            "removeAll": "Enlever tout",
+            "addField": "Ajouter un champ"
+        },
+        "fieldsDescription": "Tous les champs sont dans le formulaire.",
+        "prefillInfoLink": "Pré-remplir les valeurs dynamiquement",
+        "modal": {
+            "title": "Pré-remplir les valeurs dynamiquement",
+            "descriptionPartOne": "Les formulaires peuvent être préremplis afin d'aider l'utilisateur à remplir le formulaire plus rapidement.",
+            "descriptionPartTwo": "Tous les champs qui sont disponibles dans le formulaire peuvent être pré-remplis.",
+            "howToPrefill": {
+                "title": "Comment pré-remplir un formulaire",
+                "description": "Si vous souhaitez pré-remplir un formulaire, vous pouvez le faire via des paramètres de requête ajoutés à l'url publique du formulaire. Ces paramètres de requête sont préfixés par `prefill` pour éviter toute collision avec d'éventuels futurs paramètres de requête."
+            },
+            "format": {
+                "title": "Format",
+                "description": "Le format des paramètres de la requête est le suivant :",
+                "codeSnippet": "?prefill_<field_name>=<value>"
+            },
+            "example": {
+                "title": "Exemple",
+                "description": "Dans l'exemple ci-dessous, nous souhaitons pré-remplir un champ appelé `Name` avec la valeur de `Mike`",
+                "codeSnippet": "?prefill_Name=Mike"
+            },
+            "spaces": {
+                "title": "Espaces",
+                "description": "Les espaces dans le nom du champ sont remplacés par `+` pour éviter tout problème avec le paramètre de requête.",
+                "codeSnippet": "?prefill_my+field=Mike"
+            },
+            "multipleValues": {
+                "title": "Valeurs multiples",
+                "description": "Si vous voulez pré-remplir plusieurs champs, vous pouvez le faire en ajoutant un `,` entre les valeurs.",
+                "codeSnippet": "?prefill_multi+select=Mike,John"
+            },
+            "specialFieldTypes": {
+                "title": "Types de champs spéciaux",
+                "description": "En général, la valeur de pré-remplissage est la même que la valeur du champ. Mais il existe quelques exceptions où la valeur est traduite en une valeur différente.",
+                "ratingField": {
+                    "title": "Champ de notation",
+                    "description": "Un champ d'évaluation accepte un nombre pour indiquer le nombre d'étoiles à remplir.",
+                    "codeSnippet": "?prefill_rating=3"
+                },
+                "linkRowField": {
+                    "title": "Lien vers une table",
+                    "description": "Un champ de ligne de lien peut accepter la valeur qui s'affiche dans la liste déroulante de sélection.",
+                    "codeSnippet": "?prefill_link+row=Mike"
+                },
+                "selectField": {
+                    "title": "Champ de sélection unique / sélection multiple",
+                    "description": "Un champ de sélection unique peut accepter la valeur qui s'affiche dans la liste déroulante de sélection. Il en va de même pour le champ de sélection multiple, mais il peut également accepter plusieurs valeurs.",
+                    "codeSnippet": "?prefill_single+select=Mike"
+                },
+                "dateField": {
+                    "title": "Champ Date",
+                    "description": "Un champ de date peut accepter une date dans les formats suivants et utilisera le format de date du champ pour analyser la date.",
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
+                }
+            }
+        }
+    },
+    "deleteAccountSettings": {
+        "groupNotice": "Les groupes sans propriétaires seront être supprimés",
+        "orphanGroups": "Seront également supprimés définitivement après le délais de grâce",
+        "password": "Mot de passe",
+        "passwordConfirm": "Répétez le mot de passe",
+        "repeatPasswordMatchError": "Ce champ doit correspondre au premier champ de mot de passe.",
+        "submitButton": "Supprimer le compte",
+        "errorInvalidPasswordTitle": "Mot de passe invalide",
+        "errorInvalidPasswordMessage": "Impossible de supprimer votre compte car le mot de passe est invalide.",
+        "errorUserIsLastAdminMessage": "Impossible de supprimer votre compte car vous êtes le dernier administrateur de cette instance de Baserow.",
+        "accountDeletedSuccessMessage": "La suppression de votre compte a été programmée.",
+        "groupLoadingError": "La vérification des groupes a échouée",
+        "groupLoadingErrorDescription": "La vérifications des groupes qui seront supprimés a échouée, veuillez rafraîchir la page.",
+        "accountDeletedSuccessTitle": "Suppression de compte programmée",
+        "description": "Vous pouvez programmé la suppression de votre compte en entrant votre mot de passe actuel et en cliquant sur le bouton. Votre compte sera définitivement supprimé après {days} jours. Pendant ce délais, si vous vous connectez de nouveau, la suppression de votre compte sera annulée.",
+        "orphanGroupMemberCount": "non partagé|partagé avec 1 utilisateur|partagé avec {count} utilisateurs",
+        "title": "Supprimer le compte",
+        "groupNoticeDescription": "Quand votre compte est définitivement supprimé, tous les groupes et leurs données associées pour lesquels vous êtes le dernier administrateur actif sont également supprimés. Les groupes suivants sont ceux qui seront supprimés car vous êtes le seul administrateur. Afin d'éviter qu'ils soient supprimés, vous devez donner les droits d'administration à un autre utilisateur avant de supprimer votre compte.",
+        "errorUserIsLastAdminTitle": "Dernier administrateur"
+    },
+    "pastingNotification": {
+        "title": "Collage...",
+        "content": "Préparation des données"
+    },
+    "dashboardSidebar": {
+        "groups": "Groupes",
+        "links": "Liens",
+        "knowledgeBase": "Base de connaissances",
+        "userSettings": "Paramètres utilisateur",
+        "trash": "Corbeille",
+        "logoff": "Se déconnecter",
+        "tutorials": "Tutoriels"
+    },
+    "job": {
+        "stateFailed": "Échec",
+        "errorJobAlreadyRunningTitle": "Déjà en cours d’exécution",
+        "errorJobAlreadyRunningDescription": "Une autre tâche d'importation est déjà en cours. Vous devez attendre que celle-ci se termine avant d'en lancer une autre.",
+        "statePending": "En attente…",
+        "stateStarted": "Démarré…",
+        "stateFinished": "Terminé"
+    },
+    "clearingNotification": {
+        "content": "Préparation des données",
+        "title": "Nettoyage..."
     }
 }

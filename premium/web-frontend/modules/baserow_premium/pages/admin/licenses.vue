@@ -27,17 +27,21 @@
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
           {{ $t('licenses.admin') }}
         </li>
+        <li class="licenses__feature">
+          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
+          {{ $t('licenses.rowColoring') }}
+        </li>
       </ul>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.registerModal.show()">
           <i class="fas fa-plus"></i>
           {{ $t('licenses.registerLicense') }}
         </a>
-        <a
+        <RedirectToBaserowModal
           :href="'https://baserow.io/get-license/' + instanceId + '/'"
           class="button button--large button--ghost margin-left-2"
           target="_blank"
-          >{{ $t('licenses.getLicense') }}</a
+          >{{ $t('licenses.getLicense') }}</RedirectToBaserowModal
         >
       </div>
       <p>
@@ -68,15 +72,15 @@
             <i class="fas fa-plus"></i>
             {{ $t('licenses.registerLicense') }}
           </a>
-          <a
+          <RedirectToBaserowModal
             :href="'https://baserow.io/get-license/' + instanceId + '/'"
             class="button button--ghost"
             target="_blank"
-            >{{ $t('licenses.getLicense') }}</a
+            >{{ $t('licenses.getLicense') }}</RedirectToBaserowModal
           >
         </div>
       </div>
-      <p>
+      <div class="margin-bottom-3">
         {{ $t('licenses.baserowInstanceId') }}
         <span class="licenses__instance-id">{{ instanceId }}</span>
         <a
@@ -88,7 +92,7 @@
           {{ $t('action.copy') }}
           <Copied ref="instanceIdCopied"></Copied>
         </a>
-      </p>
+      </div>
       <div class="licenses__items">
         <nuxt-link
           v-for="license in orderedLicenses"
@@ -155,12 +159,13 @@
 <script>
 import LicenseService from '@baserow_premium/services/license'
 import RegisterLicenseModal from '@baserow_premium/components/license/RegisterLicenseModal'
+import RedirectToBaserowModal from '@baserow_premium/components/RedirectToBaserowModal'
 import moment from '@baserow/modules/core/moment'
 import SettingsService from '@baserow/modules/core/services/settings'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
-  components: { RegisterLicenseModal },
+  components: { RedirectToBaserowModal, RegisterLicenseModal },
   layout: 'app',
   middleware: 'staff',
   async asyncData({ app, error }) {

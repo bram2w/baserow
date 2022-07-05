@@ -1,7 +1,8 @@
 import abc
-from typing import List, Optional, Type, Dict, Set
+from typing import List, Optional, Type
 
 from django.db.models import (
+    DecimalField,
     Expression,
     Model,
     ExpressionWrapper,
@@ -9,6 +10,7 @@ from django.db.models import (
     Subquery,
     Value,
 )
+from django.db.models.functions import Coalesce
 
 from baserow.contrib.database.formula.ast.tree import (
     BaserowFunctionCall,
@@ -18,6 +20,9 @@ from baserow.contrib.database.formula.ast.tree import (
 )
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
     AndExpr,
+)
+from baserow.contrib.database.formula.expression_generator.generator import (
+    WrappedExpressionWithMetadata,
 )
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
@@ -111,16 +116,17 @@ class ZeroArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[Expression],
+        args: List[WrappedExpressionWithMetadata],
         model: Type[Model],
         model_instance: Optional[Model],
-        pre_annotations: Dict[str, Expression],
-        aggregate_filters: List[Expression],
-        join_ids: Set[str],
-    ) -> Expression:
-        return self.to_django_expression()
+    ) -> WrappedExpressionWithMetadata:
+        expr = WrappedExpressionWithMetadata(self.to_django_expression())
+        if self.aggregate:
+            return aggregate_wrapper(expr, model)
+        else:
+            return expr
 
-    def call_and_type_with(self) -> BaserowFunctionCall[BaserowFormulaType]:
+    def __call__(self) -> BaserowFunctionCall[BaserowFormulaType]:
         return self.call_and_type_with_args([])
 
 
@@ -135,18 +141,17 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
     aggregate = False
 
     @property
+    @abc.abstractmethod
     def arg_type(self) -> BaserowSingleArgumentTypeChecker:
         """
         Override this property to set the required argument type for the single argument
         provided to this function. Only when the argument meets the type requirement
         will type_function be called with the argument that matches.
 
-        The default definition if not overridden will allow all valid formula types.
-
         :return: A BaserowSingleArgumentTypeChecker
         """
 
-        return [BaserowFormulaValidType]
+        pass
 
     @property
     def arg_types(self) -> BaserowArgumentTypeChecker:
@@ -219,53 +224,55 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[Expression],
+        args: List[WrappedExpressionWithMetadata],
         model: Type[Model],
         model_instance: Optional[Model],
-        pre_annotations: Dict[str, Expression],
-        aggregate_filters: List[Expression],
-        join_ids: Set[str],
-    ) -> Expression:
-        django_expr = self.to_django_expression(args[0])
-        if self.aggregate:
-            return aggregate_wrapper(
-                django_expr, model, pre_annotations, aggregate_filters, join_ids
-            )
-        else:
-            return django_expr
+    ) -> WrappedExpressionWithMetadata:
+        expr = WrappedExpressionWithMetadata.from_args(
+            self.to_django_expression(args[0].expression), args
+        )
 
-    def call_and_type_with(
+        if self.aggregate:
+            return aggregate_wrapper(expr, model)
+        else:
+            return expr
+
+    def __call__(
         self, arg: BaserowExpression[BaserowFormulaType]
     ) -> BaserowFunctionCall[BaserowFormulaType]:
         return self.call_and_type_with_args([arg])
 
 
 def aggregate_wrapper(
-    aggregate_func_expr, model, pre_annotations, aggregate_filters, join_ids
-):
+    expr_with_metadata: WrappedExpressionWithMetadata,
+    model: Type[Model],
+) -> WrappedExpressionWithMetadata:
+    aggregate_filters = expr_with_metadata.aggregate_filters
+    pre_annotations = expr_with_metadata.pre_annotations
     if len(aggregate_filters) > 0:
-        combined_filter = Value(True)
+        combined_filter: Expression = Value(True)
         for f in aggregate_filters:
             combined_filter = AndExpr(combined_filter, f)
-        aggregate_func_expr.filter = combined_filter
-        aggregate_filters.clear()
+        expr_with_metadata.expression.filter = combined_filter
 
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
     not_null_filters_for_inner_join = {
         key + "__isnull": False for key in pre_annotations
     }
-    expr = ExpressionWrapper(
-        Subquery(
-            model.objects_and_trash.annotate(**pre_annotations)
-            .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
-            .values(result=aggregate_func_expr),
-        ),
-        output_field=aggregate_func_expr.output_field,
+    expr: Expression = Subquery(
+        model.objects_and_trash.annotate(**pre_annotations)
+        .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
+        .values(result=expr_with_metadata.expression),
     )
-    pre_annotations.clear()
-    join_ids.clear()
-    return expr
+
+    output_field = expr_with_metadata.expression.output_field
+    # if the output field type is a number, return 0 instead of null
+    if isinstance(output_field, DecimalField):
+        expr = Coalesce(expr, Value(0), output_field=output_field)
+    return WrappedExpressionWithMetadata(
+        ExpressionWrapper(expr, output_field=output_field)
+    )
 
 
 class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
@@ -279,32 +286,31 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
     aggregate = False
 
     @property
+    @abc.abstractmethod
     def arg1_type(self) -> BaserowSingleArgumentTypeChecker:
         """
         Override this property to set the required argument type for the first arg
         provided to this function. Only when all arguments meet the type requirements
         defined in the argX_type properties will type_function be called.
 
-        The default definition if not overridden will allow all valid formula types.
 
         :return: A BaserowSingleArgumentTypeChecker
         """
 
-        return [BaserowFormulaValidType]
+        pass
 
     @property
+    @abc.abstractmethod
     def arg2_type(self) -> BaserowSingleArgumentTypeChecker:
         """
         Override this property to set the required argument type for the second arg
         provided to this function. Only when all arguments meet the type requirements
         defined in the argX_type properties will type_function be called.
 
-        The default definition if not overridden will allow all valid formula types.
-
         :return: A BaserowSingleArgumentTypeChecker
         """
 
-        return [BaserowFormulaValidType]
+        pass
 
     @property
     def arg_types(self) -> BaserowArgumentTypeChecker:
@@ -380,22 +386,19 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[Expression],
+        args: List[WrappedExpressionWithMetadata],
         model: Type[Model],
         model_instance: Optional[Model],
-        pre_annotations: Dict[str, Expression],
-        aggregate_filters: List[Expression],
-        join_ids: Set[str],
-    ) -> Expression:
-        django_expr = self.to_django_expression(args[0], args[1])
+    ) -> WrappedExpressionWithMetadata:
+        expr = WrappedExpressionWithMetadata.from_args(
+            self.to_django_expression(args[0].expression, args[1].expression), args
+        )
         if self.aggregate:
-            return aggregate_wrapper(
-                django_expr, model, pre_annotations, aggregate_filters, join_ids
-            )
+            return aggregate_wrapper(expr, model)
         else:
-            return django_expr
+            return expr
 
-    def call_and_type_with(
+    def __call__(
         self,
         arg1: BaserowExpression[BaserowFormulaType],
         arg2: BaserowExpression[BaserowFormulaType],
@@ -409,46 +412,43 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
         return [self.arg1_type, self.arg2_type, self.arg3_type]
 
     @property
+    @abc.abstractmethod
     def arg1_type(self) -> BaserowSingleArgumentTypeChecker:
         """
         Override this property to set the required argument type for the first arg
         provided to this function. Only when all arguments meet the type requirements
         defined in the argX_type properties will type_function be called.
 
-        The default definition if not overridden will allow all valid formula types.
-
         :return: A BaserowSingleArgumentTypeChecker
         """
 
-        return [BaserowFormulaValidType]
+        pass
 
     @property
+    @abc.abstractmethod
     def arg2_type(self) -> BaserowSingleArgumentTypeChecker:
         """
         Override this property to set the required argument type for the second arg
         provided to this function. Only when all arguments meet the type requirements
         defined in the argX_type properties will type_function be called.
 
-        The default definition if not overridden will allow all valid formula types.
-
         :return: A BaserowSingleArgumentTypeChecker
         """
 
-        return [BaserowFormulaValidType]
+        pass
 
     @property
+    @abc.abstractmethod
     def arg3_type(self) -> BaserowSingleArgumentTypeChecker:
         """
         Override this property to set the required argument type for the third arg
         provided to this function. Only when all arguments meet the type requirements
         defined in the argX_type properties will type_function be called.
 
-        The default definition if not overridden will allow all valid formula types.
-
         :return: A BaserowSingleArgumentTypeChecker
         """
 
-        return [BaserowFormulaValidType]
+        pass
 
     @property
     def num_args(self) -> ArgCountSpecifier:
@@ -517,16 +517,22 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[Expression],
+        args: List[WrappedExpressionWithMetadata],
         model: Type[Model],
         model_instance: Optional[Model],
-        pre_annotations: Dict[str, Expression],
-        aggregate_filters: List[Expression],
-        join_ids: Set[str],
-    ) -> Expression:
-        return self.to_django_expression(args[0], args[1], args[2])
+    ) -> WrappedExpressionWithMetadata:
+        expr = WrappedExpressionWithMetadata.from_args(
+            self.to_django_expression(
+                args[0].expression, args[1].expression, args[2].expression
+            ),
+            args,
+        )
+        if self.aggregate:
+            return aggregate_wrapper(expr, model)
+        else:
+            return expr
 
-    def call_and_type_with(
+    def __call__(
         self,
         arg1: BaserowExpression[BaserowFormulaType],
         arg2: BaserowExpression[BaserowFormulaType],

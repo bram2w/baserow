@@ -77,6 +77,10 @@ export default {
     RowComment,
   },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       required: true,
       type: Object,
@@ -97,7 +101,10 @@ export default {
   },
   computed: {
     validPremiumLicense() {
-      return PremiumPlugin.hasValidPremiumLicense(this.additionalUserData)
+      return PremiumPlugin.hasValidPremiumLicense(
+        this.additionalUserData,
+        this.database.group.id
+      )
     },
     ...mapGetters({
       comments: 'row_comments/getSortedRowComments',

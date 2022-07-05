@@ -221,7 +221,9 @@
     },
     "fieldContext": {
         "editField": "Modifier le champ",
-        "deleteField": "Supprimer le champ"
+        "deleteField": "Supprimer le champ",
+        "hideField": "Masquer le champ",
+        "showField": "Afficher le champ"
     },
     "fieldForm": {
         "name": "Nom",
@@ -253,7 +255,9 @@
         "search": "Rechercher dans la table"
     },
     "rowEditModal": {
-        "addField": "Ajouter un champ"
+        "addField": "Ajouter un champ",
+        "showHiddenFields": "Afficher les champs masqués",
+        "hideHiddenFields": "Masquer les champs cachés"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Ajouter une option"
@@ -322,7 +326,18 @@
         "title": "Créer une nouvelle table",
         "importLabel": "Souhaitez-vous importer des données existantes ?",
         "newTable": "Commencer avec une table vide",
-        "addButton": "Ajouter la table"
+        "addButton": "Ajouter la table",
+        "preparing": "Préparation des données...",
+        "showReport": "Afficher le rapport d'erreur",
+        "reportTitleFailure": "Lignes en échec",
+        "importError": "Un problème est survenu lors de l'import du fichier",
+        "uploading": "Envoi…",
+        "reportTitleSuccess": "Import réussi mais...",
+        "openCreatedTable": "Ouvrir la table créée",
+        "stateRowCreation": "Import en cours…",
+        "reportMessage": "Les numéro de ligne suivants n'ont pas pu être importés :",
+        "statePreValidation": "Validation des données...",
+        "stateCreateTable": "Création de la table..."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
@@ -412,7 +427,8 @@
         "exportView": "Exporter la vue",
         "renameView": "Renommer la vue",
         "deleteView": "Supprimer la vue",
-        "webhooks": "Webhooks"
+        "webhooks": "Webhooks",
+        "duplicateView": "Dupliquer la vue"
     },
     "deleteViewModal": {
         "title": "Supprimer la vue {name}",
@@ -445,14 +461,15 @@
         "insertRowBelow": "Insérer en dessous",
         "enlargeRow": "Afficher la ligne",
         "deleteRow": "Supprimer la ligne",
-        "rowCount": "Acune ligne | 1 ligne | {count} lignes"
+        "rowCount": "Acune ligne | 1 ligne | {count} lignes",
+        "duplicateRow": "Dupliquer la ligne"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
     },
     "gridViewIdentifierOptions": {
-        "id": "",
-        "count": ""
+        "id": "Identifiant de ligne",
+        "count": "Compte"
     },
     "previewAny": {
         "externalWarning": "Ouvrir un fichier via un service externe expose votre fichier à leurs serveurs."
@@ -542,7 +559,8 @@
         "stateImporting": "Import en cours",
         "stateImportingTable": "Import de la table {table}",
         "errorJobAlreadyRunningTitle": "Déjà en cours",
-        "errorJobAlreadyRunningDescription": "Une autre tâche est déjà en cours. Vous devez attendre que celle-ci finisse avant d'en démarrer une autre."
+        "errorJobAlreadyRunningDescription": "Une autre tâche est déjà en cours. Vous devez attendre que celle-ci finisse avant d'en démarrer une autre.",
+        "linkError": "Le lien devrait ressembler à : https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
         "addSelectField": "Ajouter une liste déroulante"
@@ -574,5 +592,27 @@
             "incorrectPasswordTitle": "Mot de passe invalide"
         },
         "description": "Saisissez un mot de passe valide pour accéder à la page."
+    },
+    "apiDocsTableDeleteRows": {
+        "description": "Supprime les lignes {name} existantes.",
+        "items": "Un tableau d'identifiants de lignes qui doivent être supprimées."
+    },
+    "apiDocsTableUpdateRows": {
+        "id": "L'identifiant de la ligne.",
+        "description": "Mettre à jour les lignes {name} existantes."
+    },
+    "apiDocsTableCreateRows": {
+        "description": "Créer de nouvelles lignes {name}.",
+        "before": "Si il est fourni, les lignes nouvellement créées seront positionnées avant la ligne avec l’identifiant spécifié."
+    },
+    "importer": {
+        "loading": "Chargement du fichier",
+        "decoding": "Décodage",
+        "inProgress": "En cours…",
+        "preparing": "Préparation",
+        "parsing": "Analyse des données"
+    },
+    "databaseDashboardSidebarLinks": {
+        "apiDocumentation": "Documentation de l'API"
     }
 }

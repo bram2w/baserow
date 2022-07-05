@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Optional, Type, Dict, List, Tuple
 
 from django.db.models import (
     Expression,
@@ -110,7 +110,7 @@ def _baserow_expression_to_django_expression(
                 generator = BaserowExpressionToDjangoExpressionGenerator(
                     model, model_instance
                 )
-                return baserow_expression.accept(generator)
+                return baserow_expression.accept(generator).expression
     except RecursionError:
         raise MaximumFormulaSizeError()
     except Exception as e:
@@ -127,8 +127,39 @@ def _get_model_field_for_type(expression_type):
     return model_field
 
 
+JoinIdsType = List[Tuple[str, str]]
+
+
+class WrappedExpressionWithMetadata:
+    def __init__(
+        self,
+        expression: Expression,
+        pre_annotations: Optional[Dict[str, FilteredRelation]] = None,
+        aggregate_filters: Optional[List[Expression]] = None,
+        join_ids: Optional[JoinIdsType] = None,
+    ):
+        self.expression = expression
+        self.pre_annotations: Dict[str, FilteredRelation] = pre_annotations or {}
+        self.aggregate_filters: List[Expression] = aggregate_filters or []
+        self.join_ids: JoinIdsType = join_ids or []
+
+    @classmethod
+    def from_args(cls, expr, child_args: List["WrappedExpressionWithMetadata"]):
+        pre_annotations = {}
+        aggregate_filters = []
+        join_ids = []
+        for child in child_args:
+            pre_annotations.update(child.pre_annotations)
+            aggregate_filters.extend(child.aggregate_filters)
+            join_ids.extend(child.join_ids)
+
+        return WrappedExpressionWithMetadata(
+            expr, pre_annotations, aggregate_filters, join_ids
+        )
+
+
 class BaserowExpressionToDjangoExpressionGenerator(
-    BaserowFormulaASTVisitor[BaserowFormulaType, Expression]
+    BaserowFormulaASTVisitor[BaserowFormulaType, WrappedExpressionWithMetadata]
 ):
     """
     Visits a BaserowExpression replacing it with the equivalent Django Expression.
@@ -145,27 +176,27 @@ class BaserowExpressionToDjangoExpressionGenerator(
     ):
         self.model_instance = model_instance
         self.model = model
-        self.pre_annotations = {}
-        self.aggregate_filters = []
-        self.join_ids = set()
 
     def visit_field_reference(
         self, field_reference: BaserowFieldReference[BaserowFormulaType]
-    ):
+    ) -> WrappedExpressionWithMetadata:
         db_column = field_reference.referenced_field_name
-
         generating_update_expression = self.model_instance is None
         if field_reference.is_lookup():
             return self._setup_lookup_expression(field_reference)
         elif generating_update_expression:
             model_field = self.model._meta.get_field(db_column)
-            return self._make_reference_to_model_field(
-                db_column, model_field, already_in_subquery=False
+            return WrappedExpressionWithMetadata(
+                self._make_reference_to_model_field(
+                    db_column, model_field, already_in_subquery=False
+                )
             )
         elif not hasattr(self.model_instance, db_column):
             raise UnknownFieldReference(db_column)
         else:
-            return self._generate_insert_expression(db_column)
+            return WrappedExpressionWithMetadata(
+                self._generate_insert_expression(db_column)
+            )
 
     def _generate_insert_expression(self, db_column):
         model_field = self.model._meta.get_field(db_column)
@@ -191,7 +222,9 @@ class BaserowExpressionToDjangoExpressionGenerator(
         )
 
     # noinspection PyProtectedMember
-    def _setup_lookup_expression(self, field_reference):
+    def _setup_lookup_expression(
+        self, field_reference: BaserowFieldReference
+    ) -> WrappedExpressionWithMetadata:
         path_to_lookup_from_lookup_table = field_reference.target_field
         m2m_to_lookup_table = field_reference.referenced_field_name
 
@@ -201,13 +234,19 @@ class BaserowExpressionToDjangoExpressionGenerator(
             (
                 model_field,
                 filtered_join_to_lookup_field,
+                join_ids,
+                pre_annotations,
             ) = self._setup_extra_joins_to_linked_lookup_table(
                 lookup_table_model,
                 m2m_to_lookup_table,
                 path_to_lookup_from_lookup_table,
             )
         else:
-            filtered_join_to_lookup_table = self._setup_annotations_and_joins(
+            (
+                filtered_join_to_lookup_table,
+                join_ids,
+                pre_annotations,
+            ) = self._setup_annotations_and_joins(
                 lookup_table_model, m2m_to_lookup_table
             )
 
@@ -218,14 +257,18 @@ class BaserowExpressionToDjangoExpressionGenerator(
                 filtered_join_to_lookup_table + "__" + path_to_lookup_from_lookup_table
             )
 
-        return self._make_reference_to_model_field(
-            filtered_join_to_lookup_field, model_field, already_in_subquery=True
+        return WrappedExpressionWithMetadata(
+            self._make_reference_to_model_field(
+                filtered_join_to_lookup_field, model_field, already_in_subquery=True
+            ),
+            pre_annotations=pre_annotations,
+            join_ids=join_ids,
         )
 
     # noinspection PyProtectedMember
     def _setup_extra_joins_to_linked_lookup_table(
         self, lookup_table_model, m2m_to_lookup_table, path_to_lookup_from_lookup_table
-    ):
+    ) -> Tuple[fields.Field, str, JoinIdsType, Dict[str, FilteredRelation]]:
         # If someone has done a lookup of a link row field in the other table,
         # the actual values we want to lookup are in that linked tables primary
         # field. To get at those values we need to do two joins, the first
@@ -240,8 +283,12 @@ class BaserowExpressionToDjangoExpressionGenerator(
             link_field_in_lookup_table, lookup_table_model
         )
 
-        self.join_ids.add((m2m_to_lookup_table, lookup_table_model._meta.db_table))
-        filtered_join_to_link_table = self._setup_annotations_and_joins(
+        join_ids = [(m2m_to_lookup_table, lookup_table_model._meta.db_table)]
+        (
+            filtered_join_to_link_table,
+            extra_join_ids,
+            pre_annotations,
+        ) = self._setup_annotations_and_joins(
             link_table_model, path_to_link_table, middle_link=m2m_to_lookup_table
         )
 
@@ -250,6 +297,8 @@ class BaserowExpressionToDjangoExpressionGenerator(
         return (
             model_field,
             filtered_join_to_link_table + "__" + primary_field_in_related_table,
+            join_ids + extra_join_ids,
+            pre_annotations,
         )
 
     # noinspection PyProtectedMember,PyMethodMayBeStatic
@@ -260,8 +309,11 @@ class BaserowExpressionToDjangoExpressionGenerator(
         return looked_up_link_table_model
 
     # noinspection PyProtectedMember
-    def _setup_annotations_and_joins(self, model, join_path, middle_link=None):
-        self.join_ids.add((join_path, model._meta.db_table))
+    def _setup_annotations_and_joins(
+        self, model, join_path: str, middle_link=None
+    ) -> Tuple[str, JoinIdsType, Dict[str, FilteredRelation]]:
+        join_ids = [(join_path, str(model._meta.db_table))]
+        pre_annotations = {}
 
         # We must ensure the annotation name has no __ as otherwise django will think
         # we aren't referring to an annotation but instead try to perform the joins.
@@ -274,15 +326,16 @@ class BaserowExpressionToDjangoExpressionGenerator(
             # We are joining via a middle m2m relation, ensure we don't use any trashed
             # rows there also.
             relation_filters[middle_link + "__trashed"] = False
-        self.pre_annotations[unique_annotation_path_name] = FilteredRelation(
+
+        pre_annotations[unique_annotation_path_name] = FilteredRelation(
             join_path,
             condition=Q(**relation_filters),
         )
-        return unique_annotation_path_name
+        return unique_annotation_path_name, join_ids, pre_annotations
 
     def _make_reference_to_model_field(
-        self, db_column, model_field, already_in_subquery
-    ):
+        self, db_column: str, model_field: fields.Field, already_in_subquery: bool
+    ) -> Expression:
         from baserow.contrib.database.fields.fields import SingleSelectForeignKey
 
         if isinstance(model_field, SingleSelectForeignKey):
@@ -318,40 +371,53 @@ class BaserowExpressionToDjangoExpressionGenerator(
 
     def visit_function_call(
         self, function_call: BaserowFunctionCall[BaserowFormulaType]
-    ) -> Expression:
-        args = [expr.accept(self) for expr in function_call.args]
+    ) -> WrappedExpressionWithMetadata:
+        args: List[WrappedExpressionWithMetadata] = [
+            expr.accept(self) for expr in function_call.args
+        ]
         return function_call.to_django_expression_given_args(
             args,
             self.model,
             self.model_instance,
-            self.pre_annotations,
-            self.aggregate_filters,
-            self.join_ids,
         )
 
     def visit_string_literal(
         self, string_literal: BaserowStringLiteral[BaserowFormulaType]
-    ) -> Expression:
+    ) -> WrappedExpressionWithMetadata:
         # We need to cast and be super explicit this is a text field so postgres
         # does not get angry and claim this is an unknown type.
-        return Cast(
-            Value(string_literal.literal, output_field=fields.TextField()),
-            output_field=fields.TextField(),
+        return WrappedExpressionWithMetadata(
+            Cast(
+                Value(string_literal.literal, output_field=fields.TextField()),
+                output_field=fields.TextField(),
+            )
         )
 
-    def visit_int_literal(self, int_literal: BaserowIntegerLiteral[BaserowFormulaType]):
-        return Value(
-            int_literal.literal,
-            output_field=DecimalField(max_digits=50, decimal_places=0),
+    def visit_int_literal(
+        self, int_literal: BaserowIntegerLiteral[BaserowFormulaType]
+    ) -> WrappedExpressionWithMetadata:
+        return WrappedExpressionWithMetadata(
+            Value(
+                int_literal.literal,
+                output_field=DecimalField(max_digits=50, decimal_places=0),
+            )
         )
 
-    def visit_decimal_literal(self, decimal_literal: BaserowDecimalLiteral):
-        return Value(
-            decimal_literal.literal,
-            output_field=DecimalField(
-                max_digits=50, decimal_places=decimal_literal.num_decimal_places()
-            ),
+    def visit_decimal_literal(
+        self, decimal_literal: BaserowDecimalLiteral
+    ) -> WrappedExpressionWithMetadata:
+        return WrappedExpressionWithMetadata(
+            Value(
+                decimal_literal.literal,
+                output_field=DecimalField(
+                    max_digits=50, decimal_places=decimal_literal.num_decimal_places()
+                ),
+            )
         )
 
-    def visit_boolean_literal(self, boolean_literal: BaserowBooleanLiteral):
-        return Value(boolean_literal.literal, output_field=BooleanField())
+    def visit_boolean_literal(
+        self, boolean_literal: BaserowBooleanLiteral
+    ) -> WrappedExpressionWithMetadata:
+        return WrappedExpressionWithMetadata(
+            Value(boolean_literal.literal, output_field=BooleanField())
+        )

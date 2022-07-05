@@ -39,7 +39,8 @@
     "settingType": {
         "account": "Account",
         "password": "Password",
-        "tokens": "API Tokens"
+        "tokens": "API Tokens",
+        "deleteAccount": "Delete account"
     },
     "userFileUploadType": {
         "file": "my device",
@@ -211,7 +212,7 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Please restore the related tables first.",
         "cannotRestoreAsRelatedTableTrashedDescription": "You cannot restore this field because it depends on other tables which are still trashed. Please restore the other related tables first.",
         "groupUserIsLastAdminTitle": "Can't leave the group",
-        "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin. Please delete the group or give another user admin permissions."
+        "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin or because other admin's accounts are pending deletion. Please delete the group or give another user admin permissions."
     },
     "importerType": {
         "csv": "Import a CSV file",
@@ -230,13 +231,18 @@
         "listRows": "List rows",
         "getRow": "Get row",
         "createRow": "Create row",
+        "createRows": "Create rows",
         "updateRow": "Update row",
+        "updateRows": "Update rows",
         "moveRow": "Move row",
         "deleteRow": "Delete row",
+        "deleteRows": "Delete rows",
         "queryParameters": "Query parameters",
         "pathParameters": "Path parameters",
         "requestBodySchema": "Request body schema",
-        "userFieldNamesDescription": "When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`."
+        "userFieldNamesDescription": "When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.",
+        "singleRow": "Single",
+        "batchRows": "Batch"
     },
     "exporterType": {
         "csv": "Export to CSV"
@@ -310,9 +316,15 @@
         "variancePopDescription": "Calculates the population variance of the values and returns the result. The population variance should be used when the provided values contain a  value for every single piece of data in the population.",
         "avgDescription": "Averages all of the values and returns the result.",
         "sumDescription": "Sums all of the values and returns the result.",
-        "filterDescription": "Filters down an expression involving a lookup/link field reference or a lookup function call."
+        "filterDescription": "Filters down an expression involving a lookup/link field reference or a lookup function call.",
+        "roundDescription": "Returns first argument rounded to the number of digits specified by the second argument.",
+        "intDescription": "Returns only the first argument converted into an integer by truncating any decimal places."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "Invalid {name}",
+        "invalidUrlEnvVarDescription":"The {name} environment variable has been set to an invalid value. Your site admin must change {name} to a valid URL starting with http:// or https:// and then restart Baserow to fix this error."
     }
 }

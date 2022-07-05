@@ -1,6 +1,10 @@
 <template>
   <div
-    class="alert alert--simple alert-primary alert--has-icon dashboard__alert"
+    class="
+      alert alert--simple alert-primary alert--has-icon
+      dashboard__alert
+      margin-top-0
+    "
   >
     <div class="alert__icon">
       <i class="fas fa-exclamation"></i>

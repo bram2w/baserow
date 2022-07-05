@@ -49,7 +49,7 @@ export default {
   },
   computed: {
     registeredSettings() {
-      return this.$registry.getAll('settings')
+      return this.$registry.getOrderedList('settings')
     },
     settingPageComponent() {
       const active = Object.values(this.$registry.getAll('settings')).find(

@@ -27,6 +27,9 @@ backend-cmd-with-db  : Starts the embedded postgres database and then runs any s
                        backend command normally. Useful for running one off commands
                        that require the database like backups and restores.
 web-frontend-cmd CMD : Runs the specified web-frontend command, use help to show all
+install-plugin   CMD : Installs a plugin (append --help for more info).
+uninstall-plugin CMD : Un-installs a plugin (append --help for more info).
+list-plugins     CMD : Lists currently installed plugins.
 help                 : Show this message.
 """
 }
@@ -61,7 +64,7 @@ file_env() {
 }
 
 startup_echo(){
-  ./baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
+  /baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
 }
 
 create_secret_env_if_missing(){
@@ -148,9 +151,11 @@ if [[ "$DATABASE_HOST" == "embed" && -z "${DATABASE_URL:-}" ]]; then
   fi
   startup_echo "No DATABASE_HOST or DATABASE_URL provided, using embedded postgres."
   export DATABASE_HOST=localhost
+  export BASEROW_EMBEDDED_PSQL=true
 else
   startup_echo "Using provided external postgres at ${DATABASE_HOST:-} or the " \
                "DATABASE_URL"
+  export BASEROW_EMBEDDED_PSQL=false
 fi
 
 # ========================
@@ -196,6 +201,8 @@ else
   echo "Not loading DATABASE_PASSWORD as DATABASE_URL or DISABLED_EMBEDDED_SQL is set."
 fi
 
+file_env EMAIL_SMTP_PASSWORD
+
 # ========================
 # = DATA DIR SETUP
 # ========================
@@ -227,7 +234,7 @@ chown -R "$DOCKER_USER": "$DATA_DIR"/backups
 # = COMMAND LINE ARG HANDLER
 # ========================
 
-docker_safe_run(){
+docker_safe_exec(){
     # When running one off commands we want to become the docker user + ensure signals
     # are handled correctly. This function achieves both by using tini and gosu.
     CURRENT_USER=$(whoami)
@@ -243,24 +250,39 @@ check_can_start_embedded_services(){
       echo >&2 "Cannot start the embedded postgres as DISABLE_EMBEDDED_PSQL is set"
       exit 1
     fi
-    # We only want to be used via docker run in a new container and so we expect our
-    # parent processes id to be 1. If we are being execed in an existing container
-    # these checks will fail.
-    if [[ $$ -ne 1 || $(pgrep -f "redis") || $(pgrep -f "postgres") ]]; then
-        echo -e "\e[31mPlease do not run the start-only-db or backend-cmd-with-db commands in "\
-        "an existing Baserow container as they are designed tif [[ -z "${DISABLE_EMBEDDED_REDIS:-}" ]]; then
-  mkdir -p "$DATA_DIR"/redis
-  chown -R redis:redis "$DATA_DIR"/redis
-fi
+}
 
-if [[ -z "${DISABLE_EMBEDDED_PSQL:-}" ]]; then
-  mkdir -p "$DATA_DIR"/postgres
-  chown -R postgres:postgres "$DATA_DIR"/postgres
-fi
-o be standalone. Please"\
-        " use docker run instead of exec or just the normal 'backend' command.\e[0m" \
-        >&2
-        exit 1
+run_cmd_with_db(){
+    if [[ $(pgrep -f "redis") && $(pgrep -f "bin/postgres") ]]; then
+      # We already have a redis and postgres running, just execute the command.
+      startup_echo "Found an existing embedded postgres + redis running so running command immediately."
+      startup_echo "======== RUNNING COMMAND ========="
+      "$@"
+      startup_echo "=================================="
+    else
+      check_can_start_embedded_services
+
+      startup_echo "Didn't find an existing postgres + redis running, starting them up now."
+      export SUPERVISOR_CONF=/baserow/supervisor/supervisor_include_only.conf
+      /baserow/supervisor/start.sh "${@:2}" &
+      SUPERVISORD_PID=$!
+
+      function finish {
+        startup_echo "======== Cleaning up after Command =========="
+        (sleep 1; kill $SUPERVISORD_PID) &
+        wait $SUPERVISORD_PID
+      }
+      trap finish EXIT
+      /baserow/backend/docker/docker-entrypoint.sh wait_for_db
+      startup_echo "======== RUNNING COMMAND ========="
+      # Ensure we run the finish cleanup even if the command exits with a non zero exit
+      # code
+      set +e
+      "$@"
+      retval=$?
+      set -e
+      startup_echo "=================================="
+      exit $retval
     fi
 }
 
@@ -269,23 +291,7 @@ case "$1" in
       exec /baserow/supervisor/start.sh "${@:2}"
     ;;
     backend-cmd-with-db)
-      check_can_start_embedded_services
-
-      export SUPERVISOR_CONF=/baserow/supervisor/supervisor_include_only.conf
-      /baserow/supervisor/start.sh "${@:2}" &
-      SUPERVISORD_PID=$!
-
-      function finish {
-        echo "======== Cleaning up after Command =========="
-        (sleep 1; kill $SUPERVISORD_PID) &
-        wait $SUPERVISORD_PID
-      }
-      trap finish EXIT
-      ./baserow/backend/docker/docker-entrypoint.sh wait_for_db
-      echo "======== RUNNING COMMAND ========="
-      gosu "$DOCKER_USER" ./baserow/backend/docker/docker-entrypoint.sh "${@:2}"
-      echo "=================================="
-      finish
+      run_cmd_with_db gosu "$DOCKER_USER" /baserow/backend/docker/docker-entrypoint.sh "${@:2}"
     ;;
     start-only-db)
       check_can_start_embedded_services
@@ -306,10 +312,25 @@ case "$1" in
       exec /baserow/supervisor/start.sh "${@:2}"
     ;;
     backend-cmd)
-      docker_safe_run /baserow/backend/docker/docker-entrypoint.sh "${@:2}"
+      cd /baserow/backend
+      docker_safe_exec /baserow/backend/docker/docker-entrypoint.sh "${@:2}"
     ;;
     web-frontend-cmd)
-      docker_safe_run /baserow/web-frontend/docker/docker-entrypoint.sh "${@:2}"
+      cd /baserow/web-frontend
+      docker_safe_exec /baserow/web-frontend/docker/docker-entrypoint.sh "${@:2}"
+    ;;
+    install-plugin)
+      exec /baserow/plugins/install_plugin.sh --runtime "${@:2}"
+    ;;
+    uninstall-plugin)
+      export BASEROW_DISABLE_PLUGIN_INSTALL_ON_STARTUP="on"
+      # We need the database to uninstall as the plugin might need to unapply migrations
+      # Whereas when installing any database changes can just be normal migrations which
+      # will then be run on startup.
+      run_cmd_with_db /baserow/plugins/uninstall_plugin.sh "${@:2}"
+    ;;
+    list-plugins)
+      exec /baserow/plugins/list_plugins.sh "${@:2}"
     ;;
     *)
         echo "Command given was $*"

@@ -12,7 +12,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
 )
 
-from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.license.handler import check_active_premium_license_for_group
 
 from .decorator_types import BackgroundColorDecoratorType, LeftBorderColorDecoratorType
 from .serializers import (
@@ -24,11 +24,13 @@ from .serializers import (
 class PremiumDecoratorValueProviderType(DecoratorValueProviderType):
     def before_create_decoration(self, view, user):
         if user:
-            check_active_premium_license(user)
+            check_active_premium_license_for_group(user, view.table.database.group)
 
-    def before_update_decoration(self, view, user):
+    def before_update_decoration(self, view_decoration, user):
         if user:
-            check_active_premium_license(user)
+            check_active_premium_license_for_group(
+                user, view_decoration.view.table.database.group
+            )
 
 
 class SelectColorValueProviderType(PremiumDecoratorValueProviderType):

@@ -1,6 +1,11 @@
 from decimal import Decimal
+
 import pytest
+from django.conf import settings
+from django.db import connection
 from django.shortcuts import reverse
+from django.test.utils import CaptureQueriesContext
+from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -8,16 +13,11 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
 )
-from freezegun import freeze_time
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
-from baserow.contrib.database.fields.field_cache import FieldCache
+
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import is_dict_subset
-from django.conf import settings
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
 
 
 # Create
@@ -626,7 +626,6 @@ def test_batch_create_rows_num_of_queries(api_client, data_fixture):
         formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
         formula_type="number",
     )
-    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
 
     # common fields
     text_field = data_fixture.create_text_field(
@@ -1528,7 +1527,6 @@ def test_batch_update_rows_dependent_fields_diff_table(api_client, data_fixture)
         formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
         formula_type="number",
     )
-    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
 
     model_b = table_b.get_model()
     row_b_1 = model_b.objects.create()
@@ -1628,7 +1626,7 @@ def test_batch_create_rows_dependent_fields_lookup(api_client, data_fixture):
             },
             {
                 f"id": 3,
-                f"field_{lookup_formula.id}": None,
+                f"field_{lookup_formula.id}": "0",
                 f"field_{row_id_formula.id}": "3",
             },
         ]
@@ -1662,7 +1660,6 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
         formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
         formula_type="number",
     )
-    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
 
     # common fields
     text_field = data_fixture.create_text_field(
@@ -1738,11 +1735,13 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
 
     url = reverse("api:database:rows:batch", kwargs={"table_id": table_b.id})
 
+    related_link_field = link_field.link_row_related_field
     with CaptureQueriesContext(connection) as update_one_row_ctx:
         request_body = {
             "items": [
                 {
                     f"id": row_b_1.id,
+                    f"field_{related_link_field.id}": [row_1.id],
                     f"field_{number_field.id}": 120,
                     f"field_{text_field.id}": "Text",
                     f"field_{boolean_field.id}": True,
@@ -1766,6 +1765,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
             "items": [
                 {
                     f"id": row_b_2.id,
+                    f"field_{related_link_field.id}": [row_1.id],
                     f"field_{number_field.id}": 240,
                     f"field_{text_field.id}": "Text 2",
                     f"field_{boolean_field.id}": False,
@@ -1777,6 +1777,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
                 },
                 {
                     f"id": row_b_3.id,
+                    f"field_{related_link_field.id}": [row_2.id],
                     f"field_{number_field.id}": 240,
                     f"field_{text_field.id}": "Text 3",
                     f"field_{boolean_field.id}": False,
@@ -1788,6 +1789,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
                 },
                 {
                     f"id": row_b_4.id,
+                    f"field_{related_link_field.id}": [row_1.id, row_2.id],
                     f"field_{number_field.id}": 500,
                     f"field_{text_field.id}": "Text 4",
                     f"field_{boolean_field.id}": False,
@@ -1935,7 +1937,6 @@ def test_batch_delete_rows_dependent_fields_diff_table(api_client, data_fixture)
         formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
         formula_type="number",
     )
-    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
 
     model_b = table_b.get_model()
     row_b_1 = model_b.objects.create()
@@ -1987,7 +1988,6 @@ def test_batch_delete_rows_num_of_queries(api_client, data_fixture):
         formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
         formula_type="number",
     )
-    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
 
     # common fields
     text_field = data_fixture.create_text_field(

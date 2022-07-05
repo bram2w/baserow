@@ -1,16 +1,13 @@
 import inspect
+from decimal import Decimal
 
 import pytest
 from django.db.models import TextField
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
-from baserow.contrib.database.table.cache import (
-    generated_models_cache,
-)
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
-    CachingFieldUpdateCollector,
+    FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.field_types import FormulaFieldType
@@ -20,13 +17,17 @@ from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
     BaserowFormulaInvalidType,
-    FormulaHandler,
     BaserowFormulaTextType,
     BaserowFormulaNumberType,
 )
 from baserow.contrib.database.formula.ast.tree import BaserowFunctionDefinition
 from baserow.contrib.database.formula.registries import formula_function_registry
+from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.cache import (
+    generated_models_cache,
+)
 from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField,
     ViewSortFieldNotSupported,
@@ -277,11 +278,34 @@ def test_formula_with_row_id_is_populated_after_creating_row(
     table = data_fixture.create_database_table(user=user)
     handler = FieldHandler()
     formula_field = handler.create_field(
-        user=user, table=table, type_name="formula", name="2", formula="row_id()"
+        user=user,
+        table=table,
+        type_name="formula",
+        name="2",
+        formula="left('abc', row_id())",
     )
 
     row = RowHandler().create_row(user=user, table=table)
-    assert getattr(row, f"field_{formula_field.id}") == row.id
+    assert getattr(row, f"field_{formula_field.id}") == "a"
+
+
+@pytest.mark.django_db
+def test_decimal_formula_with_row_id_is_populated_after_creating_row(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    handler = FieldHandler()
+    formula_field = handler.create_field(
+        user=user,
+        table=table,
+        type_name="formula",
+        name="2",
+        formula="row_id()/10 * 4",
+    )
+
+    row = RowHandler().create_row(user=user, table=table)
+    assert getattr(row, f"field_{formula_field.id}") == Decimal("0.40000")
 
 
 @pytest.mark.django_db
@@ -305,112 +329,6 @@ def test_can_rename_field_preserving_whitespace(
     formula_field.refresh_from_db()
 
     assert formula_field.formula == f" field('b') \n"
-
-
-@pytest.mark.django_db
-def test_recalculate_formulas_according_to_version(
-    data_fixture,
-):
-    formula_with_default_internal_field = data_fixture.create_formula_field(
-        formula="1",
-        internal_formula="",
-        requires_refresh_after_insert=False,
-        name="a",
-        version=1,
-        recalculate=False,
-        create_field=False,
-    )
-    formula_that_needs_refresh = data_fixture.create_formula_field(
-        formula="row_id()",
-        internal_formula="",
-        formula_type="number",
-        requires_refresh_after_insert=False,
-        name="b",
-        version=1,
-        recalculate=False,
-        create_field=False,
-    )
-    broken_reference_formula = data_fixture.create_formula_field(
-        formula="field('unknown')",
-        internal_formula="",
-        requires_refresh_after_insert=False,
-        name="c",
-        version=1,
-        recalculate=False,
-        create_field=False,
-    )
-    dependant_formula = data_fixture.create_formula_field(
-        table=formula_that_needs_refresh.table,
-        formula="field('b')",
-        internal_formula="",
-        requires_refresh_after_insert=False,
-        name="d",
-        version=1,
-        recalculate=False,
-        create_field=False,
-    )
-    formula_already_at_correct_version = data_fixture.create_formula_field(
-        formula="'a'",
-        internal_formula="",
-        requires_refresh_after_insert=False,
-        name="e",
-        version=FormulaHandler.BASEROW_FORMULA_VERSION,
-        recalculate=False,
-        create_field=False,
-    )
-    upto_date_formula_depending_on_old_version = data_fixture.create_formula_field(
-        table=dependant_formula.table,
-        formula=f"field('{dependant_formula.name}')",
-        internal_formula="",
-        requires_refresh_after_insert=False,
-        name="f",
-        version=FormulaHandler.BASEROW_FORMULA_VERSION,
-        recalculate=False,
-        create_field=False,
-    )
-    assert (
-        formula_already_at_correct_version.version
-        == FormulaHandler.BASEROW_FORMULA_VERSION
-    )
-    assert dependant_formula.version == 1
-
-    field_cache = FieldCache()
-    for formula_field in FormulaField.objects.all():
-        FieldDependencyHandler().rebuild_dependencies(formula_field, field_cache)
-    FormulaHandler().recalculate_formulas_according_to_version()
-
-    formula_with_default_internal_field.refresh_from_db()
-    assert formula_with_default_internal_field.internal_formula == "error_to_nan(1)"
-    assert not formula_with_default_internal_field.requires_refresh_after_insert
-
-    formula_that_needs_refresh.refresh_from_db()
-    assert formula_that_needs_refresh.internal_formula == "error_to_nan(row_id())"
-    assert formula_that_needs_refresh.requires_refresh_after_insert
-
-    broken_reference_formula.refresh_from_db()
-    assert broken_reference_formula.internal_formula == "field('unknown')"
-    assert broken_reference_formula.formula_type == "invalid"
-    assert not broken_reference_formula.requires_refresh_after_insert
-
-    dependant_formula.refresh_from_db()
-    assert dependant_formula.internal_formula == "error_to_nan(row_id())"
-    assert dependant_formula.requires_refresh_after_insert
-
-    # The update is not done for this formula and hence the values are left alone
-    formula_already_at_correct_version.refresh_from_db()
-    assert formula_already_at_correct_version.internal_formula == ""
-    assert not formula_already_at_correct_version.requires_refresh_after_insert
-
-    upto_date_formula_depending_on_old_version.refresh_from_db()
-    assert (
-        upto_date_formula_depending_on_old_version.field_dependencies.get().specific
-        == dependant_formula
-    )
-    assert (
-        upto_date_formula_depending_on_old_version.internal_formula
-        == "error_to_nan(row_id())"
-    )
-    assert upto_date_formula_depending_on_old_version.requires_refresh_after_insert
 
 
 @pytest.mark.django_db
@@ -926,7 +844,8 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
     table = data_fixture.create_database_table(user=user)
     handler = FieldHandler()
     handler.create_field(user=user, table=table, type_name="text", name="a")
-    formula_field = handler.create_field(
+    # noinspection PyTypeChecker
+    formula_field: FormulaField = handler.create_field(
         user=user,
         table=table,
         type_name="formula",
@@ -936,28 +855,30 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
     table_model = table.get_model()
     row = table_model.objects.create()
     formula_field_type = FormulaFieldType()
-    update_collector = CachingFieldUpdateCollector(table, existing_model=table_model)
+    update_collector = FieldUpdateCollector(table)
+    field_cache = FieldCache()
+    field_cache.cache_model(table_model)
 
     formula_field_type.row_of_dependency_updated(
-        formula_field, row, update_collector, None
+        formula_field, row, update_collector, field_cache, None
     )
     formula_field_type.row_of_dependency_updated(
-        formula_field, row, update_collector, []
+        formula_field, row, update_collector, field_cache, []
     )
     formula_field_type.row_of_dependency_created(
-        formula_field, row, update_collector, None
+        formula_field, row, update_collector, field_cache, None
     )
     formula_field_type.row_of_dependency_created(
-        formula_field, row, update_collector, []
+        formula_field, row, update_collector, field_cache, []
     )
     formula_field_type.row_of_dependency_deleted(
-        formula_field, row, update_collector, None
+        formula_field, row, update_collector, field_cache, None
     )
     formula_field_type.row_of_dependency_deleted(
-        formula_field, row, update_collector, []
+        formula_field, row, update_collector, field_cache, []
     )
     with django_assert_num_queries(0):
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
 
 @pytest.mark.django_db
@@ -1235,3 +1156,218 @@ def test_inserting_a_row_with_lookup_field_immediately_populates_it_with_empty_l
     default_empty_value_for_lookup = getattr(inserted_row, f"field_{lookup.id}")
     assert default_empty_value_for_lookup is not None
     assert default_empty_value_for_lookup == "[]"
+
+
+@pytest.mark.django_db
+def test_multiple_formula_fields_with_different_django_lookups_being_used_to_filter(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+
+    table = data_fixture.create_database_table(user=user)
+
+    grid_view = data_fixture.create_grid_view(user=user, table=table)
+    option_field = data_fixture.create_single_select_field(user=user, table=table)
+
+    formula_field_ref_link_field = FieldHandler().create_field(
+        user=user, table=table, name="a", type_name="formula", formula=f"1"
+    )
+    formula_referencing_single_select = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="formula",
+        formula=f"field('{option_field.name}')",
+        name="single_select_formula",
+    )
+
+    data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=formula_field_ref_link_field,
+        type="empty",
+    )
+
+    response = api_client.get(
+        reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_cant_create_primary_lookup_that_looksup_itself(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    with pytest.raises(
+        InvalidFormulaType,
+        match="references itself via a link field causing a circular dependency",
+    ):
+        FieldHandler().update_field(
+            user,
+            table_a.field_set.get(primary=True).specific,
+            new_type_name="formula",
+            name="formulafield",
+            formula=f"lookup('{link_field.name}', '{link_field.link_row_related_field.name}')",
+        )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_converting_link_row_field_with_formula_dependency(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    table_b_primary_field = table_b.field_set.get(primary=True)
+    table_a_primary_field = table_a.field_set.get(primary=True)
+    lookup_of_table_b_pk = FieldHandler().create_field(
+        user,
+        table=table_a,
+        type_name="formula",
+        name="broken",
+        formula=f"lookup('{link_field.name}','{table_b_primary_field.name}')",
+    )
+    # Change the link field to a text field, this should break the lookup formula
+    FieldHandler().update_field(user, link_field, new_type_name="text")
+
+    lookup_of_table_b_pk.refresh_from_db()
+    assert lookup_of_table_b_pk.formula_type == "invalid"
+    assert (
+        lookup_of_table_b_pk.error
+        == "first lookup function argument must be a link row field"
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_converted_reversed_link_row_field_with_formula_dependency(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    table_b_primary_field = table_b.field_set.get(primary=True)
+    table_a_primary_field = table_a.field_set.get(primary=True)
+    related_link_row_field = link_field.link_row_related_field
+    lookup_of_table_b_pk = FieldHandler().create_field(
+        user,
+        table=table_a,
+        type_name="formula",
+        name="broken",
+        formula=f"lookup('{link_field.name}','{table_b_primary_field.name}')",
+    )
+    # Change the link field to a text field, this should break the lookup formula
+    FieldHandler().update_field(user, related_link_row_field, new_type_name="text")
+
+    lookup_of_table_b_pk.refresh_from_db()
+    assert lookup_of_table_b_pk.formula_type == "invalid"
+    assert lookup_of_table_b_pk.error == "references the deleted or unknown field link"
+
+
+def can_query_grid_view_for(api_client, grid_view, token):
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) == 10
+
+
+@pytest.mark.django_db(transaction=True)
+def test_every_formula_sub_type_can_be_a_primary_field(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    grid_view_table_a = data_fixture.create_grid_view(user, table=table_a)
+    grid_view_table_b = data_fixture.create_grid_view(user, table=table_b)
+
+    table_b_primary_field = table_b.field_set.get(primary=True)
+    table_a_primary_field = table_a.field_set.get(primary=True).specific
+    related_link_row_field = link_field.link_row_related_field
+
+    data_fixture.create_email_field(table=table_a, name="email")
+    option_field_table_a = data_fixture.create_single_select_field(
+        table=table_a, name="single_select"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_a, value="A", color="blue"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_a, value="B", color="red"
+    )
+
+    data_fixture.create_text_field(table=table_b, name="text")
+    data_fixture.create_number_field(table=table_b, name="int", number_decimal_places=0)
+    data_fixture.create_boolean_field(table=table_b, name="bool")
+    data_fixture.create_number_field(
+        table=table_b, name="decimal", number_decimal_places=10
+    )
+    data_fixture.create_formula_field(
+        table=table_b, name="date_interval", formula='date_interval("1 day")'
+    )
+    data_fixture.create_date_field(table=table_b, name="date")
+    option_field_table_b = data_fixture.create_single_select_field(
+        table=table_b, name="single_select"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_b, value="A", color="blue"
+    )
+    data_fixture.create_select_option(
+        field=option_field_table_b, value="B", color="red"
+    )
+    data_fixture.create_email_field(table=table_b, name="email")
+
+    fill_table_rows(10, table_a)
+    fill_table_rows(10, table_b)
+
+    every_formula_type = [
+        "CONCAT('test ', UPPER('formula'))",
+        "1",
+        "true",
+        "100/3",
+        "date_interval('1 day')",
+        "todate('20200101', 'YYYYMMDD')",
+        "field('single_select')",
+        "field('email')",
+        "1/0",
+        f"lookup('{link_field.name}', 'text')",
+        f"lookup('{link_field.name}', 'int')",
+        f"lookup('{link_field.name}', 'bool')",
+        f"lookup('{link_field.name}', 'decimal')",
+        f"lookup('{link_field.name}', 'date_interval')",
+        f"lookup('{link_field.name}', 'date')",
+        f"lookup('{link_field.name}', 'single_select')",
+        f"lookup('{link_field.name}', 'email')",
+    ]
+    for f in every_formula_type:
+        primary_formula = FieldHandler().update_field(
+            user,
+            table_a_primary_field,
+            new_type_name="formula",
+            name="primary formula",
+            formula=f,
+        )
+        assert primary_formula.error is None
+        can_query_grid_view_for(api_client, grid_view_table_a, token)
+        can_query_grid_view_for(api_client, grid_view_table_b, token)
+
+
+@pytest.mark.django_db
+def test_can_have_nested_date_formulas(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_date_field(table=table, name="jaar_van")
+
+    FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="datum",
+        formula="todate(concat(totext(year(field('jaar_van'))),'-01-01'),'YYYY-MM-DD')",
+    )
+    FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="failured",
+        formula="date_diff('day', field('jaar_van'), field('datum')) + 1",
+    )

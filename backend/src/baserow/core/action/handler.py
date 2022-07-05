@@ -62,7 +62,7 @@ class ActionHandler:
                 action_type.undo(user, latest_params, action_being_undone)
         except Exception:
             tb = traceback.format_exc()
-            logger.error(
+            logger.warning(
                 f"Undoing {latest_not_undone_action} failed because of: \n{tb}"
             )
             latest_not_undone_action.error = tb
@@ -125,7 +125,7 @@ class ActionHandler:
                     action_type.redo(user, latest_params, action_being_redone)
             except Exception:
                 tb = traceback.format_exc()
-                logger.error(
+                logger.warning(
                     f"Redoing {normal_action_happened_since_undo} failed because of: \n"
                     f"{tb}",
                 )

@@ -54,9 +54,13 @@ from .signals import (
     application_updated,
     application_deleted,
     applications_reordered,
+    before_group_user_updated,
+    before_group_user_deleted,
+    before_group_deleted,
     group_created,
     group_updated,
     group_deleted,
+    group_user_added,
     group_user_updated,
     group_user_deleted,
     groups_reordered,
@@ -110,6 +114,7 @@ class CoreHandler:
                 "allow_new_signups",
                 "allow_signups_via_group_invitations",
                 "allow_reset_password",
+                "account_deletion_grace_delay",
             ],
             settings_instance,
         )
@@ -220,13 +225,19 @@ class CoreHandler:
             group_user.permissions == GROUP_USER_PERMISSION_ADMIN
             and GroupUser.objects.filter(
                 group=group, permissions=GROUP_USER_PERMISSION_ADMIN
-            ).count()
+            )
+            .exclude(user__profile__to_be_deleted=True)
+            .count()
             == 1
         ):
             raise GroupUserIsLastAdmin(
                 "The user is the last admin left in the group and can therefore not "
                 "leave it."
             )
+
+        before_group_user_deleted.send(
+            self, user=user, group=group, group_user=group_user
+        )
 
         # If the user is not the last admin, we can safely delete the user from the
         # group.
@@ -271,6 +282,10 @@ class CoreHandler:
         # along with the signal.
         group_id = group.id
         group_users = list(group.users.all())
+
+        before_group_deleted.send(
+            self, group_id=group_id, group=group, group_users=group_users, user=user
+        )
 
         TrashHandler.trash(user, group, None, group)
 
@@ -347,6 +362,9 @@ class CoreHandler:
             raise ValueError("The group user is not an instance of GroupUser.")
 
         group_user.group.has_user(user, "ADMIN", raise_error=True)
+
+        before_group_user_updated.send(self, group_user=group_user, **kwargs)
+
         group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
         group_user.save()
 
@@ -368,6 +386,11 @@ class CoreHandler:
             raise ValueError("The group user is not an instance of GroupUser.")
 
         group_user.group.has_user(user, "ADMIN", raise_error=True)
+
+        before_group_user_deleted.send(
+            self, user=group_user.user, group=group_user.group, group_user=group_user
+        )
+
         group_user_id = group_user.id
         group_user.delete()
 
@@ -643,6 +666,11 @@ class CoreHandler:
                 "permissions": invitation.permissions,
             },
         )
+
+        group_user_added.send(
+            self, group_user_id=group_user.id, group_user=group_user, user=user
+        )
+
         invitation.delete()
 
         return group_user

@@ -11,6 +11,8 @@ import {
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
   LengthIsLowerThanViewFilterType,
+  LinkRowContainsFilterType,
+  LinkRowNotContainsFilterType,
 } from '@baserow/modules/database/viewFilters'
 
 const dateBeforeCasesWithTimezone = [
@@ -420,6 +422,72 @@ const lengthIsLowerThanCases = [
   },
 ]
 
+const linkRowContainsCases = [
+  {
+    rowValue: [{ value: 'bill' }],
+    filterValue: '',
+    expected: true,
+  },
+  {
+    rowValue: [{ value: 'bill' }],
+    filterValue: 'bi',
+    expected: true,
+  },
+  {
+    rowValue: [{ value: 'some other name' }],
+    filterValue: 'bill',
+    expected: false,
+  },
+  {
+    rowValue: [{ value: 'some other name' }, { value: 'bill' }],
+    filterValue: 'bill',
+    expected: true,
+  },
+  {
+    rowValue: [{ value: 'BILL' }],
+    filterValue: 'bill',
+    expected: true,
+  },
+  {
+    rowValue: [{ value: 'bill' }],
+    filterValue: 'BILL',
+    expected: true,
+  },
+]
+
+const linkRowNotContainsCases = [
+  {
+    rowValue: [{ value: 'bill' }],
+    filterValue: '',
+    expected: true,
+  },
+  {
+    rowValue: [{ value: 'bill' }],
+    filterValue: 'bi',
+    expected: false,
+  },
+  {
+    rowValue: [{ value: 'some other name' }],
+    filterValue: 'bill',
+    expected: true,
+  },
+  {
+    rowValue: [{ value: 'some other name' }, { value: 'bill' }],
+    filterValue: 'bill',
+    expected: false,
+  },
+  {
+    rowValue: [{ value: 'BILL' }],
+    filterValue: 'bill',
+    expected: false,
+  },
+  {
+    rowValue: [{ value: 'bill' }],
+    filterValue: 'BILL',
+    expected: false,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -560,6 +628,25 @@ describe('All Tests', () => {
     'LengthIsLowerThanViewFilterType',
     (values) => {
       const result = new LengthIsLowerThanViewFilterType().matches(
+        values.rowValue,
+        values.filterValue
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(linkRowContainsCases)('LinkRowContainsFilterType', (values) => {
+    const result = new LinkRowContainsFilterType().matches(
+      values.rowValue,
+      values.filterValue
+    )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(linkRowNotContainsCases)(
+    'LinkRowNotContainsFilterType',
+    (values) => {
+      const result = new LinkRowNotContainsFilterType().matches(
         values.rowValue,
         values.filterValue
       )

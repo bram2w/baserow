@@ -6,10 +6,16 @@ services:
     build:
       dockerfile: $PWD/deploy/all-in-one/Dockerfile
       context: $PWD
+      args:
+        # We allow configuring the UID/GID here so you can run as the dev's actual user
+        # reducing the chance the containers screw up the bind mounted folders.
+        UID: $UID
+        GID: $GID
     environment:
       EMAIL_SMTP: 'yes'
       EMAIL_SMTP_HOST: 'mailhog'
       EMAIL_SMTP_PORT: '1025'
+      BASEROW_PUBLIC_URL:
     ports:
       - "80:80"
       - "443:443"

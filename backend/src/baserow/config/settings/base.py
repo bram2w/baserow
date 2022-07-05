@@ -1,6 +1,8 @@
 import datetime
+import importlib
 import os
 from decimal import Decimal
+from pathlib import Path
 from urllib.parse import urlparse, urljoin
 
 import dj_database_url
@@ -10,6 +12,20 @@ from corsheaders.defaults import default_headers
 from baserow.version import VERSION
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+BASEROW_PLUGIN_DIR_PATH = Path(os.environ.get("BASEROW_PLUGIN_DIR", "/baserow/plugins"))
+
+if BASEROW_PLUGIN_DIR_PATH.exists():
+    BASEROW_PLUGIN_FOLDERS = [
+        file
+        for file in BASEROW_PLUGIN_DIR_PATH.iterdir()
+        if file.is_dir() and Path(file, "backend").exists()
+    ]
+else:
+    BASEROW_PLUGIN_FOLDERS = []
+
+BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -35,9 +51,7 @@ INSTALLED_APPS = [
     "health_check",
     "health_check.db",
     "health_check.cache",
-    "health_check.storage",
     "health_check.contrib.migrations",
-    "health_check.contrib.psutil",
     "health_check.contrib.redis",
     "baserow.core",
     "baserow.api",
@@ -46,9 +60,17 @@ INSTALLED_APPS = [
     "baserow_premium",
 ]
 
-ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", None)
+BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
+if BASEROW_FULL_HEALTHCHECKS is not None:
+    INSTALLED_APPS += ["health_check.storage", "health_check.contrib.psutil"]
+
+ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:
-    INSTALLED_APPS += ADDITIONAL_APPS.split(",")
+    INSTALLED_APPS += [app.strip() for app in ADDITIONAL_APPS if app.strip() != ""]
+
+if BASEROW_BACKEND_PLUGIN_NAMES:
+    print(f"Loaded backend plugins: {','.join(BASEROW_BACKEND_PLUGIN_NAMES)}")
+    INSTALLED_APPS.extend(BASEROW_BACKEND_PLUGIN_NAMES)
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -59,6 +81,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "baserow.middleware.BaserowCustomHttp404Middleware",
 ]
 
 ROOT_URLCONF = "baserow.config.urls"
@@ -92,6 +115,16 @@ REDIS_URL = os.getenv(
     f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0",
 )
 
+BASEROW_GROUP_STORAGE_USAGE_ENABLED = (
+    os.getenv("BASEROW_GROUP_STORAGE_USAGE_ENABLED", "false") == "true"
+)
+
+BASEROW_GROUP_STORAGE_USAGE_QUEUE = os.getenv(
+    "BASEROW_GROUP_STORAGE_USAGE_QUEUE", "export"
+)
+
+BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
+
 CELERY_BROKER_URL = REDIS_URL
 CELERY_TASK_ROUTES = {
     "baserow.contrib.database.export.tasks.run_export_job": {"queue": "export"},
@@ -100,7 +133,9 @@ CELERY_TASK_ROUTES = {
         "queue": "export"
     },
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
+    "baserow.core.usage.tasks": {"queue": BASEROW_GROUP_STORAGE_USAGE_QUEUE},
     "baserow.contrib.database.table.tasks.run_row_count_job": {"queue": "export"},
+    "baserow.core.jobs.tasks.clean_up_jobs": {"queue": "export"},
 }
 CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
 CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60  # 60 seconds
@@ -260,7 +295,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.10.1",
+    "VERSION": "1.10.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -271,6 +306,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Templates"},
         {"name": "Trash"},
         {"name": "Applications"},
+        {"name": "Jobs"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
         {"name": "Database table views"},
@@ -285,7 +321,6 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
-        {"name": "Database airtable import"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -443,6 +478,10 @@ INITIAL_TABLE_DATA_LIMIT = None
 if "INITIAL_TABLE_DATA_LIMIT" in os.environ:
     INITIAL_TABLE_DATA_LIMIT = int(os.getenv("INITIAL_TABLE_DATA_LIMIT"))
 
+BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT = int(
+    os.getenv("BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT", 5000)
+)
+
 MEDIA_URL_PATH = "/media/"
 MEDIA_URL = os.getenv("MEDIA_URL", urljoin(PUBLIC_BACKEND_URL, MEDIA_URL_PATH))
 MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/baserow/media")
@@ -457,6 +496,8 @@ BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
+
+USAGE_CALCULATION_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
 ROW_COUNT_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
@@ -541,9 +582,24 @@ BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
     "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
 )
 
-BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
-    os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+
+BASEROW_JOB_EXPIRATION_TIME_LIMIT = int(
+    os.getenv("BASEROW_JOB_EXPIRATION_TIME_LIMIT", 30 * 24 * 60)  # 30 days
 )
+BASEROW_JOB_SOFT_TIME_LIMIT = int(
+    os.getenv("BASEROW_JOB_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+)
+BASEROW_JOB_CLEANUP_INTERVAL_MINUTES = int(
+    os.getenv("BASEROW_JOB_CLEANUP_INTERVAL_MINUTES", 5)  # 5 minutes
+)
+BASEROW_MAX_FILE_IMPORT_ERROR_COUNT = int(
+    os.getenv("BASEROW_MAX_FILE_IMPORT_ERROR_COUNT", 30)
+)
+# Allow this percentage of error in field type auto detection at import
+BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD = int(
+    os.getenv("BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD", 0)  # 0 to be safe
+)
+
 
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.
@@ -597,8 +653,6 @@ LOGGING = {
     },
 }
 
-BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
-
 # Now incorrectly named old variable, previously we would run `sync_templates` prior
 # to starting the gunicorn server in Docker. This variable would prevent that from
 # happening. Now we sync_templates in an async job triggered after migration.
@@ -623,4 +677,32 @@ BASEROW_SYNC_TEMPLATES_TIME_LIMIT = int(
     os.getenv("BASEROW_SYNC_TEMPLATES_TIME_LIMIT", 60 * 30)
 )
 
+APPEND_SLASH = False
+
+BASEROW_DISABLE_MODEL_CACHE = bool(os.getenv("BASEROW_DISABLE_MODEL_CACHE", ""))
+
+# Indicates whether we are running the tests or not. Set to True in the test.py settings
+# file used by pytest.ini
 TESTS = False
+
+
+# Allows accessing and setting values on a dictionary like an object. Using this
+# we can pass plugin authors a `settings` object which can modify the settings like
+# they expect (settings.SETTING = 'test') etc.
+class AttrDict(dict):
+    def __getattr__(self, item):
+        return super().__getitem__(item)
+
+    def __setattr__(self, item, value):
+        return super().__setitem__(item, value)
+
+
+for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
+    try:
+        mod = importlib.import_module(plugin + ".config.settings.settings")
+        # The plugin should have a setup function which accepts a 'settings' object.
+        # This settings object is an AttrDict shadowing our local variables so the
+        # plugin can access the Django settings and modify them prior to startup.
+        result = mod.setup(AttrDict({k: v for k, v in vars().items() if k.isupper()}))
+    except ImportError:
+        pass

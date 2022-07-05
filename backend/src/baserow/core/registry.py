@@ -1,5 +1,17 @@
 import contextlib
-from typing import TypeVar, Generic, Dict, List, ValuesView, Tuple, Type
+from django.db import models
+from rest_framework import serializers
+from typing import (
+    TypeVar,
+    Generic,
+    Dict,
+    List,
+    ValuesView,
+    Tuple,
+    Type,
+    Any,
+    Optional,
+)
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -45,16 +57,24 @@ class CustomFieldsInstanceMixin:
     serializer_field_names = []
     """The field names that must be added to the serializer."""
 
+    request_serializer_field_names = None
+    """
+    The field names that must be added to the request serializer if different from
+    the `serializer_field_names`.
+    """
+
     serializer_field_overrides = {}
     """The fields that must be added to the serializer."""
 
-    def get_serializer_class(self, *args, **kwargs):
-        """
-        Returns a model serializer class based on this type field names and overrides.
+    request_serializer_field_overrides = None
+    """
+    The fields that must be added to the request serializer if different from the
+    `serializer_field_overrides` property.
+    """
 
+    def __init__(self):
+        """
         :raises ValueError: If the object does not have a `model_class` attribute.
-        :return: The generated model serializer class.
-        :rtype: ModelSerializer
         """
 
         model_class = getattr(self, "model_class")
@@ -64,37 +84,64 @@ class CustomFieldsInstanceMixin:
                 "extend the ModelInstanceMixin?"
             )
 
+    def get_serializer_class(
+        self, *args, request_serializer: bool = False, **kwargs
+    ) -> serializers.ModelSerializer:
+        """
+        Returns a model serializer class based on this type field names and overrides.
+
+        :raises ValueError: If the object does not have a `model_class` attribute.
+        :return: The generated model serializer class.
+        """
+
+        if request_serializer and self.request_serializer_field_overrides is not None:
+            field_overrides = self.request_serializer_field_overrides
+        else:
+            field_overrides = self.serializer_field_overrides
+
+        if request_serializer and self.request_serializer_field_names is not None:
+            field_names = self.request_serializer_field_names
+        else:
+            field_names = self.serializer_field_names
+
         return get_serializer_class(
-            model_class,
-            self.serializer_field_names,
-            field_overrides=self.serializer_field_overrides,
+            self.model_class,
+            field_names,
+            field_overrides=field_overrides,
             *args,
             **kwargs,
         )
 
-    def get_serializer(self, model_instance, base_class=None, context=None, **kwargs):
+    def get_serializer(
+        self,
+        model_instance: models.Model,
+        base_class: Optional[serializers.ModelSerializer] = None,
+        context: Optional[Dict[str, Any]] = None,
+        request: bool = False,
+        **kwargs: Dict[str, Any],
+    ) -> serializers.ModelSerializer:
         """
         Returns an instantiated model serializer based on this type field names and
         overrides. The provided model instance will be used instantiate the serializer.
 
         :param model_instance: The instance for which the serializer must be generated.
-        :type model_instance: Model
         :param base_class: The base serializer class that must be extended. For example
             common fields could be stored here.
-        :type base_class: ModelSerializer
         :param context: Extra context arguments to pass to the serializers context.
-        :type kwargs: dict
+        :param request: True if you want the request serializer.
         :param kwargs: The kwargs are used to initialize the serializer class.
-        :type kwargs: dict
         :return: The instantiated generated model serializer.
-        :rtype: ModelSerializer
         """
 
         if context is None:
             context = {}
 
         model_instance = model_instance.specific
-        serializer_class = self.get_serializer_class(base_class=base_class)
+
+        serializer_class = self.get_serializer_class(
+            base_class=base_class, request_serializer=request
+        )
+
         return serializer_class(
             model_instance, context={"instance_type": self, **context}, **kwargs
         )

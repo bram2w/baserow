@@ -12,12 +12,25 @@ User = get_user_model()
 
 
 class GroupUserSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-    email = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField(help_text="User defined name.")
+    email = serializers.SerializerMethodField(help_text="User email.")
+    to_be_deleted = serializers.BooleanField(
+        source="user.profile.to_be_deleted",
+        help_text="True if user account is pending deletion.",
+    )
 
     class Meta:
         model = GroupUser
-        fields = ("id", "name", "email", "group", "permissions", "created_on")
+        fields = (
+            "id",
+            "name",
+            "email",
+            "group",
+            "permissions",
+            "created_on",
+            "user_id",
+            "to_be_deleted",
+        )
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_name(self, object):

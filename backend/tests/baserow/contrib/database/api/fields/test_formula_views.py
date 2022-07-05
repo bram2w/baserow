@@ -461,7 +461,7 @@ def test_trashing_creating_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response_json["count"] == 1
-    assert response_json["results"][0][f"field_{formula_field_id}"] is None
+    assert response_json["results"][0][f"field_{formula_field_id}"] == "1"
 
 
 @pytest.mark.django_db
@@ -572,7 +572,7 @@ def test_changing_type_of_reference_field_to_valid_one_for_formula(
     response_json = response.json()
     assert response_json["count"] == 2
     assert response_json["results"][0][f"field_{formula_field_id}"] == "1test"
-    assert response_json["results"][1][f"field_{formula_field_id}"] == "test"
+    assert response_json["results"][1][f"field_{formula_field_id}"] == "0test"
 
 
 @pytest.mark.django_db

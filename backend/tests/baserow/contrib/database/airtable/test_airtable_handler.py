@@ -12,17 +12,16 @@ from pytz import UTC, timezone as pytz_timezone, UnknownTimeZoneError
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.constants import JOB_PENDING
+from baserow.core.jobs.exceptions import MaxJobCountExceeded, JobDoesNotExist
+
 from baserow.core.user_files.models import UserFile
 from baserow.core.utils import Progress
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.fields.models import TextField
-from baserow.contrib.database.airtable.constants import (
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING,
-)
 from baserow.contrib.database.airtable.exceptions import (
     AirtableShareIsNotABase,
-    AirtableImportJobDoesNotExist,
-    AirtableImportJobAlreadyRunning,
 )
 from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.airtable.handler import AirtableHandler
@@ -211,7 +210,7 @@ def test_to_baserow_database_export():
     assert baserow_database_export["tables"][1]["id"] == "tbl7glLIGtH8C8zGCzb"
     assert baserow_database_export["tables"][1]["name"] == "Data"
     assert baserow_database_export["tables"][1]["order"] == 1
-    assert len(baserow_database_export["tables"][1]["fields"]) == 23
+    assert len(baserow_database_export["tables"][1]["fields"]) == 24
 
     # We don't have to check all the fields and rows, just a single one, because we have
     # separate tests for mapping the Airtable fields and values to Baserow.
@@ -270,6 +269,7 @@ def test_to_baserow_database_export():
             "type": "grid",
             "name": "Grid",
             "order": 1,
+            "row_identifier_type": "id",
             "filter_type": "AND",
             "filters_disabled": False,
             "filters": [],
@@ -390,6 +390,7 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
         )
 
     progress = Progress(1000)
+
     databases, id_mapping = AirtableHandler.import_from_airtable_to_group(
         group,
         "shrXxmp0WmqsTkFWTzv",
@@ -458,56 +459,68 @@ def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
 
 @pytest.mark.django_db(transaction=True)
 @responses.activate
-@patch("baserow.contrib.database.airtable.handler.run_import_from_airtable")
-def test_create_and_start_airtable_import_job(
-    mock_run_import_from_airtable, data_fixture
-):
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_create_and_start_airtable_import_job(mock_run_async_job, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     group_2 = data_fixture.create_group()
 
     with pytest.raises(UserNotInGroup):
-        AirtableHandler.create_and_start_airtable_import_job(user, group_2, "test")
+        JobHandler().create_and_start_job(
+            user,
+            "airtable",
+            group_id=group_2.id,
+            airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
+        )
 
-    job = AirtableHandler.create_and_start_airtable_import_job(user, group, "test")
+    job = JobHandler().create_and_start_job(
+        user,
+        "airtable",
+        group_id=group.id,
+        airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
+    )
     assert job.user_id == user.id
     assert job.group_id == group.id
-    assert job.airtable_share_id == "test"
+    assert job.airtable_share_id == "shrXxmp0WmqsTkFWTz"
     assert job.progress_percentage == 0
     assert job.timezone is None
     assert job.state == "pending"
     assert job.error == ""
 
-    mock_run_import_from_airtable.delay.assert_called_once()
-    args = mock_run_import_from_airtable.delay.call_args
+    mock_run_async_job.delay.assert_called_once()
+    args = mock_run_async_job.delay.call_args
     assert args[0][0] == job.id
-
-    job.delete()
-    job = AirtableHandler.create_and_start_airtable_import_job(
-        user, group, "test", timezone="Europe/Amsterdam"
-    )
-    assert job.timezone == "Europe/Amsterdam"
 
 
 @pytest.mark.django_db(transaction=True)
 @responses.activate
-@patch("baserow.contrib.database.airtable.handler.run_import_from_airtable")
+@patch("baserow.core.jobs.handler.run_async_job")
 def test_create_and_start_airtable_import_job_with_timezone(
-    mock_run_import_from_airtable, data_fixture
+    mock_run_async_job, data_fixture
 ):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
 
     with pytest.raises(UnknownTimeZoneError):
-        AirtableHandler.create_and_start_airtable_import_job(
-            user, group, "test", timezone="UNKNOWN"
+        JobHandler().create_and_start_job(
+            user,
+            "airtable",
+            group_id=group.id,
+            airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
+            timezone="UNKNOWN",
         )
 
     assert AirtableImportJob.objects.all().count() == 0
 
-    job = AirtableHandler.create_and_start_airtable_import_job(
-        user, group, "test", timezone="Europe/Amsterdam"
+    job = JobHandler().create_and_start_job(
+        user,
+        "airtable",
+        group_id=group.id,
+        airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
+        timezone="Europe/Amsterdam",
     )
+
+    job.refresh_from_db()
     assert job.timezone == "Europe/Amsterdam"
 
 
@@ -516,23 +529,27 @@ def test_create_and_start_airtable_import_job_with_timezone(
 def test_create_and_start_airtable_import_job_while_other_job_is_running(data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
-    data_fixture.create_airtable_import_job(
-        user=user, state=AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING
-    )
+    data_fixture.create_airtable_import_job(user=user, state=JOB_PENDING)
 
-    with pytest.raises(AirtableImportJobAlreadyRunning):
-        AirtableHandler.create_and_start_airtable_import_job(user, group, "test")
+    with pytest.raises(MaxJobCountExceeded):
+        JobHandler().create_and_start_job(
+            user,
+            "airtable",
+            group_id=group.id,
+            airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
+        )
 
 
 @pytest.mark.django_db
 def test_get_airtable_import_job(data_fixture):
     user = data_fixture.create_user()
+
     job_1 = data_fixture.create_airtable_import_job(user=user)
     job_2 = data_fixture.create_airtable_import_job()
 
-    with pytest.raises(AirtableImportJobDoesNotExist):
-        AirtableHandler.get_airtable_import_job(user, job_2.id)
+    with pytest.raises(JobDoesNotExist):
+        JobHandler().get_job(user, job_2.id)
 
-    job = AirtableHandler.get_airtable_import_job(user, job_1.id)
+    job = JobHandler().get_job(user, job_1.id, job_model=AirtableImportJob)
     assert isinstance(job, AirtableImportJob)
     assert job.id == job_1.id

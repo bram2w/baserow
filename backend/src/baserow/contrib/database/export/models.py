@@ -27,11 +27,11 @@ EXPORT_JOB_RUNNING_STATUSES = [EXPORT_JOB_PENDING_STATUS, EXPORT_JOB_EXPORTING_S
 
 
 class ExportJob(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    table = models.ForeignKey(Table, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True)
     # An export job might be for just a table and not a particular view of that table
     # , in that situation the view will be None.
-    view = models.ForeignKey(View, on_delete=models.CASCADE, null=True, blank=True)
+    view = models.ForeignKey(View, on_delete=models.SET_NULL, null=True, blank=True)
     # New exporter types might be registered dynamically by plugins hence we can't
     # restrict this field to a particular choice of options as we don't know them.
     exporter_type = models.TextField()

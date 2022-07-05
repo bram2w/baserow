@@ -13,11 +13,14 @@ ARG UID
 ENV UID=${UID:-9999}
 ARG GID
 ENV GID=${GID:-9999}
-ARG DOCKER_USER=baserow_docker_user
+ARG DOCKER_USER
+ENV DOCKER_USER=${DOCKER_USER:-baserow_docker_user}
 
 ENV DATA_DIR=/baserow/data
+ENV BASEROW_PLUGIN_DIR=$DATA_DIR/plugins
 ENV POSTGRES_VERSION=11
 ENV POSTGRES_LOCATION=/etc/postgresql/11/main
+ENV BASEROW_IMAGE_TYPE="all-in-one"
 
 # ========================
 # = APT-GET UPDATE/UPGRADE/INSTALL DEPS + NODE + CADDY
@@ -43,14 +46,16 @@ RUN apt-get update && \
     nano \
     vim \
     gawk \
+    git \
     && \
     # ========================
-    # Install Node
+    # Install Node and Yarn
     # ========================
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install --no-install-recommends -y nodejs && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/* &&  \
+    npm install --global yarn@1.22.19 && \
     # ========================
     # Install Caddy
     # ========================
@@ -85,7 +90,7 @@ COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
 COPY --chown=$UID:$GID Caddyfile /baserow/caddy/Caddyfile
 
-HEALTHCHECK CMD ["/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
+HEALTHCHECK --interval=60s CMD ["/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
 
 # ========================
 # = BASEROW
@@ -98,8 +103,11 @@ COPY --chown=$UID:$GID --from=web_frontend_image_base /baserow/web-frontend/.nux
 COPY --chown=$UID:$GID --from=web_frontend_image_base /baserow/ /baserow/
 COPY --chown=$UID:$GID --from=backend_image_base /baserow/ /baserow/
 
-COPY deploy/all-in-one/supervisor/ /baserow/supervisor
 
-COPY deploy/all-in-one/baserow.sh /baserow.sh
+COPY --chown=$UID:$GID deploy/all-in-one/supervisor/ /baserow/supervisor
+
+COPY --chown=$UID:$GID deploy/all-in-one/baserow.sh /baserow.sh
+COPY --chown=$UID:$GID deploy/plugins/*.sh /baserow/plugins/
 ENTRYPOINT ["/baserow.sh"]
 CMD ["start"]
+EXPOSE 80

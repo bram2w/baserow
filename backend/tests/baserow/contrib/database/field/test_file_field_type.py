@@ -46,11 +46,6 @@ def test_file_field_type(data_fixture):
     with pytest.raises(ValidationError):
         row_handler.create_row(user=user, table=table, values={"file": {}}, model=model)
 
-    with pytest.raises(ValidationError):
-        row_handler.create_row(
-            user=user, table=table, values={"file": [{"no_name": "test"}]}, model=model
-        )
-
     with pytest.raises(InvalidUserFileNameError):
         row_handler.create_row(
             user=user,

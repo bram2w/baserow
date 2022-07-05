@@ -14,7 +14,10 @@
           @click="recalcAutoComplete"
           @keyup="recalcAutoComplete"
           @keydown.tab="doAutoCompleteAfterTab"
-          @keydown.enter.exact.prevent="$refs.editContext.hide()"
+          @keydown.enter.exact.prevent="
+            $refs.editContext.hide()
+            $emit('hidden', $event)
+          "
         ></AutoExpandableTextarea>
       </div>
       <div v-if="error" class="formula-field__input-error">{{ error }}</div>

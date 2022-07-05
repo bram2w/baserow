@@ -1,151 +1,53 @@
 version: "3.4"
+########################################################################################
+#
+# READ ME FIRST!
+#
+# Use the much simpler `docker-compose.all-in-one.yml` instead of this file
+# unless you are an advanced user!
+#
+# This compose file runs every service separately using a Caddy reverse proxy to route
+# requests to the backend or web-frontend, handle websockets and to serve uploaded files
+# . Even if you have your own http proxy we recommend to simply forward requests to it
+# as it is already properly configured for Baserow.
+#
+# If you wish to continue with this more advanced compose file, it is recommended that
+# you set environment variables using the .env.example file by:
+# 1. `cp .env.example .env`
+# 2. Edit .env and fill in the first 3 variables.
+# 3. Set further environment variables as you wish.
+#
+# More documentation can be found in:
+# https://baserow.io/docs/installation%2Finstall-with-docker-compose
+#
+########################################################################################
 
-# == README ==
-#
-# To use this docker-compose.yml to run Baserow you must set the three required
-# environment variables in the `x-backend-required-variables` section below and review
-# the variables in the `x-common-important-variables` section. If you receive the
-# following error it is because you need to set the required environment variables
-# first:
-#   ```
-# ERROR: Missing mandatory value for "environment" option interpolating
-#   ```
-#
-#   If you are upgrading from Baserow 1.8.2 or earlier please read the additional section
-#   below.
-#
-#   See [Configuring Baserow](configuration.md) for information on the
-#   other environment variables you can configure.
-#
-#   ## How to set environment variables
-#
-#   You can set these variables by using docker-compose env file
-# (https://docs.docker.com/compose/environment-variables/#the-env-file):
-#   1. Copy the `.env.example` file found in the root of Baserows repository
-# (https://gitlab.com/bramw/baserow/-/blob/master/.env.example)  to `.env`:
-#   ```
-#   curl -o .env https://gitlab.com/bramw/baserow/-/blob/master/.env.example
-#   ```
-#   2. Edit `.env` and provide values for the missing environment variables.
-#   3. `docker-compose up`
-#
-#   Alternatively you can set these variables by either running docker-compose with
-# the environment variables set on the command line (fill in secure values first):
-#   ```
-#   SECRET_KEY= DATABASE_PASSWORD= REDIS_PASSWORD= docker-compose up
-#   ```
-#
-# ## Upgrading from Baserow 1.8.2's docker-compose file
-#
-# To upgrade from 1.8.2's docker-compose file from inside the Baserow git repo you need to:
-#   1. Stop your existing Baserow install when safe to do so:
-#   `docker-compose down`
-#   2. `git pull`
-#   3. Copy `.env.example` to `.env` and edit `.env` filling in the missing variables
-# below:
-#   - `SECRET_KEY` to a secure value, existing logins sessions will be invalidated.
-#   - `DATABASE_PASSWORD` to a secure password (this defaulted to 'baserow' before, in
-#     step 3 we are going to change the database users password to the value you set)
-#   - `REDIS_PASSWORD` to a secure password.
-#   - `WEB_FRONTEND_PORT` back to 3000 if you want to continue accessing Baserow on
-#     that port (it now defaults to 80).
-#   - `BASEROW_PUBLIC_URL` to the URL/IP/Domain you were using access Baserow remotely
-#     (it must begin with http:// or https://). If you have set `WEB_FRONTEND_PORT` to
-#     anything but 80 you must append it to the end of `BASEROW_PUBLIC_URL`.
-#   - `BASEROW_CADDY_ADDRESSES` configures which addresses the new internal Caddy reverse
-#     proxy listens on. By default, it will serve http only, enable automatic https
-#     by setting to `https://YOUR_DOMAIN_NAME.com`. Append `,http://localhost` if you
-#     still want to be able to access Baserow from `localhost`.
-#   4. Run the command below which will change the baserow postgresql users password to
-#      what you have set in step 1 in the .env file (no need to edit the command):
-#   ```
-#   docker-compose run --rm backend bash -c "PGPASSWORD=baserow psql -h db -U baserow -c \"ALTER USER baserow WITH PASSWORD '$DATABASE_PASSWORD';\" && echo 'Successfully changed Baserow's db user password'"
-#   ```
-#   5. `docker-compose up -d`
-
-# These environment variables are required to be set securely by you, see the README
-# above.
-x-backend-required-variables: &backend-required-variables
-  SECRET_KEY: ${SECRET_KEY:?
-    !!!! ⚠️IMPORTANT ⚠️!!!! Open Baserow's docker-compose.yml and follow the
-    instructions.
-
-    This env var must be a condidential secret key used by Baserow's Django Backend to
-    secure signed data.}
-  DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set to your own unique secure database
-    password for the Baserow Postgresql service user to use, prior to version 1.9
-    this defaulted to "baserow" and so should be set to that.}
-  REDIS_PASSWORD: ${REDIS_PASSWORD:?Set to your own unqiue secure redis password used
-    to access the redis instance run by Baserow.}
-
-# These are optional but important variables which control how Baserow can be accessed.
-x-common-important-variables: &common-important-variables
-  # BASEROW_PUBLIC_URL is a comma separated list of urls you will be using to access
-  # Baserow, normally should just be a single URL. The first URL provided will be used
-  # to generate correct urls in emails, share links, downloads. All the urls will be
-  # used by the Caddy reverse proxy as addresses to listen for. See
-  # https://caddyserver.com/docs/caddyfile/concepts#addresses for more info.
-  # Caddy will setup HTTPS automatically if you have setup DNS correctly and use a
-  # https:// url. See https://caddyserver.com/docs/automatic-https.
-  # > If you are also setting WEB_FRONTEND_PORT to anything but 80 then you must
-  # > append this port to your BASEROW_PUBLIC_URL like so:
-  # > $YOUR_BASEROW_PUBLIC_URL:$YOUR_CUSTOM_WEB_FRONTEND_PORT
+# See https://baserow.io/docs/installation%2Fconfiguration for more details on these
+# backend environment variables, their defaults if left blank etc.
+x-backend-variables: &backend-variables
+  # Most users should only need to set these first four variables.
+  SECRET_KEY: ${SECRET_KEY:?}
+  DATABASE_PASSWORD: ${DATABASE_PASSWORD:?}
+  REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+  # If you manually change this line make sure you also change the duplicate line in
+  # the web-frontend service.
   BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
-  # This is a comma separated list of addresses the Caddy reverse proxy sitting in-front
-  # of Baserow's services will listen on. If you wish to enable automatic https then
-  # you should change this to be `https://YOUR_DOMAIN_NAME.com`.
-  BASEROW_CADDY_ADDRESSES: ${BASEROW_CADDY_ADDRESSES:-:80}
-  # WEB_FRONTEND_PORT is the HTTP port that Baserow will bind to on the host to serve
-  # content. Prior to 1.9 this defaulted to 3000 but was changed to 80 in 1.9.
-  # > If set to anything but the default of 80 to access Baserow you will need to
-  # > append the port to your BASEROW_PUBLIC_URL (see above).
-  WEB_FRONTEND_PORT: ${WEB_FRONTEND_PORT:-80}
-  # WEB_FRONTEND_SSL_PORT is the SSL port Baserow will bind to on the host for HTTPS.
-  WEB_FRONTEND_SSL_PORT: ${WEB_FRONTEND_SSL_PORT:-443}
-  # HOST_PUBLISH_IP is the address Baserow will bind to on the host, the choices are:
-  # - The default value of 0.0.0.0 : This will make Baserow accessible publicly from
-  #   other machines on your network, the internet if the server is exposed to it and
-  #   also due to a docker bug/"feature" bypass any Ubuntu UFW Firewall rules
-  #   (See https://github.com/chaifeng/ufw-docker).
-  # - 127.0.0.1 : This will make Baserow private and only available on the machine
-  #               running docker-compose. Useful for when you want to run Baserow behind
-  #               a reverse proxy or just make it private.
-  HOST_PUBLISH_IP: ${HOST_PUBLISH_IP:-0.0.0.0}
-  # Set to any non-empty value to ensure Baserow generates https:// next links provided
-  # by paginated API endpoints. Baserow will still work correctly if not enabled, this
-  # is purely for giving the correct https url for clients of the API.
-  # If you have setup Baserow to use Caddy's auto HTTPS or you have put Baserow behind
-  # a reverse proxy which:
-  #  * Handles HTTPS
-  #  * Strips the X-Forwarded-Proto header from all incoming requests.
-  #  * Sets the X-Forwarded-Proto header and sends it to Baserow.
-  # Then you can safely set BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER=yes to ensure Baserow
-  # generates https links for pagination correctly.
-  #
-  # 1. !!! Do not enable this setting if you have not setup https. !!!
-  # 2. See https://docs.djangoproject.com/en/3.2/ref/settings/#secure-proxy-ssl-header
-  #    for more details.
-  # 3  You will also need to disable the automatic https provided by Caddy if using your
-  #    own reverse proxy by using the BASEROW_CADDY_GLOBAL_CONF variable above.
-  BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER: ${BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:-}
 
-x-common-variables: &common-variables
-  <<: *common-important-variables
-  PRIVATE_BACKEND_URL: http://backend:8000
-  PRIVATE_WEB_FRONTEND_URL: http://web-frontend:3000
-  PUBLIC_BACKEND_URL:
-  PUBLIC_WEB_FRONTEND_URL:
-  FEATURE_FLAGS:
-
-x-common-backend-variables: &common-backend-variables
-  <<: *backend-required-variables
-  <<: *common-variables
-  MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}
-  SYNC_TEMPLATES_ON_STARTUP: ${SYNC_TEMPLATES_ON_STARTUP:-true}
-  BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:
+  # Set these if you want to use an external postgres instead of the db service below.
   DATABASE_USER: ${DATABASE_USER:-baserow}
   DATABASE_NAME: ${DATABASE_NAME:-baserow}
-  ADDITIONAL_APPS:
+  DATABASE_HOST:
+  DATABASE_PORT:
+  DATABASE_URL:
+
+  # Set these if you want to use an external redis instead of the redis service below.
+  REDIS_HOST:
+  REDIS_PORT:
+  REDIS_PROTOCOL:
+  REDIS_URL:
+  REDIS_USER:
+
+  # Set these to enable Baserow to send emails.
   EMAIL_SMTP:
   EMAIL_SMTP_HOST:
   EMAIL_SMTP_PORT:
@@ -153,20 +55,75 @@ x-common-backend-variables: &common-backend-variables
   EMAIL_SMTP_USER:
   EMAIL_SMTP_PASSWORD:
   FROM_EMAIL:
-  DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
-  MEDIA_URL:
-  BASEROW_EXTRA_ALLOWED_HOSTS:
+
+  # Set these to use AWS S3 bucket to store user files.
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_STORAGE_BUCKET_NAME:
+  AWS_S3_REGION_NAME:
+  AWS_S3_ENDPOINT_URL:
+  AWS_S3_CUSTOM_DOMAIN:
+
+  # Misc settings see https://baserow.io/docs/installation%2Fconfiguration for info
+  BASEROW_AMOUNT_OF_WORKERS:
+  BASEROW_ROW_PAGE_SIZE_LIMIT:
+  BATCH_ROWS_SIZE_LIMIT:
+  INITIAL_TABLE_DATA_LIMIT:
   BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+
+  BASEROW_EXTRA_ALLOWED_HOSTS:
+  ADDITIONAL_APPS:
+  BASEROW_PLUGIN_GIT_REPOS:
+  BASEROW_PLUGIN_URLS:
+
+  BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:
+  MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}
+  SYNC_TEMPLATES_ON_STARTUP: ${SYNC_TEMPLATES_ON_STARTUP:-true}
+  DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
+  BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:
+  BASEROW_SYNC_TEMPLATES_TIME_LIMIT:
+
+  BASEROW_BACKEND_DEBUG:
+  BASEROW_BACKEND_LOG_LEVEL:
+  FEATURE_FLAGS:
+
+  PRIVATE_BACKEND_URL: http://backend:8000
+  PUBLIC_BACKEND_URL:
+  PUBLIC_WEB_FRONTEND_URL:
+  MEDIA_URL:
+  MEDIA_ROOT:
+
+  BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT:
+  HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
+  OLD_ACTION_CLEANUP_INTERVAL_MINUTES:
+  MINUTES_UNTIL_ACTION_CLEANED_UP:
+  BASEROW_GROUP_STORAGE_USAGE_ENABLED:
+  BASEROW_GROUP_STORAGE_USAGE_QUEUE:
   BASEROW_COUNT_ROWS_ENABLED:
+  DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
+  BASEROW_FULL_HEALTHCHECKS:
+  BASEROW_DISABLE_MODEL_CACHE:
+  BASEROW_PLUGIN_DIR:
+  BASEROW_JOB_EXPIRATION_TIME_LIMIT:
+  BASEROW_JOB_CLEANUP_INTERVAL_MINUTES:
+  BASEROW_MAX_FILE_IMPORT_ERROR_COUNT:
+  BASEROW_JOB_SOFT_TIME_LIMIT:
+  BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD:
+  BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT:
+
 
 services:
-  # A caddy reverse proxy sitting in-front of all the services.
+  # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
+  # requests to either the backend or web-frontend and also serving user uploaded files
+  # from the media volume.
   caddy:
     image: caddy:2.4.6
     restart: unless-stopped
     environment:
-      <<: *common-variables
-      BASEROW_CADDY_GLOBAL_CONF: ${BASEROW_CADDY_GLOBAL_CONF:-}
+      # Controls what port the Caddy server binds to inside its container.
+      BASEROW_CADDY_ADDRESSES: ${BASEROW_CADDY_ADDRESSES:-:80}
+      PRIVATE_WEB_FRONTEND_URL: ${PRIVATE_WEB_FRONTEND_URL:-http://web-frontend:3000}
+      PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
     ports:
       - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_PORT:-80}:80"
       - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_SSL_PORT:-443}:443"
@@ -184,10 +141,10 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.10.1
+    image: baserow/backend:1.10.2
     restart: unless-stopped
     environment:
-      <<: *common-backend-variables
+      <<: *backend-variables
     depends_on:
       - db
       - redis
@@ -197,20 +154,31 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.10.1
+    image: baserow/web-frontend:1.10.2
     restart: unless-stopped
     environment:
-      <<: *common-variables
+      BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
+      PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
+      PUBLIC_BACKEND_URL:
+      PUBLIC_WEB_FRONTEND_URL:
+      BASEROW_DISABLE_PUBLIC_URL_CHECK:
+      INITIAL_TABLE_DATA_LIMIT:
+      DOWNLOAD_FILE_VIA_XHR:
+      HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
+      DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
+      FEATURE_FLAGS:
+      ADDITIONAL_MODULES:
+      BASEROW_MAX_IMPORT_FILE_SIZE_MB:
     depends_on:
       - backend
     networks:
       local:
 
   celery:
-    image: baserow/backend:1.10.1
+    image: baserow/backend:1.10.2
     restart: unless-stopped
     environment:
-      <<: *common-backend-variables
+      <<: *backend-variables
     command: celery-worker
     # The backend image's baked in healthcheck defaults to the django healthcheck
     # override it to the celery one here.
@@ -224,26 +192,28 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.10.1
+    image: baserow/backend:1.10.2
     restart: unless-stopped
     command: celery-exportworker
+    environment:
+      <<: *backend-variables
     # The backend image's baked in healthcheck defaults to the django healthcheck
     # override it to the celery one here.
     healthcheck:
       test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh celery-exportworker-healthcheck" ]
     depends_on:
       - backend
-    environment:
-      <<: *common-backend-variables
     volumes:
       - media:/baserow/media
     networks:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.10.1
+    image: baserow/backend:1.10.2
     restart: unless-stopped
     command: celery-beat
+    environment:
+      <<: *backend-variables
     # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237
     stop_signal: SIGQUIT
     # We don't yet have a healthcheck for the beat worker, just assume it is healthy.
@@ -251,16 +221,12 @@ services:
       test: [ "CMD-SHELL", "exit 0" ]
     depends_on:
       - backend
-    environment:
-      <<: *common-backend-variables
     volumes:
       - media:/baserow/media
     networks:
       local:
 
   db:
-    # Please ensure the postgres-client's major version in the backend image is kept in
-    # sync with this major version so pg_dump remains compatible.
     image: postgres:11.3
     restart: unless-stopped
     environment:

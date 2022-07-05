@@ -20,29 +20,17 @@
           @blur="$v.airtableUrl.$touch()"
         />
         <div v-if="$v.airtableUrl.$error" class="error">
-          The link should look like: https://airtable.com/shrxxxxxxxxxxxxxx
+          {{ $t(importFromAirtable.linkError) }}
         </div>
       </div>
     </div>
     <Error :error="error"></Error>
     <div class="modal-progress__actions">
-      <div
+      <ProgressBar
         v-if="jobIsRunning || jobHasSucceeded"
-        class="modal-progress__loading-bar"
-      >
-        <div
-          class="modal-progress__loading-bar-inner"
-          :style="{
-            width: `${job.progress_percentage}%`,
-            'transition-duration': [1, 0].includes(job.progress_percentage)
-              ? '0s'
-              : '1s',
-          }"
-        ></div>
-        <span class="modal-progress__status-text">
-          {{ humanReadableState }}
-        </span>
-      </div>
+        :value="job.progress_percentage"
+        :status="jobHumanReadableState"
+      />
       <button
         v-if="!jobHasSucceeded"
         class="button button--large modal-progress__export-button"
@@ -71,56 +59,20 @@ import { mapGetters } from 'vuex'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
+import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import AirtableService from '@baserow/modules/database/services/airtable'
 
 export default {
   name: 'ImportFromAirtable',
-  mixins: [error],
+  mixins: [error, jobProgress],
   data() {
     return {
       importType: 'none',
       airtableUrl: '',
       loading: false,
-      job: null,
-      pollInterval: null,
     }
   },
   computed: {
-    jobHasSucceeded() {
-      return this.job !== null && this.job.state === 'finished'
-    },
-    jobIsRunning() {
-      return (
-        this.job !== null && !['failed', 'finished'].includes(this.job.state)
-      )
-    },
-    jobHasFailed() {
-      return this.job !== null && this.job.state === 'failed'
-    },
-    humanReadableState() {
-      if (this.job === null) {
-        return ''
-      }
-
-      const importingTablePrefix = 'importing-table-'
-      if (this.job.state.startsWith(importingTablePrefix)) {
-        const table = this.job.state.replace(importingTablePrefix, '')
-        return this.$t('importFromAirtable.stateImportingTable', { table })
-      }
-
-      const translations = {
-        pending: this.$t('importFromAirtable.statePending'),
-        failed: this.$t('importFromAirtable.stateFailed'),
-        finished: this.$t('importFromAirtable.stateFinished'),
-        'downloading-base': this.$t('importFromAirtable.stateDownloadingBase'),
-        converting: this.$t('importFromAirtable.stateConverting'),
-        'downloading-files': this.$t(
-          'importFromAirtable.stateDownloadingFiles'
-        ),
-        importing: this.$t('importFromAirtable.stateImporting'),
-      }
-      return translations[this.job.state]
-    },
     ...mapGetters({
       selectedGroupId: 'group/selectedId',
     }),
@@ -144,33 +96,15 @@ export default {
           this.airtableUrl,
           new Intl.DateTimeFormat().resolvedOptions().timeZone
         )
-        this.job = data
-        this.pollInterval = setInterval(this.getLatestJobInfo, 1000)
+        this.startJobPoller(data)
       } catch (error) {
         this.stopPollAndHandleError(error, {
-          ERROR_AIRTABLE_JOB_ALREADY_RUNNING: new ResponseErrorMessage(
+          ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
             this.$t('importFromAirtable.errorJobAlreadyRunningTitle'),
             this.$t('importFromAirtable.errorJobAlreadyRunningDescription')
           ),
         })
         this.loading = false
-      }
-    },
-    async getLatestJobInfo() {
-      try {
-        const { data } = await AirtableService(this.$client).get(this.job.id)
-        this.job = data
-        if (this.jobHasFailed) {
-          const error = new ResponseErrorMessage(
-            this.$t('importFromAirtable.importError'),
-            this.job.human_readable_error
-          )
-          this.stopPollAndHandleError(error)
-        } else if (!this.jobIsRunning) {
-          this.stopPollIfRunning()
-        }
-      } catch (error) {
-        this.stopPollAndHandleError(error)
       }
     },
     stopPollAndHandleError(error, specificErrorMap = null) {
@@ -180,10 +114,22 @@ export default {
         ? this.handleError(error, 'airtable', specificErrorMap)
         : this.showError(error)
     },
-    stopPollIfRunning() {
-      if (this.pollInterval) {
-        clearInterval(this.pollInterval)
+    getCustomHumanReadableJobState(state) {
+      const importingTablePrefix = 'importing-table-'
+      if (state.startsWith(importingTablePrefix)) {
+        const table = state.replace(importingTablePrefix, '')
+        return this.$t('importFromAirtable.stateImportingTable', { table })
       }
+
+      const translations = {
+        'downloading-base': this.$t('importFromAirtable.stateDownloadingBase'),
+        converting: this.$t('importFromAirtable.stateConverting'),
+        'downloading-files': this.$t(
+          'importFromAirtable.stateDownloadingFiles'
+        ),
+        importing: this.$t('importFromAirtable.stateImporting'),
+      }
+      return translations[state]
     },
     openDatabase() {
       const application = this.$store.getters['application/get'](
@@ -193,6 +139,16 @@ export default {
       if (type.select(application, this)) {
         this.$emit('hidden')
       }
+    },
+    onJobFailure() {
+      const error = new ResponseErrorMessage(
+        this.$t('importFromAirtable.importError'),
+        this.job.human_readable_error
+      )
+      this.stopPollAndHandleError(error)
+    },
+    onJobError(error) {
+      this.stopPollAndHandleError(error)
     },
   },
   validations: {

@@ -51,6 +51,8 @@ import {
   LinkRowHasNotFilterType,
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
+  LinkRowContainsFilterType,
+  LinkRowNotContainsFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -174,6 +176,7 @@ import {
   VarianceViewAggregationType,
   MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
+import { DatabasePlugin } from '@baserow/modules/database/plugins'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -211,6 +214,7 @@ export default (context) => {
   app.$registry.registerNamespace('viewDecorator')
   app.$registry.registerNamespace('decoratorValueProvider')
 
+  app.$registry.register('plugin', new DatabasePlugin(context))
   app.$registry.register('application', new DatabaseApplicationType(context))
   app.$registry.register('view', new GridViewType(context))
   app.$registry.register('view', new GalleryViewType(context))
@@ -265,6 +269,11 @@ export default (context) => {
   app.$registry.register('viewFilter', new BooleanViewFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasNotFilterType(context))
+  app.$registry.register('viewFilter', new LinkRowContainsFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new LinkRowNotContainsFilterType(context)
+  )
   app.$registry.register('viewFilter', new MultipleSelectHasFilterType(context))
   app.$registry.register(
     'viewFilter',

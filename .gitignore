@@ -123,3 +123,7 @@ formula/out/
 junit.xml
 
 .env
+
+!plugin-boilerplate/{{ cookiecutter.project_slug }}/.env
+
+field-diagrams/

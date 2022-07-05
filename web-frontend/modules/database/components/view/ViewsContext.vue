@@ -28,6 +28,7 @@
           update: order,
           marginTop: -1.5,
         }"
+        :database="database"
         :view="view"
         :table="table"
         :read-only="readOnly"
@@ -42,6 +43,7 @@
         <CreateViewLink
           v-for="(viewType, type) in viewTypes"
           :key="type"
+          :database="database"
           :table="table"
           :view-type="viewType"
           @created="selectedView"
@@ -69,6 +71,10 @@ export default {
   },
   mixins: [context, dropdownHelpers],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

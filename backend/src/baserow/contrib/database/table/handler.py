@@ -1,10 +1,16 @@
-from typing import Any, cast, NewType, List, Tuple, Optional, Type
+from typing import Any, cast, NewType, List, Tuple, Optional, Dict
+from collections import defaultdict
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 from django.utils import timezone
+from django.utils import translation
+from django.utils.translation import gettext as _
 
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.models import Job
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -12,15 +18,8 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
-from baserow.contrib.database.fields.field_types import (
-    LongTextFieldType,
-    BooleanFieldType,
-)
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
-)
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
@@ -31,10 +30,11 @@ from .exceptions import (
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
+    InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
 )
-from .models import GeneratedTableModel, Table
-from .signals import table_created, table_updated, table_deleted, tables_reordered
+from .models import Table
+from .signals import table_updated, table_deleted, tables_reordered
 
 
 TableForUpdate = NewType("TableForUpdate", Table)
@@ -96,36 +96,141 @@ class TableHandler:
         user: AbstractUser,
         database: Database,
         name: str,
-        fill_example: bool = False,
-        data: Optional[List[List[str]]] = None,
+        data: Optional[List[List[Any]]] = None,
         first_row_header: bool = True,
-    ) -> Table:
+        session: Optional[str] = None,
+        sync: bool = False,
+    ) -> Job:
         """
-        Creates a new table and a primary text field.
+        Starts a new job to create a new table from optional provided data.
 
         :param user: The user on whose behalf the table is created.
         :param database: The database that the table instance belongs to.
         :param name: The name of the table is created.
-        :param fill_example: Indicates whether an initial view, some fields and
-            some rows should be added. Works only if no data is provided.
         :param data: A list containing all the rows that need to be inserted is
-            expected. All the values of the row are going to be converted to a string
-            and will be inserted in the database.
+            expected. All the values will be inserted in the database.
         :param first_row_header: Indicates if the first row are the fields. The names
-            of these rows are going to be used as fields.
-        :raises MaxFieldLimitExceeded: When the data contains more columns
-            than the field limit.
-        :return: The created table instance.
+            of these rows are going to be used as fields. If `fields` is provided,
+            this options is ignored.
+        :param session: The user session Id used to register the action.
+        :param sync: Set to True if you want to execute the task synchronously.
+        :return: The created job instance.
         """
 
         database.group.has_user(user, raise_error=True)
 
-        if data is not None:
-            fields, data = self.normalize_initial_table_data(data, first_row_header)
-            if len(fields) > settings.MAX_FIELD_LIMIT:
-                raise MaxFieldLimitExceeded(
-                    f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
+        if sync:
+            limit = settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT
+            if limit and len(data) > limit:
+                raise InitialSyncTableDataLimitExceeded(
+                    f"It is not possible to import more than "
+                    f"{settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT} rows "
+                    "when creating a table synchronously. Use Asynchronous "
+                    "alternative instead."
                 )
+
+        job = JobHandler().create_and_start_job(
+            user,
+            "file_import",
+            database=database,
+            name=name,
+            data=data,
+            first_row_header=first_row_header,
+            user_session_id=session,
+            sync=sync,
+        )
+
+        if sync:
+            job.refresh_from_db()
+
+        return job
+
+    def create_minimal_table(
+        self,
+        user: AbstractUser,
+        database: Database,
+        name: str,
+        fill_example: bool = False,
+        session: Optional[str] = None,
+    ) -> Job:
+        """
+        Creates a new minimum table with only one text field and no data.
+
+        :param user: The user on whose behalf the table is created.
+        :param database: The database that the table instance belongs to.
+        :param name: The name of the table is created.
+        :param fill_example: Fill the table with example field and data.
+        :param session: The user session Id used to register the action.
+        :return: The created job instance.
+        """
+
+        database.group.has_user(user, raise_error=True)
+
+        with translation.override(user.profile.language):
+            if fill_example:
+                fields, data = self.get_example_table_field_and_data()
+            else:
+                fields, data = self.get_minimal_table_field_and_data()
+
+        table = self.create_table_and_fields(user, database, name, fields)
+
+        job = self.import_table_data(user, table, data, session=session, sync=True)
+
+        return job
+
+    def import_table_data(
+        self,
+        user: AbstractUser,
+        table: Table,
+        data: List[List[Any]],
+        session: Optional[str] = None,
+        sync: bool = False,
+    ) -> Job:
+        """
+        Creates job to import data into the specified table.
+
+        :param user: The user on whose behalf the table is created.
+        :param table: The table we want the data to be inserted.
+        :param data: A list containing all the rows that need to be inserted is
+            expected.
+        :param session: The user session Id used to register the action.
+        :param sync: Set to True if you want to execute the task synchronously.
+        :return: The created job instance.
+        """
+
+        job = JobHandler().create_and_start_job(
+            user,
+            "file_import",
+            data=data,
+            table=table,
+            user_session_id=session,
+            sync=sync,
+        )
+
+        if sync:
+            job.refresh_from_db()
+
+        return job
+
+    def create_table_and_fields(
+        self,
+        user: AbstractUser,
+        database: Database,
+        name: str,
+        fields: List[Tuple[str, str, Dict[str, Any]]],
+    ) -> Table:
+        """
+        Creates a new table with the specified fields. Also creates a default grid view
+        for this table.
+
+        :param user: The user on whose behalf the table is created.
+        :param database: The database that the table instance belongs to.
+        :param name: The name of the table is created.
+        :param fields: You specify the field configuration with this parameter. The
+            tuples content is the field name, then the field type and the field
+            configuration. You can add an optional `field_options` dict for the
+            field_options of the created view.
+        """
 
         last_order = Table.get_last_order(database)
         table = Table.objects.create(
@@ -134,19 +239,40 @@ class TableHandler:
             name=name,
         )
 
-        if data is not None:
-            # If the initial data has been provided we will create those fields before
-            # creating the model so that we the whole table schema is created right
-            # away.
-            for index, name in enumerate(fields):
-                fields[index] = TextField.objects.create(
-                    table=table, order=index, primary=index == 0, name=name
-                )
+        # Let's create the fields before creating the model so that the whole
+        # table schema is created right away.
+        field_options_dict = {}
+        for index, (name, field_type_name, field_config) in enumerate(fields):
+            field_options = field_config.pop("field_options", None)
+            field_type = field_type_registry.get(field_type_name)
+            FieldModel = field_type.model_class
 
-        else:
-            # If no initial data is provided we want to create a primary text field for
-            # the table.
-            TextField.objects.create(table=table, order=0, primary=True, name="Name")
+            fields[index] = FieldModel.objects.create(
+                table=table,
+                order=index,
+                primary=index == 0,
+                name=name,
+                **field_config,
+            )
+            if field_options:
+                field_options_dict[fields[index].id] = field_options
+
+        # Creates a default view
+        view_handler = ViewHandler()
+
+        with translation.override(user.profile.language):
+            view = view_handler.create_view(
+                user, table, GridViewType.type, name=_("Grid")
+            )
+
+        # Fix field_options if any
+        if field_options_dict:
+            view_handler.update_field_options(
+                user=user,
+                view=view,
+                field_options=field_options_dict,
+                fields=fields,
+            )
 
         # Create the table schema in the database database.
         with safe_django_schema_editor() as schema_editor:
@@ -154,21 +280,19 @@ class TableHandler:
             model = table.get_model(managed=True)
             schema_editor.create_model(model)
 
-        if data is not None:
-            self.fill_initial_table_data(user, table, fields, data, model)
-        elif fill_example:
-            self.fill_example_table_data(user, table)
-
-        table_created.send(self, table=table, user=user)
-
         return table
 
-    def normalize_initial_table_data(
-        self, data: List[List[str]], first_row_header: bool
+    def normalize_initial_table_data_and_guess_types(
+        self, data: List[List[Any]], first_row_header: bool
     ) -> Tuple[List, List]:
         """
         Normalizes the provided initial table data. The amount of columns will be made
-        equal for each row. The header and the rows will also be separated.
+        equal for each row. The header and the rows will also be separated. Try to guess
+        the field type by counting the occurrence of all values type in data. The
+        guesser try to be as safer as possible but by setting the value
+        `settings.BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD` to something greater
+        than 0 we allow this percentage of rows to fail import to have more precise
+        types.
 
         :param data: A list containing all the provided rows.
         :param first_row_header: Indicates if the first row is the header. For each
@@ -176,6 +300,10 @@ class TableHandler:
         :return: A list containing the field names and a list containing all the rows.
         :raises InvalidInitialTableData: When the data doesn't contain a column or row.
         :raises MaxFieldNameLengthExceeded: When the provided name is too long.
+        :raises InitialTableDataDuplicateName: When duplicates exit in field names.
+        :raises ReservedBaserowFieldNameException: When the field name is reserved by
+            Baserow.
+        :raises InvalidBaserowFieldName: When the field name is invalid (emtpy).
         """
 
         if len(data) == 0:
@@ -196,12 +324,17 @@ class TableHandler:
         fields = data.pop(0) if first_row_header else []
 
         for i in range(len(fields), largest_column_count):
-            fields.append(f"Field {i + 1}")
+            fields.append(_("Field %d") % (i + 1,))
+
+        if len(fields) > settings.MAX_FIELD_LIMIT:
+            raise MaxFieldLimitExceeded(
+                f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
+            )
 
         # Stripping whitespace from field names is already done by
-        # TableCreateSerializer  however we repeat to ensure that non API usages of
+        # TableCreateSerializer however we repeat to ensure that non API usages of
         # this method is consistent with api usage.
-        field_name_set = {name.strip() for name in fields}
+        field_name_set = {str(name).strip() for name in fields}
 
         if len(field_name_set) != len(fields):
             raise InitialTableDataDuplicateName()
@@ -218,76 +351,99 @@ class TableHandler:
         if "" in field_name_set:
             raise InvalidBaserowFieldName()
 
-        for row in data:
-            for i in range(len(row), largest_column_count):
-                row.append("")
+        normalized_data = []
 
+        # Fill missing rows and computes value type frequencies
+        value_type_frequencies = defaultdict(lambda: defaultdict(lambda: 0))
+        for row in data:
+            new_row = []
+            for index, value in enumerate(row):
+                if value is not None:
+                    if isinstance(value, int):
+                        if len(str(value)) <= 50:
+                            value_type_frequencies[index]["number_int"] += 1
+                        else:
+                            value_type_frequencies[index]["text"] += 1
+                    elif isinstance(value, float):
+                        sign, digits, exponent = Decimal(str(value)).as_tuple()
+                        if abs(exponent) <= 10 and len(digits) <= 50 + 10:
+                            value_type_frequencies[index]["number_float"] += 1
+                        else:
+                            value_type_frequencies[index]["text"] += 1
+                    else:
+                        value = "" if value is None else str(value)
+                        if len(value) > 255:
+                            value_type_frequencies[index]["long_text"] += 1
+                        else:
+                            value_type_frequencies[index]["text"] += 1
+
+                new_row.append(value)
+
+            # Fill incomplete rows with empty values
+            for i in range(len(new_row), largest_column_count):
+                new_row.append(None)
+
+            normalized_data.append(new_row)
+
+        field_with_type = []
+        tolerated_error_threshold = (
+            len(normalized_data)
+            / 100
+            * settings.BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD
+        )
+        # Try to guess field type from type frequency
+        for index, field_name in enumerate(fields):
+            frequencies = value_type_frequencies[index]
+            if frequencies["long_text"] > tolerated_error_threshold:
+                field_with_type.append(
+                    (field_name, "long_text", {"field_options": {"width": 400}})
+                )
+            elif frequencies["text"] > tolerated_error_threshold:
+                field_with_type.append((field_name, "text", {}))
+            elif frequencies["number_float"] > tolerated_error_threshold:
+                field_with_type.append(
+                    (
+                        field_name,
+                        "number",
+                        {"number_negative": True, "number_decimal_places": 10},
+                    )
+                )
+            elif frequencies["number_int"] > tolerated_error_threshold:
+                field_with_type.append(
+                    (
+                        field_name,
+                        "number",
+                        {"number_negative": True, "field_options": {"width": 150}},
+                    )
+                )
+            else:
+                field_with_type.append((field_name, "text", {}))
+
+        return field_with_type, normalized_data
+
+    def get_example_table_field_and_data(self):
+        """
+        Generates fields and data with some initial example data.
+        """
+
+        fields = [
+            (_("Name"), "text", {}),
+            (_("Notes"), "long_text", {"field_options": {"width": 400}}),
+            (_("Active"), "boolean", {"field_options": {"width": 100}}),
+        ]
+        data = [["", "", False], ["", "", False]]
         return fields, data
 
-    def fill_initial_table_data(
-        self,
-        user: AbstractUser,
-        table: Table,
-        fields: List[str],
-        data: List[List[Any]],
-        model: Type[GeneratedTableModel],
-    ):
+    def get_minimal_table_field_and_data(self):
         """
-        Fills the provided table with the normalized data that needs to be created upon
-        creation of the table.
-
-        :param user: The user on whose behalf the table is created.
-        :param table: The newly created table where the initial data has to be inserted
-            into.
-        :param fields: A list containing the field names.
-        :param data: A list containing the rows that need to be inserted.
-        :param model: The generated table model of the table that needs to be filled
-            with initial data.
+        Generates fields and data for an empty table.
         """
 
-        ViewHandler().create_view(user, table, GridViewType.type, name="Grid")
-
-        bulk_data = [
-            model(
-                order=index + 1,
-                **{
-                    f"field_{fields[index].id}": str(value)
-                    for index, value in enumerate(row)
-                },
-            )
-            for index, row in enumerate(data)
+        fields = [
+            (_("Name"), "text", {}),
         ]
-        model.objects.bulk_create(bulk_data)
-
-    def fill_example_table_data(self, user: AbstractUser, table: Table):
-        """
-        Fills the table with some initial example data. A new table is expected that
-        already has the primary field named 'name'.
-
-        :param user: The user on whose behalf the table is filled.
-        :param table: The table that needs the initial data.
-        """
-
-        view_handler = ViewHandler()
-        field_handler = FieldHandler()
-
-        view = view_handler.create_view(user, table, GridViewType.type, name="Grid")
-        notes = field_handler.create_field(
-            user, table, LongTextFieldType.type, name="Notes"
-        )
-        active = field_handler.create_field(
-            user, table, BooleanFieldType.type, name="Active"
-        )
-
-        field_options = {notes.id: {"width": 400}, active.id: {"width": 100}}
-        fields = [notes, active]
-        view_handler.update_field_options(
-            user=user, view=view, field_options=field_options, fields=fields
-        )
-
-        model = table.get_model(attribute_names=True)
-        model.objects.create(name="Tesla", active=True, order=1)
-        model.objects.create(name="Amazon", active=False, order=2)
+        data = []
+        return fields, data
 
     def update_table_by_id(self, user: AbstractUser, table_id: int, name: str) -> Table:
         """
@@ -419,3 +575,19 @@ class TableHandler:
             Table.objects.bulk_update(
                 tables_to_store, ["row_count", "row_count_updated_at"]
             )
+
+    @classmethod
+    def get_total_row_count_of_group(cls, group_id: int) -> int:
+        """
+        Returns the total row count of all tables in the given group.
+
+        :param group_id: The group of which the total row count needs to be calculated.
+        :return: The total row count of all tables in the given group.
+        """
+
+        return (
+            Table.objects.filter(database__group_id=group_id).aggregate(
+                Sum("row_count")
+            )["row_count__sum"]
+            or 0
+        )

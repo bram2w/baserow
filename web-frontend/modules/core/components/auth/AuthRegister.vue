@@ -83,6 +83,12 @@
           </div>
         </div>
       </div>
+      <component
+        :is="component"
+        v-for="(component, index) in registerComponents"
+        :ref="`register-component-${index}`"
+        :key="index"
+      ></component>
       <div class="actions">
         <slot></slot>
         <button
@@ -138,6 +144,13 @@ export default {
       },
     }
   },
+  computed: {
+    registerComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getRegisterComponent())
+        .filter((component) => component !== null)
+    },
+  },
   beforeMount() {
     if (this.invitation !== null) {
       this.account.email = this.invitation.email
@@ -146,7 +159,19 @@ export default {
   methods: {
     async register() {
       this.$v.$touch()
-      if (this.$v.$invalid) {
+      let registerComponentsValid = true
+
+      for (let i = 0; i < this.registerComponents.length; i++) {
+        const ref = this.$refs[`register-component-${i}`][0]
+        if (
+          Object.prototype.hasOwnProperty.call(ref, 'isValid') &&
+          !ref.isValid(this.account)
+        ) {
+          registerComponentsValid = false
+        }
+      }
+
+      if (this.$v.$invalid || !registerComponentsValid) {
         return
       }
 

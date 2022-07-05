@@ -548,7 +548,14 @@ def test_human_readable_values(data_fixture):
         "multiple_select": "",
         "text": "",
         "url": "",
-        "formula": "test FORMULA",
+        "formula_bool": "True",
+        "formula_date": "2020-01-01",
+        "formula_dateinterval": "1 day, 0:00:00",
+        "formula_decimal": "33.3333333333",
+        "formula_email": "",
+        "formula_int": "1",
+        "formula_singleselect": "",
+        "formula_text": "test FORMULA",
         "lookup": "",
     }
     assert results == {
@@ -581,7 +588,14 @@ def test_human_readable_values(data_fixture):
         "multiple_select": "D, C, E",
         "text": "text",
         "url": "https://www.google.com",
-        "formula": "test FORMULA",
+        "formula_bool": "True",
+        "formula_date": "2020-01-01",
+        "formula_dateinterval": "1 day",
+        "formula_decimal": "33.3333333333",
+        "formula_email": "test@example.com",
+        "formula_int": "1",
+        "formula_singleselect": "A",
+        "formula_text": "test FORMULA",
         "lookup": "linked_row_1, linked_row_2, ",
     }
 

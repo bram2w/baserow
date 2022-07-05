@@ -167,7 +167,10 @@ class DiscriminatorCustomFieldsMappingSerializerExtension(
 
     def map_serializer(self, auto_schema, direction):
         mapping = {
-            types.type: types.get_serializer_class(base_class=self.target.base_class)
+            types.type: types.get_serializer_class(
+                base_class=self.target.base_class,
+                request_serializer=self.target.request,
+            )
             for types in self.target.registry.registry.values()
         }
 

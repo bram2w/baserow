@@ -182,6 +182,7 @@
     </Context>
     <RowEditModal
       ref="rowEditModal"
+      :database="database"
       :table="table"
       :primary="primary"
       :visible-fields="[primary].concat(visibleFields)"
@@ -839,17 +840,23 @@ export default {
       }
     },
     keyDownEvent(event) {
-      // Check if arrow key was pressed.
       if (
-        this.$store.getters[
-          this.storePrefix + 'view/grid/isMultiSelectActive'
-        ] &&
-        ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(event.key)
+        this.$store.getters[this.storePrefix + 'view/grid/isMultiSelectActive']
       ) {
-        // Cancels multi-select if it's currently active.
-        this.$store.dispatch(
-          this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
-        )
+        // Check if arrow key was pressed.
+        if (
+          ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(
+            event.key
+          )
+        ) {
+          // Cancels multi-select if it's currently active.
+          this.$store.dispatch(
+            this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
+          )
+        }
+        if (event.key === 'Backspace') {
+          this.clearValuesFromMultipleCellSelection()
+        }
       }
     },
     /**
@@ -965,6 +972,30 @@ export default {
       }
       this.deletingRow = false
       return true
+    },
+    /**
+     * Called when the backspace key is pressed while multi-cell select is active.
+     * Clears the values of all selected cells by updating them to their null values.
+     */
+    async clearValuesFromMultipleCellSelection() {
+      try {
+        this.$store.dispatch('notification/setClearing', true)
+
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/clearValuesFromMultipleCellSelection',
+          {
+            table: this.table,
+            view: this.view,
+            primary: this.primary,
+            fields: this.leftFields.concat(this.visibleFields),
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'view')
+      } finally {
+        this.$store.dispatch('notification/setClearing', false)
+      }
     },
   },
 }

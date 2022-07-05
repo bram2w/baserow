@@ -2,8 +2,10 @@ from io import BytesIO
 
 import pytest
 from django.urls import reverse
+from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
+from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -13,6 +15,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaArrayType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 
 
@@ -526,9 +529,11 @@ def test_import_export_tables_with_lookup_fields(
     user = data_fixture.create_user()
     imported_group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, name="Placeholder")
-    table = data_fixture.create_database_table(name="Example", database=database)
+    table = data_fixture.create_database_table(
+        name="Example", database=database, order=0
+    )
     customers_table = data_fixture.create_database_table(
-        name="Customers", database=database
+        name="Customers", database=database, order=1
     )
     customer_name = data_fixture.create_text_field(table=customers_table, primary=True)
     customer_age = data_fixture.create_number_field(table=customers_table)
@@ -583,6 +588,7 @@ def test_import_export_tables_with_lookup_fields(
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()
     imported_table = imported_tables[0]
+    assert imported_table.name == table.name
 
     imported_lookup_field = imported_table.field_set.get(
         name=lookup_field.name
@@ -1371,6 +1377,17 @@ def test_deleting_table_with_dependants_works(
 
     assert not depends_on_related_field.dependencies.exists()
     assert not depends_on_related_field.dependants.exists()
+    assert [str(o) for o in FieldDependency.objects.all()] == unordered(
+        [
+            str(FieldDependency(dependant=string_agg, dependency=lookup_field)),
+            str(
+                FieldDependency(
+                    dependant=lookup_field,
+                    broken_reference_field_name=linkrowfield.name,
+                )
+            ),
+        ]
+    )
 
     lookup_field.refresh_from_db()
     assert lookup_field.formula_type == "invalid"
@@ -1435,6 +1452,16 @@ def test_deleting_table_with_dependants_works(
 
     string_agg.refresh_from_db()
     assert string_agg.formula_type == "text"
+
+    assert [str(o) for o in lookup_field.dependencies.all()] == unordered(
+        [
+            str(
+                FieldDependency(
+                    dependant=lookup_field, dependency=looked_up_field, via=linkrowfield
+                )
+            ),
+        ]
+    )
 
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -1720,6 +1747,44 @@ def test_converting_away_from_lookup_field_deletes_parent_formula_field(
 
 
 @pytest.mark.django_db
+def test_updating_other_side_of_link_row_field_updates_lookups(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_b_model = table_b.get_model(attribute_names=True)
+    row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    row_a = table_a_model.objects.create(primary="a")
+    row_a.save()
+
+    lookup = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name="link",
+        target_field_name="target",
+    )
+
+    RowHandler().update_row_by_id(
+        user,
+        table_b,
+        row_1.id,
+        {f"{link_field.link_row_related_field.db_column}": [row_a.id]},
+    )
+
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=row_a.id).lookup == [
+        {"id": row_1.id, "value": "target 1"}
+    ]
+
+
+@pytest.mark.django_db
 def test_can_modify_row_containing_lookup_diamond_dep(
     data_fixture, api_client, django_assert_num_queries
 ):
@@ -1887,3 +1952,264 @@ def test_can_modify_row_containing_lookup_diamond_dep(
             },
         ],
     }
+
+
+@pytest.mark.django_db
+def test_deleting_link_in_other_side_of_link_row_field_updates_lookups(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+
+    # Make some rows in table b which we will lookup from table a
+    table_b_model = table_b.get_model(attribute_names=True)
+    table_b_row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    table_b_row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    # Make a row in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_a_row_1 = table_a_model.objects.create(primary="a")
+    table_a_row_1.save()
+
+    # Create a lookup from table a to table b's target column
+    FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name=link_field.name,
+        target_field_name=target_field.name,
+    )
+
+    # Create a connection between table b and table a
+    RowHandler().update_row_by_id(
+        user,
+        table_b,
+        table_b_row_1.id,
+        {f"{link_field.link_row_related_field.db_column}": [table_a_row_1.id]},
+    )
+
+    # Assert that the lookup was updated in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=table_a_row_1.id).lookup == [
+        {"id": table_b_row_1.id, "value": "target 1"}
+    ]
+
+    # Delete the connection in table b
+    RowHandler().update_row_by_id(
+        user,
+        table_b,
+        table_b_row_1.id,
+        {f"{link_field.link_row_related_field.db_column}": []},
+    )
+
+    # Assert that the lookup was updated in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=table_a_row_1.id).lookup == []
+
+
+@pytest.mark.django_db
+def test_batch_deleting_all_links_in_other_side_of_link_row_field_updates_lookups(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+
+    # Make some rows in table b which we will lookup from table a
+    table_b_model = table_b.get_model(attribute_names=True)
+    table_b_row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    table_b_row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    # Make rows in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_a_row_1 = table_a_model.objects.create(primary="a")
+    table_a_row_2 = table_a_model.objects.create(primary="b")
+
+    # Create a lookup from table a to table b's target column
+    FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name=link_field.name,
+        target_field_name=target_field.name,
+    )
+
+    # Create a connection between table b and table a
+    RowHandler().update_rows(
+        user,
+        table_b,
+        [
+            {
+                "id": table_b_row_1.id,
+                f"{link_field.link_row_related_field.db_column}": [table_a_row_1.id],
+            },
+            {
+                "id": table_b_row_2.id,
+                f"{link_field.link_row_related_field.db_column}": [table_a_row_2.id],
+            },
+        ],
+    )
+
+    # Assert that the lookup was updated in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=table_a_row_1.id).lookup == [
+        {"id": table_b_row_1.id, "value": "target 1"},
+    ]
+    assert table_a_model.objects.get(id=table_a_row_2.id).lookup == [
+        {"id": table_b_row_2.id, "value": "target 2"},
+    ]
+
+    # Delete the connections in table b
+    RowHandler().update_rows(
+        user,
+        table_b,
+        [
+            {
+                "id": table_b_row_1.id,
+                f"{link_field.link_row_related_field.db_column}": [],
+            },
+            {
+                "id": table_b_row_2.id,
+                f"{link_field.link_row_related_field.db_column}": [],
+            },
+        ],
+    )
+
+    # Assert that the lookup was updated in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=table_a_row_1.id).lookup == []
+    assert table_a_model.objects.get(id=table_a_row_2.id).lookup == []
+
+
+@pytest.mark.django_db
+def test_batch_deleting_some_links_in_other_side_of_link_row_field_updates_lookups(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+
+    # Make some rows in table b which we will lookup from table a
+    table_b_model = table_b.get_model(attribute_names=True)
+    table_b_row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    table_b_row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    # Make rows in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_a_row_1 = table_a_model.objects.create(primary="a")
+    table_a_row_2 = table_a_model.objects.create(primary="b")
+
+    # Create a lookup from table a to table b's target column
+    FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name=link_field.name,
+        target_field_name=target_field.name,
+    )
+
+    # Create a connection between table b and table a
+    RowHandler().update_rows(
+        user,
+        table_b,
+        [
+            {
+                "id": table_b_row_1.id,
+                f"{link_field.link_row_related_field.db_column}": [
+                    table_a_row_1.id,
+                    table_a_row_2.id,
+                ],
+            },
+            {
+                "id": table_b_row_2.id,
+                f"{link_field.link_row_related_field.db_column}": [table_a_row_2.id],
+            },
+        ],
+    )
+
+    # Assert that the lookup was updated in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=table_a_row_1.id).lookup == [
+        {"id": table_b_row_1.id, "value": "target 1"},
+    ]
+    assert table_a_model.objects.get(id=table_a_row_2.id).lookup == [
+        {"id": table_b_row_1.id, "value": "target 1"},
+        {"id": table_b_row_2.id, "value": "target 2"},
+    ]
+
+    # Delete the connections in table b
+    RowHandler().update_rows(
+        user,
+        table_b,
+        [
+            {
+                "id": table_b_row_1.id,
+                f"{link_field.link_row_related_field.db_column}": [table_a_row_1.id],
+            },
+            {
+                "id": table_b_row_2.id,
+                f"{link_field.link_row_related_field.db_column}": [],
+            },
+        ],
+    )
+
+    # Assert that the lookup was updated in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    assert table_a_model.objects.get(id=table_a_row_1.id).lookup == [
+        {"id": table_b_row_1.id, "value": "target 1"},
+    ]
+    assert table_a_model.objects.get(id=table_a_row_2.id).lookup == []
+
+
+@pytest.mark.django_db
+def test_converting_a_lookup_field_doesnt_break_its_dependants(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+
+    # Make some rows in table b which we will lookup from table a
+    table_b_model = table_b.get_model(attribute_names=True)
+    table_b_row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    table_b_row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    # Make a row in table a
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_a_row_1 = table_a_model.objects.create(primary="a")
+    table_a_row_1.save()
+
+    # Create a lookup from table a to table b's target column
+    lookup = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name=link_field.name,
+        target_field_name=target_field.name,
+    )
+
+    # A field which depends on the lookup field
+    dependant = FieldHandler().create_field(
+        user, table_a, "formula", name="dependant on lookup", formula=f"field('lookup')"
+    )
+
+    assert list(specific_iterator(dependant.field_dependencies.all())) == [lookup]
+    assert list(specific_iterator(lookup.dependant_fields.all())) == [dependant]
+
+    FieldHandler().update_field(
+        user,
+        lookup,
+        "text",
+    )
+
+    assert list(specific_iterator(dependant.field_dependencies.all())) == [lookup]
+    assert list(specific_iterator(lookup.dependant_fields.all())) == [dependant]

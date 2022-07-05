@@ -18,7 +18,7 @@ def formula_exception_handler(e):
     :param e: The exception to report.
     """
 
-    if settings.DEBUG:
+    if settings.DEBUG or settings.TESTS:
         # We want to see any issues immediately in debug mode.
         raise e
     try:

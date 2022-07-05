@@ -25,7 +25,8 @@
         "search": "Zoeken",
         "copy": "Kopiëren",
         "activate": "Activeren",
-        "deactivate": "Deactiveren"
+        "deactivate": "Deactiveren",
+        "paste": "Plakken"
     },
     "adminType": {
         "settings": "Instellingen"
@@ -38,7 +39,8 @@
     "settingType": {
         "account": "Account",
         "password": "Wachtwoord",
-        "tokens": "API-tokens"
+        "tokens": "API-tokens",
+        "deleteAccount": "Account verwijderen"
     },
     "userFileUploadType": {
         "file": "mijn apparaat",
@@ -156,7 +158,8 @@
         "table": "tabel",
         "field": "veld",
         "row": "rij",
-        "view": "weergave"
+        "view": "weergave",
+        "rows": "rijen"
     },
     "webhook": {
         "request": "Verzoek",
@@ -234,7 +237,12 @@
         "queryParameters": "Query-parameters",
         "pathParameters": "Pad-parameters",
         "requestBodySchema": "Verzoek body schema",
-        "userFieldNamesDescription": "Als een waarde is opgegeven voor de `user_field_names` GET parameter, dan zullen de veldnamen die door dit eindpunt worden geretourneerd de werkelijke namen van de velden zijn.\n\n Als de `user_field_names` GET parameter niet wordt opgegeven, dan zullen alle geretourneerde veldnamen `field_` zijn, gevolgd door de id van het veld. Bijvoorbeeld `field_1` verwijst naar het veld met een id van `1`."
+        "userFieldNamesDescription": "Als een waarde is opgegeven voor de `user_field_names` GET parameter, dan zullen de veldnamen die door dit eindpunt worden geretourneerd de werkelijke namen van de velden zijn.\n\n Als de `user_field_names` GET parameter niet wordt opgegeven, dan zullen alle geretourneerde veldnamen `field_` zijn, gevolgd door de id van het veld. Bijvoorbeeld `field_1` verwijst naar het veld met een id van `1`.",
+        "updateRows": "Rijen bijwerken",
+        "singleRow": "Enkel",
+        "createRows": "Rijen maken",
+        "deleteRows": "Rijen verwijderen",
+        "batchRows": "Batch"
     },
     "exporterType": {
         "csv": "Exporteren naar CSV"
@@ -308,9 +316,15 @@
         "variancePopDescription": "Berekent de populatievariantie van de waarden en retourneert het resultaat. De populatievariantie moet worden gebruikt wanneer de verstrekte waarden een waarde bevatten voor elk afzonderlijk gegeven in de populatie.",
         "avgDescription": "Berekent het gemiddelde van alle waarden en retourneert het resultaat.",
         "sumDescription": "Somt alle waarden op en retourneert het resultaat.",
-        "filterDescription": "Filtert een uitdrukking met een lookup/link veldverwijzing of een lookup-functie oproep."
+        "filterDescription": "Filtert een uitdrukking met een lookup/link veldverwijzing of een lookup-functie oproep.",
+        "intDescription": "Retourneert alleen het eerste argument dat is omgezet in een geheel getal door decimalen af te rekken.",
+        "roundDescription": "Geeft het eerste argument afgerond op het aantal cijfers dat is opgegeven door het tweede argument."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
+    },
+    "urlCheck": {
+        "invalidUrlEnvVarTitle": "Ongeldig {name}",
+        "invalidUrlEnvVarDescription": "De omgevingsvariabele {name} is op een ongeldige waarde ingesteld. De sitebeheerder moet {name} veranderen in een geldige URL die begint met http:// of https:// en dan Baserow opnieuw opstarten om deze fout te herstellen."
     }
 }

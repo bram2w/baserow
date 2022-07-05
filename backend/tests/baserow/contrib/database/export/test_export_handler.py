@@ -225,9 +225,12 @@ def test_can_export_every_interesting_different_field_to_csv(
         "last_modified_datetime_eu,last_modified_date_eu,created_on_datetime_us,"
         "created_on_date_us,created_on_datetime_eu,created_on_date_eu,link_row,"
         "decimal_link_row,file_link_row,file,single_select,"
-        "multiple_select,phone_number,formula,lookup\r\n"
+        "multiple_select,phone_number,formula_text,formula_int,formula_bool,"
+        "formula_decimal,formula_dateinterval,formula_date,formula_singleselect,"
+        "formula_email,lookup\r\n"
         "1,,,,,,,,,0,False,,,,,01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
         "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,,,,,,,,test FORMULA,"
+        "1,True,33.3333333333,1 day,2020-01-01,,,"
         "\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,3,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,"
@@ -238,7 +241,8 @@ def test_can_export_every_interesting_different_field_to_csv(
         '.txt,unnamed row 2",'
         '"visible_name=a.txt url=http://localhost:8000/media/user_files/hashed_name.txt'
         ',visible_name=b.txt url=http://localhost:8000/media/user_files/other_name.txt"'
-        ',A,"D,C,E",+4412345678,test FORMULA,"linked_row_1,linked_row_2,"\r\n'
+        ',A,"D,C,E",+4412345678,test FORMULA,1,True,33.3333333333,1 day,2020-01-01,A,'
+        'test@example.com,"linked_row_1,linked_row_2,"\r\n'
     )
 
     assert contents == expected
@@ -528,7 +532,7 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
     assert job_which_fails.error == "Failed"
     table_exporter_registry.unregister("broken")
 
-    # We do not expect an error because canceled errors should be ignored.
+    # We do not expect an error because cancelled errors should be ignored.
     job_which_fails = handler.create_pending_export_job(
         user, table, None, {"exporter_type": "cancelled"}
     )

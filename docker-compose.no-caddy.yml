@@ -1,0 +1,251 @@
+version: "3.4"
+########################################################################################
+#
+# This compose file runs every service separately without any reverse proxy or http
+# server to serve user uploaded files. It is intended as a starting point for people
+# who want to use their own reverse proxy and run Baserow with one service per
+# container. The web-frontend service is available by default at http://localhost:3000
+# and the backend service is available by default at http://localhost:8000 .
+#
+# To use this file you need to:
+#   1. Set the PUBLIC_BACKEND_URL to the URL that the user's browser can access the
+#      backend service on.
+#   2. Set the PUBLIC_WEB_FRONTEND_URL to the URL that the user's browser can access the
+#      web-frontend service on.
+#   3. Host the media files in the media volume on a HTTP server and set the MEDIA_URL
+#      to the URL the user's browser can access the files on.
+#   4. Ensure requests sent to the backend in /ws path are upgraded to websocket
+#      connections.
+#
+# See the following guides for more details and example configurations:
+#   1. https://baserow.io/docs/installation%2Finstall-behind-nginx
+#   2. https://baserow.io/docs/installation%2Finstall-behind-apache
+#
+# Also More documentation can be found in:
+# https://baserow.io/docs/installation%2Finstall-with-docker-compose
+#
+########################################################################################
+
+# See https://baserow.io/docs/installation%2Fconfiguration for more details on these
+# backend environment variables, their defaults if left blank etc.
+x-backend-variables: &backend-variables
+  # Most users should only need to set these first four variables.
+  SECRET_KEY: ${SECRET_KEY:?}
+  DATABASE_PASSWORD: ${DATABASE_PASSWORD:?}
+  REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+
+  PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:8000}
+  PUBLIC_WEB_FRONTEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:3000}
+
+  # Set these if you want to use an external postgres instead of the db service below.
+  DATABASE_USER: ${DATABASE_USER:-baserow}
+  DATABASE_NAME: ${DATABASE_NAME:-baserow}
+  DATABASE_HOST:
+  DATABASE_PORT:
+  DATABASE_URL:
+
+  # Set these if you want to use an external redis instead of the redis service below.
+  REDIS_HOST:
+  REDIS_PORT:
+  REDIS_PROTOCOL:
+  REDIS_URL:
+  REDIS_USER:
+
+  # Set these to enable Baserow to send emails.
+  EMAIL_SMTP:
+  EMAIL_SMTP_HOST:
+  EMAIL_SMTP_PORT:
+  EMAIL_SMTP_USE_TLS:
+  EMAIL_SMTP_USER:
+  EMAIL_SMTP_PASSWORD:
+  FROM_EMAIL:
+
+  # Set these to use AWS S3 bucket to store user files.
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_STORAGE_BUCKET_NAME:
+  AWS_S3_REGION_NAME:
+  AWS_S3_ENDPOINT_URL:
+  AWS_S3_CUSTOM_DOMAIN:
+
+  # Misc settings see https://baserow.io/docs/installation%2Fconfiguration for info
+  BASEROW_AMOUNT_OF_WORKERS:
+  BASEROW_ROW_PAGE_SIZE_LIMIT:
+  BATCH_ROWS_SIZE_LIMIT:
+  INITIAL_TABLE_DATA_LIMIT:
+  BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+
+  BASEROW_EXTRA_ALLOWED_HOSTS:
+  ADDITIONAL_APPS:
+  BASEROW_PLUGIN_GIT_REPOS:
+  BASEROW_PLUGIN_URLS:
+
+  BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:
+  MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}
+  SYNC_TEMPLATES_ON_STARTUP: ${SYNC_TEMPLATES_ON_STARTUP:-true}
+  DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
+  BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:
+  BASEROW_SYNC_TEMPLATES_TIME_LIMIT:
+
+  BASEROW_BACKEND_DEBUG:
+  BASEROW_BACKEND_LOG_LEVEL:
+  FEATURE_FLAGS:
+
+  PRIVATE_BACKEND_URL: http://backend:8000
+  BASEROW_PUBLIC_URL:
+  MEDIA_URL:
+  MEDIA_ROOT:
+
+  BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT:
+  HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
+  OLD_ACTION_CLEANUP_INTERVAL_MINUTES:
+  MINUTES_UNTIL_ACTION_CLEANED_UP:
+  BASEROW_GROUP_STORAGE_USAGE_ENABLED:
+  BASEROW_GROUP_STORAGE_USAGE_QUEUE:
+  BASEROW_COUNT_ROWS_ENABLED:
+  DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
+  BASEROW_FULL_HEALTHCHECKS:
+  BASEROW_DISABLE_MODEL_CACHE:
+  BASEROW_PLUGIN_DIR:
+  BASEROW_JOB_EXPIRATION_TIME_LIMIT:
+  BASEROW_JOB_CLEANUP_INTERVAL_MINUTES:
+  BASEROW_MAX_FILE_IMPORT_ERROR_COUNT:
+  BASEROW_JOB_SOFT_TIME_LIMIT:
+  BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD:
+
+
+services:
+  backend:
+    image: baserow/backend:1.10.2
+    restart: unless-stopped
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
+    environment:
+      <<: *backend-variables
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  web-frontend:
+    image: baserow/web-frontend:1.10.2
+    restart: unless-stopped
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
+    environment:
+      BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
+      PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
+      PUBLIC_BACKEND_URL:
+      PUBLIC_WEB_FRONTEND_URL:
+      BASEROW_DISABLE_PUBLIC_URL_CHECK:
+      INITIAL_TABLE_DATA_LIMIT:
+      DOWNLOAD_FILE_VIA_XHR:
+      HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
+      DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
+      FEATURE_FLAGS:
+      ADDITIONAL_MODULES:
+      BASEROW_MAX_IMPORT_FILE_SIZE_MB:
+    depends_on:
+      - backend
+    networks:
+      local:
+
+  celery:
+    image: baserow/backend:1.10.2
+    restart: unless-stopped
+    environment:
+      <<: *backend-variables
+    command: celery-worker
+    # The backend image's baked in healthcheck defaults to the django healthcheck
+    # override it to the celery one here.
+    healthcheck:
+      test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh celery-worker-healthcheck" ]
+    depends_on:
+      - backend
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  celery-export-worker:
+    image: baserow/backend:1.10.2
+    restart: unless-stopped
+    command: celery-exportworker
+    environment:
+      <<: *backend-variables
+    # The backend image's baked in healthcheck defaults to the django healthcheck
+    # override it to the celery one here.
+    healthcheck:
+      test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh celery-exportworker-healthcheck" ]
+    depends_on:
+      - backend
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  celery-beat-worker:
+    image: baserow/backend:1.10.2
+    restart: unless-stopped
+    command: celery-beat
+    environment:
+      <<: *backend-variables
+    # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237
+    stop_signal: SIGQUIT
+    # We don't yet have a healthcheck for the beat worker, just assume it is healthy.
+    healthcheck:
+      test: [ "CMD-SHELL", "exit 0" ]
+    depends_on:
+      - backend
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  db:
+    image: postgres:11.3
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-baserow}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:?}
+      - POSTGRES_DB=${DATABASE_NAME:-baserow}
+    healthcheck:
+      test: [ "CMD-SHELL", "su postgres -c \"pg_isready -U ${DATABASE_USER:-baserow}\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      local:
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.0
+    command: redis-server --requirepass ${REDIS_PASSWORD:?}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+    networks:
+      local:
+
+  # By default, the media volume will be owned by root on startup. Ensure it is owned by
+  # the same user that django is running as, so it can write user files.
+  volume-permissions-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /baserow/media
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:
+
+networks:
+  local:
+    driver: bridge

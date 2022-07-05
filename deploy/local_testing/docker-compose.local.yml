@@ -1,0 +1,59 @@
+version: "3.4"
+
+# This compose override runs a production version of Baserow, but builds images from
+# the local repository. It comes with a mailhog at http://localhost:8025 for testing.
+services:
+
+  backend:
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+
+  celery:
+    image: baserow_backend:latest
+    environment:
+      EMAIL_SMTP: 'yes'
+      EMAIL_SMTP_HOST: 'mailhog'
+      EMAIL_SMTP_PORT: '1025'
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+
+  celery-export-worker:
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+
+  celery-beat-worker:
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+
+  web-frontend:
+    image: baserow_web-frontend:latest
+    build:
+      dockerfile: ./web-frontend/Dockerfile
+      context: .
+
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - "8025:8025" # web ui
+    networks:
+      local:
+
+  # When switching between dev and local the media files in the media volume will be
+  # owned by different users. Ensure that we chown them to the user appropriate for the
+  # environment here.
+  media-volume-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /baserow/media
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:

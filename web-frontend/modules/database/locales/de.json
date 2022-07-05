@@ -221,7 +221,9 @@
     },
     "fieldContext": {
         "editField": "Feld bearbeiten",
-        "deleteField": "Feld löschen"
+        "deleteField": "Feld löschen",
+        "hideField": "Feld ausblenden",
+        "showField": "Feld anzeigen"
     },
     "fieldForm": {
         "name": "Name",
@@ -253,7 +255,9 @@
         "search": "Zeilen suchen"
     },
     "rowEditModal": {
-        "addField": "Feld hinzufügen"
+        "addField": "Feld hinzufügen",
+        "showHiddenFields": "Ausgeblendete Felder anzeigen",
+        "hideHiddenFields": "Versteckte Felder ausblenden"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Eine weitere Option hinzufügen"
@@ -322,7 +326,13 @@
         "title": "Neue Tabelle erstellen",
         "importLabel": "Möchten Sie vorhandene Daten importieren?",
         "newTable": "Beginnen Sie mit einer neuen Tabelle",
-        "addButton": "Tabelle hinzufügen"
+        "addButton": "Tabelle hinzufügen",
+        "uploading": "Hochladen...",
+        "preparing": "Daten werden vorbereitet...",
+        "importError": "Beim Dateiimport ist etwas schief gelaufen",
+        "statePreValidation": "Validierung von Daten...",
+        "stateCreateTable": "Tabelle wird erstellt...",
+        "reportMessage": "Die folgenden Zeilenindizes konnten nicht importiert werden:"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klicken Sie zum Bearbeiten der Formel",
@@ -412,7 +422,8 @@
         "exportView": "Ansicht exportieren",
         "renameView": "Ansicht umbenennen",
         "deleteView": "Ansicht löschen",
-        "webhooks": "Webhooks"
+        "webhooks": "Webhooks",
+        "duplicateView": "Ansicht duplizieren"
     },
     "deleteViewModal": {
         "title": "Löschen {name}",
@@ -574,5 +585,24 @@
     },
     "viewDecorator": {
         "decorator": "Farbe | 1 Farbe | {count} Farben"
+    },
+    "apiDocsTableUpdateRows": {
+        "description": "Aktualisiert bestehende {name} Zeilen.",
+        "id": "Die Zeilen-ID."
+    },
+    "apiDocsTableCreateRows": {
+        "before": "Falls angegeben, werden die neu erstellten Zeilen vor der Zeile mit der angegebenen id positioniert.",
+        "description": "Neue Zeilen {name} erstellen."
+    },
+    "importer": {
+        "loading": "Datei wird geladen",
+        "decoding": "Dekodierung von Daten",
+        "inProgress": "In Arbeit...",
+        "parsing": "Analysieren von Daten",
+        "preparing": "Aufbereitung der Daten"
+    },
+    "apiDocsTableDeleteRows": {
+        "description": "Löscht die vorhandenen Zeilen {name}.",
+        "items": "Ein Array von Zeilennummern, die gelöscht werden sollen."
     }
 }

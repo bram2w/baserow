@@ -5,7 +5,7 @@ from django.db import connection
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.update_collector import (
-    CachingFieldUpdateCollector,
+    FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
@@ -22,6 +22,7 @@ from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
 from .models import TrashedRows
+from baserow.contrib.database.fields.field_cache import FieldCache
 
 User = get_user_model()
 
@@ -39,7 +40,8 @@ class TableTrashableItemType(TrashableItemType):
     def restore(self, trashed_item: Table, trash_entry: TrashEntry):
         super().restore(trashed_item, trash_entry)
 
-        update_collector = CachingFieldUpdateCollector(trashed_item)
+        field_cache = FieldCache()
+        update_collector = FieldUpdateCollector(trashed_item)
         field_handler = FieldHandler()
         for field in trashed_item.field_set(manager="objects_and_trash").all():
             field = field.specific
@@ -65,12 +67,13 @@ class TableTrashableItemType(TrashableItemType):
                     field,
                     apply_and_send_updates=False,
                     update_collector=update_collector,
+                    field_cache=field_cache,
                 )
             except RelatedTableTrashedException:
                 continue
 
-            update_collector.cache_field(field)
-        update_collector.apply_updates_and_get_updated_fields()
+            field_cache.cache_field(field)
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
         update_collector.send_additional_field_updated_signals()
 
         table_created.send(
@@ -105,7 +108,8 @@ class TableTrashableItemType(TrashableItemType):
     def trash(self, item_to_trash: Table, requesting_user: User):
         model = item_to_trash.get_model()
 
-        update_collector = CachingFieldUpdateCollector(item_to_trash)
+        update_collector = FieldUpdateCollector(item_to_trash)
+        field_cache = FieldCache()
         handler = FieldHandler()
 
         for field in model._field_objects.values():
@@ -113,17 +117,18 @@ class TableTrashableItemType(TrashableItemType):
             # One of the previously deleted fields might have cached this field we
             # now want to delete, ensure it is gone from the cache as presence in the
             # cache is treated as the field not being trashed in other code.
-            update_collector.uncache_field(field)
+            field_cache.uncache_field(field)
             handler.delete_field(
                 requesting_user,
                 field,
                 create_separate_trash_entry=False,
                 apply_and_send_updates=False,
                 update_collector=update_collector,
+                field_cache=field_cache,
                 allow_deleting_primary=True,
             )
 
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
         update_collector.send_additional_field_updated_signals()
 
         super().trash(item_to_trash, requesting_user)
@@ -229,8 +234,9 @@ class RowTrashableItemType(TrashableItemType):
 
         model = table.get_model()
 
-        update_collector = CachingFieldUpdateCollector(
-            table, existing_model=model, starting_row_id=trashed_item.id
+        field_cache = FieldCache()
+        update_collector = FieldUpdateCollector(
+            table, starting_row_ids=[trashed_item.id]
         )
         updated_fields = [f["field"] for f in model._field_objects.values()]
         for field in updated_fields:
@@ -238,14 +244,17 @@ class RowTrashableItemType(TrashableItemType):
                 dependant_field,
                 dependant_field_type,
                 path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
+            ) in field.dependant_fields_with_types(
+                field_cache, associated_relation_changed=True
+            ):
                 dependant_field_type.row_of_dependency_created(
                     dependant_field,
                     trashed_item,
                     update_collector,
+                    field_cache,
                     path_to_starting_table,
                 )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         ViewHandler().field_value_updated(updated_fields)
 
@@ -341,16 +350,16 @@ class RowsTrashableItemType(TrashableItemType):
     def restore(self, trashed_item, trash_entry: TrashEntry):
         table = self._get_table(trashed_item.table_id)
         table_model = self._get_table_model(trashed_item.table_id)
-        rows_to_restore = table_model.objects_and_trash.filter(
+        rows_to_restore_queryset = table_model.objects_and_trash.filter(
             id__in=trashed_item.row_ids
-        ).enhance_by_fields()
-        for row in rows_to_restore:
-            row.trashed = False
-        table_model.objects_and_trash.bulk_update(rows_to_restore, ["trashed"])
+        )
+        rows_to_restore_queryset.update(trashed=False)
+        rows_to_restore = rows_to_restore_queryset.enhance_by_fields()
         trashed_item.delete()
 
-        update_collector = CachingFieldUpdateCollector(
-            table, existing_model=table_model, starting_row_id=trashed_item.row_ids
+        field_cache = FieldCache()
+        update_collector = FieldUpdateCollector(
+            table, starting_row_ids=trashed_item.row_ids
         )
         updated_fields = [f["field"] for f in table_model._field_objects.values()]
         for field in updated_fields:
@@ -358,14 +367,17 @@ class RowsTrashableItemType(TrashableItemType):
                 dependant_field,
                 dependant_field_type,
                 path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
+            ) in field.dependant_fields_with_types(
+                field_cache, associated_relation_changed=True
+            ):
                 dependant_field_type.row_of_dependency_created(
                     dependant_field,
                     rows_to_restore,
                     update_collector,
+                    field_cache,
                     path_to_starting_table,
                 )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         rows_created.send(
             self,

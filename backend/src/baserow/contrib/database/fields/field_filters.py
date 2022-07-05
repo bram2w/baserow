@@ -1,7 +1,11 @@
 from typing import Dict, Any, Union
 
 from django.db.models import Q, BooleanField
-from django.db.models.expressions import RawSQL
+from django.db.models.expressions import F, Value
+
+from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    FileNameContainsExpr,
+)
 
 FILTER_TYPE_AND = "AND"
 FILTER_TYPE_OR = "OR"
@@ -119,35 +123,10 @@ def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotated
     if value == "":
         return Q()
     # Check if the model_field has a file which matches the provided filter value.
-    annotation_query = _build_filename_contains_raw_query(field, value)
+    annotation_query = FileNameContainsExpr(
+        F(field_name), Value(f"%{value}%"), output_field=BooleanField()
+    )
     return AnnotatedQ(
         annotation={f"{field_name}_matches_visible_names": annotation_query},
         q={f"{field_name}_matches_visible_names": True},
-    )
-
-
-def _build_filename_contains_raw_query(field, value):
-    # It is not possible to use Django's ORM to query for if one item in a JSONB
-    # list has has a key which contains a specified value.
-    #
-    # The closest thing the Django ORM provides is:
-    #   queryset.filter(your_json_field__contains=[{"key":"value"}])
-    # However this is an exact match, so in the above example [{"key":"value_etc"}]
-    # would not match the filter.
-    #
-    # Instead we have to resort to RawSQL to use various built in PostgreSQL JSON
-    # Array manipulation functions to be able to 'iterate' over a JSONB list
-    # performing `like` on individual keys in said list.
-    num_files_with_name_like_value = f"""
-    EXISTS(
-        SELECT attached_files ->> 'visible_name'
-        FROM JSONB_ARRAY_ELEMENTS("field_{field.id}") as attached_files
-        WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
-    )
-"""  # nosec
-    # No user input goes into the sql constructed + escaped param is used so safe.
-    return RawSQL(  # nosec
-        num_files_with_name_like_value,
-        params=[f"%{value}%"],
-        output_field=BooleanField(),
     )

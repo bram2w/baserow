@@ -326,143 +326,89 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <div class="alert alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-          <div class="alert">
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
-              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
-              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
-              lacinia, sagittis quam sed, pellentesque orci. Aenean non
-              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
-              felis euismod.
-            </p>
-          </div>
-          <div class="alert alert--success alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-          <div class="alert alert--warning alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-          <div class="alert alert--error alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-
-          <div class="alert alert--simple alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-          <div class="alert alert--simple">
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
-              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
-              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
-              lacinia, sagittis quam sed, pellentesque orci. Aenean non
-              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
-              felis euismod.
-            </p>
-          </div>
-          <div class="alert alert--simple alert--success alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-          <div
-            class="
-              alert
-              alert--simple
-              alert--with-shadow
-              alert--warning
-              alert--has-icon
-            "
+          <Alert title="Notification message" icon="exclamation">
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Notification message">
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent lobortis feugiat erat, nec volutpat nulla tincidunt
+            vel. In hac habitasse platea dictumst. Aenean fringilla lacus nunc,
+            non pharetra mauris pulvinar lacinia. Aenean ut sem lacinia,
+            sagittis quam sed, pellentesque orci. Aenean non consequat mi. Nunc
+            laoreet ligula a nunc eleifend, nec accumsan felis euismod.
+          </Alert>
+          <Alert title="Notification message" type="success" icon="exclamation">
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Notification message" type="warning" icon="exclamation">
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Notification message" type="error" icon="exclamation">
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Notification message" simple icon="exclamation">
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Notification message" simple>
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert
+            title="Notification message"
+            type="success"
+            simple
+            icon="exclamation"
           >
-            <a href="#" class="alert__close">
-              <i class="fas fa-times"></i>
-            </a>
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
-          <div class="alert alert--simple alert--error alert--has-icon">
-            <div class="alert__icon">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="alert__title">Notification message</div>
-            <p class="alert__content">
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </div>
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert
+            title="Notification message"
+            type="warning"
+            simple
+            shadow
+            icon="exclamation"
+          >
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert
+            title="Notification message"
+            type="error"
+            simple
+            shadow
+            icon="exclamation"
+          >
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
         </div>
+
         <div class="margin-bottom-3 style-guide__buttons">
           <a class="button">a.button</a>
           <a class="button disabled">a.button[disabled]</a>
@@ -550,6 +496,7 @@
         <div class="margin-bottom-3">
           <a class="button button--large button--loading">Loading</a>
           <a class="button button--loading">Loading</a>
+          <a class="button button--ghost button--loading">Loading</a>
         </div>
         <div class="margin-bottom-3">
           <div class="tooltip margin-bottom-2">
@@ -1045,6 +992,12 @@
                 </div>
                 Will also be permanently deleted
               </div>
+              <p class="delete-section__description">
+                Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
+                dolor sit amet, consectetur adipiscing elit. Mauris vel tellus
+                suscipit, gravida libero a, egestas urna. Quisque tellus nisi,
+                consequat et interdum non, posuere sed lacus.
+              </p>
               <ul class="delete-section__list">
                 <li>
                   <i class="delete-section__list-icon fas fa-database"></i>

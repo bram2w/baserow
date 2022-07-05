@@ -72,6 +72,6 @@ def fill_database_with_tables(limit: int, database: Database):
     print(f"Starting making tables in sub process {process_id}")
     user = database.group.users.first()
     for i in tqdm(range(limit), desc=f"Worker {process_id}"):
-        TableHandler().create_table(
+        TableHandler().create_minimal_table(
             user, database, name=f"Table {i} from process {process_id}"
         )

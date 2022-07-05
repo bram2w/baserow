@@ -115,6 +115,9 @@ shell           : Start a Django Python shell
 shell           : Start a Django Python shell
 wait_for_db     : Waits BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS attempts for the
                   configured db to become available.
+install-plugin  : Installs a plugin (append --help for more info).
+uninstall-plugin: Un-installs a plugin (append --help for more info).
+list-plugins    : Lists currently installed plugins.
 help            : Show this message
 
 SERVICE COMMANDS:
@@ -144,17 +147,20 @@ test:           : Run the tests (only available if using dev target)
 ci-test:        : Run the tests for ci including various reports (dev only)
 ci-check-startup: Start up a single gunicorn and timeout after 10 seconds for ci (dev)
 watch-py CMD    : Auto reruns the provided CMD whenever python files change
+install-plugin  : Installs a baserow plugin.
 """
 }
 
 run_setup_commands_if_configured(){
-if [ "$MIGRATE_ON_STARTUP" = "true" ] ; then
-  echo "python /baserow/backend/src/baserow/manage.py migrate"
-  python /baserow/backend/src/baserow/manage.py migrate
-fi
+  startup_plugin_setup
+  if [ "$MIGRATE_ON_STARTUP" = "true" ] ; then
+    echo "python /baserow/backend/src/baserow/manage.py migrate"
+    python /baserow/backend/src/baserow/manage.py migrate
+  fi
 }
 
 start_celery_worker(){
+  startup_plugin_setup
   if [[ -n "$BASEROW_RUN_MINIMAL" ]]; then
     EXTRA_CELERY_ARGS=(--without-heartbeat --without-gossip --without-mingle)
   else
@@ -220,7 +226,8 @@ if [[ -z "${1:-}" ]]; then
   exit 1
 fi
 
-source "/baserow/venv/bin/activate"
+source /baserow/venv/bin/activate
+source /baserow/plugins/utils.sh
 
 case "$1" in
     django-dev)
@@ -229,6 +236,12 @@ case "$1" in
         echo "Running Development Server on 0.0.0.0:${BASEROW_BACKEND_PORT}"
         echo "Press CTRL-p CTRL-q to close this session without stopping the container."
         attachable_exec python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
+    ;;
+    django-dev-no-attach)
+        wait_for_postgres
+        run_setup_commands_if_configured
+        echo "Running Development Server on 0.0.0.0:${BASEROW_BACKEND_PORT}"
+        python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
     ;;
     gunicorn)
       run_backend_server asgi "${@:2}"
@@ -319,7 +332,7 @@ case "$1" in
           directory_args="$directory_args -d=$i"
         done
 
-        attachable_exec watchmedo auto-restart "$directory_args" --pattern=*.py --recursive -- bash "${BASH_SOURCE[0]} ${*:2}"
+        attachable_exec watchmedo auto-restart "$directory_args" --pattern="*.py" --recursive -- bash "${BASH_SOURCE[0]} ${*:2}"
     ;;
     backup)
         if [[ -n "$DATABASE_URL" ]]; then
@@ -359,6 +372,15 @@ case "$1" in
     ;;
     wait_for_db)
       wait_for_postgres
+    ;;
+    install-plugin)
+      exec /baserow/plugins/install_plugin.sh --runtime "${@:2}"
+    ;;
+    uninstall-plugin)
+      exec /baserow/plugins/uninstall_plugin.sh "${@:2}"
+    ;;
+    list-plugins)
+      exec /baserow/plugins/list_plugins.sh "${@:2}"
     ;;
     *)
         echo "Command given was $*"

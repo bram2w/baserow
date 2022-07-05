@@ -13,7 +13,7 @@
             "licenses": "Lizenzen"
         },
         "viewType": {
-            "kanban": "Kanban-Methode"
+            "kanban": "Kanban"
         },
         "exporterType": {
             "json": "Nach JSON exportieren",
@@ -27,7 +27,8 @@
         "comment": "Kommentar"
     },
     "rowComment": {
-        "you": "Sie"
+        "you": "Sie",
+        "anonymous": "Anonym"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Eine Lizenz registrieren",
@@ -183,6 +184,7 @@
         "kanbanView": "Kanban-Ansicht",
         "exports": "JSON- und XML-Export",
         "admin": "Administrationsfunktionen",
+        "rowColoring": "Zeilenfarbe",
         "getLicense": "Eine Lizenz erwerben",
         "baserowInstanceId": "Ihre Baserow-Instanz-ID lautet:",
         "registerLicense": "Lizenz registrieren",
@@ -242,5 +244,9 @@
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "Welches Einzelauswahlfeld soll zum färben der Zeile verwendet werden?"
+    },
+    "redirectToBaserowModal": {
+        "title": "Weiterleitung an http://baserow.io",
+        "content": "Sie verlassen Ihre selbst gehostete Instanz und werden zu http://baserow.io umgeleitet."
     }
 }

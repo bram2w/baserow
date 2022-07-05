@@ -34,7 +34,7 @@ def test_alter_boolean_field_column_type(data_fixture):
     for value in mapping.keys():
         model.objects.create(**{f"field_{field.id}": value})
 
-    # Change the field type to a number and test if the values have been changed.
+    # Change the field type to a boolean and test if the values have been changed.
     field = handler.update_field(user=user, field=field, new_type_name="boolean")
 
     model = table.get_model()

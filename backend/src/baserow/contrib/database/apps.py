@@ -2,7 +2,7 @@ from django.apps import AppConfig
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist
 from django.db import ProgrammingError
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, pre_migrate
 
 from baserow.contrib.database.table.cache import clear_generated_model_cache
 from baserow.core.registries import (
@@ -10,6 +10,7 @@ from baserow.core.registries import (
     application_type_registry,
 )
 from baserow.core.trash.registries import trash_item_type_registry
+from baserow.core.usage.registries import group_storage_usage_item_registry
 from baserow.ws.registries import page_registry
 
 
@@ -94,6 +95,7 @@ class DatabaseConfig(AppConfig):
 
         from baserow.contrib.database.views.actions import (
             CreateViewActionType,
+            DuplicateViewActionType,
             DeleteViewActionType,
             OrderViewsActionType,
             UpdateViewActionType,
@@ -111,6 +113,7 @@ class DatabaseConfig(AppConfig):
         )
 
         action_type_registry.register(CreateViewActionType())
+        action_type_registry.register(DuplicateViewActionType())
         action_type_registry.register(DeleteViewActionType())
         action_type_registry.register(OrderViewsActionType())
         action_type_registry.register(UpdateViewActionType())
@@ -244,6 +247,8 @@ class DatabaseConfig(AppConfig):
             SingleSelectNotEqualViewFilterType,
             LinkRowHasViewFilterType,
             LinkRowHasNotViewFilterType,
+            LinkRowContainsViewFilterType,
+            LinkRowNotContainsViewFilterType,
             MultipleSelectHasViewFilterType,
             MultipleSelectHasNotViewFilterType,
             LengthIsLowerThanViewFilterType,
@@ -271,6 +276,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(LinkRowHasViewFilterType())
         view_filter_type_registry.register(LinkRowHasNotViewFilterType())
+        view_filter_type_registry.register(LinkRowContainsViewFilterType())
+        view_filter_type_registry.register(LinkRowNotContainsViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())
         view_filter_type_registry.register(NotEmptyViewFilterType())
@@ -374,12 +381,31 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(MultipleAttachmentAirtableColumnType())
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
 
+        from baserow.contrib.database.table.usage_types import (
+            TableGroupStorageUsageItemType,
+        )
+
+        group_storage_usage_item_registry.register(TableGroupStorageUsageItemType())
+
+        from baserow.contrib.database.views.usage_types import (
+            FormViewGroupStorageUsageItem,
+        )
+
+        group_storage_usage_item_registry.register(FormViewGroupStorageUsageItem())
+
+        from baserow.core.jobs.registries import job_type_registry
+        from .airtable.job_type import AirtableImportJobType
+        from .file_import.job_type import FileImportJobType
+
+        job_type_registry.register(AirtableImportJobType())
+        job_type_registry.register(FileImportJobType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
-        post_migrate.connect(clear_generated_model_cache_receiver, sender=self)
+        pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
 
 # noinspection PyPep8Naming
@@ -389,12 +415,14 @@ def clear_generated_model_cache_receiver(sender, **kwargs):
 
 # noinspection PyPep8Naming
 def safely_update_formula_versions(sender, **kwargs):
+    if settings.TESTS:
+        return
+
     apps = kwargs.get("apps", None)
     # app.ready will be called for management commands also, we only want to
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
     if apps is not None and not settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
-        from baserow.contrib.database.formula import FormulaHandler
 
         try:
             FormulaField = apps.get_model("database", "FormulaField")
@@ -418,4 +446,8 @@ def safely_update_formula_versions(sender, **kwargs):
             return
 
         print("Checking to see if formulas need updating...")
-        FormulaHandler.recalculate_formulas_according_to_version()
+        from baserow.contrib.database.formula.migrations.handler import (
+            FormulaMigrationHandler,
+        )
+
+        FormulaMigrationHandler.migrate_formulas_to_latest_version()

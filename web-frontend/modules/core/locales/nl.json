@@ -91,7 +91,8 @@
         "invitationDescription": "uitgenodigd {since} geleden",
         "sendInvite": "Uitnodiging versturen",
         "userAlreadyInGroupTitle": "Gebruiker zit al in de groep.",
-        "userAlreadyInGroupText": "Het is niet mogelijk een uitnodiging te versturen als de gebruiker al lid is van de groep."
+        "userAlreadyInGroupText": "Het is niet mogelijk een uitnodiging te versturen als de gebruiker al lid is van de groep.",
+        "userDescriptionPendingDeletion": "{user} - in afwachting van verwijdering"
     },
     "groupInviteForm": {
         "invitationFormTitle": "Uitnodigen per e-mail",
@@ -220,14 +221,16 @@
         "errorInvalidLinkMessage": "Kon het wachtwoord niet resetten omdat de link ongeldig is.",
         "errorLinkExpiredTitle": "Link verlopen",
         "errorLinkExpiredMessage": "De link voor het resetten van je wachtwoord is verlopen. Vraag een nieuwe link aan.",
-        "disabled": "",
-        "disabledMessage": ""
+        "disabled": "Wachtwoord opnieuw instellen is uitgeschakeld",
+        "disabledMessage": "Het is niet mogelijk om het wachtwoord te resetten omdat het is uitgeschakeld."
     },
     "signup": {
         "headTitle": "Nieuw account aanmaken",
         "title": "Aanmelden",
         "disabled": "Aanmelden is uitgeschakeld",
-        "disabledMessage": "Het is niet mogelijk om een account aan te maken omdat het is uitgeschakeld."
+        "disabledMessage": "Het is niet mogelijk om een account aan te maken omdat het is uitgeschakeld.",
+        "requireFirstUser": "Welkom bij Baserow!",
+        "requireFirstUserMessage": "Vul het onderstaande formulier in om de admin gebruiker aan te maken."
     },
     "forgotPassword": {
         "title": "Wachtwoord vergeten",
@@ -242,14 +245,18 @@
         "baserowInstanceId": "Installatie-ID",
         "instanceIdDescription": "De installatie-ID is de unieke identificatiecode van je Baserow instantie.",
         "accountRestrictions": "Accountbeperkingen",
-        "settingAllowResetPasswordName": "",
-        "settingAllowResetPasswordDescription": "",
-        "settingAllowResetPasswordWarning": "",
+        "settingAllowResetPasswordName": "Wachtwoord opnieuw instellen toestaan",
+        "settingAllowResetPasswordDescription": "Standaard kunnen gebruikers een link aanvragen om hun wachtwoord te resetten.",
+        "settingAllowResetPasswordWarning": "Houd er rekening mee dat u zichzelf van het systeem kunt uitsluiten en dat de toegang niet kan worden hersteld als u uw wachtwoord vergeet.",
         "settingAllowNewAccountsName": "Toestaan aanmaken van nieuwe accounts",
         "settingAllowNewAccountsDescription": "Standaard kan elke gebruiker die je Baserow-domein bezoekt zich aanmelden voor een nieuw account.",
         "enabled": "ingeschakeld",
         "settingAllowSignupsViaGroupInvitationsName": "Aanmeldingen via groepsuitnodigingen toestaan",
-        "settingAllowSignupsViaGroupInvitationDescription": "Zelfs als het aanmaken van nieuwe accounts is uitgeschakeld, kunnen direct uitgenodigde gebruikers met deze optie toch een account aanmaken."
+        "settingAllowSignupsViaGroupInvitationDescription": "Zelfs als het aanmaken van nieuwe accounts is uitgeschakeld, kunnen direct uitgenodigde gebruikers met deze optie toch een account aanmaken.",
+        "userDeletionGraceDelay": "Gebruiker verwijderen",
+        "settingUserDeletionGraceDelay": "Respijtperiode",
+        "settingUserDeletionGraceDelayDescription": "Dit is het aantal dagen zonder login waarna een voor verwijdering geplande account permanent wordt verwijderd.",
+        "invalidAccountDeletionGraceDelay": "Deze waarde is vereist en moet een positief geheel getal zijn kleiner dan 32000"
     },
     "copyingNotification": {
         "title": "Kopiëren...",
@@ -274,5 +281,112 @@
         "title": "Autorisatiefout",
         "content": "Het lijkt erop dat je niet de rechten hebt om deze bron te zien.",
         "action": "Pagina vernieuwen"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "Alles toevoegen",
+            "removeAll": "Alles verwijderen",
+            "addField": "Veld toevoegen"
+        },
+        "fieldsDescription": "Alle velden staan in het formulier.",
+        "prefillInfoLink": "Waarden dynamisch vooraf invullen",
+        "modal": {
+            "title": "Waarden dynamisch vooraf invullen",
+            "descriptionPartOne": "Formulieren kunnen vooraf worden ingevuld om de gebruiker te helpen het formulier sneller in te vullen.",
+            "descriptionPartTwo": "Alle velden die in het formulier beschikbaar zijn, kunnen vooraf worden ingevuld.",
+            "howToPrefill": {
+                "title": "Een formulier vooraf invullen",
+                "description": "Als u een formulier vooraf met gegevens wilt invullen, kunt u dit doen via queryparameters die zijn toegevoegd aan de openbare formulier-URL. Deze queryparameters worden voorafgegaan door 'prefill' om elke botsing met mogelijke toekomstige queryparameters te voorkomen."
+            },
+            "format": {
+                "title": "Format",
+                "description": "Het formaat van de queryparameters is als volgt:",
+                "codeSnippet": "?prefill_<field_name>=<value>"
+            },
+            "example": {
+                "title": "Voorbeeld",
+                "description": "In het onderstaande voorbeeld willen we een veld genaamd `Naam` vullen met de waarde `Mike`",
+                "codeSnippet": "?prefill_Name=Mike"
+            },
+            "spaces": {
+                "title": "Ruimtes",
+                "description": "Spaties in de veldnaam worden vervangen door `+` om problemen met de query parameter te voorkomen.",
+                "codeSnippet": "?prefill_my+field=Mike"
+            },
+            "multipleValues": {
+                "title": "Meerdere waarden",
+                "description": "Als u meerdere velden wilt vullen, kunt u dat doen door een `,` tussen de waarden te plaatsen.",
+                "codeSnippet": "?prefill_multi+select=Mike,John"
+            },
+            "specialFieldTypes": {
+                "title": "Speciale veldtypes",
+                "description": "Over het algemeen is de prefill-waarde gelijk aan de waarde van het veld. Maar er zijn enkele uitzonderingen waarbij de waarde wordt vertaald naar een andere waarde.",
+                "ratingField": {
+                    "title": "Beoordelingsveld",
+                    "description": "Een beoordelingsveld accepteert een getal om aan te geven hoeveel sterren er moeten worden ingevuld.",
+                    "codeSnippet": "?prefill_rating=3"
+                },
+                "linkRowField": {
+                    "title": "Link naar tabel veld",
+                    "description": "Een link naar tabel kan de waarde aannemen die in het keuzemenu wordt getoond.",
+                    "codeSnippet": "?prefill_link+row=Mike"
+                },
+                "selectField": {
+                    "title": "Enkel selectie / meervoudig selectieveld",
+                    "description": "Een enkelvoudig keuzeveld kan de waarde accepteren die in de keuzelijst wordt getoond. Dat geldt ook voor het veld Meervoudige selectie, maar dat kan ook meerdere waarden accepteren.",
+                    "codeSnippet": "?prefill_single+select=Mike"
+                },
+                "dateField": {
+                    "title": "Datumveld",
+                    "description": "Een datumveld kan een datum in de volgende notaties accepteren en gebruikt de datumnotatie van het veld om de datum te parseren.",
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
+                }
+            }
+        }
+    },
+    "deleteAccountSettings": {
+        "orphanGroups": "Zal ook permanent worden verwijderd na de respijtperiode",
+        "passwordConfirm": "Herhaal wachtwoord",
+        "repeatPasswordMatchError": "Dit veld moet overeenkomen met het eerste wachtwoordveld.",
+        "submitButton": "Account verwijderen",
+        "errorUserIsLastAdminTitle": "Laatste beheerder",
+        "groupLoadingError": "Groepen controle is mislukt",
+        "groupLoadingErrorDescription": "Het controleren van de te verwijderen groepen is mislukt, vernieuw de pagina.",
+        "description": "U kunt de verwijdering van uw account plannen door uw huidige wachtwoord in te voeren en op de knop te klikken. Uw account zal permanent worden verwijderd na {days} dagen. In de tussentijd, als u opnieuw inlogt, zal de verwijdering van uw account worden geannuleerd.",
+        "groupNotice": "Weesgroepen worden verwijderd",
+        "orphanGroupMemberCount": "gedeeld met niemand|gedeeld met één gebruiker|gedeeld met {count} gebruikers",
+        "title": "Account verwijderen",
+        "groupNoticeDescription": "Wanneer uw account permanent wordt verwijderd, worden alle groepen en bijbehorende gegevens waarvoor u de laatste actieve gebruiker met beheerdersrechten bent ook verwijderd. De hieronder getoonde groepen worden verwijderd omdat u de enige beheerder bent. Om te voorkomen dat ze worden verwijderd moet u eerst een andere gebruiker adminrechten geven voordat u uw account verwijdert.",
+        "password": "Wachtwoord",
+        "errorInvalidPasswordTitle": "Ongeldig wachtwoord",
+        "errorInvalidPasswordMessage": "Uw account kan niet worden verwijderd omdat uw wachtwoord ongeldig is.",
+        "errorUserIsLastAdminMessage": "Kan uw account niet verwijderen omdat u de laatste beheerder van deze Baserow instance bent.",
+        "accountDeletedSuccessTitle": "Verwijdering van account gepland",
+        "accountDeletedSuccessMessage": "Uw account staat op de planning om verwijderd te worden."
+    },
+    "clearingNotification": {
+        "title": "Wissen...",
+        "content": "Voorbereiding van uw gegevens"
+    },
+    "dashboardSidebar": {
+        "groups": "Groepen",
+        "links": "Links",
+        "knowledgeBase": "Kennisbank",
+        "tutorials": "Tutorials",
+        "userSettings": "Gebruikersinstellingen",
+        "trash": "Prullenbak",
+        "logoff": "Uitloggen"
+    },
+    "job": {
+        "statePending": "Wachten om te beginnen...",
+        "stateStarted": "Begonnen...",
+        "stateFinished": "Afgerond",
+        "stateFailed": "Mislukt",
+        "errorJobAlreadyRunningTitle": "Al aan de gang",
+        "errorJobAlreadyRunningDescription": "Er loopt al een andere importjob. U moet wachten tot die klaar is voordat u een andere start."
+    },
+    "pastingNotification": {
+        "title": "Plakken...",
+        "content": "Voorbereiding van uw gegevens"
     }
 }

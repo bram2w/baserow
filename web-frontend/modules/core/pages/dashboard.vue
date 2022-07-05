@@ -1,112 +1,45 @@
 <template>
-  <div class="layout__col-2-scroll">
-    <div
-      class="
-        alert alert--simple alert--warning alert--has-icon
-        dashboard__alert
-      "
-    >
-      <div class="alert__icon">
-        <i class="fas fa-exclamation"></i>
-      </div>
-      <div class="alert__title">{{ $t('dashboard.alertTitle') }}</div>
-      <p class="alert__content">
-        {{ $t('dashboard.alertText') }}
-      </p>
-      <a
-        href="https://github.com/sponsors/bram2w"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button--primary dashboard__alert-button"
-      >
-        {{ $t('dashboard.becomeGithubSponsor') }}
-        <i class="fa fa-heart"></i>
-      </a>
-      <a
-        href="https://gitlab.com/bramw/baserow"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button--primary dashboard__alert-button"
-      >
-        {{ $t('dashboard.starOnGitlab') }}
-        <i class="fab fa-gitlab"></i>
-      </a>
-      <a
-        v-tooltip="$t('dashboard.shareOnTwitter')"
-        :href="
-          'https://twitter.com/intent/tweet?url=https://baserow.io' +
-          '&hashtags=opensource,nocode,database,baserow&text=' +
-          encodeURI($t('dashboard.tweetContent'))
-        "
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button--primary dashboard__alert-button"
-      >
-        <i class="fab fa-twitter"></i>
-      </a>
-      <a
-        v-tooltip="$t('dashboard.shareOnReddit')"
-        :href="
-          'https://www.reddit.com/submit?url=https://baserow.io&title=' +
-          encodeURI($t('dashboard.redditTitle'))
-        "
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button--primary dashboard__alert-button"
-      >
-        <i class="fab fa-reddit"></i>
-      </a>
-      <a
-        v-tooltip="$t('dashboard.shareOnFacebook')"
-        href="https://www.facebook.com/sharer/sharer.php?u=https://baserow.io"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button--primary dashboard__alert-button"
-      >
-        <i class="fab fa-facebook"></i>
-      </a>
-      <a
-        v-tooltip="$t('dashboard.shareOnLinkedIn')"
-        href="https://www.linkedin.com/sharing/share-offsite/?url=https://baserow.io"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="button button--primary dashboard__alert-button"
-      >
-        <i class="fab fa-linkedin"></i>
-      </a>
-    </div>
-    <GroupInvitation
-      v-for="invitation in groupInvitations"
-      :key="'invitation-' + invitation.id"
-      :invitation="invitation"
-      @remove="removeInvitation($event)"
-    ></GroupInvitation>
-    <div v-if="groups.length === 0" class="placeholder">
-      <div class="placeholder__icon">
-        <i class="fas fa-layer-group"></i>
-      </div>
-      <h1 class="placeholder__title">{{ $t('dashboard.noGroupTitle') }}</h1>
-      <p class="placeholder__content">
-        {{ $t('dashboard.noGroupText') }}
-      </p>
-      <div class="placeholder__action">
-        <a class="button button--large" @click="$refs.createGroupModal.show()">
-          <i class="fas fa-plus"></i>
-          {{ $t('dashboard.createGroup') }}
-        </a>
-      </div>
-    </div>
-    <div v-if="groups.length > 0" class="dashboard">
-      <DashboardGroup
-        v-for="group in sortedGroups"
-        :key="group.id"
-        :group="group"
-      ></DashboardGroup>
-      <div>
-        <a class="button button--large" @click="$refs.createGroupModal.show()">
-          <i class="fas fa-plus"></i>
-          {{ $t('dashboard.createGroup') }}
-        </a>
+  <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
+    <div class="dashboard">
+      <DashboardHelp></DashboardHelp>
+      <GroupInvitation
+        v-for="invitation in groupInvitations"
+        :key="'invitation-' + invitation.id"
+        :invitation="invitation"
+        @remove="removeInvitation($event)"
+      ></GroupInvitation>
+      <div class="dashboard__container">
+        <div class="dashboard__sidebar">
+          <DashboardSidebar
+            :groups="sortedGroups"
+            @group-selected="scrollToGroup"
+            @create-group-clicked="$refs.createGroupModal.show()"
+          ></DashboardSidebar>
+        </div>
+        <div class="dashboard__content">
+          <DashboardNoGroups
+            v-if="groups.length === 0"
+            @create-clicked="$refs.createGroupModal.show()"
+          ></DashboardNoGroups>
+          <template v-else>
+            <DashboardGroup
+              v-for="group in sortedGroups"
+              :ref="'group-' + group.id"
+              :key="group.id"
+              :group="group"
+              :component-arguments="groupComponentArguments"
+            ></DashboardGroup>
+            <div>
+              <a
+                class="dashboard__create-link"
+                @click="$refs.createGroupModal.show()"
+              >
+                <i class="fas fa-plus"></i>
+                {{ $t('dashboard.createGroup') }}
+              </a>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
     <CreateGroupModal ref="createGroupModal"></CreateGroupModal>
@@ -117,21 +50,43 @@
 import { mapState, mapGetters } from 'vuex'
 
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
-import DashboardGroup from '@baserow/modules/core/components/group/DashboardGroup'
 import GroupInvitation from '@baserow/modules/core/components/group/GroupInvitation'
+import DashboardGroup from '@baserow/modules/core/components/dashboard/DashboardGroup'
+import DashboardHelp from '@baserow/modules/core/components/dashboard/DashboardHelp'
+import DashboardNoGroups from '@baserow/modules/core/components/dashboard/DashboardNoGroups'
+import DashboardSidebar from '@baserow/modules/core/components/dashboard/DashboardSidebar'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
-  components: { CreateGroupModal, DashboardGroup, GroupInvitation },
+  components: {
+    DashboardHelp,
+    DashboardNoGroups,
+    DashboardSidebar,
+    CreateGroupModal,
+    DashboardGroup,
+    GroupInvitation,
+  },
   layout: 'app',
   /**
    * Fetches the data that must be shown on the dashboard, this could for example be
    * pending group invitations.
    */
-  async asyncData({ error, app }) {
+  async asyncData(context) {
+    const { error, app } = context
     try {
       const { data } = await AuthService(app.$client).dashboard()
-      return { groupInvitations: data.group_invitations }
+      let asyncData = {
+        groupInvitations: data.group_invitations,
+        groupComponentArguments: {},
+      }
+      // Loop over all the plugin and call the `fetchAsyncDashboardData` because there
+      // might be plugins that extend the dashboard and we want to fetch that async data
+      // here.
+      const plugins = Object.values(app.$registry.getAll('plugin'))
+      for (let i = 0; i < plugins.length; i++) {
+        asyncData = await plugins[i].fetchAsyncDashboardData(context, asyncData)
+      }
+      return asyncData
     } catch (e) {
       return error({ statusCode: 400, message: 'Error loading dashboard.' })
     }
@@ -161,6 +116,16 @@ export default {
         (i) => i.id === invitation.id
       )
       this.groupInvitations.splice(index, 1)
+    },
+    /**
+     * Make sure that the selected group is visible.
+     */
+    scrollToGroup(group) {
+      const ref = this.$refs['group-' + group.id]
+      if (ref) {
+        const element = ref[0].$el
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
     },
   },
 }

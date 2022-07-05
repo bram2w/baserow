@@ -17,6 +17,8 @@ RUN apt-get update && \
     tini \
     nano \
     vim \
+    git \
+    gosu \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \
@@ -27,6 +29,8 @@ RUN apt-get update && \
 # If GID or UID already exist that's OK no need to stop the build.
 RUN groupmod -g ${GID} node || exit 0
 RUN usermod -u ${UID} -g ${GID} node || exit 0
+ENV DOCKER_USER=node
+ENV BASEROW_IMAGE_TYPE="web-frontend"
 
 USER $UID:$GID
 
@@ -40,7 +44,7 @@ RUN yarn install && yarn cache clean
 
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
 COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
-
+COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh
@@ -48,7 +52,8 @@ RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
 # tini installed above protects us from zombie processes and ensures the default signal
 # handlers work, see https://github.com/krallin/tini.
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/web-frontend/docker/docker-entrypoint.sh"]
-HEALTHCHECK CMD ["curl", "-f", "http://localhost:3000/_health/"]
+HEALTHCHECK --interval=60s CMD ["curl", "-f", "http://localhost:3000/_health/"]
+EXPOSE 3000
 
 FROM base as dev
 

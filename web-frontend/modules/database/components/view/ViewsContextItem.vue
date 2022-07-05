@@ -36,6 +36,7 @@
       </a>
       <ViewContext
         ref="context"
+        :database="database"
         :table="table"
         :view="view"
         @enable-rename="enableRename"
@@ -54,6 +55,10 @@ export default {
   components: { EditableViewName, ViewContext },
   mixins: [context],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: true,
@@ -79,7 +84,7 @@ export default {
         !this.readOnly &&
         this.$registry
           .get('view', this.view.type)
-          .isDeactivated({ view: this.view })
+          .isDeactivated(this.database.group.id)
       )
     },
   },

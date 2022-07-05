@@ -19,6 +19,7 @@ def test_import_export_database(data_fixture):
         formula=f"field('{text_field.name}')",
         formula_type="text",
     )
+    data_fixture.create_link_row_field(table=table, link_row_table=table)
     view = data_fixture.create_grid_view(table=table)
     data_fixture.create_view_filter(view=view, field=text_field, value="Test")
     data_fixture.create_view_sort(view=view, field=text_field)
@@ -57,7 +58,7 @@ def test_import_export_database(data_fixture):
     assert imported_table.id != table.id
     assert imported_table.name == table.name
     assert imported_table.order == table.order
-    assert imported_table.field_set.all().count() == 2
+    assert imported_table.field_set.all().count() == 3
     assert imported_table.view_set.all().count() == 1
 
     imported_view = imported_table.view_set.all().first()

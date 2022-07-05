@@ -75,6 +75,8 @@ class TemporaryGroupInstanceType(
     allowed_fields = ["name"]
     serializer_field_names = ["name"]
     serializer_field_overrides = {"name": IntegerField()}
+    request_serializer_field_names = ["order"]
+    request_serializer_field_overrides = {"order": IntegerField()}
 
 
 class TemporarySerializer(ModelSerializer):
@@ -177,6 +179,11 @@ def test_get_serializer(data_fixture):
     assert serializer.__class__.__name__ == "DatabaseSerializer"
     assert "id" not in serializer.data
     assert serializer.data["name"] == 1
+    assert "order" not in serializer.data
 
     serializer = registry.get_serializer(database, base_class=TemporarySerializer)
     assert "id" in serializer.data
+    assert "order" not in serializer.data
+
+    serializer = registry.get_serializer(database, request=True)
+    assert "order" in serializer.data

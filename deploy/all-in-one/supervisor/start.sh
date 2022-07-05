@@ -14,14 +14,14 @@ cat << EOF
 ██████╔╝██║  ██║███████║███████╗██║  ██║╚██████╔╝╚███╔███╔╝
 ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝  ╚══╝╚══╝
 
-Version 1.10.1
+Version 1.10.2
 
 =========================================================================================
 EOF
 cat /baserow/supervisor/STARTUP_README.md
 
 startup_echo(){
-  ./baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
+  /baserow/supervisor/wrapper.sh GREEN STARTUP echo -e "\e[32m$*\e[0m"
 }
 
 # ========================
@@ -32,7 +32,7 @@ SUPERVISOR_DISABLED_CONF_DIR=/baserow/supervisor/includes/disabled
 SUPERVISOR_ENABLED_CONF_DIR=/baserow/supervisor/includes/enabled
 
 if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
-  startup_echo "Running first time setup of embedded baserow database."
+  startup_echo "Running setup of embedded baserow database."
 
   # Update the postgres config to point at the DATA_DIR which must be done here as
   # DATA_DIR can change at runtime.
@@ -40,11 +40,7 @@ if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
   chown postgres:postgres "$POSTGRES_LOCATION"/postgresql.conf
 
   # Setup an empty baserow database with the provided user and password.
-  PGDATA="$DATA_DIR/postgres/" \
-    POSTGRES_USER=$DATABASE_USER \
-    POSTGRES_PASSWORD=$DATABASE_PASSWORD \
-    POSTGRES_DB=$DATABASE_NAME \
-    ./baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh
+  ./baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh setup
 
   # Enable the embedded postgres by moving it into the directory from which supervisor
   # includes all .conf files it finds.
@@ -78,6 +74,13 @@ if [[ "$BASEROW_PUBLIC_URL" == "http://localhost"* ]]; then
 else
   startup_echo "Starting Baserow using addresses $BASEROW_PUBLIC_URL, if any are https automatically Caddy will attempt to setup HTTPS automatically."
 fi
+
+# ========================
+# = INSTALL PLUGINS
+# ========================
+
+source /baserow/plugins/utils.sh
+startup_plugin_setup
 
 # ========================
 # = STARTUP SUPERVISOR

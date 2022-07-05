@@ -62,6 +62,9 @@ export default (client) => {
     update(viewId, values) {
       return client.patch(`/database/views/${viewId}/`, values)
     },
+    duplicate(viewId) {
+      return client.post(`/database/views/${viewId}/duplicate/`)
+    },
     order(tableId, order) {
       return client.post(`/database/views/table/${tableId}/order/`, {
         view_ids: order,
@@ -79,11 +82,11 @@ export default (client) => {
     rotateSlug(viewId) {
       return client.post(`/database/views/${viewId}/rotate-slug/`)
     },
-    linkRowFieldLookup(slug, fieldId, page, search = null) {
+    linkRowFieldLookup(slug, fieldId, page, search = null, size = 100) {
       const config = {
         params: {
           page,
-          size: 100,
+          size,
         },
       }
 

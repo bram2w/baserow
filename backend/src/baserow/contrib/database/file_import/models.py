@@ -1,0 +1,59 @@
+from django.db import models
+
+from baserow.core.jobs.models import Job
+from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.models import Database
+
+
+# If you ever change the return value of this function please duplicate the old
+# version into migration database.0080 and change that migration to use the duplicate
+# to ensure this old migration doesn't logically change.
+def file_import_directory_path(instance, filename):
+    return f"user_{instance.user.id}/file_import/job__{instance.id}.json"
+
+
+# If you ever change the return value of this function please duplicate the old version
+# into migration database.0080_auto_20220702_1612 and change that migration to use the
+# duplicate to ensure this old migration doesn't logically change
+def default_report():
+    return {"failing_rows": {}}
+
+
+class FileImportJob(Job):
+    database = models.ForeignKey(
+        Database,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="table_import_jobs",
+        help_text="The database where we want to create the table",
+    )
+    name = models.CharField(
+        max_length=255, default="", help_text="The name the the created table."
+    )
+    table = models.ForeignKey(
+        Table,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="import_jobs",
+        help_text="If provided the job will be a data import only job. "
+        "Otherwise it will be the created table.",
+    )
+    data_file = models.FileField(
+        upload_to=file_import_directory_path,
+        null=True,
+        help_text="The data file to import.",
+    )
+    first_row_header = models.BooleanField(
+        default=False, help_text="Is the first row of the provided data the header?"
+    )
+    user_session_id = models.CharField(
+        max_length=255,
+        default="",
+        null=True,
+        help_text="The user session id to register the action when the action is "
+        "complete.",
+    )
+    report = models.JSONField(
+        default=default_report,
+        help_text="The import error report.",
+    )

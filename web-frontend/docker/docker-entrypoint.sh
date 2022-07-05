@@ -12,16 +12,20 @@ COMMANDS:
 nuxt-dev   : Start a normal nuxt development server
 nuxt       : Start a non-dev prod ready nuxt server
 nuxt-local : Start a non-dev prod ready nuxt server using the preset local config
-bash     : Start a bash shell
+bash       : Start a bash shell
+build-local: Triggers a nuxt re-build of Baserow's web-frontend.
 
 DEV COMMANDS:
-lint     : Run all the linting
-lint-fix : Run eslint fix
-stylelint: Run stylelint
-eslint   : Run eslint
-test     : Run jest tests
-ci-test  : Run ci tests with reporting
-help     : Show this message
+lint            : Run all the linting
+lint-fix        : Run eslint fix
+stylelint       : Run stylelint
+eslint          : Run eslint
+test            : Run jest tests
+ci-test         : Run ci tests with reporting
+install-plugin  : Installs a plugin (append --help for more info).
+uninstall-plugin: Un-installs a plugin (append --help for more info).
+list-plugins    : Lists currently installed plugins.
+help            : Show this message
 """
 }
 
@@ -39,15 +43,48 @@ if [[ -z "${1:-}" ]]; then
   exit 1
 fi
 
+source /baserow/plugins/utils.sh
+
+shopt -s nullglob
+
+setup_additional_modules(){
+  # Tell nuxt that all built plugins are additional modules to be loaded.
+  # We only want to include the built ones as we might have not yet installed the
+  # dependencies or some plugins yet and we don't want nuxt building those ones.
+  ADDITIONAL_MODULES="${ADDITIONAL_MODULES:-}"
+  for plugin_dir in "$BASEROW_PLUGIN_DIR"/*; do
+      if [[ -d "${plugin_dir}/web-frontend/" ]]; then
+        plugin_name="$(basename -- "$plugin_dir")"
+        package_name=$(echo "$plugin_name" | tr '_' '-')
+        WEBFRONTEND_BUILT_MARKER=/baserow/container_markers/$plugin_name.web-frontend-built
+        if [[ -f "$WEBFRONTEND_BUILT_MARKER" ]]; then
+          ADDITIONAL_MODULES="${ADDITIONAL_MODULES:-},$plugin_dir/web-frontend/modules/$package_name/module.js"
+        fi
+      fi
+  done
+  export ADDITIONAL_MODULES
+}
+
 
 case "$1" in
     nuxt-dev)
-        attachable_exec yarn run dev
+      startup_plugin_setup
+      setup_additional_modules
+      attachable_exec yarn run dev
+    ;;
+    nuxt-dev-no-attach)
+      startup_plugin_setup
+      setup_additional_modules
+      exec yarn run dev
     ;;
     nuxt)
+      startup_plugin_setup
+      setup_additional_modules
       exec ./node_modules/.bin/nuxt start --hostname "${BASEROW_WEBFRONTEND_BIND_ADDRESS:-0.0.0.0}" --port "$BASEROW_WEBFRONTEND_PORT" "${@:2}"
     ;;
     nuxt-local)
+      startup_plugin_setup
+      setup_additional_modules
       exec ./node_modules/.bin/nuxt start --hostname "${BASEROW_WEBFRONTEND_BIND_ADDRESS:-0.0.0.0}" --port "$BASEROW_WEBFRONTEND_PORT" --config-file ./config/nuxt.config.local.js "${@:2}"
     ;;
     lint)
@@ -70,6 +107,19 @@ case "$1" in
     ;;
     bash)
       exec /bin/bash -c "${@:2}"
+    ;;
+    build-local)
+      setup_additional_modules
+      exec yarn run build-local
+    ;;
+    install-plugin)
+      exec /baserow/plugins/install_plugin.sh "${@:2}"
+    ;;
+    uninstall-plugin)
+      exec /baserow/plugins/uninstall_plugin.sh "${@:2}"
+    ;;
+    list-plugins)
+      exec /baserow/plugins/list_plugins.sh "${@:2}"
     ;;
     *)
       echo "Command given was $*"

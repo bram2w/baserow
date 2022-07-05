@@ -65,7 +65,7 @@ export default {
           for (let tableI = 0; tableI < application.tables.length; tableI++) {
             const table = application.tables[tableI]
             if (table.id === tableId) {
-              return application.tables.filter((t) => t.id !== tableId)
+              return application.tables
             }
           }
         }

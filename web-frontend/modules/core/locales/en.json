@@ -47,6 +47,26 @@
         "errorInvalidOldPasswordTitle": "Invalid password",
         "errorInvalidOldPasswordMessage": "Could not change your password because your old password is invalid."
     },
+    "deleteAccountSettings": {
+        "title": "Delete account",
+        "description": "You can schedule the deletion of your account by entering your current password and clicking the button. Your account will be permanently deleted after {days} days. In the meantime, if you log in again, your account deletion will be cancelled.",
+        "groupNotice": "Orphan groups will be deleted",
+        "groupNoticeDescription": "When your account is permanently deleted, all groups and associated data for which you are the last active user with Admin permissions will also be deleted. The groups shown below are the ones that will be deleted because you are the only admin. To prevent them being deleted you must first give another user admin before deleting your account.",
+        "orphanGroups": "Will also be permanently deleted after the grace time",
+        "orphanGroupMemberCount": "shared with nobody|shared with one user|shared with {count} users",
+        "password": "Password",
+        "passwordConfirm": "Repeat password",
+        "repeatPasswordMatchError": "This field must match the first password field.",
+        "submitButton": "Delete account",
+        "errorInvalidPasswordTitle": "Invalid password",
+        "errorInvalidPasswordMessage": "Could not delete your account because your password is invalid.",
+        "errorUserIsLastAdminTitle": "Last administrator",
+        "errorUserIsLastAdminMessage": "Could not delete your account because your are the last administrator of this Baserow instance.",
+        "accountDeletedSuccessTitle": "Account deletion scheduled",
+        "accountDeletedSuccessMessage": "Your account has been scheduled to be deleted.",
+        "groupLoadingError": "Groups checking has failed",
+        "groupLoadingErrorDescription": "Checking the groups to be deleted failed, please refresh the page."
+    },
     "error": {
         "alreadyExistsTitle": "User already exists",
         "alreadyExistsMessage": "A user with the provided e-mail address already exists.",
@@ -91,6 +111,7 @@
         "invitationDescription": "invited {since} ago",
         "sendInvite": "Send invite",
         "userAlreadyInGroupTitle": "User is already in the group.",
+        "userDescriptionPendingDeletion": "{user} - pending deletion",
         "userAlreadyInGroupText": "It is not possible to send an invitation when the user is already a member of the group."
     },
     "groupInviteForm": {
@@ -196,6 +217,10 @@
         "title": "Pasting...",
         "content": "Preparing your data"
     },
+    "clearingNotification": {
+        "title": "Clearing...",
+        "content": "Preparing your data"
+    },
     "undoRedoNotification": {
         "undoingTitle": "Undoing...",
         "undoingText": "Undoing your action",
@@ -221,7 +246,7 @@
     "dashboard": {
         "title": "Dashboard",
         "alertTitle": "We need your help!",
-        "alertText": "If you find Baserow useful then sponsoring, starring or sharing us is greatly appreciated. By sponsoring us on GitHub you will get early access to the premium features!",
+        "alertText": "If you find Baserow useful then starring or sharing us is greatly appreciated. By sharing Baserow you are helping us to improve the product and to make it more useful for you.",
         "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
         "redditTitle": "'Baserow - An open source no-code database",
         "noGroupTitle": "No groups found",
@@ -233,6 +258,15 @@
         "shareOnReddit": "Share on Reddit",
         "shareOnFacebook": "Share on Facebook",
         "shareOnLinkedIn": "Share on LinkedIn"
+    },
+    "dashboardSidebar": {
+        "groups": "Groups",
+        "links": "Links",
+        "knowledgeBase": "Knowledge base",
+        "tutorials": "Tutorials",
+        "userSettings": "User settings",
+        "trash": "Trash",
+        "logoff": "Logoff"
     },
     "login": {
         "title": "Login",
@@ -255,7 +289,9 @@
         "headTitle": "Create new account",
         "title": "Sign up",
         "disabled": "Sign up is disabled",
-        "disabledMessage": "It's not possible to create an account because it has been disabled."
+        "disabledMessage": "It's not possible to create an account because it has been disabled.",
+        "requireFirstUser": "Welcome to Baserow!",
+        "requireFirstUserMessage": "Please fill the form below to create the admin user."
     },
     "forgotPassword": {
         "title": "Forgot password",
@@ -277,6 +313,80 @@
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",
         "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
+        "userDeletionGraceDelay": "User deletion",
+        "settingUserDeletionGraceDelay": "Grace delay",
+        "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
+        "invalidAccountDeletionGraceDelay": "This value is required and must be a positive integer smaller than 32000",
         "enabled": "enabled"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "Add all",
+            "removeAll": "Remove all",
+            "addField": "Add field"
+        },
+        "fieldsDescription": "All the fields are in the form.",
+        "prefillInfoLink": "Pre-fill values dynamically",
+        "modal": {
+            "title": "Pre-fill values dynamically",
+            "descriptionPartOne": "Forms can be prefilled in order to help the user fill in the form faster.",
+            "descriptionPartTwo": "All fields which are availbale in the form can be prefilled.",
+            "howToPrefill": {
+                "title": "How to prefill a form",
+                "description": "If you want to prefill a form with data you can do so via query parameters added to the public form url. These query parameters are prefixed with `prefill` to avoid any collision with potential future query parameters."
+            },
+            "format": {
+                "title": "Format",
+                "description": "The format of the query parameters is as follows:",
+                "codeSnippet": "?prefill_<field_name>=<value>"
+            },
+            "example": {
+                "title": "Example",
+                "description": "In the example below we want to prefill a field called `Name` with the value of `Mike`",
+                "codeSnippet": "?prefill_Name=Mike"
+            },
+            "spaces": {
+                "title": "Spaces",
+                "description": "Spaces in the field name are replaced with `+` to avoid any issues with the query parameter.",
+                "codeSnippet": "?prefill_my+field=Mike"
+            },
+            "multipleValues": {
+                "title": "Multiple values",
+                "description": "If you want to prefill multiple fields you can do so by adding a `,` between the values.",
+                "codeSnippet": "?prefill_multi+select=Mike,John"
+            },
+            "specialFieldTypes": {
+                "title": "Special field types",
+                "description": "Generally the prefill value is the same as the value of the field. But there are some exceptions where the value is translated to a different value.",
+                "ratingField": {
+                    "title": "Rating field",
+                    "description": "A rating field accepts a number to indicate how many stars should be filled.",
+                    "codeSnippet": "?prefill_rating=3"
+                },
+                "linkRowField": {
+                    "title": "Link row field",
+                    "description": "A link row field can accept the value that is shown in the select dropdown.",
+                    "codeSnippet": "?prefill_link+row=Mike"
+                },
+                "selectField": {
+                    "title": "Single Select / Multiple Select field",
+                    "description": "A single select field can accept the value that is shown in the select dropdown. So does the Multiple Select field, but it can also accept multiple values.",
+                    "codeSnippet": "?prefill_single+select=Mike"
+                },
+                "dateField": {
+                    "title": "Date field",
+                    "description": "A date field can accept a date in the following formats and will use the date format of the field to parse the date.",
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
+                }
+            }
+        }
+    },
+    "job": {
+        "statePending": "Waiting to start...",
+        "stateStarted": "Started...",
+        "stateFinished": "Finished",
+        "stateFailed": "Failed",
+        "errorJobAlreadyRunningTitle": "Already running",
+        "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
     }
 }

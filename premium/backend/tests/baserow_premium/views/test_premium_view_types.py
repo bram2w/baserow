@@ -72,15 +72,16 @@ def test_import_export_kanban_view(premium_data_fixture, tmpdir):
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
     table = premium_data_fixture.create_database_table(user=user)
+    file_field = premium_data_fixture.create_file_field(table=table)
     kanban_view = premium_data_fixture.create_kanban_view(
-        table=table,
-        single_select_field=None,
+        table=table, single_select_field=None, card_cover_image_field=file_field
     )
     single_select_field = premium_data_fixture.create_single_select_field(table=table)
     field_option = premium_data_fixture.create_kanban_view_field_option(
         kanban_view=kanban_view, field=single_select_field, hidden=True, order=1
     )
     kanban_view.single_select_field = single_select_field
+    kanban_view.save()
 
     files_buffer = BytesIO()
     kanban_field_type = view_type_registry.get("kanban")
@@ -95,7 +96,8 @@ def test_import_export_kanban_view(premium_data_fixture, tmpdir):
     assert serialized["name"] == kanban_view.name
     assert serialized["order"] == 0
     assert serialized["single_select_field_id"] == single_select_field.id
-    assert len(serialized["field_options"]) == 1
+    assert serialized["card_cover_image_field_id"] == file_field.id
+    assert len(serialized["field_options"]) == 2
     assert serialized["field_options"][0]["id"] == field_option.id
     assert serialized["field_options"][0]["field_id"] == field_option.field_id
     assert serialized["field_options"][0]["hidden"] is True
@@ -104,9 +106,13 @@ def test_import_export_kanban_view(premium_data_fixture, tmpdir):
     imported_single_select_field = premium_data_fixture.create_single_select_field(
         table=table
     )
+    imported_file_field = premium_data_fixture.create_file_field(table=table)
 
     id_mapping = {
-        "database_fields": {single_select_field.id: imported_single_select_field.id}
+        "database_fields": {
+            single_select_field.id: imported_single_select_field.id,
+            file_field.id: imported_file_field.id,
+        }
     }
 
     with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
@@ -120,9 +126,14 @@ def test_import_export_kanban_view(premium_data_fixture, tmpdir):
     assert (
         kanban_view.single_select_field_id != imported_kanban_view.single_select_field
     )
+    assert (
+        kanban_view.card_cover_image_field_id
+        != imported_kanban_view.card_cover_image_field_id
+    )
+    assert imported_kanban_view.card_cover_image_field_id == imported_file_field.id
 
     imported_field_options = imported_kanban_view.get_field_options()
-    assert len(imported_field_options) == 1
+    assert len(imported_field_options) == 2
     imported_field_option = imported_field_options[0]
     assert field_option.id != imported_field_option.id
     assert imported_single_select_field.id == imported_field_option.field_id

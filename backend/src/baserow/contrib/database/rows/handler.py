@@ -2,16 +2,24 @@ import re
 from collections import defaultdict
 from decimal import Decimal
 from math import floor, ceil
-from typing import cast, Any, Dict, List, NewType, Optional, Type
+from typing import cast, Any, Dict, List, NewType, Optional, Type, Tuple, Set
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 from django.db.models import Max, F, QuerySet
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 
+from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
+from baserow.contrib.database.fields.dependencies.update_collector import (
+    FieldUpdateCollector,
+)
+from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.models import LinkRowField
+from baserow.contrib.database.fields.registries import FieldType
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
-from baserow.core.trash.handler import TrashHandler
 from baserow.contrib.database.trash.models import TrashedRows
+from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import get_non_unique_values
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
     before_row_update,
@@ -25,18 +33,15 @@ from .signals import (
     row_deleted,
     rows_deleted,
 )
-from baserow.contrib.database.fields.dependencies.update_collector import (
-    CachingFieldUpdateCollector,
-)
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
-from baserow.core.utils import get_non_unique_values
-
 
 GeneratedTableModelForUpdate = NewType(
     "GeneratedTableModelForUpdate", GeneratedTableModel
 )
 
 RowsForUpdate = NewType("RowsForUpdate", QuerySet)
+
+
+BATCH_SIZE = 1024
 
 
 class RowHandler:
@@ -64,7 +69,7 @@ class RowHandler:
             if field_id in values or field["name"] in values
         }
 
-    def prepare_rows_in_bulk(self, fields, rows):
+    def prepare_rows_in_bulk(self, fields, rows, generate_error_report=False):
         """
         Prepares a set of values in bulk for all rows so that they can be created or
         updated in the database. It will check if the values can actually be set and
@@ -97,21 +102,29 @@ class RowHandler:
             prepared_values_by_field[
                 field_name
             ] = field_type.prepare_value_for_db_in_bulk(
-                field["field"],
-                batch_values,
+                field["field"], batch_values, continue_on_error=generate_error_report
             )
 
         # replace original values to keep ordering
         prepared_rows = []
+        failing_rows = {}
         for index, row in enumerate(rows):
             new_values = row
+            row_errors = {}
             for field_id, field in fields.items():
                 field_name = field["name"]
                 if field_name in row:
-                    new_values[field_name] = prepared_values_by_field[field_name][index]
-            prepared_rows.append(new_values)
+                    prepared_value = prepared_values_by_field[field_name][index]
+                    if isinstance(prepared_value, Exception):
+                        row_errors[field_name] = [prepared_value]
+                    else:
+                        new_values[field_name] = prepared_value
+            if not row_errors:
+                prepared_rows.append(new_values)
+            else:
+                failing_rows[index] = row_errors
 
-        return prepared_rows
+        return prepared_rows, failing_rows
 
     def extract_field_ids_from_keys(self, keys: List[str]) -> List[int]:
         """
@@ -193,7 +206,12 @@ class RowHandler:
 
         return values, manytomany_values
 
-    def get_order_before_row(self, before, model, amount=1):
+    def get_order_before_row(
+        self,
+        before: GeneratedTableModel,
+        model: Type[GeneratedTableModel],
+        amount: int = 1,
+    ) -> Tuple[Decimal, Decimal]:
         """
         Calculates a new unique order lower than the provided before row
         order and a step representing the change needed between multiple rows if
@@ -202,11 +220,8 @@ class RowHandler:
         could be updated as their order might need to change.
 
         :param before: The row instance where the before order must be calculated for.
-        :type before: Table
         :param model: The model of the related table
-        :type model: Model
         :param amount: The number of rows being placed.
-        :type amount: int
         :return: The order for the last inserted row and the
             step (change) that should be used between all new rows.
         :rtype: tuple(Decimal, Decimal)
@@ -421,25 +436,25 @@ class RowHandler:
         return instance
 
     def force_create_row(
-        self, table, values=None, model=None, before=None, user_field_names=False
+        self,
+        table: Table,
+        values: Optional[Dict[str, Any]] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
+        before: Optional[GeneratedTableModel] = None,
+        user_field_names: bool = False,
     ):
         """
         Creates a new row for a given table with the provided values.
 
         :param table: The table for which to create a row for.
-        :type table: Table
         :param values: The values that must be set upon creating the row. The keys must
             be the field ids.
-        :type values: dict
         :param model: If a model is already generated it can be provided here to avoid
             having to generate the model again.
-        :type model: Model
         :param before: If provided the new row will be placed right before that row
             instance.
-        :type before: Table
         :param user_field_names: Whether or not the values are keyed by the internal
             Baserow field name (field_1,field_2 etc) or by the user field names.
-        :type user_field_names: True
         :return: The created row instance.
         :rtype: Model
         """
@@ -464,20 +479,17 @@ class RowHandler:
             getattr(instance, name).set(value)
 
         fields = []
-        update_collector = CachingFieldUpdateCollector(
-            table, starting_row_id=instance.id, existing_model=model
-        )
+        update_collector = FieldUpdateCollector(table, starting_row_ids=[instance.id])
+        field_cache = FieldCache()
         field_ids = []
         for field_object in model._field_objects.values():
-            field_type = field_object["type"]
+            field_type: FieldType = field_object["type"]
             field = field_object["field"]
             fields.append(field)
             field_ids.append(field.id)
 
             field_type.after_rows_created(
-                field,
-                [instance],
-                update_collector,
+                field, [instance], update_collector, field_cache
             )
 
         for (
@@ -485,12 +497,19 @@ class RowHandler:
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            field_ids, update_collector
+            table.id,
+            field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_created(
-                dependant_field, instance, update_collector, path_to_starting_table
+                dependant_field,
+                instance,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         if model.fields_requiring_refresh_after_insert():
             instance.refresh_from_db(
@@ -539,7 +558,6 @@ class RowHandler:
         row_id: int,
         values: Dict[str, Any],
         model: Optional[Type[GeneratedTableModel]] = None,
-        user_field_names: bool = False,
     ) -> GeneratedTableModelForUpdate:
         """
         Updates one or more values of the provided row_id.
@@ -550,8 +568,6 @@ class RowHandler:
         :param values: The values that must be updated. The keys must be the field ids.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
-        :param user_field_names: Whether or not the values are keyed by the internal
-            Baserow field name (field_1,field_2 etc) or by the user field names.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         """
@@ -592,11 +608,13 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
+        updated_fields_by_name = {}
         updated_fields = []
         updated_field_ids = set()
         for field_id, field in model._field_objects.items():
             if field_id in values or field["name"] in values:
                 updated_field_ids.add(field_id)
+                updated_fields_by_name[field["name"]] = field["field"]
                 updated_fields.append(field["field"])
 
         before_return = before_row_update.send(
@@ -613,25 +631,49 @@ class RowHandler:
         for name, value in values.items():
             setattr(row, name, value)
 
+        # This update can remove link row connections with other rows. We need to keep
+        # track of these so we can later update any dependant cells in those rows that
+        # we used to link to. This is a dictionary where the key is the id link row
+        # field in this table, and the value is a set of row ids that this row used to
+        # link to via that link row field.
+        deleted_m2m_rels_per_link_field: Dict[int, Set[int]] = defaultdict(set)
+
         for name, value in manytomany_values.items():
+            field = updated_fields_by_name[name]
+            new_ids = set(value)
+            # Uses the existing prefetch cache and so doesn't run queries.
+            if isinstance(field, LinkRowField):
+                for existing in getattr(row, name).all():
+                    if existing.id not in new_ids:
+                        deleted_m2m_rels_per_link_field[field.id].add(existing.id)
             getattr(row, name).set(value)
 
         row.save()
 
-        update_collector = CachingFieldUpdateCollector(
-            table, starting_row_id=row.id, existing_model=model
+        update_collector = FieldUpdateCollector(
+            table,
+            starting_row_ids=[row.id],
+            deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
         )
+        field_cache = FieldCache()
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            updated_field_ids, update_collector
+            table.id,
+            updated_field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_updated(
-                dependant_field, row, update_collector, path_to_starting_table
+                dependant_field,
+                row,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
         # We need to refresh here as ExpressionFields might have had their values
         # updated. Django does not support UPDATE .... RETURNING and so we need to
         # query for the rows updated values instead.
@@ -660,6 +702,8 @@ class RowHandler:
         rows_values: List[Dict[str, Any]],
         before_row: Optional[GeneratedTableModel] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_signal=True,
+        generate_error_report=False,
     ) -> List[GeneratedTableModel]:
         """
         Creates new rows for a given table if the user
@@ -685,13 +729,20 @@ class RowHandler:
             before_row, model, amount=len(rows_values)
         )
 
-        rows = self.prepare_rows_in_bulk(model._field_objects, rows_values)
+        report = {}
+        rows, errors = self.prepare_rows_in_bulk(
+            model._field_objects,
+            rows_values,
+            generate_error_report=generate_error_report,
+        )
+        report.update({index: err for index, err in errors.items()})
 
         rows_relationships = []
         for index, row in enumerate(rows, start=-len(rows)):
             values, manytomany_values = self.extract_manytomany_values(row, model)
             values["order"] = highest_order - (step * (abs(index + 1)))
             instance = model(**values)
+
             relations = {
                 field_name: value
                 for field_name, value in manytomany_values.items()
@@ -705,20 +756,31 @@ class RowHandler:
 
         many_to_many = defaultdict(list)
         for index, row in enumerate(inserted_rows):
-            manytomany_values = rows_relationships[index][1]
+            _, manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
                 through = getattr(model, field_name).through
                 through_fields = through._meta.get_fields()
                 value_column = None
                 row_column = None
 
+                model_field = model._meta.get_field(field_name)
+                is_referencing_the_same_table = (
+                    model_field.model == model_field.related_model
+                )
+
                 # Figure out which field in the many to many through table holds the row
-                # value and which on contains the value.
+                # value and which one contains the value.
                 for field in through_fields:
                     if type(field) is not ForeignKey:
                         continue
 
-                    if field.remote_field.model == model:
+                    if is_referencing_the_same_table:
+                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
+                        # columns for self-referencing many_to_many relations.
+                        row_column = field.get_attname_column()[1]
+                        value_column = row_column.replace("from", "to")
+                        break
+                    elif field.remote_field.model == model:
                         row_column = field.get_attname_column()[1]
                     else:
                         value_column = field.get_attname_column()[1]
@@ -737,11 +799,10 @@ class RowHandler:
             through = getattr(model, field_name).through
             through.objects.bulk_create(values)
 
-        update_collector = CachingFieldUpdateCollector(
-            table,
-            starting_row_id=[row.id for row in inserted_rows],
-            existing_model=model,
+        update_collector = FieldUpdateCollector(
+            table, starting_row_ids=[row.id for row in inserted_rows]
         )
+        field_cache = FieldCache()
         field_ids = []
         for field_object in model._field_objects.values():
             field_type = field_object["type"]
@@ -749,9 +810,7 @@ class RowHandler:
             field_ids.append(field.id)
 
             field_type.after_rows_created(
-                field,
-                inserted_rows,
-                update_collector,
+                field, inserted_rows, update_collector, field_cache
             )
 
         for (
@@ -759,36 +818,43 @@ class RowHandler:
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            field_ids, update_collector
+            table.id,
+            field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_created(
                 dependant_field,
                 inserted_rows,
                 update_collector,
+                field_cache,
                 path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
         updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
-        rows_to_return = list(
-            model.objects.all()
-            .enhance_by_fields()
-            .filter(id__in=[row.id for row in inserted_rows])
-        )
+        if send_signal:
+            rows_to_return = list(
+                model.objects.all()
+                .enhance_by_fields()
+                .filter(id__in=[row.id for row in inserted_rows])
+            )
 
-        rows_created.send(
-            self,
-            rows=rows_to_return,
-            before=before_row,
-            user=user,
-            table=table,
-            model=model,
-        )
+            rows_created.send(
+                self,
+                rows=rows_to_return,
+                before=before_row,
+                user=user,
+                table=table,
+                model=model,
+            )
 
+        if generate_error_report:
+            return inserted_rows, report
         return rows_to_return
 
     def update_rows(
@@ -821,7 +887,7 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        rows = self.prepare_rows_in_bulk(model._field_objects, rows)
+        rows, _ = self.prepare_rows_in_bulk(model._field_objects, rows)
         row_ids = [row["id"] for row in rows]
 
         non_unique_ids = get_non_unique_values(row_ids)
@@ -841,9 +907,11 @@ class RowHandler:
             raise RowDoesNotExist(sorted(list(set(row_ids) - set(db_rows_ids))))
 
         updated_field_ids = set()
+        field_name_to_field = dict()
         for obj in rows_to_update:
             row_values = rows_by_id[obj.id]
             for field_id, field in model._field_objects.items():
+                field_name_to_field[field["name"]] = field["field"]
                 if field_id in row_values or field["name"] in row_values:
                     updated_field_ids.add(field_id)
 
@@ -889,6 +957,14 @@ class RowHandler:
         many_to_many = defaultdict(list)
         row_column_name = None
         row_ids_change_m2m_per_field = defaultdict(set)
+
+        # This update can remove link row connections with other rows. We need to keep
+        # track of these so we can later update any dependant cells in those rows that
+        # we used to link to. This is a dictionary where the key is the id link row
+        # field in this table, and the value is a set of row ids that these rows used to
+        # link to via that link row field.
+        deleted_m2m_rels_per_link_field: Dict[int, Set[int]] = defaultdict(set)
+
         for index, row in enumerate(rows_to_update):
             manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
@@ -896,6 +972,11 @@ class RowHandler:
                 through_fields = through._meta.get_fields()
                 value_column = None
                 row_column = None
+
+                model_field = model._meta.get_field(field_name)
+                is_referencing_the_same_table = (
+                    model_field.model == model_field.related_model
+                )
 
                 # Figure out which field in the many to many through table holds the row
                 # value and which one contains the value.
@@ -905,16 +986,40 @@ class RowHandler:
 
                     row_ids_change_m2m_per_field[field_name].add(row.id)
 
-                    if field.remote_field.model == model:
+                    if is_referencing_the_same_table:
+                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
+                        # columns for self-referencing many_to_many relations.
+                        row_column = field.get_attname_column()[1]
+                        row_column_name = row_column
+                        value_column = row_column.replace("from", "to")
+                        break
+                    elif field.remote_field.model == model:
                         row_column = field.get_attname_column()[1]
                         row_column_name = row_column
                     else:
                         value_column = field.get_attname_column()[1]
 
+                # If this m2m field is a link row we need to find out all connections
+                # which will be removed by this update. This is so we can update
+                # rows which previously were connected to an updated row, but no
+                # longer are.
+                field = field_name_to_field[field_name]
+                if isinstance(field, LinkRowField):
+                    # Uses the existing prefetch cache and so doesn't run queries.
+                    m2m_rels_before_update = {
+                        r.id for r in getattr(row, field_name).all()
+                    }
+                    deleted_m2m_rels_per_link_field[field.id].update(
+                        m2m_rels_before_update
+                    )
+
                 if len(value) == 0:
                     many_to_many[field_name].append(None)
                 else:
                     for i in value:
+                        # After we have discarded all connections the user has provided
+                        # we will be left with only the deleted connections as desired.
+                        deleted_m2m_rels_per_link_field[field.id].discard(i)
                         many_to_many[field_name].append(
                             getattr(model, field_name).through(
                                 **{
@@ -948,23 +1053,30 @@ class RowHandler:
         if len(bulk_update_fields) > 0:
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
 
-        update_collector = CachingFieldUpdateCollector(
-            table, starting_row_id=row_ids, existing_model=model
+        update_collector = FieldUpdateCollector(
+            table,
+            starting_row_ids=row_ids,
+            deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
         )
+        field_cache = FieldCache()
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            updated_field_ids, update_collector
+            table.id,
+            updated_field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_updated(
                 dependant_field,
                 rows_to_update,
                 update_collector,
+                field_cache,
                 path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
@@ -1060,25 +1172,36 @@ class RowHandler:
         row.order = self.get_order_before_row(before_row, model)[0]
         row.save()
 
-        update_collector = CachingFieldUpdateCollector(
-            table, starting_row_id=row.id, existing_model=model
-        )
-        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
+        update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
+        field_cache = FieldCache()
+        updated_field_ids = []
+        updated_fields = []
+        for field_id, field_object in model._field_objects.items():
+            updated_field_ids.append(field_id)
+            field = field_object["field"]
+            updated_fields.append(field)
+
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            updated_field_ids, update_collector
+            table.id,
+            updated_field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_moved(
-                dependant_field, row, update_collector, path_to_starting_table
+                dependant_field,
+                row,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
         row_updated.send(
@@ -1149,25 +1272,37 @@ class RowHandler:
 
         TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
 
-        update_collector = CachingFieldUpdateCollector(
-            table, starting_row_id=row.id, existing_model=model
-        )
-        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
+        update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
+        field_cache = FieldCache()
+        updated_field_ids = []
+        updated_fields = []
+
+        for field_id, field_object in model._field_objects.items():
+            updated_field_ids.append(field_id)
+            field = field_object["field"]
+            updated_fields.append(field)
+
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            updated_field_ids, update_collector
+            table.id,
+            updated_field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_deleted(
-                dependant_field, row, update_collector, path_to_starting_table
+                dependant_field,
+                row,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
         row_deleted.send(
@@ -1231,25 +1366,36 @@ class RowHandler:
             user, group, table.database, trashed_rows, parent_id=table.id
         )
 
-        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
-        update_collector = CachingFieldUpdateCollector(
-            table, starting_row_id=row_ids, existing_model=model
-        )
+        updated_field_ids = []
+        updated_fields = []
+        for field_id, field_object in model._field_objects.items():
+            updated_field_ids.append(field_id)
+            field = field_object["field"]
+            updated_fields.append(field)
+
+        update_collector = FieldUpdateCollector(table, starting_row_ids=row_ids)
+        field_cache = FieldCache()
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in FieldDependencyHandler.get_dependant_fields_with_type(
-            updated_field_ids, update_collector
+            table.id,
+            updated_field_ids,
+            associated_relations_changed=True,
+            field_cache=field_cache,
         ):
             dependant_field_type.row_of_dependency_deleted(
-                dependant_field, rows, update_collector, path_to_starting_table
+                dependant_field,
+                rows,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
             )
-        update_collector.apply_updates_and_get_updated_fields()
+        update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
         rows_deleted.send(

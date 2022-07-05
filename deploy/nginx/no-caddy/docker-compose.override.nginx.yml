@@ -1,0 +1,23 @@
+version: "3.4"
+# This compose file is for testing our example Nginx configuration locally specifically
+# with the `docker-compose.no-caddy.yml` file in the root of the repo.
+
+# To test this setup you can run:
+# ```
+# cp .env.testing .env
+# docker-compose -f ../../../docker-compose.no-caddy.yml -f docker-compose.override.nginx.yml up
+# ```
+
+
+# To test you have to add `127.0.0.1 example.localhost` to your /etc/hosts.
+services:
+  nginx:
+    image: nginx
+    ports:
+      - '80:80'
+    volumes:
+      - $PWD/nginx.conf:/etc/nginx/nginx.conf:ro
+      - media:/baserow/media
+    depends_on: [backend]
+    networks:
+      local:

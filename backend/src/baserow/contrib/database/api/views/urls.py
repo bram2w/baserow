@@ -5,6 +5,7 @@ from baserow.contrib.database.views.registries import view_type_registry
 from .views import (
     ViewsView,
     ViewView,
+    DuplicateViewView,
     OrderViewsView,
     ViewFiltersView,
     ViewFilterView,
@@ -45,6 +46,11 @@ urlpatterns = view_type_registry.api_urls + [
         name="decoration_item",
     ),
     re_path(r"(?P<view_id>[0-9]+)/$", ViewView.as_view(), name="item"),
+    re_path(
+        r"(?P<view_id>[0-9]+)/duplicate/$",
+        DuplicateViewView.as_view(),
+        name="duplicate",
+    ),
     re_path(
         r"(?P<view_id>[0-9]+)/filters/$", ViewFiltersView.as_view(), name="list_filters"
     ),

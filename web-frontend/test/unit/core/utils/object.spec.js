@@ -1,5 +1,6 @@
 import {
   clone,
+  isPromise,
   mappingToStringifiedJSONLines,
 } from '@baserow/modules/core/utils/object'
 
@@ -58,5 +59,15 @@ describe('test utils object', () => {
       13: 'Value 3',
       20: 'Value 2',
     })
+  })
+
+  test('test isPromise', () => {
+    expect(isPromise(new Promise(() => null))).toBeTruthy()
+    expect(isPromise('string')).toBeFalsy()
+
+    // This is one downside of the function, it shouldn't return true
+    // but it does. Unfortunately this is as close to a good promise detection
+    // as we can get
+    expect(isPromise({ then: () => null, catch: () => null })).toBeTruthy()
   })
 })

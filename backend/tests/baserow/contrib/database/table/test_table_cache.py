@@ -1,134 +1,205 @@
 import pytest
+from django.test.utils import override_settings
 
-from baserow.contrib.database.table.cache import (
-    invalidate_table_in_model_cache,
-    table_model_cache_version_key,
-    generated_models_cache,
-    clear_generated_model_cache,
-    get_current_cached_model_version,
-    get_cached_model_field_attrs,
-)
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.table.cache import get_cached_model_field_attrs
+from baserow.core.trash.handler import TrashHandler
 
 
-def get_latest_attrs(table_id):
-    return get_cached_model_field_attrs(
-        table_id, get_current_cached_model_version(table_id)
+@pytest.mark.django_db
+def test_creating_link_row_field_invalidates_its_link_row_related_cache(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    unrelated_table = data_fixture.create_database_table(user=user)
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+    old_unrelated_table_version = unrelated_table.version
+
+    FieldHandler().create_field(
+        user, table_a, "link_row", link_row_table=table_b, name="new"
     )
 
-
-@pytest.mark.django_db
-def test_changing_link_row_field_invalidates_both_tables(data_fixture):
-    unrelated_table = data_fixture.create_database_table()
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    table_a.get_model()
-    table_b.get_model()
-    unrelated_table.get_model()
-
-    assert get_latest_attrs(table_a.id) is not None
-    assert get_latest_attrs(table_b.id) is not None
-    assert get_latest_attrs(unrelated_table.id) is not None
-
-    link_field.save()
-
-    assert get_latest_attrs(table_a.id) is None
-    assert get_latest_attrs(table_b.id) is None
-    assert get_latest_attrs(unrelated_table.id) is not None
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    unrelated_table.refresh_from_db()
+    assert old_table_a_version != table_a.version
+    assert old_table_b_version != table_b.version
+    assert old_unrelated_table_version == unrelated_table.version
 
 
 @pytest.mark.django_db
-def test_invalidating_the_cache_increments_the_version_key():
-    clear_generated_model_cache()
-    pretend_table_id = 1
-    model_version_key = table_model_cache_version_key(pretend_table_id)
-    generated_models_cache.set(model_version_key, 0, timeout=None)
-    invalidate_table_in_model_cache(pretend_table_id, invalidate_related_tables=True)
-    assert generated_models_cache.get(model_version_key) == 1
+def test_converting_link_row_field_to_another_type_invalidates_its_related_tables_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+
+    FieldHandler().update_field(user, link_field, new_type_name="text")
+
+    table_a.refresh_from_db()
+    assert table_a.version != old_table_a_version
+
+    table_b.refresh_from_db()
+    assert table_b.version != old_table_b_version
 
 
 @pytest.mark.django_db
-def test_invalidating_the_cache_if_not_cached_already_creates_v1():
-    clear_generated_model_cache()
-    pretend_table_id = 1
-    invalidate_table_in_model_cache(pretend_table_id, invalidate_related_tables=True)
-    table_version_key = table_model_cache_version_key(pretend_table_id)
-    assert generated_models_cache.get(table_version_key) == 1
+def test_converting_link_row_field_to_point_at_another_table_invalidates_its_related_tables_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    table_c = data_fixture.create_database_table(user, database=table_a.database)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    table_c.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+    old_table_c_version = table_c.version
+
+    FieldHandler().update_field(user, link_field, link_row_table=table_c)
+
+    table_a.refresh_from_db()
+    assert table_a.version != old_table_a_version
+
+    table_b.refresh_from_db()
+    assert table_b.version != old_table_b_version
+
+    table_c.refresh_from_db()
+    assert table_c.version != old_table_c_version
 
 
 @pytest.mark.django_db
-def test_invalidating_related_table_incrs_related_table_version_also(data_fixture):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
+def test_converting_text_to_link_row_field_invalidates_its_related_tables_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    unrelated_table = data_fixture.create_database_table(user=user)
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+    table_a_text_field = data_fixture.create_text_field(table=table_a)
 
-    table_version_key_a = table_model_cache_version_key(table_a.id)
-    table_version_key_b = table_model_cache_version_key(table_b.id)
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+    old_unrelated_table_version = unrelated_table.version
 
-    table_a_version = generated_models_cache.get(table_version_key_a)
-    table_b_version = generated_models_cache.get(table_version_key_b)
-    invalidate_table_in_model_cache(table_a.id, invalidate_related_tables=True)
+    FieldHandler().update_field(
+        user, table_a_text_field, "link_row", link_row_table=table_b, name="new"
+    )
 
-    assert generated_models_cache.get(table_version_key_a) == table_a_version + 1
-
-    assert generated_models_cache.get(table_version_key_b) == table_b_version + 1
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    unrelated_table.refresh_from_db()
+    assert old_table_a_version != table_a.version
+    assert old_table_b_version != table_b.version
+    assert old_unrelated_table_version == unrelated_table.version
 
 
 @pytest.mark.django_db
-def test_deleting_field_removes_tables_generated_model_cache_entry(data_fixture):
+@override_settings(BASEROW_DISABLE_MODEL_CACHE=True)
+def test_can_disable_model_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    unrelated_table = data_fixture.create_database_table(user=user)
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+    table_a_text_field = data_fixture.create_text_field(table=table_a)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+    old_unrelated_table_version = unrelated_table.version
+
+    assert get_cached_model_field_attrs(table_a) is None
+    assert get_cached_model_field_attrs(table_b) is None
+    assert get_cached_model_field_attrs(unrelated_table) is None
+
+    FieldHandler().update_field(
+        user, table_a_text_field, "link_row", link_row_table=table_b, name="new"
+    )
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    unrelated_table.refresh_from_db()
+    assert old_table_a_version == table_a.version
+    assert old_table_b_version == table_b.version
+    assert old_unrelated_table_version == unrelated_table.version
+
+    assert get_cached_model_field_attrs(table_a) is None
+    assert get_cached_model_field_attrs(table_b) is None
+    assert get_cached_model_field_attrs(unrelated_table) is None
+
+
+@pytest.mark.django_db
+def test_trashing_link_row_field_invalidates_its_related_tables_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+
+    FieldHandler().delete_field(user, link_field)
+
+    table_a.refresh_from_db()
+    assert table_a.version != old_table_a_version
+
+    table_b.refresh_from_db()
+    assert table_b.version != old_table_b_version
+
+
+@pytest.mark.django_db
+def test_restoring_link_row_field_invalidates_its_related_tables_cache(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    FieldHandler().delete_field(user, link_field)
+
+    table_a.refresh_from_db()
+    table_b.refresh_from_db()
+    old_table_a_version = table_a.version
+    old_table_b_version = table_b.version
+
+    TrashHandler().restore_item(user, "field", link_field.id)
+
+    table_a.refresh_from_db()
+    assert table_a.version != old_table_a_version
+
+    table_b.refresh_from_db()
+    assert table_b.version != old_table_b_version
+
+
+@pytest.mark.django_db
+def test_deleting_field_invalidates_tables_model_cache(data_fixture):
     field = data_fixture.create_text_field()
+    table = field.table
     field.table.get_model()
 
-    assert get_latest_attrs(field.table_id) is not None
+    assert get_cached_model_field_attrs(table) is not None
 
     field.delete()
 
-    assert get_latest_attrs(field.table_id) is None
-
-
-@pytest.mark.django_db
-def test_deleting_table_removes_generated_model_cache_entry(data_fixture):
-    table = data_fixture.create_database_table()
-    table.get_model()
-
-    assert get_latest_attrs(table.id) is not None
-
-    table.delete()
-
-    assert get_latest_attrs(table.id) is None
-
-
-@pytest.mark.django_db
-def test_deleting_tables_database_removes_generated_model_cache_entry(data_fixture):
-    table = data_fixture.create_database_table()
-    table.get_model()
-
-    assert get_latest_attrs(table.id) is not None
-
-    table.database.delete()
-
-    assert get_latest_attrs(table.id) is None
-
-
-@pytest.mark.django_db
-def test_deleting_tables_group_removes_generated_model_cache_entry(data_fixture):
-    table = data_fixture.create_database_table()
-    table.get_model()
-
-    assert get_latest_attrs(table.id) is not None
-
-    table.database.group.delete()
-
-    assert get_latest_attrs(table.id) is None
-
-
-@pytest.mark.django_db
-def test_getting_newer_version_of_stored_attrs_returns_none(data_fixture):
-    table = data_fixture.create_database_table()
-    table.get_model()
-
-    current_version = get_current_cached_model_version(table.id)
-
-    # If we are asking for the current version or an older one we will get the field
-    # attrs back.
-    assert get_cached_model_field_attrs(table.id, current_version) is not None
-    assert get_cached_model_field_attrs(table.id, current_version - 1) is not None
-
-    # If we are getting a newer version which doesn't exist, we'll get back None
-    assert get_cached_model_field_attrs(table.id, current_version + 1) is None
+    table.refresh_from_db()
+    assert get_cached_model_field_attrs(table) is None

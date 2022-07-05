@@ -9,7 +9,11 @@ from django.db.models import Q, IntegerField, DateTimeField
 from django.db.models.functions import Cast, Length
 from pytz import timezone, all_timezones
 
-from baserow.contrib.database.fields.field_filters import AnnotatedQ
+from baserow.contrib.database.fields.field_filters import (
+    AnnotatedQ,
+    FilterBuilder,
+    FILTER_TYPE_AND,
+)
 from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
     OptionallyAnnotatedQ,
@@ -751,6 +755,51 @@ class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterTy
     """
 
     type = "link_row_has_not"
+
+
+class LinkRowContainsViewFilterType(ViewFilterType):
+    type = "link_row_contains"
+    compatible_field_types = [LinkRowFieldType.type]
+
+    def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
+        related_primary_field = field.get_related_primary_field().specific
+        related_primary_field_type = field_type_registry.get_by_model(
+            related_primary_field
+        )
+        model = field.table.get_model()
+        related_primary_field_model_field = related_primary_field_type.get_model_field(
+            related_primary_field
+        )
+
+        subquery = (
+            FilterBuilder(FILTER_TYPE_AND)
+            .filter(
+                related_primary_field_type.contains_query(
+                    f"{field_name}__{related_primary_field.db_column}",
+                    value,
+                    related_primary_field_model_field,
+                    related_primary_field,
+                )
+            )
+            .apply_to_queryset(model.objects)
+            .values_list("id", flat=True)
+        )
+
+        return Q(
+            **{f"id__in": subquery},
+        )
+
+
+class LinkRowNotContainsViewFilterType(
+    NotViewFilterTypeMixin, LinkRowContainsViewFilterType
+):
+    type = "link_row_not_contains"
+
+    def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
+        if value == "":
+            return Q()
+
+        return super().get_filter(field_name, value, model_field, field)
 
 
 class MultipleSelectHasViewFilterType(ManyToManyHasBaseViewFilter):

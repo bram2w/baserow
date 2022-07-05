@@ -6,12 +6,7 @@ from baserow.contrib.database.table.models import Table
 class TableSerializer(serializers.ModelSerializer):
     class Meta:
         model = Table
-        fields = (
-            "id",
-            "name",
-            "order",
-            "database_id",
-        )
+        fields = ("id", "name", "order", "database_id")
         extra_kwargs = {
             "id": {"read_only": True},
             "database_id": {"read_only": True},
@@ -22,12 +17,6 @@ class TableSerializer(serializers.ModelSerializer):
 class TableCreateSerializer(serializers.ModelSerializer):
     data = serializers.ListField(
         min_length=1,
-        child=serializers.ListField(
-            child=serializers.CharField(
-                help_text="The value of the cell.", allow_blank=True
-            ),
-            help_text="The row containing all the values.",
-        ),
         default=None,
         help_text="A list of rows that needs to be created as initial table data. If "
         "not provided some example data is going to be created.",
@@ -36,7 +25,7 @@ class TableCreateSerializer(serializers.ModelSerializer):
         default=False,
         help_text="Indicates if the first provided row is the header. If true the "
         "field names are going to be the values of the first row. Otherwise "
-        'they will be called "Column N"',
+        'they will be called "Field N"',
     )
 
     class Meta:

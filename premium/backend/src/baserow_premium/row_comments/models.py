@@ -21,7 +21,10 @@ class RowComment(CreatedAndUpdatedOnMixin, models.Model):
         help_text="The id of the row the comment is for."
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, help_text="The user who made the comment."
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="The user who made the comment.",
     )
     comment = models.TextField(help_text="The users comment.")
 

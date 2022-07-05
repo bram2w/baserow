@@ -27,7 +27,8 @@
         "comment": "Commento"
     },
     "rowComment": {
-        "you": "Tu"
+        "you": "Tu",
+        "anonymous": "Anonimo"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Registra una licenza",
@@ -184,6 +185,7 @@
         "kanbanView": "Vista Kanbab",
         "exports": "Esportazione JSON e XML",
         "admin": "Funzionalità amministratore",
+        "rowColoring": "Colore righe",
         "getLicense": "Ottieni una licenza",
         "baserowInstanceId": "Il tuo ID di istanza Baserow è:",
         "registerLicense": "Registra licenza",
@@ -243,5 +245,9 @@
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "Quale singola selezione usare per colorare le righe?"
+    },
+    "redirectToBaserowModal": {
+        "title": "Verrai reindirizzato su http://baserow.io",
+        "content": "Stai lasciando la tua installazione self-hosted e verrai indirizzato su http://baserow.io."
     }
 }

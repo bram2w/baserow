@@ -1,4 +1,6 @@
 import pytest
+from django.test.utils import CaptureQueriesContext
+from django.db import connection
 from django.shortcuts import reverse
 from rest_framework.status import (
     HTTP_200_OK,
@@ -12,7 +14,7 @@ from baserow.contrib.database.models import Database
 
 
 @pytest.mark.django_db
-def test_list_applications(api_client, data_fixture):
+def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -95,13 +97,28 @@ def test_list_applications(api_client, data_fixture):
     url = reverse(
         "api:applications:list",
     )
-    response = api_client.get(
-        url,
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == HTTP_200_OK
+
+    data_fixture.create_database_table(user, database=application_4)
+    with CaptureQueriesContext(connection) as query_for_n_tables:
+        response = api_client.get(
+            url,
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
     for application in response.json():
         assert application["group"]["id"] != group_1.id
+
+    data_fixture.create_database_table(user, database=application_1)
+    data_fixture.create_database_table(user, database=application_1)
+    with CaptureQueriesContext(connection) as query_for_n_plus_one_tables:
+        response = api_client.get(
+            url,
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+    assert len(query_for_n_tables.captured_queries) == len(
+        query_for_n_plus_one_tables.captured_queries
+    )
 
 
 @pytest.mark.django_db

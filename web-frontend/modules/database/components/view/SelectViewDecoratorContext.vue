@@ -1,6 +1,10 @@
 <template>
   <Context ref="context">
-    <ViewDecoratorList :view="view" @select="$emit('select', $event)" />
+    <ViewDecoratorList
+      :database="database"
+      :view="view"
+      @select="$emit('select', $event)"
+    />
   </Context>
 </template>
 
@@ -15,6 +19,10 @@ export default {
   },
   mixins: [context],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: true,

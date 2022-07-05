@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+
 from baserow.core.exceptions import (
     InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
@@ -111,14 +113,30 @@ class InvalidBaserowFieldName(Exception):
     """
 
 
-class AllProvidedMultipleSelectValuesMustBeIntegers(Exception):
+class AllProvidedMultipleSelectValuesMustBeIntegers(ValidationError):
     """
     Raised when one tries to create or update a row for a MultipleSelectField that
     contains a value other than an integer.
     """
 
+    def __init__(self, ids, *args, **kwargs):
+        if not isinstance(ids, list):
+            ids = [ids]
+        self.ids = ids
+        msg = (
+            f"The provided select option ids {self.ids} are not valid integers."
+            if len(self.ids) > 1
+            else f"The provided select option id {self.ids} is not a valid integer."
+        )
+        super().__init__(
+            msg,
+            code="invalid",
+            *args,
+            **kwargs,
+        )
 
-class AllProvidedMultipleSelectValuesMustBeSelectOption(Exception):
+
+class AllProvidedMultipleSelectValuesMustBeSelectOption(ValidationError):
     """
     Raised when one tries to create or update a row for a MultipleSelectField that
     contains a SelectOption ID that either does not exists or does not belong to the
@@ -129,7 +147,18 @@ class AllProvidedMultipleSelectValuesMustBeSelectOption(Exception):
         if not isinstance(ids, list):
             ids = [ids]
         self.ids = ids
-        super().__init__(*args, **kwargs)
+        msg = (
+            f"The provided select option ids {self.ids} are not valid select options."
+            if len(self.ids) > 1
+            else f"The provided select option id {self.ids} is not a valid select "
+            "option."
+        )
+        super().__init__(
+            msg,
+            *args,
+            code="invalid_option",
+            **kwargs,
+        )
 
 
 class InvalidLookupThroughField(Exception):

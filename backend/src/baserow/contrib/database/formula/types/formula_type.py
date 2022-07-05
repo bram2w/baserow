@@ -310,7 +310,7 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
         )
 
         func = formula_function_registry.get("array_agg")
-        return func.call_and_type_with(expr)
+        return func(expr)
 
     def raise_if_invalid(self):
         pass
@@ -346,7 +346,7 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
             formula_function_registry,
         )
 
-        return formula_function_registry.get("error_to_null").call_and_type_with(expr)
+        return formula_function_registry.get("error_to_null")(expr)
 
     def unwrap_at_field_level(self, expr: "tree.BaserowExpression[BaserowFormulaType]"):
         return expr.args[0].with_valid_type(expr.expression_type)

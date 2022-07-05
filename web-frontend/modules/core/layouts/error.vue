@@ -13,10 +13,8 @@
     <p v-if="error.statusCode === 404" class="placeholder__content">
       {{ $t('errorLayout.notFound') }}
     </p>
-    <p v-else class="placeholder__content">
-      {{ $t('errorLayout.error') }}
-    </p>
-    <div class="placeholder__action">
+    <p v-else class="placeholder__content">{{ content }}</p>
+    <div v-if="showBackButton" class="placeholder__action">
       <nuxt-link
         v-if="isAuthenticated"
         :to="{ name: 'dashboard' }"
@@ -54,6 +52,12 @@ export default {
     },
     message() {
       return this.error.message || this.$t('errorLayout.wrong')
+    },
+    content() {
+      return this.error.content || this.$t('errorLayout.error')
+    },
+    showBackButton() {
+      return !this.error.hideBackButton
     },
     ...mapGetters({
       isAuthenticated: 'auth/isAuthenticated',

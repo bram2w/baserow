@@ -16,6 +16,7 @@ from baserow.core.utils import (
     truncate_middle,
     split_comma_separated_string,
     remove_invalid_surrogate_characters,
+    find_unused_name,
     grouper,
     Progress,
     ChildProgressBuilder,
@@ -111,6 +112,88 @@ def test_split_comma_separated_string():
 
 def test_remove_invalid_surrogate_characters():
     assert remove_invalid_surrogate_characters(b"test\uD83Dtest") == "testtest"
+
+
+def test_unused_names():
+    assert find_unused_name(["test"], ["foo", "bar", "baz"]) == "test"
+    assert find_unused_name(["test"], ["test", "field", "field 2"]) == "test 2"
+    assert find_unused_name(["test", "other"], ["test", "field", "field 2"]) == "other"
+    assert find_unused_name(["field"], ["test", "field", "field 2"]) == "field 3"
+    assert find_unused_name(["field"], [1, 2]) == "field"
+    assert (
+        find_unused_name(
+            ["regex like field [0-9]"],
+            ["regex like field [0-9]", "regex like field [0-9] 2"],
+        )
+        == "regex like field [0-9] 3"
+    )
+    # Try another suffix
+    assert (
+        find_unused_name(
+            ["field"], ["field", "field 4" "field (1)", "field (2)"], suffix=" ({0})"
+        )
+        == "field (3)"
+    )
+
+
+def test_unused_names_with_max_length():
+    max_name_length = 255
+    exactly_length_field_name = "x" * max_name_length
+    too_long_field_name = "x" * (max_name_length + 1)
+
+    # Make sure that the returned string does not exceed the max_name_length
+    assert (
+        len(
+            find_unused_name(
+                [exactly_length_field_name], [], max_length=max_name_length
+            )
+        )
+        <= max_name_length
+    )
+    assert (
+        len(
+            find_unused_name(
+                [f"{exactly_length_field_name} - test"], [], max_length=max_name_length
+            )
+        )
+        <= max_name_length
+    )
+    assert (
+        len(find_unused_name([too_long_field_name], [], max_length=max_name_length))
+        <= max_name_length
+    )
+
+    initial_name = (
+        "xIyV4w3J4J0Zzd5ZIz4eNPucQOa9tS25ULHw2SCr4RDZ9h2AvxYr5nlGRNQR2ir517B3SkZB"
+        "nw2eGnBJQAdX8A6QcSCmcbBAnG3BczFytJkHJK7cE6VsAS6tROTg7GOwSQsdImURRwEarrXo"
+        "lv9H4bylyJM0bDPkgB4H6apiugZ19X0C9Fw2ed125MJHoFgTZLbJRc6joNyJSOkGkmGhBuIq"
+        "RKipRYGzB4oiFKYPx5Xoc8KHTsLqVDQTWwwzhaR"
+    )
+    expected_name_1 = (
+        "xIyV4w3J4J0Zzd5ZIz4eNPucQOa9tS25ULHw2SCr4RDZ9h2AvxYr5nlGRNQR2ir517B3SkZB"
+        "nw2eGnBJQAdX8A6QcSCmcbBAnG3BczFytJkHJK7cE6VsAS6tROTg7GOwSQsdImURRwEarrXo"
+        "lv9H4bylyJM0bDPkgB4H6apiugZ19X0C9Fw2ed125MJHoFgTZLbJRc6joNyJSOkGkmGhBuIq"
+        "RKipRYGzB4oiFKYPx5Xoc8KHTsLqVDQTWwwzh 2"
+    )
+
+    expected_name_2 = (
+        "xIyV4w3J4J0Zzd5ZIz4eNPucQOa9tS25ULHw2SCr4RDZ9h2AvxYr5nlGRNQR2ir517B3SkZB"
+        "nw2eGnBJQAdX8A6QcSCmcbBAnG3BczFytJkHJK7cE6VsAS6tROTg7GOwSQsdImURRwEarrXo"
+        "lv9H4bylyJM0bDPkgB4H6apiugZ19X0C9Fw2ed125MJHoFgTZLbJRc6joNyJSOkGkmGhBuIq"
+        "RKipRYGzB4oiFKYPx5Xoc8KHTsLqVDQTWwwzh 3"
+    )
+
+    assert (
+        find_unused_name([initial_name], [initial_name], max_length=max_name_length)
+        == expected_name_1
+    )
+
+    assert (
+        find_unused_name(
+            [initial_name], [initial_name, expected_name_1], max_length=max_name_length
+        )
+        == expected_name_2
+    )
 
 
 def test_grouper():

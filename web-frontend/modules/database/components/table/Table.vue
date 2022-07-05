@@ -39,6 +39,7 @@
           <ViewsContext
             v-if="views !== null"
             ref="viewsContext"
+            :database="database"
             :table="table"
             :views="views"
             :read-only="readOnly"
@@ -65,6 +66,7 @@
           </a>
           <ViewContext
             ref="viewContext"
+            :database="database"
             :view="view"
             :table="table"
             @enable-rename="$refs.rename.edit()"
@@ -108,6 +110,7 @@
           class="header__filter-item"
         >
           <ViewDecoratorMenu
+            :database="database"
             :view="view"
             :table="table"
             :fields="fields"

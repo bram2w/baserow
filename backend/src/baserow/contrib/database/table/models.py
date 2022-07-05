@@ -1,11 +1,10 @@
 import re
 from typing import Dict, Any, Union, Type
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Q, F, QuerySet
 
-from baserow.core.db import specific_iterator
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
@@ -21,10 +20,10 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.cache import (
     get_cached_model_field_attrs,
     set_cached_model_field_attrs,
-    get_current_cached_model_version,
 )
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.core.db import specific_iterator
 from baserow.core.mixins import (
     OrderableMixin,
     CreatedAndUpdatedOnMixin,
@@ -353,6 +352,7 @@ class Table(
     name = models.CharField(max_length=255)
     row_count = models.PositiveIntegerField(null=True)
     row_count_updated_at = models.DateTimeField(null=True)
+    version = models.TextField(default="initial_version")
 
     class Meta:
         ordering = ("order",)
@@ -479,16 +479,14 @@ class Table(
             and field_ids is None
             and add_dependencies is True
             and attribute_names is False
+            and not settings.BASEROW_DISABLE_MODEL_CACHE
         )
 
         if use_cache:
-            current_model_version = get_current_cached_model_version(self.id)
-            field_attrs = get_cached_model_field_attrs(
-                self.id, min_model_version=current_model_version
-            )
+            self.refresh_from_db(fields=["version"])
+            field_attrs = get_cached_model_field_attrs(self)
         else:
             field_attrs = None
-            current_model_version = None
 
         if field_attrs is None:
             field_attrs = self._fetch_and_generate_field_attrs(
@@ -501,11 +499,7 @@ class Table(
             )
 
             if use_cache:
-                set_cached_model_field_attrs(
-                    table_id=self.id,
-                    model_version=current_model_version,
-                    field_attrs=field_attrs,
-                )
+                set_cached_model_field_attrs(self, field_attrs)
 
         attrs.update(**field_attrs)
 
@@ -601,6 +595,10 @@ class Table(
             field_name = field.db_column
 
             if filtered and add_dependencies:
+                from baserow.contrib.database.fields.dependencies.handler import (
+                    FieldDependencyHandler,
+                )
+
                 direct_dependencies = (
                     FieldDependencyHandler.get_same_table_dependencies(field)
                 )

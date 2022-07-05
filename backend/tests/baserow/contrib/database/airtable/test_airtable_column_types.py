@@ -665,6 +665,7 @@ def test_airtable_import_foreign_key_column(data_fixture, api_client):
         == [1, 2]
     )
 
+    # link to same table row
     airtable_field = {
         "id": "fldQcEaGEe7xuhUEuPL",
         "name": "Link to Users",
@@ -682,8 +683,10 @@ def test_airtable_import_foreign_key_column(data_fixture, api_client):
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
         {"id": "tblRpq315qnnIcg5IjI"}, airtable_field, UTC
     )
-    assert baserow_field is None
-    assert airtable_column_type is None
+    assert isinstance(baserow_field, LinkRowField)
+    assert isinstance(airtable_column_type, ForeignKeyAirtableColumnType)
+    assert baserow_field.link_row_table_id == "tblRpq315qnnIcg5IjI"
+    assert baserow_field.link_row_related_field_id == "fldQcEaGEe7xuhUEuPL"
 
 
 @pytest.mark.django_db

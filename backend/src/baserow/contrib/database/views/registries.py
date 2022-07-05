@@ -18,6 +18,7 @@ from django.db import models as django_models
 from rest_framework.fields import CharField
 from rest_framework.serializers import Serializer
 
+from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.core.registry import (
     Instance,
     Registry,
@@ -30,8 +31,6 @@ from baserow.core.registry import (
     ImportExportMixin,
     MapAPIExceptionsInstanceMixin,
 )
-from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
-
 from .exceptions import (
     ViewTypeAlreadyRegistered,
     ViewTypeDoesNotExist,
@@ -44,7 +43,6 @@ from .exceptions import (
     DecoratorTypeDoesNotExist,
     DecoratorTypeAlreadyRegistered,
 )
-
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
@@ -271,33 +269,45 @@ class ViewType(
 
         if self.can_filter:
             for view_filter in filters:
-                view_filter_type = view_filter_type_registry.get(view_filter["type"])
-                view_filter_copy = view_filter.copy()
-                view_filter_id = view_filter_copy.pop("id")
-                view_filter_copy["field_id"] = id_mapping["database_fields"][
-                    view_filter_copy["field_id"]
-                ]
-                view_filter_copy[
-                    "value"
-                ] = view_filter_type.set_import_serialized_value(
-                    view_filter_copy["value"], id_mapping
-                )
-                view_filter_object = ViewFilter.objects.create(
-                    view=view, **view_filter_copy
-                )
-                id_mapping["database_view_filters"][
-                    view_filter_id
-                ] = view_filter_object.id
+                try:
+                    view_filter_type = view_filter_type_registry.get(
+                        view_filter["type"]
+                    )
+                    view_filter_copy = view_filter.copy()
+                    view_filter_id = view_filter_copy.pop("id")
+                    view_filter_copy["field_id"] = id_mapping["database_fields"][
+                        view_filter_copy["field_id"]
+                    ]
+                    view_filter_copy[
+                        "value"
+                    ] = view_filter_type.set_import_serialized_value(
+                        view_filter_copy["value"], id_mapping
+                    )
+                    view_filter_object = ViewFilter.objects.create(
+                        view=view, **view_filter_copy
+                    )
+                    id_mapping["database_view_filters"][
+                        view_filter_id
+                    ] = view_filter_object.id
+                except KeyError:
+                    pass
 
         if self.can_sort:
-            for view_decoration in sortings:
-                view_sort_copy = view_decoration.copy()
-                view_sort_id = view_sort_copy.pop("id")
-                view_sort_copy["field_id"] = id_mapping["database_fields"][
-                    view_sort_copy["field_id"]
-                ]
-                view_sort_object = ViewSort.objects.create(view=view, **view_sort_copy)
-                id_mapping["database_view_sortings"][view_sort_id] = view_sort_object.id
+            for view_sorting in sortings:
+                try:
+                    view_sort_copy = view_sorting.copy()
+                    view_sort_id = view_sort_copy.pop("id")
+                    view_sort_copy["field_id"] = id_mapping["database_fields"][
+                        view_sort_copy["field_id"]
+                    ]
+                    view_sort_object = ViewSort.objects.create(
+                        view=view, **view_sort_copy
+                    )
+                    id_mapping["database_view_sortings"][
+                        view_sort_id
+                    ] = view_sort_object.id
+                except KeyError:
+                    pass
 
         if self.can_decorate:
             for view_decoration in decorations:

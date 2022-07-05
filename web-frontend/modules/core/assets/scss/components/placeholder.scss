@@ -2,6 +2,12 @@
   margin: 60px auto;
   width: 520px;
   text-align: center;
+
+  &.placeholder--align-left {
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 .placeholder__logo {

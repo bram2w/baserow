@@ -27,7 +27,8 @@
         "comment": "Commentaire"
     },
     "rowComment": {
-        "you": "Vous"
+        "you": "Vous",
+        "anonymous": "Anonyme"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Activer une licence",
@@ -183,6 +184,7 @@
         "kanbanView": "Vue Kanban",
         "exports": "Export JSON et XML",
         "admin": "Interface d'administration",
+        "rowColoring": "Coloration des lignes",
         "getLicense": "Obtenir une licence",
         "baserowInstanceId": "Votre identifiant d'instance Baserow est :",
         "registerLicense": "Activer une licence",
@@ -242,5 +244,9 @@
         "addColor": "Ajouter une couleur",
         "addCondition": "Ajouter une condition",
         "colorAlwaysApply": "Cette couleur s'applique par défaut. Vous pouvez ajouter des conditions en cliquant sur le bouton « Ajouter une condition »."
+    },
+    "redirectToBaserowModal": {
+        "title": "Redirection vers http://baserow.io",
+        "content": "Vous allez quitter votre instance auto-hébergée et être redirigé vers http://baserow.io."
     }
 }

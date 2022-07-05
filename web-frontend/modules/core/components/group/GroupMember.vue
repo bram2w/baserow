@@ -6,8 +6,12 @@
   >
     <div class="group-member__initials">{{ name | nameAbbreviation }}</div>
     <div class="group-member__content">
-      <div class="group-member__name">
-        {{ name }}
+      <div class="group-member__header">
+        <span
+          class="group-member__name"
+          :class="{ 'group-member__name--to-be-deleted': toBeDeleted }"
+          >{{ name }}</span
+        >
       </div>
       <div class="group-member__description">
         {{ description }}
@@ -18,6 +22,7 @@
         v-if="!disabled"
         :value="permissions"
         :show-search="false"
+        :disabled="toBeDeleted"
         @input="$emit('updated', { permissions: $event })"
       >
         <DropdownItem
@@ -71,6 +76,11 @@ export default {
       default: false,
     },
     disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    toBeDeleted: {
       type: Boolean,
       required: false,
       default: false,
