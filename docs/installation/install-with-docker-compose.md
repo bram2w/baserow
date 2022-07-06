@@ -4,11 +4,11 @@
 > [community](https://community.baserow.io/) or contribute the change yourself at
 > https://gitlab.com/bramw/baserow/-/tree/develop/docs .
 
-## Quickstart 
+## Quickstart
 
-The following config is the easiest way of deploying Baserow with docker-compose
-and just uses the all-in-one image and a single container. If you use this 
-config then you should instead refer to the the [Install with Docker](./install-with-docker.md)
+The following config is the easiest way of deploying Baserow with docker-compose and
+just uses the all-in-one image and a single container. If you use this config then you
+should instead refer to the the [Install with Docker](./install-with-docker.md)
 guide on the specifics of how to work with this image.
 
 ```yaml
@@ -57,18 +57,15 @@ docker-compose up -d
 or by directly cloning our git repo so you can get updates easier:
 
 ```bash
-$ cd ~/baserow
-$ git clone --depth=1 --branch master https://gitlab.com/bramw/baserow.git
-$ cd baserow
-$ docker-compose up -d
+cd ~/baserow
+git clone --depth=1 --branch master https://gitlab.com/bramw/baserow.git
+cd baserow
+docker-compose up -d
 # To update to the latest run:
 docker-compose down
 git pull
 docker-compose up -d
 ```
-
-> Baserow will take a couple of minutes on your first startup before it works. This is
-> because the templates need to be installed.
 
 > There is a security flaw with docker and the ufw firewall.
 > By default docker when exposing ports on 0.0.0.0 will bypass any ufw firewall rules
@@ -80,11 +77,10 @@ docker-compose up -d
 
 ## Usage
 
-To use this docker-compose.yml to run Baserow you must set the three required
-environment variables in the `x-backend-required-variables` section inside the
-`docker-compose.yml` and review the variables in the `x-common-important-variables`
-section. If you receive the following error it is because you need to set the required
-environment variables first:
+To use this docker-compose.yml to run Baserow you must set the three  
+environment variables `SECRET_KEY`, `DATABASE_PASSWORD` and `REDIS_PASSWORD`. See the
+section below for more details. If you receive the following error it is because you
+need to set the required environment variables first:
 
 ```
 ERROR: Missing mandatory value for "environment" option interpolating
