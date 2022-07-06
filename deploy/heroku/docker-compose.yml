@@ -36,7 +36,7 @@ services:
   db:
     # Please ensure the postgres-client's major version in the backend image is kept in
     # sync with this major version so pg_dump remains compatible.
-    image: postgres:11.3
+    image: postgres:11
     environment:
       - POSTGRES_USER=${DATABASE_USER:-baserow}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}
@@ -55,7 +55,7 @@ services:
     ports:
       - "8025:8025" # web ui
   redis:
-    image: redis:6.0
+    image: redis:6
     command: redis-server --requirepass ${REDIS_PASSWORD:-baserow}
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]

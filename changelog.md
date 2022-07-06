@@ -14,6 +14,7 @@ For example:
 ### Bug Fixes
 
 * Disable table import field type guessing and instead always import as text fields. [#1050](https://gitlab.com/bramw/baserow/-/issues/1050)
+* Upgrade the images provided in our example docker-compose files to be the latest and most secure. [#1056](https://gitlab.com/bramw/baserow/-/issues/1056)
 
 ### Breaking Changes
 
