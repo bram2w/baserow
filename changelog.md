@@ -13,6 +13,8 @@ For example:
 
 ### Bug Fixes
 
+* Disable table import field type guessing and instead always import as text fields. [#1050](https://gitlab.com/bramw/baserow/-/issues/1050)
+
 ### Breaking Changes
 
 

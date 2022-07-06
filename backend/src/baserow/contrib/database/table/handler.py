@@ -1,6 +1,4 @@
 from typing import Any, cast, NewType, List, Tuple, Optional, Dict
-from collections import defaultdict
-from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -9,8 +7,7 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import gettext as _
 
-from baserow.core.jobs.handler import JobHandler
-from baserow.core.jobs.models import Job
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -18,13 +15,14 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.models import Job
 from baserow.core.trash.handler import TrashHandler
-from baserow.contrib.database.db.schema import safe_django_schema_editor
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
@@ -35,7 +33,6 @@ from .exceptions import (
 )
 from .models import Table
 from .signals import table_updated, table_deleted, tables_reordered
-
 
 TableForUpdate = NewType("TableForUpdate", Table)
 
@@ -353,31 +350,8 @@ class TableHandler:
 
         normalized_data = []
 
-        # Fill missing rows and computes value type frequencies
-        value_type_frequencies = defaultdict(lambda: defaultdict(lambda: 0))
         for row in data:
-            new_row = []
-            for index, value in enumerate(row):
-                if value is not None:
-                    if isinstance(value, int):
-                        if len(str(value)) <= 50:
-                            value_type_frequencies[index]["number_int"] += 1
-                        else:
-                            value_type_frequencies[index]["text"] += 1
-                    elif isinstance(value, float):
-                        sign, digits, exponent = Decimal(str(value)).as_tuple()
-                        if abs(exponent) <= 10 and len(digits) <= 50 + 10:
-                            value_type_frequencies[index]["number_float"] += 1
-                        else:
-                            value_type_frequencies[index]["text"] += 1
-                    else:
-                        value = "" if value is None else str(value)
-                        if len(value) > 255:
-                            value_type_frequencies[index]["long_text"] += 1
-                        else:
-                            value_type_frequencies[index]["text"] += 1
-
-                new_row.append(value)
+            new_row = list(row)
 
             # Fill incomplete rows with empty values
             for i in range(len(new_row), largest_column_count):
@@ -386,38 +360,8 @@ class TableHandler:
             normalized_data.append(new_row)
 
         field_with_type = []
-        tolerated_error_threshold = (
-            len(normalized_data)
-            / 100
-            * settings.BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD
-        )
-        # Try to guess field type from type frequency
         for index, field_name in enumerate(fields):
-            frequencies = value_type_frequencies[index]
-            if frequencies["long_text"] > tolerated_error_threshold:
-                field_with_type.append(
-                    (field_name, "long_text", {"field_options": {"width": 400}})
-                )
-            elif frequencies["text"] > tolerated_error_threshold:
-                field_with_type.append((field_name, "text", {}))
-            elif frequencies["number_float"] > tolerated_error_threshold:
-                field_with_type.append(
-                    (
-                        field_name,
-                        "number",
-                        {"number_negative": True, "number_decimal_places": 10},
-                    )
-                )
-            elif frequencies["number_int"] > tolerated_error_threshold:
-                field_with_type.append(
-                    (
-                        field_name,
-                        "number",
-                        {"number_negative": True, "field_options": {"width": 150}},
-                    )
-                )
-            else:
-                field_with_type.append((field_name, "text", {}))
+            field_with_type.append((field_name, "text", {}))
 
         return field_with_type, normalized_data
 

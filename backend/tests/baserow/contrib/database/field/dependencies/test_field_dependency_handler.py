@@ -1,5 +1,6 @@
 import pytest
 from django.conf import settings
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.dependencies.circular_reference_checker import (
     will_cause_circular_dep,
@@ -294,7 +295,7 @@ def test_get_dependant_fields_with_type(data_fixture):
         (text_field_1_dependency_2, text_field_type, None),
         (text_field_1_and_2_dependency_1, text_field_type, None),
     ]
-    assert results == expected_text_field_1_dependants
+    assert results == unordered(expected_text_field_1_dependants)
 
     results = FieldDependencyHandler.get_dependant_fields_with_type(
         table.id,
@@ -312,7 +313,7 @@ def test_get_dependant_fields_with_type(data_fixture):
         ),
         (text_field_1_and_2_dependency_1, text_field_type, None),
     ]
-    assert results == expected_text_field_2_dependants
+    assert results == unordered(expected_text_field_2_dependants)
 
     results = FieldDependencyHandler.get_dependant_fields_with_type(
         table.id,
@@ -328,6 +329,6 @@ def test_get_dependant_fields_with_type(data_fixture):
         associated_relations_changed=True,
         field_cache=field_cache,
     )
-    assert (
-        results == expected_text_field_1_dependants + expected_text_field_2_dependants
+    assert results == unordered(
+        expected_text_field_1_dependants + expected_text_field_2_dependants
     )
