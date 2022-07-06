@@ -224,7 +224,7 @@ export default {
 
         header.forEach((key) => {
           const exists = Object.prototype.hasOwnProperty.call(entry, key)
-          const value = exists ? entry[key].toString() : ''
+          const value = exists ? JSON.stringify(entry[key]) : ''
           row.push(value)
         })
 

@@ -1,39 +1,37 @@
 import pytest
-from pyinstrument import Profiler
-from baserow.core.exceptions import UserNotInGroup
-from freezegun import freeze_time
-from decimal import Decimal
-
-from django.utils import timezone
 from django.conf import settings
 from django.test.utils import override_settings
+from django.utils import timezone
+from freezegun import freeze_time
+from pyinstrument import Profiler
 
-from baserow.contrib.database.fields.models import SelectOption
-from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
-from baserow.contrib.database.fields.models import TextField, LongTextField, NumberField
-from baserow.core.jobs.tasks import run_async_job, clean_up_jobs
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.constants import (
-    JOB_FAILED,
-    JOB_FINISHED,
-    JOB_STARTED,
-    JOB_PENDING,
-)
-from baserow.contrib.database.file_import.exceptions import (
-    FileImportMaxErrorCountExceeded,
-)
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
+from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.models import SelectOption
+from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.file_import.exceptions import (
+    FileImportMaxErrorCountExceeded,
+)
 from baserow.contrib.database.table.exceptions import (
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
     InitialTableDataDuplicateName,
 )
+from baserow.core.exceptions import UserNotInGroup
+from baserow.core.jobs.constants import (
+    JOB_FAILED,
+    JOB_FINISHED,
+    JOB_STARTED,
+    JOB_PENDING,
+)
+from baserow.core.jobs.models import Job
+from baserow.core.jobs.tasks import run_async_job, clean_up_jobs
 
 
 @pytest.mark.django_db(transaction=True)
@@ -225,14 +223,12 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     field1, field2, field3, field4, field5 = fields
 
     assert isinstance(field1.specific, TextField)
-    assert isinstance(field2.specific, NumberField)
-    assert field2.specific.number_decimal_places == 10
-    assert isinstance(field3.specific, NumberField)
-    assert field3.specific.number_decimal_places == 10
-    assert isinstance(field4.specific, LongTextField)
-    assert isinstance(field5.specific, LongTextField)
+    assert isinstance(field2.specific, TextField)
+    assert isinstance(field3.specific, TextField)
+    assert isinstance(field4.specific, TextField)
+    assert isinstance(field5.specific, TextField)
 
-    assert getattr(rows[0], field3.db_column) == Decimal("1.55")
+    assert getattr(rows[0], field3.db_column) == "1.55"
 
     # Test type guessing with error threshold
     with override_settings(
@@ -246,7 +242,7 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     table = job.table
     model = table.get_model()
     rows = model.objects.all()
-    assert len(rows) == 19
+    assert len(rows) == 20
 
     fields = table.field_set.all()
 
@@ -255,11 +251,9 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     field1, field2, field3, field4, field5 = fields
 
     assert isinstance(field1.specific, TextField)
-    assert isinstance(field2.specific, NumberField)
-    assert field2.specific.number_decimal_places == 0
-    assert isinstance(field3.specific, NumberField)
-    assert field3.specific.number_decimal_places == 10
-    assert isinstance(field4.specific, LongTextField)
+    assert isinstance(field2.specific, TextField)
+    assert isinstance(field3.specific, TextField)
+    assert isinstance(field4.specific, TextField)
     assert isinstance(field5.specific, TextField)
 
     # Import data to an existing table
@@ -272,7 +266,7 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
         run_async_job(job.id)
 
     rows = model.objects.all()
-    assert len(rows) == 21
+    assert len(rows) == 22
 
     # Import data with error
     data = [
@@ -291,27 +285,9 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     job.refresh_from_db()
 
     rows = model.objects.all()
-    assert len(rows) == 23
+    assert len(rows) == 26
 
-    assert sorted(job.report["failing_rows"].keys()) == ["0", "3"]
-
-    assert job.report["failing_rows"]["0"] == {
-        f"field_{field2.id}": [
-            {"code": "invalid", "error": "A valid number is required."}
-        ],
-        f"field_{field3.id}": [
-            {"code": "invalid", "error": "A valid number is required."}
-        ],
-    }
-
-    assert job.report["failing_rows"]["3"] == {
-        f"field_{field2.id}": [
-            {
-                "code": "max_decimal_places",
-                "error": "Ensure that there are no more than 0 decimal places.",
-            }
-        ]
-    }
+    assert sorted(job.report["failing_rows"].keys()) == []
 
     # Change user language to test message i18n
     job.user.profile.language = "fr"
@@ -327,12 +303,7 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
 
     job.refresh_from_db()
 
-    assert job.report["failing_rows"]["0"][f"field_{field2.id}"] == [
-        {
-            "code": "invalid",
-            "error": "Un nombre valide est requis.",
-        }
-    ]
+    assert job.report["failing_rows"] == {}
 
     data = [
         [1.3],

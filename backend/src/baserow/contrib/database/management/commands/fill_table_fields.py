@@ -1,5 +1,5 @@
-import sys
 import random
+import sys
 
 from django.core.management.base import BaseCommand
 
@@ -64,7 +64,14 @@ def fill_table_fields(limit, table):
         # This is a helper cli command, randomness is not being used for any security
         # or crypto related reasons.
         field_type_name, all_kwargs = random.choice(allowed_field_list)  # nosec
-        kwargs = random.choice(all_kwargs)  # nosec
+        # These two kwarg types depend on another field existing, which it might
+        # not as we are picking randomly.
+        allowed_kwargs_list = [
+            kwargs
+            for kwargs in all_kwargs
+            if kwargs["name"] not in ["formula_singleselect", "formula_email"]
+        ]
+        kwargs = random.choice(allowed_kwargs_list)  # nosec
         kwargs.pop("primary", None)
         kwargs["name"] = field_handler.find_next_unused_field_name(
             table, [kwargs["name"]]
