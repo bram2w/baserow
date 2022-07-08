@@ -11,6 +11,9 @@ For example:
 
 ### New Features
 
+* Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)
+* Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
+
 ### Bug Fixes
 
 * Disable table import field type guessing and instead always import as text fields. [#1050](https://gitlab.com/bramw/baserow/-/issues/1050)

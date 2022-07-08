@@ -7,6 +7,8 @@ import {
   DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
   DateEqualsDaysAgoViewFilterType,
+  DateEqualsMonthsAgoViewFilterType,
+  DateEqualsYearsAgoViewFilterType,
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
@@ -340,6 +342,92 @@ const dateDaysAgo = [
   },
 ]
 
+const dateMonthsAgo = [
+  {
+    rowValue: moment().tz('Europe/Berlin').subtract(1, 'months').format(),
+    filterValue: 'Europe/Berlin?1',
+    expected: true,
+  },
+  {
+    rowValue: '1970-08-11T23:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().subtract(3, 'months').format(),
+    filterValue: 'UTC?3',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?1',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Mars/Noland?1',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'months').format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'months').format(),
+    filterValue: '',
+    expected: true,
+  },
+]
+
+const dateYearsAgo = [
+  {
+    rowValue: moment().tz('Europe/Berlin').subtract(1, 'years').format(),
+    filterValue: 'Europe/Berlin?1',
+    expected: true,
+  },
+  {
+    rowValue: '1970-08-11T23:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().subtract(3, 'years').format(),
+    filterValue: 'UTC?3',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?1',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Mars/Noland?1',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'years').format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'years').format(),
+    filterValue: '',
+    expected: true,
+  },
+]
+
 const multipleSelectValuesHas = [
   {
     rowValue: [
@@ -601,6 +689,20 @@ describe('All Tests', () => {
 
   test.each(dateDaysAgo)('DateDaysAgo', (values) => {
     const result = new DateEqualsDaysAgoViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateMonthsAgo)('DateMonthsAgo', (values) => {
+    const result = new DateEqualsMonthsAgoViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateYearsAgo)('DateYearsAgo', (values) => {
+    const result = new DateEqualsYearsAgoViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)

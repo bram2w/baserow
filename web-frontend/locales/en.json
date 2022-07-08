@@ -134,6 +134,8 @@
         "isNotDate": "is not date",
         "isToday": "is today",
         "isDaysAgo": "is days ago",
+        "isMonthsAgo": "is months ago",
+        "isYearsAgo": "is years ago",
         "inThisMonth": "in this month",
         "inThisYear": "in this year",
         "lowerThan": "lower than",
