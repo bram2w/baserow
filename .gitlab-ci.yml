@@ -319,7 +319,7 @@ backend-check-startup:
     - job: build-backend-image
   services:
     - docker:20.10.12-dind
-    - name: postgres:11.3
+    - name: postgres:11
       alias: db
   variables:
     RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
@@ -344,7 +344,7 @@ backend-test-group-1:
     - .skippable-job
   services:
     - docker:20.10.12-dind
-    - name: postgres:11.3
+    - name: postgres:11
       alias: db
   variables:
     DOCKER_HOST: tcp://docker:2376
