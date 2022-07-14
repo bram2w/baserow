@@ -248,5 +248,11 @@
     "redirectToBaserowModal": {
         "title": "Redirecting to http://baserow.io",
         "content": "You are leaving your self hosted instance and you are being redirected to http://baserow.io."
+    },
+    "premiumTopSidebar": {
+      "impersonateDescription": "This account is impersonated. A page refresh will stop it.",
+      "impersonateStop": "Stop",
+      "premium": "Premium",
+      "premiumDescription": "Your account has access to the premium features globally"
     }
 }

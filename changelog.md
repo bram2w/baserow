@@ -13,6 +13,7 @@ For example:
 
 * Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)
 * Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
+* Show badge when the user has account level premium.
 
 ### Bug Fixes
 
