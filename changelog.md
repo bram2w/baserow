@@ -11,6 +11,7 @@ For example:
 
 ### New Features
 
+* Added `in this week` filter [#569](https://gitlab.com/bramw/baserow/-/issues/954).
 * Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)
 * Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
 
@@ -99,6 +100,8 @@ For example:
 * Fixed bad request displayed with webhook endpoints that redirects
 * **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
   is now a POST request instead of GET.
+
+## Released (2022-10-05 1.10.0)
 * Prevent the Airtable import from failing hard when an invalid date is provided.
 * Increased the max decimal places of a number field to 10.
 * Fix formula autocomplete for fields with multiple quotes

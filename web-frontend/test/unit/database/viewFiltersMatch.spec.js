@@ -15,6 +15,9 @@ import {
   LengthIsLowerThanViewFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
+  DateEqualsCurrentWeekViewFilterType,
+  DateEqualsCurrentMonthViewFilterType,
+  DateEqualsCurrentYearViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 
 const dateBeforeCasesWithTimezone = [
@@ -299,6 +302,65 @@ const dateToday = [
   },
 ]
 
+const dateInThisWeek = [
+  {
+    rowValue: '2022-05-29',
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: '2022-05-29T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: '2022-05-30',
+    filterValue: 'Europe/Berlin',
+    expected: true,
+  },
+  {
+    rowValue: '2022-05-30T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: true,
+  },
+  {
+    rowValue: '2022-06-05T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: true,
+  },
+  {
+    rowValue: '2022-06-06T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+]
+
+const dateInThisMonth = [
+  {
+    rowValue: '2022-05-01T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: '2022-06-01T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: true,
+  },
+]
+
+const dateInThisYear = [
+  {
+    rowValue: '2021-06-01T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: '2022-06-01T12:00:00.000000Z',
+    filterValue: 'Europe/Berlin',
+    expected: true,
+  },
+]
+
 const dateDaysAgo = [
   {
     rowValue: moment().tz('Europe/Berlin').subtract(1, 'days').format(),
@@ -509,6 +571,55 @@ const lengthIsLowerThanCases = [
     expected: true,
   },
 ]
+
+describe('Date in this week, month and year tests', () => {
+  let testApp = null
+  let dateNowSpy
+
+  beforeAll(() => {
+    testApp = new TestApp()
+    // Wed Jun 01 2022 00:00:00
+    dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => 1654038000000)
+  })
+
+  afterAll(() => {
+    dateNowSpy.mockRestore()
+  })
+
+  afterEach(() => {
+    testApp.afterEach()
+  })
+
+  test.each(dateInThisWeek)('DateInThisWeek with timezone.', (values) => {
+    const result = new DateEqualsCurrentWeekViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {
+      timezone: values.timezone,
+    })
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateInThisWeek)('DateInThisWeek without timezone.', (values) => {
+    const result = new DateEqualsCurrentWeekViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateInThisMonth)('DateInThisMonth', (values) => {
+    const result = new DateEqualsCurrentMonthViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateInThisYear)('DateInThisYear', (values) => {
+    const result = new DateEqualsCurrentYearViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+})
 
 const linkRowContainsCases = [
   {
