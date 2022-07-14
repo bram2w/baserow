@@ -481,6 +481,9 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
                 query_dict[f"{query_field_name}__year"] = now.year
             if "month" in self.query_for:
                 query_dict[f"{query_field_name}__month"] = now.month
+            if "week" in self.query_for:
+                week = now.isocalendar()[1]
+                query_dict[f"{query_field_name}__week"] = week
             if "day" in self.query_for:
                 query_dict[f"{query_field_name}__day"] = now.day
 
@@ -618,6 +621,16 @@ class DateEqualsYearsAgoViewFilterType(DateEqualsXAgoViewFilterType):
 
     def get_date_to_compare(self, now, x_units_ago):
         return now + relativedelta(years=-x_units_ago)
+
+
+class DateEqualsCurrentWeekViewFilterType(DateEqualsTodayViewFilterType):
+    """
+    The current week filter works as a subset of today filter and checks if the
+    field value falls into current week.
+    """
+
+    type = "date_equals_week"
+    query_for = ["year", "week"]
 
 
 class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):

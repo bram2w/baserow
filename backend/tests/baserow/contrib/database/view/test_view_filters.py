@@ -2385,7 +2385,7 @@ def test_last_modified_year_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
-def test_date_day_month_year_filter_type(data_fixture):
+def test_date_day_week_month_year_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
@@ -2407,6 +2407,11 @@ def test_date_day_month_year_filter_type(data_fixture):
     row_3 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 1, 2),
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 4),
         }
     )
     model.objects.create(
@@ -2431,7 +2436,7 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row.id not in ids
 
-        view_filter.type = "date_equals_month"
+        view_filter.type = "date_equals_week"
         view_filter.save()
 
         ids = [
@@ -2441,16 +2446,28 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert row_2.id in ids
         assert row_3.id in ids
 
-        view_filter.type = "date_equals_year"
+        view_filter.type = "date_equals_month"
         view_filter.save()
 
         ids = [
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
         ]
         assert len(ids) == 3
+        assert row_2.id in ids
+        assert row_3.id in ids
+        assert row_4.id in ids
+
+        view_filter.type = "date_equals_year"
+        view_filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 4
         assert row.id in ids
         assert row_2.id in ids
         assert row_3.id in ids
+        assert row_4.id in ids
 
     view_filter.type = "date_equals_today"
     view_filter.save()

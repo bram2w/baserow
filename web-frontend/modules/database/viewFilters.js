@@ -802,6 +802,36 @@ export class DateEqualsYearsAgoViewFilterType extends DateEqualsXAgoViewFilterTy
   }
 }
 
+export class DateEqualsCurrentWeekViewFilterType extends DateEqualsTodayViewFilterType {
+  static getType() {
+    return 'date_equals_week'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.inThisWeek')
+  }
+
+  matches(rowValue, filterValue, field) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    // If the field.timezone property is set (last modified and created on),
+    // the original value is in UTC0 and must be converted to the timezone of the filter.
+    // If the field.timezone property is not set (date+time), the original value is already
+    // in the right timezone because it's naive, so it doesn't have to be converted,
+    // but it must be marked as the same timezone.
+    rowValue = moment.utc(rowValue).tz(filterValue, !field.timezone)
+
+    const today = moment().tz(filterValue)
+    const firstDay = today.clone().startOf('isoWeek')
+    const lastDay = today.clone().endOf('isoWeek')
+
+    return rowValue.isBetween(firstDay, lastDay, null, '[]')
+  }
+}
+
 export class DateEqualsCurrentMonthViewFilterType extends DateEqualsTodayViewFilterType {
   static getType() {
     return 'date_equals_month'
