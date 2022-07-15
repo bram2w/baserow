@@ -88,14 +88,8 @@ export default {
   mixins: [form, importer],
   data() {
     return {
-      values: {
-        getData: null,
-        firstRowHeader: true,
-      },
       filename: '',
-      error: '',
       rawData: null,
-      preview: {},
     }
   },
   validations: {
@@ -122,13 +116,16 @@ export default {
         parseInt(this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB, 10) * 1024 * 1024
 
       if (file.size > maxSize) {
+        this.handleImporterError(
+          this.$t('tableXMLImporter.limitFileSize', {
+            limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
+          })
+        )
         this.filename = ''
-        this.values.getData = null
-        this.error = this.$t('tableXMLImporter.limitFileSize', {
-          limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
-        })
-        this.preview = {}
       } else {
+        this.resetImporterState()
+        this.fileLoadingProgress = 0
+
         this.$emit('changed')
         this.state = 'loading'
         this.filename = file.name
@@ -145,29 +142,30 @@ export default {
       }
     },
     async reload() {
+      this.resetImporterState()
       this.state = 'parsing'
       await this.$ensureRender()
+
       const xmlParser = new XMLParser()
       xmlParser.parse(this.rawData)
 
       await this.$ensureRender()
       xmlParser.loadXML(3)
+
       await this.$ensureRender()
       const [header, xmlData, errors] = xmlParser.transform()
 
       if (errors.length > 0) {
-        this.values.getData = null
-        this.error = this.$t('tableXMLImporter.processingError', {
-          errors: errors.join('\n'),
-        })
-        this.preview = {}
+        this.handleImporterError(
+          this.$t('tableXMLImporter.processingError', {
+            errors: errors.join('\n'),
+          })
+        )
         return
       }
 
       if (xmlData.length === 0) {
-        this.values.getData = null
-        this.error = this.$t('tableXMLImporter.emptyError')
-        this.preview = {}
+        this.handleImporterError(this.$t('tableXMLImporter.emptyError'))
         return
       }
 
@@ -179,9 +177,9 @@ export default {
 
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       if (limit !== null && xmlData.length > limit) {
-        this.values.getData = null
-        this.error = this.$t('tableXMLImporter.limitError', { limit })
-        this.preview = {}
+        this.handleImporterError(
+          this.$t('tableXMLImporter.limitError', { limit })
+        )
         return
       }
 
@@ -192,6 +190,7 @@ export default {
       this.values.getData = async () => {
         await this.$ensureRender()
         xmlParser.loadXML()
+
         await this.$ensureRender()
         const [header, xmlData, errors] = xmlParser.transform()
 
@@ -211,8 +210,6 @@ export default {
         return dataWithHeader
       }
       this.state = null
-      this.parsing = false
-      this.error = ''
       this.preview = this.getPreview(dataWithHeader)
     },
   },

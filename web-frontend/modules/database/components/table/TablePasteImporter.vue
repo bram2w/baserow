@@ -57,13 +57,7 @@ export default {
   mixins: [form, importer],
   data() {
     return {
-      values: {
-        getData: null,
-        firstRowHeader: true,
-      },
       content: '',
-      error: '',
-      preview: {},
     }
   },
   validations: {
@@ -75,28 +69,29 @@ export default {
   methods: {
     changed(content) {
       this.$emit('changed')
+      this.resetImporterState()
+
       this.content = content
       this.reload()
     },
-    reload() {
+    async reload() {
       if (this.content === '') {
-        this.values.getData = null
-        this.error = ''
-        this.preview = {}
+        this.resetImporterState()
         return
       }
 
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       const count = this.content.split(/\r\n|\r|\n/).length
       if (limit !== null && count > limit) {
-        this.values.getData = null
-        this.error = this.$t('tablePasteImporter.limitError', {
-          limit,
-        })
-        this.preview = {}
+        this.handleImporterError(
+          this.$t('tablePasteImporter.limitError', {
+            limit,
+          })
+        )
         return
       }
-
+      this.state = 'parsing'
+      await this.$ensureRender()
       this.$papa.parse(this.content, {
         delimiter: '\t',
         complete: (data) => {
@@ -118,14 +113,13 @@ export default {
             })
           }
           this.error = ''
+          this.state = null
           this.preview = this.getPreview(dataWithHeader)
         },
         error(error) {
           // Papa parse has resulted in an error which we need to display to the user.
           // All previously loaded data will be removed.
-          this.values.getData = null
-          this.error = error.errors[0].message
-          this.preview = {}
+          this.handleImporterError(error.errors[0].message)
         },
       })
     },

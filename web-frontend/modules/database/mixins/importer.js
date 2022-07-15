@@ -11,6 +11,12 @@ export default {
     return {
       fileLoadingProgress: 0,
       state: null,
+      error: '',
+      values: {
+        firstRowHeader: true,
+        getData: null,
+      },
+      preview: {},
     }
   },
   computed: {
@@ -19,6 +25,17 @@ export default {
     },
   },
   methods: {
+    resetImporterState() {
+      this.values.getData = null
+      this.preview = {}
+      this.state = null
+      this.error = ''
+    },
+    handleImporterError(error) {
+      this.resetImporterState()
+      this.fileLoadingProgress = 0
+      this.error = error
+    },
     /**
      * Adds a header of Field 1, Field 2 etc if the first row is not already a header,
      * otherwise checks that the existing header has valid and non duplicate field

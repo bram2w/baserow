@@ -71,6 +71,8 @@ For example:
 * Fix views becoming inaccessible due to race condition when invalidating model cache. [#1040](https://gitlab.com/bramw/baserow/-/issues/1040)
 * Fix refresh formula options button always being shown initially. [#1037](https://gitlab.com/bramw/baserow/-/issues/1037)
 * Fix get_human_readable_value crashing for some formula types. [#1042](https://gitlab.com/bramw/baserow/-/issues/1042)
+* Fix import form that gets stuck in a spinning state when it hits an error.
+
 
 ### Breaking Changes
 
