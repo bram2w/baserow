@@ -133,17 +133,11 @@ export default {
   mixins: [form, importer],
   data() {
     return {
-      values: {
-        data: null,
-        firstRowHeader: true,
-        getData: null,
-      },
       filename: '',
       columnSeparator: 'auto',
       encoding: 'utf-8',
-      error: '',
       rawData: null,
-      preview: {},
+      parsedData: null,
     }
   },
   validations: {
@@ -174,17 +168,18 @@ export default {
       const maxSize =
         parseInt(this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB, 10) * 1024 * 1024
 
-      this.fileLoadingProgress = 0
-
       if (file.size > maxSize) {
         this.filename = ''
-        this.values.data = null
-        this.values.getData = null
-        this.error = this.$t('tableCSVImporter.limitFileSize', {
-          limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
-        })
-        this.preview = {}
+        this.handleImporterError(
+          this.$t('tableCSVImporter.limitFileSize', {
+            limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
+          })
+        )
       } else {
+        this.resetImporterState()
+        this.fileLoadingProgress = 0
+        this.parsedData = null
+
         this.$emit('changed')
         this.filename = file.name
         this.state = 'loading'
@@ -207,6 +202,7 @@ export default {
      * when the CSV doesn't have any entries the appropriate error will be shown.
      */
     async reload() {
+      this.resetImporterState()
       this.state = 'parsing'
       await this.$ensureRender()
 
@@ -214,14 +210,46 @@ export default {
       const decodedData = decoder.decode(this.rawData)
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       const count = decodedData.split(/\r\n|\r|\n/).length
+
       if (limit !== null && count > limit) {
-        this.values.data = null
-        this.values.getData = null
-        this.error = this.$t('tableCSVImporter.limitError', {
-          limit,
-        })
-        this.preview = {}
+        this.handleImporterError(
+          this.$t('tableCSVImporter.limitError', {
+            limit,
+          })
+        )
         return
+      }
+
+      // Prepare a callback function to be called when the form is submitted.
+      // This is where the rest of the parsing takes place.
+      // This was added to avoid the UI freezing while uploading large files.
+      const getData = () => {
+        return new Promise((resolve, reject) => {
+          this.$ensureRender().then(() => {
+            this.$papa.parse(decodedData, {
+              dynamicTyping: true,
+              skipEmptyLines: true,
+              delimiter:
+                this.columnSeparator === 'auto' ? '' : this.columnSeparator,
+              complete: (data) => {
+                if (this.values.firstRowHeader) {
+                  // Only run ensureHeaderExistsAndIsValid on the first row
+                  // as it can't handle too many rows.
+                  const dataWithHeader = this.ensureHeaderExistsAndIsValid(
+                    data.data.slice(0, 1),
+                    this.values.firstRowHeader
+                  )
+                  // Update the header row with the valid header names
+                  data.data[0] = dataWithHeader[0]
+                }
+                resolve(data.data)
+              },
+              error(error) {
+                reject(error)
+              },
+            })
+          })
+        })
       }
 
       await this.$ensureRender()
@@ -235,13 +263,10 @@ export default {
           if (data.data.length === 0) {
             // We need at least a single entry otherwise the user has probably chosen
             // a wrong file.
-            this.values.data = null
-            this.values.getData = null
-            this.error = this.$t('tableCSVImporter.emptyCSV')
-            this.preview = {}
+            this.handleImporterError(this.$t('tableCSVImporter.emptyCSV'))
           } else {
             // Store the data to reload the preview without reparsing.
-            this.values.data = [...data.data]
+            this.parsedData = [...data.data]
             // If parsed successfully and it is not empty then the initial data can be
             // prepared for creating the table.
             const dataWithHeader = this.ensureHeaderExistsAndIsValid(
@@ -251,69 +276,22 @@ export default {
             // If the first row is not the header, remove the last row as we will
             // be adding one row of generated headers.
             if (!this.values.firstRowHeader) dataWithHeader.pop()
-            this.error = ''
-            this.preview = this.getPreview(dataWithHeader)
             this.state = null
-            this.parsing = false
+            this.preview = this.getPreview(dataWithHeader)
+            this.values.getData = getData
           }
         },
         error(error) {
           // Papa parse has resulted in an error which we need to display to the user.
-          // All previously loaded data will be removed.
-          this.values.data = null
-          this.values.getData = null
-          this.error = error.errors[0].message
-          this.preview = {}
-          this.state = null
-          this.parsing = false
-          this.fileLoadingProgress = 0
+          this.handleImporterError(error.errors[0].message)
         },
       })
-
-      // Prepare a callback function to be called when the form is submitted.
-      // This is where the rest of the parsing takes place.
-      // This was added to avoid the UI freezing while uploading large files.
-      const getData = () => {
-        return new Promise((resolve, reject) => {
-          this.$ensureRender().then(() => {
-            this.$papa.parse(decodedData, {
-              dynamicTyping: true,
-              skipEmptyLines: true,
-              delimiter:
-                this.columnSeparator === 'auto' ? '' : this.columnSeparator,
-              complete: async (data) => {
-                if (this.values.firstRowHeader) {
-                  // Only run ensureHeaderExistsAndIsValid on the first row
-                  // as it can't handle too many rows.
-                  const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-                    data.data.slice(0, 1),
-                    this.values.firstRowHeader
-                  )
-                  // Update the header row with the valid header names
-                  data.data[0] = dataWithHeader[0]
-                }
-                await this.$ensureRender()
-                resolve(data.data)
-              },
-              error(error) {
-                reject(error)
-              },
-            })
-          })
-        })
-      }
-
-      if (this.error === '') {
-        this.values.getData = getData
-      } else {
-        this.values.getData = null
-      }
     },
     /**
      * Reload the preview without re-parsing the raw data.
      */
     reloadPreview() {
-      const rows = [...this.values.data]
+      const rows = [...this.parsedData]
       if (!this.values.firstRowHeader) rows.pop()
       const dataWithHeader = this.ensureHeaderExistsAndIsValid(
         rows,
