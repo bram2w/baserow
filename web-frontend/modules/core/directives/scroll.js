@@ -26,7 +26,15 @@ export default {
     el.scrollDirectiveEvent = (event) => {
       event.preventDefault()
 
-      const { deltaY, deltaX, deltaMode } = event
+      const deltaMode = event.deltaMode
+      let { deltaY, deltaX } = event
+
+      // shiftKey enable the horizontal scroll, so swap deltaX and deltaY
+      if (event.shiftKey) {
+        deltaX = deltaY
+        deltaY = 0
+      }
+
       let pixelY = 0
       let pixelX = 0
 
