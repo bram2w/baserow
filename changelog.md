@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 * Added `in this week` filter [#569](https://gitlab.com/bramw/baserow/-/issues/954).
+* Allow users to use row id in the form redirect URL. [#871](https://gitlab.com/bramw/baserow/-/merge_requests/871)
 * Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)
 * Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
 * Show badge when the user has account level premium.

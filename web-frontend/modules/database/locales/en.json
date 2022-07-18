@@ -515,6 +515,9 @@
         "id": "Row identifier",
         "count": "Count"
     },
+    "formViewMeta": {
+        "includeRowId": "Use {row_id} to include the newly created row id in the URL."
+    },
     "previewAny": {
         "externalWarning": "Opening your file via an external service exposes your file to their servers."
     },

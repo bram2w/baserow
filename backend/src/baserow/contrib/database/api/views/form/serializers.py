@@ -74,10 +74,13 @@ class PublicFormViewSerializer(serializers.ModelSerializer):
 
 
 class FormViewSubmittedSerializer(serializers.ModelSerializer):
+    row_id = serializers.IntegerField()
+
     class Meta:
         model = FormView
         fields = (
             "submit_action",
             "submit_action_message",
             "submit_action_redirect_url",
+            "row_id",
         )
