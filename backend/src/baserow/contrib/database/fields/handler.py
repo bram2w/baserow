@@ -453,7 +453,6 @@ class FieldHandler:
             # If no field converter is found we are going to alter the field using the
             # the lenient schema editor.
             with lenient_schema_editor(
-                connection,
                 from_field_type.get_alter_column_prepare_old_value(
                     connection, old_field, field
                 ),

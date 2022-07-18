@@ -254,7 +254,6 @@ class TextFieldToMultipleSelectFieldConverter(FieldConverter):
         # The lenient_schema_editor is needed so that field type specific conversions
         # will be respected when converting to a MultipleSelectField.
         with lenient_schema_editor(
-            connection,
             from_field_type.get_alter_column_prepare_old_value(
                 connection, from_field, to_field
             ),
@@ -372,7 +371,6 @@ class MultipleSelectFieldToTextFieldConverter(FieldConverter):
             to_model_field,
         )
         with lenient_schema_editor(
-            connection,
             None,
             to_field_type.get_alter_column_prepare_new_value(
                 connection, from_field, to_field
