@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 from typing import cast, Any
 from unittest.mock import patch
@@ -6,9 +7,10 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import connection, transaction
-from django.test.utils import CaptureQueriesContext
+from django.test.utils import CaptureQueriesContext, override_settings
 from django.utils import timezone
 from freezegun import freeze_time
+from pytest_unordered import unordered
 
 from baserow.api.sessions import set_untrusted_client_session_id
 from baserow.contrib.database.fields.actions import UpdateFieldActionType
@@ -19,15 +21,25 @@ from baserow.core.action.registries import (
     ActionScopeStr,
     ActionType,
 )
-from baserow.core.action.scopes import RootActionScopeType
-from baserow.core.actions import DeleteGroupActionType, CreateGroupActionType
+from baserow.core.action.scopes import RootActionScopeType, GroupActionScopeType
+from baserow.core.actions import (
+    CreateApplicationActionType,
+    DeleteGroupActionType,
+    CreateGroupActionType,
+    UpdateApplicationActionType,
+)
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, GROUP_USER_PERMISSION_ADMIN
+from baserow.core.models import Application, Group, GROUP_USER_PERMISSION_ADMIN
+from baserow.test_utils.helpers import (
+    assert_undo_redo_actions_are_valid,
+    assert_undo_redo_actions_fails_with_error,
+)
 
 User = get_user_model()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_action_with_matching_session_and_category_undoes(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -40,6 +52,7 @@ def test_undoing_action_with_matching_session_and_category_undoes(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_action_with_matching_session_and_not_matching_category_does_nothing(
     data_fixture,
 ):
@@ -54,13 +67,14 @@ def test_undoing_action_with_matching_session_and_not_matching_category_does_not
         ActionScopeStr,
         CreateGroupActionType.scope() + "_fake_category_which_wont_match",
     )
-    action = ActionHandler.undo(user, [fake_category_which_wont_match], session_id)
+    actions = ActionHandler.undo(user, [fake_category_which_wont_match], session_id)
 
-    assert action is None
+    assert not actions
     assert Group.objects.filter(id=group_user.group_id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_action_with_not_matching_session_and_not_matching_category_does_nothing(
     data_fixture,
 ):
@@ -76,15 +90,16 @@ def test_undoing_action_with_not_matching_session_and_not_matching_category_does
         CreateGroupActionType.scope() + "_fake_category_which_wont_match",
     )
     other_session_which_wont_match = session_id + "_fake"
-    action = ActionHandler.undo(
+    actions = ActionHandler.undo(
         user, [fake_category_which_wont_match], other_session_which_wont_match
     )
 
-    assert action is None
+    assert not actions
     assert Group.objects.filter(id=group_user.group_id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_action_with_not_matching_session_and_matching_category_does_nothing(
     data_fixture,
 ):
@@ -96,17 +111,18 @@ def test_undoing_action_with_not_matching_session_and_matching_category_does_not
     )
 
     other_session_which_wont_match = session_id + "_fake"
-    action = ActionHandler.undo(
+    actions = ActionHandler.undo(
         user,
         [CreateGroupActionType.scope()],
         other_session_which_wont_match,
     )
 
-    assert action is None
+    assert not actions
     assert Group.objects.filter(id=group_user.group_id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_action_with_matching_session_and_category_redoes(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -115,18 +131,18 @@ def test_redoing_action_with_matching_session_and_category_redoes(data_fixture):
         user, group_name="test"
     )
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
 
-    assert action.is_undone()
     assert not Group.objects.exists()
 
-    action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
 
-    assert not action.is_undone()
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
     assert Group.objects.filter(id=group_user.group_id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_action_with_matching_session_and_not_matching_category_doesnt_redo(
     data_fixture,
 ):
@@ -135,22 +151,23 @@ def test_redoing_action_with_matching_session_and_not_matching_category_doesnt_r
 
     action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
 
-    assert action.is_undone()
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
     assert not Group.objects.exists()
 
     fake_category_which_wont_match = cast(
         ActionScopeStr,
         CreateGroupActionType.scope() + "_fake_category_which_wont_match",
     )
-    action = ActionHandler.redo(user, [fake_category_which_wont_match], session_id)
+    actions = ActionHandler.redo(user, [fake_category_which_wont_match], session_id)
 
-    assert action is None
+    assert not actions
     assert not Group.objects.exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_action_with_not_matching_session_and_not_matching_category_doesnt_redo(
     data_fixture,
 ):
@@ -159,9 +176,9 @@ def test_redoing_action_with_not_matching_session_and_not_matching_category_does
 
     action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
 
-    assert action.is_undone()
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
     assert not Group.objects.exists()
 
     fake_category_which_wont_match = cast(
@@ -170,15 +187,16 @@ def test_redoing_action_with_not_matching_session_and_not_matching_category_does
     )
     other_session_which_wont_match = session_id + "_fake"
 
-    action = ActionHandler.redo(
+    actions = ActionHandler.redo(
         user, [fake_category_which_wont_match], other_session_which_wont_match
     )
 
-    assert action is None
+    assert not actions
     assert not Group.objects.exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_action_with_not_matching_session_and_matching_category_doesnt_redo(
     data_fixture,
 ):
@@ -187,24 +205,25 @@ def test_redoing_action_with_not_matching_session_and_matching_category_doesnt_r
 
     action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
 
-    assert action.is_undone()
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
     assert not Group.objects.exists()
 
     other_session_which_wont_match = session_id + "_fake"
 
-    action = ActionHandler.redo(
+    actions = ActionHandler.redo(
         user,
         [CreateGroupActionType.scope()],
         other_session_which_wont_match,
     )
 
-    assert action is None
+    assert not actions
     assert not Group.objects.exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_with_multiple_sessions_undoes_only_in_provided_session(
     data_fixture,
 ):
@@ -222,16 +241,18 @@ def test_undoing_with_multiple_sessions_undoes_only_in_provided_session(
         CreateGroupActionType
     ).do(same_user_with_different_session, group_name="test2")
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert action.is_undone()
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
 
-    assert action is None
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+
+    assert not actions
     assert not Group.objects.filter(id=group_user_from_first_session.group_id).exists()
     assert Group.objects.filter(id=group_user_from_second_session.group_id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_with_multiple_sessions_redoes_only_in_provided_session(
     data_fixture,
 ):
@@ -259,16 +280,17 @@ def test_redoing_with_multiple_sessions_redoes_only_in_provided_session(
         same_user_with_different_session, group_name="test2"
     )
 
-    action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
-    assert not action.is_undone()
-    action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
-    assert action is None
+    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    assert not actions
 
     assert Group.objects.filter(id=group_user_from_first_session.group_id).exists()
     assert not Group.objects.filter(id=group_user_from_second_session.group_id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_with_multiple_users_undoes_only_in_the_own_users_actions(
     data_fixture,
 ):
@@ -287,17 +309,18 @@ def test_undoing_with_multiple_users_undoes_only_in_the_own_users_actions(
         .group
     )
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert action.is_undone()
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert action is None
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    assert not actions
 
     assert not Group.objects.filter(id=group_created_by_first_user.id).exists()
     assert Group.objects.filter(id=group_created_by_second_user.id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_with_multiple_users_redoes_only_in_the_own_users_actions(
     data_fixture,
 ):
@@ -316,23 +339,26 @@ def test_redoing_with_multiple_users_redoes_only_in_the_own_users_actions(
         .group
     )
 
-    user2_action = ActionHandler.undo(
+    user2_actions = ActionHandler.undo(
         user2, [CreateGroupActionType.scope()], session_id
     )
-    assert user2_action.is_undone()
+    assert_undo_redo_actions_are_valid(user2_actions, [CreateGroupActionType])
 
-    action = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert action.is_undone()
-    action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
-    assert not action.is_undone()
-    action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
-    assert action is None
+    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+
+    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+
+    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    assert not actions
 
     assert Group.objects.filter(id=group_created_by_first_user.id).exists()
     assert not Group.objects.filter(id=group_created_by_second_user.id).exists()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_when_undo_fails_can_try_undo_next_action(
     data_fixture,
 ):
@@ -351,10 +377,10 @@ def test_when_undo_fails_can_try_undo_next_action(
     )
     group2.delete()
 
-    undone_action = ActionHandler.undo(
+    undone_actions = ActionHandler.undo(
         user, [CreateGroupActionType.scope()], session_id
     )
-    assert undone_action.error
+    assert_undo_redo_actions_fails_with_error(undone_actions, [CreateGroupActionType])
 
     assert Group.objects.filter(id=group1.id).exists()
 
@@ -364,6 +390,7 @@ def test_when_undo_fails_can_try_undo_next_action(
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 @patch("baserow.core.signals.group_deleted.send")
 def test_when_undo_fails_the_action_is_rolled_back(
     mock_group_deleted,
@@ -382,10 +409,11 @@ def test_when_undo_fails_the_action_is_rolled_back(
         "Error that should make the undo rollback"
     )
 
-    undone_action = ActionHandler.undo(
+    undone_actions = ActionHandler.undo(
         user, [CreateGroupActionType.scope()], session_id
     )
-    assert undone_action.error
+    assert undone_actions
+    assert undone_actions[0].error, "Undo/redo action should have an error"
 
     assert Group.objects.filter(id=group.id).exists(), (
         "The group should still exist as the undo transaction should have failed and "
@@ -394,6 +422,7 @@ def test_when_undo_fails_the_action_is_rolled_back(
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_when_undo_fails_can_try_redo_undo_to_try_again(
     data_fixture,
 ):
@@ -421,19 +450,19 @@ def test_when_undo_fails_can_try_redo_undo_to_try_again(
 
     # User A tries to Undo the creation of the group, it fails as it has already been
     # deleted.
-    undone_action = ActionHandler.undo(
+    undone_actions = ActionHandler.undo(
         user, [CreateGroupActionType.scope()], session_id
     )
-    assert undone_action.error
+    assert_undo_redo_actions_fails_with_error(undone_actions, [DeleteGroupActionType])
 
     # User B Undoes the deletion, recreating the group
     ActionHandler.undo(other_user, [DeleteGroupActionType.scope()], session_id)
 
     # User A Redoes which does nothing
-    redone_action = ActionHandler.redo(
+    redone_actions = ActionHandler.redo(
         user, [CreateGroupActionType.scope()], session_id
     )
-    assert redone_action.error
+    assert_undo_redo_actions_fails_with_error(redone_actions, [DeleteGroupActionType])
 
     # User A can now Undo the creation of the group as it exists again
     ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
@@ -442,6 +471,7 @@ def test_when_undo_fails_can_try_redo_undo_to_try_again(
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_when_redo_fails_the_action_is_rolled_back(
     data_fixture,
 ):
@@ -466,10 +496,10 @@ def test_when_redo_fails_the_action_is_rolled_back(
         )
 
         # Redo the deletion
-        redone_action = ActionHandler.redo(
+        redone_actions = ActionHandler.redo(
             user, [CreateGroupActionType.scope()], session_id
         )
-    assert redone_action.error
+    assert_undo_redo_actions_fails_with_error(redone_actions, [CreateGroupActionType])
 
     assert Group.objects.filter(id=group.id).exists(), (
         "The group should still exist as the redo should have rolled back when it "
@@ -478,6 +508,7 @@ def test_when_redo_fails_the_action_is_rolled_back(
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.undo_redo
 def test_actions_which_were_updated_less_than_configured_limit_ago_not_cleaned_up(
     data_fixture, settings
 ):
@@ -496,6 +527,7 @@ def test_actions_which_were_updated_less_than_configured_limit_ago_not_cleaned_u
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_cleanup_doesnt_do_n_queries_per_action_when_they_have_no_custom_cleanup(
     data_fixture, settings, django_assert_num_queries
 ):
@@ -544,6 +576,7 @@ def _create_two_no_custom_cleanup_actions(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.undo_redo
 def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, settings):
     now = timezone.now()
     num_minutes_where_actions_will_be_old_enough_for_cleaning = timedelta(
@@ -563,6 +596,7 @@ def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, se
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.undo_redo
 def test_custom_cleanup_failing_doesnt_rollback_other_successful_cleanups(
     data_fixture, settings, mutable_action_registry, django_assert_num_queries
 ):
@@ -595,6 +629,286 @@ def test_custom_cleanup_failing_doesnt_rollback_other_successful_cleanups(
         # failed is left.
         assert Action.objects.count() == 1
         assert Action.objects.first().id == action_which_will_fail.id
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_undoing_multiple_actions_in_a_single_undo_operation(data_fixture):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+
+    undone_actions = ActionHandler.undo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        undone_actions, [CreateGroupActionType, CreateGroupActionType]
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@override_settings(MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP=1)
+def test_undoing_multiple_actions_is_limited_in_a_single_undo_operation(data_fixture):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+
+    undone_actions = ActionHandler.undo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_are_valid(undone_actions, [CreateGroupActionType])
+
+    undone_actions = ActionHandler.undo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_are_valid(undone_actions, [CreateGroupActionType])
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_redoing_multiple_actions_in_a_single_redo_operation(data_fixture):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+
+    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+
+    redone_actions = ActionHandler.redo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        redone_actions, [CreateGroupActionType, CreateGroupActionType]
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@override_settings(MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP=1)
+def test_redoing_multiple_actions_is_limited_in_a_single_undo_operation(data_fixture):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+
+    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+
+    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+
+    redone_actions = ActionHandler.redo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_are_valid(redone_actions, [CreateGroupActionType])
+
+    redone_actions = ActionHandler.redo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_are_valid(redone_actions, [CreateGroupActionType])
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_undo_redo_action_group_with_interleaved_actions(data_fixture):
+    session_id = "session-id"
+    action_group_1, action_group_2 = uuid.uuid4(), uuid.uuid4()
+    user_1 = data_fixture.create_user(
+        session_id=session_id, action_group=action_group_1
+    )
+    user_2 = data_fixture.create_user(
+        session_id=session_id, action_group=action_group_2
+    )
+    group = data_fixture.create_group(users=[user_1, user_2])
+
+    def _interleave_actions():
+        user_1_app = action_type_registry.get_by_type(CreateApplicationActionType).do(
+            user_1, group=group, application_type="database", name="u1_a1"
+        )
+        user_2_app = action_type_registry.get_by_type(CreateApplicationActionType).do(
+            user_2, group=group, application_type="database", name="u2_a1"
+        )
+        action_type_registry.get_by_type(UpdateApplicationActionType).do(
+            user_1, application=user_1_app, name="u1_a2"
+        )
+        action_type_registry.get_by_type(UpdateApplicationActionType).do(
+            user_2, application=user_2_app, name="u2_a2"
+        )
+
+    _interleave_actions()
+
+    assert Application.objects.count() == 2
+
+    # user1 undo, user2 undo, user1 redo, user2 redo
+    undone_actions = ActionHandler.undo(
+        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
+    )
+    assert list(Application.objects.values_list("name", flat=True)) == ["u2_a2"]
+    undone_actions = ActionHandler.undo(
+        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
+    )
+    assert Application.objects.count() == 0
+    redone_actions = ActionHandler.redo(
+        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
+    )
+    assert list(Application.objects.values_list("name", flat=True)) == ["u1_a2"]
+    redone_actions = ActionHandler.redo(
+        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
+    )
+    assert list(Application.objects.values_list("name", flat=True)) == unordered(
+        ["u1_a2", "u2_a2"]
+    )
+
+    # user1 undo, user2 undo, user2 redo, user1 redo
+    undone_actions = ActionHandler.undo(
+        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
+    )
+    assert list(Application.objects.values_list("name", flat=True)) == ["u2_a2"]
+    undone_actions = ActionHandler.undo(
+        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
+    )
+    assert Application.objects.count() == 0
+    redone_actions = ActionHandler.redo(
+        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
+    )
+    assert list(Application.objects.values_list("name", flat=True)) == ["u2_a2"]
+    redone_actions = ActionHandler.redo(
+        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(
+        redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
+    )
+    assert list(Application.objects.values_list("name", flat=True)) == unordered(
+        ["u1_a2", "u2_a2"]
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@patch("baserow.core.signals.group_deleted.send")
+def test_when_undo_fails_the_action_group_is_rolled_back(
+    mock_group_deleted,
+    data_fixture,
+):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+
+    group = (
+        action_type_registry.get_by_type(CreateGroupActionType)
+        .do(user, group_name="test2")
+        .group
+    )
+
+    application = action_type_registry.get_by_type(CreateApplicationActionType).do(
+        user, group=group, application_type="database", name="u1_a1"
+    )
+
+    mock_group_deleted.side_effect = Exception(
+        "Error that should make the undo rollback"
+    )
+
+    undone_actions = ActionHandler.undo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_fails_with_error(
+        undone_actions, [CreateGroupActionType, CreateApplicationActionType]
+    )
+
+    assert Group.objects.filter(id=group.id).exists(), (
+        "The group should still exist as the undo transaction should have failed and "
+        "rolled back. "
+    )
+
+    assert Application.objects.filter(id=application.id).exists(), (
+        "The application should still exist as the undo transaction should have failed and "
+        "rolled back. "
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_when_undo_fails_in_action_group_can_try_redo_undo_to_try_again(
+    data_fixture,
+):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+    other_user = data_fixture.create_user(session_id=session_id)
+
+    # User A creates a group
+    group = (
+        action_type_registry.get_by_type(CreateGroupActionType)
+        .do(user, group_name="test")
+        .group
+    )
+
+    application = action_type_registry.get_by_type(CreateApplicationActionType).do(
+        user, group=group, application_type="database", name="u1_a1"
+    )
+
+    # User B deletes the group
+    locked_group = CoreHandler().get_group_for_update(group_id=group.id)
+    data_fixture.create_user_group(
+        group=locked_group,
+        user=other_user,
+        permissions=GROUP_USER_PERMISSION_ADMIN,
+    )
+    action_type_registry.get_by_type(DeleteGroupActionType).do(
+        other_user, group=locked_group
+    )
+
+    # User A tries to Undo the creation of the group, it fails as it has already been
+    # deleted.
+    undone_actions = ActionHandler.undo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_fails_with_error(
+        undone_actions, [DeleteGroupActionType, CreateApplicationActionType]
+    )
+
+    # User B Undoes the deletion, recreating the group
+    ActionHandler.undo(other_user, [DeleteGroupActionType.scope()], session_id)
+
+    # User A Redoes which does nothing
+    redone_actions = ActionHandler.redo(
+        user, [CreateGroupActionType.scope()], session_id
+    )
+    assert_undo_redo_actions_fails_with_error(
+        redone_actions, [DeleteGroupActionType, CreateApplicationActionType]
+    )
+
+    # User A can now Undo the creation of the group as it exists again
+    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+
+    assert not Group.objects.exists()
 
 
 def _create_an_action_with_custom_cleanup(data_fixture):

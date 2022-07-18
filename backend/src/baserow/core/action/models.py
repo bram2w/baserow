@@ -33,6 +33,7 @@ class Action(CreatedAndUpdatedOnMixin, models.Model):
     scope = models.TextField(db_index=True)
     undone_at = models.DateTimeField(null=True, blank=True, db_index=True)
     error = models.TextField(null=True, blank=True)
+    action_group = models.UUIDField(null=True, blank=True, db_index=True)
 
     def is_undone(self) -> bool:
         return self.undone_at is not None
@@ -45,7 +46,7 @@ class Action(CreatedAndUpdatedOnMixin, models.Model):
             f"Action(user={self.user_id}, type={self.type}, scope={self.scope}, "
             f"created_on={self.created_on}, updated_on={self.updated_on} "
             f"undone_at={self.undone_at}, params={self.params}, \n"
-            f"session={self.session})"
+            f"session={self.session}) action_group={self.action_group}"
         )
 
     class Meta:

@@ -966,7 +966,12 @@ export const actions = {
    */
   async updateAllFieldOptions(
     { dispatch, getters },
-    { newFieldOptions, oldFieldOptions, readOnly = false }
+    {
+      newFieldOptions,
+      oldFieldOptions,
+      readOnly = false,
+      undoRedoActionGroupId = null,
+    }
   ) {
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
@@ -978,6 +983,7 @@ export const actions = {
         await ViewService(this.$client).updateFieldOptions({
           viewId: gridId,
           values: updateValues,
+          undoRedoActionGroupId,
         })
       } catch (error) {
         dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
@@ -1092,7 +1098,7 @@ export const actions = {
    */
   async updateFieldOptionsOrder(
     { commit, getters, dispatch },
-    { order, readOnly = false }
+    { order, readOnly = false, undoRedoActionGroupId = null }
   ) {
     const oldFieldOptions = clone(getters.getAllFieldOptions)
     const newFieldOptions = clone(getters.getAllFieldOptions)
@@ -1119,6 +1125,7 @@ export const actions = {
       oldFieldOptions,
       newFieldOptions,
       readOnly,
+      undoRedoActionGroupId,
     })
   },
   /**

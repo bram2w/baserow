@@ -17,6 +17,7 @@ from baserow.contrib.database.table.models import Table
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_creating_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -33,6 +34,7 @@ def test_can_undo_creating_table(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_creating_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -58,6 +60,7 @@ def test_can_undo_redo_creating_table(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_deleting_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -74,6 +77,7 @@ def test_can_undo_deleting_table(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_deleting_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -96,6 +100,7 @@ def test_can_undo_redo_deleting_table(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_ordering_tables(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -124,6 +129,7 @@ def test_can_undo_ordering_tables(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_ordering_tables(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -157,6 +163,7 @@ def test_can_undo_redo_ordering_tables(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_updating_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -181,6 +188,7 @@ def test_can_undo_updating_table(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_updating_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)

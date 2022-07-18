@@ -108,7 +108,10 @@ export const actions = {
   /**
    * Creates a new field with the provided type for the given table.
    */
-  async create(context, { type, table, values, forceCreate = true }) {
+  async create(
+    context,
+    { type, table, values, forceCreate = true, undoRedoActionGroupId = null }
+  ) {
     const { dispatch } = context
 
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
@@ -124,8 +127,11 @@ export const actions = {
 
     const postData = clone(values)
     postData.type = type
-
-    const { data } = await FieldService(this.$client).create(table.id, postData)
+    const { data } = await FieldService(this.$client).create(
+      table.id,
+      postData,
+      undoRedoActionGroupId
+    )
     const forceCreateCallback = async () => {
       return await dispatch('forceCreate', {
         table,
@@ -145,6 +151,7 @@ export const actions = {
       forceCreateCallback: callback,
       fetchNeeded,
       newField: data,
+      undoRedoActionGroupId,
     }
   },
   /**

@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from decimal import Decimal
+from typing import List, Type
 
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.timezone import make_aware, utc
@@ -11,6 +12,8 @@ from baserow.contrib.database.fields.field_helpers import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.action.models import Action
+from baserow.core.action.registries import ActionType
 
 
 def _parse_datetime(datetime):
@@ -294,3 +297,30 @@ def register_instance_temporarily(registry, instance):
         yield instance
     finally:
         registry.unregister(instance)
+
+
+def assert_undo_redo_actions_are_valid(
+    actions: List[Action], expected_action_types: List[Type[ActionType]]
+):
+    assert len(actions) == len(
+        expected_action_types
+    ), f"Expected {len(actions)} actions but got {len(expected_action_types)} action_types"
+
+    for action, expected_action_type in zip(actions, expected_action_types):
+        assert (
+            action.type == expected_action_type.type
+        ), f"Action expected of type {expected_action_type} but got {action.type}"
+        assert (
+            action is not None
+        ), "Action is None, but should be of type {expected_action_type}"
+        assert action.error is None, "Action has error: {action.error}"
+
+
+def assert_undo_redo_actions_fails_with_error(
+    actions: List[Action], expected_action_types: List[Type[ActionType]]
+):
+    assert actions, "Actions list should not be empty"
+
+    for action, expected_action_type in zip(actions, expected_action_types):
+        assert action, "Action is None, but should be of type {expected_action_type}"
+        assert action.error is not None, "Action has no error, but should have one"

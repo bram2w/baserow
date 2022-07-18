@@ -1,3 +1,4 @@
+import uuid
 import pytest
 
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_when_nothing_to_do_response_with_correct_code(
     api_client, data_fixture
 ):
@@ -25,13 +27,13 @@ def test_undoing_when_nothing_to_do_response_with_correct_code(
     )
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "action_scope": None,
-        "action_type": None,
+        "actions": [],
         "result_code": UndoRedoResultCodeField.NOTHING_TO_DO,
     }
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_without_session_id_returns_error(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     response = api_client.patch(
@@ -45,6 +47,7 @@ def test_undoing_without_session_id_returns_error(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_an_action_and_get_correct_response_code(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
@@ -71,13 +74,18 @@ def test_can_undo_an_action_and_get_correct_response_code(api_client, data_fixtu
     assert not Group.objects.filter(id=group_id).exists()
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "action_scope": CreateGroupActionType.scope(),
-        "action_type": CreateGroupActionType.type,
+        "actions": [
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            }
+        ],
         "result_code": UndoRedoResultCodeField.SUCCESS,
     }
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undoing_an_action_which_fails_returns_correct_result_code(
     api_client, data_fixture
 ):
@@ -105,13 +113,18 @@ def test_undoing_an_action_which_fails_returns_correct_result_code(
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "action_scope": CreateGroupActionType.scope(),
-        "action_type": CreateGroupActionType.type,
+        "actions": [
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            }
+        ],
         "result_code": UndoRedoResultCodeField.SKIPPED_DUE_TO_ERROR,
     }
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_when_nothing_to_do_response_with_correct_code(
     api_client, data_fixture
 ):
@@ -125,13 +138,13 @@ def test_redoing_when_nothing_to_do_response_with_correct_code(
     )
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "action_scope": None,
-        "action_type": None,
+        "actions": [],
         "result_code": UndoRedoResultCodeField.NOTHING_TO_DO,
     }
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_without_session_id_returns_error(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     response = api_client.patch(
@@ -145,6 +158,7 @@ def test_redoing_without_session_id_returns_error(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_redo_an_action_and_get_correct_response_code(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
@@ -182,13 +196,18 @@ def test_can_redo_an_action_and_get_correct_response_code(api_client, data_fixtu
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "action_scope": CreateGroupActionType.scope(),
-        "action_type": CreateGroupActionType.type,
+        "actions": [
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            }
+        ],
         "result_code": UndoRedoResultCodeField.SUCCESS,
     }
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_redoing_an_action_which_fails_returns_correct_result_code(
     api_client, data_fixture
 ):
@@ -224,7 +243,169 @@ def test_redoing_an_action_which_fails_returns_correct_result_code(
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "action_scope": CreateGroupActionType.scope(),
-        "action_type": CreateGroupActionType.type,
+        "actions": [
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            }
+        ],
         "result_code": UndoRedoResultCodeField.SKIPPED_DUE_TO_ERROR,
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_an_action_group_and_get_correct_response_code(
+    api_client, data_fixture
+):
+    _, token = data_fixture.create_user_and_token()
+
+    same_session_id = "test"
+    same_action_group = str(uuid.uuid4())
+
+    response = api_client.post(
+        reverse("api:groups:list"),
+        {"name": "Test 1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group,
+    )
+    assert response.status_code == HTTP_200_OK
+    group1_id = response.json()["id"]
+
+    assert Group.objects.filter(id=group1_id).exists()
+
+    response = api_client.post(
+        reverse("api:groups:list"),
+        {"name": "Test 2"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group,
+    )
+    assert response.status_code == HTTP_200_OK
+    group2_id = response.json()["id"]
+
+    assert Group.objects.filter(id=group2_id).exists()
+
+    # the undo should delete both groups
+    response = api_client.patch(
+        reverse("api:user:undo"),
+        {"scopes": {"root": True}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+    )
+
+    assert not Group.objects.filter(id__in=[group1_id, group2_id]).exists()
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "actions": [
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            },
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            },
+        ],
+        "result_code": UndoRedoResultCodeField.SUCCESS,
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_redo_an_action_group_and_get_correct_response_code(
+    api_client, data_fixture
+):
+    _, token = data_fixture.create_user_and_token()
+
+    same_session_id = "test"
+    same_action_group_id = str(uuid.uuid4())
+
+    response = api_client.post(
+        reverse("api:groups:list"),
+        {"name": "Test 1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group_id,
+    )
+    assert response.status_code == HTTP_200_OK
+    group1_id = response.json()["id"]
+
+    assert Group.objects.filter(id=group1_id).exists()
+
+    response = api_client.post(
+        reverse("api:groups:list"),
+        {"name": "Test 2"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group_id,
+    )
+    assert response.status_code == HTTP_200_OK
+    group2_id = response.json()["id"]
+
+    assert Group.objects.filter(id=group2_id).exists()
+
+    api_client.patch(
+        reverse("api:user:undo"),
+        {"scopes": {"root": True}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+    )
+
+    assert Group.objects.count() == 0
+
+    # the redo should recreate both groups
+    response = api_client.patch(
+        reverse("api:user:redo"),
+        {"scopes": {"root": True}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+    )
+
+    assert Group.objects.filter(id=group1_id).exists()
+    assert Group.objects.filter(id=group2_id).exists()
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "actions": [
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            },
+            {
+                "action_scope": CreateGroupActionType.scope(),
+                "action_type": CreateGroupActionType.type,
+            },
+        ],
+        "result_code": UndoRedoResultCodeField.SUCCESS,
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_invalid_undo_redo_action_group_header_raise_error(api_client, data_fixture):
+    _, token = data_fixture.create_user_and_token()
+
+    same_session_id = "test"
+    action_group = "invalid_header_should_be_uuid4"
+
+    response = api_client.post(
+        reverse("api:groups:list"),
+        {"name": "Test 1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_CLIENTUNDOREDOACTIONGROUPID=action_group,
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == [
+        "An invalid ClientUndoRedoActionGroupId header was provided. "
+        "It must be a valid Version 4 UUID."
+    ]

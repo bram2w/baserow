@@ -1,10 +1,18 @@
+import { UNDO_REDO_ACTION_GROUP_HEADER } from '@baserow/modules/database/utils/action'
+
 export default (client) => {
   return {
     fetchAll(tableId) {
       return client.get(`/database/fields/table/${tableId}/`)
     },
-    create(tableId, values) {
-      return client.post(`/database/fields/table/${tableId}/`, values)
+    create(tableId, values, undoRedoActionGroupId = null) {
+      const config = {}
+      if (undoRedoActionGroupId != null) {
+        config.headers = {
+          [UNDO_REDO_ACTION_GROUP_HEADER]: undoRedoActionGroupId,
+        }
+      }
+      return client.post(`/database/fields/table/${tableId}/`, values, config)
     },
     get(fieldId) {
       return client.get(`/database/fields/${fieldId}/`)

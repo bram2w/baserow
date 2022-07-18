@@ -21,7 +21,11 @@ from baserow.api.exceptions import (
     QueryParameterValidationException,
 )
 from baserow.api.pagination import PageNumberPagination
-from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
+from baserow.api.schemas import (
+    get_error_schema,
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+)
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import validate_data
 from baserow.contrib.database.api.utils import get_include_exclude_fields
@@ -346,6 +350,7 @@ class RowsView(APIView):
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="create_database_table_row",
@@ -649,6 +654,7 @@ class RowView(APIView):
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="update_database_table_row",
@@ -760,6 +766,7 @@ class RowView(APIView):
                 description="Deletes the row related to the value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="delete_database_table_row",
@@ -840,6 +847,7 @@ class RowMoveView(APIView):
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="move_database_table_row",
@@ -931,6 +939,7 @@ class BatchRowsView(APIView):
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="batch_create_database_table_rows",
@@ -1045,6 +1054,7 @@ class BatchRowsView(APIView):
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="batch_update_database_table_rows",
@@ -1151,6 +1161,7 @@ class BatchDeleteRowsView(APIView):
                 description="Deletes the rows in the table related to the value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="batch_delete_database_table_rows",

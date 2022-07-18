@@ -8,9 +8,11 @@ from baserow.contrib.database.views.models import ViewFilter
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.action.scopes import ViewActionScopeType
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_creating_view_filter(data_fixture):
     session_id = "1010"
     user = data_fixture.create_user(session_id=session_id)
@@ -34,12 +36,16 @@ def test_can_undo_creating_view_filter(data_fixture):
     assert view_filter.type == "equal"
     assert view_filter.value == "123"
 
-    ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    undone_actions = ActionHandler.undo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(undone_actions, [CreateViewFilterActionType])
 
     assert ViewFilter.objects.filter(pk=view_filter.id).count() == 0
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_creating_view_filter(data_fixture):
     session_id = "1010"
     user = data_fixture.create_user(session_id=session_id)
@@ -68,7 +74,10 @@ def test_can_undo_redo_creating_view_filter(data_fixture):
 
     assert ViewFilter.objects.filter(pk=view_filter.id).count() == 0
 
-    ActionHandler.redo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    redone_actions = ActionHandler.redo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(redone_actions, [CreateViewFilterActionType])
 
     assert ViewFilter.objects.filter(pk=view_filter.id).count() == 1
     updated_view_filter = ViewFilter.objects.first()
@@ -80,6 +89,7 @@ def test_can_undo_redo_creating_view_filter(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_updating_view_filter(data_fixture):
     session_id = "1010"
     user = data_fixture.create_user(session_id=session_id)
@@ -108,13 +118,21 @@ def test_can_undo_updating_view_filter(data_fixture):
     assert view_filter.value == "My new test value"
     assert view_filter.type == "contains"
 
-    ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    undone_actions = ActionHandler.undo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+
+    assert_undo_redo_actions_are_valid(undone_actions, [UpdateViewFilterActionType])
 
     view_filter.refresh_from_db()
     assert view_filter.value == "My new test value"
     assert view_filter.type == "equal"
 
-    ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    undone_actions = ActionHandler.undo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+
+    assert_undo_redo_actions_are_valid(undone_actions, [UpdateViewFilterActionType])
 
     view_filter.refresh_from_db()
     assert view_filter.value == "Test"
@@ -122,6 +140,7 @@ def test_can_undo_updating_view_filter(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_updating_view_filter(data_fixture):
     session_id = "1010"
     user = data_fixture.create_user(session_id=session_id)
@@ -143,18 +162,24 @@ def test_can_undo_redo_updating_view_filter(data_fixture):
     view_filter.refresh_from_db()
     assert view_filter.value == "My new test value"
 
-    ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    undone_actions = ActionHandler.undo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
 
     view_filter.refresh_from_db()
     assert view_filter.value == "Test"
 
-    ActionHandler.redo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    undone_actions = ActionHandler.redo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(undone_actions, [UpdateViewFilterActionType])
 
     view_filter.refresh_from_db()
     assert view_filter.value == "My new test value"
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_deleting_view_filter(data_fixture):
     session_id = "1010"
     user = data_fixture.create_user(session_id=session_id)
@@ -176,7 +201,10 @@ def test_can_undo_deleting_view_filter(data_fixture):
 
     assert ViewFilter.objects.count() == 0
 
-    ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    undone_actions = ActionHandler.undo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(undone_actions, [DeleteViewFilterActionType])
 
     assert ViewFilter.objects.count() == 1
     updated_view_filter = ViewFilter.objects.first()
@@ -188,6 +216,7 @@ def test_can_undo_deleting_view_filter(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_deleting_view_filter(data_fixture):
     session_id = "1010"
     user = data_fixture.create_user(session_id=session_id)
@@ -211,6 +240,9 @@ def test_can_undo_redo_deleting_view_filter(data_fixture):
 
     assert ViewFilter.objects.count() == 1
 
-    ActionHandler.redo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
+    redone_actions = ActionHandler.redo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(redone_actions, [DeleteViewFilterActionType])
 
     assert ViewFilter.objects.count() == 0

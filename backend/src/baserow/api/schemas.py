@@ -40,3 +40,15 @@ CLIENT_SESSION_ID_SCHEMA_PARAMETER = OpenApiParameter(
     f"endpoints with the same {settings.CLIENT_SESSION_ID_HEADER} header this action "
     "can be undone/redone.",
 )
+
+CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER = OpenApiParameter(
+    name=settings.CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER,
+    location=OpenApiParameter.HEADER,
+    type=OpenApiTypes.UUID,
+    required=False,
+    description="An optional header that marks the action performed by this request "
+    "as having occurred in a particular action group."
+    f"Then calling the undo/redo endpoint with the same {settings.CLIENT_SESSION_ID_HEADER} "
+    "header, all the actions belonging to the same action group can be undone/redone together "
+    "in a single API call.",
+)

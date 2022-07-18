@@ -207,13 +207,13 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(FormulaFieldConverter())
 
         from .fields.actions import (
-            CreateFieldTypeAction,
-            DeleteFieldTypeAction,
+            CreateFieldActionType,
+            DeleteFieldActionType,
             UpdateFieldActionType,
         )
 
-        action_type_registry.register(CreateFieldTypeAction())
-        action_type_registry.register(DeleteFieldTypeAction())
+        action_type_registry.register(CreateFieldActionType())
+        action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
 
         from .views.view_types import GridViewType, GalleryViewType, FormViewType
