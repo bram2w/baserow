@@ -241,13 +241,16 @@ export default {
         this.submitted = true
         this.submitAction = data.submit_action
         this.submitActionMessage = data.submit_action_message
-        this.submitActionRedirectURL = data.submit_action_redirect_url
+        this.submitActionRedirectURL = data.submit_action_redirect_url.replace(
+          `{row_id}`,
+          data.row_id
+        )
 
         // If the submit action is a redirect, then we need to redirect safely to the
         // provided URL.
         if (this.isRedirect) {
           setTimeout(() => {
-            window.location.assign(data.submit_action_redirect_url)
+            window.location.assign(this.submitActionRedirectURL)
           }, 4000)
         }
       } catch (error) {

@@ -362,6 +362,7 @@ def test_submit_form_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "row_id": 1,
         "submit_action": "MESSAGE",
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
@@ -734,6 +735,7 @@ def test_submit_password_protected_form_view_requires_authorization(
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "row_id": 1,
         "submit_action": "MESSAGE",
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
@@ -756,6 +758,7 @@ def test_submit_password_protected_form_view_requires_authorization(
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "row_id": 2,
         "submit_action": "MESSAGE",
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",

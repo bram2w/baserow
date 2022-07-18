@@ -80,6 +80,9 @@
               Please enter a valid URL
             </div>
           </div>
+          <div class="form-view__meta-controls-help">
+            {{ $t('formViewMeta.includeRowId') }}
+          </div>
         </div>
       </div>
     </div>
