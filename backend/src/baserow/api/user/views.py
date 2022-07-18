@@ -480,8 +480,8 @@ class UndoView(APIView):
         session_id = get_untrusted_client_session_id(request.user)
         if session_id is None:
             raise ClientSessionIdHeaderNotSetException()
-        undone_action = ActionHandler.undo(request.user, data, session_id)
-        serializer = UndoRedoResponseSerializer(undone_action)
+        undone_actions = ActionHandler.undo(request.user, data, session_id)
+        serializer = UndoRedoResponseSerializer({"actions": undone_actions})
         return Response(serializer.data, status=200)
 
 
@@ -524,9 +524,6 @@ class RedoView(APIView):
         session_id = get_untrusted_client_session_id(request.user)
         if session_id is None:
             raise ClientSessionIdHeaderNotSetException()
-        redone_action = ActionHandler.redo(
-            request.user,
-            data,
-            session_id,
-        )
-        return Response(UndoRedoResponseSerializer(redone_action).data, status=200)
+        redone_actions = ActionHandler.redo(request.user, data, session_id)
+        serializer = UndoRedoResponseSerializer({"actions": redone_actions})
+        return Response(serializer.data, status=200)

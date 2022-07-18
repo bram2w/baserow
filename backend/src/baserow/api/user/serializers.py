@@ -130,31 +130,28 @@ class UndoRedoResultCodeField(serializers.Field):
     SKIPPED_DUE_TO_ERROR = "SKIPPED_DUE_TO_ERROR"
 
     def __init__(self, *args, **kwargs):
-        kwargs[
-            "help_text"
-        ] = f"Indicates the result of the undo/redo operation. Will be "
-        f"'{self.SUCCESS}' on success, '{self.NOTHING_TO_DO}' when "
-        f"there is no action to undo/redo and "
-        f"'{self.SKIPPED_DUE_TO_ERROR}' when the undo/redo failed due "
-        f"to a conflict or error and was skipped over."
+        kwargs["help_text"] = (
+            "Indicates the result of the undo/redo operation. Will be "
+            f"'{self.SUCCESS}' on success, '{self.NOTHING_TO_DO}' when "
+            "there is no action to undo/redo and "
+            f"'{self.SKIPPED_DUE_TO_ERROR}' when the undo/redo failed due "
+            "to a conflict or error and was skipped over."
+        )
         super().__init__(*args, **kwargs)
 
     def get_attribute(self, instance):
-        return instance
+        return instance["actions"]
 
-    def get_initial(self):
-        return self.NOTHING_TO_DO
-
-    def to_representation(self, instance):
-        if instance.has_error():
+    def to_representation(self, actions):
+        if not actions:
+            return self.NOTHING_TO_DO
+        if actions[0].has_error():
             return self.SKIPPED_DUE_TO_ERROR
         else:
             return self.SUCCESS
 
 
-class UndoRedoResponseSerializer(serializers.ModelSerializer):
-
-    result_code = UndoRedoResultCodeField()
+class UndoRedoActionSerializer(serializers.ModelSerializer):
 
     action_type = serializers.CharField(
         required=False,
@@ -175,21 +172,14 @@ class UndoRedoResponseSerializer(serializers.ModelSerializer):
         "will contain the scope of the action that was undone/redone.",
     )
 
-    @extend_schema_field(OpenApiTypes.STR)
-    def get_result_code(self, instance):
-        if instance is None:
-            return self.NOTHING_TO_DO
-        elif instance.error:
-            return self.SKIPPED_DUE_TO_ERROR
-        else:
-            return self.SUCCESS
-
-    def to_representation(self, instance):
-        return super().to_representation(instance)
-
     class Meta:
         model = Action
-        fields = ("action_type", "action_scope", "result_code")
+        fields = ("action_type", "action_scope")
+
+
+class UndoRedoResponseSerializer(serializers.Serializer):
+    actions = UndoRedoActionSerializer(many=True)
+    result_code = UndoRedoResultCodeField()
 
 
 class AccountSerializer(serializers.Serializer):

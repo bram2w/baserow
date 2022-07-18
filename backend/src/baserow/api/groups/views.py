@@ -14,7 +14,11 @@ from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
 )
-from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
+from baserow.api.schemas import (
+    get_error_schema,
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+)
 from baserow.api.groups.users.serializers import GroupUserGroupSerializer
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.core.models import GroupUser
@@ -97,6 +101,7 @@ class GroupView(APIView):
                 description="Updates the group related to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Groups"],
         operation_id="update_group",
@@ -145,6 +150,7 @@ class GroupView(APIView):
                 description="Deletes the group related to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Groups"],
         operation_id="delete_group",
@@ -238,7 +244,10 @@ class GroupOrderView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        parameters=[CLIENT_SESSION_ID_SCHEMA_PARAMETER],
+        parameters=[
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
         tags=["Groups"],
         operation_id="order_groups",
         description=(

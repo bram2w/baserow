@@ -23,9 +23,11 @@ from baserow.contrib.database.rows.actions import (
     UpdateRowsActionType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_creating_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -65,14 +67,13 @@ def test_can_undo_creating_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == CreateRowActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [CreateRowActionType])
 
     assert model.objects.all().count() == 0
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_creating_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -116,9 +117,7 @@ def test_can_undo_redo_creating_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == CreateRowActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [CreateRowActionType])
 
     assert model.objects.all().count() == 1
 
@@ -129,6 +128,7 @@ def test_can_undo_redo_creating_row(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_creating_rows(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -175,14 +175,13 @@ def test_can_undo_creating_rows(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == CreateRowsActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [CreateRowsActionType])
 
     assert model.objects.all().count() == 0
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_creating_rows(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -233,14 +232,13 @@ def test_can_undo_redo_creating_rows(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == CreateRowsActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [CreateRowsActionType])
 
     assert model.objects.all().count() == 3
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_deleting_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -280,9 +278,7 @@ def test_can_undo_deleting_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == DeleteRowActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [DeleteRowActionType])
 
     assert model.objects.all().count() == 1
     assert getattr(row, f"field_{name_field.id}") == "Tesla"
@@ -292,6 +288,7 @@ def test_can_undo_deleting_row(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_deleting_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -333,14 +330,13 @@ def test_can_undo_redo_deleting_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == DeleteRowActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [DeleteRowActionType])
 
     assert model.objects.all().count() == 0
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_deleting_rows(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -393,14 +389,13 @@ def test_can_undo_deleting_rows(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == DeleteRowsActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [DeleteRowsActionType])
 
     assert model.objects.all().count() == 3
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_deleting_rows(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -455,14 +450,13 @@ def test_can_undo_redo_deleting_rows(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == DeleteRowsActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [DeleteRowsActionType])
 
     assert model.objects.all().count() == 0
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_moving_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -494,15 +488,14 @@ def test_can_undo_moving_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == MoveRowActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [MoveRowActionType])
 
     refresh_rows_from_db()
     assert row_1.order < row_2.order < row_3.order
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_moving_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -538,15 +531,14 @@ def test_can_undo_redo_moving_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == MoveRowActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [MoveRowActionType])
 
     refresh_rows_from_db()
     assert row_2.order < row_3.order < row_1.order
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undo_moving_row_does_nothing_if_row_is_at_same_original_position(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -575,17 +567,18 @@ def test_undo_moving_row_does_nothing_if_row_is_at_same_original_position(data_f
     assert row_1.order < row_2.order < row_3.order
     order = [row_1.order, row_2.order, row_3.order]
 
-    action_undone = ActionHandler.undo(
+    undone_actions = ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is None
+    assert not undone_actions
 
     refresh_rows_from_db()
     assert order == [row_1.order, row_2.order, row_3.order]
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_updating_row(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -784,9 +777,7 @@ def test_can_undo_redo_updating_row(data_fixture):
 
     car.refresh_from_db()
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateRowActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateRowActionType])
 
     assert model.objects.all().count() == 1
     assert getattr(car, f"field_{car_name_field.id}") == "Model 3"
@@ -819,9 +810,7 @@ def test_can_undo_redo_updating_row(data_fixture):
 
     car.refresh_from_db()
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateRowActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateRowActionType])
 
     assert model.objects.all().count() == 1
     assert getattr(car, f"field_{car_name_field.id}") == "Alfa Romeo Giulietta"
@@ -849,6 +838,7 @@ def test_can_undo_redo_updating_row(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_undo_redo_updating_row_dont_change_formula_field_values(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -896,9 +886,7 @@ def test_undo_redo_updating_row_dont_change_formula_field_values(data_fixture):
 
     row.refresh_from_db()
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateRowActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateRowActionType])
 
     assert getattr(row, f"field_{formula_field.id}") == Decimal("4")
 
@@ -908,14 +896,13 @@ def test_undo_redo_updating_row_dont_change_formula_field_values(data_fixture):
     )
 
     row.refresh_from_db()
-    assert action_redone is not None
-    assert action_redone.type == UpdateRowActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateRowActionType])
 
     assert getattr(row, f"field_{formula_field.id}") == Decimal("4")
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_rows(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -955,9 +942,7 @@ def test_can_undo_update_rows(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateRowsActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateRowsActionType])
 
     row_one.refresh_from_db()
     row_two.refresh_from_db()
@@ -967,6 +952,7 @@ def test_can_undo_update_rows(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_rows(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -1000,9 +986,7 @@ def test_can_undo_redo_update_rows(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateRowsActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateRowsActionType])
 
     row_one.refresh_from_db()
     row_two.refresh_from_db()
@@ -1012,6 +996,7 @@ def test_can_undo_redo_update_rows(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_rows_interesting_field_types(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -1124,9 +1109,7 @@ def test_can_undo_redo_update_rows_interesting_field_types(data_fixture):
         user, [TableActionScopeType.value(table_id=table1.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateRowsActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateRowsActionType])
 
     row_table_1.refresh_from_db()
 
@@ -1149,9 +1132,7 @@ def test_can_undo_redo_update_rows_interesting_field_types(data_fixture):
         user, [TableActionScopeType.value(table_id=table1.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateRowsActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateRowsActionType])
 
     row_table_1.refresh_from_db()
 

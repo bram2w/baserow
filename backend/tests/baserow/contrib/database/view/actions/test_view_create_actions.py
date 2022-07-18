@@ -8,6 +8,7 @@ from baserow.core.action.registries import action_type_registry
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_create_view(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -23,6 +24,7 @@ def test_can_undo_create_view(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_create_view(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)

@@ -1,3 +1,5 @@
+import { UNDO_REDO_ACTION_GROUP_HEADER } from '@baserow/modules/database/utils/action'
+
 export default (client) => {
   return {
     fetchAll(
@@ -76,8 +78,18 @@ export default (client) => {
     fetchFieldOptions(viewId) {
       return client.get(`/database/views/${viewId}/field-options/`)
     },
-    updateFieldOptions({ viewId, values }) {
-      return client.patch(`/database/views/${viewId}/field-options/`, values)
+    updateFieldOptions({ viewId, values, undoRedoActionGroupId = null }) {
+      const config = {}
+      if (undoRedoActionGroupId != null) {
+        config.headers = {
+          [UNDO_REDO_ACTION_GROUP_HEADER]: undoRedoActionGroupId,
+        }
+      }
+      return client.patch(
+        `/database/views/${viewId}/field-options/`,
+        values,
+        config
+      )
     },
     rotateSlug(viewId) {
       return client.post(`/database/views/${viewId}/rotate-slug/`)

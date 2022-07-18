@@ -15,6 +15,7 @@ For example:
 * Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)
 * Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
 * Show badge when the user has account level premium.
+* Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call. [#951](https://gitlab.com/bramw/baserow/-/issues/951)
 
 ### Bug Fixes
 
@@ -23,6 +24,7 @@ For example:
 * Fix the perm delete trash cleanup job failing for self linking tables. [#1075](https://gitlab.com/bramw/baserow/-/issues/1075)
 
 ### Breaking Changes
+* API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
 
 
 ## Released (2022-07-05 1.10.2)
@@ -77,7 +79,6 @@ For example:
 
 
 ### Breaking Changes
-
 
 ## Released (2022-06-09 1.10.1)
 

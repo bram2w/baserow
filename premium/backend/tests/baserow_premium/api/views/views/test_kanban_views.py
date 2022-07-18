@@ -14,6 +14,7 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.action.scopes import ViewActionScopeType
 from baserow.contrib.database.views.actions import UpdateViewActionType
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 from baserow_premium.views.models import KanbanView
 
@@ -917,6 +918,7 @@ def test_update_kanban_view_card_cover_image_field(
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_kanban_view(data_fixture, premium_data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -977,9 +979,7 @@ def test_can_undo_redo_update_kanban_view(data_fixture, premium_data_fixture):
     )
 
     kanban_view.refresh_from_db()
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     assert kanban_view.name == original_kanban_data["name"]
     assert kanban_view.filter_type == original_kanban_data["filter_type"]
@@ -998,9 +998,7 @@ def test_can_undo_redo_update_kanban_view(data_fixture, premium_data_fixture):
     )
 
     kanban_view.refresh_from_db()
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     assert kanban_view.name == new_kanban_data["name"]
     assert kanban_view.filter_type == new_kanban_data["filter_type"]

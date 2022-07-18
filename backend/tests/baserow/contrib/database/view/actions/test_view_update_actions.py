@@ -1,5 +1,7 @@
+import uuid
 import pytest
-
+from pytest_unordered import unordered
+from baserow.contrib.database.fields.actions import CreateFieldActionType
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.action.scopes import ViewActionScopeType
@@ -11,9 +13,11 @@ from baserow.contrib.database.views.actions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_view_field_options(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -122,9 +126,9 @@ def test_can_undo_update_view_field_options(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewFieldOptionsActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(
+        action_undone, [UpdateViewFieldOptionsActionType]
+    )
 
     undo_options = grid_view.get_field_options()
     assert len(undo_options) == 3
@@ -162,6 +166,7 @@ def test_can_undo_update_view_field_options(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_view_field_options(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -272,9 +277,9 @@ def test_can_undo_redo_update_view_field_options(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewFieldOptionsActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(
+        action_redone, [UpdateViewFieldOptionsActionType]
+    )
 
     redo_options = grid_view.get_field_options()
     assert len(redo_options) == 3
@@ -309,6 +314,7 @@ def test_can_undo_redo_update_view_field_options(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_rotate_view_slug(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -327,15 +333,14 @@ def test_can_undo_rotate_view_slug(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == RotateViewSlugActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [RotateViewSlugActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.slug == original_view_slug
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_rotate_view_slug(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -356,15 +361,14 @@ def test_can_undo_redo_rotate_view_slug(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == RotateViewSlugActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [RotateViewSlugActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.slug == new_view_slug
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_view_name(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -381,15 +385,14 @@ def test_can_undo_update_view_name(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.name == "Original name"
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_view_name(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -408,15 +411,14 @@ def test_can_undo_redo_update_view_name(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.name == "New name"
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_view_set_view_public(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -433,15 +435,14 @@ def test_can_undo_update_view_set_view_public(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.public is False
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_view_set_view_public(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -460,15 +461,14 @@ def test_can_undo_redo_update_view_set_view_public(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.public is True
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_view_set_view_public_with_password(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -489,9 +489,7 @@ def test_can_undo_update_view_set_view_public_with_password(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.public is False
@@ -499,6 +497,7 @@ def test_can_undo_update_view_set_view_public_with_password(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_view_set_view_public_with_password(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -521,9 +520,7 @@ def test_can_undo_redo_update_view_set_view_public_with_password(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.public is True
@@ -531,6 +528,7 @@ def test_can_undo_redo_update_view_set_view_public_with_password(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_view_filter_type(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -549,15 +547,14 @@ def test_can_undo_update_view_filter_type(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.filter_type == "AND"
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_view_filter_type(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -578,15 +575,14 @@ def test_can_undo_redo_update_view_filter_type(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.filter_type == "OR"
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_update_view_filters_disabled(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -605,15 +601,14 @@ def test_can_undo_update_view_filters_disabled(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.filters_disabled is False
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_view_filters_disabled(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -634,15 +629,14 @@ def test_can_undo_redo_update_view_filters_disabled(data_fixture):
         user, [ViewActionScopeType.value(grid_view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     grid_view.refresh_from_db()
     assert grid_view.filters_disabled is True
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_form_view(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -712,9 +706,7 @@ def test_can_undo_redo_update_form_view(data_fixture):
     )
 
     form_view.refresh_from_db()
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     assert form_view.name == original_form_data["name"]
     assert form_view.public == original_form_data["public"]
@@ -734,9 +726,7 @@ def test_can_undo_redo_update_form_view(data_fixture):
     )
 
     form_view.refresh_from_db()
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     assert form_view.name == new_form_data["name"]
     assert form_view.public == new_form_data["public"]
@@ -753,6 +743,7 @@ def test_can_undo_redo_update_form_view(data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.undo_redo
 def test_can_undo_redo_update_gallery_view(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -798,9 +789,7 @@ def test_can_undo_redo_update_gallery_view(data_fixture):
     )
 
     gallery_view.refresh_from_db()
-    assert action_undone is not None
-    assert action_undone.type == UpdateViewActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateViewActionType])
 
     assert gallery_view.name == original_gallery_data["name"]
     assert gallery_view.filter_type == original_gallery_data["filter_type"]
@@ -812,11 +801,137 @@ def test_can_undo_redo_update_gallery_view(data_fixture):
     )
 
     gallery_view.refresh_from_db()
-    assert action_redone is not None
-    assert action_redone.type == UpdateViewActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateViewActionType])
 
     assert gallery_view.name == new_gallery_data["name"]
     assert gallery_view.filter_type == new_gallery_data["filter_type"]
     assert gallery_view.filters_disabled == new_gallery_data["filters_disabled"]
     assert gallery_view.card_cover_image_field.id == file_field_2.id
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_redo_insert_field_in_action_group(data_fixture):
+    session_id, action_group = "session-id", uuid.uuid4()
+    user = data_fixture.create_user(session_id=session_id, action_group=action_group)
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field_1 = data_fixture.create_text_field(table=table)
+    field_2 = data_fixture.create_text_field(table=table)
+
+    ViewHandler().update_field_options(
+        user=user,
+        view=grid_view,
+        field_options={
+            field_1.id: {
+                "width": 150,
+                "order": 0,
+                "aggregation_raw_type": "",
+                "aggregation_type": "",
+            },
+            field_2.id: {
+                "width": 150,
+                "order": 1,
+                "aggregation_raw_type": "",
+                "aggregation_type": "",
+            },
+        },
+    )
+
+    # insert left/right is an action group composed of two actions:
+    # 1. create field
+    # 2. update fields options
+
+    new_field = action_type_registry.get_by_type(CreateFieldActionType).do(
+        user, table, "number", name="to the right of field_1"
+    )
+
+    action_type_registry.get_by_type(UpdateViewFieldOptionsActionType).do(
+        user,
+        grid_view,
+        field_options={
+            field_1.id: {
+                "width": 150,
+                "order": 0,
+                "aggregation_raw_type": "",
+                "aggregation_type": "",
+            },
+            new_field.id: {
+                "width": 150,
+                "order": 1,
+                "aggregation_raw_type": "",
+                "aggregation_type": "",
+            },
+            field_2.id: {
+                "width": 150,
+                "order": 2,
+                "aggregation_raw_type": "",
+                "aggregation_type": "",
+            },
+        },
+    )
+
+    updated_options = grid_view.get_field_options()
+    assert len(updated_options) == 3
+
+    assert [
+        {
+            "id": fo.field_id,
+            "order": fo.order,
+        }
+        for fo in updated_options
+    ] == unordered(
+        [
+            {"id": field_1.id, "order": 0},
+            {"id": new_field.id, "order": 1},
+            {"id": field_2.id, "order": 2},
+        ]
+    )
+
+    undone_actions = ActionHandler.undo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+
+    assert_undo_redo_actions_are_valid(
+        undone_actions, [UpdateViewFieldOptionsActionType, CreateFieldActionType]
+    )
+
+    original_options = grid_view.get_field_options()
+    assert len(original_options) == 2
+    assert [
+        {
+            "id": fo.field_id,
+            "order": fo.order,
+        }
+        for fo in original_options
+    ] == unordered(
+        [
+            {"id": field_1.id, "order": 0},
+            {"id": field_2.id, "order": 1},
+        ]
+    )
+
+    redone_actions = ActionHandler.redo(
+        user, [ViewActionScopeType.value(grid_view.id)], session_id
+    )
+
+    assert_undo_redo_actions_are_valid(
+        redone_actions, [CreateFieldActionType, UpdateViewFieldOptionsActionType]
+    )
+
+    updated_options = grid_view.get_field_options()
+    assert len(updated_options) == 3
+
+    assert [
+        {
+            "id": fo.field_id,
+            "order": fo.order,
+        }
+        for fo in updated_options
+    ] == unordered(
+        [
+            {"id": field_1.id, "order": 0},
+            {"id": new_field.id, "order": 1},
+            {"id": field_2.id, "order": 2},
+        ]
+    )

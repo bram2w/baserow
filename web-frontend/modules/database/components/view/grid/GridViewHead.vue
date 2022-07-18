@@ -106,19 +106,21 @@ export default {
      * we need to move the newField into the correct order position.
      * This function find the correct order position and update the fieldOptions accordingly.
      **/
-    async updateInsertedFieldOrder({ position, newField, fromField }) {
+    async updateInsertedFieldOrder({
+      position,
+      newField,
+      fromField,
+      undoRedoActionGroupId = null,
+    }) {
       const newOrder = this.fields.map((field) => field.id)
       const oldIndex = newOrder.indexOf(newField.id)
       const offset = position === 'left' ? 0 : 1
       const newIndex = newOrder.indexOf(fromField.id) + offset
       newOrder.splice(newIndex, 0, newOrder.splice(oldIndex, 1)[0])
-
       try {
         await this.$store.dispatch(
           `${this.storePrefix}view/grid/updateFieldOptionsOrder`,
-          {
-            order: newOrder,
-          }
+          { order: newOrder, undoRedoActionGroupId }
         )
       } catch (error) {
         notifyIf(error, 'view')
