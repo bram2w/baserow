@@ -2,6 +2,7 @@ import contextlib
 
 from django.db import connection, transaction
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
+from django.db.backends.ddl_references import Statement
 from django.db.backends.utils import strip_quotes
 
 from .sql_queries import sql_drop_try_cast, sql_create_try_cast
@@ -189,7 +190,6 @@ class PostgresqlLenientDatabaseSchemaEditor:
 
 @contextlib.contextmanager
 def lenient_schema_editor(
-    connection,
     alter_column_prepare_old_value=None,
     alter_column_prepare_new_value=None,
     force_alter_column=False,
@@ -202,9 +202,6 @@ def lenient_schema_editor(
     to convert the value and if it does not succeed the value will be set to null,
     but it will never fail.
 
-    :param connection: The current connection for which to generate the schema editor
-        for.
-    :type connection: DatabaseWrapper
     :param alter_column_prepare_old_value: Optionally a query statement converting the
         `p_in` value to a string format.
     :type alter_column_prepare_old_value: None or str
@@ -218,22 +215,6 @@ def lenient_schema_editor(
         `postgresql` is supported.
     """
 
-    vendor_schema_editor_mapping = {"postgresql": PostgresqlLenientDatabaseSchemaEditor}
-    schema_editor_class = vendor_schema_editor_mapping.get(connection.vendor)
-
-    if not schema_editor_class:
-        raise ValueError(
-            f"The provided connection vendor is not supported. We only "
-            f'support {", ".join(vendor_schema_editor_mapping.keys())}.'
-        )
-
-    regular_schema_editor = connection.SchemaEditorClass
-    schema_editor_class = type(
-        "LenientDatabaseSchemaEditor", (schema_editor_class, regular_schema_editor), {}
-    )
-
-    connection.SchemaEditorClass = schema_editor_class
-
     kwargs = {"force_alter_column": force_alter_column}
 
     if alter_column_prepare_old_value:
@@ -242,13 +223,23 @@ def lenient_schema_editor(
     if alter_column_prepare_new_value:
         kwargs["alter_column_prepare_new_value"] = alter_column_prepare_new_value
 
-    try:
-        with safe_django_schema_editor(**kwargs) as schema_editor:
-            yield schema_editor
-    except Exception as e:
-        raise e
-    finally:
-        connection.SchemaEditorClass = regular_schema_editor
+    with safe_django_schema_editor(
+        name="LenientDatabaseSchemaEditor",
+        classes=[PostgresqlLenientDatabaseSchemaEditor],
+        **kwargs,
+    ) as schema_editor:
+        yield schema_editor
+
+
+def _build_schema_editor_class(name, classes):
+    if connection.vendor != "postgresql":
+        raise ValueError(
+            f"The provided connection vendor is not supported. We only support "
+            f"postgres."
+        )
+    regular_schema_editor = connection.SchemaEditorClass
+    schema_editor_class = type(name, (*classes, regular_schema_editor), {})
+    return schema_editor_class, regular_schema_editor
 
 
 @contextlib.contextmanager
@@ -260,44 +251,124 @@ def optional_atomic(atomic=True):
         yield
 
 
-def create_model_and_related_tables_without_duplicates(schema_editor, model):
+class SafeBaserowPostgresSchemaEditor:
     """
-    Create a table and any accompanying indexes or unique constraints for
-    the given `model`.
-
-    NOTE: this method is a clone of `schema_editor.create_model` with a change:
-    it checks if the through table already exists and if it does, it does not try to
-    create it again (otherwise we'll end up with a table already exists exception).
-    In this way we can create both sides of the m2m relationship for self-referencing
-    link_rows when importing data without errors.
+    Overrides the create/delete_model methods to work with our link_row fields which
+    link back to the same table.
     """
 
-    sql, params = schema_editor.table_sql(model)
-    # Prevent using [] as params, in the case a literal '%' is used in the definition
-    schema_editor.execute(sql, params or None)
+    def create_model(self, model):
+        """
+        Create a table and any accompanying indexes or unique constraints for
+        the given `model`.
 
-    # Add any field index and index_together's
-    schema_editor.deferred_sql.extend(schema_editor._model_indexes_sql(model))
+        NOTE: this method is a clone of `schema_editor.create_model` with a change:
+        it checks if the through table already exists and if it does, it does not try
+        to create it again (otherwise we'll end up with a table already exists
+        exception). In this way we can create both sides of the m2m relationship for
+        self-referencing link_rows when importing data without errors.
+        """
 
-    # Make M2M tables
-    already_created_through_table_name = set()
-    for field in model._meta.local_many_to_many:
-        remote_through = field.remote_field.through
-        db_table = remote_through._meta.db_table
-        if (
-            field.remote_field.through._meta.auto_created
-            and db_table not in already_created_through_table_name
-        ):
-            schema_editor.create_model(remote_through)
-            already_created_through_table_name.add(db_table)
+        sql, params = self.table_sql(model)
+        # Prevent using [] as params, in the case a literal '%' is used in the
+        # definition
+        self.execute(sql, params or None)
+
+        # Add any field index and index_together's
+        self.deferred_sql.extend(self._model_indexes_sql(model))
+
+        # Make M2M tables
+        already_created_through_table_name = set()
+        for field in model._meta.local_many_to_many:
+            remote_through = field.remote_field.through
+            db_table = remote_through._meta.db_table
+            if (
+                field.remote_field.through._meta.auto_created
+                and db_table not in already_created_through_table_name
+            ):
+                self.create_model(remote_through)
+                already_created_through_table_name.add(db_table)
+
+    def delete_model(self, model):
+        """
+        Delete a model and any related m2m tables.
+
+        NOTE: this method is a clone of `schema_editor.delete_model` with a change:
+        it checks if the through table has already been deleted, it does not try to
+        deleted it again (otherwise we'll end up with a table already deleted
+        exception).
+
+        In this way we can delete both sides of the m2m relationship for
+        self-referencing link_rows.
+        """
+
+        # Handle auto-created intermediary models
+        already_deleted_through_table_name = set()
+        for field in model._meta.local_many_to_many:
+            remote_through = field.remote_field.through
+            db_table = remote_through._meta.db_table
+            if (
+                remote_through._meta.auto_created
+                and db_table not in already_deleted_through_table_name
+            ):
+                self.delete_model(field.remote_field.through)
+                already_deleted_through_table_name.add(db_table)
+
+        # Delete the table
+        self.execute(
+            self.sql_delete_table
+            % {
+                "table": self.quote_name(model._meta.db_table),
+            }
+        )
+        # Remove all deferred statements referencing the deleted table.
+
+        for sql in list(self.deferred_sql):
+            if isinstance(sql, Statement) and sql.references_table(
+                model._meta.db_table
+            ):
+                self.deferred_sql.remove(sql)
 
 
 @contextlib.contextmanager
-def safe_django_schema_editor(atomic=True, **kwargs):
-    # django.db.backends.base.schema.BaseDatabaseSchemaEditor.__exit__ has a bug
-    # where it will not properly call atomic.__exit__ if executing deferred sql
-    # causes an exception. Instead we disable its internal atomic wrapper which has
-    # this bug and wrap it ourselves properly and safely.
-    with optional_atomic(atomic=atomic):
-        with connection.schema_editor(atomic=False, **kwargs) as schema_editor:
-            yield schema_editor
+def safe_django_schema_editor(atomic=True, name=None, classes=None, **kwargs):
+    """
+    This is a customized version of the django provided Postgres
+    BaseDatabaseSchemaEditor. Inside of Baserow this schema editor should always be
+    used to prevent the following two bugs:
+
+    1. The django.db.backends.base.schema.BaseDatabaseSchemaEditor.__exit__ has a bug
+    where it will not properly call atomic.__exit__ if executing deferred sql
+    causes an exception. Instead we disable its internal atomic wrapper which has
+    this bug and wrap it ourselves properly and safely.
+    2. Our implementation of link_row fields which link back to the same table have to
+    add two separate ManyToMany model fields to the Generated baserow django models.
+    Because of this the normal shcema_editor.delete_model/create_model functions crash
+    as they will try to create or delete the through m2m table twice. This safe
+    schema editor overrides these two methods to only create/delete the m2m table once.
+    """
+
+    if name is None:
+        name = "BaserowSafeDjangoPostgresSchemaEditor"
+
+    if classes is None:
+        classes = []
+
+    classes.append(SafeBaserowPostgresSchemaEditor)
+
+    (
+        BaserowSafeDjangoPostgresSchemaEditor,
+        regular_schema_editor,
+    ) = _build_schema_editor_class(name, classes)
+
+    kwargs.setdefault("connection", connection)
+
+    try:
+        connection.SchemaEditorClass = BaserowSafeDjangoPostgresSchemaEditor
+        with optional_atomic(atomic=atomic):
+            with BaserowSafeDjangoPostgresSchemaEditor(
+                atomic=False, **kwargs
+            ) as schema_editor:
+                yield schema_editor
+    finally:
+        connection.SchemaEditorClass = regular_schema_editor

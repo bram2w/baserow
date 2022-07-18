@@ -7,7 +7,9 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import gettext as _
 
-from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.contrib.database.db.schema import (
+    safe_django_schema_editor,
+)
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
