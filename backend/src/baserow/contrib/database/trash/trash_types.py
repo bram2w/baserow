@@ -10,7 +10,7 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.rows.signals import row_created, rows_created
+from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.contrib.database.views.handler import ViewHandler
@@ -258,9 +258,9 @@ class RowTrashableItemType(TrashableItemType):
 
         ViewHandler().field_value_updated(updated_fields)
 
-        row_created.send(
+        rows_created.send(
             self,
-            row=trashed_item,
+            rows=[trashed_item],
             table=table,
             model=model,
             before=None,

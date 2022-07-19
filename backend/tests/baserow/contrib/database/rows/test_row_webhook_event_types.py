@@ -3,10 +3,11 @@ import pytest
 from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.ws.rows.signals import before_rows_update
 
 
 @pytest.mark.django_db()
-def test_row_created_event_type(data_fixture):
+def test_rows_created_event_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(table=table, primary=True, name="Test 1")
@@ -19,41 +20,43 @@ def test_row_created_event_type(data_fixture):
         url="http://localhost",
         use_user_field_names=False,
     )
-    payload = webhook_event_type_registry.get("row.created").get_payload(
-        event_id="1", webhook=webhook, model=model, table=table, row=row
+    payload = webhook_event_type_registry.get("rows.created").get_payload(
+        event_id="1", webhook=webhook, model=model, table=table, rows=[row]
     )
     assert payload == {
         "table_id": table.id,
         "event_id": "1",
-        "event_type": "row.created",
-        "row_id": row.id,
-        "values": {
-            "id": 1,
-            "order": "1.00000000000000000000",
-            f"field_{field.id}": None,
-        },
+        "event_type": "rows.created",
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{field.id}": None,
+            }
+        ],
     }
 
     webhook.use_user_field_names = True
     webhook.save()
-    payload = webhook_event_type_registry.get("row.created").get_payload(
-        event_id="1", webhook=webhook, model=model, table=table, row=row
+    payload = webhook_event_type_registry.get("rows.created").get_payload(
+        event_id="1", webhook=webhook, model=model, table=table, rows=[row]
     )
     assert payload == {
         "table_id": table.id,
         "event_id": "1",
-        "event_type": "row.created",
-        "row_id": row.id,
-        "values": {
-            "id": 1,
-            "order": "1.00000000000000000000",
-            "Test 1": None,
-        },
+        "event_type": "rows.created",
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                "Test 1": None,
+            }
+        ],
     }
 
 
 @pytest.mark.django_db()
-def test_row_updated_event_type(data_fixture):
+def test_rows_updated_event_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table(database=table.database)
@@ -85,9 +88,16 @@ def test_row_updated_event_type(data_fixture):
     row = model.objects.create(**{f"field_{text_field.id}": "Old Test value"})
     getattr(row, f"field_{link_row_field.id}").add(i1.id)
 
-    before_return = webhook_event_type_registry.get(
-        "row.updated"
-    ).get_test_call_before_return(table, row, model)
+    before_return = {
+        before_rows_update: before_rows_update(
+            rows=[row],
+            model=model,
+            table=table,
+            sender=None,
+            user=None,
+            updated_field_ids=None,
+        )
+    }
 
     row = RowHandler().update_row_by_id(
         user=user,
@@ -103,65 +113,71 @@ def test_row_updated_event_type(data_fixture):
         url="http://localhost",
         use_user_field_names=False,
     )
-    payload = webhook_event_type_registry.get("row.updated").get_payload(
+    payload = webhook_event_type_registry.get("rows.updated").get_payload(
         event_id="1",
         webhook=webhook,
         model=model,
         table=table,
-        row=row,
+        rows=[row],
         before_return=before_return,
     )
     assert payload == {
         "table_id": table.id,
         "event_id": "1",
-        "event_type": "row.updated",
-        "row_id": row.id,
-        "values": {
-            "id": 1,
-            "order": "1.00000000000000000000",
-            f"field_{text_field.id}": "New Test value",
-            f"field_{link_row_field.id}": [{"id": 1, "value": "Lookup 1"}],
-        },
-        "old_values": {
-            "id": 1,
-            "order": "1.00000000000000000000",
-            f"field_{text_field.id}": "Old Test value",
-            f"field_{link_row_field.id}": [{"id": 1, "value": "Lookup 1"}],
-        },
+        "event_type": "rows.updated",
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{text_field.id}": "New Test value",
+                f"field_{link_row_field.id}": [{"id": 1, "value": "Lookup 1"}],
+            }
+        ],
+        "old_items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{text_field.id}": "Old Test value",
+                f"field_{link_row_field.id}": [{"id": 1, "value": "Lookup 1"}],
+            }
+        ],
     }
 
     webhook.use_user_field_names = True
     webhook.save()
-    payload = webhook_event_type_registry.get("row.updated").get_payload(
+    payload = webhook_event_type_registry.get("rows.updated").get_payload(
         event_id="1",
         webhook=webhook,
         model=model,
         table=table,
-        row=row,
+        rows=[row],
         before_return=before_return,
     )
     assert payload == {
         "table_id": table.id,
         "event_id": "1",
-        "event_type": "row.updated",
-        "row_id": row.id,
-        "values": {
-            "id": 1,
-            "order": "1.00000000000000000000",
-            f"{text_field.name}": "New Test value",
-            f"{link_row_field.name}": [{"id": 1, "value": "Lookup 1"}],
-        },
-        "old_values": {
-            "id": 1,
-            "order": "1.00000000000000000000",
-            f"{text_field.name}": "Old Test value",
-            f"{link_row_field.name}": [{"id": 1, "value": "Lookup 1"}],
-        },
+        "event_type": "rows.updated",
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"{text_field.name}": "New Test value",
+                f"{link_row_field.name}": [{"id": 1, "value": "Lookup 1"}],
+            }
+        ],
+        "old_items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"{text_field.name}": "Old Test value",
+                f"{link_row_field.name}": [{"id": 1, "value": "Lookup 1"}],
+            }
+        ],
     }
 
 
 @pytest.mark.django_db()
-def test_row_deleted_event_type(data_fixture):
+def test_rows_deleted_event_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     data_fixture.create_text_field(table=table, primary=True, name="Test 1")
@@ -174,17 +190,17 @@ def test_row_deleted_event_type(data_fixture):
         url="http://localhost",
         use_user_field_names=False,
     )
-    payload = webhook_event_type_registry.get("row.deleted").get_payload(
+    payload = webhook_event_type_registry.get("rows.deleted").get_payload(
         event_id="1",
         webhook=webhook,
         model=model,
         table=table,
-        row=row,
+        rows=[row],
     )
 
     assert payload == {
         "table_id": table.id,
         "event_id": "1",
-        "event_type": "row.deleted",
-        "row_id": row.id,
+        "event_type": "rows.deleted",
+        "row_ids": [row.id],
     }

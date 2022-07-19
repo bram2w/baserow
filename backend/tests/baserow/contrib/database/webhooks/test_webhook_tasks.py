@@ -20,11 +20,11 @@ def test_call_webhook(data_fixture):
     call_webhook.run(
         webhook_id=0,
         event_id="00000000-0000-0000-0000-000000000000",
-        event_type="row.created",
+        event_type="rows.created",
         method="POST",
         url="http://localhost/",
         headers={"Baserow-header-1": "Value 1"},
-        payload={"type": "row.created"},
+        payload={"type": "rows.created"},
     )
     assert TableWebhookCall.objects.all().count() == 0
 
@@ -32,11 +32,11 @@ def test_call_webhook(data_fixture):
         call_webhook.run(
             webhook_id=webhook.id,
             event_id="00000000-0000-0000-0000-000000000000",
-            event_type="row.created",
+            event_type="rows.created",
             method="POST",
             url="http://localhost/",
             headers={"Baserow-header-1": "Value 1"},
-            payload={"type": "row.created"},
+            payload={"type": "rows.created"},
         )
         transaction.commit()
 
@@ -44,7 +44,7 @@ def test_call_webhook(data_fixture):
     created_call = TableWebhookCall.objects.all().first()
     called_time_1 = created_call.called_time
     assert created_call.webhook_id == webhook.id
-    assert created_call.event_type == "row.created"
+    assert created_call.event_type == "rows.created"
     assert created_call.called_time
     assert created_call.called_url == "http://localhost/"
     assert "POST http://localhost/" in created_call.request
@@ -56,11 +56,11 @@ def test_call_webhook(data_fixture):
     call_webhook.run(
         webhook_id=webhook.id,
         event_id="00000000-0000-0000-0000-000000000000",
-        event_type="row.created",
+        event_type="rows.created",
         method="POST",
         url="http://localhost/",
         headers={"Baserow-header-1": "Value 1"},
-        payload={"type": "row.created"},
+        payload={"type": "rows.created"},
     )
 
     webhook.refresh_from_db()
@@ -74,11 +74,11 @@ def test_call_webhook(data_fixture):
     call_webhook.run(
         webhook_id=webhook.id,
         event_id="00000000-0000-0000-0000-000000000001",
-        event_type="row.created",
+        event_type="rows.created",
         method="POST",
         url="http://localhost/",
         headers={"Baserow-header-1": "Value 1"},
-        payload={"type": "row.created"},
+        payload={"type": "rows.created"},
     )
 
     webhook.refresh_from_db()
@@ -92,17 +92,17 @@ def test_call_webhook(data_fixture):
     call_webhook(
         webhook_id=webhook.id,
         event_id="00000000-0000-0000-0000-000000000002",
-        event_type="row.created",
+        event_type="rows.created",
         method="POST",
         url="http://localhost/",
         headers={"Baserow-header-1": "Value 1"},
-        payload={"type": "row.created"},
+        payload={"type": "rows.created"},
     )
 
     assert TableWebhookCall.objects.all().count() == 3
     created_call = TableWebhookCall.objects.all().first()
     assert created_call.webhook_id == webhook.id
-    assert created_call.event_type == "row.created"
+    assert created_call.event_type == "rows.created"
     assert created_call.called_time
     assert created_call.called_url == "http://localhost/"
     assert "POST http://localhost/" in created_call.request
@@ -120,17 +120,17 @@ def test_call_webhook(data_fixture):
         call_webhook(
             webhook_id=webhook.id,
             event_id="00000000-0000-0000-0000-000000000003",
-            event_type="row.created",
+            event_type="rows.created",
             method="POST",
             url="http://localhost2/",
             headers={"Baserow-header-1": "Value 1"},
-            payload={"type": "row.created"},
+            payload={"type": "rows.created"},
         )
 
     assert TableWebhookCall.objects.all().count() == 4
     created_call = TableWebhookCall.objects.all().first()
     assert created_call.webhook_id == webhook.id
-    assert created_call.event_type == "row.created"
+    assert created_call.event_type == "rows.created"
     assert created_call.called_time
     assert created_call.called_url == "http://localhost2/"
     assert "POST http://localhost2/" in created_call.request

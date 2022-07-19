@@ -28,6 +28,12 @@ For example:
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
 
+* **breaking change** Webhooks `row.created`, `row.updated` and `row.deleted` are
+  replaced with `rows.created`, `rows.updated` and `rows.deleted`, containing multiple
+  changed rows at once. Already created webhooks will still be called, but the received
+  body will contain only the first changed row instead of all rows. It is highly
+  recommended to convert all webhooks to the new types.
+
 
 ## Released (2022-07-05 1.10.2)
 
@@ -78,7 +84,6 @@ For example:
 * Fix refresh formula options button always being shown initially. [#1037](https://gitlab.com/bramw/baserow/-/issues/1037)
 * Fix get_human_readable_value crashing for some formula types. [#1042](https://gitlab.com/bramw/baserow/-/issues/1042)
 * Fix import form that gets stuck in a spinning state when it hits an error.
-
 
 ### Breaking Changes
 

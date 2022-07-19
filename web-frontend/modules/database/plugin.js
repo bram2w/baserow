@@ -64,9 +64,9 @@ import {
   JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
 import {
-  RowCreatedWebhookEventType,
-  RowUpdatedWebhookEventType,
-  RowDeletedWebhookEventType,
+  RowsCreatedWebhookEventType,
+  RowsUpdatedWebhookEventType,
+  RowsDeletedWebhookEventType,
 } from '@baserow/modules/database/webhookEventTypes'
 import {
   ImageFilePreview,
@@ -321,15 +321,15 @@ export default (context) => {
   app.$registry.register('exporter', new CSVTableExporterType(context))
   app.$registry.register(
     'webhookEvent',
-    new RowCreatedWebhookEventType(context)
+    new RowsCreatedWebhookEventType(context)
   )
   app.$registry.register(
     'webhookEvent',
-    new RowUpdatedWebhookEventType(context)
+    new RowsUpdatedWebhookEventType(context)
   )
   app.$registry.register(
     'webhookEvent',
-    new RowDeletedWebhookEventType(context)
+    new RowsDeletedWebhookEventType(context)
   )
 
   // Text functions

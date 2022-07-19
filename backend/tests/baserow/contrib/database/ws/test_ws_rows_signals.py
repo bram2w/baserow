@@ -28,11 +28,11 @@ def test_row_created(mock_broadcast_to_channel_group, data_fixture):
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_created"
+    assert args[0][1]["type"] == "rows_created"
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row"]["id"] == row.id
+    assert args[0][1]["rows"][0]["id"] == row.id
     assert args[0][1]["before_row_id"] is None
-    assert args[0][1]["row"][f"field_{field.id}"] == "Test"
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "Test"
     assert args[0][1]["metadata"] == {}
 
     row_2 = RowHandler().create_row(
@@ -40,11 +40,11 @@ def test_row_created(mock_broadcast_to_channel_group, data_fixture):
     )
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_created"
+    assert args[0][1]["type"] == "rows_created"
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row"]["id"] == row_2.id
+    assert args[0][1]["rows"][0]["id"] == row_2.id
     assert args[0][1]["before_row_id"] == row.id
-    assert args[0][1]["row"][f"field_{field.id}"] == "Test2"
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "Test2"
     assert args[0][1]["metadata"] == {}
 
 
@@ -64,12 +64,12 @@ def test_row_created_with_metadata(mock_broadcast_to_channel_group, data_fixture
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_created"
+    assert args[0][1]["type"] == "rows_created"
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row"]["id"] == row.id
+    assert args[0][1]["rows"][0]["id"] == row.id
     assert args[0][1]["before_row_id"] is None
-    assert args[0][1]["row"][f"field_{field.id}"] == "Test"
-    assert args[0][1]["metadata"] == {"row_id": row.id}
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "Test"
+    assert args[0][1]["metadata"] == {1: {"row_id": row.id}}
 
 
 def test_populates_with_row_id_metadata():
@@ -102,14 +102,14 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_updated"
+    assert args[0][1]["type"] == "rows_updated"
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row_before_update"]["id"] == row.id
-    assert args[0][1]["row_before_update"][f"field_{field.id}"] is None
-    assert args[0][1]["row_before_update"][f"field_{field_2.id}"] is None
-    assert args[0][1]["row"]["id"] == row.id
-    assert args[0][1]["row"][f"field_{field.id}"] == "Test"
-    assert args[0][1]["row"][f"field_{field_2.id}"] is None
+    assert args[0][1]["rows_before_update"][0]["id"] == row.id
+    assert args[0][1]["rows_before_update"][0][f"field_{field.id}"] is None
+    assert args[0][1]["rows_before_update"][0][f"field_{field_2.id}"] is None
+    assert args[0][1]["rows"][0]["id"] == row.id
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "Test"
+    assert args[0][1]["rows"][0][f"field_{field_2.id}"] is None
     assert args[0][1]["metadata"] == {}
 
     row.refresh_from_db()
@@ -121,11 +121,11 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
 
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_updated"
+    assert args[0][1]["type"] == "rows_updated"
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row"]["id"] == row.id
-    assert args[0][1]["row"][f"field_{field.id}"] == "First"
-    assert args[0][1]["row"][f"field_{field_2.id}"] == "Second"
+    assert args[0][1]["rows"][0]["id"] == row.id
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "First"
+    assert args[0][1]["rows"][0][f"field_{field_2.id}"] == "Second"
     assert args[0][1]["metadata"] == {}
 
 
@@ -148,15 +148,15 @@ def test_row_updated_with_metadata(mock_broadcast_to_channel_group, data_fixture
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_updated"
+    assert args[0][1]["type"] == "rows_updated"
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row_before_update"]["id"] == row.id
-    assert args[0][1]["row_before_update"][f"field_{field.id}"] is None
-    assert args[0][1]["row_before_update"][f"field_{field_2.id}"] is None
-    assert args[0][1]["row"]["id"] == row.id
-    assert args[0][1]["row"][f"field_{field.id}"] == "Test"
-    assert args[0][1]["row"][f"field_{field_2.id}"] is None
-    assert args[0][1]["metadata"] == {"row_id": row.id}
+    assert args[0][1]["rows_before_update"][0]["id"] == row.id
+    assert args[0][1]["rows_before_update"][0][f"field_{field.id}"] is None
+    assert args[0][1]["rows_before_update"][0][f"field_{field_2.id}"] is None
+    assert args[0][1]["rows"][0]["id"] == row.id
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "Test"
+    assert args[0][1]["rows"][0][f"field_{field_2.id}"] is None
+    assert args[0][1]["metadata"] == {1: {"row_id": row.id}}
 
 
 @pytest.mark.django_db(transaction=True)
@@ -174,8 +174,8 @@ def test_row_deleted(mock_broadcast_to_channel_group, data_fixture):
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "row_deleted"
-    assert args[0][1]["row_id"] == row_id
+    assert args[0][1]["type"] == "rows_deleted"
+    assert args[0][1]["row_ids"] == [row_id]
     assert args[0][1]["table_id"] == table.id
-    assert args[0][1]["row"]["id"] == row_id
-    assert args[0][1]["row"][f"field_{field.id}"] == "Value"
+    assert args[0][1]["rows"][0]["id"] == row_id
+    assert args[0][1]["rows"][0][f"field_{field.id}"] == "Value"

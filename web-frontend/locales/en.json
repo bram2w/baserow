@@ -175,8 +175,11 @@
         },
         "eventType": {
             "rowCreated": "When a row is created",
+            "rowsCreated": "Rows are created",
             "rowUpdated": "When a row is updated",
-            "rowDeleted": "When a row is deleted"
+            "rowsUpdated": "Rows are updated",
+            "rowDeleted": "When a row is deleted",
+            "rowsDeleted": "Rows are deleted"
         }
     },
     "clientHandler": {

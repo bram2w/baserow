@@ -391,7 +391,7 @@ SPECTACULAR_SETTINGS = {
             "multiple_select_has",
             "multiple_select_has_not",
         ],
-        "EventTypesEnum": ["row.created", "row.updated", "row.deleted"],
+        "EventTypesEnum": ["rows.created", "rows.updated", "rows.deleted"],
     },
 }
 

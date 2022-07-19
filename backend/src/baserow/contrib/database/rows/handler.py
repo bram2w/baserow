@@ -22,15 +22,10 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import get_non_unique_values
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
-    before_row_update,
-    before_row_delete,
     before_rows_update,
     before_rows_delete,
-    row_created,
     rows_created,
-    row_updated,
     rows_updated,
-    row_deleted,
     rows_deleted,
 )
 
@@ -404,7 +399,7 @@ class RowHandler:
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
-        belongs to the related group. It also calls the row_created signal.
+        belongs to the related group. It also calls the rows_created signal.
 
         :param user: The user of whose behalf the row is created.
         :param table: The table for which to create a row for.
@@ -429,8 +424,13 @@ class RowHandler:
             table, values, model, before_row, user_field_names
         )
 
-        row_created.send(
-            self, row=instance, before=before_row, user=user, table=table, model=model
+        rows_created.send(
+            self,
+            rows=[instance],
+            before=before_row,
+            user=user,
+            table=table,
+            model=model,
         )
 
         return instance
@@ -617,14 +617,15 @@ class RowHandler:
                 updated_fields_by_name[field["name"]] = field["field"]
                 updated_fields.append(field["field"])
 
-        before_return = before_row_update.send(
+        before_return = before_rows_update.send(
             self,
-            row=row,
+            rows=[row],
             user=user,
             table=table,
             model=model,
             updated_field_ids=updated_field_ids,
         )
+
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
 
@@ -683,9 +684,9 @@ class RowHandler:
 
         ViewHandler().field_value_updated(updated_fields)
 
-        row_updated.send(
+        rows_updated.send(
             self,
-            row=row,
+            rows=[row],
             user=user,
             table=table,
             model=model,
@@ -1165,8 +1166,8 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        before_return = before_row_update.send(
-            self, row=row, user=user, table=table, model=model, updated_field_ids=[]
+        before_return = before_rows_update.send(
+            self, rows=[row], user=user, table=table, model=model, updated_field_ids=[]
         )
 
         row.order = self.get_order_before_row(before_row, model)[0]
@@ -1204,9 +1205,9 @@ class RowHandler:
 
         ViewHandler().field_value_updated(updated_fields)
 
-        row_updated.send(
+        rows_updated.send(
             self,
-            row=row,
+            rows=[row],
             user=user,
             table=table,
             model=model,
@@ -1264,11 +1265,9 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        before_return = before_row_delete.send(
-            self, row=row, user=user, table=table, model=model
+        before_return = before_rows_delete.send(
+            self, rows=[row], user=user, table=table, model=model
         )
-
-        row_id = row.id
 
         TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
 
@@ -1305,10 +1304,9 @@ class RowHandler:
 
         ViewHandler().field_value_updated(updated_fields)
 
-        row_deleted.send(
+        rows_deleted.send(
             self,
-            row_id=row_id,
-            row=row,
+            rows=[row],
             user=user,
             table=table,
             model=model,

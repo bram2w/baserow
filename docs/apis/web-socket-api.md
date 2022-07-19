@@ -145,13 +145,9 @@ are subscribed to the page.
 * `field_updated`
 * `field_deleted`
 * `field_restored`
-* `row_created`
 * `rows_created`
-* `row_updated`
 * `rows_updated`
-* `row_deleted`
-* `before_row_update`
-* `before_row_delete`
+* `rows_deleted`
 * `before_rows_update`
 * `before_rows_delete`
 * `view_created`
