@@ -1419,7 +1419,7 @@ def test_get_public_view_by_slug(data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.rows.signals.row_created.send")
+@patch("baserow.contrib.database.rows.signals.rows_created.send")
 def test_submit_form_view(send_mock, data_fixture):
     table = data_fixture.create_database_table()
     form = data_fixture.create_form_view(table=table)
@@ -1451,7 +1451,7 @@ def test_submit_form_view(send_mock, data_fixture):
     )
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["row"].id == instance.id
+    assert send_mock.call_args[1]["rows"][0].id == instance.id
     assert send_mock.call_args[1]["user"] is None
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["before"] is None

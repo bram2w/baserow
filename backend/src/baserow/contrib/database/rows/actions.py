@@ -41,7 +41,7 @@ class CreateRowActionType(ActionType):
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
-        belongs to the related group. It also calls the row_created signal.
+        belongs to the related group. It also calls the rows_created signal.
         See the baserow.contrib.database.rows.handler.RowHandler.create_row
         for more information.
         Undoing this action trashes the row and redoing restores it.

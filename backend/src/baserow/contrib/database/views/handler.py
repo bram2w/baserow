@@ -35,7 +35,7 @@ from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.signals import row_created
+from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
@@ -1712,8 +1712,8 @@ class ViewHandler:
         allowed_values = extract_allowed(values, allowed_field_names)
         instance = RowHandler().force_create_row(table, allowed_values, model)
 
-        row_created.send(
-            self, row=instance, before=None, user=None, table=table, model=model
+        rows_created.send(
+            self, rows=[instance], before=None, user=None, table=table, model=model
         )
 
         return instance

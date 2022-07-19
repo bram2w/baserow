@@ -475,16 +475,18 @@ def test_trash_and_restore_rows_in_batch(send_mock, data_fixture):
     customers_primary_field = field_handler.create_field(
         user=user, table=customers_table, type_name="text", name="Name", primary=True
     )
-    row1 = row_handler.create_row(
-        user=user,
-        table=customers_table,
-        values={f"field_{customers_primary_field.id}": "Row A"},
-    )
-    row2 = row_handler.create_row(
-        user=user,
-        table=customers_table,
-        values={f"field_{customers_primary_field.id}": ""},
-    )
+
+    with patch("baserow.contrib.database.rows.signals.rows_created.send"):
+        row1 = row_handler.create_row(
+            user=user,
+            table=customers_table,
+            values={f"field_{customers_primary_field.id}": "Row A"},
+        )
+        row2 = row_handler.create_row(
+            user=user,
+            table=customers_table,
+            values={f"field_{customers_primary_field.id}": ""},
+        )
 
     trashed_rows = TrashedRows.objects.create(
         table=customers_table, row_ids=[row1.id, row2.id]

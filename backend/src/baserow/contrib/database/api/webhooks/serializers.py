@@ -53,7 +53,13 @@ class TableWebhookCreateRequestSerializer(serializers.ModelSerializer):
 class TableWebhookUpdateRequestSerializer(serializers.ModelSerializer):
     events = serializers.ListField(
         required=False,
-        child=serializers.ChoiceField(choices=webhook_event_type_registry.get_types()),
+        child=serializers.ChoiceField(
+            choices=[
+                t
+                for t in webhook_event_type_registry.get_types()
+                if t not in ["row.created", "row.updated", "row.deleted"]
+            ]
+        ),
         help_text="A list containing the events that will trigger this webhook.",
     )
     headers = serializers.DictField(

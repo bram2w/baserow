@@ -365,19 +365,10 @@ class WebhookHandler:
 
         event_id = str(uuid.uuid4())
         model = table.get_model()
-        row = model(id=0, order=0)
+
         event = webhook_event_type_registry.get(event_type)
-        before_return = event.get_test_call_before_return(
-            table=table, row=row, model=model
-        )
-        payload = event.get_payload(
-            event_id=event_id,
-            webhook=webhook,
-            model=model,
-            table=table,
-            row=row,
-            before_return=before_return,
-        )
+
+        payload = event.get_test_call_payload(table, model, event_id, webhook)
         headers.update(self.get_headers(event_type, event_id))
 
         return self.make_request(webhook.request_method, webhook.url, headers, payload)
