@@ -1,0 +1,15 @@
+aslamanver.vsc-export
+dbaeumer.vscode-eslint
+eamodio.gitlens
+GitLab.gitlab-workflow
+matangover.mypy
+ms-azuretools.vscode-docker
+ms-python.python
+ms-python.vscode-pylance
+mtxr.sqltools
+mtxr.sqltools-driver-pg
+Orta.vscode-jest
+ryanluker.vscode-coverage-gutters
+sibiraj-s.vscode-scss-formatter
+stylelint.vscode-stylelint
+Vue.volar

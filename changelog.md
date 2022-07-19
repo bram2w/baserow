@@ -10,7 +10,7 @@ For example:
 -->
 
 ### New Features
-
+* Add configs and docs for VSCode setup. [#854](https://gitlab.com/bramw/baserow/-/issues/854)
 * Added `in this week` filter [#569](https://gitlab.com/bramw/baserow/-/issues/954).
 * Allow users to use row id in the form redirect URL. [#871](https://gitlab.com/bramw/baserow/-/merge_requests/871)
 * Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)

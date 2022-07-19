@@ -9,7 +9,7 @@ automatic style fixers to make your life as easy as possible.
 
 1. First checkout a fresh copy of Baserow: `git clone git@gitlab.com:bramw/baserow.git`
 1. `cd baserow`
-1. `./intellij-config/apply_standard_baserow_intellij_config.sh`
+1. `./config/intellij/apply_standard_baserow_intellij_config.sh`
     1. Type `Y` and hit enter to apply the standard Baserow config
 1. Open Intellij and on the "Welcome to IntelliJ IDEA" screen click the "Open" button
    and open the baserow folder you cloned above.

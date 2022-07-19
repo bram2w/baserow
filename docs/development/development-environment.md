@@ -17,6 +17,8 @@ found in the root of the Baserow repo.
   to work well with Baserow for development purposes.
 - See [feature flags](feature-flags.md) for how Baserow uses basic feature flags for
   optionally enabling unfinished or unready features.
+- See [vscode setup](vscode-setup.md) for how to configure Visual Studio Code
+to work well with Baserow for development purposes.
 
 ## Fixing git blame
 

@@ -44,8 +44,14 @@ click==8.0.4
     #   -c base.txt
     #   black
     #   pip-tools
-coverage==6.2
-    # via -r dev.in
+coreapi==2.3.3
+    # via djangorestframework-stubs
+coreschema==0.0.4
+    # via coreapi
+coverage[toml]==6.2
+    # via
+    #   -r dev.in
+    #   pytest-cov
 debugpy==1.5.1
     # via -r dev.in
 django==3.2.13
@@ -53,9 +59,21 @@ django==3.2.13
     #   -c base.txt
     #   django-extensions
     #   django-silk
+    #   django-stubs
+    #   django-stubs-ext
 django-extensions==3.1.5
     # via -r dev.in
 django-silk==4.2.0
+    # via -r dev.in
+django-stubs==1.12.0
+    # via
+    #   -r dev.in
+    #   djangorestframework-stubs
+django-stubs-ext==0.5.0
+    # via
+    #   -r dev.in
+    #   django-stubs
+djangorestframework-stubs==1.7.0
     # via -r dev.in
 execnet==1.9.0
     # via pytest-xdist
@@ -97,8 +115,12 @@ importlib-resources==5.4.0
     #   jsonschema
 iniconfig==1.1.1
     # via pytest
+itypes==1.2.0
+    # via coreapi
 jinja2==3.0.3
-    # via django-silk
+    # via
+    #   coreschema
+    #   django-silk
 jsonschema==4.4.0
     # via
     #   -c base.txt
@@ -108,8 +130,16 @@ markupsafe==2.1.0
     # via jinja2
 mccabe==0.6.1
     # via flake8
+mypy==0.961
+    # via
+    #   -r dev.in
+    #   django-stubs
+    #   djangorestframework-stubs
 mypy-extensions==0.4.3
-    # via black
+    # via
+    #   -r dev.in
+    #   black
+    #   mypy
 openapi-schema-validator==0.2.3
     # via openapi-spec-validator
 openapi-spec-validator==0.4.0
@@ -160,6 +190,7 @@ pytest==6.2.5
     # via
     #   -r dev.in
     #   pytest-asyncio
+    #   pytest-cov
     #   pytest-django
     #   pytest-env
     #   pytest-forked
@@ -172,6 +203,8 @@ pytest==6.2.5
     #   pytest-unordered
     #   pytest-xdist
 pytest-asyncio==0.15.1
+    # via -r dev.in
+pytest-cov==3.0.0
     # via -r dev.in
 pytest-django==4.4.0
     # via -r dev.in
@@ -217,7 +250,9 @@ regex==2021.8.3
 requests==2.26.0
     # via
     #   -c base.txt
+    #   coreapi
     #   django-silk
+    #   djangorestframework-stubs
     #   responses
 responses==0.13.4
     # via -r dev.in
@@ -246,17 +281,42 @@ toml==0.10.2
 tomli==1.2.3
     # via
     #   black
+    #   coverage
+    #   django-stubs
+    #   mypy
     #   pep517
-typed-ast==1.5.2
-    # via black
+typed-ast==1.5.4
+    # via
+    #   black
+    #   mypy
+types-markdown==3.3.29
+    # via djangorestframework-stubs
+types-pytz==2022.1.1
+    # via django-stubs
+types-pyyaml==6.0.9
+    # via
+    #   django-stubs
+    #   djangorestframework-stubs
+types-requests==2.28.0
+    # via djangorestframework-stubs
+types-urllib3==1.26.16
+    # via types-requests
 typing-extensions==4.1.1
     # via
     #   -c base.txt
     #   asgiref
     #   black
+    #   django-stubs
+    #   django-stubs-ext
+    #   djangorestframework-stubs
     #   gitpython
     #   importlib-metadata
     #   jsonschema
+    #   mypy
+uritemplate==4.1.1
+    # via
+    #   -c base.txt
+    #   coreapi
 urllib3==1.26.8
     # via
     #   -c base.txt

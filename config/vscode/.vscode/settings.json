@@ -1,0 +1,95 @@
+{
+    "python.formatting.provider": "black",
+    "python.linting.flake8Args": [
+        "--config=backend/.flake8",
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "backend"
+    ],
+    "jest.autoRun": "off",
+    "jest.rootPath": "web-frontend",
+    "jest.jestCommandLine": "node_modules/.bin/jest --config jest.config.js --runInBand --watchAll=false",
+    "coverage-gutters.coverageBaseDir": "**/*coverage",
+    "coverage-gutters.showLineCoverage": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "baserow",
+            "database": "baserow",
+            "username": "baserow",
+            "password": "baserow"
+        }
+    ],
+    "editor.formatOnSave": true,
+    "python.linting.banditEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "eslint.format.enable": true,
+    "python.linting.pylintEnabled": false,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/*.pyc": true,
+        "**/__pycache__/": true,
+        "**/.nuxt/": true
+    },
+    "python.linting.mypyEnabled": true,
+    "mypy.targets": [
+        "backend/src/",
+        "premium/backend/src/"
+    ],
+    "python.analysis.typeCheckingMode": "off",
+    "mypy.configFile": "backend/mypy.ini",
+    "python.linting.mypyCategorySeverity.note": "Error",
+    "python.linting.mypyCategorySeverity.error": "Error",
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": false
+        }
+    },
+    "mypy.dmypyExecutable": "",
+    "mypy.runUsingActiveInterpreter": true,
+    "python.linting.mypyPath": "mypy",
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/backend/src",
+        "${workspaceFolder}/premium/backend/src"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend/src",
+        "${workspaceFolder}/premium/backend/src"
+    ],
+    "python.linting.pycodestyleEnabled": false,
+    "python.linting.pydocstyleEnabled": false,
+    "python.envFile": "${workspaceFolder}/.vscode/env",
+    "stylelint.configFile": "${workspaceFolder}/web-frontend/.stylelintrc",
+    "stylelint.validate": [
+        "css",
+        "less",
+        "postcss",
+        "scss"
+    ],
+    "stylelint.snippet": [
+        "css",
+        "less",
+        "postcss",
+        "scss"
+    ],
+    "python.formatting.blackArgs": [
+        "premium/backend",
+        "--extend-exclude='/generated/'",
+        "--check"
+    ],
+    "cSpell.words": [
+        "baserow",
+        "BASEROW",
+        "debugpy"
+    ],
+}
