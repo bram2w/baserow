@@ -538,6 +538,38 @@ def test_count_rows_ignores_templates(data_fixture, tmpdir):
     settings.APPLICATION_TEMPLATES_DIR = old_templates
 
 
+@pytest.mark.django_db(transaction=True)
+def test_count_rows_table_gets_deleted(data_fixture):
+    table = data_fixture.create_database_table()
+    table_deleted = data_fixture.create_database_table(create_table=False)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_text_field(table=table)
+    model = table.get_model()
+
+    count_expected = random.randint(0, 100)
+
+    for i in range(count_expected):
+        model.objects.create(**{f"field_{field.id}": i})
+
+    TableHandler().count_rows()
+
+    table.refresh_from_db()
+    table_deleted.refresh_from_db()
+    assert table.row_count == count_expected
+    assert table_deleted.row_count is None
+
+
+@pytest.mark.django_db
+def test_exception_is_raised_if_something_goes_wrong(data_fixture):
+    data_fixture.create_database_table()
+
+    with patch("baserow.contrib.database.table.models.Table.get_model") as mock:
+        mock.side_effect = Exception("Something went wrong")
+
+        with pytest.raises(Exception):
+            TableHandler().count_rows()
+
+
 @pytest.mark.django_db
 @pytest.mark.disabled_in_ci
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in

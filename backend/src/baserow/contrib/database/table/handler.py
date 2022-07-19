@@ -1,7 +1,9 @@
+import logging
 from typing import Any, cast, NewType, List, Tuple, Optional, Dict
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.db import ProgrammingError
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 from django.utils import translation
@@ -37,6 +39,8 @@ from .models import Table
 from .signals import table_updated, table_deleted, tables_reordered
 
 TableForUpdate = NewType("TableForUpdate", Table)
+
+logger = logging.getLogger(__name__)
 
 
 class TableHandler:
@@ -505,10 +509,16 @@ class TableHandler:
                 chunk_size=chunk_size
             )
         ):
-            count = table.get_model(field_ids=[]).objects.count()
-            table.row_count = count
-            table.row_count_updated_at = time
-            tables_to_store.append(table)
+            try:
+                count = table.get_model(field_ids=[]).objects.count()
+                table.row_count = count
+                table.row_count_updated_at = time
+                tables_to_store.append(table)
+            except ProgrammingError as e:
+                if f'"database_table_{table.id}" does not exist' in str(e):
+                    logger.warning(f"Error while counting rows {e}")
+                else:
+                    raise e
 
             # This makes sure we don't pollute the memory
             if i % chunk_size == 0:
