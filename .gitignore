@@ -103,9 +103,9 @@ backend/reports/
 .idea/
 *.iml
 
-!intellij-config/.idea/
-!intellij-config/*.iml
-!intellij-config/**/*.iml
+!config/intellij/.idea/
+!config/intellij/*.iml
+!config/intellij/**/*.iml
 
 # IntelliJ
 out/
@@ -114,8 +114,8 @@ out/
 
 
 # vscode config files
-.vscode
-vetur.config.js
+.vscode/
+!config/vscode/.vscode/
 
 formula/out/
 
