@@ -3,7 +3,6 @@
     :database="database"
     :table="table"
     :fields="fields"
-    :primary="primary"
     :views="views"
     :view="view"
     :table-loading="tableLoading"
@@ -75,7 +74,6 @@ export default {
     // After selecting the table the fields become available which need to be added to
     // the data.
     data.fields = store.getters['field/getAll']
-    data.primary = store.getters['field/getPrimary']
     data.view = undefined
 
     // Because we do not have a dashboard for the table yet we're going to redirect to
@@ -101,7 +99,7 @@ export default {
           return error({ statusCode: 400, message: type.getDeactivatedText() })
         }
 
-        await type.fetch({ store }, view, data.fields, data.primary, 'page/')
+        await type.fetch({ store }, view, data.fields, 'page/')
       } catch (e) {
         // In case of a network error we want to fail hard.
         if (e.response === undefined && !(e instanceof StoreItemLookupError)) {

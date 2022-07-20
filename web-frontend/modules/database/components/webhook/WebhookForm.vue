@@ -331,7 +331,7 @@ export default {
       return webhookEvent.getExamplePayload(this.table, rowExample)
     },
     ...mapGetters({
-      fields: 'field/getAllWithPrimary',
+      fields: 'field/getAll',
     }),
   },
   created() {

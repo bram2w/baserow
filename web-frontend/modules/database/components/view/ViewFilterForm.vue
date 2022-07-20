@@ -14,7 +14,6 @@
       :filters="view.filters"
       :disable-filter="disableFilter"
       :filter-type="view.filter_type"
-      :primary="primary"
       :fields="fields"
       :view="view"
       :read-only="readOnly"
@@ -42,6 +41,7 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
+import { getPrimaryOrFirstField } from '@baserow/modules/database/utils/field'
 
 export default {
   name: 'ViewFilterForm',
@@ -49,10 +49,6 @@ export default {
     ViewFieldConditionsForm,
   },
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -78,11 +74,12 @@ export default {
   methods: {
     async addFilter(values) {
       try {
+        const field = getPrimaryOrFirstField(this.fields)
         await this.$store.dispatch('view/createFilter', {
+          field,
           view: this.view,
-          field: this.primary,
           values: {
-            field: this.primary.id,
+            field: field.id,
           },
           emitEvent: false,
           readOnly: this.readOnly,

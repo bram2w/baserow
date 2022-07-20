@@ -40,14 +40,6 @@ describe('Kanban view store', () => {
     store.registerModule('kanban', kanbanStore)
 
     const fields = []
-    const primary = {
-      id: 1,
-      name: 'Single select',
-      type: 'single_select',
-      options: [{ id: 1, color: 'blue', value: '' }],
-      primary: true,
-    }
-
     await store.dispatch('kanban/createdNewRow', {
       view,
       values: {
@@ -56,7 +48,6 @@ describe('Kanban view store', () => {
         field_1: null,
       },
       fields,
-      primary,
     })
     await store.dispatch('kanban/createdNewRow', {
       view,
@@ -66,7 +57,6 @@ describe('Kanban view store', () => {
         field_1: null,
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks.null.count).toBe(3)
@@ -83,7 +73,6 @@ describe('Kanban view store', () => {
         field_1: { id: 1 },
       },
       fields,
-      primary,
     })
     await store.dispatch('kanban/createdNewRow', {
       view,
@@ -93,7 +82,6 @@ describe('Kanban view store', () => {
         field_1: { id: 1 },
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks['1'].count).toBe(102)
@@ -125,13 +113,6 @@ describe('Kanban view store', () => {
     store.registerModule('kanban', kanbanStore)
 
     const fields = []
-    const primary = {
-      id: 1,
-      name: 'Single select',
-      type: 'single_select',
-      options: [{ id: 1, color: 'blue', value: '' }],
-      primary: true,
-    }
 
     await store.dispatch('kanban/deletedExistingRow', {
       view,
@@ -141,7 +122,6 @@ describe('Kanban view store', () => {
         field_1: null,
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks.null.count).toBe(0)
@@ -155,7 +135,6 @@ describe('Kanban view store', () => {
         field_1: { id: 1 },
       },
       fields,
-      primary,
     })
     await store.dispatch('kanban/deletedExistingRow', {
       view,
@@ -165,7 +144,6 @@ describe('Kanban view store', () => {
         field_1: { id: 1 },
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks['1'].count).toBe(98)
@@ -200,13 +178,6 @@ describe('Kanban view store', () => {
     store.registerModule('kanban', kanbanStore)
 
     const fields = []
-    const primary = {
-      id: 1,
-      name: 'Single select',
-      type: 'single_select',
-      options: [{ id: 1, color: 'blue', value: '' }],
-      primary: true,
-    }
 
     // Should be moved to the first in the buffer
     await store.dispatch('kanban/updatedExistingRow', {
@@ -216,7 +187,6 @@ describe('Kanban view store', () => {
         order: '9.00',
       },
       fields,
-      primary,
     })
     // Should be completely ignored because it's outside of the buffer
     await store.dispatch('kanban/updatedExistingRow', {
@@ -226,7 +196,6 @@ describe('Kanban view store', () => {
         order: '13.00',
       },
       fields,
-      primary,
     })
     // Did not exist before, but has moved within the buffer.
     await store.dispatch('kanban/updatedExistingRow', {
@@ -236,7 +205,6 @@ describe('Kanban view store', () => {
         order: '8.00',
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks['1'].count).toBe(101)
@@ -255,7 +223,6 @@ describe('Kanban view store', () => {
         field_1: null,
       },
       fields,
-      primary,
     })
     // Moved to stack `null`, because the position is within the buffer, we expect
     // it to be added to it.
@@ -267,7 +234,6 @@ describe('Kanban view store', () => {
         order: '1.00',
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks.null.count).toBe(3)
@@ -290,7 +256,6 @@ describe('Kanban view store', () => {
         field_1: { id: 1 },
       },
       fields,
-      primary,
     })
     // Moved to stack `1`, because the position is outside the buffer, we expect it
     // not to be in there.
@@ -301,7 +266,6 @@ describe('Kanban view store', () => {
         field_1: { id: 1 },
       },
       fields,
-      primary,
     })
 
     expect(store.state.kanban.stacks.null.count).toBe(1)

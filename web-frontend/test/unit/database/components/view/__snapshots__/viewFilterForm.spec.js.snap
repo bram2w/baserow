@@ -135,7 +135,6 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <!---->
                 </a>
               </li>
-               
               <li
                 class="select__item"
               >
@@ -502,7 +501,6 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <!---->
                 </a>
               </li>
-               
               <li
                 class="select__item active"
               >
@@ -805,7 +803,6 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   <!---->
                 </a>
               </li>
-               
               <li
                 class="select__item active"
               >
@@ -1108,7 +1105,6 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   <!---->
                 </a>
               </li>
-               
               <li
                 class="select__item active"
               >

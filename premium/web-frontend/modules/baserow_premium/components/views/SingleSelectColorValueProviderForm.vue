@@ -33,10 +33,6 @@ export default {
       type: Object,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -48,7 +44,7 @@ export default {
   },
   computed: {
     selectFields() {
-      return [this.primary, ...this.fields].filter(
+      return this.fields.filter(
         ({ type }) => type === SingleSelectFieldType.getType()
       )
     },

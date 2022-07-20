@@ -20,7 +20,7 @@
       </a>
       <ViewFieldsContext
         ref="customizeContext"
-        :fields="allFields"
+        :fields="fields"
         :read-only="readOnly"
         :field-options="fieldOptions"
         :cover-image-field="view.card_cover_image_field"
@@ -35,7 +35,6 @@
       <ViewSearch
         :view="view"
         :fields="fields"
-        :primary="primary"
         :store-prefix="storePrefix"
         :always-hide-rows-not-matching-search="true"
         @refresh="$emit('refresh', $event)"
@@ -71,10 +70,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -85,9 +80,6 @@ export default {
     },
   },
   computed: {
-    allFields() {
-      return [this.primary].concat(this.fields)
-    },
     ...mapState({
       tableLoading: (state) => state.table.loading,
     }),

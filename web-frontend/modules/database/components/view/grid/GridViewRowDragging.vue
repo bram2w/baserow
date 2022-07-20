@@ -29,10 +29,6 @@ export default {
       type: Object,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -66,9 +62,8 @@ export default {
   },
   computed: {
     width() {
-      const allFields = [this.primary].concat(this.fields)
       return (
-        allFields.reduce(
+        this.fields.reduce(
           (value, field) => this.getFieldWidth(field.id) + value,
           0
         ) + this.gridViewRowDetailsWidth
@@ -245,7 +240,6 @@ export default {
           table: this.table,
           grid: this.view,
           fields: this.fields,
-          primary: this.primary,
           getScrollTop,
           row: this.row,
           before: this.targetRow,

@@ -19,7 +19,6 @@
           ref="updateContext"
           :option="option"
           :fields="fields"
-          :primary="primary"
           :store-prefix="storePrefix"
           @saved="hide()"
         ></KanbanViewUpdateStackContext>
@@ -79,10 +78,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     storePrefix: {
       type: String,
       required: true,
@@ -103,7 +98,6 @@ export default {
           {
             optionId: this.option.id,
             fields: this.fields,
-            primary: this.primary,
             deferredFieldUpdate: true,
           }
         )

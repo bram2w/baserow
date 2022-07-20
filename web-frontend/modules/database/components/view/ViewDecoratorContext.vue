@@ -60,7 +60,6 @@
             v-if="dec.valueProviderType"
             :view="view"
             :table="table"
-            :primary="primary"
             :fields="fields"
             :read-only="readOnly"
             :options="dec.decoration.value_provider_conf"
@@ -129,10 +128,6 @@ export default {
       type: Object,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -173,7 +168,7 @@ export default {
             value_provider_type: valueProviderType.getType(),
             value_provider_conf: valueProviderType.getDefaultConfiguration({
               view: this.view,
-              fields: this.allTableFields,
+              fields: this.fields,
             }),
           },
           decoration,

@@ -80,7 +80,6 @@
           <ViewFilter
             :view="view"
             :fields="fields"
-            :primary="primary"
             :read-only="readOnly"
             :disable-filter="disableFilter"
             @changed="refresh()"
@@ -93,7 +92,6 @@
           <ViewSort
             :view="view"
             :fields="fields"
-            :primary="primary"
             :read-only="readOnly"
             :disable-sort="disableSort"
             @changed="refresh()"
@@ -114,7 +112,6 @@
             :view="view"
             :table="table"
             :fields="fields"
-            :primary="primary"
             :read-only="readOnly"
             :disable-sort="disableSort"
             @changed="refresh()"
@@ -128,7 +125,6 @@
         :table="table"
         :view="view"
         :fields="fields"
-        :primary="primary"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @refresh="refresh"
@@ -143,7 +139,6 @@
         :table="table"
         :view="view"
         :fields="fields"
-        :primary="primary"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @refresh="refresh"
@@ -200,10 +195,6 @@ export default {
     },
     fields: {
       type: Array,
-      required: true,
-    },
-    primary: {
-      type: Object,
       required: true,
     },
     views: {
@@ -349,7 +340,6 @@ export default {
           { store: this.$store },
           this.view,
           fieldsToRefresh,
-          this.primary,
           this.storePrefix,
           includeFieldOptions
         )

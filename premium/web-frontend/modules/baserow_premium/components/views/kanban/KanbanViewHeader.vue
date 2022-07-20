@@ -30,7 +30,6 @@
           :table="table"
           :view="view"
           :fields="fields"
-          :primary="primary"
           :read-only="readOnly"
           :store-prefix="storePrefix"
           @refresh="$emit('refresh', $event)"
@@ -57,7 +56,7 @@
       </a>
       <ViewFieldsContext
         ref="customizeContext"
-        :fields="allFields"
+        :fields="fields"
         :read-only="readOnly"
         :field-options="fieldOptions"
         :cover-image-field="view.card_cover_image_field"
@@ -100,10 +99,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -111,16 +106,12 @@ export default {
   },
   computed: {
     stackedByFieldName() {
-      const allFields = [this.primary].concat(this.fields)
-      for (let i = 0; i < allFields.length; i++) {
-        if (allFields[i].id === this.view.single_select_field) {
-          return allFields[i].name
+      for (let i = 0; i < this.fields.length; i++) {
+        if (this.fields[i].id === this.view.single_select_field) {
+          return this.fields[i].name
         }
       }
       return ''
-    },
-    allFields() {
-      return [this.primary].concat(this.fields)
     },
     ...mapState({
       tableLoading: (state) => state.table.loading,

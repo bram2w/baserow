@@ -163,7 +163,6 @@ export const registerRealtimeEvents = (realtime) => {
           context,
           data.table_id,
           store.getters['field/getAll'],
-          store.getters['field/getPrimary'],
           data.rows[i],
           data.metadata,
           'page/'
@@ -183,7 +182,6 @@ export const registerRealtimeEvents = (realtime) => {
           context,
           data.table_id,
           store.getters['field/getAll'],
-          store.getters['field/getPrimary'],
           rowBeforeUpdate,
           row,
           data.metadata,
@@ -205,7 +203,6 @@ export const registerRealtimeEvents = (realtime) => {
           context,
           data.table_id,
           store.getters['field/getAll'],
-          store.getters['field/getPrimary'],
           row,
           'page/'
         )

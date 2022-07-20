@@ -9,7 +9,7 @@
     <ChooseSingleSelectField
       :view="view"
       :table="table"
-      :fields="allFields"
+      :fields="fields"
       :value="view.single_select_field"
       :read-only="readOnly"
       :loading="loading"
@@ -39,10 +39,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -57,11 +53,6 @@ export default {
     return {
       loading: false,
     }
-  },
-  computed: {
-    allFields() {
-      return [this.primary, ...this.fields]
-    },
   },
   methods: {
     async update(value) {

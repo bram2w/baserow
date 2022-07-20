@@ -5,8 +5,7 @@
       <Table
         :database="database"
         :table="table"
-        :fields="fields || startingFields"
-        :primary="primary || startingPrimary"
+        :fields="fields"
         :view="view"
         :read-only="true"
         :table-loading="false"
@@ -63,7 +62,7 @@ export default {
       const table = database.tables[0]
       await store.dispatch('table/forceSelect', { database, table })
 
-      const { primary, fields } = await store.dispatch('field/forceSetFields', {
+      await store.dispatch('field/forceSetFields', {
         fields: data.fields,
       })
 
@@ -79,13 +78,11 @@ export default {
       // It might be possible that the view also has some stores that need to be
       // filled with initial data, so we're going to call the fetch function here.
       const type = app.$registry.get('view', view.type)
-      await type.fetch({ store }, view, fields, primary, 'page/')
+      await type.fetch({ store }, view, data.fields, 'page/')
       return {
         database,
         table,
         view,
-        startingFields: fields,
-        startingPrimary: primary,
       }
     } catch (e) {
       const statusCode = e.response?.status
@@ -109,7 +106,6 @@ export default {
   },
   computed: {
     ...mapGetters({
-      primary: 'field/getPrimary',
       fields: 'field/getAll',
     }),
   },

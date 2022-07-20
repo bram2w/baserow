@@ -5,20 +5,12 @@ import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 /**
  * Generates a sort function based on the provided sortings.
  */
-export function getRowSortFunction(
-  $registry,
-  sortings,
-  fields,
-  primary = null
-) {
+export function getRowSortFunction($registry, sortings, fields) {
   let sortFunction = firstBy()
 
   sortings.forEach((sort) => {
     // Find the field that is related to the sort.
-    let field = fields.find((f) => f.id === sort.field)
-    if (field === undefined && primary !== null && primary.id === sort.field) {
-      field = primary
-    }
+    const field = fields.find((f) => f.id === sort.field)
 
     if (field !== undefined) {
       const fieldName = `field_${field.id}`

@@ -54,10 +54,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     storePrefix: {
       type: String,
       required: true,
@@ -120,7 +116,6 @@ export default {
           // the server using the newly set search terms.
           refreshMatchesOnClient: false,
           fields: this.fields,
-          primary: this.primary,
         }
       )
       this.$emit('refresh', {
@@ -137,7 +132,6 @@ export default {
           hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
           refreshMatchesOnClient: true,
           fields: this.fields,
-          primary: this.primary,
         }
       )
       this.finishedLoading()

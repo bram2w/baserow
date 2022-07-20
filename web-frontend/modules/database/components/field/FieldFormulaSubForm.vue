@@ -69,7 +69,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      rawFields: 'field/getAllWithPrimary',
+      rawFields: 'field/getAll',
     }),
     localOrServerFormulaType() {
       return (
