@@ -8,8 +8,8 @@
     @hidden="$emit('hidden', { row })"
   >
     <template #content>
-      <h2 v-if="primary !== undefined" class="box__title">
-        {{ getHeading(primary, row) }}
+      <h2 class="box__title">
+        {{ heading }}
       </h2>
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
@@ -80,6 +80,7 @@ import modal from '@baserow/modules/core/mixins/modal'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import RowEditModalFieldsList from './RowEditModalFieldsList.vue'
 import RowEditModalHiddenFieldsSection from './RowEditModalHiddenFieldsSection.vue'
+import { getPrimaryOrFirstField } from '@baserow/modules/database/utils/field'
 
 export default {
   name: 'RowEditModal',
@@ -92,16 +93,12 @@ export default {
   props: {
     database: {
       type: Object,
-      required: true,
+      required: false,
+      default: null,
     },
     table: {
       type: Object,
       required: true,
-    },
-    primary: {
-      type: Object,
-      required: false,
-      default: undefined,
     },
     primaryIsSortable: {
       type: Boolean,
@@ -150,6 +147,22 @@ export default {
     },
     row() {
       return this.modalRow.row
+    },
+    heading() {
+      const field = getPrimaryOrFirstField(this.visibleFields)
+
+      if (!field) {
+        return null
+      }
+
+      const name = `field_${field.id}`
+      if (Object.prototype.hasOwnProperty.call(this.row, name)) {
+        return this.$registry
+          .get('field', field.type)
+          .toHumanReadableString(field, this.row[name])
+      } else {
+        return null
+      }
     },
   },
   watch: {
@@ -207,16 +220,6 @@ export default {
     update(context) {
       context.table = this.table
       this.$emit('update', context)
-    },
-    getHeading(primary, row) {
-      const name = `field_${primary.id}`
-      if (Object.prototype.hasOwnProperty.call(row, name)) {
-        return this.$registry
-          .get('field', primary.type)
-          .toHumanReadableString(primary, row[name])
-      } else {
-        return null
-      }
     },
   },
 }

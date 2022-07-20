@@ -131,6 +131,7 @@ export default {
     return {
       renaming: false,
       selected: 0,
+      canClose: true,
     }
   },
   computed: {

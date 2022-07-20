@@ -29,6 +29,7 @@ For example:
 
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
+* Removed `primary` from all `components`and `stores` where it isn't absolutely required. [#1057](https://gitlab.com/bramw/baserow/-/issues/1057)
 
 * **breaking change** Webhooks `row.created`, `row.updated` and `row.deleted` are
   replaced with `rows.created`, `rows.updated` and `rows.deleted`, containing multiple

@@ -58,7 +58,6 @@ describe('View Filter Tests', () => {
     await store.dispatch('page/view/grid/fetchInitial', {
       gridId: 1,
       fields: [field],
-      primary: {},
     })
     await store.dispatch('view/fetchAll', { id: 1 })
   }
@@ -100,12 +99,13 @@ describe('View Filter Tests', () => {
   async function editFieldWithoutSavingNewValue(row, newValue) {
     await store.dispatch('page/view/grid/updateMatchFilters', {
       view: store.getters['view/first'],
-      fields: [],
-      primary: {
-        id: 1,
-        type: 'file',
-        primary: true,
-      },
+      fields: [
+        {
+          id: 1,
+          type: 'file',
+          primary: true,
+        },
+      ],
       row,
       overrides: {
         field_1: newValue,

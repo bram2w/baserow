@@ -28,10 +28,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     storePrefix: {
       type: String,
       required: true,
@@ -51,7 +47,6 @@ export default {
           this.storePrefix + 'view/kanban/createStack',
           {
             fields: this.fields,
-            primary: this.primary,
             color: values.color,
             value: values.value,
           }

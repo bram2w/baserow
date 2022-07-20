@@ -58,7 +58,7 @@
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :grid="view"
-      :field="primary"
+      :field="leftFields[0]"
       :width="leftFieldsWidth"
       :read-only="readOnly"
       :store-prefix="storePrefix"
@@ -112,8 +112,7 @@
       ref="rowDragging"
       :table="table"
       :view="view"
-      :primary="primary"
-      :fields="visibleFields"
+      :fields="allVisibleFields"
       :store-prefix="storePrefix"
       vertical="getVerticalScrollbarElement"
       @scroll="scroll($event.pixelY, $event.pixelX)"
@@ -184,8 +183,7 @@
       ref="rowEditModal"
       :database="database"
       :table="table"
-      :primary="primary"
-      :visible-fields="[primary].concat(visibleFields)"
+      :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="readOnly"
@@ -232,10 +230,6 @@ export default {
   },
   mixins: [viewHelpers, gridViewHelpers, viewDecoration],
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -266,12 +260,15 @@ export default {
     }
   },
   computed: {
+    allVisibleFields() {
+      return this.leftFields.concat(this.visibleFields)
+    },
     /**
      * Returns only the visible fields in the correct order.
      */
     visibleFields() {
       const fieldOptions = this.fieldOptions
-      return this.fields
+      return this.rightFields
         .filter(filterVisibleFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
@@ -280,12 +277,15 @@ export default {
      */
     hiddenFields() {
       const fieldOptions = this.fieldOptions
-      return this.fields
+      return this.rightFields
         .filter(filterHiddenFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     leftFields() {
-      return [this.primary]
+      return this.fields.filter((field) => field.primary)
+    },
+    rightFields() {
+      return this.fields.filter((field) => !field.primary)
     },
     leftFieldsWidth() {
       return this.leftFields.reduce(
@@ -407,7 +407,6 @@ export default {
             table: this.table,
             view: this.view,
             fields: this.fields,
-            primary: this.primary,
             row,
             field,
             value,
@@ -429,7 +428,6 @@ export default {
         view: this.view,
         row,
         fields: this.fields,
-        primary: this.primary,
         overrides,
       })
     },
@@ -476,7 +474,6 @@ export default {
         {
           scrollTop: this.$refs.left.$refs.body.scrollTop,
           fields: this.fields,
-          primary: this.primary,
         }
       )
     },
@@ -501,7 +498,6 @@ export default {
             table: this.table,
             // We need a list of all fields including the primary one here.
             fields: this.fields,
-            primary: this.primary,
             values,
             before,
           }
@@ -539,7 +535,6 @@ export default {
             table: this.table,
             view: this.view,
             fields: this.fields,
-            primary: this.primary,
             row,
             getScrollTop,
           }
@@ -607,7 +602,6 @@ export default {
       this.$store.dispatch(this.storePrefix + 'view/grid/refreshRow', {
         grid: this.view,
         fields: this.fields,
-        primary: this.primary,
         row,
         getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
       })
@@ -698,7 +692,6 @@ export default {
           {
             grid: this.view,
             fields: this.fields,
-            primary: this.primary,
             row,
             field,
             getScrollTop,
@@ -713,7 +706,7 @@ export default {
      */
     selectNextCell({ row, field, direction = 'next' }) {
       const fields = this.visibleFields
-      const primary = this.primary
+      const primary = this.leftFields[0]
       let nextFieldId = -1
       let nextRowId = -1
 
@@ -868,7 +861,7 @@ export default {
         this.$store.dispatch('notification/setCopying', true)
         const output = await this.$store.dispatch(
           this.storePrefix + 'view/grid/exportMultiSelect',
-          this.leftFields.concat(this.visibleFields)
+          this.allVisibleFields
         )
         // If the output is undefined, it means that there is no multiple selection.
         if (output !== undefined) {
@@ -933,8 +926,7 @@ export default {
           {
             table: this.table,
             view: this.view,
-            primary: this.primary,
-            fields: this.leftFields.concat(this.visibleFields),
+            fields: this.allVisibleFields,
             getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
             data,
             rowIndex,
@@ -961,8 +953,7 @@ export default {
           {
             table: this.table,
             view: this.view,
-            primary: this.primary,
-            fields: this.leftFields.concat(this.visibleFields),
+            fields: this.allVisibleFields,
             getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
           }
         )
@@ -986,8 +977,7 @@ export default {
           {
             table: this.table,
             view: this.view,
-            primary: this.primary,
-            fields: this.leftFields.concat(this.visibleFields),
+            fields: this.allVisibleFields,
             getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
           }
         )

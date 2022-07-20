@@ -15,7 +15,6 @@
       ref="context"
       :view="view"
       :fields="fields"
-      :primary="primary"
       :store-prefix="storePrefix"
       :always-hide-rows-not-matching-search="alwaysHideRowsNotMatchingSearch"
       @refresh="$emit('refresh', $event)"
@@ -37,10 +36,6 @@ export default {
     },
     fields: {
       type: Array,
-      required: true,
-    },
-    primary: {
-      type: Object,
       required: true,
     },
     storePrefix: {

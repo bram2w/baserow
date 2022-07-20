@@ -3,7 +3,7 @@
     <li class="header__filter-item">
       <GridViewHide
         :view="view"
-        :fields="fields"
+        :fields="fieldsAllowedToBeHidden"
         :read-only="readOnly"
         :store-prefix="storePrefix"
       ></GridViewHide>
@@ -12,7 +12,6 @@
       <ViewSearch
         :view="view"
         :fields="fields"
-        :primary="primary"
         :store-prefix="storePrefix"
         @refresh="$emit('refresh', $event)"
       ></ViewSearch>
@@ -38,10 +37,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -55,6 +50,9 @@ export default {
     ...mapState({
       tableLoading: (state) => state.table.loading,
     }),
+    fieldsAllowedToBeHidden() {
+      return this.fields.filter((field) => !field.primary)
+    },
   },
 }
 </script>

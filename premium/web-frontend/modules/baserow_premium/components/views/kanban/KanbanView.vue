@@ -4,7 +4,6 @@
       :table="table"
       :view="view"
       :fields="fields"
-      :primary="primary"
       :read-only="readOnly"
       :store-prefix="storePrefix"
       :include-field-options-on-refresh="true"
@@ -29,7 +28,6 @@
         :view="view"
         :card-fields="cardFields"
         :fields="fields"
-        :primary="primary"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
@@ -45,7 +43,6 @@
         :view="view"
         :card-fields="cardFields"
         :fields="fields"
-        :primary="primary"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
@@ -63,14 +60,12 @@
       <KanbanViewCreateStackContext
         ref="addOptionContext"
         :fields="fields"
-        :primary="primary"
         :store-prefix="storePrefix"
       ></KanbanViewCreateStackContext>
     </div>
     <RowCreateModal
       ref="rowCreateModal"
       :table="table"
-      :primary="primary"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
@@ -88,7 +83,6 @@
       ref="rowEditModal"
       :database="database"
       :table="table"
-      :primary="primary"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
@@ -155,10 +149,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -176,15 +166,13 @@ export default {
      */
     cardFields() {
       const fieldOptions = this.fieldOptions
-      return [this.primary]
-        .concat(this.fields)
+      return this.fields
         .filter(filterVisibleFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     hiddenFields() {
       const fieldOptions = this.fieldOptions
-      return [this.primary]
-        .concat(this.fields)
+      return this.fields
         .filter(filterHiddenFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
@@ -193,7 +181,7 @@ export default {
      * cards in stacks.
      */
     singleSelectField() {
-      const allFields = [this.primary].concat(this.fields)
+      const allFields = this.fields
       for (let i = 0; i < allFields.length; i++) {
         if (allFields[i].id === this.singleSelectFieldId) {
           return allFields[i]
@@ -239,7 +227,6 @@ export default {
             view: this.view,
             table: this.table,
             fields: this.fields,
-            primary: this.primary,
             values: row,
           }
         )
@@ -256,7 +243,6 @@ export default {
             table: this.table,
             view: this.view,
             fields: this.fields,
-            primary: this.primary,
             row,
             field,
             value,

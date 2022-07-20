@@ -137,11 +137,11 @@ describe('GridView component with decoration', () => {
       primary,
     })
     await store.dispatch('view/fetchAll', { id: 1 })
-    return { application, table, primary, fields, view }
+    return { application, table, fields, view }
   }
 
   test('Default component with first_cell decoration', async () => {
-    const { application, table, primary, fields, view } = await populateStore([
+    const { application, table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -164,7 +164,6 @@ describe('GridView component with decoration', () => {
       database: application,
       table,
       view,
-      primary,
       fields,
       readOnly: false,
       storePrefix: 'page/',
@@ -174,7 +173,7 @@ describe('GridView component with decoration', () => {
   })
 
   test('Default component with row wrapper decoration', async () => {
-    const { application, table, primary, fields, view } = await populateStore([
+    const { application, table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -213,7 +212,6 @@ describe('GridView component with decoration', () => {
       database: application,
       table,
       view,
-      primary,
       fields,
       readOnly: false,
       storePrefix: 'page/',
@@ -223,7 +221,7 @@ describe('GridView component with decoration', () => {
   })
 
   test('Default component with unavailable decoration', async () => {
-    const { application, table, primary, fields, view } = await populateStore([
+    const { application, table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -243,7 +241,6 @@ describe('GridView component with decoration', () => {
       database: application,
       table,
       view,
-      primary,
       fields,
       readOnly: false,
       storePrefix: 'page/',

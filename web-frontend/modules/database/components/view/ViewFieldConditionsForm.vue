@@ -52,12 +52,6 @@
           @input="updateFilter(filter, { field: $event })"
         >
           <DropdownItem
-            :key="'primary-' + primary.id"
-            :name="primary.name"
-            :value="primary.id"
-            :disabled="hasNoCompatibleFilterTypes(primary, filterTypes)"
-          ></DropdownItem>
-          <DropdownItem
             v-for="field in fields"
             :key="'field-' + field.id"
             :name="field.name"
@@ -74,12 +68,7 @@
           @input="updateFilter(filter, { type: $event })"
         >
           <DropdownItem
-            v-for="fType in allowedFilters(
-              filterTypes,
-              primary,
-              fields,
-              filter.field
-            )"
+            v-for="fType in allowedFilters(filterTypes, fields, filter.field)"
             :key="fType.type"
             :name="fType.getName()"
             :value="fType.type"
@@ -93,7 +82,6 @@
           :filter="filter"
           :view="view"
           :fields="fields"
-          :primary="primary"
           :disabled="disableFilter"
           :read-only="readOnly"
           @input="updateFilter(filter, { value: $event })"
@@ -117,10 +105,6 @@ export default {
     },
     filterType: {
       type: String,
-      required: true,
-    },
-    primary: {
-      type: Object,
       required: true,
     },
     fields: {
@@ -184,9 +168,8 @@ export default {
     /**
      * Returns a list of filter types that are allowed for the given fieldId.
      */
-    allowedFilters(filterTypes, primary, fields, fieldId) {
-      const field =
-        primary.id === fieldId ? primary : fields.find((f) => f.id === fieldId)
+    allowedFilters(filterTypes, fields, fieldId) {
+      const field = fields.find((f) => f.id === fieldId)
       return Object.values(filterTypes).filter((filterType) => {
         return field !== undefined && filterType.fieldIsCompatible(field)
       })
@@ -214,7 +197,6 @@ export default {
       if (Object.prototype.hasOwnProperty.call(values, 'field')) {
         const allowedFilterTypes = this.allowedFilters(
           this.filterTypes,
-          this.primary,
           this.fields,
           field
         ).map((filter) => filter.type)
@@ -244,10 +226,7 @@ export default {
      * responsible for updating the filter value.
      */
     getInputComponent(type, fieldId) {
-      const field =
-        this.primary.id === fieldId
-          ? this.primary
-          : this.fields.find(({ id }) => id === fieldId)
+      const field = this.fields.find(({ id }) => id === fieldId)
       return this.$registry.get('viewFilter', type).getInputComponent(field)
     },
   },

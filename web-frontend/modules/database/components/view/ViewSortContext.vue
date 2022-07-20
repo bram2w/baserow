@@ -41,14 +41,6 @@
             @input="updateSort(sort, { field: $event })"
           >
             <DropdownItem
-              :key="'sort-field-' + sort.id + '-' + primary.id"
-              :name="primary.name"
-              :value="primary.id"
-              :disabled="
-                sort.field !== primary.id && !isFieldAvailable(primary)
-              "
-            ></DropdownItem>
-            <DropdownItem
               v-for="field in fields"
               :key="'sort-field-' + sort.id + '-' + field.id"
               :name="field.name"
@@ -136,15 +128,6 @@
         </a>
         <Context ref="addContext" class="sortings__add-context">
           <ul ref="items" class="context__menu">
-            <li v-show="isFieldAvailable(primary)">
-              <a @click="addSort(primary)">
-                <i
-                  class="context__menu-icon fas fa-fw"
-                  :class="'fa-' + primary._.type.iconClass"
-                ></i>
-                {{ primary.name }}
-              </a>
-            </li>
             <li
               v-for="field in fields"
               v-show="isFieldAvailable(field)"
@@ -173,10 +156,6 @@ export default {
   name: 'ViewSortContext',
   mixins: [context],
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -204,11 +183,7 @@ export default {
      * Calculates the total amount of available fields.
      */
     availableFieldsLength() {
-      const fields = this.fields.filter((field) =>
-        this.getCanSortInView(field)
-      ).length
-      const primary = this.getCanSortInView(this.primary) ? 1 : 0
-      return fields + primary
+      return this.fields.filter(this.getCanSortInView).length
     },
   },
   methods: {
@@ -216,9 +191,6 @@ export default {
       return this.$registry.get('field', field.type).getCanSortInView(field)
     },
     getField(fieldId) {
-      if (this.primary.id === fieldId) {
-        return this.primary
-      }
       for (const i in this.fields) {
         if (this.fields[i].id === fieldId) {
           return this.fields[i]

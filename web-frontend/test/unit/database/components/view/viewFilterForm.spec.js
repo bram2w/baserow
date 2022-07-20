@@ -1,19 +1,18 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import ViewFilterForm from '@baserow/modules/database/components/view/ViewFilterForm'
 
-const primary = {
-  id: 1,
-  name: 'Name',
-  order: 0,
-  type: 'text',
-  primary: true,
-  text_default: '',
-  _: {
-    loading: false,
-  },
-}
-
 const fields = [
+  {
+    id: 1,
+    name: 'Name',
+    order: 0,
+    type: 'text',
+    primary: true,
+    text_default: '',
+    _: {
+      loading: false,
+    },
+  },
   {
     id: 2,
     table_id: 196,
@@ -91,7 +90,6 @@ describe('ViewFilterForm component', () => {
 
   const mountViewFilterForm = async (
     props = {
-      primary: {},
       fields: [],
       view: { filters: [], _: {} },
       readOnly: false,
@@ -112,7 +110,6 @@ describe('ViewFilterForm component', () => {
 
   test('Full view filter component', async () => {
     const wrapper = await mountViewFilterForm({
-      primary,
       fields,
       view,
       readOnly: false,
@@ -150,7 +147,6 @@ describe('ViewFilterForm component', () => {
     // Mounting the component
     const wrapper = await mountViewFilterForm(
       {
-        primary,
         fields,
         view: viewClone,
         readOnly: false,

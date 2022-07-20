@@ -88,7 +88,6 @@ export default {
               `${this.getDragAndDropStoreName(this)}/cancelRowDrag`,
               {
                 view: this.view,
-                primary: this.primary,
                 fields: this.fields,
                 row: this.dragAndDropDraggingRow,
               }

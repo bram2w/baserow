@@ -19,15 +19,8 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
   },
   computed: {
-    allTableFields() {
-      return [this.primary, ...this.fields]
-    },
     activeDecorations() {
       return this.view.decorations
         .map((decoration) => {
@@ -51,7 +44,7 @@ export default {
               return {
                 value: deco.valueProviderType.getValue({
                   row,
-                  fields: this.allTableFields,
+                  fields: this.fields,
                   options: decoration.value_provider_conf,
                 }),
               }

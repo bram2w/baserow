@@ -54,7 +54,7 @@ export class KanbanViewType extends PremiumViewType {
     return KanbanView
   }
 
-  async fetch({ store }, view, fields, primary, storePrefix = '') {
+  async fetch({ store }, view, fields, storePrefix = '') {
     // If the single select field is `null` we can't fetch the initial data anyway,
     // we don't have to do anything. The KanbanView component will handle it by
     // showing a form to choose or create a single select field.
@@ -72,7 +72,6 @@ export class KanbanViewType extends PremiumViewType {
     { store },
     view,
     fields,
-    primary,
     storePrefix = '',
     includeFieldOptions = false
   ) {
@@ -113,7 +112,6 @@ export class KanbanViewType extends PremiumViewType {
     { store },
     tableId,
     fields,
-    primary,
     values,
     metadata,
     storePrefix = ''
@@ -121,9 +119,8 @@ export class KanbanViewType extends PremiumViewType {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/createdNewRow', {
         view: store.getters['view/getSelected'],
-        fields,
-        primary,
         values,
+        fields,
       })
     }
   }
@@ -132,7 +129,6 @@ export class KanbanViewType extends PremiumViewType {
     { store },
     tableId,
     fields,
-    primary,
     row,
     values,
     metadata,
@@ -142,20 +138,18 @@ export class KanbanViewType extends PremiumViewType {
       await store.dispatch(storePrefix + 'view/kanban/updatedExistingRow', {
         view: store.getters['view/getSelected'],
         fields,
-        primary,
         row,
         values,
       })
     }
   }
 
-  async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
+  async rowDeleted({ store }, tableId, fields, row, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/deletedExistingRow', {
         view: store.getters['view/getSelected'],
         row,
         fields,
-        primary,
       })
     }
   }

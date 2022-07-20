@@ -127,22 +127,20 @@ describe('GalleryView component with decoration', () => {
     })
     mockServer.createFields(application, table, fieldData)
     await store.dispatch('field/fetchAll', table)
-    const primary = store.getters['field/getPrimary']
     const fields = store.getters['field/getAll']
 
     mockServer.createGalleryRows(view, fields, rows)
     await store.dispatch('page/view/gallery/fetchInitial', {
       viewId: 1,
       fields,
-      primary,
     })
     await store.dispatch('view/fetchAll', { id: 1 })
 
-    return { application, table, primary, fields, view }
+    return { application, table, fields, view }
   }
 
   test('Default component with first_cell decoration', async () => {
-    const { application, table, primary, fields, view } = await populateStore([
+    const { application, table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -165,7 +163,6 @@ describe('GalleryView component with decoration', () => {
       database: application,
       table,
       view,
-      primary,
       fields,
       readOnly: false,
       storePrefix: 'page/',
@@ -175,7 +172,7 @@ describe('GalleryView component with decoration', () => {
   })
 
   test('Default component with row wrapper decoration', async () => {
-    const { application, table, primary, fields, view } = await populateStore([
+    const { application, table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -214,7 +211,6 @@ describe('GalleryView component with decoration', () => {
       database: application,
       table,
       view,
-      primary,
       fields,
       readOnly: false,
       storePrefix: 'page/',
@@ -224,7 +220,7 @@ describe('GalleryView component with decoration', () => {
   })
 
   test('Default component with unavailable decoration', async () => {
-    const { application, table, primary, fields, view } = await populateStore([
+    const { application, table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
         value_provider_type: 'fake_value_provider_type',
@@ -244,7 +240,6 @@ describe('GalleryView component with decoration', () => {
       database: application,
       table,
       view,
-      primary,
       fields,
       readOnly: false,
       storePrefix: 'page/',
