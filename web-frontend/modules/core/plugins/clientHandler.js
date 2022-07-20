@@ -77,6 +77,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.groupUserIsLastAdminTitle'),
         app.i18n.t('clientHandler.groupUserIsLastAdminDescription')
       ),
+      ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.errorMaxJobCountExceededTitle'),
+        app.i18n.t('clientHandler.errorMaxJobCountExceededDescription')
+      ),
     }
   }
 

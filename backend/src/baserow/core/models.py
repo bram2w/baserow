@@ -8,10 +8,12 @@ from django.db.models import UniqueConstraint, Q
 from django.contrib.postgres.fields import ArrayField
 
 from rest_framework.exceptions import NotAuthenticated
+from baserow.core.jobs.models import Job
 
 from baserow.core.user_files.models import UserFile
 
 from .mixins import (
+    JobWithUserDataMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
@@ -416,3 +418,20 @@ class TrashEntry(models.Model):
                 fields=["-trashed_at", "trash_item_type", "group", "application"]
             )
         ]
+
+
+class DuplicateApplicationJob(JobWithUserDataMixin, Job):
+    original_application = models.ForeignKey(
+        Application,
+        null=True,
+        related_name="duplicated_by_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The Baserow application to duplicate.",
+    )
+    duplicated_application = models.OneToOneField(
+        Application,
+        null=True,
+        related_name="duplicated_from_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The duplicated Baserow application.",
+    )

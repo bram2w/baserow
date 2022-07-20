@@ -7,6 +7,9 @@ export default (client) => {
     create(groupId, values) {
       return client.post(`/applications/group/${groupId}/`, values)
     },
+    asyncDuplicate(applicationId) {
+      return client.post(`/applications/${applicationId}/duplicate/async/`)
+    },
     get(applicationId) {
       return client.get(`/applications/${applicationId}/`)
     },

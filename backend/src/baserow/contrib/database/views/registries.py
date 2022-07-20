@@ -166,7 +166,10 @@ class ViewType(
             }
 
     def export_serialized(
-        self, view: "View", files_zip: ZipFile, storage: Optional[Storage] = None
+        self,
+        view: "View",
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
     ) -> Dict[str, Any]:
         """
         Exports the view to a serialized dict that can be imported by the

@@ -5,8 +5,8 @@ import JobService from '@baserow/modules/core/services/job'
  * - `getCustomHumanReadableJobState(state)` returns the human readable message your
  *   custom state values.
  * - onJobDone() (optional) is called when the job is finished
- * - onJobFailure() (optional) is called if the job failed
- * - onJobError(error) (optional) is there is an exception during the job polling
+ * - onJobFailed() (optional) is called if the job failed
+ * - onJobPollingError(error) (optional) is there is an exception during the job polling
  *
  */
 export default {
@@ -57,34 +57,34 @@ export default {
      */
     startJobPoller(job) {
       this.job = job
-      this.pollInterval = setInterval(this.getLatestJobInfo, 1000)
+      this.pollInterval = setTimeout(this.getLatestJobInfo, 1000)
     },
     async getLatestJobInfo() {
       try {
         const { data } = await JobService(this.$client).get(this.job.id)
         this.job = data
         if (this.jobHasFailed) {
-          this.stopPollIfRunning()
-          if (this.onJobFailure) {
-            await this.onJobFailure()
+          if (this.onJobFailed) {
+            await this.onJobFailed()
           }
         } else if (!this.jobIsRunning) {
-          this.stopPollIfRunning()
           if (this.onJobDone) {
             await this.onJobDone()
           }
+        } else {
+          // job unfinished, set the next polling timeout
+          this.pollInterval = setTimeout(this.getLatestJobInfo, 1000)
         }
       } catch (error) {
-        this.stopPollIfRunning()
-        if (this.onJobError) {
-          this.onJobError(error)
+        if (this.onJobPollingError) {
+          this.onJobPollingError(error)
         }
         this.job = null
       }
     },
     stopPollIfRunning() {
       if (this.pollInterval) {
-        clearInterval(this.pollInterval)
+        clearTimeout(this.pollInterval)
         this.pollInterval = null
       }
     },

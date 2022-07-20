@@ -1,4 +1,5 @@
 import pytest
+from baserow.core.handler import CoreHandler
 
 from baserow.core.registries import ApplicationType, ApplicationTypeRegistry
 from baserow.core.exceptions import (
@@ -57,3 +58,24 @@ def test_application_get_api_urls():
     registry.register(temporary_2)
 
     assert registry.api_urls == ["url_1", "url_2", "url_3"]
+
+
+@pytest.mark.django_db
+def test_duplicate_application_name_collision(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    application_name = "app"
+
+    app = data_fixture.create_database_application(group=group, name=application_name)
+    app_2 = data_fixture.create_database_application(
+        group=group, name=f"{application_name} 2"
+    )
+
+    # choose a new unique name
+    app_3 = CoreHandler().duplicate_application(user, app)
+    assert app_3.name == f"{application_name} 3"
+
+    # takes the first available non trashed number
+    app_2.delete()
+    new_app_2 = CoreHandler().duplicate_application(user, app)
+    assert new_app_2.name == f"{application_name} 2"

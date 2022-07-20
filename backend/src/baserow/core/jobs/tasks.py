@@ -16,7 +16,6 @@ def run_async_job(self, job_id: int):
 
     from celery.exceptions import SoftTimeLimitExceeded
 
-    from django.db import transaction
     from django.core.cache import cache
 
     from baserow.core.jobs.models import Job
@@ -26,12 +25,13 @@ def run_async_job(self, job_id: int):
 
     from .cache import job_progress_key
 
-    job = Job.objects.get(id=job_id)
+    job = Job.objects.get(id=job_id).specific
+    job_type = job_type_registry.get_by_model(job)
     job.state = JOB_STARTED
     job.save()
 
     try:
-        with transaction.atomic():
+        with job_type.transaction_atomic_context():
             JobHandler().run(job)
 
         job.state = JOB_FINISHED
@@ -39,7 +39,6 @@ def run_async_job(self, job_id: int):
         # progress update.
         job.save(update_fields=("state",))
     except Exception as e:
-        job_type = job_type_registry.get_by_model(job.specific_class)
         error = f"Something went wrong during the {job_type.type} job execution."
 
         exception_mapping = {

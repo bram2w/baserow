@@ -803,7 +803,7 @@ class FieldType(
         row: "GeneratedTableModel",
         field_name: str,
         cache: Dict[str, Any],
-        files_zip: ZipFile,
+        files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ) -> Any:
         """
@@ -829,7 +829,7 @@ class FieldType(
         field_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
-        files_zip: ZipFile,
+        files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
         """
@@ -1360,7 +1360,7 @@ class ReadOnlyFieldType(FieldType):
         row: "GeneratedTableModel",
         field_name: str,
         cache: Dict[str, Any],
-        files_zip: ZipFile,
+        files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ) -> None:
         """
@@ -1373,7 +1373,7 @@ class ReadOnlyFieldType(FieldType):
         field_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
-        files_zip: ZipFile,
+        files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
         """

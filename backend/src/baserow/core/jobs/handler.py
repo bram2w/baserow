@@ -61,9 +61,9 @@ class JobHandler:
         progress = Progress(100)
         progress.register_updated_event(progress_updated)
 
-        job_type = job_type_registry.get_by_model(job.specific_class)
+        job_type = job_type_registry.get_by_model(job)
 
-        return job_type.run(job.specific, progress)
+        return job_type.run(job, progress)
 
     @staticmethod
     def get_job(
@@ -135,6 +135,7 @@ class JobHandler:
 
         if sync:
             run_async_job(job.id)
+            job.refresh_from_db()
         else:
             transaction.on_commit(lambda: run_async_job.delay(job.id))
 

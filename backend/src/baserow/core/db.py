@@ -1,10 +1,10 @@
 from collections import defaultdict
-from typing import Iterable
+from typing import Iterable, Optional
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import DEFAULT_DB_ALIAS
 from django.db.models import QuerySet, Model
 from django.db.transaction import Atomic, get_connection
-from django.contrib.contenttypes.models import ContentType
 
 
 class LockedAtomicTransaction(Atomic):
@@ -131,3 +131,44 @@ def specific_iterator(queryset: QuerySet) -> Iterable[Model]:
         ordered_specific_objects.append(specific_object)
 
     return ordered_specific_objects
+
+
+class IsolationLevel:
+    READ_COMMITTED = "READ COMMITTED"
+    REPEATABLE_READ = "REPEATABLE READ"
+    SERIALIZABLE = "SERIALIZABLE"
+
+
+class BaserowAtomic(Atomic):
+    def __init__(
+        self,
+        using,
+        savepoint,
+        durable,
+        isolation_level: Optional[str] = None,
+    ):
+        super().__init__(using, savepoint, durable)
+        self.isolation_level = isolation_level
+
+    def __enter__(self):
+        super().__enter__()
+        if self.isolation_level:
+            cursor = get_connection(self.using).cursor()
+            cursor.execute("SET TRANSACTION ISOLATION LEVEL %s" % self.isolation_level)
+
+
+def transaction_atomic(
+    using=None,
+    savepoint=True,
+    durable=False,
+    isolation_level: Optional[str] = None,
+):
+    # Bare decorator: @atomic -- although the first argument is called
+    # `using`, it's actually the function being decorated.
+    if callable(using):
+        return BaserowAtomic(DEFAULT_DB_ALIAS, savepoint, durable, isolation_level)(
+            using
+        )
+    # Decorator: @atomic(...) or context manager: with atomic(...): ...
+    else:
+        return BaserowAtomic(using, savepoint, durable, isolation_level)
