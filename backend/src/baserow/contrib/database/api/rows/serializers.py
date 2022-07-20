@@ -349,6 +349,7 @@ class ListRowsQueryParamsSerializer(serializers.Serializer):
     include = serializers.CharField(required=False)
     exclude = serializers.CharField(required=False)
     filter_type = serializers.CharField(required=False, default="")
+    view_id = serializers.IntegerField(required=False)
 
 
 class BatchUpdateRowsSerializer(serializers.Serializer):

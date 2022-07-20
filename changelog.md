@@ -18,6 +18,7 @@ For example:
 * Show badge when the user has account level premium.
 * Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call. [#951](https://gitlab.com/bramw/baserow/-/issues/951)
 * Applications can now be duplicated. [#960](https://gitlab.com/bramw/baserow/-/issues/960)
+* Added option to use view's filters and sorting when listing rows. [#190](https://gitlab.com/bramw/baserow/-/issues/190)
 
 ### Bug Fixes
 

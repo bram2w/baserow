@@ -48,6 +48,7 @@ from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TA
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+    ERROR_VIEW_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
@@ -75,6 +76,7 @@ from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField,
     ViewFilterTypeDoesNotExist,
+    ViewDoesNotExist,
 )
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.exceptions import UserNotInGroup
@@ -95,6 +97,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.views.handler import ViewHandler
 from .schemas import row_names_response_schema
 
 
@@ -222,6 +225,12 @@ class RowsView(APIView):
                     "Baserow field names (field_123 etc). "
                 ),
             ),
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Includes all the filters and sorts of the provided view.",
+            ),
         ],
         tags=["Database table rows"],
         operation_id="list_database_table_rows",
@@ -271,6 +280,7 @@ class RowsView(APIView):
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         }
     )
     @validate_query_parameters(ListRowsQueryParamsSerializer)
@@ -289,6 +299,7 @@ class RowsView(APIView):
         include = query_params.get("include")
         exclude = query_params.get("exclude")
         user_field_names = query_params.get("user_field_names")
+        view_id = query_params.get("view_id")
         fields = get_include_exclude_fields(
             table, include, exclude, user_field_names=user_field_names
         )
@@ -298,6 +309,16 @@ class RowsView(APIView):
             field_ids=[] if fields else None,
         )
         queryset = model.objects.all().enhance_by_fields()
+
+        if view_id:
+            view_handler = ViewHandler()
+            view = view_handler.get_view(view_id)
+
+            if view.table_id != table.id:
+                raise ViewDoesNotExist()
+
+            queryset = view_handler.apply_filters(view, queryset)
+            queryset = view_handler.apply_sorting(view, queryset)
 
         if search:
             queryset = queryset.search_all_fields(search)

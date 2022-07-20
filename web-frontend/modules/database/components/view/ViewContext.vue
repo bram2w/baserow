@@ -1,5 +1,6 @@
 <template>
   <Context ref="context">
+    <div class="context__menu-title">{{ view.name }} ({{ view.id }})</div>
     <ul class="context__menu">
       <li v-if="hasValidExporter">
         <a @click="exportView()">

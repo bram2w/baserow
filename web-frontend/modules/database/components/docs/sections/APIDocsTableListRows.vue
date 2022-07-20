@@ -92,6 +92,12 @@
             :content="$t('apiDocsTableListRows.exclude')"
           />
         </APIDocsParameter>
+        <APIDocsParameter name="view_id" :optional="true" type="integer">
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocsTableListRows.viewId')"
+          />
+        </APIDocsParameter>
       </ul>
     </div>
     <div class="api-docs__right">
