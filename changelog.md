@@ -17,6 +17,7 @@ For example:
 * Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
 * Show badge when the user has account level premium.
 * Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call. [#951](https://gitlab.com/bramw/baserow/-/issues/951)
+* Applications can now be duplicated. [#960](https://gitlab.com/bramw/baserow/-/issues/960)
 
 ### Bug Fixes
 

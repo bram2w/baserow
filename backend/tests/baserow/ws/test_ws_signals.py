@@ -222,3 +222,22 @@ def test_applications_reordered(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["type"] == "applications_reordered"
     assert args[0][1]["group_id"] == group.id
     assert args[0][1]["order"] == [database.id]
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.signals.broadcast_to_group")
+def test_duplicate_application(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+
+    with transaction.atomic():
+        application_clone = CoreHandler().duplicate_application(
+            user=user, application=database
+        )
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == group.id
+    assert args[0][1]["type"] == "application_created"
+    assert args[0][1]["application"]["id"] == application_clone.id

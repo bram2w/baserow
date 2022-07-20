@@ -2,7 +2,6 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 from copy import deepcopy
-from io import BytesIO
 from typing import (
     Dict,
     Any,
@@ -14,7 +13,6 @@ from typing import (
     Type,
     Union,
 )
-from zipfile import ZIP_DEFLATED, ZipFile
 
 import jwt
 
@@ -27,7 +25,6 @@ from django.core.cache import cache
 from django.db import models as django_models
 from django.db.models import F, Count
 from django.db.models.query import QuerySet
-from django.core.files.storage import default_storage
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -43,6 +40,7 @@ from baserow.core.utils import (
     set_allowed_attrs,
     get_model_reference_field_name,
     find_unused_name,
+    split_ending_number,
 )
 from .exceptions import (
     ViewDoesNotExist,
@@ -210,6 +208,21 @@ class ViewHandler:
 
         return instance
 
+    def find_unused_view_name(self, table_id: int, proposed_name: str) -> str:
+        """
+        Finds an unused name for a view.
+
+        :param table_id: The table_id of the view.
+        :param proposed_name: The name that is proposed to be used.
+        :return: A new unique name to use.
+        """
+
+        existing_view_names = View.objects.filter(table_id=table_id).values_list(
+            "name", flat=True
+        )
+        name, _ = split_ending_number(proposed_name)
+        return find_unused_name([name], existing_view_names, max_length=255)
+
     def duplicate_view(self, user: AbstractUser, original_view: View) -> View:
         """
         Duplicates the given view to create a new one. The name is appended with the
@@ -226,27 +239,14 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(original_view)
-
-        storage = default_storage
-
         fields = original_view.table.field_set.all()
 
-        files_buffer = BytesIO()
         # Use export/import to duplicate the view easily
-        with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
-            serialized = view_type.export_serialized(original_view, files_zip, storage)
-
-        existing_view_names = View.objects.filter(
-            table_id=original_view.table.id
-        ).values_list("name", flat=True)
+        serialized = view_type.export_serialized(original_view)
 
         # Change the name of the view
-        name = serialized["name"]
-        match = ending_number_regex.match(name)
-        if match:
-            name, _ = match.groups()
-        serialized["name"] = find_unused_name(
-            [name], existing_view_names, max_length=255
+        serialized["name"] = self.find_unused_view_name(
+            original_view.table_id, serialized["name"]
         )
 
         # The new view must not be publicly shared
@@ -257,10 +257,9 @@ class ViewHandler:
             "database_fields": {field.id: field.id for field in fields},
             "database_field_select_options": {},
         }
-        with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
-            duplicated_view = view_type.import_serialized(
-                original_view.table, serialized, id_mapping, files_zip, storage
-            )
+        duplicated_view = view_type.import_serialized(
+            original_view.table, serialized, id_mapping
+        )
 
         queryset = View.objects.filter(table_id=original_view.table.id)
         view_ids = queryset.values_list("id", flat=True)

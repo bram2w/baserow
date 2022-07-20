@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -97,7 +97,12 @@ class KanbanViewType(ViewType):
 
         return values
 
-    def export_serialized(self, kanban, files_zip, storage):
+    def export_serialized(
+        self,
+        kanban: View,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
         """
         Adds the serialized kanban view options to the exported dict.
         """
@@ -130,7 +135,7 @@ class KanbanViewType(ViewType):
         id_mapping: Dict[str, Any],
         files_zip: ZipFile,
         storage: Storage,
-    ):
+    ) -> View:
         """
         Imports the serialized kanban view field options.
         """

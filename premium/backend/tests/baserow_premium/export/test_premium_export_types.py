@@ -435,7 +435,9 @@ def strip_indents_and_newlines(xml):
 def run_export_over_interesting_test_table(
     premium_data_fixture, storage_mock, options, user_kwargs=None
 ):
-    table, user, _, _ = setup_interesting_test_table(premium_data_fixture, user_kwargs)
+    table, user, _, _ = setup_interesting_test_table(
+        premium_data_fixture, user_kwargs=user_kwargs
+    )
     grid_view = premium_data_fixture.create_grid_view(table=table)
     job, contents = run_export_job_with_mock_storage(
         table, grid_view, storage_mock, user, options

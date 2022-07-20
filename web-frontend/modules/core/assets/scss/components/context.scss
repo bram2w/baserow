@@ -66,6 +66,12 @@
 
     @include fixed-height(32px, 14px);
 
+    &.disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+      box-shadow: none;
+    }
+
     &:hover {
       background-color: $color-neutral-100;
       text-decoration: none;

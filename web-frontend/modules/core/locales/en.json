@@ -8,6 +8,7 @@
     },
     "sidebarApplication": {
         "renameApplication": "Rename {type}",
+        "duplicateApplication": "Duplicate {type}",
         "viewTrash": "View trash",
         "deleteApplication": "Delete {type}"
     },

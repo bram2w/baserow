@@ -2,11 +2,11 @@ from django.contrib.auth import get_user_model
 
 from rest_framework_jwt.settings import api_settings
 
-from baserow.core.models import UserProfile
 from baserow.api.sessions import (
     set_client_undo_redo_action_group_id,
     set_untrusted_client_session_id,
 )
+from baserow.core.models import GROUP_USER_PERMISSION_ADMIN, GroupUser, UserProfile
 
 User = get_user_model()
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -50,6 +50,15 @@ class UserFixtures:
 
         set_untrusted_client_session_id(user, session_id)
         set_client_undo_redo_action_group_id(user, action_group)
+
+        # add it to a specific group if it is given
+        if "group" in kwargs:
+            GroupUser.objects.create(
+                group=kwargs["group"],
+                user=user,
+                order=0,
+                permissions=GROUP_USER_PERMISSION_ADMIN,
+            )
 
         return user
 

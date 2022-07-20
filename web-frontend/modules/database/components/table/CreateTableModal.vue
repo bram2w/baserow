@@ -265,14 +265,14 @@ export default {
       })
       this.hide()
     },
-    onJobFailure() {
+    onJobFailed() {
       const error = new ResponseErrorMessage(
         this.$t('createTableModal.importError'),
         this.job.human_readable_error
       )
       this.stopPollAndHandleError(error)
     },
-    onJobError(error) {
+    onJobPollingError(error) {
       this.stopPollAndHandleError(error)
     },
     stopPollAndHandleError(error, specificErrorMap = null) {

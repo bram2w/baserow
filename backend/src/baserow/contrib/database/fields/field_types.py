@@ -5,16 +5,16 @@ from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint, sample
 from typing import Any, Callable, Dict, List, Tuple, TYPE_CHECKING, Optional
+from zipfile import ZipFile
 
-import pytz
-from pytz import timezone
+from pytz import all_timezones, timezone
 from dateutil import parser
 from dateutil.parser import ParserError
 
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage
+from django.core.files.storage import default_storage, Storage
 from django.db import models, OperationalError
 from django.db.models import Case, When, Q, F, Func, Value, CharField, DateTimeField
 from django.db.models.functions import Coalesce
@@ -121,7 +121,7 @@ from .registries import (
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.table.models import GeneratedTableModel
+    from baserow.contrib.database.table.models import GeneratedTableModel, Table
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
@@ -849,7 +849,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     allowed_fields = DateFieldType.allowed_fields + ["timezone"]
     serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
     serializer_field_overrides = {
-        "timezone": serializers.ChoiceField(choices=pytz.all_timezones, required=True)
+        "timezone": serializers.ChoiceField(choices=all_timezones, required=True)
     }
     source_field_name = None
     model_field_class = models.DateTimeField
@@ -1514,7 +1514,12 @@ class LinkRowFieldType(FieldType):
         serialized["link_row_related_field_id"] = field.link_row_related_field_id
         return serialized
 
-    def import_serialized(self, table, serialized_values, id_mapping):
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+    ) -> Optional[Field]:
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
@@ -1862,7 +1867,14 @@ class FileFieldType(FieldType):
     def contains_query(self, *args):
         return filename_contains_filter(*args)
 
-    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> List[Dict[str, Any]]:
         file_names = []
         user_file_handler = UserFileHandler()
 
@@ -1876,7 +1888,7 @@ class FileFieldType(FieldType):
                 except UserFile.DoesNotExist:
                     continue
 
-                if file["name"] not in files_zip.namelist():
+                if files_zip is not None and file["name"] not in files_zip.namelist():
                     # Load the user file from the content and write it to the zip file
                     # because it might not exist in the environment that it is going
                     # to be imported in.
@@ -1896,18 +1908,29 @@ class FileFieldType(FieldType):
         return file_names
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
-    ):
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile],
+        storage: Optional[Storage],
+    ) -> None:
         user_file_handler = UserFileHandler()
         files = []
 
         for file in value:
-            with files_zip.open(file["name"]) as stream:
-                # Try to upload the user file with the original name to make sure
-                # that if the was already uploaded, it will not be uploaded again.
-                user_file = user_file_handler.upload_user_file(
-                    None, file["original_name"], stream, storage=storage
-                )
+            # files_zip could be None when files are in the same storage of the export
+            # so no need to export/reimport files already present in the storage.
+            if files_zip is None:
+                user_file = user_file_handler.get_user_file_by_name(file["name"])
+            else:
+                with files_zip.open(file["name"]) as stream:
+                    # Try to upload the user file with the original name to make sure
+                    # that if the was already uploaded, it will not be uploaded again.
+                    user_file = user_file_handler.upload_user_file(
+                        None, file["original_name"], stream, storage=storage
+                    )
 
             value = user_file.serialize()
             value["visible_name"] = file["visible_name"]
@@ -3133,7 +3156,12 @@ class LookupFieldType(FormulaFieldType):
             setattr(field, key, value)
         field.save(recalculate=False)
 
-    def import_serialized(self, table, serialized_values, id_mapping):
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+    ) -> "Field":
         serialized_copy = serialized_values.copy()
         # The through field and target field id's must be set to None because we
         # don't need them. The field is created based on the field name.

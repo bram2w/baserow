@@ -1,7 +1,9 @@
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+from zipfile import ZipFile
 
 from django.core.exceptions import ValidationError
+from django.core.files.storage import Storage
 from django.contrib.auth.models import AbstractUser
 from django.urls import path, include
 
@@ -37,6 +39,7 @@ from .exceptions import (
 )
 from .handler import ViewHandler
 from .models import (
+    View,
     GridView,
     GridViewFieldOptions,
     GalleryView,
@@ -70,7 +73,12 @@ class GridViewType(ViewType):
             path("grid/", include(api_urls, namespace=self.type)),
         ]
 
-    def export_serialized(self, grid, files_zip, storage):
+    def export_serialized(
+        self,
+        grid: View,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
         """
         Adds the serialized grid view options to the exported dict.
         """
@@ -96,8 +104,13 @@ class GridViewType(ViewType):
         return serialized
 
     def import_serialized(
-        self, table, serialized_values, id_mapping, files_zip, storage
-    ):
+        self,
+        table: Table,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> View:
         """
         Imports the serialized grid view field options.
         """
@@ -324,7 +337,12 @@ class GalleryViewType(ViewType):
 
         return values
 
-    def export_serialized(self, gallery, files_zip, storage):
+    def export_serialized(
+        self,
+        gallery: View,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
         """
         Adds the serialized gallery view options to the exported dict.
         """
@@ -349,8 +367,13 @@ class GalleryViewType(ViewType):
         return serialized
 
     def import_serialized(
-        self, table, serialized_values, id_mapping, files_zip, storage
-    ):
+        self,
+        table: Table,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> View:
         """
         Imports the serialized gallery view field options.
         """
@@ -483,7 +506,12 @@ class FormViewType(ViewType):
 
         return field_options
 
-    def export_serialized(self, form, files_zip, storage):
+    def export_serialized(
+        self,
+        form: View,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
         """
         Adds the serialized form view options to the exported dict.
         """
@@ -496,7 +524,7 @@ class FormViewType(ViewType):
 
             name = user_file.name
 
-            if name not in files_zip.namelist():
+            if files_zip is not None and name not in files_zip.namelist():
                 file_path = UserFileHandler().user_file_path(name)
                 with storage.open(file_path, mode="rb") as storage_file:
                     files_zip.writestr(name, storage_file.read())
@@ -530,8 +558,13 @@ class FormViewType(ViewType):
         return serialized
 
     def import_serialized(
-        self, table, serialized_values, id_mapping, files_zip, storage
-    ):
+        self,
+        table: Table,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> View:
         """
         Imports the serialized form view and field options.
         """
@@ -540,10 +573,13 @@ class FormViewType(ViewType):
             if not file:
                 return None
 
-            with files_zip.open(file["name"]) as stream:
-                user_file = UserFileHandler().upload_user_file(
-                    None, file["original_name"], stream, storage=storage
-                )
+            if files_zip is None:
+                user_file = UserFileHandler().get_user_file_by_name(file["name"])
+            else:
+                with files_zip.open(file["name"]) as stream:
+                    user_file = UserFileHandler().upload_user_file(
+                        None, file["original_name"], stream, storage=storage
+                    )
             return user_file
 
         serialized_copy = serialized_values.copy()
