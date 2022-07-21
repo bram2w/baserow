@@ -59,7 +59,7 @@ export default {
       values: {
         formula: '',
       },
-      fetchedTypeOptions: {},
+      fetchedTypeOptions: { error: null },
       mergedTypeOptions: { ...this.defaultValues },
       parsingError: null,
       previousValidParsedFormula: this.defaultValues.formula,
@@ -105,11 +105,17 @@ export default {
     },
   },
   watch: {
-    defaultValues(newValue) {
-      this.mergedTypeOptions = { ...newValue, ...this.fetchedTypeOptions }
+    defaultValues: {
+      deep: true,
+      handler(newValue) {
+        this.mergedTypeOptions = { ...newValue, ...this.fetchedTypeOptions }
+      },
     },
-    fetchedTypeOptions(newValue) {
-      this.mergedTypeOptions = { ...this.defaultValues, ...newValue }
+    fetchedTypeOptions: {
+      deep: true,
+      handler(newValue) {
+        this.mergedTypeOptions = { ...this.defaultValues, ...newValue }
+      },
     },
   },
   methods: {
@@ -158,7 +164,7 @@ export default {
           'ERROR_FIELD_CIRCULAR_REFERENCE',
         ].includes(error.handler.code)
       ) {
-        this.$set(this.fetchedTypeOptions, 'error', error.handler.detail)
+        this.fetchedTypeOptions.error = error.handler.detail
         this.formulaTypeRefreshNeeded = false
         return true
       } else {
@@ -167,7 +173,7 @@ export default {
     },
     reset() {
       const formula = this.values.formula
-      this.fetchedTypeOptions = {}
+      this.fetchedTypeOptions = { error: null }
       this.formulaTypeRefreshNeeded = false
       Object.assign(this.mergedTypeOptions, this.defaultValues)
       form.methods.reset.call(this)
