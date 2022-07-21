@@ -23,6 +23,7 @@ For example:
 * Disable table import field type guessing and instead always import as text fields. [#1050](https://gitlab.com/bramw/baserow/-/issues/1050)
 * Upgrade the images provided in our example docker-compose files to be the latest and most secure. [#1056](https://gitlab.com/bramw/baserow/-/issues/1056)
 * Fix the perm delete trash cleanup job failing for self linking tables. [#1075](https://gitlab.com/bramw/baserow/-/issues/1075)
+* Ensure the latest error is always shown when clicking the formula refresh options link. [#1092](https://gitlab.com/bramw/baserow/-/issues/1092)
 
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
