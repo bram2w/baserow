@@ -37,6 +37,7 @@ For example:
   changed rows at once. Already created webhooks will still be called, but the received
   body will contain only the first changed row instead of all rows. It is highly
   recommended to convert all webhooks to the new types.
+* Fix not being able to paste multiple cells when a formula field of array or single select type was in an error state. [#1084](https://gitlab.com/bramw/baserow/-/issues/1084)
 
 
 ## Released (2022-07-05 1.10.2)

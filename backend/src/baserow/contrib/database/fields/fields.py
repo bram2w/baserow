@@ -2,13 +2,12 @@ from typing import Optional
 
 from django.db import models
 from django.db.models import Field, Value
+from django.db.models.expressions import RawSQL
 from django.db.models.fields.related_descriptors import (
     ForwardManyToOneDescriptor,
     ManyToManyDescriptor,
 )
-from django.db.models.expressions import RawSQL
 from django.utils.functional import cached_property
-
 
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
 
@@ -206,6 +205,12 @@ class BaserowExpressionField(models.Field):
                         self.expression, model_instance
                     )
                 )
+
+    @property
+    def valid_for_bulk_update(self):
+        # When the expression is None we are in the error state and so shouldn't be
+        # included in any BULK UPDATE statement.
+        return self.expression is not None
 
 
 class SerialField(models.Field):
