@@ -1041,15 +1041,18 @@ class RowHandler:
             delete_qs._raw_delete(delete_qs.db)
             through.objects.bulk_create([v for v in values if v is not None])
 
-        # For now all fields that don't represent a relationship will be used in
-        # the bulk_update() call. This could be optimized in the future if we can
-        # select just fields that need to be updated (fields that are passed in +
-        # read only fields that need updating too)
-        bulk_update_fields = [
-            field["name"]
-            for field in model._field_objects.values()
-            if not isinstance(model._meta.get_field(field["name"]), ManyToManyField)
-        ] + ["updated_on"]
+        bulk_update_fields = ["updated_on"]
+        for field in model._field_objects.values():
+            field_name = field["name"]
+            model_field = model._meta.get_field(field_name)
+            # For now all valid fields that don't represent a relationship will be
+            # used in the bulk_update() call. This could be optimized in the future
+            # if we can select just fields that need to be updated (fields that are
+            # passed in + read only fields that need updating too)
+            not_m2m = not isinstance(model_field, ManyToManyField)
+            if not_m2m and getattr(model_field, "valid_for_bulk_update", True):
+                bulk_update_fields.append(field_name)
+
         if len(bulk_update_fields) > 0:
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
 

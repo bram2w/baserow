@@ -26,6 +26,7 @@ For example:
 
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
+* Fix not being able to paste multiple cells when a formula field of array or single select type was in an error state. [#1084](https://gitlab.com/bramw/baserow/-/issues/1084)
 
 
 ## Released (2022-07-05 1.10.2)
