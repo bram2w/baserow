@@ -39,7 +39,7 @@ export default {
   methods: {
     updateInsertedFieldOrder({ newField, undoRedoActionGroupId }) {
       // GridViewHead will update the order of the fields and call the backend endpoint
-      this.$emit('update-inserted-field-order', {
+      this.$emit('move-field', {
         newField,
         position: this.position,
         fromField: this.fromField,

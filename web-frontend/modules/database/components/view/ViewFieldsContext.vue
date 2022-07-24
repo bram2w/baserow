@@ -82,11 +82,12 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { escapeRegExp } from '@baserow/modules/core/utils/string'
 import context from '@baserow/modules/core/mixins/context'
 import { clone } from '@baserow/modules/core/utils/object'
-import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
+import { sortFieldsByOrderAndIdFunction } from '@baserow/modules/database/utils/view'
 
 export default {
   name: 'ViewFieldsContext',
@@ -145,39 +146,22 @@ export default {
           const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')
           return field.name.match(regex)
         })
-        .sort((a, b) => {
-          const orderA = this.fieldOptions[a.id]
-            ? this.fieldOptions[a.id].order
-            : maxPossibleOrderValue
-          const orderB = this.fieldOptions[b.id]
-            ? this.fieldOptions[b.id].order
-            : maxPossibleOrderValue
-
-          // First by order.
-          if (orderA > orderB) {
-            return 1
-          } else if (orderA < orderB) {
-            return -1
-          }
-
-          // Then by id.
-          if (a.id < b.id) {
-            return -1
-          } else if (a.id > b.id) {
-            return 1
-          } else {
-            return 0
-          }
-        })
+        .sort(sortFieldsByOrderAndIdFunction(this.fieldOptions))
     },
     fileFields() {
       const type = FileFieldType.getType()
       return this.fields.filter((field) => field.type === type)
     },
+    ...mapGetters({
+      allFields: 'field/getAll',
+    }),
   },
   methods: {
     order(order, oldOrder) {
-      this.$emit('update-order', { order, oldOrder })
+      this.$emit('update-order', {
+        order: [this.allFields[0].id, ...order], // Add primary field first
+        oldOrder,
+      })
     },
     updateAllFieldOptions(values) {
       const newFieldOptions = {}

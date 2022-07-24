@@ -432,7 +432,11 @@ def test_duplicate_views(reordered_mock, created_mock, data_fixture):
 
     new_view2 = handler.duplicate_view(user=user, original_view=new_view)
 
-    assert new_view2.name == grid.name + " 3"
+    assert new_view2.name == new_view.name + " 2"
+
+    new_view3 = handler.duplicate_view(user=user, original_view=grid)
+
+    assert new_view3.name == grid.name + " 3"
 
 
 @pytest.mark.django_db

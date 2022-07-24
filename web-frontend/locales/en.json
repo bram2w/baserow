@@ -25,6 +25,7 @@
         "search": "Search",
         "copy": "Copy",
         "paste": "Paste",
+        "duplicate": "Duplicate",
         "activate": "Activate",
         "deactivate": "Deactivate"
     },

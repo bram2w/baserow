@@ -1128,6 +1128,75 @@ export const actions = {
     })
   },
   /**
+   * Move one field on the left or the right of the specified `fromField`
+   * by updating all the fieldOptions orders.
+   *
+   * @param {object} fieldToMove The field that is going to be moved.
+   * @param {string} position Set to 'left' to move the field to the left of the
+   *                          fromField. The field is moved to the right otherwise.
+   * @param {object} fromField We want to move the `fieldtoMove` relatively to this
+   *                           field.
+   *                           If `position` === 'left' the `fieldToMove` is going to be
+   *                           positioned at the left of the specified `fromField`
+   *                           otherwise to the right of this field.
+   * @param {string} undoRedoActionGroupId An optional undo/redo group action.
+   * @param {boolean} readOnly Set to true to not send the modification to the server.
+   */
+  async updateSingleFieldOptionOrder(
+    { getters, dispatch },
+    {
+      fieldToMove,
+      position = 'left',
+      fromField,
+      undoRedoActionGroupId = null,
+      readOnly = false,
+    }
+  ) {
+    const oldFieldOptions = clone(getters.getAllFieldOptions)
+    const newFieldOptions = clone(getters.getAllFieldOptions)
+
+    // Order field options by order then by fieldId
+    const orderedFieldOptions = Object.entries(newFieldOptions)
+      .map(([fieldIdStr, options]) => [parseInt(fieldIdStr), options])
+      .sort(([a, { order: orderA }], [b, { order: orderB }]) => {
+        // First by order.
+        if (orderA > orderB) {
+          return 1
+        } else if (orderA < orderB) {
+          return -1
+        }
+
+        return a - b
+      })
+
+    let index = 0
+    // Update order of all fieldOptions inserting the movedField to the right position
+    orderedFieldOptions.forEach(([fieldId, options]) => {
+      if (fieldId === fromField.id) {
+        // Update firstField and second field order
+        if (position === 'left') {
+          newFieldOptions[fieldToMove.id].order = index
+          newFieldOptions[fromField.id].order = index + 1
+        } else {
+          newFieldOptions[fromField.id].order = index
+          newFieldOptions[fieldToMove.id].order = index + 1
+        }
+        index += 2
+      } else if (fieldId !== fieldToMove.id) {
+        // Update all other field order
+        options.order = index
+        index += 1
+      }
+    })
+
+    return await dispatch('updateAllFieldOptions', {
+      oldFieldOptions,
+      newFieldOptions,
+      readOnly,
+      undoRedoActionGroupId,
+    })
+  },
+  /**
    * Deletes the field options of the provided field id if they exist.
    */
   forceDeleteFieldOptions({ commit }, fieldId) {

@@ -66,6 +66,7 @@ For example:
 * Allow to import more than 15Mb. [949](ttps://gitlab.com/bramw/baserow/-/issues/949)
 * Add the ability to disable the model cache with the new BASEROW_DISABLE_MODEL_CACHE env variable.
 * Add support for horizontal scrolling in grid views pressing Shift + mouse-wheel. [#867](https://gitlab.com/bramw/baserow/-/issues/867)
+* Add basic field duplication. [#964](https://gitlab.com/bramw/baserow/-/issues/964)
 
 ### Bug Fixes
 
