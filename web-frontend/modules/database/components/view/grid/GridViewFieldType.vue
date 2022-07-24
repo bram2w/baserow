@@ -67,8 +67,23 @@
             :table="table"
             :from-field="field"
             @field-created="$emit('field-created', $event)"
-            @update-inserted-field-order="updateInsertedFieldOrder"
+            @move-field="moveField($event)"
           ></InsertFieldContext>
+        </li>
+        <li v-if="!readOnly">
+          <a
+            @click=";[$refs.duplicateFieldModal.toggle(), $refs.context.hide()]"
+          >
+            <i class="context__menu-icon fas fa-fw fa-clone"></i>
+            {{ $t('gridViewFieldType.duplicate') }}
+          </a>
+          <DuplicateFieldModal
+            ref="duplicateFieldModal"
+            :table="table"
+            :from-field="field"
+            @field-created="$emit('field-created', $event)"
+            @move-field="moveField($event)"
+          ></DuplicateFieldModal>
         </li>
         <li />
         <li v-if="canFilter">
@@ -149,12 +164,18 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
+import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
-  components: { FieldContext, GridViewFieldWidthHandle, InsertFieldContext },
+  components: {
+    FieldContext,
+    GridViewFieldWidthHandle,
+    InsertFieldContext,
+    DuplicateFieldModal,
+  },
   mixins: [gridViewHelpers],
   props: {
     table: {
@@ -207,8 +228,8 @@ export default {
     }
   },
   methods: {
-    updateInsertedFieldOrder($event) {
-      this.$emit('update-inserted-field-order', $event)
+    moveField($event) {
+      this.$emit('move-field', $event)
       this.$refs.context.hide()
     },
     async createFilter(event, view, field) {

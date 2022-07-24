@@ -67,7 +67,7 @@ from .signals import (
     groups_reordered,
 )
 from .trash.handler import TrashHandler
-from .utils import Progress, find_unused_name, set_allowed_attrs, split_ending_number
+from .utils import Progress, find_unused_name, set_allowed_attrs
 
 User = get_user_model()
 
@@ -785,8 +785,9 @@ class CoreHandler:
         existing_applications_names = self.list_applications_in_group(
             group_id
         ).values_list("name", flat=True)
-        name, _ = split_ending_number(proposed_name)
-        return find_unused_name([name], existing_applications_names, max_length=255)
+        return find_unused_name(
+            [proposed_name], existing_applications_names, max_length=255
+        )
 
     def update_application(
         self, user: AbstractUser, application: Application, name: str

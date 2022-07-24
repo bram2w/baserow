@@ -498,6 +498,7 @@
         "insertLeft": "Insert left",
         "insertRight": "Insert right",
         "createFilter": "Create filter",
+        "duplicate": "Duplicate field",
         "sortField": "Sort",
         "hideField": "Hide field"
     },
@@ -623,5 +624,10 @@
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "API documentation"
+    },
+    "duplicateFieldContext": {
+        "duplicate": "Duplicate field",
+        "cloneData": "Copy data",
+        "soon": "Available soon"
     }
 }

@@ -40,7 +40,6 @@ from baserow.core.utils import (
     set_allowed_attrs,
     get_model_reference_field_name,
     find_unused_name,
-    split_ending_number,
 )
 from .exceptions import (
     ViewDoesNotExist,
@@ -220,8 +219,7 @@ class ViewHandler:
         existing_view_names = View.objects.filter(table_id=table_id).values_list(
             "name", flat=True
         )
-        name, _ = split_ending_number(proposed_name)
-        return find_unused_name([name], existing_view_names, max_length=255)
+        return find_unused_name([proposed_name], existing_view_names, max_length=255)
 
     def duplicate_view(self, user: AbstractUser, original_view: View) -> View:
         """

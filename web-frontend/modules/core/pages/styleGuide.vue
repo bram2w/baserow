@@ -1011,6 +1011,11 @@
                 </li>
               </ul>
             </div>
+            <div class="actions actions--right">
+              <button class="button button--large button--overflow">
+                Validate
+              </button>
+            </div>
           </div>
           <div class="modal__box modal__box--with-sidebar">
             <a class="modal__close">
