@@ -145,7 +145,6 @@ export default {
             { store: this.$store },
             view,
             this.fields,
-            null,
             'template/'
           )
           this.tableLoading = false

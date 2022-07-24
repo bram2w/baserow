@@ -190,7 +190,10 @@ export const registerRealtimeEvents = (realtime) => {
       }
     }
     for (let i = 0; i < data.rows.length; i++) {
-      store.dispatch('rowModal/updated', { values: data.rows[i] })
+      store.dispatch('rowModal/updated', {
+        tableId: data.table_id,
+        values: data.rows[i],
+      })
     }
   })
 
