@@ -56,11 +56,6 @@ export default {
   components: { AuthRegister, LangPicker },
   mixins: [groupInvitationToken],
   layout: 'login',
-  data() {
-    return {
-      shouldShowAdminSignupPage: false,
-    }
-  },
   head() {
     return {
       title: this.$t('signup.headTitle'),
@@ -74,19 +69,18 @@ export default {
           this.invitation?.id)
       )
     },
+    shouldShowAdminSignupPage() {
+      return this.settings.show_admin_signup_page
+    },
     ...mapGetters({
       settings: 'settings/get',
     }),
   },
-  mounted() {
-    this.shouldShowAdminSignupPage = this.settings.show_admin_signup_page
-  },
   methods: {
     success() {
-      if (this.shouldShowAdminSignupPage) {
+      this.$nuxt.$router.push({ name: 'dashboard' }, () => {
         this.$store.dispatch('settings/hideAdminSignupPage')
-      }
-      this.$nuxt.$router.push({ name: 'dashboard' })
+      })
     },
   },
 }
