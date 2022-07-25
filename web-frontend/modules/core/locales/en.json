@@ -167,6 +167,7 @@
         "fromParent": "from {parent}",
         "name": "{user} deleted {type} {title} {parent}",
         "restore": "Restore",
+        "andMore": "... and {count} more",
         "unnamed": "Unnamed {type} {id}"
     },
     "trashModal": {

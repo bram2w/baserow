@@ -95,7 +95,7 @@
           }}</label>
           <div class="control__elements">
             <Checkbox
-              v-model="values.firstRowHeader"
+              v-model="firstRowHeader"
               :disabled="isDisabled"
               @input="reloadPreview()"
               >{{ $t('common.yes') }}</Checkbox
@@ -135,6 +135,7 @@ export default {
     return {
       filename: '',
       columnSeparator: 'auto',
+      firstRowHeader: true,
       encoding: 'utf-8',
       rawData: null,
       parsedData: null,
@@ -227,22 +228,16 @@ export default {
         return new Promise((resolve, reject) => {
           this.$ensureRender().then(() => {
             this.$papa.parse(decodedData, {
-              dynamicTyping: true,
               skipEmptyLines: true,
               delimiter:
                 this.columnSeparator === 'auto' ? '' : this.columnSeparator,
-              complete: (data) => {
-                if (this.values.firstRowHeader) {
-                  // Only run ensureHeaderExistsAndIsValid on the first row
-                  // as it can't handle too many rows.
-                  const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-                    data.data.slice(0, 1),
-                    this.values.firstRowHeader
-                  )
-                  // Update the header row with the valid header names
-                  data.data[0] = dataWithHeader[0]
+              complete: (parsedResult) => {
+                if (this.firstRowHeader) {
+                  const [, ...data] = parsedResult.data
+                  resolve(data)
+                } else {
+                  resolve(parsedResult.data)
                 }
-                resolve(data.data)
               },
               error(error) {
                 reject(error)
@@ -255,29 +250,19 @@ export default {
       await this.$ensureRender()
       // Parse only the first 4 rows to show a preview. (header + 3 rows)
       this.$papa.parse(decodedData, {
-        preview: 4,
-        dynamicTyping: true,
+        preview: 6,
         skipEmptyLines: true,
         delimiter: this.columnSeparator === 'auto' ? '' : this.columnSeparator,
-        complete: (data) => {
-          if (data.data.length === 0) {
+        complete: (parsedResult) => {
+          if (parsedResult.data.length === 0) {
             // We need at least a single entry otherwise the user has probably chosen
             // a wrong file.
             this.handleImporterError(this.$t('tableCSVImporter.emptyCSV'))
           } else {
             // Store the data to reload the preview without reparsing.
-            this.parsedData = [...data.data]
-            // If parsed successfully and it is not empty then the initial data can be
-            // prepared for creating the table.
-            const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-              data.data,
-              this.values.firstRowHeader
-            )
-            // If the first row is not the header, remove the last row as we will
-            // be adding one row of generated headers.
-            if (!this.values.firstRowHeader) dataWithHeader.pop()
+            this.parsedData = [...parsedResult.data]
+            this.reloadPreview()
             this.state = null
-            this.preview = this.getPreview(dataWithHeader)
             this.values.getData = getData
           }
         },
@@ -291,13 +276,14 @@ export default {
      * Reload the preview without re-parsing the raw data.
      */
     reloadPreview() {
-      const rows = [...this.parsedData]
-      if (!this.values.firstRowHeader) rows.pop()
-      const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-        rows,
-        this.values.firstRowHeader
-      )
-      this.preview = this.getPreview(dataWithHeader)
+      if (this.firstRowHeader) {
+        const [header, ...data] = this.parsedData
+        this.values.header = this.prepareHeader(header, data)
+        this.preview = this.getPreview(this.values.header, data)
+      } else {
+        this.values.header = this.prepareHeader([], this.parsedData)
+        this.preview = this.getPreview(this.values.header, this.parsedData)
+      }
     },
   },
 }

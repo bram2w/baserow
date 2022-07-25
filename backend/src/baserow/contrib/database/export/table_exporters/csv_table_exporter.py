@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from typing import List, Type
 
+
+from baserow.core.utils import list_to_comma_separated_string
 from baserow.contrib.database.api.export.serializers import (
     CsvExporterOptionsSerializer,
     BaseExporterOptionsSerializer,
@@ -101,7 +103,9 @@ class CsvQuerysetSerializer(QuerysetSerializer):
         """
 
         if isinstance(val, list):
-            return ",".join([self._value_to_csv(inner_val) for inner_val in val])
+            return list_to_comma_separated_string(
+                [self._value_to_csv(inner_val) for inner_val in val]
+            )
         if isinstance(val, dict):
             return " ".join(
                 [

@@ -12,7 +12,7 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
-from baserow.contrib.database.table.signals import table_created
+from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
@@ -388,14 +388,19 @@ class RowsTrashableItemType(TrashableItemType):
                 )
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
-        rows_created.send(
-            self,
-            rows=rows_to_restore,
-            table=table,
-            model=table_model,
-            before=None,
-            user=None,
-        )
+        if len(rows_to_restore) < 50:
+            rows_created.send(
+                self,
+                rows=rows_to_restore,
+                table=table,
+                model=table_model,
+                before=None,
+                user=None,
+            )
+        else:
+            # Use table signal here instead of row signal because we don't want
+            # to send too many ids in the signal
+            table_updated.send(self, table=table, user=None, force_table_refresh=True)
 
     def trash(self, item_to_trash, requesting_user):
         """

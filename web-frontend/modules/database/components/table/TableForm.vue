@@ -1,6 +1,10 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
+    <FormElement
+      v-if="creation"
+      :error="fieldHasErrors('name')"
+      class="control"
+    >
       <label class="control__label">
         <i class="fas fa-font"></i>
         {{ $t('tableForm.name') }}
@@ -31,6 +35,13 @@ import form from '@baserow/modules/core/mixins/form'
 export default {
   name: 'TableForm',
   mixins: [form],
+  props: {
+    creation: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+  },
   data() {
     return {
       values: {
@@ -40,11 +51,22 @@ export default {
   },
   validations: {
     values: {
-      name: { required },
+      name: {
+        // No object-shorthand here to access vm properties
+        // eslint-disable-next-line object-shorthand
+        required: function (value) {
+          if (this.creation) {
+            return required(value)
+          }
+          return true
+        },
+      },
     },
   },
   mounted() {
-    this.$refs.name.focus()
+    if (this.creation) {
+      this.$refs.name.focus()
+    }
   },
 }
 </script>

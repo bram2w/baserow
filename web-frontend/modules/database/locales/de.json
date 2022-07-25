@@ -322,7 +322,7 @@
         "firstRowHeader": "Erste Zeile ist Kopfzeile",
         "limitError": "Es ist nicht möglich, mehr als {limit} Zeilen zu importieren."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Neue Tabelle erstellen",
         "importLabel": "Möchten Sie vorhandene Daten importieren?",
         "newTable": "Beginnen Sie mit einer neuen Tabelle",

@@ -23,7 +23,7 @@
         $t('tablePasteImporter.firstRowHeader')
       }}</label>
       <div class="control__elements">
-        <Checkbox v-model="values.firstRowHeader" @input="reload()">{{
+        <Checkbox v-model="firstRowHeader" @input="reload()">{{
           $t('common.yes')
         }}</Checkbox>
       </div>
@@ -58,6 +58,7 @@ export default {
   data() {
     return {
       content: '',
+      firstRowHeader: true,
     }
   },
   validations: {
@@ -94,27 +95,29 @@ export default {
       await this.$ensureRender()
       this.$papa.parse(this.content, {
         delimiter: '\t',
-        complete: (data) => {
+        complete: (parsedResult) => {
           // If parsed successfully and it is not empty then the initial data can be
           // prepared for creating the table. We store the data stringified because it
           // doesn't need to be reactive.
-          const rows = [...data.data]
-          const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-            data.data,
-            this.values.firstRowHeader
-          )
+          let data
+
+          if (this.firstRowHeader) {
+            const [header, ...rest] = parsedResult.data
+            data = rest
+            this.values.header = this.prepareHeader(header, data)
+          } else {
+            data = parsedResult.data
+            this.values.header = this.prepareHeader([], data)
+          }
 
           this.values.getData = () => {
             return new Promise((resolve) => {
-              if (this.values.firstRowHeader) {
-                rows[0] = dataWithHeader[0]
-              }
-              resolve(rows)
+              resolve(data)
             })
           }
           this.error = ''
           this.state = null
-          this.preview = this.getPreview(dataWithHeader)
+          this.preview = this.getPreview(this.values.header, data)
         },
         error(error) {
           // Papa parse has resulted in an error which we need to display to the user.

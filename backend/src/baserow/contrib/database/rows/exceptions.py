@@ -14,3 +14,13 @@ class RowIdsNotUnique(Exception):
     def __init__(self, ids, *args, **kwargs):
         self.ids = ids
         super().__init__(*args, **kwargs)
+
+
+class ReportMaxErrorCountExceeded(Exception):
+    """
+    Raised when a the report raises too many error.
+    """
+
+    def __init__(self, report, *args, **kwargs):
+        self.report = report
+        super().__init__("Too many errors", *args, **kwargs)

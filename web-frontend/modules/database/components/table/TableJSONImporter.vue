@@ -219,14 +219,13 @@ export default {
 
         data.push(row)
       })
-      data.unshift(header)
 
-      const dataWithHeader = this.ensureHeaderExistsAndIsValid(data, true)
+      this.values.header = this.prepareHeader(header, data)
       this.values.getData = () => {
-        return dataWithHeader
+        return data
       }
       this.state = null
-      this.preview = this.getPreview(dataWithHeader)
+      this.preview = this.getPreview(this.values.header, data)
     },
   },
 }

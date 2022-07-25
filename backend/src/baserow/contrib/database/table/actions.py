@@ -1,8 +1,9 @@
 import dataclasses
-from typing import List
+from typing import List, Optional, Any
 
 from django.contrib.auth.models import AbstractUser
 
+from baserow.core.utils import Progress
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableForUpdate, TableHandler
@@ -24,18 +25,43 @@ class CreateTableActionType(ActionType):
     def do(
         cls,
         user: AbstractUser,
-        table: Table,
+        database: Database,
+        name: str,
+        data: Optional[List[List[Any]]] = None,
+        first_row_header: bool = True,
+        progress: Optional[Progress] = None,
     ) -> Table:
         """
-        Do nothing but register the table creation action.
+        Create a table in the specified database.
         Undoing this action trashes the table and redoing restores it.
 
         :param user: The user on whose behalf the table is created.
+        :param database: The database that the table instance belongs to.
         :param name: The name of the table is created.
+        :param data: A list containing all the rows that need to be inserted is
+            expected. All the values will be inserted in the database.
+        :param first_row_header: Indicates if the first row are the fields. The names
+            of these rows are going to be used as fields. If `fields` is provided,
+            this options is ignored.
+        :param progress: An optional progress instance if you want to track the progress
+            of the task.
+        :return: The created table and the error report.
         """
+
+        table, error_report = TableHandler().create_table(
+            user,
+            database,
+            name,
+            data=data,
+            first_row_header=first_row_header,
+            fill_example=True,
+            progress=progress,
+        )
 
         params = cls.Params(table.id)
         cls.register_action(user, params, cls.scope(table.database.id))
+
+        return table, error_report
 
     @classmethod
     def scope(cls, database_id) -> ActionScopeStr:

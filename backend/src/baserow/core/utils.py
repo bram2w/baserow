@@ -7,6 +7,7 @@ import os
 import random
 import re
 import string
+import io
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
@@ -286,6 +287,28 @@ def split_comma_separated_string(comma_separated_string: str) -> List[str]:
             [comma_separated_string], delimiter=",", quotechar='"', escapechar="\\"
         )
     )
+
+
+def list_to_comma_separated_string(value_list: List[str]) -> str:
+    """
+    Converts the given list to a CSV compatible value. The result string can be parsed
+    by a proper CSV parser. This function does the reverse as the previous one.
+
+    :param value_list: List of value to convert.
+    :return: A comma separated string.
+    """
+
+    out = io.StringIO()
+
+    # Use python csv handler to convert the list to a string
+    csv_writer = csv.writer(out, delimiter=",", quotechar='"', escapechar="\\")
+    csv_writer.writerow(value_list)
+
+    out.seek(0)
+    result = out.read()
+
+    # Strip removes the extra end line
+    return result.strip()
 
 
 def get_model_reference_field_name(lookup_model, target_model):

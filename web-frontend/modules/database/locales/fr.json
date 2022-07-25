@@ -322,7 +322,7 @@
         "firstRowHeader": "La première ligne est l'entête",
         "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Créer une nouvelle table",
         "importLabel": "Souhaitez-vous importer des données existantes ?",
         "newTable": "Commencer avec une table vide",

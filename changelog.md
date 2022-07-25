@@ -20,6 +20,7 @@ For example:
 * Applications can now be duplicated. [#960](https://gitlab.com/bramw/baserow/-/issues/960)
 * Added option to use view's filters and sorting when listing rows. [#190](https://gitlab.com/bramw/baserow/-/issues/190)
 * Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
+* Made it possible to import data into an existing table. [#342](https://gitlab.com/bramw/baserow/-/issues/342)
 
 ### Bug Fixes
 

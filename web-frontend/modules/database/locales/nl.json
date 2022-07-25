@@ -322,7 +322,7 @@
         "firstRowHeader": "Eerste rij is header",
         "limitError": "Het is niet mogelijk om meer dan {limit} rijen te importeren."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Nieuwe tabel maken",
         "importLabel": "Wil je bestaande gegevens importeren?",
         "newTable": "Begin met een nieuwe tabel",

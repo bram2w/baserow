@@ -318,7 +318,7 @@
         "firstRowHeader": "La primera fila es el encabezado",
         "limitError": "No es posible importar más de {limit} filas."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Crear nueva tabla",
         "importLabel": "¿Le gustaría importar datos existentes?",
         "newTable": "Comenzar con una nueva tabla",

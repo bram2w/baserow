@@ -387,6 +387,108 @@ def test_update_rows_created_on_and_last_modified(data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.rows_created.send")
+def test_import_rows(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test", order=1
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", number_negative=True, order=2
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_decimal_places=2,
+        number_negative=False,
+        order=3,
+    )
+
+    handler = RowHandler()
+
+    rows, report = handler.import_rows(
+        user=user,
+        table=table,
+        data=[
+            [
+                "Tesla",
+                240,
+                59999.99,
+            ],
+            [
+                "Giulietta",
+                210,
+                34999.99,
+            ],
+            [
+                "Panda",
+                160,
+                8999.99,
+            ],
+        ],
+        send_signal=False,
+    )
+    assert len(rows) == 3
+    assert report == {}
+
+    model = table.get_model()
+    assert model.objects.count() == 3
+
+    send_mock.assert_not_called()
+
+    rows, report = handler.import_rows(
+        user=user,
+        table=table,
+        data=[
+            [
+                "Tesla",
+                240,
+                59999.999999,
+            ],
+            [
+                "Giulietta",
+                210.888,
+                34999.99,
+            ],
+            [
+                "Panda",
+                160,
+                8999.99,
+            ],
+        ],
+    )
+
+    assert len(rows) == 1
+    assert sorted(report.keys()) == sorted([0, 1])
+
+    model = table.get_model()
+    assert model.objects.count() == 4
+
+    send_mock.assert_called_once()
+
+    rows, report = handler.import_rows(
+        user=user,
+        table=table,
+        data=[
+            [
+                "Panda",
+                160,
+                8999.99,
+            ],
+            ["Tesla", 240, 59999.999999, "bli bloup"],
+            [
+                "Giulietta",
+                210.888,
+            ],
+        ],
+    )
+
+    assert len(rows) == 1
+    assert sorted(report.keys()) == sorted([1, 2])
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 @patch("baserow.contrib.database.rows.signals.before_rows_update.send")
 def test_move_row(before_send_mock, send_mock, data_fixture):
@@ -529,8 +631,6 @@ def test_get_include_exclude_fields_with_user_field_names(data_fixture):
     data_fixture.create_text_field(name="Test", table=table, order=2)
     data_fixture.create_text_field(name="Test_2", table=table, order=3)
     data_fixture.create_text_field(name="With Space", table=table, order=4)
-
-    row_handler = RowHandler()
 
     assert (
         get_include_exclude_fields(

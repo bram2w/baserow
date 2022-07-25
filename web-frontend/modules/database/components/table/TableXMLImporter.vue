@@ -150,7 +150,7 @@ export default {
       xmlParser.parse(this.rawData)
 
       await this.$ensureRender()
-      xmlParser.loadXML(3)
+      xmlParser.loadXML(6)
 
       await this.$ensureRender()
       const [header, xmlData, errors] = xmlParser.transform()
@@ -169,12 +169,6 @@ export default {
         return
       }
 
-      let hasHeader = false
-      if (header.length > 0) {
-        xmlData.unshift(header)
-        hasHeader = true
-      }
-
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       if (limit !== null && xmlData.length > limit) {
         this.handleImporterError(
@@ -183,34 +177,22 @@ export default {
         return
       }
 
-      const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-        xmlData,
-        hasHeader
-      )
+      this.values.header = this.prepareHeader(header, xmlData)
       this.values.getData = async () => {
         await this.$ensureRender()
         xmlParser.loadXML()
 
         await this.$ensureRender()
-        const [header, xmlData, errors] = xmlParser.transform()
+        const [, xmlData, errors] = xmlParser.transform()
 
         if (errors.length > 0) {
           throw new Error(errors)
         }
 
-        let hasHeader = false
-        if (header.length > 0) {
-          xmlData.unshift(header)
-          hasHeader = true
-        }
-        const dataWithHeader = this.ensureHeaderExistsAndIsValid(
-          xmlData,
-          hasHeader
-        )
-        return dataWithHeader
+        return xmlData
       }
       this.state = null
-      this.preview = this.getPreview(dataWithHeader)
+      this.preview = this.getPreview(this.values.header, xmlData)
     },
   },
 }

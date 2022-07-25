@@ -9,11 +9,11 @@ from django.contrib.postgres.fields import ArrayField
 
 from rest_framework.exceptions import NotAuthenticated
 from baserow.core.jobs.models import Job
+from baserow.core.jobs.mixins import JobWithUserDataMixin
 
 from baserow.core.user_files.models import UserFile
 
 from .mixins import (
-    JobWithUserDataMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,

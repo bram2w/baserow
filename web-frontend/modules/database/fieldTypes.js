@@ -271,6 +271,7 @@ export class FieldType extends Registerable {
       iconClass: this.iconClass,
       name: this.getName(),
       isReadOnly: this.isReadOnly,
+      canImport: this.getCanImport(),
     }
   }
 
@@ -529,6 +530,14 @@ export class FieldType extends Registerable {
   parseQueryParameter(field, value, options) {
     return value
   }
+
+  /**
+   * Determines whether the field type value can be imported from a file
+   * @returns {boolean}
+   */
+  getCanImport() {
+    return false
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -603,6 +612,10 @@ export class TextFieldType extends FieldType {
   canParseQueryParameter() {
     return true
   }
+
+  getCanImport() {
+    return true
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -671,6 +684,10 @@ export class LongTextFieldType extends FieldType {
   }
 
   canParseQueryParameter() {
+    return true
+  }
+
+  getCanImport() {
     return true
   }
 }
@@ -1009,6 +1026,10 @@ export class NumberFieldType extends FieldType {
   parseQueryParameter(field, value) {
     return NumberFieldType.formatNumber(field.field, value)
   }
+
+  getCanImport() {
+    return true
+  }
 }
 
 export class RatingFieldType extends FieldType {
@@ -1085,7 +1106,7 @@ export class RatingFieldType extends FieldType {
     const value = parseInt(pastedValue, 10)
 
     if (isNaN(value) || !isFinite(value)) {
-      return
+      return 0
     }
 
     // Clamp the value
@@ -1134,6 +1155,10 @@ export class RatingFieldType extends FieldType {
     }
 
     return valueParsed
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -1217,6 +1242,10 @@ export class BooleanFieldType extends FieldType {
 
   parseQueryParameter(field, value) {
     return value === 'true'
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -1347,6 +1376,10 @@ class BaseDateFieldType extends FieldType {
   }
 
   canBeReferencedByFormulaField() {
+    return true
+  }
+
+  getCanImport() {
     return true
   }
 }
@@ -1667,6 +1700,10 @@ export class EmailFieldType extends FieldType {
   canParseQueryParameter() {
     return true
   }
+
+  getCanImport() {
+    return true
+  }
 }
 
 export class FileFieldType extends FieldType {
@@ -1859,7 +1896,7 @@ export class SingleSelectFieldType extends FieldType {
 
   _findOptionWithMatchingId(field, rawTextValue) {
     if (isNumeric(rawTextValue)) {
-      const pastedOptionId = parseInt(rawTextValue)
+      const pastedOptionId = parseInt(rawTextValue, 10)
       return field.select_options.find((option) => option.id === pastedOptionId)
     }
     return undefined
@@ -1950,6 +1987,10 @@ export class SingleSelectFieldType extends FieldType {
 
     return selectedOption ?? this.getEmptyValue()
   }
+
+  getCanImport() {
+    return true
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -2015,33 +2056,29 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   prepareValueForCopy(field, value) {
-    let returnValue
     if (value === undefined || value === null) {
-      returnValue = []
+      return ''
     }
-    returnValue = value
-    return JSON.stringify({
-      value: returnValue,
-    })
+
+    const nameList = value.map(({ value }) => value)
+    // Use papa to generate a CSV  string
+    const result = this.app.$papa.unparse([nameList])
+    return result
   }
 
   prepareValueForPaste(field, clipboardData) {
-    let values
     try {
-      values = JSON.parse(clipboardData)
-    } catch (SyntaxError) {
-      return []
-    }
-    // We need to check whether the pasted select_options belong to this field.
-    const pastedIDs = values.value.map((obj) => obj.id)
-    const fieldSelectOptionIDs = field.select_options.map((obj) => obj.id)
-    const pastedIDsBelongToField = pastedIDs.some((id) =>
-      fieldSelectOptionIDs.includes(id)
-    )
+      const values = this.app.$papa.parse(clipboardData)
+      const data = values.data[0]
 
-    if (pastedIDsBelongToField) {
-      return values.value
-    } else {
+      const selectOptionMap = Object.fromEntries(
+        field.select_options.map((option) => [option.value, option])
+      )
+
+      return data
+        .filter((name) => Object.keys(selectOptionMap).includes(name))
+        .map((name) => selectOptionMap[name])
+    } catch (e) {
       return []
     }
   }
@@ -2122,6 +2159,10 @@ export class MultipleSelectFieldType extends FieldType {
     )
 
     return selectOptions.length > 0 ? selectOptions : this.getEmptyValue()
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -2215,6 +2256,10 @@ export class PhoneNumberFieldType extends FieldType {
 
   parseQueryParameter(field, value) {
     return value
+  }
+
+  getCanImport() {
+    return true
   }
 }
 

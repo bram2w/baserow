@@ -9,6 +9,12 @@
         </a>
       </li>
       <li>
+        <a @click="importFile()">
+          <i class="context__menu-icon fas fa-fw fa-file-import"></i>
+          {{ $t('viewContext.importFile') }}
+        </a>
+      </li>
+      <li>
         <a @click="duplicateView()">
           <i class="context__menu-icon fas fa-fw fa-clone"></i>
           {{ $t('viewContext.duplicateView') }}
@@ -39,21 +45,29 @@
       :table="table"
       :view="view"
     />
+    <ImportFileModal
+      ref="importFileModal"
+      :database="database"
+      :table="table"
+      :fields="fields"
+    />
     <WebhookModal ref="webhookModal" :table="table" />
   </Context>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import context from '@baserow/modules/core/mixins/context'
 import error from '@baserow/modules/core/mixins/error'
 import viewTypeHasExporterTypes from '@baserow/modules/database/utils/viewTypeHasExporterTypes'
+import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
 
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal.vue'
 
 export default {
   name: 'ViewContext',
-  components: { ExportTableModal, WebhookModal },
+  components: { ExportTableModal, WebhookModal, ImportFileModal },
   mixins: [context, error],
   props: {
     database: {
@@ -73,6 +87,9 @@ export default {
     hasValidExporter() {
       return viewTypeHasExporterTypes(this.view.type, this.$registry)
     },
+    ...mapGetters({
+      fields: 'field/getAll',
+    }),
   },
   methods: {
     setLoading(view, value) {
@@ -119,6 +136,10 @@ export default {
     exportView() {
       this.$refs.context.hide()
       this.$refs.exportViewModal.show()
+    },
+    importFile() {
+      this.$refs.context.hide()
+      this.$refs.importFileModal.show()
     },
     openWebhookModal() {
       this.$refs.context.hide()
