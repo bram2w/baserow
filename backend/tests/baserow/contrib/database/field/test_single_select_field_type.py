@@ -756,7 +756,7 @@ def test_import_export_single_select_field(data_fixture):
     assert imported_select_option.order == select_option.order
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_get_set_export_serialized_value_single_select_field(data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)

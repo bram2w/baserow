@@ -81,6 +81,18 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.errorMaxJobCountExceededTitle'),
         app.i18n.t('clientHandler.errorMaxJobCountExceededDescription')
       ),
+      ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.failedToLockFieldDueToConflictTitle'),
+        app.i18n.t('clientHandler.failedToLockFieldDueToConflictDescription')
+      ),
+      ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.failedToLockTableDueToConflictTitle'),
+        app.i18n.t('clientHandler.failedToLockTableDueToConflictDescription')
+      ),
+      ERROR_UNDO_REDO_LOCK_CONFLICT: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.failedToUndoRedoDueToConflictTitle'),
+        app.i18n.t('clientHandler.failedToUndoRedoDueToConflictDescription')
+      ),
     }
   }
 

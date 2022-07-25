@@ -221,7 +221,13 @@
         "groupUserIsLastAdminTitle": "Can't leave the group",
         "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin or because other admin's accounts are pending deletion. Please delete the group or give another user admin permissions.",
         "errorMaxJobCountExceededTitle": "Couldn't start action.",
-        "errorMaxJobCountExceededDescription": "You cannot start any more of these actions as you have others still running in the background. Please try again once the previous actions complete."
+        "errorMaxJobCountExceededDescription": "You cannot start any more of these actions as you have others still running in the background. Please try again once the previous actions complete.",
+        "failedToLockFieldDueToConflictTitle": "Can't change field",
+        "failedToLockFieldDueToConflictDescription": "Another operation is currently updating or using this field, please wait until it finishes before trying again.",
+        "failedToLockTableDueToConflictTitle": "Can't create field",
+        "failedToLockTableDueToConflictDescription": "Another operation is currently updating or using this table, please wait until it finishes before trying again.",
+        "failedToUndoRedoDueToConflictTitle": "Can't undo/redo",
+        "failedToUndoRedoDueToConflictDescription": "Another operation is currently running blocking your undo or redo, please wait until it finishes before trying again."
     },
     "importerType": {
         "csv": "Import a CSV file",

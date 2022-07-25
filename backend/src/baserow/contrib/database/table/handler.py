@@ -1,9 +1,10 @@
 import logging
+import traceback
 from typing import Any, cast, NewType, List, Tuple, Optional, Dict
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import ProgrammingError
+from django.db import ProgrammingError, DatabaseError
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 from django.utils import translation
@@ -34,6 +35,7 @@ from .exceptions import (
     InitialTableDataLimitExceeded,
     InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
+    FailedToLockTableDueToConflict,
 )
 from .models import Table
 from .signals import table_updated, table_deleted, tables_reordered
@@ -70,19 +72,34 @@ class TableHandler:
 
         return table
 
-    def get_table_for_update(self, table_id: int) -> TableForUpdate:
+    def get_table_for_update(
+        self, table_id: int, nowait: bool = False
+    ) -> TableForUpdate:
         """
         Provide a type hint for tables that need to be updated.
         :param table_id: The id of the table that needs to be updated.
+        :param nowait: Whether to wait to get the lock on the table or raise a
+            DatabaseError not able to do so immediately.
         :return: The table that needs to be updated.
+        :raises: FailedToLockTableDueToConflict if nowait is True and the table was not
+            able to be locked for update immediately.
         """
 
-        return cast(
-            TableForUpdate,
-            self.get_table(
-                table_id, base_queryset=Table.objects.select_for_update(of=("self",))
-            ),
-        )
+        try:
+            return cast(
+                TableForUpdate,
+                self.get_table(
+                    table_id,
+                    base_queryset=Table.objects.select_for_update(
+                        of=("self",), nowait=nowait
+                    ),
+                ),
+            )
+        except DatabaseError as e:
+            if "could not obtain lock on row" in traceback.format_exc():
+                raise FailedToLockTableDueToConflict() from e
+            else:
+                raise e
 
     def get_tables_order(self, database: Database) -> List[int]:
         """

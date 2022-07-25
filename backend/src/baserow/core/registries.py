@@ -1,7 +1,13 @@
 from typing import Any, Dict, Optional, TYPE_CHECKING
 from zipfile import ZipFile
+
 from django.core.files.storage import Storage
+from django.db.transaction import Atomic
+
+from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
+from baserow.core.utils import ChildProgressBuilder, Progress
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
+from .export_serialized import CoreExportSerializedStructure
 from .registry import (
     Instance,
     Registry,
@@ -11,9 +17,6 @@ from .registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
-from .export_serialized import CoreExportSerializedStructure
-from baserow.core.utils import ChildProgressBuilder, Progress
-from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 
 if TYPE_CHECKING:
     from .models import Application, Group
@@ -176,6 +179,22 @@ class ApplicationType(
         :param application: The application model instance that needs to be deleted.
         :type application: Application
         """
+
+    def export_safe_transaction_context(self, application: "Application") -> Atomic:
+        """
+        Should return an Atomic context (such as transaction.atomic or
+        baserow.contrib.database.db.atomic.read_repeatable_single_database_atomic_transaction)
+        which can be used to safely run a database transaction to export an application
+        of this type.
+
+        :param application: The application that we are about to export.
+        :return: An Atomic context object that will be used to open a transaction safely
+            to export an application of this type.
+        """
+
+        raise NotImplementedError(
+            "Must be implemented by the specific application type"
+        )
 
     def export_serialized(
         self,

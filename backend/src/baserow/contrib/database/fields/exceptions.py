@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from baserow.core.exceptions import (
     InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
+    LockConflict,
 )
 
 
@@ -177,3 +178,10 @@ class InvalidLookupTargetField(Exception):
 
 class IncompatibleFieldTypeForUniqueValues(Exception):
     """Raised when the unique values of an incompatible field are requested."""
+
+
+class FailedToLockFieldDueToConflict(LockConflict):
+    """
+    Raised when a user tried to update a field which was locked by another
+    concurrent operation
+    """

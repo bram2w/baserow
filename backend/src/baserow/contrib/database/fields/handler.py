@@ -1,4 +1,5 @@
 import logging
+import traceback
 from copy import deepcopy
 from typing import (
     Dict,
@@ -17,7 +18,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
 from django.db.models import QuerySet
-from django.db.utils import ProgrammingError, DataError
+from django.db.utils import ProgrammingError, DataError, DatabaseError
 from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import (
@@ -55,6 +56,7 @@ from .exceptions import (
     InvalidBaserowFieldName,
     MaxFieldNameLengthExceeded,
     IncompatibleFieldTypeForUniqueValues,
+    FailedToLockFieldDueToConflict,
 )
 from .field_cache import FieldCache
 from .models import Field, SelectOption, SpecificFieldForUpdate
@@ -170,15 +172,57 @@ class FieldHandler:
         return field
 
     def get_specific_field_for_update(
-        self, field_id: int, field_model: Optional[Type[T]] = None
+        self,
+        field_id: int,
+        field_model: Optional[Type[T]] = None,
+        nowait: Optional[bool] = None,
+        lock_table=True,
+        allow_trash=False,
     ) -> SpecificFieldForUpdate:
-        return cast(
-            SpecificFieldForUpdate,
-            self.get_field(
+        """
+        Returns the .specific field which has been locked FOR UPDATE.
+
+        :param field_id: The field to lock and retrieve the specific instance of.
+        :param field_model: The field_model to query using, provide a specific one if
+            you want an exception raised if the field is not of this field_model type.
+        :param nowait: Whether to wait to get the lock on the row or not. If set to
+            True and the row is already locked a FailedToLockFieldDueToConflict
+            exception will be raised.
+        :param lock_table: Whether to also lock the fields table FOR UPDATE also.
+        :param allow_trash: Whether trashed fields should also be included in the lock.
+        :return: A specific locked field instance
+        """
+
+        if nowait is None:
+            nowait = not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR
+
+        if allow_trash:
+            queryset = Field.objects_and_trash
+        else:
+            queryset = Field.objects
+
+        if lock_table:
+            queryset = queryset.select_related("table").select_for_update(
+                of=("self", "table"), nowait=nowait
+            )
+        else:
+            queryset = queryset.select_for_update(of=("self",), nowait=nowait)
+
+        try:
+            specific_field = self.get_field(
                 field_id,
                 field_model,
-                base_queryset=Field.objects.select_for_update(of=("self",)),
-            ).specific,
+                base_queryset=queryset,
+            ).specific
+        except DatabaseError as e:
+            if "could not obtain lock on row" in traceback.format_exc():
+                raise FailedToLockFieldDueToConflict() from e
+            else:
+                raise e
+
+        return cast(
+            SpecificFieldForUpdate,
+            specific_field,
         )
 
     def create_field(

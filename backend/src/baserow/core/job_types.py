@@ -1,18 +1,18 @@
 from typing import Any, Dict
-from django.contrib.auth.models import AbstractUser
 
+from django.contrib.auth.models import AbstractUser
 from rest_framework import serializers
+
 from baserow.api.applications.serializers import ApplicationSerializer
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
+from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import DuplicateApplicationActionType
-from baserow.core.db import transaction_atomic, IsolationLevel
 from baserow.core.exceptions import UserNotInGroup, GroupDoesNotExist
 from baserow.core.handler import CoreHandler
+from baserow.core.jobs.registries import JobType
 from baserow.core.jobs.types import AnyJob
 from baserow.core.models import Application, DuplicateApplicationJob
-from baserow.core.jobs.registries import JobType
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
-
-from baserow.core.action.registries import action_type_registry
+from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
 
 
@@ -40,8 +40,14 @@ class DuplicateApplicationJobType(JobType):
         "duplicated_application": ApplicationSerializer(read_only=True),
     }
 
-    def transaction_atomic_context(self):
-        return transaction_atomic(isolation_level=IsolationLevel.REPEATABLE_READ)
+    def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
+        application = (
+            CoreHandler()
+            .get_user_application(job.user, job.original_application_id)
+            .specific
+        )
+        application_type = application_type_registry.get_by_model(application)
+        return application_type.export_safe_transaction_context(application)
 
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser

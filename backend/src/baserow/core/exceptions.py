@@ -131,3 +131,10 @@ class TrashItemDoesNotExist(Exception):
     """
     Raised when the trash item does not exist in the database.
     """
+
+
+class LockConflict(Exception):
+    """
+    Generic base class used for exceptions raised when an operation fails as part of
+    Baserow has been locked for some operation.
+    """

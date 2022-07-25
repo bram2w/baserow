@@ -522,7 +522,7 @@ def test_import_export_lookup_field_trashed_target_field(data_fixture, api_clien
     )
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db(transaction=True)
 def test_import_export_tables_with_lookup_fields(
     data_fixture, django_assert_num_queries
 ):

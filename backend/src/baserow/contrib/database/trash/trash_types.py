@@ -23,6 +23,7 @@ from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
 from .models import TrashedRows
 from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 
 User = get_user_model()
 
@@ -163,7 +164,15 @@ class FieldTrashableItemType(TrashableItemType):
             # for this field no longer exists.
             trash_item_lookup_cache["row_table_model_cache"].pop(field.table.id, None)
 
-        field = field.specific
+        try:
+            field = FieldHandler().get_specific_field_for_update(
+                field.id,
+                nowait=False,
+                lock_table=False,
+                allow_trash=True,
+            )
+        except FieldDoesNotExist:
+            raise TrashItemDoesNotExist()
         field_type = field_type_registry.get_by_model(field)
 
         # Remove the field from the table schema.

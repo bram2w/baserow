@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from baserow.core.action.models import Action
 from baserow.core.action.registries import action_type_registry, ActionScopeStr
+from baserow.core.exceptions import LockConflict
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,8 @@ class ActionHandler:
             with transaction.atomic():
                 for action in actions_being_undone:
                     cls._undo_action(user, action, undone_at)
+        except LockConflict:
+            raise
         except Exception:
             # if any single action fails, rollback and set the same error for all.
             tb = traceback.format_exc()
@@ -197,6 +200,8 @@ class ActionHandler:
                 with transaction.atomic():
                     for action in actions_being_redone:
                         cls._redo_action(user, action)
+            except LockConflict:
+                raise
             except Exception:
                 # if just one action fails, rollback and set the same error for all.
                 tb = traceback.format_exc()

@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.db import transaction
 
 from baserow.core.jobs.registries import job_type_registry
 from baserow.config.celery import app
@@ -25,13 +26,14 @@ def run_async_job(self, job_id: int):
 
     from .cache import job_progress_key
 
-    job = Job.objects.get(id=job_id).specific
-    job_type = job_type_registry.get_by_model(job)
-    job.state = JOB_STARTED
-    job.save()
+    with transaction.atomic():
+        job = Job.objects.get(id=job_id).specific
+        job_type = job_type_registry.get_by_model(job)
+        job.state = JOB_STARTED
+        job.save()
 
     try:
-        with job_type.transaction_atomic_context():
+        with job_type.transaction_atomic_context(job):
             JobHandler().run(job)
 
         job.state = JOB_FINISHED

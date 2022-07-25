@@ -752,7 +752,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     assert len(response_json[f"field_{link_row_field.id}"]) == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.field_link_row
 def test_import_export_link_row_field(data_fixture):
     user = data_fixture.create_user()

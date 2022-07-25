@@ -1,13 +1,16 @@
 import uuid
-import pytest
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
 
 from baserow.api.user.serializers import UndoRedoResultCodeField
+from baserow.contrib.database.fields.models import TextField, NumberField
+from baserow.core.action.models import Action
 from baserow.core.actions import CreateGroupActionType
 from baserow.core.models import Group
+from baserow.test_utils.helpers import independent_test_db_connection
 
 User = get_user_model()
 
@@ -409,3 +412,90 @@ def test_invalid_undo_redo_action_group_header_raise_error(api_client, data_fixt
         "An invalid ClientUndoRedoActionGroupId header was provided. "
         "It must be a valid Version 4 UUID."
     ]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.undo_redo
+def test_undoing_when_field_locked_fails_and_doesnt_skip(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(user, table=table)
+
+    same_session_id = "test"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field.id}),
+        {"name": "Test 1", "type": "number"},
+        format="json",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_field where id = {field.id} FOR SHARE"
+            )
+            assert len(cursor.fetchall()) == 1
+        response = api_client.patch(
+            reverse("api:user:undo"),
+            {"scopes": {"table": table.id}},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+            HTTP_CLIENTSESSIONID=same_session_id,
+        )
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response.json()["error"] == "ERROR_UNDO_REDO_LOCK_CONFLICT"
+
+    assert NumberField.objects.filter(id=field.id).exists()
+    assert not TextField.objects.filter(id=field.id).exists()
+    assert not Action.objects.get().is_undone()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.undo_redo
+def test_redoing_when_field_locked_fails_and_doesnt_skip(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(user, table=table)
+
+    same_session_id = "test"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field.id}),
+        {"name": "Test 1", "type": "number"},
+        format="json",
+        HTTP_CLIENTSESSIONID=same_session_id,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    api_client.patch(
+        reverse("api:user:undo"),
+        {"scopes": {"table": table.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=same_session_id,
+    )
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_field where id = {field.id} FOR SHARE"
+            )
+            assert len(cursor.fetchall()) == 1
+        response = api_client.patch(
+            reverse("api:user:redo"),
+            {"scopes": {"table": table.id}},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+            HTTP_CLIENTSESSIONID=same_session_id,
+        )
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response.json()["error"] == "ERROR_UNDO_REDO_LOCK_CONFLICT"
+
+    assert not NumberField.objects.filter(id=field.id).exists()
+    assert TextField.objects.filter(id=field.id).exists()
+    assert Action.objects.get().is_undone()

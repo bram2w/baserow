@@ -185,7 +185,7 @@ def test_file_field_type(data_fixture):
     assert results[2].text is None
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_import_export_file_field(data_fixture, tmpdir):
     user = data_fixture.create_user()
     imported_group = data_fixture.create_group(user=user)

@@ -38,7 +38,7 @@ class JobType(
     messages.
     """
 
-    def transaction_atomic_context(self):
+    def transaction_atomic_context(self, job: Job):
         """
         This method gives the possibility to change the transaction context per request.
         """
