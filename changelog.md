@@ -29,6 +29,7 @@ For example:
 * Fix the perm delete trash cleanup job failing for self linking tables. [#1075](https://gitlab.com/bramw/baserow/-/issues/1075)
 * Add better error handling to row count job. [#1051](https://gitlab.com/bramw/baserow/-/issues/1051)
 * Ensure the latest error is always shown when clicking the formula refresh options link. [#1092](https://gitlab.com/bramw/baserow/-/issues/1092)
+* Fix backspace and delete keys breaking after selecting a formula text cell. [#1085](https://gitlab.com/bramw/baserow/-/issues/1085)
 
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
