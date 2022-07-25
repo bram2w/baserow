@@ -1,6 +1,7 @@
 from django.db import models
 
 from baserow.core.jobs.models import Job
+from baserow.core.jobs.mixins import JobWithUserDataMixin
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.models import Database
 
@@ -19,7 +20,9 @@ def default_report():
     return {"failing_rows": {}}
 
 
-class FileImportJob(Job):
+class FileImportJob(JobWithUserDataMixin, Job):
+    user_data_to_save = ["user_websocket_id"]
+
     database = models.ForeignKey(
         Database,
         on_delete=models.SET_NULL,
@@ -45,13 +48,6 @@ class FileImportJob(Job):
     )
     first_row_header = models.BooleanField(
         default=False, help_text="Is the first row of the provided data the header?"
-    )
-    user_session_id = models.CharField(
-        max_length=255,
-        default="",
-        null=True,
-        help_text="The user session id to register the action when the action is "
-        "complete.",
     )
     report = models.JSONField(
         default=default_report,

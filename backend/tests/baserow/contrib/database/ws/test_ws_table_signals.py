@@ -10,13 +10,13 @@ from baserow.contrib.database.table.handler import TableHandler
 def test_table_created(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
-    job = TableHandler().create_minimal_table(user=user, database=database, name="Test")
+    table, _ = TableHandler().create_table(user=user, database=database, name="Test")
 
     mock_broadcast_to_group.delay.assert_called_once()
     args = mock_broadcast_to_group.delay.call_args
-    assert args[0][0] == job.table.database.group_id
+    assert args[0][0] == table.database.group_id
     assert args[0][1]["type"] == "table_created"
-    assert args[0][1]["table"]["id"] == job.table.id
+    assert args[0][1]["table"]["id"] == table.id
 
 
 @pytest.mark.django_db(transaction=True)

@@ -6,6 +6,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registries import Plugin
 
 from .table.handler import TableHandler
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 LOREM = (
@@ -32,6 +33,7 @@ class DatabasePlugin(Plugin):
 
         core_handler = CoreHandler()
         table_handler = TableHandler()
+        row_handler = RowHandler()
 
         with override(user.profile.language):
             database = core_handler.create_application(
@@ -61,7 +63,7 @@ class DatabasePlugin(Plugin):
                 ["John", "Von Neumann", "", True],
                 ["Blaise", "Pascal", "", True],
             ]
-            table_handler.import_table_data(user, table, data, sync=True)
+            row_handler.import_rows(user, table, data, send_signal=False)
 
             # Creating the example projects table.
             table = table_handler.create_table_and_fields(
@@ -81,4 +83,4 @@ class DatabasePlugin(Plugin):
                 [_("Computer architecture"), str(date(1945, 1, 1)), False],
                 [_("Cellular Automata"), str(date(1952, 6, 1)), False],
             ]
-            table_handler.import_table_data(user, table, data, sync=True)
+            row_handler.import_rows(user, table, data, send_signal=False)

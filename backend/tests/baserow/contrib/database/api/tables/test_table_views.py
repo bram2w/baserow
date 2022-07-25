@@ -127,7 +127,7 @@ def test_create_table(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     json_response = response.json()
 
-    job = FileImportJob.objects.get(id=json_response)
+    job = FileImportJob.objects.get(id=json_response["id"])
 
     assert job.table is not None
     assert job.table.name == "Test 1"
@@ -179,9 +179,9 @@ def test_create_table_with_data(
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
 
-    mock_run_async_job.delay.assert_called_with(response_json)
+    mock_run_async_job.delay.assert_called_with(response_json["id"])
 
-    job = FileImportJob.objects.get(id=response_json)
+    job = FileImportJob.objects.get(id=response_json["id"])
 
     assert job.table is None
     assert job.name == "Test 1"

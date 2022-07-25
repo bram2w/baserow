@@ -21,6 +21,13 @@ export default (client) => {
         config
       )
     },
+    importData(tableId, data, config = null) {
+      return client.post(
+        `/database/tables/${tableId}/import/async/`,
+        { data },
+        config
+      )
+    },
     get(tableId) {
       return client.get(`/database/tables/${tableId}/`)
     },

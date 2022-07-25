@@ -1,6 +1,12 @@
 from django.urls import re_path
 
-from .views import TablesView, TableView, OrderTablesView, AsyncCreateTableView
+from .views import (
+    TablesView,
+    TableView,
+    OrderTablesView,
+    AsyncCreateTableView,
+    AsyncTableImportView,
+)
 
 
 app_name = "baserow.contrib.database.api.tables"
@@ -18,4 +24,9 @@ urlpatterns = [
         name="order",
     ),
     re_path(r"(?P<table_id>[0-9]+)/$", TableView.as_view(), name="item"),
+    re_path(
+        r"(?P<table_id>[0-9]+)/import/async/$",
+        AsyncTableImportView.as_view(),
+        name="import_async",
+    ),
 ]

@@ -322,7 +322,7 @@
         "firstRowHeader": "La prima riga è l'intestazione",
         "limitError": "Non è possibile importare più di {limit} righe."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Crea nuova tabella",
         "importLabel": "Vuoi importare i dati esistenti?",
         "newTable": "Inizia con una nuova tabella",

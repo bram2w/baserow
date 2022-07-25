@@ -15,9 +15,7 @@ from baserow.contrib.database.fields.exceptions import (
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.fields.models import TextField
-from baserow.contrib.database.file_import.exceptions import (
-    FileImportMaxErrorCountExceeded,
-)
+from baserow.contrib.database.rows.exceptions import ReportMaxErrorCountExceeded
 from baserow.contrib.database.table.exceptions import (
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
@@ -150,7 +148,7 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     assert text_fields[1].name == "Field 2"
     assert text_fields[2].name == "Field 3"
 
-    # Robust to strange names
+    # Robust to strange field names
     with patch_filefield_storage():
         job = data_fixture.create_file_import_job(
             data=[
@@ -179,82 +177,23 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     assert text_fields[5].name == "1.3"
     assert text_fields[6].name == "/w. r/awr"
 
-    data = [
-        ["1-1", 1, 1.55, "x" * 260, "x"],
-        ["2-1", 2, 1, "i", "."],
-        ["3-1", 3, 2.4, "i", "."],
-        ["3-1", 3, 2.4, "x" * 260, "x" * 260],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, "x" * 260],
-        ["3-1", 3, 2.4, "x" * 260],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, "x" * 260],
-        ["3-1", int("3" * 50), 2.4, None],
-        ["3-1", 3, 2.4, "x" * 260],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4, None],
-        ["3-1", 3, 2.4888888888, None],
-        ["3-1", 3.2, 123445.12345, None],
-    ]
+    table = data_fixture.create_database_table(user=job.user)
+    data_fixture.create_text_field(table=table, order=1, name="Name")
+    data_fixture.create_number_field(
+        table=table, order=2, name="Number 1", number_negative=True
+    )
+    data_fixture.create_created_on_field(table=table, order=2, name="Created_on")
+    number_field = data_fixture.create_number_field(
+        table=table,
+        order=3,
+        name="Number 2",
+        number_negative=True,
+        number_decimal_places=10,
+    )
+    data_fixture.create_text_field(table=table, order=4, name="Text 1")
+    data_fixture.create_text_field(table=table, order=5, name="Text 2")
 
-    # Test type guessing but low error threshold
-    with override_settings(
-        BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD=0
-    ), patch_filefield_storage():
-        job = data_fixture.create_file_import_job(data=data, first_row_header=False)
-        run_async_job(job.id)
-
-    job.refresh_from_db()
-
-    table = job.table
     model = table.get_model()
-    rows = model.objects.all()
-    assert len(rows) == 20
-
-    fields = table.field_set.all()
-
-    assert fields.count() == 5
-
-    field1, field2, field3, field4, field5 = fields
-
-    assert isinstance(field1.specific, TextField)
-    assert isinstance(field2.specific, TextField)
-    assert isinstance(field3.specific, TextField)
-    assert isinstance(field4.specific, TextField)
-    assert isinstance(field5.specific, TextField)
-
-    assert getattr(rows[0], field3.db_column) == "1.55"
-
-    # Test type guessing with error threshold
-    with override_settings(
-        BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD=10
-    ), patch_filefield_storage():
-        job = data_fixture.create_file_import_job(data=data, first_row_header=False)
-        run_async_job(job.id)
-
-    job.refresh_from_db()
-
-    table = job.table
-    model = table.get_model()
-    rows = model.objects.all()
-    assert len(rows) == 20
-
-    fields = table.field_set.all()
-
-    assert fields.count() == 5
-
-    field1, field2, field3, field4, field5 = fields
-
-    assert isinstance(field1.specific, TextField)
-    assert isinstance(field2.specific, TextField)
-    assert isinstance(field3.specific, TextField)
-    assert isinstance(field4.specific, TextField)
-    assert isinstance(field5.specific, TextField)
 
     # Import data to an existing table
     data = [["baz", 3, -3, "foo", None], ["bob", -4, 2.5, "bar", "a" * 255]]
@@ -265,15 +204,20 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
         )
         run_async_job(job.id)
 
-    rows = model.objects.all()
-    assert len(rows) == 22
+    job.refresh_from_db()
 
-    # Import data with error
+    assert not job.report["failing_rows"]
+
+    rows = model.objects.all()
+    assert len(rows) == 2
+
+    # Import data with different length
     data = [
         ["good", "test", "test", "Anything"],
         [],
         [None, None],
         ["good", 2.5, None, "Anything"],
+        ["good", 2.5, None, "Anything", "too much", "values"],
     ]
 
     with patch_filefield_storage():
@@ -285,59 +229,9 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     job.refresh_from_db()
 
     rows = model.objects.all()
-    assert len(rows) == 26
+    assert len(rows) == 2 + 2
 
-    assert sorted(job.report["failing_rows"].keys()) == []
-
-    # Change user language to test message i18n
-    job.user.profile.language = "fr"
-    job.user.profile.save()
-
-    data = [["good", "ugly", "bad"]]
-
-    with patch_filefield_storage():
-        job = data_fixture.create_file_import_job(
-            user=job.user, database=table.database, table=table, data=data
-        )
-        run_async_job(job.id)
-
-    job.refresh_from_db()
-
-    assert job.report["failing_rows"] == {}
-
-    data = [
-        [1.3],
-        [1.12345678901],  # this one is too long for decimal field
-    ]
-
-    with override_settings(
-        BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD=0
-    ), patch_filefield_storage():
-        job = data_fixture.create_file_import_job(data=data, first_row_header=False)
-        run_async_job(job.id)
-
-    job.refresh_from_db()
-    fields = job.table.field_set.all()
-    assert fields.count() == 1
-    field1 = fields[0]
-    assert isinstance(field1.specific, TextField)
-
-    data = [
-        [1],
-        ["1" * 51],  # Too long
-    ]
-
-    with override_settings(
-        BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD=0
-    ), patch_filefield_storage():
-        job = data_fixture.create_file_import_job(data=data, first_row_header=False)
-        run_async_job(job.id)
-
-    job.refresh_from_db()
-    fields = job.table.field_set.all()
-    assert fields.count() == 1
-    field1 = fields[0]
-    assert isinstance(field1.specific, TextField)
+    assert sorted(job.report["failing_rows"].keys()) == ["0", "3", "4"]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -348,7 +242,7 @@ def test_run_file_import_task_for_special_fields(data_fixture, patch_filefield_s
 
     # number field updating another table through link & formula
     number_field = data_fixture.create_number_field(
-        table=table_b, order=1, name="Number"
+        table=table_b, order=0, name="Number"
     )
     formula_field = data_fixture.create_formula_field(
         table=table,
@@ -612,7 +506,7 @@ def test_run_file_import_test_chunk(data_fixture, patch_filefield_storage):
 def test_run_file_import_limit(data_fixture, patch_filefield_storage):
 
     row_count = 2000
-    max_error = settings.BASEROW_MAX_FILE_IMPORT_ERROR_COUNT
+    max_error = settings.BASEROW_MAX_ROW_REPORT_ERROR_COUNT
 
     user = data_fixture.create_user()
 
@@ -640,7 +534,7 @@ def test_run_file_import_limit(data_fixture, patch_filefield_storage):
     with patch_filefield_storage():
         job = data_fixture.create_file_import_job(table=table, data=data, user=user)
 
-        with pytest.raises(FileImportMaxErrorCountExceeded):
+        with pytest.raises(ReportMaxErrorCountExceeded):
             run_async_job(job.id)
 
     job.refresh_from_db()
@@ -661,7 +555,7 @@ def test_run_file_import_limit(data_fixture, patch_filefield_storage):
     with patch_filefield_storage():
         job = data_fixture.create_file_import_job(table=table, data=data, user=user)
 
-        with pytest.raises(FileImportMaxErrorCountExceeded):
+        with pytest.raises(ReportMaxErrorCountExceeded):
             run_async_job(job.id)
 
     job.refresh_from_db()
@@ -673,7 +567,7 @@ def test_run_file_import_limit(data_fixture, patch_filefield_storage):
     assert job.human_readable_error == "This file import has raised too many errors."
 
     assert (
-        len(job.report["failing_rows"]) == settings.BASEROW_MAX_FILE_IMPORT_ERROR_COUNT
+        len(job.report["failing_rows"]) == settings.BASEROW_MAX_ROW_REPORT_ERROR_COUNT
     )
 
     assert len(job.report["failing_rows"]) == max_error

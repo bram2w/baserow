@@ -78,6 +78,7 @@ class DatabaseConfig(AppConfig):
         from .rows.actions import (
             CreateRowActionType,
             CreateRowsActionType,
+            ImportRowsActionType,
             DeleteRowActionType,
             DeleteRowsActionType,
             MoveRowActionType,
@@ -87,6 +88,7 @@ class DatabaseConfig(AppConfig):
 
         action_type_registry.register(CreateRowActionType())
         action_type_registry.register(CreateRowsActionType())
+        action_type_registry.register(ImportRowsActionType())
         action_type_registry.register(DeleteRowActionType())
         action_type_registry.register(DeleteRowsActionType())
         action_type_registry.register(MoveRowActionType())

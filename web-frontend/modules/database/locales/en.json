@@ -308,6 +308,7 @@
         "emptyCSV": "This CSV file is empty."
     },
     "importer": {
+        "fieldDefaultName": "Field {count}",
         "loading": "Loading file",
         "decoding": "Decoding data",
         "parsing": "Parsing data",
@@ -347,11 +348,14 @@
         "firstRowHeader": "First row is header",
         "limitError": "It is not possible to import more than {limit} rows."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Create new table",
+        "additionalImportTitle": "Import into {table}",
         "importLabel": "Would you like to import existing data?",
         "newTable": "Start with a new table",
         "addButton": "Add table",
+        "showTable": "show table",
+        "importButton": "Import",
         "uploading": "Uploading...",
         "preparing": "Preparing data...",
         "importError": "Something went wrong during the file import",
@@ -362,7 +366,10 @@
         "reportMessage": "The following row indexes couldn't be imported:",
         "stateRowCreation": "Importing...",
         "statePreValidation": "Validating data...",
-        "stateCreateTable": "Creating table..."
+        "stateCreateTable": "Creating table...",
+        "fieldMappingTitle": "Field mapping",
+        "fieldMappingDescription": "We have automatically mapped the columns of the Baserow fields in your table. You can change them below. Any incompatible cell will remain empty after the import.",
+        "selectImportMessage": "Please select data to import."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Click to edit the formula",
@@ -478,6 +485,7 @@
         "duplicateView": "Duplicate view",
         "renameView": "Rename view",
         "webhooks": "Webhooks",
+        "importFile": "Import file",
         "deleteView": "Delete view"
     },
     "deleteViewModal": {

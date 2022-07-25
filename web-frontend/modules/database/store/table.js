@@ -96,7 +96,7 @@ export const actions = {
         onUploadProgress,
       }
     )
-    // The returned data is a the job table creation id
+    // The returned data is a table creation job
     return data
   },
   /**

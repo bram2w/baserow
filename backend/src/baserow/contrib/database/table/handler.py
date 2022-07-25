@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import gettext as _
 
+from baserow.core.utils import Progress
 from baserow.contrib.database.db.schema import (
     safe_django_schema_editor,
 )
@@ -25,20 +26,23 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
-from baserow.core.jobs.handler import JobHandler
-from baserow.core.jobs.models import Job
 from baserow.core.trash.handler import TrashHandler
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
-    InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
     FailedToLockTableDueToConflict,
 )
+from baserow.contrib.database.rows.handler import RowHandler
+
 from .models import Table
-from .signals import table_updated, table_deleted, tables_reordered
+from .signals import table_created, table_updated, table_deleted, tables_reordered
+from .constants import TABLE_CREATION
+
+
+BATCH_SIZE = 1024
 
 TableForUpdate = NewType("TableForUpdate", Table)
 
@@ -118,11 +122,14 @@ class TableHandler:
         name: str,
         data: Optional[List[List[Any]]] = None,
         first_row_header: bool = True,
-        session: Optional[str] = None,
-        sync: bool = False,
-    ) -> Job:
+        fill_example: bool = False,
+        progress: Optional[Progress] = None,
+    ):
         """
-        Starts a new job to create a new table from optional provided data.
+        Creates a new table from optionally provided data. If no data is specified,
+        and fill_example is True, the new table will contain demo data. If fill_example
+        is `False` the table will be empty.
+        Send a `table_created` signal at the end of the process.
 
         :param user: The user on whose behalf the table is created.
         :param database: The database that the table instance belongs to.
@@ -132,98 +139,37 @@ class TableHandler:
         :param first_row_header: Indicates if the first row are the fields. The names
             of these rows are going to be used as fields. If `fields` is provided,
             this options is ignored.
-        :param session: The user session Id used to register the action.
-        :param sync: Set to True if you want to execute the task synchronously.
-        :return: The created job instance.
-        """
-
-        database.group.has_user(user, raise_error=True)
-
-        if sync:
-            limit = settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT
-            if limit and len(data) > limit:
-                raise InitialSyncTableDataLimitExceeded(
-                    f"It is not possible to import more than "
-                    f"{settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT} rows "
-                    "when creating a table synchronously. Use Asynchronous "
-                    "alternative instead."
-                )
-
-        job = JobHandler().create_and_start_job(
-            user,
-            "file_import",
-            database=database,
-            name=name,
-            data=data,
-            first_row_header=first_row_header,
-            user_session_id=session,
-            sync=sync,
-        )
-        return job
-
-    def create_minimal_table(
-        self,
-        user: AbstractUser,
-        database: Database,
-        name: str,
-        fill_example: bool = False,
-        session: Optional[str] = None,
-    ) -> Job:
-        """
-        Creates a new minimum table with only one text field and no data.
-
-        :param user: The user on whose behalf the table is created.
-        :param database: The database that the table instance belongs to.
-        :param name: The name of the table is created.
         :param fill_example: Fill the table with example field and data.
-        :param session: The user session Id used to register the action.
-        :return: The created job instance.
+        :param progress: An optional progress instance if you want to track the progress
+            of the task.
+        :return: The created table and the error report.
         """
 
         database.group.has_user(user, raise_error=True)
 
-        with translation.override(user.profile.language):
-            if fill_example:
-                fields, data = self.get_example_table_field_and_data()
-            else:
-                fields, data = self.get_minimal_table_field_and_data()
+        if progress:
+            progress.increment(0, state=TABLE_CREATION)
+
+        if data is not None:
+            (fields, data,) = self.normalize_initial_table_data(
+                data, first_row_header=first_row_header
+            )
+        else:
+            with translation.override(user.profile.language):
+                if fill_example:
+                    fields, data = self.get_example_table_field_and_data()
+                else:
+                    fields, data = self.get_minimal_table_field_and_data()
 
         table = self.create_table_and_fields(user, database, name, fields)
 
-        job = self.import_table_data(user, table, data, session=session, sync=True)
-
-        return job
-
-    def import_table_data(
-        self,
-        user: AbstractUser,
-        table: Table,
-        data: List[List[Any]],
-        session: Optional[str] = None,
-        sync: bool = False,
-    ) -> Job:
-        """
-        Creates job to import data into the specified table.
-
-        :param user: The user on whose behalf the table is created.
-        :param table: The table we want the data to be inserted.
-        :param data: A list containing all the rows that need to be inserted is
-            expected.
-        :param session: The user session Id used to register the action.
-        :param sync: Set to True if you want to execute the task synchronously.
-        :return: The created job instance.
-        """
-
-        job = JobHandler().create_and_start_job(
-            user,
-            "file_import",
-            data=data,
-            table=table,
-            user_session_id=session,
-            sync=sync,
+        _, error_report = RowHandler().import_rows(
+            user, table, data, progress=progress, send_signal=False
         )
 
-        return job
+        table_created.send(self, table=table, user=user)
+
+        return table, error_report
 
     def create_table_and_fields(
         self,
@@ -295,28 +241,24 @@ class TableHandler:
 
         return table
 
-    def normalize_initial_table_data_and_guess_types(
+    def normalize_initial_table_data(
         self, data: List[List[Any]], first_row_header: bool
     ) -> Tuple[List, List]:
         """
         Normalizes the provided initial table data. The amount of columns will be made
-        equal for each row. The header and the rows will also be separated. Try to guess
-        the field type by counting the occurrence of all values type in data. The
-        guesser try to be as safer as possible but by setting the value
-        `settings.BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD` to something greater
-        than 0 we allow this percentage of rows to fail import to have more precise
-        types.
+        equal for each row. The header and the rows will also be separated.
 
         :param data: A list containing all the provided rows.
         :param first_row_header: Indicates if the first row is the header. For each
             of these header columns a field is going to be created.
-        :return: A list containing the field names and a list containing all the rows.
         :raises InvalidInitialTableData: When the data doesn't contain a column or row.
         :raises MaxFieldNameLengthExceeded: When the provided name is too long.
         :raises InitialTableDataDuplicateName: When duplicates exit in field names.
         :raises ReservedBaserowFieldNameException: When the field name is reserved by
             Baserow.
-        :raises InvalidBaserowFieldName: When the field name is invalid (emtpy).
+        :raises InvalidBaserowFieldName: When the field name is invalid (empty).
+        :return: A list containing the field names with a type and a list containing all
+            the rows.
         """
 
         if len(data) == 0:
@@ -364,22 +306,10 @@ class TableHandler:
         if "" in field_name_set:
             raise InvalidBaserowFieldName()
 
-        normalized_data = []
+        fields_with_type = [(field_name, "text", {}) for field_name in fields]
+        result = [[str(value) for value in row] for row in data]
 
-        for row in data:
-            new_row = list(row)
-
-            # Fill incomplete rows with empty values
-            for i in range(len(new_row), largest_column_count):
-                new_row.append(None)
-
-            normalized_data.append(new_row)
-
-        field_with_type = []
-        for index, field_name in enumerate(fields):
-            field_with_type.append((field_name, "text", {}))
-
-        return field_with_type, normalized_data
+        return fields_with_type, result
 
     def get_example_table_field_and_data(self):
         """
