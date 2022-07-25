@@ -1,5 +1,5 @@
-from django.db import transaction
 from django.conf import settings
+from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import permission_classes as method_permission_classes
@@ -21,7 +21,6 @@ from baserow.api.schemas import (
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
-from baserow.core.db import specific_iterator
 from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_DELETE_PRIMARY_FIELD,
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
@@ -33,10 +32,23 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_SELF_REFERENCE,
     ERROR_FIELD_CIRCULAR_REFERENCE,
     ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
+    ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
 )
-from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
+from baserow.contrib.database.api.tables.errors import (
+    ERROR_TABLE_DOES_NOT_EXIST,
+    ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
+)
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
+from baserow.contrib.database.fields.actions import (
+    UpdateFieldActionType,
+    CreateFieldActionType,
+    DeleteFieldActionType,
+)
+from baserow.contrib.database.fields.dependencies.exceptions import (
+    SelfReferenceFieldDependencyError,
+    CircularFieldDependencyError,
+)
 from baserow.contrib.database.fields.exceptions import (
     CannotDeletePrimaryField,
     CannotChangeFieldType,
@@ -46,15 +58,20 @@ from baserow.contrib.database.fields.exceptions import (
     FieldWithSameNameAlreadyExists,
     InvalidBaserowFieldName,
     IncompatibleFieldTypeForUniqueValues,
+    FailedToLockFieldDueToConflict,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.exceptions import (
+    TableDoesNotExist,
+    FailedToLockTableDueToConflict,
+)
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
+from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .serializers import (
@@ -65,15 +82,6 @@ from .serializers import (
     RelatedFieldsSerializer,
     UniqueRowValueParamsSerializer,
     UniqueRowValuesSerializer,
-)
-from baserow.contrib.database.fields.dependencies.exceptions import (
-    SelfReferenceFieldDependencyError,
-    CircularFieldDependencyError,
-)
-from baserow.contrib.database.fields.actions import (
-    UpdateFieldActionType,
-    CreateFieldActionType,
-    DeleteFieldActionType,
 )
 
 
@@ -213,6 +221,7 @@ class FieldsView(APIView):
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
             CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
+            FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
         }
     )
     def post(self, request, data, table_id):
@@ -220,7 +229,9 @@ class FieldsView(APIView):
 
         type_name = data.pop("type")
         field_type = field_type_registry.get(type_name)
-        table = TableHandler().get_table(table_id)
+        table = TableHandler().get_table_for_update(
+            table_id, nowait=not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR
+        )
         table.database.group.has_user(request.user, raise_error=True)
 
         # field_create permission doesn't exists, so any call of this endpoint with a
@@ -340,6 +351,7 @@ class FieldView(APIView):
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
             CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
+            FailedToLockFieldDueToConflict: ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
         }
     )
     def patch(self, request, field_id):

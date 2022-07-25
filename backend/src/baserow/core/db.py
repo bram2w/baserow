@@ -1,10 +1,12 @@
+import contextlib
 from collections import defaultdict
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Tuple, List, Any
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import DEFAULT_DB_ALIAS
+from django.db import DEFAULT_DB_ALIAS, transaction
 from django.db.models import QuerySet, Model
 from django.db.transaction import Atomic, get_connection
+from psycopg2 import sql
 
 
 class LockedAtomicTransaction(Atomic):
@@ -139,36 +141,24 @@ class IsolationLevel:
     SERIALIZABLE = "SERIALIZABLE"
 
 
-class BaserowAtomic(Atomic):
-    def __init__(
-        self,
-        using,
-        savepoint,
-        durable,
-        isolation_level: Optional[str] = None,
-    ):
-        super().__init__(using, savepoint, durable)
-        self.isolation_level = isolation_level
-
-    def __enter__(self):
-        super().__enter__()
-        if self.isolation_level:
-            cursor = get_connection(self.using).cursor()
-            cursor.execute("SET TRANSACTION ISOLATION LEVEL %s" % self.isolation_level)
-
-
+@contextlib.contextmanager
 def transaction_atomic(
     using=None,
     savepoint=True,
     durable=False,
     isolation_level: Optional[str] = None,
+    first_sql_to_run_in_transaction_with_args: Optional[
+        Tuple[sql.SQL, List[Any]]
+    ] = None,
 ):
-    # Bare decorator: @atomic -- although the first argument is called
-    # `using`, it's actually the function being decorated.
-    if callable(using):
-        return BaserowAtomic(DEFAULT_DB_ALIAS, savepoint, durable, isolation_level)(
-            using
-        )
-    # Decorator: @atomic(...) or context manager: with atomic(...): ...
-    else:
-        return BaserowAtomic(using, savepoint, durable, isolation_level)
+    with transaction.atomic(using, savepoint, durable) as a:
+        if isolation_level or first_sql_to_run_in_transaction_with_args:
+            cursor = get_connection(using).cursor()
+
+            if isolation_level:
+                cursor.execute("SET TRANSACTION ISOLATION LEVEL %s" % isolation_level)
+
+            if first_sql_to_run_in_transaction_with_args:
+                first_sql, first_args = first_sql_to_run_in_transaction_with_args
+                cursor.execute(first_sql, first_args)
+        yield a

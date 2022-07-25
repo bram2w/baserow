@@ -172,7 +172,7 @@ def test_created_on_field_type_wrong_timezone(data_fixture):
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_import_export_last_modified_field(data_fixture):
     user = data_fixture.create_user()
     imported_group = data_fixture.create_group(user=user)

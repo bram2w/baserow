@@ -12,10 +12,12 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
 )
 
 from baserow.contrib.database.file_import.models import FileImportJob
 from baserow.contrib.database.table.models import Table
+from baserow.test_utils.helpers import independent_test_db_connection
 
 
 @pytest.mark.django_db
@@ -447,3 +449,97 @@ def test_get_database_application_with_tables(api_client, data_fixture):
     assert len(response_json["tables"]) == 2
     assert response_json["tables"][0]["id"] == table_1.id
     assert response_json["tables"][1]["id"] == table_2.id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_table_returns_with_error_if_cant_lock_table_if_locked_for_update(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR UPDATE"
+            )
+            response = api_client.patch(
+                reverse("api:database:tables:item", kwargs={"table_id": table.id}),
+                {"name": "Test 1"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_table_returns_with_error_if_cant_lock_table_if_locked_for_share(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR SHARE"
+            )
+            response = api_client.patch(
+                reverse("api:database:tables:item", kwargs={"table_id": table.id}),
+                {"name": "Test 1"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_delete_table_returns_with_error_if_cant_lock_table_if_locked_for_update(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR UPDATE"
+            )
+            response = api_client.delete(
+                reverse("api:database:tables:item", kwargs={"table_id": table.id}),
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_delete_table_returns_with_error_if_cant_lock_table_if_locked_for_share(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR SHARE"
+            )
+            response = api_client.delete(
+                reverse("api:database:tables:item", kwargs={"table_id": table.id}),
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"

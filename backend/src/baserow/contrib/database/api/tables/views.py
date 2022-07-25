@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from baserow.api.sessions import get_untrusted_client_session_id
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -37,6 +38,7 @@ from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
     InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
+    FailedToLockTableDueToConflict,
 )
 from baserow.contrib.database.table.actions import (
     DeleteTableActionType,
@@ -58,6 +60,7 @@ from .errors import (
     ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+    ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
 )
 from .serializers import (
     TableSerializer,
@@ -342,6 +345,7 @@ class TableView(APIView):
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
         }
     )
     @validate_body(TableUpdateSerializer)
@@ -350,7 +354,10 @@ class TableView(APIView):
 
         table = action_type_registry.get_by_type(UpdateTableActionType).do(
             request.user,
-            TableHandler().get_table_for_update(table_id),
+            TableHandler().get_table_for_update(
+                table_id,
+                nowait=not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR,
+            ),
             name=data["name"],
         )
 
@@ -388,13 +395,18 @@ class TableView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
+            FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
         }
     )
     def delete(self, request, table_id):
         """Deletes an existing table."""
 
         action_type_registry.get_by_type(DeleteTableActionType).do(
-            request.user, TableHandler().get_table_for_update(table_id)
+            request.user,
+            TableHandler().get_table_for_update(
+                table_id,
+                nowait=not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR,
+            ),
         )
 
         return Response(status=204)

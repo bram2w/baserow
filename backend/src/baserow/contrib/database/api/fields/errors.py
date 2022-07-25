@@ -1,4 +1,8 @@
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+)
 
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 
@@ -100,4 +104,10 @@ ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES = (
     "ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES",
     HTTP_400_BAD_REQUEST,
     "The requested field type is not compatible with generating unique values.",
+)
+ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT = (
+    "ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT",
+    HTTP_409_CONFLICT,
+    "The requested field is already being updated or used by another operation, "
+    "please try again after other concurrent operations have finished.",
 )

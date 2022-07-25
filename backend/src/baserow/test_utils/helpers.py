@@ -1,8 +1,11 @@
+import contextlib
 from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Type
 
+import psycopg2
 from django.contrib.auth.models import AbstractUser
+from django.db import connection
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.timezone import make_aware, utc
 from freezegun import freeze_time
@@ -373,3 +376,18 @@ def assert_undo_redo_actions_fails_with_error(
     for action, expected_action_type in zip(actions, expected_action_types):
         assert action, "Action is None, but should be of type {expected_action_type}"
         assert action.error is not None, "Action has no error, but should have one"
+
+
+@contextlib.contextmanager
+def independent_test_db_connection():
+    d = connection.settings_dict
+    conn = psycopg2.connect(
+        host=d["HOST"],
+        database=d["NAME"],
+        user=d["USER"],
+        password=d["PASSWORD"],
+        port=d["PORT"],
+    )
+    conn.autocommit = False
+    yield conn
+    conn.close()

@@ -946,7 +946,7 @@ def test_get_template(data_fixture):
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_export_import_group_application(data_fixture):
     group = data_fixture.create_group()
     imported_group = data_fixture.create_group()

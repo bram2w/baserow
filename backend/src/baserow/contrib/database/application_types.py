@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from zipfile import ZipFile
 
-from django.core.management.color import no_style
 from django.core.files.storage import Storage
+from django.core.management.color import no_style
 from django.db import connection
+from django.db.transaction import Atomic
 from django.urls import path, include
 from django.utils import timezone
 
@@ -16,7 +17,6 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.views.registries import view_type_registry
@@ -26,6 +26,7 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 from baserow.core.utils import grouper
 from .constants import IMPORT_SERIALIZED_IMPORTING, IMPORT_SERIALIZED_IMPORTING_TABLE
+from .db.atomic import read_repeatable_single_database_atomic_transaction
 from .export_serialized import DatabaseExportSerializedStructure
 
 
@@ -56,19 +57,8 @@ class DatabaseApplicationType(ApplicationType):
             path("database/", include(api_urls, namespace=self.type)),
         ]
 
-    def _lock_table_fields_for_share(self, table_ids: List[int]):
-        """
-        Locks for share all the fields in the tables with the provided `table_ids`.
-
-        This function set locks FOR SHARE to prevent ALTER TABLE and other
-        DDL (non MVCC friendly) commands to change the table schema and break the
-        transaction isolation level, causing potential errors or data inconsistencies
-        during long read-only operations (e.g. export serialized).
-        """
-
-        return Field.objects.raw(
-            "SELECT * FROM database_field WHERE table_id IN %s FOR SHARE", [table_ids]
-        )
+    def export_safe_transaction_context(self, application) -> Atomic:
+        return read_repeatable_single_database_atomic_transaction(application.id)
 
     def export_serialized(
         self,
@@ -90,10 +80,6 @@ class DatabaseApplicationType(ApplicationType):
             "view_set__viewfilter_set",
             "view_set__viewsort_set",
         )
-
-        table_ids = [table.id for table in tables]
-        if table_ids:
-            self._lock_table_fields_for_share(table_ids)
 
         serialized_tables = []
         for table in tables:

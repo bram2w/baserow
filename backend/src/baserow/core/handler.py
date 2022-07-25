@@ -937,9 +937,10 @@ class CoreHandler:
             for a in applications:
                 application = a.specific
                 application_type = application_type_registry.get_by_model(application)
-                exported_application = application_type.export_serialized(
-                    application, files_zip, storage
-                )
+                with application_type.export_safe_transaction_context(application):
+                    exported_application = application_type.export_serialized(
+                        application, files_zip, storage
+                    )
                 exported_applications.append(exported_application)
 
         return exported_applications
