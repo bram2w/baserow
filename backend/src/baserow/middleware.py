@@ -1,4 +1,5 @@
 from typing import Callable
+from django.conf import settings
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.urls import is_valid_path
@@ -36,7 +37,7 @@ def json_error_404_not_found(path: str) -> HttpResponse:
 
 def json_is_accepted(request: HttpRequest) -> bool:
     accept_headers = request.headers.get("accept", "")
-    return "application/json" in accept_headers or accept_headers == "*/*"
+    return "application/json" in accept_headers or accept_headers in ["*/*", ""]
 
 
 class BaserowCustomHttp404Middleware:
@@ -46,9 +47,15 @@ class BaserowCustomHttp404Middleware:
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
 
-        if response.status_code == 404 and json_is_accepted(request):
+        if response.status_code == 404:
             path, urlconf = request.path_info, getattr(request, "urlconf", None)
-            if is_valid_path(f"{path}/", urlconf):
+            if (
+                is_valid_path(path, urlconf)
+                or settings.DEBUG
+                and not json_is_accepted(request)
+            ):
+                return response
+            elif is_valid_path(f"{path}/", urlconf):
                 return json_error_404_add_trailing_slash(path)
             else:
                 return json_error_404_not_found(path)

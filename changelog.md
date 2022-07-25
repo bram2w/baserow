@@ -19,6 +19,7 @@ For example:
 * Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call. [#951](https://gitlab.com/bramw/baserow/-/issues/951)
 * Applications can now be duplicated. [#960](https://gitlab.com/bramw/baserow/-/issues/960)
 * Added option to use view's filters and sorting when listing rows. [#190](https://gitlab.com/bramw/baserow/-/issues/190)
+* Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
 
 ### Bug Fixes
 
