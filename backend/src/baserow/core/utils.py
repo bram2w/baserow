@@ -599,3 +599,21 @@ class ChildProgressBuilder:
             return parent.create_child(represents_progress, child_total)
         else:
             return Progress(child_total)
+
+
+class MirrorDict(dict):
+    """
+    This dict will always return the same value as the key. It can be used to
+    replicate non existing mapping that must return the same values
+
+    d = MirrorDict()
+    d['test'] == 'test'
+    d[1] == 1
+    d.get('test') == 'test'
+    """
+
+    def __getitem__(self, key):
+        return key
+
+    def get(self, key, default=None):
+        return key

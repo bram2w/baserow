@@ -40,6 +40,7 @@ from baserow.core.utils import (
     set_allowed_attrs,
     get_model_reference_field_name,
     find_unused_name,
+    MirrorDict,
 )
 from .exceptions import (
     ViewDoesNotExist,
@@ -237,7 +238,6 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(original_view)
-        fields = original_view.table.field_set.all()
 
         # Use export/import to duplicate the view easily
         serialized = view_type.export_serialized(original_view)
@@ -251,9 +251,12 @@ class ViewHandler:
         if "public" in serialized:
             serialized["public"] = False
 
+        # We're using the MirrorDict here because the fields and select options in
+        # the mapping remain the same. They haven't change because we're only
+        # reimporting the view and not the table, fields, etc.
         id_mapping = {
-            "database_fields": {field.id: field.id for field in fields},
-            "database_field_select_options": {},
+            "database_fields": MirrorDict(),
+            "database_field_select_options": MirrorDict(),
         }
         duplicated_view = view_type.import_serialized(
             original_view.table, serialized, id_mapping
