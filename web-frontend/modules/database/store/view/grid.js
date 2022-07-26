@@ -1647,6 +1647,28 @@ export const actions = {
     }
   },
   /**
+   * Set the multiple select indexes using the row and field head and tail indexes.
+   */
+  setMultipleSelect(
+    { commit },
+    { rowHeadIndex, fieldHeadIndex, rowTailIndex, fieldTailIndex }
+  ) {
+    commit('UPDATE_MULTISELECT', {
+      position: 'head',
+      rowIndex: rowHeadIndex,
+      fieldIndex: fieldHeadIndex,
+    })
+    commit('UPDATE_MULTISELECT', {
+      position: 'tail',
+      rowIndex: rowTailIndex,
+      fieldIndex: fieldTailIndex,
+    })
+    commit('SET_MULTISELECT_ACTIVE', true)
+    // Unselect a single selected cell because we've just updated the multiple
+    // selected and we don't want that to conflict.
+    commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
+  },
+  /**
    * This action is used by the grid view to change multiple cells when pasting
    * multiple values. It figures out which cells need to be changed, makes a request
    * to the backend and updates the affected rows in the store.
@@ -1671,20 +1693,12 @@ export const actions = {
     // paste in, so the user can see which values have been updated. This is because
     // it could be that there are more or less values in the clipboard compared to
     // what was originally selected.
-    commit('UPDATE_MULTISELECT', {
-      position: 'head',
-      rowIndex: rowHeadIndex,
-      fieldIndex: fieldHeadIndex,
+    await dispatch('setMultipleSelect', {
+      rowHeadIndex,
+      fieldHeadIndex,
+      rowTailIndex,
+      fieldTailIndex,
     })
-    commit('UPDATE_MULTISELECT', {
-      position: 'tail',
-      rowIndex: rowTailIndex,
-      fieldIndex: fieldTailIndex,
-    })
-    commit('SET_MULTISELECT_ACTIVE', true)
-    // Unselect a single selected cell because we've just updated the multiple
-    // selected and we don't want that to conflict.
-    commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
 
     // Figure out which rows are already in the buffered and temporarily store them
     // in an array.

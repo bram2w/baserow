@@ -10,6 +10,7 @@ For example:
 -->
 
 ### New Features
+
 * Add configs and docs for VSCode setup. [#854](https://gitlab.com/bramw/baserow/-/issues/854)
 * Added `in this week` filter [#569](https://gitlab.com/bramw/baserow/-/issues/954).
 * Allow users to use row id in the form redirect URL. [#871](https://gitlab.com/bramw/baserow/-/merge_requests/871)
@@ -21,6 +22,7 @@ For example:
 * Added option to use view's filters and sorting when listing rows. [#190](https://gitlab.com/bramw/baserow/-/issues/190)
 * Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
 * Made it possible to import data into an existing table. [#342](https://gitlab.com/bramw/baserow/-/issues/342)
+* Made it possible to select the entire row via the row context menu. [#1061](https://gitlab.com/bramw/baserow/-/issues/1061)
 
 ### Bug Fixes
 

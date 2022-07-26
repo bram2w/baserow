@@ -516,6 +516,7 @@
         "rowHasMoved": "Row has moved"
     },
     "gridView": {
+        "selectRow": "Select row",
         "insertRowAbove": "Insert row above",
         "insertRowBelow": "Insert row below",
         "duplicateRow": "Duplicate row",
