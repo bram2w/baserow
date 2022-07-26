@@ -61,6 +61,7 @@ For example:
 * Fixed duplicating view with that depends on select options mapping. [#1104](https://gitlab.com/bramw/baserow/-/issues/1104)
 * Don't allow invalid aggregate formulas from being created causing errors when inserting rows. [#1089](https://gitlab.com/bramw/baserow/-/issues/1089)
 * Fix backspace and delete keys breaking after selecting a formula text cell. [#1085](https://gitlab.com/bramw/baserow/-/issues/1085)
+* Fixed problem when new webhooks would be sent twice with both old and new payload.
 
 ### Breaking Changes
 
