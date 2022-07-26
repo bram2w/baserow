@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
 def fill_table_fields(limit, table):
     field_handler = FieldHandler()
-    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
+    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None, None)
     first_user = table.database.group.users.first()
     # Keep all fields but link_row and lookup
     allowed_field_list = [
@@ -81,7 +81,7 @@ def fill_table_fields(limit, table):
 
 def create_field_for_every_type(table):
     field_handler = FieldHandler()
-    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
+    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None, None)
     first_user = table.database.group.users.first()
     i = 0
     for field_type_name, all_possible_kwargs in all_kwargs_per_type.items():

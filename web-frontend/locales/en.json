@@ -17,6 +17,7 @@
         "change": "Change",
         "delete": "Delete",
         "rename": "Rename",
+        "duplicate": "Duplicate",
         "add": "Add",
         "makeChoice": "Make a choice",
         "cancel": "Cancel",

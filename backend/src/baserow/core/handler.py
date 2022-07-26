@@ -19,9 +19,6 @@ from itsdangerous import URLSafeSerializer
 from tqdm import tqdm
 
 from baserow.core.user.utils import normalize_email_address
-from baserow.core.utils import (
-    ChildProgressBuilder,
-)
 from .emails import GroupInvitationEmail
 from .exceptions import (
     UserNotInGroup,
@@ -67,7 +64,7 @@ from .signals import (
     groups_reordered,
 )
 from .trash.handler import TrashHandler
-from .utils import Progress, find_unused_name, set_allowed_attrs
+from .utils import ChildProgressBuilder, find_unused_name, set_allowed_attrs
 
 User = get_user_model()
 
@@ -777,9 +774,9 @@ class CoreHandler:
         """
         Finds an unused name for an application.
 
+        :param group_id: The group id that the application belongs to.
         :param proposed_name: The name that is proposed to be used.
-        :param group: The group that the application belongs to.
-        :return: The name that is unused.
+        :return: A unique name to use.
         """
 
         existing_applications_names = self.list_applications_in_group(
@@ -814,7 +811,7 @@ class CoreHandler:
         self,
         user: AbstractUser,
         application: Application,
-        progress: Optional[Progress] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Application:
         """
         Duplicates an existing application instance.
@@ -827,14 +824,13 @@ class CoreHandler:
         group = application.group
         group.has_user(user, raise_error=True)
 
-        if progress is None:
-            progress = Progress(100)
+        progress = ChildProgressBuilder.build(progress_builder, child_total=2)
 
         # export the application
         specific_application = application.specific
         application_type = application_type_registry.get_by_model(specific_application)
         serialized = application_type.export_serialized(specific_application)
-        progress.increment(50)
+        progress.increment()
 
         # Set a new unique name for the new application
         serialized["name"] = self.find_unused_application_name(
@@ -846,7 +842,7 @@ class CoreHandler:
         new_application_clone = application_type.import_serialized(
             group, serialized, id_mapping
         )
-        progress.increment(50)
+        progress.increment()
 
         # broadcast the application_created signal
         application_created.send(

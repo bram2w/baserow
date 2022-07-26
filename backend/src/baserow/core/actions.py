@@ -12,7 +12,7 @@ from baserow.core.action.scopes import (
 from baserow.core.handler import GroupForUpdate, CoreHandler
 from baserow.core.models import GroupUser, Group, Application
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import Progress
+from baserow.core.utils import ChildProgressBuilder
 
 
 class DeleteGroupActionType(ActionType):
@@ -448,7 +448,7 @@ class DuplicateApplicationActionType(ActionType):
         cls,
         user: AbstractUser,
         application: Application,
-        progress: Optional[Progress] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Application:
         """
         Duplicate an existing application instance.
@@ -457,11 +457,15 @@ class DuplicateApplicationActionType(ActionType):
 
         :param user: The user on whose behalf the application is duplicated.
         :param application: The application instance that needs to be duplicated.
+        :param progress_builder: A progress builder instance that can be used to
+            track the progress of the duplication.
         :return: The new (duplicated) application instance.
         """
 
         new_application_clone = CoreHandler().duplicate_application(
-            user, application, progress
+            user,
+            application,
+            progress_builder,
         )
 
         params = cls.Params(new_application_clone.id)

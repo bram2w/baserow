@@ -105,7 +105,7 @@ def test_can_submit_duplicate_application_job(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_can_undo_redo_duplicate_application_job(data_fixture):
+def test_cannot_undo_duplicate_application_job(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -126,14 +126,8 @@ def test_can_undo_redo_duplicate_application_job(data_fixture):
     assert Application.objects.count() == 2
 
     with transaction.atomic():
-        ActionHandler.undo(
+        actions_undone = ActionHandler.undo(
             user, [GroupActionScopeType.value(group_id=group.id)], session_id
         )
 
-        assert Application.objects.count() == 1
-
-        ActionHandler.redo(
-            user, [GroupActionScopeType.value(group_id=group.id)], session_id
-        )
-
-        assert Application.objects.count() == 2
+        assert actions_undone == []

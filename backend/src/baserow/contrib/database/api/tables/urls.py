@@ -6,6 +6,7 @@ from .views import (
     OrderTablesView,
     AsyncCreateTableView,
     AsyncTableImportView,
+    AsyncDuplicateTableView,
 )
 
 
@@ -22,6 +23,11 @@ urlpatterns = [
         r"database/(?P<database_id>[0-9]+)/order/$",
         OrderTablesView.as_view(),
         name="order",
+    ),
+    re_path(
+        r"(?P<table_id>[0-9]+)/duplicate/async/$",
+        AsyncDuplicateTableView.as_view(),
+        name="async_duplicate",
     ),
     re_path(r"(?P<table_id>[0-9]+)/$", TableView.as_view(), name="item"),
     re_path(

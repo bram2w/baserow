@@ -11,7 +11,7 @@ import io
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
-from typing import List, Optional, Iterable
+from typing import List, Optional, Iterable, Tuple
 
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
@@ -356,6 +356,21 @@ def remove_invalid_surrogate_characters(content: bytes) -> str:
     """
 
     return re.sub(r"\\u(d|D)([a-z|A-Z|0-9]{3})", "", content.decode("utf-8", "ignore"))
+
+
+def split_ending_number(name: str) -> Tuple[str, str]:
+    """
+    Splits a string into two parts, the first part is the string before the last
+    number, the second part is the last number.
+
+    :param string: The string to split.
+    :return: A tuple with the first part and the second part.
+    """
+
+    match = re.search(r"(.+) (\d+)$", name)
+    if match:
+        return match.group(1), match.group(2)
+    return name, ""
 
 
 def find_unused_name(

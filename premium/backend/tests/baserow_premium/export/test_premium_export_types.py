@@ -62,6 +62,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_datetime_eu": "02/01/2021 13:00",
     "created_on_date_eu": "02/01/2021",
     "link_row": [],
+    "self_link_row": [],
     "decimal_link_row": [],
     "file_link_row": [],
     "file": [],
@@ -107,6 +108,7 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_2",
         "unnamed row 3"
     ],
+    "self_link_row": [],
     "decimal_link_row": [
         "1.234",
         "-123.456",
@@ -260,6 +262,7 @@ def test_can_export_every_interesting_different_field_to_xml(
     <created-on-datetime-eu>02/01/2021 13:00</created-on-datetime-eu>
     <created-on-date-eu>02/01/2021</created-on-date-eu>
     <link-row/>
+    <self-link-row/>
     <decimal-link-row/>
     <file-link-row/>
     <file/>
@@ -305,6 +308,7 @@ def test_can_export_every_interesting_different_field_to_xml(
         <item>linked_row_2</item>
         <item>unnamed row 3</item>
     </link-row>
+    <self-link-row/>
     <decimal-link-row>
         <item>1.234</item>
         <item>-123.456</item>
