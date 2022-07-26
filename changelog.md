@@ -23,6 +23,29 @@ For example:
 * Added option to use view's filters and sorting when listing rows. [#190](https://gitlab.com/bramw/baserow/-/issues/190)
 * Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
 * Made it possible to import data into an existing table. [#342](https://gitlab.com/bramw/baserow/-/issues/342)
+* New templates:
+    * Benefit Show Manager
+    * Business Expenses
+    * Emergency Triage Log
+    * Employee Directory
+    * Growth Experiments
+    * Moving Company Manager
+    * Online Freelancer Management
+    * Personal Finance Manager
+    * User Feedback
+    * Workshops and Trainings
+* Updated templates:
+    * Company Blog Management
+    * Student Planner
+    * Applicant Tracker
+    * Book Catalog
+    * Bucket List
+    * Car Maintenance Log
+    * Company Asset Tracker
+    * Email Marketing Campaigns
+    * Holiday Shopping
+    * Recipe Book
+    * Wedding Planning
 * Tables can now be duplicated. [#961](https://gitlab.com/bramw/baserow/-/issues/961)
 * Introduced environment variable to disable Google docs file preview. [#1074](https://gitlab.com/bramw/baserow/-/issues/1074)
 * Made it possible to select the entire row via the row context menu. [#1061](https://gitlab.com/bramw/baserow/-/issues/1061)
@@ -38,6 +61,7 @@ For example:
 * Fixed duplicating view with that depends on select options mapping. [#1104](https://gitlab.com/bramw/baserow/-/issues/1104)
 
 ### Breaking Changes
+
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
 * Removed `primary` from all `components`and `stores` where it isn't absolutely required. [#1057](https://gitlab.com/bramw/baserow/-/issues/1057)
 * Concurrent field updates will now respond with a 409 instead of blocking until the previous update finished, set the env var BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR to revert to the old behaviour. [#1097](https://gitlab.com/bramw/baserow/-/issues/1097)

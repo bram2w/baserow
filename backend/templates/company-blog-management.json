@@ -385,6 +385,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 117594,
@@ -574,6 +575,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 117718,
@@ -763,6 +765,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 117729,
@@ -937,7 +940,9 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 120362,
+                            "card_cover_image_field_id": 120325,
                             "field_options": [
                                 {
                                     "id": 1068,
@@ -1064,6 +1069,8 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "card_cover_image_field_id": 120325,
                             "field_options": [
                                 {
                                     "id": 8193,
@@ -1588,6 +1595,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 105959,
@@ -1669,6 +1677,8 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "card_cover_image_field_id": 110750,
                             "field_options": [
                                 {
                                     "id": 8209,
@@ -1723,7 +1733,9 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 110728,
+                            "card_cover_image_field_id": 110750,
                             "field_options": [
                                 {
                                     "id": 1084,
@@ -1963,6 +1975,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 105962,
@@ -1997,8 +2010,8 @@
                                     "width": 113,
                                     "hidden": false,
                                     "order": 0,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "max",
+                                    "aggregation_raw_type": "max"
                                 }
                             ]
                         },
@@ -2026,6 +2039,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 118209,

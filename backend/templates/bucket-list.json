@@ -40,13 +40,13 @@
                             "select_options": [
                                 {
                                     "id": 12378,
-                                    "value": "Not Started",
+                                    "value": "Not started",
                                     "color": "dark-gray",
                                     "order": 0
                                 },
                                 {
                                     "id": 12379,
-                                    "value": "In Progress",
+                                    "value": "In progress",
                                     "color": "orange",
                                     "order": 1
                                 },
@@ -58,7 +58,7 @@
                                 },
                                 {
                                     "id": 12381,
-                                    "value": "Postponed/Abandoned",
+                                    "value": "Postponed/abandoned",
                                     "color": "dark-red",
                                     "order": 3
                                 }
@@ -76,7 +76,7 @@
                         {
                             "id": 145957,
                             "type": "date",
-                            "name": "Est. Completion",
+                            "name": "Est. date of completion",
                             "order": 3,
                             "primary": false,
                             "date_format": "ISO",
@@ -105,7 +105,7 @@
                         {
                             "id": 30733,
                             "type": "grid",
-                            "name": "All Goals",
+                            "name": "All goals",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -119,6 +119,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149821,
@@ -144,17 +145,17 @@
                                     "width": 211,
                                     "hidden": false,
                                     "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "empty_percentage",
+                                    "aggregation_raw_type": "empty_count"
                                 },
                                 {
                                     "id": 150224,
                                     "field_id": 145957,
-                                    "width": 161,
+                                    "width": 208,
                                     "hidden": false,
                                     "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "max_date",
+                                    "aggregation_raw_type": "max"
                                 },
                                 {
                                     "id": 150223,
@@ -162,8 +163,8 @@
                                     "width": 132,
                                     "hidden": false,
                                     "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "min_date",
+                                    "aggregation_raw_type": "min"
                                 },
                                 {
                                     "id": 150247,
@@ -179,7 +180,7 @@
                         {
                             "id": 30824,
                             "type": "grid",
-                            "name": "Not Started",
+                            "name": "Not started",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -194,6 +195,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 150227,
@@ -245,7 +247,7 @@
                         {
                             "id": 30825,
                             "type": "grid",
-                            "name": "In Progress",
+                            "name": "In progress",
                             "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -260,6 +262,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 150232,
@@ -326,6 +329,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 150237,
@@ -377,7 +381,7 @@
                         {
                             "id": 30827,
                             "type": "grid",
-                            "name": "Postponed/Abandoned",
+                            "name": "Postponed/abandoned",
                             "order": 5,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -392,6 +396,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 150242,
@@ -523,6 +528,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 145682,
                             "field_options": [
                                 {
@@ -569,8 +575,8 @@
                             "id": 1,
                             "order": "1.00000000000000000000",
                             "created_on": "2021-08-21T18:36:50.381041+00:00",
-                            "updated_on": "2021-08-23T01:42:38.196133+00:00",
-                            "field_145679": "Run a 5k",
+                            "updated_on": "2022-05-23T05:55:05.516948+00:00",
+                            "field_145679": "Run a 5K",
                             "field_145682": 12380,
                             "field_145686": [
                                 4
@@ -1109,7 +1115,7 @@
                         {
                             "id": 145687,
                             "type": "link_row",
-                            "name": "Goals",
+                            "name": "Related goals",
                             "order": 2,
                             "primary": false,
                             "link_row_table_id": 27622,
@@ -1120,7 +1126,7 @@
                         {
                             "id": 30734,
                             "type": "grid",
-                            "name": "All Categories",
+                            "name": "All categories",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1134,6 +1140,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149824,
@@ -1141,8 +1148,8 @@
                                     "width": 146,
                                     "hidden": false,
                                     "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "unique_count",
+                                    "aggregation_raw_type": "unique_count"
                                 },
                                 {
                                     "id": 149822,

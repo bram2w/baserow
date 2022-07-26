@@ -163,6 +163,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 407412,
@@ -280,6 +281,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414799,
@@ -397,6 +399,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414812,
@@ -520,6 +523,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414824,
@@ -637,6 +641,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414875,
@@ -739,6 +744,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 330655,
                             "field_options": [
                                 {
@@ -1405,6 +1411,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 407395,
@@ -1504,6 +1511,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414952,
@@ -1588,6 +1596,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 330632,
                             "field_options": [
                                 {
@@ -1962,6 +1971,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 407418,
@@ -2052,6 +2062,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414973,
@@ -2136,6 +2147,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414983,
@@ -2226,6 +2238,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 414990,
@@ -2301,6 +2314,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 332299,
                             "field_options": [
                                 {
@@ -2613,6 +2627,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 407421,
@@ -2694,6 +2709,8 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "card_cover_image_field_id": 332509,
                             "field_options": [
                                 {
                                     "id": 7021,
@@ -2748,7 +2765,9 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 330660,
+                            "card_cover_image_field_id": 332509,
                             "field_options": [
                                 {
                                     "id": 817,
@@ -3246,6 +3265,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 407424,
@@ -3345,6 +3365,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 415045,
@@ -3429,7 +3450,9 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 330663,
+                            "card_cover_image_field_id": 349945,
                             "field_options": [
                                 {
                                     "id": 824,
@@ -3496,6 +3519,8 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "card_cover_image_field_id": 349945,
                             "field_options": [
                                 {
                                     "id": 7723,
