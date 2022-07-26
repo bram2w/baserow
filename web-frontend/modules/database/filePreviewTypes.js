@@ -125,6 +125,10 @@ export class GoogleDocFilePreview extends FilePreviewType {
   }
 
   isCompatible(mimeType, fileName) {
+    if (this.app.$env.BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW) {
+      return false
+    }
+
     const conds = [
       'application/pdf',
 

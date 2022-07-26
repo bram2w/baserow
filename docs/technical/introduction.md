@@ -94,10 +94,12 @@ are accepted.
   download files via XHR query to bypass `Content-Disposition: inline` that
   can't be overridden in another way. If your files are stored under another
   origin, you also must add CORS headers to your server.
+* `BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW` (default ``): Set to `true` or `1` to
+  disable Google docs file preview in the web-frontend.
 * `PUBLIC_BACKEND_URL` (default `http://localhost:8000`): The publicly accessible URL of
-  the backend. For the development environment this is `http://localhost:8000`, but if
-  you change the port to 9000 it will be `http://localhost:9000`. You should be able to
-  lookup this url with your browser.
+ the backend. For the development environment this is `http://localhost:8000`, but if
+ you change the port to 9000 it will be `http://localhost:9000`. You should be able to
+ lookup this url with your browser.
 * `PRIVATE_BACKEND_URL` (default `http://backend:8000`): Not only the browser, but also
   the web-frontend server should be able to make HTTP requests to the backend. It might
   not have access to the `PUBLIC_BACKEND_URL` or there could be a more direct route,

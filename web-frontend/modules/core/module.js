@@ -93,6 +93,10 @@ export default function CoreModule(options) {
           key: 'FEATURE_FLAGS',
           default: '',
         },
+        {
+          key: 'BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW',
+          default: '',
+        },
       ],
     },
   ])
