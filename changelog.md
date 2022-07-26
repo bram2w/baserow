@@ -36,7 +36,7 @@ For example:
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
 * Removed `primary` from all `components`and `stores` where it isn't absolutely required. [#1057](https://gitlab.com/bramw/baserow/-/issues/1057)
-* Concurrent field updates will now respond with a 409 instead of blocking until the previous update finished, set the env var BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR to revert to the old behaviour. [#1097](https://gitlab.com/bramw/baserow/-/issues/1097)
+* Concurrent field updates will now respond with a 409 instead of blocking until the previous update finished, set the env var BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR to revert to the old behaviour. [#1097](https://gitlab.com/bramw/baserow/-/issues/1097)
 
 * **breaking change** Webhooks `row.created`, `row.updated` and `row.deleted` are
   replaced with `rows.created`, `rows.updated` and `rows.deleted`, containing multiple

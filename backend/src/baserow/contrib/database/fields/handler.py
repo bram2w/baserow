@@ -139,15 +139,12 @@ class FieldHandler:
         Selects a field with a given id from the database.
 
         :param field_id: The identifier of the field that must be returned.
-        :type field_id: int
         :param field_model: If provided that model's objects are used to select the
             field. This can for example be useful when you want to select a TextField or
             other child of the Field model.
-        :type field_model: Type[Field]
         :param base_queryset: The base queryset from where to select the field.
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `field_model` parameter doesn't work anymore.
-        :type base_queryset: Queryset
         :raises FieldDoesNotExist: When the field with the provided id does not exist.
         :return: The requested field instance of the provided id.
         :rtype: Field
@@ -175,9 +172,6 @@ class FieldHandler:
         self,
         field_id: int,
         field_model: Optional[Type[T]] = None,
-        nowait: Optional[bool] = None,
-        lock_table=True,
-        allow_trash=False,
     ) -> SpecificFieldForUpdate:
         """
         Returns the .specific field which has been locked FOR UPDATE.
@@ -185,34 +179,16 @@ class FieldHandler:
         :param field_id: The field to lock and retrieve the specific instance of.
         :param field_model: The field_model to query using, provide a specific one if
             you want an exception raised if the field is not of this field_model type.
-        :param nowait: Whether to wait to get the lock on the row or not. If set to
-            True and the row is already locked a FailedToLockFieldDueToConflict
-            exception will be raised.
-        :param lock_table: Whether to also lock the fields table FOR UPDATE also.
-        :param allow_trash: Whether trashed fields should also be included in the lock.
         :return: A specific locked field instance
         """
 
-        if nowait is None:
-            nowait = not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR
-
-        if allow_trash:
-            queryset = Field.objects_and_trash
-        else:
-            queryset = Field.objects
-
-        if lock_table:
-            queryset = queryset.select_related("table").select_for_update(
-                of=("self", "table"), nowait=nowait
-            )
-        else:
-            queryset = queryset.select_for_update(of=("self",), nowait=nowait)
+        queryset = Field.objects.select_related("table").select_for_update(
+            of=("self", "table"), nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
+        )
 
         try:
             specific_field = self.get_field(
-                field_id,
-                field_model,
-                base_queryset=queryset,
+                field_id, field_model, base_queryset=queryset
             ).specific
         except DatabaseError as e:
             if "could not obtain lock on row" in traceback.format_exc():

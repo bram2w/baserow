@@ -18,7 +18,7 @@ def read_repeatable_single_database_atomic_transaction(
        will see a snapshot of the database starting at the first SELECT etc statement
        run instead the transaction.
     2. This query runs that first transaction itself and intentionally locks all field
-       and table metadata rows in this first SELECT statement FOR SHARE. This means
+       and table metadata rows in this first SELECT statement FOR KEY SHARE. This means
        once the transaction has obtained this lock it can proceed safely without
        having to worry about fields being updated during the length of the transaction.
        We need to lock these rows as otherwise Baserow's various endpoints can
@@ -38,7 +38,7 @@ def read_repeatable_single_database_atomic_transaction(
         """
  SELECT * FROM database_field
  INNER JOIN database_table ON database_field.table_id = database_table.id
- WHERE database_table.database_id = %s FOR SHARE OF database_field, database_table
+ WHERE database_table.database_id = %s FOR KEY SHARE OF database_field, database_table
 """
     )
     first_statement_args = [database_id]
@@ -62,7 +62,7 @@ def read_committed_single_table_transaction(
 
     This manager does one things to ensure this:
     1. This query runs that first transaction itself and intentionally locks all field
-       and the table's metadata row in this first SELECT statement FOR SHARE. This
+       and the table's metadata row in this first SELECT statement FOR KEY SHARE. This
        means once the transaction has obtained this lock it can proceed safely without
        having to worry about fields being updated during the length of the transaction.
        We need to lock these rows as otherwise Baserow's various endpoints can
@@ -83,7 +83,7 @@ def read_committed_single_table_transaction(
         """
  SELECT * FROM database_field
  INNER JOIN database_table ON database_field.table_id = database_table.id
- WHERE database_table.id = %s FOR SHARE OF database_field, database_table
+ WHERE database_table.id = %s FOR KEY SHARE OF database_field, database_table
 """
     )
     first_statement_args = [table_id]

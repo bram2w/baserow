@@ -23,7 +23,6 @@ from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
 from .models import TrashedRows
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 
 User = get_user_model()
 
@@ -99,6 +98,13 @@ class TableTrashableItemType(TrashableItemType):
             # it still exists.
             trash_item_lookup_cache["row_table_model_cache"].pop(trashed_item.id, None)
 
+        try:
+            Table.objects_and_trash.select_for_update(of=("self",)).get(
+                id=trashed_item.id
+            )
+        except Table.DoesNotExist:
+            raise TrashItemDoesNotExist()
+
         with safe_django_schema_editor() as schema_editor:
             model = trashed_item.get_model()
             schema_editor.delete_model(model)
@@ -165,13 +171,12 @@ class FieldTrashableItemType(TrashableItemType):
             trash_item_lookup_cache["row_table_model_cache"].pop(field.table.id, None)
 
         try:
-            field = FieldHandler().get_specific_field_for_update(
-                field.id,
-                nowait=False,
-                lock_table=False,
-                allow_trash=True,
+            field = (
+                Field.objects_and_trash.select_for_update(of=("self",))
+                .get(id=field.id)
+                .specific
             )
-        except FieldDoesNotExist:
+        except Field.DoesNotExist:
             raise TrashItemDoesNotExist()
         field_type = field_type_registry.get_by_model(field)
 

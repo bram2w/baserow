@@ -681,8 +681,8 @@ BASEROW_SYNC_TEMPLATES_TIME_LIMIT = int(
 APPEND_SLASH = False
 
 BASEROW_DISABLE_MODEL_CACHE = bool(os.getenv("BASEROW_DISABLE_MODEL_CACHE", ""))
-BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR = bool(
-    os.getenv("BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR", False)
+BASEROW_NOWAIT_FOR_LOCKS = not bool(
+    os.getenv("BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR", False)
 )
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
