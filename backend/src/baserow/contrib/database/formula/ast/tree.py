@@ -555,26 +555,26 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
         """
 
         if callable(self.arg_types):
-            arg_types_for_this_arg = self.arg_types(
+            arg_type_checkers = self.arg_types(
                 arg_index, [t.expression_type for t in all_typed_args]
             )
         else:
-            arg_types_for_this_arg = self.arg_types[arg_index]
+            arg_type_checkers = self.arg_types[arg_index]
 
         expression_type = typed_arg.expression_type
         valid_type_names = []
-        for valid_arg_type in arg_types_for_this_arg:
-            if isinstance(valid_arg_type, SingleArgumentTypeChecker):
-                if valid_arg_type.check(expression_type):
+        for checker in arg_type_checkers:
+            if isinstance(checker, SingleArgumentTypeChecker):
+                if checker.check(arg_index, typed_arg):
                     return typed_arg
                 else:
                     valid_type_names.append(
-                        valid_arg_type.invalid_message(expression_type)
+                        checker.invalid_message(arg_index, typed_arg)
                     )
-            elif isinstance(expression_type, valid_arg_type):
+            elif isinstance(expression_type, checker):
                 return typed_arg
             else:
-                valid_type_names.append(valid_arg_type.type)
+                valid_type_names.append(checker.type)
 
         expression_type_name = expression_type.type
         if len(valid_type_names) == 1:

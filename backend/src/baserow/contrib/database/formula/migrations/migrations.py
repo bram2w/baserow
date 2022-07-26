@@ -2,7 +2,6 @@ import dataclasses
 
 from django.db.models import Q
 
-
 NO_FORMULAS = Q(pk__in=[])
 ALL_FORMULAS = ~NO_FORMULAS
 
@@ -87,6 +86,14 @@ FORMULA_MIGRATIONS = FormulaMigrations(
             recalculate_cell_values_for=(
                 Q(formula_type="date") | Q(array_formula_type="date")
             ),
+        ),
+        FormulaMigration(
+            version=4,
+            # v4 makes some previously incorrectly valid formulas invalid now as they
+            # should have always been invalid e.g. sum(1).
+            recalculate_formula_attributes_for=ALL_FORMULAS,
+            recalculate_field_dependencies_for=NO_FORMULAS,
+            recalculate_cell_values_for=NO_FORMULAS,
         ),
     ]
 )
