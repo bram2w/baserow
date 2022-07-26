@@ -29,6 +29,7 @@ class WebhookEventType(Instance):
     """
 
     signal = None
+    should_trigger_when_all_event_types_selected = True
 
     def __init__(self):
         if not isinstance(self.signal, Signal):

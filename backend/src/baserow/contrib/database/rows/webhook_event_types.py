@@ -46,6 +46,7 @@ class RowCreatedEventType(RowsCreatedEventType):
 
     type = "row.created"
     signal = rows_created
+    should_trigger_when_all_event_types_selected = False
 
     def get_payload(self, *args, **kwargs):
         payload = super().get_payload(*args, **kwargs)
@@ -103,6 +104,7 @@ class RowUpdatedEventType(RowsUpdatedEventType):
 
     type = "row.updated"
     signal = rows_updated
+    should_trigger_when_all_event_types_selected = False
 
     def get_payload(
         self, event_id, webhook, model, table, rows, before_return, **kwargs
@@ -147,6 +149,7 @@ class RowDeletedEventType(RowsDeletedEventType):
 
     type = "row.deleted"
     signal = rows_deleted
+    should_trigger_when_all_event_types_selected = False
 
     def get_payload(self, event_id, webhook, rows, **kwargs):
         payload = super().get_payload(event_id, webhook, rows, **kwargs)
