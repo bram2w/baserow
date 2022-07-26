@@ -123,7 +123,7 @@ class SubmitFormViewView(APIView):
                 "validators": [required_validator],
             }
             for option in options
-            if option.required
+            if option.is_required()
         }
         field_ids = [option.field_id for option in options]
         validation_serializer = get_row_serializer_class(

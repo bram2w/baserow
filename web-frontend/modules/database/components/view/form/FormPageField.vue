@@ -10,6 +10,7 @@
         </div>
         <component
           :is="getFieldComponent()"
+          :key="field.field.id"
           ref="field"
           :slug="slug"
           :field="field.field"

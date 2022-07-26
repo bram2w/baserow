@@ -2,6 +2,8 @@ from unittest.mock import patch, call, ANY
 
 import pytest
 
+from django.db import transaction
+
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.views.handler import ViewHandler
 
@@ -98,17 +100,20 @@ def test_when_field_hidden_in_public_view_field_force_refresh_sent(
         user=user, table=table, public=True
     )
     handler = ViewHandler()
-    handler.update_field_options(
-        user=user,
-        view=public_form_view,
-        field_options={str(text_field.id): {"hidden": True}},
-    )
 
-    handler.update_field_options(
-        user=user,
-        view=public_grid_view,
-        field_options={str(text_field.id): {"hidden": True}},
-    )
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_form_view,
+            field_options={str(text_field.id): {"hidden": True}},
+        )
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_grid_view,
+            field_options={str(text_field.id): {"hidden": True}},
+        )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -147,16 +152,20 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
     public_form_view = data_fixture.create_form_view(
         user=user, table=table, public=True
     )
-    handler.update_field_options(
-        user=user,
-        view=public_form_view,
-        field_options={str(text_field.id): {"hidden": False}},
-    )
-    handler.update_field_options(
-        user=user,
-        view=public_grid_view,
-        field_options={str(text_field.id): {"hidden": False}},
-    )
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_form_view,
+            field_options={str(text_field.id): {"hidden": False}},
+        )
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_grid_view,
+            field_options={str(text_field.id): {"hidden": False}},
+        )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -209,23 +218,26 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
     public_form_view = data_fixture.create_form_view(
         user=user, table=table, public=True
     )
-    handler.update_field_options(
-        user=user,
-        view=public_form_view,
-        field_options={
-            str(visible_field.id): {"width": 100},
-            str(hidden_field.id): {"width": 100},
-        },
-    )
 
-    handler.update_field_options(
-        user=user,
-        view=public_grid_view,
-        field_options={
-            str(visible_field.id): {"width": 100},
-            str(hidden_field.id): {"width": 100},
-        },
-    )
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_form_view,
+            field_options={
+                str(visible_field.id): {"width": 100},
+                str(hidden_field.id): {"width": 100},
+            },
+        )
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_grid_view,
+            field_options={
+                str(visible_field.id): {"width": 100},
+                str(hidden_field.id): {"width": 100},
+            },
+        )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [

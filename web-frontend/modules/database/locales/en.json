@@ -405,7 +405,9 @@
         "noFilterText": "Filters allow you to show rows that apply to your conditions.",
         "where": "Where",
         "and": "And",
-        "or": "Or"
+        "or": "Or",
+        "relatedFieldNotFound": "The related field is not found.",
+        "filterTypeNotFound": "The filter type is not compatible."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "image",
@@ -632,6 +634,11 @@
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "API documentation"
+    },
+    "formViewField": {
+        "required": "required",
+        "showWhenMatchingConditions": "show when conditions are met",
+        "addCondition": "Add condition"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicate field",

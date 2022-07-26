@@ -2,6 +2,8 @@ import pytest
 
 from unittest.mock import patch
 
+from django.db import transaction
+
 from baserow.contrib.database.views.handler import ViewHandler
 
 
@@ -244,11 +246,12 @@ def test_view_field_options_updated(mock_broadcast_to_channel_group, data_fixtur
     text_field = data_fixture.create_text_field(table=table)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    ViewHandler().update_field_options(
-        user=user,
-        view=grid_view,
-        field_options={str(text_field.id): {"width": 150}},
-    )
+    with transaction.atomic():
+        ViewHandler().update_field_options(
+            user=user,
+            view=grid_view,
+            field_options={str(text_field.id): {"width": 150}},
+        )
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args

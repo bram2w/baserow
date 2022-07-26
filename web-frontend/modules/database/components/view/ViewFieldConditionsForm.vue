@@ -14,10 +14,11 @@
       <a
         v-if="!disableFilter"
         class="filters__remove"
-        @click="deleteFilter(filter)"
+        @click="deleteFilter($event, filter)"
       >
         <i class="fas fa-times"></i>
       </a>
+      <span v-else class="filters__remove"></span>
       <div class="filters__operator">
         <span v-if="index === 0">{{ $t('viewFilterContext.where') }}</span>
         <Dropdown
@@ -78,6 +79,10 @@
       <div class="filters__value">
         <component
           :is="getInputComponent(filter.type, filter.field)"
+          v-if="
+            fieldIdExists(fields, filter.field) &&
+            fieldIsCompatible(filter.type, filter.field)
+          "
           :ref="`filter-value-${index}`"
           :filter="filter"
           :view="view"
@@ -86,6 +91,16 @@
           :read-only="readOnly"
           @input="updateFilter(filter, { value: $event })"
         />
+        <i
+          v-else-if="!fieldIdExists(fields, filter.field)"
+          v-tooltip="$t('viewFilterContext.relatedFieldNotFound')"
+          class="fas fa-exclamation-triangle color-error"
+        ></i>
+        <i
+          v-else-if="!fieldIsCompatible(filter.type, filter.field)"
+          v-tooltip="$t('viewFilterContext.filterTypeNotFound')"
+          class="fas fa-exclamation-triangle color-error"
+        ></i>
       </div>
     </div>
   </div>
@@ -174,7 +189,8 @@ export default {
         return field !== undefined && filterType.fieldIsCompatible(field)
       })
     },
-    deleteFilter(filter) {
+    deleteFilter(event, filter) {
+      event.deletedFilterEvent = true
       this.$emit('deleteFilter', filter)
     },
     /**
@@ -217,7 +233,6 @@ export default {
 
       this.$emit('updateFilter', { filter, values })
     },
-
     selectBooleanOperator(value) {
       this.$emit('selectOperator', value)
     },
@@ -228,6 +243,15 @@ export default {
     getInputComponent(type, fieldId) {
       const field = this.fields.find(({ id }) => id === fieldId)
       return this.$registry.get('viewFilter', type).getInputComponent(field)
+    },
+    fieldIdExists(fields, fieldId) {
+      return fields.findIndex((field) => field.id === fieldId) !== -1
+    },
+    fieldIsCompatible(filterType, fieldId) {
+      const field = this.fields.find(({ id }) => id === fieldId)
+      return this.$registry
+        .get('viewFilter', filterType)
+        .fieldIsCompatible(field)
     },
   },
 }

@@ -61,7 +61,12 @@ from .exceptions import (
     DecoratorValueProviderTypeNotCompatible,
     NoAuthorizationToPubliclySharedView,
 )
-from .models import View, ViewDecoration, ViewFilter, ViewSort
+from .models import (
+    View,
+    ViewDecoration,
+    ViewFilter,
+    ViewSort,
+)
 from .registries import (
     view_type_registry,
     view_filter_type_registry,
@@ -458,15 +463,61 @@ class ViewHandler:
             view, field_options, fields
         )
 
+        # Figure out which field options can be updated and fetch existing ones. We
+        # need the existing ones to later determine whether it must be updated or
+        # newly created.
         allowed_field_ids = [field.id for field in fields]
+        valid_field_ids = []
         for field_id, options in field_options.items():
             if int(field_id) not in allowed_field_ids:
                 raise UnrelatedFieldError(
                     f"The field id {field_id} is not related to the view."
                 )
-            model.objects_and_trash.update_or_create(
-                field_id=field_id, defaults=options, **{field_name: view}
+            valid_field_ids.append(field_id)
+
+        existing_field_options = {
+            o.field_id: o
+            for o in model.objects_and_trash.filter(
+                field_id__in=valid_field_ids, **{field_name: view}
+            ).select_for_update(of=("self",))
+        }
+
+        field_options_to_create = []
+        field_options_to_update = []
+        option_names_to_update = set()
+
+        for field_id, options in field_options.items():
+            exists = int(field_id) in existing_field_options
+
+            if exists:
+                field_options_object = existing_field_options[int(field_id)]
+            else:
+                field_options_object = model(field_id=field_id, **{field_name: view})
+
+            allowed_values = extract_allowed(
+                options, view_type.field_options_allowed_fields
             )
+            for key, value in allowed_values.items():
+                setattr(field_options_object, key, value)
+                option_names_to_update.add(key)
+
+            if exists:
+                field_options_to_update.append(field_options_object)
+            else:
+                field_options_to_create.append(field_options_object)
+
+        if len(field_options_to_create) > 0:
+            model.objects_and_trash.bulk_create(field_options_to_create)
+
+        if len(field_options_to_update) > 0 and len(option_names_to_update) > 0:
+            model.objects_and_trash.bulk_update(
+                field_options_to_update, option_names_to_update
+            )
+
+        updated_instances = field_options_to_create + field_options_to_update
+        view_type.after_field_options_update(
+            view, field_options, fields, updated_instances
+        )
 
         view_field_options_updated.send(self, view=view, user=user)
 
@@ -1701,7 +1752,7 @@ class ViewHandler:
             field_name = model._field_objects[field.field_id]["name"]
             allowed_field_names.append(field_name)
 
-            if field.required and (
+            if field.is_required() and (
                 field_name not in values or values[field_name] in EMPTY_VALUES
             ):
                 field_errors[field_name] = ["This field is required."]

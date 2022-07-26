@@ -30,7 +30,9 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.registries import view_aggregation_type_registry
+from baserow.contrib.database.views.registries import (
+    view_aggregation_type_registry,
+)
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_files.models import UserFile
 from .exceptions import (
@@ -46,8 +48,9 @@ from .models import (
     GalleryViewFieldOptions,
     FormView,
     FormViewFieldOptions,
+    FormViewFieldOptionsCondition,
 )
-from .registries import ViewType
+from .registries import ViewType, view_filter_type_registry
 
 
 class GridViewType(ViewType):
@@ -60,6 +63,13 @@ class GridViewType(ViewType):
     can_decorate = True
     when_shared_publicly_requires_realtime_events = True
     allowed_fields = ["row_identifier_type"]
+    field_options_allowed_fields = [
+        "width",
+        "hidden",
+        "order",
+        "aggregation_type",
+        "aggregation_raw_type",
+    ]
     serializer_field_names = ["row_identifier_type"]
 
     api_exceptions_map = {
@@ -292,6 +302,7 @@ class GalleryViewType(ViewType):
     field_options_model_class = GalleryViewFieldOptions
     field_options_serializer_class = GalleryViewFieldOptionsSerializer
     allowed_fields = ["card_cover_image_field"]
+    field_options_allowed_fields = ["hidden", "order"]
     serializer_field_names = ["card_cover_image_field"]
     serializer_field_overrides = {
         "card_cover_image_field": PrimaryKeyRelatedField(
@@ -459,6 +470,15 @@ class FormViewType(ViewType):
         "submit_action_message",
         "submit_action_redirect_url",
     ]
+    field_options_allowed_fields = [
+        "name",
+        "description",
+        "enabled",
+        "required",
+        "show_when_matching_conditions",
+        "condition_type",
+        "order",
+    ]
     serializer_field_names = [
         "title",
         "description",
@@ -490,6 +510,16 @@ class FormViewType(ViewType):
             path("form/", include(api_urls, namespace=self.type)),
         ]
 
+    def after_field_type_change(self, field):
+        field_type = field_type_registry.get_by_model(field)
+
+        # If the new field type is not compatible with the form view, we must disable
+        # all the form view field options because they're not compatible anymore.
+        if not field_type.can_be_in_form_view:
+            FormViewFieldOptions.objects_and_trash.filter(
+                field=field, enabled=True
+            ).update(enabled=False)
+
     def before_field_options_update(self, view, field_options, fields):
         """
         Checks if a field type that is incompatible with the form view is being
@@ -505,6 +535,88 @@ class FormViewType(ViewType):
                     raise FormViewFieldTypeIsNotSupported(field_type.type)
 
         return field_options
+
+    def after_field_options_update(
+        self, view, field_options, fields, update_field_option_instances
+    ):
+        """
+        This method is called directly after the form view field options are updated.
+        It will create, update or delete the provided conditions in a query efficient
+        manner.
+        """
+
+        field_ids = [field.id for field in fields]
+        updated_field_options_by_id = {
+            o.field_id: o for o in update_field_option_instances
+        }
+        updated_field_ids = [
+            field_id
+            for field_id, options in field_options.items()
+            if "conditions" in options
+        ]
+
+        # Prefetch all the existing conditions to avoid N amount of queries later on.
+        existing_conditions = {
+            c.id: c
+            for c in FormViewFieldOptionsCondition.objects.filter(
+                field_option__field_id__in=updated_field_ids
+            ).select_related("field_option")
+        }
+
+        conditions_to_create = []
+        conditions_to_update = []
+        condition_ids_to_delete = set(existing_conditions.keys())
+
+        for field_id, options in field_options.items():
+            if "conditions" not in options:
+                continue
+
+            numeric_field_id = int(field_id)
+            updated_field_option_instance = updated_field_options_by_id[
+                numeric_field_id
+            ]
+
+            for condition in options["conditions"]:
+                if condition["field"] not in field_ids:
+                    raise FieldNotInTable(
+                        f"The field {condition['field']} does not belong to table "
+                        f"{view.table.id}."
+                    )
+
+                # To avoid another query, we find the existing form condition in the
+                # prefetched conditions.
+                existing_condition = existing_conditions.get(condition["id"], None)
+                if (
+                    existing_condition is not None
+                    and existing_condition.field_option.field_id == numeric_field_id
+                ):
+                    existing_condition.field_id = condition["field"]
+                    existing_condition.type = condition["type"]
+                    existing_condition.value = condition["value"]
+                    conditions_to_update.append(existing_condition)
+                    condition_ids_to_delete.remove(existing_condition.id)
+                else:
+                    conditions_to_create.append(
+                        FormViewFieldOptionsCondition(
+                            field_option=updated_field_option_instance,
+                            field_id=condition["field"],
+                            type=condition["type"],
+                            value=condition["value"],
+                        )
+                    )
+
+        if len(conditions_to_create) > 0:
+            FormViewFieldOptionsCondition.objects.bulk_create(conditions_to_create)
+
+        if len(conditions_to_update) > 0:
+            FormViewFieldOptionsCondition.objects.bulk_update(
+                conditions_to_update, ["field_id", "type", "value"]
+            )
+
+        if len(condition_ids_to_delete) > 0:
+            FormViewFieldOptionsCondition.objects.filter(
+                id__in=condition_ids_to_delete
+            ).delete()
 
     def export_serialized(
         self,
@@ -551,6 +663,19 @@ class FormViewType(ViewType):
                     "enabled": field_option.enabled,
                     "required": field_option.required,
                     "order": field_option.order,
+                    "show_when_matching_conditions": field_option.show_when_matching_conditions,
+                    "condition_type": field_option.condition_type,
+                    "conditions": [
+                        {
+                            "id": condition.id,
+                            "field": condition.field_id,
+                            "type": condition.type,
+                            "value": view_filter_type_registry.get(
+                                condition.type
+                            ).get_export_serialized_value(condition.value),
+                        }
+                        for condition in field_option.conditions.all()
+                    ],
                 }
             )
 
@@ -593,18 +718,35 @@ class FormViewType(ViewType):
         if "database_form_view_field_options" not in id_mapping:
             id_mapping["database_form_view_field_options"] = {}
 
+        condition_objects = []
         for field_option in field_options:
             field_option_copy = field_option.copy()
             field_option_id = field_option_copy.pop("id")
+            field_option_conditions = field_option_copy.pop("conditions", [])
             field_option_copy["field_id"] = id_mapping["database_fields"][
                 field_option["field_id"]
             ]
             field_option_object = FormViewFieldOptions.objects.create(
                 form_view=form_view, **field_option_copy
             )
+            for condition in field_option_conditions:
+                value = view_filter_type_registry.get(
+                    condition["type"]
+                ).set_import_serialized_value(condition["value"], id_mapping)
+                condition_objects.append(
+                    FormViewFieldOptionsCondition(
+                        field_option=field_option_object,
+                        field_id=id_mapping["database_fields"][condition["field"]],
+                        type=condition["type"],
+                        value=value,
+                    )
+                )
             id_mapping["database_form_view_field_options"][
                 field_option_id
             ] = field_option_object.id
+
+        # Create the conditions in bulk to improve performance.
+        FormViewFieldOptionsCondition.objects.bulk_create(condition_objects)
 
         return form_view
 
@@ -668,3 +810,6 @@ class FormViewType(ViewType):
             values[field] = user_file and user_file.serialize()
 
         return values
+
+    def enhance_field_options_queryset(self, queryset):
+        return queryset.prefetch_related("conditions")
