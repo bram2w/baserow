@@ -33,6 +33,7 @@ For example:
 * Fixed changing field type to unsupported form view bug. [#1078](https://gitlab.com/bramw/baserow/-/issues/1078)
 * Ensure the latest error is always shown when clicking the formula refresh options link. [#1092](https://gitlab.com/bramw/baserow/-/issues/1092)
 * Fixed duplicating view with that depends on select options mapping. [#1104](https://gitlab.com/bramw/baserow/-/issues/1104)
+* Don't allow invalid aggregate formulas from being created causing errors when inserting rows. [#1089](https://gitlab.com/bramw/baserow/-/issues/1089)
 
 ### Breaking Changes
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.

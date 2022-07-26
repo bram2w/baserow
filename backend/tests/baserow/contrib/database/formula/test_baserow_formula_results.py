@@ -1,7 +1,9 @@
 import datetime
 import sys
+import traceback
 from datetime import timedelta
 from decimal import Decimal
+from re import search
 from typing import List, Any, Optional
 
 import pytest
@@ -12,6 +14,28 @@ from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FormulaField, Field
+from baserow.contrib.database.formula import (
+    literal,
+    BaserowFormulaArrayType,
+    BaserowFormulaBooleanType,
+    BaserowFormulaTextType,
+    BaserowFormulaNumberType,
+)
+from baserow.contrib.database.formula.ast.function_defs import (
+    Baserow2dArrayAgg,
+    BaserowAggJoin,
+)
+from baserow.contrib.database.formula.ast.tree import (
+    BaserowFunctionCall,
+    BaserowFieldReference,
+)
+from baserow.contrib.database.formula.registries import formula_function_registry
+from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
+from baserow.contrib.database.formula.types.formula_type import (
+    UnTyped,
+    BaserowFormulaValidType,
+)
+from baserow.contrib.database.formula.types.type_checker import MustBeManyExprChecker
 from baserow.contrib.database.rows.handler import RowHandler
 
 VALID_FORMULA_TESTS = [
@@ -495,7 +519,89 @@ INVALID_FORMULA_TESTS = [
         "regex_replace was of type number but the only usable type for this argument "
         "is text.",
     ),
+    (
+        "sum(1)",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function sum was of type "
+            "number but the only usable type for this argument is a list of number "
+            "values obtained from a lookup or link row field reference."
+        ),
+    ),
 ]
+
+
+@pytest.mark.django_db
+def test_aggregate_functions_never_allow_non_many_inputs(data_fixture, api_client):
+    user = data_fixture.create_user()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    function_exceptions = {Baserow2dArrayAgg.type}
+    custom_cases = {
+        BaserowAggJoin.type: [
+            [literal("x"), literal("y")],
+            [literal("x"), BaserowFieldReference[UnTyped](link_field.name, None, None)],
+        ]
+    }
+    for formula_func in formula_function_registry.get_all():
+        if not formula_func.aggregate or formula_func.type in function_exceptions:
+            continue
+
+        if formula_func.type in custom_cases:
+            fake_args = custom_cases[formula_func.type]
+        else:
+            fake_args = [construct_some_literal_args(formula_func)]
+
+        for arg_set in fake_args:
+            formula = str(BaserowFunctionCall[UnTyped](formula_func, arg_set, None))
+            try:
+                FieldHandler().create_field(
+                    user,
+                    table,
+                    "formula",
+                    name=f"{formula_func.type}",
+                    formula=formula,
+                )
+                assert False, (
+                    f"Function {formula_func.type} with formula "
+                    f"{formula} did not raise any exception when we "
+                    f"were expecting it to do so as it was passed non "
+                    f"many expressions."
+                )
+            except Exception as e:
+                assert isinstance(e, InvalidFormulaType) and search(
+                    "is a list of .*values obtained from a", str(e)
+                ), (
+                    f"Function {formula_func.type} crashed with formula: "
+                    f"{formula or ''} because of: \n{traceback.format_exc()}"
+                )
+
+
+def construct_some_literal_args(formula_func):
+    args = formula_func.arg_types
+    fake_args = []
+    for a in args:
+        r = None
+        arg_checker = a[0]
+        if isinstance(arg_checker, MustBeManyExprChecker):
+            arg_checker = arg_checker.formula_types[0]
+        if arg_checker == BaserowFormulaValidType:
+            r = ""
+        elif arg_checker == BaserowFormulaBooleanType:
+            r = True
+        elif arg_checker == BaserowFormulaTextType:
+            r = "literal"
+        elif arg_checker == BaserowFormulaNumberType:
+            r = Decimal(1.2345)
+        elif arg_checker == BaserowFormulaArrayType:
+            raise Exception("No array literals exist yet in the formula language")
+        else:
+            assert False, (
+                f"Please add a branch for {arg_checker} to "
+                f"the test function construct_some_literal_args"
+            )
+        fake_args.append(literal(r))
+    return fake_args
 
 
 @pytest.mark.parametrize("test_input,error,detail", INVALID_FORMULA_TESTS)
