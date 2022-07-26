@@ -136,6 +136,14 @@
         </li>
       </ul>
       <ul v-show="!isMultiSelectActive" class="context__menu">
+        <li>
+          <a
+            @click=";[selectRow($event, selectedRow), $refs.rowContext.hide()]"
+          >
+            <i class="context__menu-icon fas fa-fw fa-check-square"></i>
+            {{ $t('gridView.selectRow') }}
+          </a>
+        </li>
         <li v-if="!readOnly">
           <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
@@ -488,6 +496,24 @@ export default {
 
       $divider.classList.toggle('shadow', canScroll && left > 0)
       $right.scrollLeft = left
+    },
+    /**
+     * Selects the entire row.
+     */
+    async selectRow(event, row) {
+      event.stopPropagation()
+      const rowIndex = this.$store.getters[
+        this.storePrefix + 'view/grid/getRowIndexById'
+      ](row.id)
+      await this.$store.dispatch(
+        this.storePrefix + 'view/grid/setMultipleSelect',
+        {
+          rowHeadIndex: rowIndex,
+          rowTailIndex: rowIndex,
+          fieldHeadIndex: 0,
+          fieldTailIndex: this.visibleFields.length,
+        }
+      )
     },
     async addRow(before = null, values = {}) {
       try {
