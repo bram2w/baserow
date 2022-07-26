@@ -79,7 +79,7 @@
                         {
                             "id": 136187,
                             "type": "link_row",
-                            "name": "Ingredients: Optional",
+                            "name": "Ingredients: optional",
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 25899,
@@ -88,14 +88,14 @@
                         {
                             "id": 136188,
                             "type": "long_text",
-                            "name": "Ingredients: Quantity",
+                            "name": "Ingredients: quantity",
                             "order": 6,
                             "primary": false
                         },
                         {
                             "id": 136189,
                             "type": "link_row",
-                            "name": "Materials Needed",
+                            "name": "Materials needed",
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 25901,
@@ -113,7 +113,7 @@
                         {
                             "id": 136191,
                             "type": "number",
-                            "name": "Cook Time (min)",
+                            "name": "Cook time (minutes)",
                             "order": 9,
                             "primary": false,
                             "number_decimal_places": 0,
@@ -122,7 +122,7 @@
                         {
                             "id": 136192,
                             "type": "number",
-                            "name": "Prep Time (min)",
+                            "name": "Prep time (minutes)",
                             "order": 10,
                             "primary": false,
                             "number_decimal_places": 0,
@@ -216,16 +216,16 @@
                         {
                             "id": 204537,
                             "type": "formula",
-                            "name": "Total Time (hr)",
+                            "name": "Total time (hours)",
                             "order": 16,
                             "primary": false,
                             "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 2,
+                            "number_decimal_places": 5,
                             "array_formula_type": null,
-                            "formula": "(field('Prep Time (min)')/60) + (field('Cook Time (min)')/60)",
+                            "formula": "field('Prep time (minutes)')/60 + field('Cook time (minutes)')/60",
                             "formula_type": "number"
                         },
                         {
@@ -240,7 +240,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "sum(lookup('Ingredients','Cost per serving')) + sum(lookup('Ingredients: Optional','Cost per serving'))",
+                            "formula": "sum(lookup('Ingredients','Cost per serving')) + sum(lookup('Ingredients: optional','Cost per serving'))",
                             "formula_type": "number"
                         },
                         {
@@ -263,7 +263,7 @@
                         {
                             "id": 28453,
                             "type": "grid",
-                            "name": "All Dishes",
+                            "name": "All dishes",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -277,6 +277,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 137538,
@@ -353,7 +354,7 @@
                                 {
                                     "id": 137547,
                                     "field_id": 136191,
-                                    "width": 160,
+                                    "width": 185,
                                     "hidden": false,
                                     "order": 8,
                                     "aggregation_type": "",
@@ -362,7 +363,7 @@
                                 {
                                     "id": 137548,
                                     "field_id": 136192,
-                                    "width": 157,
+                                    "width": 183,
                                     "hidden": false,
                                     "order": 7,
                                     "aggregation_type": "",
@@ -416,7 +417,7 @@
                                 {
                                     "id": 230857,
                                     "field_id": 204537,
-                                    "width": 149,
+                                    "width": 171,
                                     "hidden": false,
                                     "order": 9,
                                     "aggregation_type": "",
@@ -445,7 +446,7 @@
                         {
                             "id": 30478,
                             "type": "grid",
-                            "name": "Difficulty: Easy",
+                            "name": "Difficulty: easy",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -466,6 +467,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 148260,
@@ -634,7 +636,7 @@
                         {
                             "id": 30479,
                             "type": "grid",
-                            "name": "Difficulty: Medium",
+                            "name": "Difficulty: medium",
                             "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -649,6 +651,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 148274,
@@ -817,7 +820,7 @@
                         {
                             "id": 30480,
                             "type": "grid",
-                            "name": "Difficulty: Hard",
+                            "name": "Difficulty: hard",
                             "order": 4,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -838,6 +841,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 148288,
@@ -1006,7 +1010,7 @@
                         {
                             "id": 30741,
                             "type": "grid",
-                            "name": "Category: Soups and Broth",
+                            "name": "Category: soups and broth",
                             "order": 5,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1027,6 +1031,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149862,
@@ -1195,7 +1200,7 @@
                         {
                             "id": 30742,
                             "type": "grid",
-                            "name": "Category: Red Meat",
+                            "name": "Category: red meat",
                             "order": 6,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1216,6 +1221,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 151957,
@@ -1384,7 +1390,7 @@
                         {
                             "id": 30743,
                             "type": "grid",
-                            "name": "Category: Sauces",
+                            "name": "Category: sauces",
                             "order": 7,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1405,6 +1411,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149938,
@@ -1573,7 +1580,7 @@
                         {
                             "id": 30744,
                             "type": "grid",
-                            "name": "Category: Pasta",
+                            "name": "Category: pasta",
                             "order": 8,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1594,6 +1601,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149878,
@@ -1762,7 +1770,7 @@
                         {
                             "id": 30745,
                             "type": "grid",
-                            "name": "Category: Poultry",
+                            "name": "Category: poultry",
                             "order": 9,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1783,6 +1791,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149953,
@@ -1951,7 +1960,7 @@
                         {
                             "id": 30746,
                             "type": "grid",
-                            "name": "Category: Salads",
+                            "name": "Category: salads",
                             "order": 10,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1972,6 +1981,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149908,
@@ -2140,7 +2150,7 @@
                         {
                             "id": 30747,
                             "type": "grid",
-                            "name": "Category: Desserts",
+                            "name": "Category: desserts",
                             "order": 11,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2161,6 +2171,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 149923,
@@ -2329,7 +2340,7 @@
                         {
                             "id": 30750,
                             "type": "grid",
-                            "name": "Category: Seafood",
+                            "name": "Category: seafood",
                             "order": 14,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2350,6 +2361,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 152780,
@@ -2518,7 +2530,7 @@
                         {
                             "id": 44605,
                             "type": "grid",
-                            "name": "Quick Dishes",
+                            "name": "Quick dishes",
                             "order": 15,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2539,6 +2551,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 230871,
@@ -2728,6 +2741,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 276245,
@@ -2896,7 +2910,7 @@
                         {
                             "id": 67360,
                             "type": "gallery",
-                            "name": "Gallery view",
+                            "name": "Dishes",
                             "order": 17,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2908,6 +2922,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5028,
@@ -3028,6 +3043,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 136185,
                             "field_options": [
                                 {
@@ -3898,7 +3914,7 @@
                         {
                             "id": 136212,
                             "type": "link_row",
-                            "name": "Dishes - Optional Ingredients",
+                            "name": "Dishes: optional ingredients",
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 25900,
@@ -3918,7 +3934,7 @@
                         {
                             "id": 28452,
                             "type": "grid",
-                            "name": "All Ingredients",
+                            "name": "All ingredients",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -3932,6 +3948,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 137537,
@@ -3974,7 +3991,7 @@
                         {
                             "id": 52336,
                             "type": "grid",
-                            "name": "Budget Friendly",
+                            "name": "Budget friendly",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -3995,6 +4012,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 277054,
@@ -4037,7 +4055,7 @@
                         {
                             "id": 52338,
                             "type": "grid",
-                            "name": "Higher End",
+                            "name": "Luxury cuisine",
                             "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -4058,6 +4076,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 277067,
@@ -5385,7 +5404,7 @@
                         {
                             "id": 28454,
                             "type": "grid",
-                            "name": "All Materials",
+                            "name": "All materials",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -5399,6 +5418,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 137551,

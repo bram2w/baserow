@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Performance Reviews",
-    "icon": "user-check",
+    "icon": "user-friends",
     "keywords": [
         "employee review",
         "performance review",
@@ -212,6 +212,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 373674,
@@ -532,6 +533,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 4950,
@@ -655,6 +657,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 378785,
@@ -826,6 +829,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 378807,
@@ -1715,6 +1719,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 390811,
@@ -1785,6 +1790,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5928,
@@ -2059,6 +2065,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 375817,
@@ -2132,6 +2139,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5259,
@@ -2187,6 +2195,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5253,
@@ -2242,6 +2251,7 @@
                                 }
                             ],
                             "sortings": [],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5246,
@@ -2489,6 +2499,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 374315,
@@ -2528,6 +2539,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5410,
@@ -2782,6 +2794,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 390799,
@@ -2861,6 +2874,7 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
                             "field_options": [
                                 {
                                     "id": 5936,
@@ -3361,6 +3375,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 373677,
@@ -3404,8 +3419,8 @@
                                     "width": 159,
                                     "hidden": false,
                                     "order": 4,
-                                    "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "min",
+                                    "aggregation_raw_type": "min"
                                 },
                                 {
                                     "id": 373760,
@@ -3414,7 +3429,7 @@
                                     "hidden": false,
                                     "order": 6,
                                     "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 373761,
@@ -3423,7 +3438,7 @@
                                     "hidden": false,
                                     "order": 7,
                                     "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 373762,
@@ -3432,7 +3447,7 @@
                                     "hidden": false,
                                     "order": 8,
                                     "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 373763,
@@ -3441,7 +3456,7 @@
                                     "hidden": false,
                                     "order": 9,
                                     "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 373764,
@@ -3459,7 +3474,7 @@
                                     "hidden": false,
                                     "order": 11,
                                     "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 373766,
@@ -3504,7 +3519,7 @@
                                     "hidden": false,
                                     "order": 5,
                                     "aggregation_type": "average",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 378330,
@@ -3632,7 +3647,7 @@
                                     "id": 15627,
                                     "field_id": 306977,
                                     "name": "",
-                                    "description": "In a dynamic work environment, communication is one of the most important parts of how things work together. It's important to be able to communicate well with supervisors, coworkers, and clients in a lot of different businesses. Communication that is clear makes people more comfortable with each other, which makes them more likely to share and exchange ideas. It also makes everyone more productive because it bridges the gap between departments and helps everyone work together. \r\rRating Scales:\r5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
+                                    "description": "In a dynamic work environment, communication is one of the most important parts of how things work together. It's important to be able to communicate well with supervisors, coworkers, and clients in a lot of different businesses. Communication that is clear makes people more comfortable with each other, which makes them more likely to share and exchange ideas. It also makes everyone more productive because it bridges the gap between departments and helps everyone work together. \r\rRating Scales:\u00a0 5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
                                     "enabled": true,
                                     "required": true,
                                     "order": 6
@@ -3650,7 +3665,7 @@
                                     "id": 15629,
                                     "field_id": 306979,
                                     "name": "",
-                                    "description": "When you focus on your customers and give them good service, you can build long-term relationships with them. Employees need to learn skills that will help customers have a better experience. Customer can either be internal or external \u2013 project stakeholders can be viewed as customers or clients as well.\r\rRating Scales:\r5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
+                                    "description": "When you focus on your customers and give them good service, you can build long-term relationships with them. Employees need to learn skills that will help customers have a better experience. Customer can either be internal or external \u2013 project stakeholders can be viewed as customers or clients as well.\u00a0 Rating Scales:\u00a0 5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
                                     "enabled": true,
                                     "required": true,
                                     "order": 8
@@ -3677,7 +3692,7 @@
                                     "id": 15658,
                                     "field_id": 307285,
                                     "name": "",
-                                    "description": "It's important for employees to try to be responsible for their work and own up to mistakes they make. They should also do their best to fix them as best they can. This makes efficient use of time and shows that an employee is trustworthy.\r\rRating Scales:\r5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
+                                    "description": "It's important for employees to try to be responsible for their work and own up to mistakes they make. They should also do their best to fix them as best they can. This makes efficient use of time and shows that an employee is trustworthy. Rating Scales:\r5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
                                     "enabled": true,
                                     "required": true,
                                     "order": 11
@@ -3783,6 +3798,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 374320,
@@ -3993,6 +4009,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 381714,
@@ -4185,6 +4202,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 381749,
