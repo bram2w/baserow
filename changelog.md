@@ -23,6 +23,7 @@ For example:
 * Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
 * Made it possible to import data into an existing table. [#342](https://gitlab.com/bramw/baserow/-/issues/342)
 * Tables can now be duplicated. [#961](https://gitlab.com/bramw/baserow/-/issues/961)
+* Introduced environment variable to disable Google docs file preview. [#1074](https://gitlab.com/bramw/baserow/-/issues/1074)
 
 ### Bug Fixes
 
