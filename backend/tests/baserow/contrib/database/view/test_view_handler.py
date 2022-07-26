@@ -440,6 +440,29 @@ def test_duplicate_views(reordered_mock, created_mock, data_fixture):
 
 
 @pytest.mark.django_db
+def test_duplicate_views_with_multiple_select_has_filter(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    grid = data_fixture.create_public_password_protected_grid_view(table=table, order=1)
+    data_fixture.create_view_filter(
+        view=grid,
+        field=field,
+        type="multiple_select_has",
+        value="1",
+    )
+
+    handler = ViewHandler()
+    new_view = handler.duplicate_view(user=user, original_view=grid)
+    new_filters = new_view.viewfilter_set.all()
+    assert len(new_filters) == 1
+    assert new_filters[0].view_id == new_view.id
+    assert new_filters[0].field_id == field.id
+    assert new_filters[0].type == "multiple_select_has"
+    assert new_filters[0].value == "1"
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.views_reordered.send")
 def test_order_views(send_mock, data_fixture):
     user = data_fixture.create_user()
