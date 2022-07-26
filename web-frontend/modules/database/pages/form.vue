@@ -24,9 +24,9 @@
           </p>
         </div>
         <FormPageField
-          v-for="field in fields"
+          v-for="field in visibleFields"
           :ref="'field-' + field.field.id"
-          :key="field.id"
+          :key="field.field.id"
           v-model="values['field_' + field.field.id]"
           class="form-view__field"
           :slug="$route.params.slug"
@@ -74,6 +74,7 @@ import FormService from '@baserow/modules/database/services/view/form'
 import FormPageField from '@baserow/modules/database/components/view/form/FormPageField'
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 import { getPrefills } from '@baserow/modules/database/utils/form'
+import { matchSearchFilters } from '@baserow/modules/database/utils/view'
 
 export default {
   components: {
@@ -192,6 +193,71 @@ export default {
         this.submitAction === 'REDIRECT' && this.submitActionRedirectURL !== ''
       )
     },
+    /**
+     * Returns all the fields that should be visible to the visitor. They can change
+     * depending on the values because some fields have conditions whether they
+     * should be visible.
+     */
+    visibleFields() {
+      return this.fields.reduce((visibleFields, field, index, tmp) => {
+        // If the conditional visibility is disabled, we must always show the field.
+        if (!field.show_when_matching_conditions) {
+          return [...visibleFields, field]
+        }
+
+        // A condition is only valid if the filter field is before this field because
+        // you can only filter fields before. Therefore, we check which fields are
+        // before.
+        const fieldsBefore = this.fields.slice(0, index).map((f) => f.field)
+        // Find the valid filters by checking if the filter field is before this field
+        // and if the filter type is compatible with the field.
+        const conditions = field.conditions.filter((condition) => {
+          const filterType = this.$registry.get('viewFilter', condition.type)
+          const filterField = fieldsBefore.find((f) => f.id === condition.field)
+          return (
+            filterField !== undefined &&
+            filterType.fieldIsCompatible(filterField)
+          )
+        })
+        const conditionType = field.condition_type
+
+        // If there aren't any conditions, we must always show the field.
+        if (conditions.length === 0) {
+          return [...visibleFields, field]
+        }
+
+        // We only want to work with the values of fields that are actually visible.
+        // This to avoid matching the conditions on values of fields that aren't
+        // visible, but were filled out in the past and are still remembered in memory.
+        const visibleFieldIds = visibleFields.map((f) => f.field.id)
+        const visibleValues = clone(this.values)
+        this.fields
+          .filter(
+            (f) =>
+              !visibleFieldIds.includes(f.field.id) &&
+              f.field.id !== field.field.id
+          )
+          .forEach((f) => {
+            visibleValues['field_' + f.field.id] = this.$registry
+              .get('field', f.field.type)
+              .getEmptyValue(f.field)
+          })
+
+        if (
+          matchSearchFilters(
+            this.$registry,
+            conditionType,
+            conditions,
+            fieldsBefore,
+            visibleValues
+          )
+        ) {
+          return [...visibleFields, field]
+        }
+
+        return visibleFields
+      }, [])
+    },
   },
   methods: {
     async submit() {
@@ -202,9 +268,11 @@ export default {
       this.touch()
       this.loading = true
       const values = clone(this.values)
+      const submitValues = {}
 
-      for (let i = 0; i < this.fields.length; i++) {
-        const field = this.fields[i]
+      // Loop over the visible fields, because we only want to submit those values.
+      for (let i = 0; i < this.visibleFields.length; i++) {
+        const field = this.visibleFields[i]
         const fieldType = this.$registry.get('field', field.field.type)
         const valueName = `field_${field.field.id}`
         const value = values[valueName]
@@ -224,7 +292,7 @@ export default {
           return
         }
 
-        values[valueName] = fieldType.prepareValueForUpdate(
+        submitValues[valueName] = fieldType.prepareValueForUpdate(
           field.field,
           values[valueName]
         )
@@ -234,7 +302,7 @@ export default {
         const slug = this.$route.params.slug
         const { data } = await FormService(this.$client).submit(
           slug,
-          values,
+          submitValues,
           this.publicAuthToken
         )
 
@@ -263,7 +331,7 @@ export default {
      * if there are any.
      */
     touch() {
-      this.fields.forEach((field) => {
+      this.visibleFields.forEach((field) => {
         field._.touched = true
       })
     },

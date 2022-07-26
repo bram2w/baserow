@@ -859,6 +859,9 @@ export class FormViewType extends ViewType {
           enabled: false,
           required: true,
           order: maxPossibleOrderValue,
+          show_when_matching_conditions: false,
+          condition_type: 'AND',
+          conditions: [],
         },
       },
       { root: true }

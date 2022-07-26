@@ -1537,6 +1537,7 @@ class ViewFieldOptionsView(APIView):
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             UnrelatedFieldError: ERROR_UNRELATED_FIELD,
             ViewDoesNotSupportFieldOptions: ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
+            FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
         }
     )
     def patch(self, request: Request, view_id: int) -> Response:

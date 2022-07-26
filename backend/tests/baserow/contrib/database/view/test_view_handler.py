@@ -1482,6 +1482,42 @@ def test_submit_form_view(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+def test_submit_form_view_skip_required_with_conditions(data_fixture):
+    table = data_fixture.create_database_table()
+    form = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True
+    )
+    number_option = data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(ValidationError):
+        handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+
+    number_option.show_when_matching_conditions = True
+    number_option.save()
+
+    with pytest.raises(ValidationError):
+        handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+
+    # When there is a condition and `show_when_matching_conditions` is `True`,
+    # the backend can't validate whether the values match the filter, we we don't do
+    # a required validation at all.
+    data_fixture.create_form_view_field_options_condition(
+        field_option=number_option, field=text_field
+    )
+
+    handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+    model = table.get_model()
+    assert model.objects.all().count() == 1
+
+
+@pytest.mark.django_db
 def test_get_public_views_which_include_row(data_fixture, django_assert_num_queries):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

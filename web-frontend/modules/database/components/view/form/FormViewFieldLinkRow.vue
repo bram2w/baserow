@@ -6,6 +6,7 @@
       :initial-display-name="initialDisplayName"
       :class="{ 'dropdown--error': touched && !valid }"
       :fetch-on-open="lazyLoad"
+      :disabled="readOnly"
       @input="updateValue($event)"
       @hide="touch()"
     ></PaginatedDropdown>
@@ -59,8 +60,8 @@ export default {
         search
       )
     },
-    updateValue(value) {
-      this.$emit('update', value === null ? [] : [{ id: value }], this.value)
+    updateValue({ id, value }) {
+      this.$emit('update', value === null ? [] : [{ id, value }], this.value)
     },
   },
 }

@@ -148,6 +148,12 @@ class ViewType(
     and view events will be available to subscribe to and sent to said subscribers.
     """
 
+    field_options_allowed_fields = []
+    """
+    The field names that are allowed to set when creating and updating the field
+    options
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.can_share:
@@ -403,22 +409,41 @@ class ViewType(
             attrs,
         )
 
-    def before_field_options_update(self, view, field_options, fields):
+    def before_field_options_update(
+        self, view: "View", field_options: Dict[str, Any], fields: List["Field"]
+    ) -> Dict[str, Any]:
         """
         Called before the field options are updated related to the provided view.
 
         :param view: The view for which the field options need to be updated.
-        :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
-        :type field_options: dict
         :param fields: Optionally a list of fields can be provided so that they don't
             have to be fetched again.
         :return: The updated field options.
-        :rtype: dict
         """
 
         return field_options
+
+    def after_field_options_update(
+        self,
+        view: "View",
+        field_options: Dict[str, Any],
+        fields: List["Field"],
+        update_field_option_instances: List[Any],
+    ):
+        """
+        Called after the field options have been updated. This hook can be used to
+        update values that haven't been updated.
+
+        :param view: The view for which the field options need to be updated.
+        :param field_options: A dict with the field ids as the key and a dict
+            containing the values that need to be updated as value.
+        :param fields: Optionally a list of fields can be provided so that they don't
+            have to be fetched again.
+        :param update_field_option_instances: The instances of the field options that
+            have been updated.
+        """
 
     def after_field_type_change(self, field: "Field") -> None:
         """
@@ -551,6 +576,20 @@ class ViewType(
         values.update({key: getattr(view, key) for key in self.allowed_fields})
 
         return values
+
+    def enhance_field_options_queryset(
+        self, queryset: django_models.QuerySet
+    ) -> django_models.QuerySet:
+        """
+        This hook can be used to enhance the fetch field options queryset. If the
+        field options have a relationship, `select_related` or `prefetch_related` can
+        be applied here to improve performance.
+
+        :param queryset: The queryset that must be enhanced.
+        :return: The enhanced queryset.
+        """
+
+        return queryset
 
 
 class ViewTypeRegistry(

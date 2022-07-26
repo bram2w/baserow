@@ -29,6 +29,15 @@ export default {
           first = parent
         }
       }
+      // There could be components that need to know which child element have
+      // been moved to the body, but haven't moved to the body themself. If they
+      // only have a `registerMoveToBodyChild` method, we register this
+      // component a there.
+      else if (
+        Object.prototype.hasOwnProperty.call(parent, 'registerMoveToBodyChild')
+      ) {
+        parent.registerMoveToBodyChild(this)
+      }
       parent = parent.$parent
     }
 

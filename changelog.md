@@ -15,6 +15,7 @@ For example:
 * Allow users to use row id in the form redirect URL. [#871](https://gitlab.com/bramw/baserow/-/merge_requests/871)
 * Added a new "is months ago filter". [#1018](https://gitlab.com/bramw/baserow/-/issues/1018)
 * Added a new "is years ago filter". [#1019](https://gitlab.com/bramw/baserow/-/issues/1019)
+* Conditionally show form fields.
 * Show badge when the user has account level premium.
 * Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call. [#951](https://gitlab.com/bramw/baserow/-/issues/951)
 * Applications can now be duplicated. [#960](https://gitlab.com/bramw/baserow/-/issues/960)
@@ -28,6 +29,7 @@ For example:
 * Upgrade the images provided in our example docker-compose files to be the latest and most secure. [#1056](https://gitlab.com/bramw/baserow/-/issues/1056)
 * Fix the perm delete trash cleanup job failing for self linking tables. [#1075](https://gitlab.com/bramw/baserow/-/issues/1075)
 * Add better error handling to row count job. [#1051](https://gitlab.com/bramw/baserow/-/issues/1051)
+* Fixed changing field type to unsupported form view bug. [#1078](https://gitlab.com/bramw/baserow/-/issues/1078)
 * Ensure the latest error is always shown when clicking the formula refresh options link. [#1092](https://gitlab.com/bramw/baserow/-/issues/1092)
 
 ### Breaking Changes

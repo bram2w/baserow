@@ -128,8 +128,9 @@ export default {
      * has changed.
      */
     select(value) {
-      dropdown.methods.select.call(this, value)
-      this.displayName = this.getSelectedProperty(value, 'name')
+      const displayName = this.getSelectedProperty(value, 'name')
+      dropdown.methods.select.call(this, { id: value, value: displayName })
+      this.displayName = displayName
     },
     async fetch(page = 1, search = null) {
       this.page = page

@@ -29,6 +29,7 @@ class KanbanViewType(ViewType):
     field_options_model_class = KanbanViewFieldOptions
     field_options_serializer_class = KanbanViewFieldOptionsSerializer
     allowed_fields = ["single_select_field", "card_cover_image_field"]
+    field_options_allowed_fields = ["hidden", "order"]
     serializer_field_names = ["single_select_field", "card_cover_image_field"]
     serializer_field_overrides = {
         "single_select_field": PrimaryKeyRelatedField(
