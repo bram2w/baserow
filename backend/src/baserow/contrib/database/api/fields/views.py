@@ -230,7 +230,7 @@ class FieldsView(APIView):
         type_name = data.pop("type")
         field_type = field_type_registry.get(type_name)
         table = TableHandler().get_table_for_update(
-            table_id, nowait=not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR
+            table_id, nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
         )
         table.database.group.has_user(request.user, raise_error=True)
 

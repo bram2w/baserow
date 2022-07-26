@@ -349,9 +349,7 @@ class TableHandler:
         table = self.get_table_for_update(table_id)
         return self.update_table(user, table, name)
 
-    def update_table(
-        self, user: AbstractUser, table: TableForUpdate, name: str
-    ) -> TableForUpdate:
+    def update_table(self, user: AbstractUser, table: Table, name: str) -> Table:
         """
         Updates an existing table instance.
 
@@ -413,7 +411,7 @@ class TableHandler:
         table = self.get_table_for_update(table_id)
         self.delete_table(user, table)
 
-    def delete_table(self, user: AbstractUser, table: TableForUpdate):
+    def delete_table(self, user: AbstractUser, table: Table):
         """
         Moves to the trash an existing table instance if the user has access
         to the related group.

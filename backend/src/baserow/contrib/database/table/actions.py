@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 from baserow.core.utils import Progress
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.models import Database
-from baserow.contrib.database.table.handler import TableForUpdate, TableHandler
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType, ActionScopeStr
@@ -87,7 +87,7 @@ class DeleteTableActionType(ActionType):
         table_id: int
 
     @classmethod
-    def do(cls, user: AbstractUser, table: TableForUpdate):
+    def do(cls, user: AbstractUser, table: Table):
         """
         Deletes a table in the database.
         See baserow.contrib.database.table.handler.TableHandler.delete_table
@@ -185,7 +185,7 @@ class UpdateTableActionType(ActionType):
         new_table_name: str
 
     @classmethod
-    def do(cls, user: AbstractUser, table: TableForUpdate, name: str) -> TableForUpdate:
+    def do(cls, user: AbstractUser, table: Table, name: str) -> Table:
         """
         Updates the table.
         See baserow.contrib.database.table.handler.TableHandler.update_table

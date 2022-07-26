@@ -635,7 +635,7 @@ def test_update_field_returns_with_error_if_cant_lock_field_if_locked_for_update
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_field_returns_with_error_if_cant_lock_field_if_locked_for_share(
+def test_update_field_returns_with_error_if_cant_lock_field_if_locked_for_key_share(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -647,7 +647,7 @@ def test_update_field_returns_with_error_if_cant_lock_field_if_locked_for_share(
         with conn.cursor() as cursor:
             # nosec
             cursor.execute(
-                f"SELECT * FROM database_field where id = {text_field.id} FOR SHARE"
+                f"SELECT * FROM database_field where id = {text_field.id} FOR KEY SHARE"
             )
             response = api_client.patch(
                 url,
@@ -687,7 +687,7 @@ def test_update_field_returns_with_error_if_cant_lock_table_if_locked_for_update
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_field_returns_with_error_if_cant_lock_table_if_locked_for_share(
+def test_update_field_returns_with_error_if_cant_lock_table_if_locked_for_key_share(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -699,7 +699,7 @@ def test_update_field_returns_with_error_if_cant_lock_table_if_locked_for_share(
         with conn.cursor() as cursor:
             # nosec
             cursor.execute(
-                f"SELECT * FROM database_table where id = {table.id} FOR SHARE"
+                f"SELECT * FROM database_table where id = {table.id} FOR KEY SHARE"
             )
             response = api_client.patch(
                 url,
@@ -737,7 +737,7 @@ def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_update
 
 
 @pytest.mark.django_db(transaction=True)
-def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_share(
+def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_key_share(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -747,7 +747,7 @@ def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_share(
         with conn.cursor() as cursor:
             # nosec
             cursor.execute(
-                f"SELECT * FROM database_table where id = {table.id} FOR SHARE"
+                f"SELECT * FROM database_table where id = {table.id} FOR KEY SHARE"
             )
             response = api_client.post(
                 reverse("api:database:fields:list", kwargs={"table_id": table.id}),

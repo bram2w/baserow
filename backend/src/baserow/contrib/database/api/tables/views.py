@@ -1,17 +1,16 @@
 from django.conf import settings
 from django.db import transaction
-
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.core.jobs.registries import job_type_registry
-from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
     get_error_schema,
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -30,9 +29,14 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
-
-
+from baserow.contrib.database.file_import.job_type import FileImportJobType
 from baserow.contrib.database.handler import DatabaseHandler
+from baserow.contrib.database.table.actions import (
+    CreateTableActionType,
+    DeleteTableActionType,
+    OrderTableActionType,
+    UpdateTableActionType,
+)
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
@@ -40,25 +44,15 @@ from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
     InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
-    FailedToLockTableDueToConflict,
-)
-from baserow.contrib.database.table.actions import (
-    CreateTableActionType,
-    DeleteTableActionType,
-    OrderTableActionType,
-    UpdateTableActionType,
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
-from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
-from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.core.jobs.handler import JobHandler
-
-from baserow.contrib.database.file_import.job_type import FileImportJobType
-
+from baserow.core.jobs.registries import job_type_registry
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_TABLE_NOT_IN_DATABASE,
@@ -66,7 +60,6 @@ from .errors import (
     ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
-    ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
 )
 from .serializers import (
     TableSerializer,
@@ -75,7 +68,6 @@ from .serializers import (
     TableUpdateSerializer,
     OrderTablesSerializer,
 )
-
 
 FileImportJobSerializerClass = FileImportJobType().get_serializer_class(
     base_class=JobSerializer
@@ -342,7 +334,6 @@ class TableView(APIView):
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
         }
     )
     @validate_body(TableUpdateSerializer)
@@ -351,10 +342,7 @@ class TableView(APIView):
 
         table = action_type_registry.get_by_type(UpdateTableActionType).do(
             request.user,
-            TableHandler().get_table_for_update(
-                table_id,
-                nowait=not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR,
-            ),
+            TableHandler().get_table(table_id),
             name=data["name"],
         )
 
@@ -392,7 +380,6 @@ class TableView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
-            FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
         }
     )
     def delete(self, request, table_id):
@@ -400,9 +387,8 @@ class TableView(APIView):
 
         action_type_registry.get_by_type(DeleteTableActionType).do(
             request.user,
-            TableHandler().get_table_for_update(
+            TableHandler().get_table(
                 table_id,
-                nowait=not settings.BASEROW_BLOCK_INSTEAD_OF_409_CONFLICT_ERROR,
             ),
         )
 
