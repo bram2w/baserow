@@ -2032,3 +2032,19 @@ def test_cant_update_sort_when_view_trashed(data_fixture):
 
     with pytest.raises(ViewSortDoesNotExist):
         ViewHandler().update_sort(user, view_sort, field)
+
+
+@pytest.mark.django_db
+def test_can_submit_form_view_handler_with_zero_number_required(data_fixture):
+    table = data_fixture.create_database_table()
+    form = data_fixture.create_form_view(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True
+    )
+
+    handler = ViewHandler()
+
+    handler.submit_form_view(form=form, values={f"field_{number_field.id}": 0})
+    with pytest.raises(ValidationError):
+        handler.submit_form_view(form=form, values={f"field_{number_field.id}": False})

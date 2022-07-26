@@ -1597,3 +1597,42 @@ def test_changing_password_of_a_public_password_protected_form_view_invalidate_p
         HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_submit_form_view_for_required_number_field_with_0(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(
+        table=table,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, number_negative=False, number_decimal_places=0
+    )
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True, order=2
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            f"field_{number_field.id}": "0",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_200_OK, (
+        "Got an error response "
+        "instead of the expected "
+        "200 OK with body: " + str(response.json())
+    )
+    response_json = response.json()
+    assert response_json == {
+        "row_id": 1,
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
+    }

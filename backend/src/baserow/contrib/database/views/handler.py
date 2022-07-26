@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import (
     Dict,
     Any,
@@ -15,16 +15,14 @@ from typing import (
 )
 
 import jwt
-
-from redis.exceptions import LockNotOwnedError
-
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, AnonymousUser
-from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.core.cache import cache
+from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import models as django_models
 from django.db.models import F, Count
 from django.db.models.query import QuerySet
+from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -90,7 +88,9 @@ from .signals import (
     view_decoration_deleted,
     view_field_options_updated,
 )
-from .validators import EMPTY_VALUES
+from .validators import (
+    value_is_empty_for_required_form_field,
+)
 
 FieldOptionsDict = Dict[int, Dict[str, Any]]
 
@@ -1753,7 +1753,8 @@ class ViewHandler:
             allowed_field_names.append(field_name)
 
             if field.is_required() and (
-                field_name not in values or values[field_name] in EMPTY_VALUES
+                field_name not in values
+                or value_is_empty_for_required_form_field(values[field_name])
             ):
                 field_errors[field_name] = ["This field is required."]
 
