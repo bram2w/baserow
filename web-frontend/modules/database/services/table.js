@@ -39,6 +39,9 @@ export default (client) => {
         table_ids: order,
       })
     },
+    asyncDuplicate(tableId) {
+      return client.post(`/database/tables/${tableId}/duplicate/async/`)
+    },
     delete(tableId) {
       return client.delete(`/database/tables/${tableId}/`)
     },

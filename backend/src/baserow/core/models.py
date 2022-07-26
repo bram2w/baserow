@@ -421,6 +421,9 @@ class TrashEntry(models.Model):
 
 
 class DuplicateApplicationJob(JobWithUserDataMixin, Job):
+
+    user_data_to_save = ["user_websocket_id"]
+
     original_application = models.ForeignKey(
         Application,
         null=True,

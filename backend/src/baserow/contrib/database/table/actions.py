@@ -12,6 +12,7 @@ from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType, ActionScopeStr
 from baserow.core.action.scopes import ApplicationActionScopeType
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import ChildProgressBuilder
 
 
 class CreateTableActionType(ActionType):
@@ -227,4 +228,53 @@ class UpdateTableActionType(ActionType):
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         TableHandler().update_table_by_id(
             user, params.table_id, name=params.new_table_name
+        )
+
+
+class DuplicateTableActionType(ActionType):
+    type = "duplicate_table"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Table:
+        """
+        Duplicate the table.
+        Undoing this action trashes the duplicated table and redoing restores it.
+
+        :param user: The user on whose behalf the table is created.
+        :param table: The name of the table is created.
+        :param progress_builder: A progress builder instance that can be used to
+            track the progress of the duplication.
+        :return: The duplicated table instance.
+        """
+
+        new_table_clone = TableHandler().duplicate_table(
+            user, table, progress_builder=progress_builder
+        )
+        cls.register_action(
+            user, cls.Params(new_table_clone.id), cls.scope(table.database_id)
+        )
+        return new_table_clone
+
+    @classmethod
+    def scope(cls, database_id) -> ActionScopeStr:
+        return ApplicationActionScopeType.value(database_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        table = Table.objects.get(id=params.table_id)
+        TableHandler().delete_table(user, table)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        TrashHandler.restore_item(
+            user, "table", params.table_id, parent_trash_item_id=None
         )

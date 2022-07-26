@@ -2790,15 +2790,6 @@
                                     "aggregation_raw_type": ""
                                 },
                                 {
-                                    "id": 376678,
-                                    "field_id": 308738,
-                                    "width": 256,
-                                    "hidden": false,
-                                    "order": 4,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
                                     "id": 377184,
                                     "field_id": 308986,
                                     "width": 156,

@@ -63,7 +63,11 @@ class DuplicateApplicationJobType(JobType):
 
         new_application_clone = action_type_registry.get_by_type(
             DuplicateApplicationActionType
-        ).do(job.user, job.original_application, progress)
+        ).do(
+            job.user,
+            job.original_application,
+            progress.create_child_builder(represents_progress=progress.total),
+        )
 
         # update the job with the new duplicated application
         job.duplicated_application = new_application_clone

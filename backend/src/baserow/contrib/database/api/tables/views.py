@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,6 +24,7 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_RESERVED_BASEROW_FIELD_NAME,
     ERROR_INVALID_BASEROW_FIELD_NAME,
 )
+from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
@@ -500,3 +502,54 @@ class OrderTablesView(APIView):
         )
 
         return Response(status=204)
+
+
+class AsyncDuplicateTableView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The table to duplicate.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database tables"],
+        operation_id="duplicate_database_table",
+        description=(
+            "Duplicates the table with the provided `table_id` parameter "
+            "if the authorized user has access to the database's group."
+        ),
+        responses={
+            202: DuplicateTableJobType().get_serializer_class(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    def post(self, request, table_id):
+        """Creates a job to duplicate a table in a database."""
+
+        job = JobHandler().create_and_start_job(
+            request.user, DuplicateTableJobType.type, table_id=table_id
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)

@@ -11,9 +11,7 @@ from django.utils import translation
 from django.utils.translation import gettext as _
 
 from baserow.core.utils import Progress
-from baserow.contrib.database.db.schema import (
-    safe_django_schema_editor,
-)
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -26,7 +24,13 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import (
+    ChildProgressBuilder,
+    find_unused_name,
+    split_ending_number,
+)
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
@@ -396,6 +400,77 @@ class TableHandler:
 
         Table.order_objects(queryset, order)
         tables_reordered.send(self, database=database, order=order, user=user)
+
+    def find_unused_table_name(self, database: Database, proposed_name: str) -> str:
+        """
+        Finds an unused name for a table in a database.
+
+        :param database: The database that the table belongs to.
+        :param proposed_name: The name that is proposed to be used.
+        :return: A unique name to use.
+        """
+
+        existing_tables_names = list(database.table_set.values_list("name", flat=True))
+        name, _ = split_ending_number(proposed_name)
+        return find_unused_name([name], existing_tables_names, max_length=255)
+
+    def _setup_id_mapping_for_table_duplication(
+        self, serialized_table: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Sets up the id mapping for a table duplication.
+
+        :param serialized_table: The serialized table.
+        :return: The .
+        """
+
+        # TODO: fix this hack
+        return {"operation": "duplicate_table"}
+
+    def duplicate_table(
+        self,
+        user: AbstractUser,
+        table: Table,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Table:
+        """
+        Duplicates an existing table instance.
+
+        :param user: The user on whose behalf the table is duplicated.
+        :param table: The table instance that needs to be duplicated.
+        :param progress: A progress object that can be used to report progress.
+        :raises ValueError: When the provided table is not an instance of Table.
+        :return: The duplicated table instance.
+        """
+
+        if not isinstance(table, Table):
+            raise ValueError("The table is not an instance of Table")
+
+        progress = ChildProgressBuilder.build(progress_builder, child_total=2)
+
+        database = table.database
+        database.group.has_user(user, raise_error=True)
+        database_type = application_type_registry.get_by_model(database)
+
+        serialized_tables = database_type.export_tables_serialized([table])
+        progress.increment()
+
+        # Set a unique name for the table to import back as a new one.
+        exported_table = serialized_tables[0]
+        exported_table["name"] = self.find_unused_table_name(database, table.name)
+
+        imported_tables = database_type.import_tables_serialized(
+            database,
+            [exported_table],
+            self._setup_id_mapping_for_table_duplication(exported_table),
+        )
+        progress.increment()
+
+        new_table_clone = imported_tables[0]
+
+        table_created.send(self, table=new_table_clone, user=user)
+
+        return new_table_clone
 
     def delete_table_by_id(self, user: AbstractUser, table_id: int):
         """

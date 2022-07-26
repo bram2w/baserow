@@ -49,7 +49,7 @@ def test_can_undo_redo_order_applications(data_fixture, django_assert_num_querie
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_creating_application(data_fixture, django_assert_num_queries):
+def test_can_undo_create_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -69,7 +69,7 @@ def test_can_undo_creating_application(data_fixture, django_assert_num_queries):
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_redo_creating_application(data_fixture, django_assert_num_queries):
+def test_can_undo_redo_create_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -92,7 +92,7 @@ def test_can_undo_redo_creating_application(data_fixture, django_assert_num_quer
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_deleteing_application(data_fixture):
+def test_can_undo_delete_application(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -116,7 +116,7 @@ def test_can_undo_deleteing_application(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_redo_deleting_application(data_fixture, django_assert_num_queries):
+def test_can_undo_redo_delete_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -144,7 +144,7 @@ def test_can_undo_redo_deleting_application(data_fixture, django_assert_num_quer
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_updating_application(data_fixture, django_assert_num_queries):
+def test_can_undo_update_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -171,7 +171,7 @@ def test_can_undo_updating_application(data_fixture, django_assert_num_queries):
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_redo_updating_application(data_fixture, django_assert_num_queries):
+def test_can_undo_redo_update_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)

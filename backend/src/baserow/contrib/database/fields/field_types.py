@@ -55,6 +55,7 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
     literal,
 )
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
@@ -1514,12 +1515,70 @@ class LinkRowFieldType(FieldType):
         serialized["link_row_related_field_id"] = field.link_row_related_field_id
         return serialized
 
+    def import_serialized_for_table_duplication(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+    ) -> Field:
+        """
+        For table duplication we cannot just use the serialized_values, but we need to
+        create a brand new link row field and a new related field in the referenced
+        table.
+
+        :param table: The table to duplicate
+        :param serialized_values: The serialized exported values of the field
+        :param id_mapping: A dictionary mapping old table ids to new table ids
+        :return: The new field
+        """
+
+        serialized_copy = serialized_values.copy()
+        link_row_table_id = serialized_copy.get("link_row_table_id")
+        link_row_table = TableHandler().get_table(link_row_table_id)
+        original_table_id = [
+            k for k, v in id_mapping["database_tables"].items() if v == table.id
+        ][0]
+        original_link_row_related_field_id = serialized_copy.pop(
+            "link_row_related_field_id"
+        )
+
+        # if was a self-referencing link row field, update the link_row_table_id
+        if original_table_id == link_row_table_id:
+            serialized_copy["link_row_table_id"] = table.id
+            return super().import_serialized(table, serialized_copy, id_mapping)
+
+        field = super().import_serialized(table, serialized_copy, id_mapping)
+
+        related_field_name = self.find_next_unused_related_field_name(field)
+        last_order = Field.get_last_order(link_row_table)
+        related_serialized_copy = {
+            "id": original_link_row_related_field_id,
+            "name": related_field_name,
+            "type": serialized_copy.get("type"),
+            "link_row_table_id": table.id,
+            "link_row_related_field_id": field.id,
+            "link_row_relation_id": field.link_row_relation_id,
+            "order": last_order,
+        }
+        related_field = super().import_serialized(
+            link_row_table, related_serialized_copy, id_mapping
+        )
+        field.link_row_related_field = related_field
+        field.save()
+        return field
+
     def import_serialized(
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
     ) -> Optional[Field]:
+
+        if id_mapping.get("operation") == "duplicate_table":
+            return self.import_serialized_for_table_duplication(
+                table, serialized_values, id_mapping
+            )
+
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
@@ -2935,9 +2994,10 @@ class FormulaFieldType(ReadOnlyFieldType):
         field_cache: "FieldCache",
         via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
-        self._refresh_row_values_if_not_in_starting_table(
-            field, update_collector, field_cache, via_path_to_starting_table
-        )
+        if field.requires_refresh_after_insert:
+            self._refresh_row_values(
+                field, update_collector, field_cache, via_path_to_starting_table
+            )
         super().after_rows_imported(
             field, update_collector, field_cache, via_path_to_starting_table
         )

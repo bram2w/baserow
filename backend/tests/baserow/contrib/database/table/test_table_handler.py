@@ -28,6 +28,7 @@ from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
 )
 from baserow.contrib.database.fields.models import (
+    LinkRowField,
     TextField,
     LongTextField,
     BooleanField,
@@ -36,6 +37,7 @@ from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -629,3 +631,37 @@ def test_get_total_row_count_of_group(data_fixture):
     TableHandler.count_rows()
 
     assert TableHandler.get_total_row_count_of_group(group.id) == 10
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_duplicate_interesting_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    original_table_name = "original-table-name"
+    table, _, _, _ = setup_interesting_test_table(
+        data_fixture, user, database, original_table_name
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+    assert (
+        table_handler.get_table(duplicated_table.id).name == f"{original_table_name} 2"
+    )
+
+    # check link_row fields referencing other tables has been cloned correctly,
+    # while self-referencing fields now points to the new duplicated table
+    for field_object in duplicated_table.get_model()._field_objects.values():
+        field_instance = field_object["field"]
+        if not isinstance(field_instance, LinkRowField):
+            continue
+
+        if field_instance.name == "self_link_row":
+            assert field_instance.link_row_table_id == duplicated_table.id
+        else:
+            linkrow_fields = field_instance.link_row_table.linkrowfield_set.all()
+            original_link, duplicated_link = linkrow_fields
+            assert original_link.name == duplicated_link.name
+            assert original_link.link_row_table_id == duplicated_link.link_row_table_id

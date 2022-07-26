@@ -4,7 +4,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 
 
 def construct_all_possible_field_kwargs(
-    link_table, decimal_link_table, file_link_table
+    table, link_table, decimal_link_table, file_link_table
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     Some baserow field types have multiple different 'modes' which result in
@@ -104,6 +104,7 @@ def construct_all_possible_field_kwargs(
         ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
+            {"name": "self_link_row", "link_row_table": table},
             {"name": "decimal_link_row", "link_row_table": decimal_link_table},
             {"name": "file_link_row", "link_row_table": file_link_table},
         ],

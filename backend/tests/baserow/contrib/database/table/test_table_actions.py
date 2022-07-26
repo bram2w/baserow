@@ -1,4 +1,6 @@
 import pytest
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 
 from baserow.core.action.scopes import (
     ApplicationActionScopeType,
@@ -10,15 +12,38 @@ from baserow.core.action.registries import (
 from baserow.contrib.database.table.actions import (
     CreateTableActionType,
     DeleteTableActionType,
+    DuplicateTableActionType,
     OrderTableActionType,
     UpdateTableActionType,
 )
 from baserow.contrib.database.table.models import Table
+from baserow.test_utils.helpers import (
+    assert_undo_redo_actions_are_valid,
+    setup_interesting_test_table,
+)
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_creating_table(data_fixture):
+def test_can_undo_create_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    table, _ = action_type_registry.get_by_type(CreateTableActionType).do(
+        user, database, name="Test 1"
+    )
+
+    actions_undone = ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions_undone, [CreateTableActionType])
+    assert Table.objects.count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_redo_create_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -33,34 +58,34 @@ def test_can_undo_creating_table(data_fixture):
 
     assert Table.objects.filter(pk=table.id).count() == 0
 
-
-@pytest.mark.django_db
-@pytest.mark.undo_redo
-def test_can_undo_redo_creating_table(data_fixture):
-    session_id = "session-id"
-    user = data_fixture.create_user(session_id=session_id)
-    database = data_fixture.create_database_application(user=user)
-
-    table, _ = action_type_registry.get_by_type(CreateTableActionType).do(
-        user, database, name="Test 1"
-    )
-
-    ActionHandler.undo(
+    actions_redone = ActionHandler.redo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
     )
-
-    assert Table.objects.filter(pk=table.id).count() == 0
-
-    ActionHandler.redo(
-        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
-    )
-
+    assert_undo_redo_actions_are_valid(actions_redone, [CreateTableActionType])
     assert Table.objects.filter(pk=table.id).count() == 1
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_deleting_table(data_fixture):
+def test_can_undo_delete_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database, user=user)
+
+    action_type_registry.get_by_type(DeleteTableActionType).do(user, table)
+    assert Table.objects.count() == 0
+
+    actions_undone = ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions_undone, [DeleteTableActionType])
+    assert Table.objects.count() == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_redo_delete_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -74,33 +99,16 @@ def test_can_undo_deleting_table(data_fixture):
 
     assert Table.objects.filter(pk=table.id).count() == 1
 
-
-@pytest.mark.django_db
-@pytest.mark.undo_redo
-def test_can_undo_redo_deleting_table(data_fixture):
-    session_id = "session-id"
-    user = data_fixture.create_user(session_id=session_id)
-    database = data_fixture.create_database_application(user=user)
-    table = data_fixture.create_database_table(database=database, user=user)
-
-    action_type_registry.get_by_type(DeleteTableActionType).do(user, table)
-
-    ActionHandler.undo(
+    actions_redone = ActionHandler.redo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
     )
-
-    assert Table.objects.filter(pk=table.id).count() == 1
-
-    ActionHandler.redo(
-        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
-    )
-
+    assert_undo_redo_actions_are_valid(actions_redone, [DeleteTableActionType])
     assert Table.objects.filter(pk=table.id).count() == 0
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_ordering_tables(data_fixture):
+def test_can_undo_order_tables(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -121,15 +129,16 @@ def test_can_undo_ordering_tables(data_fixture):
     )
     assert get_tables_order() == new_order
 
-    ActionHandler.undo(
+    actions_undone = ActionHandler.undo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
     )
+    assert_undo_redo_actions_are_valid(actions_undone, [OrderTableActionType])
     assert get_tables_order() == original_order
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_redo_ordering_tables(data_fixture):
+def test_can_undo_redo_order_tables(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -155,15 +164,16 @@ def test_can_undo_redo_ordering_tables(data_fixture):
     )
     assert get_tables_order() == original_order
 
-    ActionHandler.redo(
+    actions_redone = ActionHandler.redo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
     )
+    assert_undo_redo_actions_are_valid(actions_redone, [OrderTableActionType])
     assert get_tables_order() == new_order
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_updating_table(data_fixture):
+def test_can_undo_update_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -178,17 +188,17 @@ def test_can_undo_updating_table(data_fixture):
     )
     assert table.name == new_table_name
 
-    ActionHandler.undo(
+    actions_undone = ActionHandler.undo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
     )
-
+    assert_undo_redo_actions_are_valid(actions_undone, [UpdateTableActionType])
     table.refresh_from_db()
     assert table.name == original_table_name
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-def test_can_undo_redo_updating_table(data_fixture):
+def test_can_undo_redo_update_table(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -210,9 +220,129 @@ def test_can_undo_redo_updating_table(data_fixture):
     table.refresh_from_db()
     assert table.name == original_table_name
 
-    ActionHandler.redo(
+    actions_redone = ActionHandler.redo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions_redone, [UpdateTableActionType])
+    table.refresh_from_db()
+    assert table.name == new_table_name
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_duplicate_simple_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    original_table_name = "original-table-name"
+    table = data_fixture.create_database_table(
+        database=database, user=user, name=original_table_name
+    )
+
+    duplicated_table = action_type_registry.get_by_type(DuplicateTableActionType).do(
+        user, table
+    )
+    assert Table.objects.count() == 2
+    assert duplicated_table.name == f"{original_table_name} 2"
+
+    actions_undone = ActionHandler.undo(
         user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
     )
 
-    table.refresh_from_db()
-    assert table.name == new_table_name
+    assert_undo_redo_actions_are_valid(actions_undone, [DuplicateTableActionType])
+    assert Table.objects.count() == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_redo_duplicate_simple_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    original_table_name = "original-table-name"
+    table = data_fixture.create_database_table(
+        database=database, user=user, name=original_table_name
+    )
+
+    duplicated_table = action_type_registry.get_by_type(DuplicateTableActionType).do(
+        user, table
+    )
+    assert Table.objects.count() == 2
+    assert duplicated_table.name == f"{original_table_name} 2"
+
+    ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+
+    assert Table.objects.count() == 1
+
+    actions_redone = ActionHandler.redo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions_redone, [DuplicateTableActionType])
+    assert Table.objects.count() == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_duplicate_interesting_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    original_table_name = "original-table-name"
+    table, _, _, _ = setup_interesting_test_table(
+        data_fixture, user, database, original_table_name
+    )
+
+    duplicated_table = action_type_registry.get_by_type(DuplicateTableActionType).do(
+        user, table
+    )
+    table_handler = TableHandler()
+    assert (
+        table_handler.get_table(duplicated_table.id).name == f"{original_table_name} 2"
+    )
+
+    actions_undone = ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+
+    assert_undo_redo_actions_are_valid(actions_undone, [DuplicateTableActionType])
+    with pytest.raises(TableDoesNotExist):
+        table_handler.get_table(duplicated_table.id)
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_redo_duplicate_interesting_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    original_table_name = "original-table-name"
+    table, _, _, _ = setup_interesting_test_table(
+        data_fixture, user, database, original_table_name
+    )
+
+    duplicated_table = action_type_registry.get_by_type(DuplicateTableActionType).do(
+        user, table
+    )
+    table_handler = TableHandler()
+    assert (
+        table_handler.get_table(duplicated_table.id).name == f"{original_table_name} 2"
+    )
+
+    ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+
+    actions_redone = ActionHandler.redo(
+        user, [ApplicationActionScopeType.value(application_id=database.id)], session_id
+    )
+
+    assert_undo_redo_actions_are_valid(actions_redone, [DuplicateTableActionType])
+    assert (
+        table_handler.get_table(duplicated_table.id).name == f"{original_table_name} 2"
+    )

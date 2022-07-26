@@ -75,6 +75,7 @@ def test_can_convert_between_all_fields(data_fixture):
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
     all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
+        table,
         Table.objects.get(name="link_table"),
         Table.objects.get(name="decimal_link_table"),
         Table.objects.get(name="file_link_table"),

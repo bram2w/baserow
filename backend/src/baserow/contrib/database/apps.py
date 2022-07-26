@@ -68,12 +68,14 @@ class DatabaseConfig(AppConfig):
             DeleteTableActionType,
             OrderTableActionType,
             UpdateTableActionType,
+            DuplicateTableActionType,
         )
 
         action_type_registry.register(CreateTableActionType())
         action_type_registry.register(DeleteTableActionType())
         action_type_registry.register(OrderTableActionType())
         action_type_registry.register(UpdateTableActionType())
+        action_type_registry.register(DuplicateTableActionType())
 
         from .rows.actions import (
             CreateRowActionType,
@@ -410,9 +412,11 @@ class DatabaseConfig(AppConfig):
         from baserow.core.jobs.registries import job_type_registry
         from .airtable.job_type import AirtableImportJobType
         from .file_import.job_type import FileImportJobType
+        from baserow.contrib.database.table.job_types import DuplicateTableJobType
 
         job_type_registry.register(AirtableImportJobType())
         job_type_registry.register(FileImportJobType())
+        job_type_registry.register(DuplicateTableJobType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

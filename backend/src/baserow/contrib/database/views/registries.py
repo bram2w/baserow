@@ -238,7 +238,7 @@ class ViewType(
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
-        files_zip: ZipFile,
+        files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ) -> "View":
         """

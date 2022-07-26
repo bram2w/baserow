@@ -85,7 +85,7 @@ def setup_interesting_test_table(
     )
     handler = FieldHandler()
     all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
-        link_table, decimal_link_table, file_link_table
+        table, link_table, decimal_link_table, file_link_table
     )
     name_to_field_id = {}
     i = 0
@@ -143,6 +143,7 @@ def setup_interesting_test_table(
         "created_on_date_eu": None,
         # We will setup link rows manually later
         "link_row": None,
+        "self_link_row": None,
         "decimal_link_row": None,
         "file_link_row": None,
         "file": [
@@ -181,6 +182,18 @@ def setup_interesting_test_table(
         "formula_singleselect": "",
         "formula_email": "test@example.com",
     }
+
+    with freeze_time("2020-02-01 01:23"):
+        data_fixture.create_user_file(
+            original_name=f"a.txt",
+            unique=f"hashed{file_suffix}",
+            sha256_hash="name",
+        )
+        data_fixture.create_user_file(
+            original_name=f"b.txt",
+            unique=f"other{file_suffix}",
+            sha256_hash="name",
+        )
 
     missing_fields = set(name_to_field_id.keys()) - set(values.keys()) - {"lookup"}
     assert missing_fields == set(), (
