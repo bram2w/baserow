@@ -6,8 +6,7 @@ Baserow consists of two main components:
 
 1. The **backend** is a Python Django application that exposes a REST API. This is the
    core of Baserow and it does not have a user interface. The [API spec](../apis/api.md) can
-   be found here. The persistent state is stored by default in a PostgreSQL database.
-   MySQL and SQLite are not supported at the moment, but probably will be in the future.
+   be found here. The persistent state is stored in a PostgreSQL database.
 1. The **web frontend** is an application that serves as a user interface for the
    backend and is made in [NuxtJS](https://nuxtjs.org/) and
    [Vue.js](https://vuejs.org/). It communicates to the backend via the REST API.
