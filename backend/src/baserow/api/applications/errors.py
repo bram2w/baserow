@@ -11,3 +11,9 @@ ERROR_APPLICATION_NOT_IN_GROUP = (
     HTTP_400_BAD_REQUEST,
     "The application id {e.application_id} does not belong to the group.",
 )
+
+ERROR_APPLICATION_OPERATION_NOT_SUPPORTED = (
+    "ERROR_APPLICATION_OPERATION_NOT_SUPPORTED",
+    HTTP_400_BAD_REQUEST,
+    "The application does not support this operation.",
+)

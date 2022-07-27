@@ -93,6 +93,30 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.failedToUndoRedoDueToConflictTitle'),
         app.i18n.t('clientHandler.failedToUndoRedoDueToConflictDescription')
       ),
+      ERROR_MAXIMUM_SNAPSHOTS_REACHED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.maximumSnapshotsReachedTitle'),
+        app.i18n.t('clientHandler.maximumSnapshotsReachedDescription')
+      ),
+      ERROR_SNAPSHOT_IS_BEING_CREATED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.snapshotBeingCreatedTitle'),
+        app.i18n.t('clientHandler.snapshotBeingCreatedDescription')
+      ),
+      ERROR_SNAPSHOT_IS_BEING_RESTORED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.snapshotBeingRestoredTitle'),
+        app.i18n.t('clientHandler.snapshotBeingRestoredDescription')
+      ),
+      ERROR_SNAPSHOT_IS_BEING_DELETED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.snapshotBeingDeletedTitle'),
+        app.i18n.t('clientHandler.snapshotBeingDeletedDescription')
+      ),
+      ERROR_SNAPSHOT_NAME_NOT_UNIQUE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.snapshotNameNotUniqueTitle'),
+        app.i18n.t('clientHandler.snapshotNameNotUniqueDescription')
+      ),
+      ERROR_SNAPSHOT_OPERATION_LIMIT_EXCEEDED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.snapshotOperationLimitExceededTitle'),
+        app.i18n.t('clientHandler.snapshotOperationLimitExceededDescription')
+      ),
     }
   }
 

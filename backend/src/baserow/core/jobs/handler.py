@@ -102,6 +102,22 @@ class JobHandler:
 
         return Job.objects.filter(user=user).select_related("content_type")
 
+    def get_pending_or_running_jobs(
+        self,
+        job_type_name: str,
+    ) -> QuerySet:
+        """
+        Returns a queryset of pending or running jobs of a provided job type
+        that can be further filtered.
+
+        :param job_type_name: The job type for which we want the queryset.
+        :return: Queryset of all pending or running jobs of the job type.
+        """
+
+        job_type = job_type_registry.get(job_type_name)
+        model_class = job_type.model_class
+        return model_class.objects.filter().is_pending_or_running()
+
     def create_and_start_job(
         self, user: AbstractUser, job_type_name: str, sync=False, **kwargs
     ) -> Job:

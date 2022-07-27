@@ -36,6 +36,7 @@ __all__ = [
     "TrashEntry",
     "UserFile",
     "Action",
+    "Snapshot",
 ]
 
 
@@ -274,7 +275,7 @@ class Application(
     PolymorphicContentTypeMixin,
     models.Model,
 ):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=160)
     order = models.PositiveIntegerField()
     content_type = models.ForeignKey(
@@ -438,3 +439,19 @@ class DuplicateApplicationJob(JobWithUserDataMixin, Job):
         on_delete=models.SET_NULL,
         help_text="The duplicated Baserow application.",
     )
+
+
+class Snapshot(models.Model):
+    name = models.CharField(max_length=160)
+    snapshot_from_application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, null=False, related_name="snapshot_to"
+    )
+    snapshot_to_application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, null=True, related_name="snapshot_from"
+    )
+    mark_for_deletion = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("name", "snapshot_from_application")

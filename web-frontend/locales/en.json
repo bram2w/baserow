@@ -228,7 +228,22 @@
         "failedToLockTableDueToConflictTitle": "Can't create field",
         "failedToLockTableDueToConflictDescription": "Another operation is currently updating or using this table, please wait until it finishes before trying again.",
         "failedToUndoRedoDueToConflictTitle": "Can't undo/redo",
-        "failedToUndoRedoDueToConflictDescription": "Another operation is currently running blocking your undo or redo, please wait until it finishes before trying again."
+        "failedToUndoRedoDueToConflictDescription": "Another operation is currently running blocking your undo or redo, please wait until it finishes before trying again.",
+        "errorMaxJobCountExceededDescription": "You cannot start any more of these actions as you have others still running in the background. Please try again once the previous actions complete.",
+        "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin or because other admin's accounts are pending deletion. Please delete the group or give another user admin permissions.",
+        "errorMaxJobCountExceededDescription": "You cannot start any more of these actions as you have others still running in the background. Please try again once the previous actions complete.",
+        "maximumSnapshotsReachedTitle": "Snapshots limit reached",
+        "maximumSnapshotsReachedDescription": "The maximum number of snapshots in a group has been reached.",
+        "snapshotBeingCreatedTitle": "A snapshot is already being created",
+        "snapshotBeingCreatedDescription": "It is not possible to create multiple snapshots at the same time.",
+        "snapshotBeingRestoredTitle": "The snapshot is being restored",
+        "snapshotBeingRestoredDescription": "It is not possible to use snapshots that are currently being restored.",
+        "snapshotBeingDeletedTitle": "The snapshot is being deleted",
+        "snapshotBeingDeletedDescription": "It is not possible to use snapshots that are currently being deleted.",
+        "snapshotNameNotUniqueTitle": "The snapshot name has to be unique.",
+        "snapshotNameNotUniqueDescription": "All snapshot names have to be unique per application.",
+        "snapshotOperationLimitExceededTitle": "Limit reached",
+        "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes."
     },
     "importerType": {
         "csv": "Import a CSV file",
