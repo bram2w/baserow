@@ -2,17 +2,14 @@
   <div>
     <h2 class="box__title">{{ $t('passwordSettings.title') }}</h2>
     <Error :error="error"></Error>
-    <div v-if="success" class="alert alert--success alert--has-icon">
-      <div class="alert__icon">
-        <i class="fas fa-check"></i>
-      </div>
-      <div class="alert__title">
-        {{ $t('passwordSettings.changedTitle') }}
-      </div>
-      <p class="alert__content">
-        {{ $t('passwordSettings.changedDescription') }}
-      </p>
-    </div>
+    <Alert
+      v-if="success"
+      type="success"
+      icon="check"
+      :title="$t('passwordSettings.changedTitle')"
+    >
+      {{ $t('passwordSettings.changedDescription') }}
+    </Alert>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
         <label class="control__label">{{

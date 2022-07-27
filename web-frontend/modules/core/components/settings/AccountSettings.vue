@@ -2,17 +2,13 @@
   <div>
     <h2 class="box__title">{{ $t('accountSettings.title') }}</h2>
     <Error :error="error"></Error>
-    <div v-if="success" class="alert alert--success alert--has-icon">
-      <div class="alert__icon">
-        <i class="fas fa-check"></i>
-      </div>
-      <div class="alert__title">
-        {{ $t('accountSettings.changedTitle') }}
-      </div>
-      <p class="alert__content">
-        {{ $t('accountSettings.changedDescription') }}
-      </p>
-    </div>
+    <Alert
+      v-if="success"
+      type="success"
+      icon="check"
+      :title="$t('accountSettings.changedTitle')"
+      >{{ $t('accountSettings.changedDescription') }}
+    </Alert>
     <AccountForm :default-values="user" @submitted="submitted">
       <div class="actions actions--right">
         <button

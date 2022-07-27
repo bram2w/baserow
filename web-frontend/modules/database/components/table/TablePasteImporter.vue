@@ -28,15 +28,14 @@
         }}</Checkbox>
       </div>
     </div>
-    <div v-if="error !== ''" class="alert alert--error alert--has-icon">
-      <div class="alert__icon">
-        <i class="fas fa-exclamation"></i>
-      </div>
-      <div class="alert__title">{{ $t('common.wrong') }}</div>
-      <p class="alert__content">
-        {{ error }}
-      </p>
-    </div>
+    <Alert
+      v-if="error !== ''"
+      type="error"
+      icon="exclamation"
+      :title="$t('common.wrong')"
+    >
+      {{ error }}
+    </Alert>
     <TableImporterPreview
       v-if="error === '' && content !== '' && Object.keys(preview).length !== 0"
       :preview="preview"

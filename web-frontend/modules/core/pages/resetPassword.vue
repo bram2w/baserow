@@ -8,15 +8,13 @@
 
       <!-- Disabled info message -->
       <template v-if="!settings.allow_reset_password">
-        <div class="alert alert--simple alert--error alert--has-icon">
-          <div class="alert__icon">
-            <i class="fas fa-exclamation"></i>
-          </div>
-          <div class="alert__title">{{ $t('resetPassword.disabled') }}</div>
-          <p class="alert__content">
-            {{ $t('resetPassword.disabledMessage') }}
-          </p>
-        </div>
+        <Alert
+          simple
+          type="error"
+          icon="exclamation"
+          :title="$t('resetPassword.disabled')"
+          >{{ $t('resetPassword.disabledMessage') }}</Alert
+        >
         <nuxt-link
           :to="{ name: 'login' }"
           class="button button--large button--primary"

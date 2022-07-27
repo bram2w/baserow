@@ -1,23 +1,18 @@
 <template>
-  <div
-    class="alert alert--simple alert--with-shadow alert--has-icon alert--error"
-  >
-    <div class="alert__icon">
-      <i class="fas fa-exclamation"></i>
-    </div>
-    <div class="alert__title">
-      {{ $t('failedConnectingNotification.title') }}
-    </div>
-    <p class="alert__content">
-      {{ $t('failedConnectingNotification.content') }}
-    </p>
+  <Alert
+    shadow
+    simple
+    type="error"
+    icon="exclamation"
+    :title="$t('failedConnectingNotification.title')"
+    >{{ $t('failedConnectingNotification.content') }}
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"
       @click="reload()"
-      >{{ $t('failedConnectingNotification.action') }}</a
-    >
-  </div>
+      >{{ $t('failedConnectingNotification.action') }}
+    </a>
+  </Alert>
 </template>
 
 <script>

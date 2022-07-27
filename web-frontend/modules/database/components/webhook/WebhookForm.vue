@@ -1,25 +1,22 @@
 <template>
   <form @submit.prevent="submit" @input="$emit('formchange')">
     <div v-if="!isDeprecated">
-      <div
+      <Alert
         v-if="!values.active"
-        class="alert alert--simple alert--primary alert--has-icon"
+        simple
+        type="primary"
+        icon="exclamation"
+        :title="$t('webhookForm.deactivated.title')"
       >
-        <div class="alert__icon">
-          <i class="fas fa-exclamation"></i>
-        </div>
-        <div class="alert__title">
-          {{ $t('webhookForm.deactivated.title') }}
-        </div>
-        <p class="alert__content">
-          {{ $t('webhookForm.deactivated.content') }}
+        {{ $t('webhookForm.deactivated.content') }}
+        <p>
+          <a
+            class="button button--ghost margin-top-1"
+            @click="values.active = true"
+            >{{ $t('webhookForm.deactivated.activate') }}</a
+          >
         </p>
-        <a
-          class="button button--ghost margin-top-1"
-          @click="values.active = true"
-          >{{ $t('webhookForm.deactivated.activate') }}</a
-        >
-      </div>
+      </Alert>
       <div class="row">
         <div class="col col-12">
           <FormElement :error="fieldHasErrors('name')" class="control">

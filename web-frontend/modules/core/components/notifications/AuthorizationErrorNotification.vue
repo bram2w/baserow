@@ -1,23 +1,19 @@
 <template>
-  <div
-    class="alert alert--simple alert--with-shadow alert--has-icon alert--error"
+  <Alert
+    simple
+    shadow
+    type="error"
+    icon="exclamation"
+    :title="$t('AuthorizationErrorNotification.title')"
   >
-    <div class="alert__icon">
-      <i class="fas fa-exclamation"></i>
-    </div>
-    <div class="alert__title">
-      {{ $t('AuthorizationErrorNotification.title') }}
-    </div>
-    <p class="alert__content">
-      {{ $t('AuthorizationErrorNotification.content') }}
-    </p>
+    {{ $t('AuthorizationErrorNotification.content') }}
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"
       @click="reload()"
       >{{ $t('AuthorizationErrorNotification.action') }}</a
     >
-  </div>
+  </Alert>
 </template>
 
 <script>

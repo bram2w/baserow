@@ -7,23 +7,18 @@
       <LangPicker />
     </div>
     <template v-if="shouldShowAdminSignupPage">
-      <div class="alert">
-        <div class="alert__title">{{ $t('signup.requireFirstUser') }}</div>
-        <p class="alert__content">
-          {{ $t('signup.requireFirstUserMessage') }}
-        </p>
-      </div>
+      <Alert :title="$t('signup.requireFirstUser')">{{
+        $t('signup.requireFirstUserMessage')
+      }}</Alert>
     </template>
     <template v-if="!isSignupEnabled">
-      <div class="alert alert--simple alert--error alert--has-icon">
-        <div class="alert__icon">
-          <i class="fas fa-exclamation"></i>
-        </div>
-        <div class="alert__title">{{ $t('signup.disabled') }}</div>
-        <p class="alert__content">
-          {{ $t('signup.disabledMessage') }}
-        </p>
-      </div>
+      <Alert
+        simple
+        type="error"
+        icon="exclamation"
+        :title="$t('signup.disabled')"
+        >{{ $t('signup.disabledMessage') }}</Alert
+      >
       <nuxt-link
         :to="{ name: 'login' }"
         class="button button--large button--primary"

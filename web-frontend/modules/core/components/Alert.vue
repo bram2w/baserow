@@ -4,14 +4,25 @@
     :class="{
       'alert--simple': simple,
       [`alert--${type}`]: type,
-      'alert--has-icon': icon,
+      'alert--has-icon': icon || loading,
       'alert--with-shadow': shadow,
+      'alert--minimal': minimal,
     }"
   >
-    <div v-if="icon" class="alert__icon">
-      <i class="fas" :class="`fa-${icon}`" />
+    <a v-if="closeButton" class="alert__close" @click="$emit('close')">
+      <i class="fas fa-times"></i>
+    </a>
+
+    <div v-if="loading" class="alert__icon">
+      <div class="loading alert__icon-loading"></div>
     </div>
-    <div class="alert__title">{{ title }}</div>
+
+    <div v-if="icon && !loading" class="alert__icon">
+      <i v-if="icon" class="fas" :class="`fa-${icon}`" />
+    </div>
+
+    <div v-if="!minimal" class="alert__title">{{ title }}</div>
+
     <p class="alert__content"><slot /></p>
   </div>
 </template>
@@ -35,13 +46,29 @@ export default {
       default: false,
     },
     title: {
-      required: true,
+      required: false,
       type: String,
+      default: '',
     },
     icon: {
       required: false,
       type: String,
       default: '',
+    },
+    loading: {
+      required: false,
+      type: Boolean,
+      default: false,
+    },
+    closeButton: {
+      required: false,
+      type: Boolean,
+      default: false,
+    },
+    minimal: {
+      required: false,
+      type: Boolean,
+      default: false,
     },
   },
 }

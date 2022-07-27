@@ -1,26 +1,20 @@
 <template>
-  <div
-    class="
-      alert alert--simple alert-primary alert--has-icon
-      dashboard__alert
-      margin-top-0
-    "
+  <Alert
+    simple
+    type="primary"
+    icon="exclamation"
+    :title="$t('groupInvitation.title')"
   >
-    <div class="alert__icon">
-      <i class="fas fa-exclamation"></i>
-    </div>
-    <div class="alert__title">{{ $t('groupInvitation.title') }}</div>
-    <p class="alert__content">
-      {{
-        $t('groupInvitation.message', {
-          by: invitation.invited_by,
-          group: invitation.group,
-        })
-      }}
-    </p>
+    {{
+      $t('groupInvitation.message', {
+        by: invitation.invited_by,
+        group: invitation.group,
+      })
+    }}
     <div v-if="invitation.message !== ''" class="quote">
       "{{ invitation.message }}"
     </div>
+    <br />
     <a
       class="button button--error dashboard__alert-button"
       :class="{ 'button--loading': rejectLoading }"
@@ -35,7 +29,7 @@
       @click="!rejectLoading && !acceptLoading && accept(invitation)"
       >{{ $t('groupInvitation.accept') }}</a
     >
-  </div>
+  </Alert>
 </template>
 
 <script>

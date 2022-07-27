@@ -1,11 +1,6 @@
 <template>
   <div>
     <div class="control">
-      <div v-if="tables.length === 0" class="alert alert--error context__alert">
-        <p class="alert__content">
-          {{ $t('fieldLinkRowSubForm.noTable') }}
-        </p>
-      </div>
       <div v-if="tables.length > 0">
         <label class="control__label control__label--small">
           {{ $t('fieldLinkRowSubForm.selectTableLabel') }}
