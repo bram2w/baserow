@@ -43,6 +43,11 @@
             "title": "El webhook está desactivado",
             "content": "Este webhook se ha desactivado porque ha habido demasiados errores consecutivos. Consulte el registro de llamadas para obtener más detalles. Haga clic en el botón de abajo para activarlo de nuevo. No olvide guardar el webhook después de activarlo.",
             "activate": "Activar"
+        },
+        "deprecatedEventType": {
+            "title": "Tipo de evento obsoleto",
+            "description": "Este webhook no recibe información sobre todas las filas modificadas al mismo tiempo. Por favor conviértelo a un tipo de evento de tipo batch. Esto cambia la carga útil del cuerpo JSON a un formato que contiene múltiples filas.",
+            "convert": "Convertir"
         }
     },
     "webhook": {
@@ -138,7 +143,8 @@
         "filterLink": "Puede encontrar una lista de todos los filtros aquí.",
         "filterType": "- `Y`: Indica que las filas deben coincidir con todos los filtros proporcionados.\n- `OR`: Indica que las filas solo tienen que coincidir con uno de los filtros.\n\n Esto funciona solo si se proporcionan dos o más filtros.",
         "include": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para incluir proporcionando el parámetro de consulta de inclusión.\n\n #### Con `user_field_names`:\n\n `include` debe ser una lista separada por comas de nombres de campos que se incluirán en los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `include=My Field,-My Field 2`, solo se incluirán esos campos (a menos que se excluyan explícitamente).\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `include` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para incluir en los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` solo se incluirán esos campos (a menos que se excluyan explícitamente).",
-        "exclude": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para excluir proporcionando el parámetro de consulta de exclusión.\n\n #### Con `user_field_names`:\n\n `excluir` debe ser una lista separada por comas de nombres de campos que se excluirán de los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `exclude=My Field,-My Field 2`, esos campos se excluirán.\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `exclude` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para excluir de los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` se excluirán."
+        "exclude": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para excluir proporcionando el parámetro de consulta de exclusión.\n\n #### Con `user_field_names`:\n\n `excluir` debe ser una lista separada por comas de nombres de campos que se excluirán de los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `exclude=My Field,-My Field 2`, esos campos se excluirán.\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `exclude` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para excluir de los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` se excluirán.",
+        "viewId": "Por defecto, no se aplica ningún filtro ni ordenación fuera de los definidos en los parámetros. Puedes añadir los filtros y ordenaciones de una vista proporcionando su `id` en el parámetro GET `view_id`. Por ejemplo, si proporcionas el siguiente parámetro GET `view_id=1`, se aplicarán los filtros y ordenaciones definidos en la vista con id `1`. Puede encontrar el `view_id` en el menú contextual de cualquier vista. Es el número entre paréntesis detrás del nombre de la vista. \n\n#### Con `filtro__{campo}__{filtro}`\n\nSe aplicará tanto el filtro proporcionado en el parámetro de consulta como los filtros definidos en la vista.\n\n#### Con `order_by`\n\nSi se proporciona `order_by` se ignorará la ordenación definida en la vista."
     },
     "apiDocsIntro": {
         "intro": "La base de datos {name} proporciona una manera fácil de integrar los datos con cualquier sistema externo. La API sigue la semántica REST, utiliza JSON para codificar objetos y se basa en códigos HTTP estándar, errores de lectura humana y mecánica para señalar los resultados de las operaciones.",
@@ -221,7 +227,9 @@
     },
     "fieldContext": {
         "editField": "Editar campo",
-        "deleteField": "Eliminar campo"
+        "deleteField": "Eliminar campo",
+        "hideField": "Ocultar campo",
+        "showField": "Mostrar campo"
     },
     "fieldForm": {
         "name": "Nombre",
@@ -253,7 +261,9 @@
         "search": "Filas de búsqueda"
     },
     "rowEditModal": {
-        "addField": "Agregue campo"
+        "addField": "Agregue campo",
+        "showHiddenFields": "Mostrar campos ocultos",
+        "hideHiddenFields": "Ocultar campos ocultos"
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Añadir otra opción"
@@ -322,7 +332,24 @@
         "title": "Crear nueva tabla",
         "importLabel": "¿Le gustaría importar datos existentes?",
         "newTable": "Comenzar con una nueva tabla",
-        "addButton": "Agregar tabla"
+        "addButton": "Agregar tabla",
+        "uploading": "Subiendo...",
+        "preparing": "Preparando datos...",
+        "importError": "Algo falló durante la importación del archivo",
+        "openCreatedTable": "Abrir la tabla creada",
+        "reportTitleFailure": "Filas fallidas",
+        "reportTitleSuccess": "Importación exitosa, pero...",
+        "reportMessage": "No se han podido importar los siguientes índices de fila:",
+        "stateRowCreation": "Importando...",
+        "statePreValidation": "Validando datos...",
+        "showReport": "Mostrar informe de error",
+        "stateCreateTable": "Creando tabla...",
+        "additionalImportTitle": "Importar a {tabla}",
+        "showTable": "mostrar tabla",
+        "importButton": "Importar",
+        "fieldMappingTitle": "Cartografía de campo",
+        "fieldMappingDescription": "Hemos asignado automáticamente las columnas de los campos Baserow en su tabla. Puedes cambiarlas a continuación. Cualquier celda incompatible permanecerá vacía después de la importación.",
+        "selectImportMessage": "Selecciona los datos que quieras importar."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Haga clic para editar la fórmula",
@@ -358,7 +385,9 @@
         "noFilterText": "Los filtros le permiten mostrar filas que se aplican a sus condiciones.",
         "where": "Donde",
         "and": "Y",
-        "or": "O"
+        "or": "O",
+        "relatedFieldNotFound": "El campo relacionado no se encuentra.",
+        "filterTypeNotFound": "El tipo de filtro no es compatible."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "imagen",
@@ -412,7 +441,9 @@
         "exportView": "Exportar vista",
         "renameView": "Renombrar vista",
         "webhooks": "Webhooks",
-        "deleteView": "Eliminar vista"
+        "deleteView": "Eliminar vista",
+        "importFile": "Importar archivo",
+        "duplicateView": "Duplicar vista"
     },
     "deleteViewModal": {
         "title": "Eliminar {name}",
@@ -433,7 +464,8 @@
         "insertRight": "Insertar a la derecha",
         "createFilter": "Crear filtro",
         "sortField": "Clasificar",
-        "hideField": "Ocultar campo"
+        "hideField": "Ocultar campo",
+        "duplicate": "Duplicar campo"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "La fila no coincide con los filtros",
@@ -445,13 +477,15 @@
         "insertRowBelow": "Insertar fila debajo",
         "enlargeRow": "Ampliar fila",
         "deleteRow": "Borrar fila",
-        "rowCount": "Sin filas | 1 fila | {count} filas"
+        "rowCount": "Sin filas | 1 fila | {count} filas",
+        "selectRow": "Seleccionar fila",
+        "duplicateRow": "Duplicar fila"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
     },
     "gridViewIdentifierOptions": {
-        "id": "",
+        "id": "Identificador de fila",
         "count": "Número de filas"
     },
     "previewAny": {
@@ -542,7 +576,8 @@
         "stateImporting": "Importando",
         "stateImportingTable": "Importando tabla {table}",
         "errorJobAlreadyRunningTitle": "Ya corriendo",
-        "errorJobAlreadyRunningDescription": "Ya se está ejecutando otro trabajo de importación. Tienes que esperar a que termine antes de empezar otro."
+        "errorJobAlreadyRunningDescription": "Ya se está ejecutando otro trabajo de importación. Tienes que esperar a que termine antes de empezar otro.",
+        "linkError": "El enlace debería parecerse así: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "viewDecorator": {
         "decorator": "Color | 1 Color | {recuento} Colores"
@@ -574,5 +609,41 @@
             "incorrectPasswordTitle": "Contraseña incorrecta",
             "incorrectPasswordText": "La contraseña proporcionada es incorrecta."
         }
+    },
+    "apiDocsTableDeleteRows": {
+        "description": "Elimina las filas existentes de {nombre}.",
+        "items": "Una matriz de identificadores de fila que deben ser eliminados."
+    },
+    "apiDocsTableUpdateRows": {
+        "description": "Actualiza filas existentes de {nombre}.",
+        "id": "La identificación de la fila."
+    },
+    "apiDocsTableCreateRows": {
+        "description": "Crear nuevas filas de {nombre}.",
+        "before": "Si se proporciona, las filas recién creadas se posicionarán antes de la fila con la identificación proporcionada."
+    },
+    "importer": {
+        "parsing": "Análisis de datos",
+        "preparing": "Preparando datos",
+        "inProgress": "En proceso...",
+        "loading": "Cargando el archivo",
+        "decoding": "Descodificando datos",
+        "fieldDefaultName": "Campo {conteo}"
+    },
+    "formViewMeta": {
+        "includeRowId": "Utiliza {row_id} para incluir el id de la fila recién creada en el URL."
+    },
+    "databaseDashboardSidebarLinks": {
+        "apiDocumentation": "Documentación del API"
+    },
+    "formViewField": {
+        "required": "requerido",
+        "showWhenMatchingConditions": "mostrar cuando se cumplen las condiciones",
+        "addCondition": "Añadir condición"
+    },
+    "duplicateFieldContext": {
+        "duplicate": "Duplicar campo",
+        "cloneData": "Copiar datos",
+        "soon": "Disponible pronto"
     }
 }

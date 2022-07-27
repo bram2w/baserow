@@ -248,5 +248,11 @@
     "redirectToBaserowModal": {
         "title": "Doorverwijzen naar http://baserow.io",
         "content": "U verlaat uw zelf gehoste instantie en u wordt omgeleid naar http://baserow.io."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "Dit account wordt geïmiteerd. Een paginavernieuwing stopt het.",
+        "impersonateStop": "Stop",
+        "premium": "Premium",
+        "premiumDescription": "Uw account heeft toegang tot de premium functies"
     }
 }

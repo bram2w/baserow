@@ -9,7 +9,8 @@
     "sidebarApplication": {
         "renameApplication": "Rinomina {type}",
         "viewTrash": "Visualizza cestino",
-        "deleteApplication": "Elimina {type}"
+        "deleteApplication": "Elimina {type}",
+        "duplicateApplication": "Duplica {type}"
     },
     "sidebar": {
         "createGroup": "Crea gruppo",
@@ -146,7 +147,8 @@
         "fromParent": "da {parent}",
         "name": "{user} eliminato {type} {title} {parent}",
         "restore": "Ripristina",
-        "unnamed": "{type} senza nome {id}"
+        "unnamed": "{type} senza nome {id}",
+        "andMore": "... e {count} altri"
     },
     "trashModal": {
         "emptyTitle": "Nessun gruppo",

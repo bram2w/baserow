@@ -43,6 +43,11 @@
             "title": "Le webhook est désactivé",
             "content": "Ce webhook a été désactivé car il produisait trop d'échecs consécutifs. Veuillez vérifier l'historique des appels pour plus d'information. Cliquez sur le bouton ci-dessous pour l'activer de nouveau. Pensez à enregistrer le webhook avant de l'activer.",
             "activate": "Activer"
+        },
+        "deprecatedEventType": {
+            "convert": "Convertir",
+            "title": "Type d'événement obsolète",
+            "description": "Ce webhook ne reçoit pas d'informations sur les lignes modifiées en une seule opération. Veuillez le convertir en un type d'événement de type lot. Cette opération modifie le contenu JSON pour un format qui permet de contenir plusieurs lignes."
         }
     },
     "webhook": {
@@ -138,7 +143,8 @@
         "filterLink": "Une liste des filtres disponibles peut être consultée ici.",
         "filterType": "- `AND` : indique que les lignes doivent satisfaire tous les filtres définis.\n- `OR` : indique que les lignes doivent satisfaire au moins l'un des filtres définis pour être retournées.\n\n Cela fonctionne uniquement quand au moins 2 filtres sont définis.",
         "include": "Par défaut, tous les champs de la table sont retournés. Vous pouvez définir le sous ensemble des champs qui seront dans les résultats en fournissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`include` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez conserver, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante `include=Mon champ,-Mon champ 2` alors seul ces champs seront retournés dans les résultats (sauf si vous les avez explicitement exclus avec le paramètre suivant).\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`include` doit être une liste de `field_` suivis par l'identifiant d'un champ à inclure dans le résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante `exclude=field_1,field_2` alors les champs d'identifiant `1` et `2` seront les champs présents dans le résultat (sauf si vous les avez explicitement exclus avec le paramètre suivant).",
-        "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus."
+        "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus.",
+        "viewId": "Par défaut, aucun des filtres et tris autres que ceux définis dans les paramètres de la requête ne sont appliqués. Vous pouvez définir les filtres et les tris d'une vue en fournissant son `id` dans le paramètre GET `view_id`. Par exemple, si vous fournissez le paramètre GET suivant `view_id=1`, les filtres et les tris définis dans la vue avec l'id `1` seront appliqués. Vous pouvez trouver le `view_id` dans le menu contextuel d'une vue donnée. Il s'agit du nombre entre parenthèses derrière le nom de la vue. \n\n #### Avec `filter__{field}__{filter}` \n\n Le filtre fourni dans le paramètre de la requête et les filtres définis dans la vue seront appliqués.\n\n #### Avec `order_by` \n\n Si `order_by` est fourni, le tri défini dans la vue sera ignoré."
     },
     "apiDocsIntro": {
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
@@ -337,7 +343,13 @@
         "stateRowCreation": "Import en cours…",
         "reportMessage": "Les numéro de ligne suivants n'ont pas pu être importés :",
         "statePreValidation": "Validation des données...",
-        "stateCreateTable": "Création de la table..."
+        "stateCreateTable": "Création de la table...",
+        "fieldMappingTitle": "Correspondance des champs",
+        "showTable": "Afficher la table",
+        "additionalImportTitle": "Importer dans {table}",
+        "importButton": "Importer",
+        "fieldMappingDescription": "Nous avons automatiquement fait la correspondance entre les colonnes du fichier et les champs Baserow dans votre table. Vous pouvez les modifier ci-dessous. Toute cellule incompatible avec le type du champ sélectionné restera vide après l'importation.",
+        "selectImportMessage": "Veuillez sélectionner les données à importer."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
@@ -373,7 +385,9 @@
         "noFilterText": "Les filtres permettent de voir uniquement les lignes qui correspondent à vos critères.",
         "where": "Quand",
         "and": "Et",
-        "or": "Ou"
+        "or": "Ou",
+        "filterTypeNotFound": "Le filtre n'est pas compatible.",
+        "relatedFieldNotFound": "Le champ associé n'a pas était trouvé."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "Image",
@@ -428,7 +442,8 @@
         "renameView": "Renommer la vue",
         "deleteView": "Supprimer la vue",
         "webhooks": "Webhooks",
-        "duplicateView": "Dupliquer la vue"
+        "duplicateView": "Dupliquer la vue",
+        "importFile": "Importer un fichier"
     },
     "deleteViewModal": {
         "title": "Supprimer la vue {name}",
@@ -449,7 +464,8 @@
         "sortField": "Trier",
         "hideField": "Cacher un champ",
         "insertRight": "Insérer à droite",
-        "insertLeft": "Insérer à gauche"
+        "insertLeft": "Insérer à gauche",
+        "duplicate": "Dupliquer le champ"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "La ligne est filtrée",
@@ -462,7 +478,8 @@
         "enlargeRow": "Afficher la ligne",
         "deleteRow": "Supprimer la ligne",
         "rowCount": "Acune ligne | 1 ligne | {count} lignes",
-        "duplicateRow": "Dupliquer la ligne"
+        "duplicateRow": "Dupliquer la ligne",
+        "selectRow": "Sélectionner la ligne"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -610,9 +627,23 @@
         "decoding": "Décodage",
         "inProgress": "En cours…",
         "preparing": "Préparation",
-        "parsing": "Analyse des données"
+        "parsing": "Analyse des données",
+        "fieldDefaultName": "Champ {count}"
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "Documentation de l'API"
+    },
+    "formViewMeta": {
+        "includeRowId": "Utilisez {row_id} pour inclure l'identifiant de la ligne a créer dans l'URL."
+    },
+    "formViewField": {
+        "required": "Obligatoire",
+        "showWhenMatchingConditions": "afficher lorsque les conditions sont remplies",
+        "addCondition": "Ajouter une condition"
+    },
+    "duplicateFieldContext": {
+        "duplicate": "Dupliquer le champ",
+        "cloneData": "Copier les données",
+        "soon": "Bientôt disponible"
     }
 }

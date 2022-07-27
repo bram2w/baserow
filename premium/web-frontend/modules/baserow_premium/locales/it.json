@@ -249,5 +249,11 @@
     "redirectToBaserowModal": {
         "title": "Verrai reindirizzato su http://baserow.io",
         "content": "Stai lasciando la tua installazione self-hosted e verrai indirizzato su http://baserow.io."
+    },
+    "premiumTopSidebar": {
+        "premiumDescription": "Il tuo account ha pieno accesso alle funzionalità premium",
+        "impersonateDescription": "Questo account è impersonato. Aggiorna la pagina per ritornare ad usare il tuo account.",
+        "impersonateStop": "Stop",
+        "premium": "Premium"
     }
 }

@@ -26,7 +26,8 @@
         "copy": "Copia",
         "activate": "Attiva",
         "deactivate": "Disattiva",
-        "paste": "Incolla"
+        "paste": "Incolla",
+        "duplicate": "Duplica"
     },
     "adminType": {
         "settings": "Impostazioni"
@@ -138,7 +139,10 @@
         "lowerThan": "inferiore a",
         "lengthIsLowerThan": "lunghezza inferiore a",
         "hasFileType": "ha il tipo di file",
-        "isDaysAgo": "è giorni fa"
+        "isDaysAgo": "è giorni fa",
+        "isMonthsAgo": "è mesi fa",
+        "isYearsAgo": "è anni fa",
+        "inThisWeek": "in questa settimana"
     },
     "viewType": {
         "grid": "Griglia",
@@ -173,7 +177,10 @@
         "eventType": {
             "rowCreated": "Quando una riga viene creata",
             "rowUpdated": "Quando una riga viene aggiornata",
-            "rowDeleted": "Quando una riga viene eliminata"
+            "rowDeleted": "Quando una riga viene eliminata",
+            "rowsDeleted": "Righe eliminate",
+            "rowsUpdated": "Righe aggiornate",
+            "rowsCreated": "Righe create"
         }
     },
     "clientHandler": {
@@ -212,7 +219,15 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Ripristina prima le tabelle relative.",
         "cannotRestoreAsRelatedTableTrashedDescription": "Non puoi ripristinare questo campo perché dipende da altre tabelle che sono ancora nel cestino. Ripristina prima le altre tabelle relative.",
         "groupUserIsLastAdminTitle": "Non è possibile lasciare il gruppo",
-        "groupUserIsLastAdminDescription": "Non è possibile lasciare il gruppo perché sei l'ultimo amministratore o perché gli altri admin verranno cancellati a breve. Elimina il gruppo o dai le autorizzazioni di amministrazione a un altro utente."
+        "groupUserIsLastAdminDescription": "Non è possibile lasciare il gruppo perché sei l'ultimo amministratore o perché gli altri admin verranno cancellati a breve. Elimina il gruppo o dai le autorizzazioni di amministrazione a un altro utente.",
+        "failedToLockTableDueToConflictTitle": "Impossibile creare un nuovo campo",
+        "failedToLockTableDueToConflictDescription": "Un'altra operazione è aggiornando o utilizzando la tabella. Attendi che termini prima di riprovare.",
+        "failedToUndoRedoDueToConflictDescription": "Un'altra operazione sta bloccando l'annullamento o il ripristino, attendi prima di riprovare.",
+        "failedToLockFieldDueToConflictDescription": "Un'altra operazione sta aggiornando il campo in questo momento. Attendi che l'altra operazione termini prima di riprovare.",
+        "errorMaxJobCountExceededTitle": "Non è possibile avviare l'azione.",
+        "errorMaxJobCountExceededDescription": "Non puoi avviare altre azioni dello stesso tipo finché le precedenti non sono terminate. Per favore, riprova più tardi.",
+        "failedToLockFieldDueToConflictTitle": "Non è possibile modificare il campo",
+        "failedToUndoRedoDueToConflictTitle": "Non è possibile annullare/ripristinare"
     },
     "importerType": {
         "csv": "Importa un file CSV",

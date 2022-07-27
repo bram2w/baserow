@@ -248,5 +248,11 @@
     "redirectToBaserowModal": {
         "title": "Redirection vers http://baserow.io",
         "content": "Vous allez quitter votre instance auto-hébergée et être redirigé vers http://baserow.io."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "L’identité de ce compte est usurpée. Une actualisation de la page l’arrêtera.",
+        "impersonateStop": "Arrêter",
+        "premium": "Premium",
+        "premiumDescription": "Votre compte a accès aux fonctionnalités premium globalement"
     }
 }

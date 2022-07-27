@@ -26,7 +26,8 @@
         "copy": "Copier",
         "activate": "Activer",
         "deactivate": "Désactiver",
-        "paste": "Coller"
+        "paste": "Coller",
+        "duplicate": "Dupliquer"
     },
     "adminType": {
         "settings": "Paramètres"
@@ -138,7 +139,10 @@
         "lowerThan": "est plus petit que",
         "lengthIsLowerThan": "a une longueur inférieure à",
         "hasFileType": "est de type",
-        "isDaysAgo": "il y a X jours"
+        "isDaysAgo": "il y a X jours",
+        "isMonthsAgo": "il y a X mois",
+        "isYearsAgo": "il y a X ans",
+        "inThisWeek": "cette semaine"
     },
     "viewType": {
         "grid": "Tableau",
@@ -173,7 +177,10 @@
         "eventType": {
             "rowCreated": "Création d'une ligne",
             "rowUpdated": "Modification d'une ligne",
-            "rowDeleted": "Suppression d'une ligne"
+            "rowDeleted": "Suppression d'une ligne",
+            "rowsCreated": "Des lignes sont créées",
+            "rowsUpdated": "Des lignes sont mises à jour",
+            "rowsDeleted": "Des lignes sont supprimées"
         }
     },
     "clientHandler": {
@@ -212,7 +219,15 @@
         "groupUserIsLastAdminTitle": "Impossible de quitter le groupe",
         "groupUserIsLastAdminDescription": "Il n'est pas possible de quitter le groupe parce que vous êtes le dernier administrateur ou parce que les comptes des autres administrateurs sont en attente de suppression. Veuillez supprimer le groupe ou donner à un autre utilisateur les droits d'administration.",
         "cannotRestoreAsRelatedTableTrashedTitle": "Veuillez d'abord restaurer les tables liées.",
-        "cannotRestoreAsRelatedTableTrashedDescription": "Vous ne pouvez pas restaurer ce champ car il dépend d'autres tables qui sont toujours dans la corbeille. Veuillez d'abord restaurer les tables liées."
+        "cannotRestoreAsRelatedTableTrashedDescription": "Vous ne pouvez pas restaurer ce champ car il dépend d'autres tables qui sont toujours dans la corbeille. Veuillez d'abord restaurer les tables liées.",
+        "failedToUndoRedoDueToConflictTitle": "Impossible d’annuler/rétablir",
+        "failedToLockFieldDueToConflictTitle": "Impossible de modifier le champ",
+        "errorMaxJobCountExceededTitle": "Impossible de démarrer l'action.",
+        "failedToLockTableDueToConflictDescription": "Une autre opération est en train de mettre à jour ou d'utiliser cette table, veuillez attendre qu'elle se termine avant de réessayer.",
+        "errorMaxJobCountExceededDescription": "Vous ne pouvez plus démarrer ce type d'action car d’autres sont encore en cours d’exécution en arrière-plan. Veuillez réessayer une fois les actions précédentes terminées.",
+        "failedToLockFieldDueToConflictDescription": "Une autre opération est en train de mettre à jour ou d'utiliser ce champ, veuillez attendre qu'elle se termine avant de réessayer.",
+        "failedToUndoRedoDueToConflictDescription": "Une autre opération est en cours d'exécution et bloque votre annulation ou votre rétablissement, veuillez attendre qu'elle se termine avant de réessayer.",
+        "failedToLockTableDueToConflictTitle": "Impossible de créer le champ"
     },
     "importerType": {
         "csv": "Importer un fichier CSV",

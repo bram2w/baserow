@@ -248,5 +248,11 @@
     "redirectToBaserowModal": {
         "title": "Weiterleitung an http://baserow.io",
         "content": "Sie verlassen Ihre selbst gehostete Instanz und werden zu http://baserow.io umgeleitet."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "Dieses Konto wird imitiert. Eine Seitenaktualisierung stoppt es.",
+        "impersonateStop": "Stopp",
+        "premium": "Premium",
+        "premiumDescription": "Ihr Konto hat Zugang zu den Premium-Funktionen account-übergreifend"
     }
 }
