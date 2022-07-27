@@ -1,13 +1,21 @@
 # Changelog
 
-## Unreleased
-
 <!--
 Ensure you add link to the gitlab issue if it exists at the end of your changelog line.
 For example:
 
 * My changelog line [(#123)](https://gitlab.com/bramw/baserow/-/issues/123)
 -->
+
+## Unreleased
+
+### New Features
+
+### Bug Fixes
+
+### Breaking Changes
+
+## Released (2022-07-27 1.11.0)
 
 ### New Features
 
