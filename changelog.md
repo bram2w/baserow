@@ -49,6 +49,7 @@ For example:
 * Tables can now be duplicated. [#961](https://gitlab.com/bramw/baserow/-/issues/961)
 * Introduced environment variable to disable Google docs file preview. [#1074](https://gitlab.com/bramw/baserow/-/issues/1074)
 * Made it possible to select the entire row via the row context menu. [#1061](https://gitlab.com/bramw/baserow/-/issues/1061)
+* Replaced all custom alert code with `Alert` component [#1016](https://gitlab.com/bramw/baserow/-/issues/1016)
 
 ### Bug Fixes
 
