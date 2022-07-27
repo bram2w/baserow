@@ -9,7 +9,8 @@
     "sidebarApplication": {
         "renameApplication": "Renombrar {type}",
         "viewTrash": "ver papelera",
-        "deleteApplication": "Borrar {type}"
+        "deleteApplication": "Borrar {type}",
+        "duplicateApplication": "Duplicar {tipo}"
     },
     "sidebar": {
         "createGroup": "Crea un grupo",
@@ -91,7 +92,8 @@
         "invitationDescription": "invitado {since} hace",
         "sendInvite": "Enviar invitación",
         "userAlreadyInGroupTitle": "El usuario ya está en el grupo.",
-        "userAlreadyInGroupText": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo."
+        "userAlreadyInGroupText": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo.",
+        "userDescriptionPendingDeletion": "{usuario} - pendiente de borrar"
     },
     "groupInviteForm": {
         "invitationFormTitle": "Invitar por correo electrónico",
@@ -145,7 +147,8 @@
         "fromParent": "de {parent}",
         "name": "{user} eliminó {type} {title} {parent}",
         "restore": "Restaurar",
-        "unnamed": "{type} {id} sin nombre"
+        "unnamed": "{type} {id} sin nombre",
+        "andMore": "... y {cuenta} más"
     },
     "trashModal": {
         "emptyTitle": "No se encontraron grupos",
@@ -220,14 +223,16 @@
         "errorInvalidLinkMessage": "No se pudo restablecer la contraseña porque el enlace no es válido.",
         "errorLinkExpiredTitle": "Enlace expirado",
         "errorLinkExpiredMessage": "El enlace de restablecimiento de contraseña ha caducado. Solicite otro.",
-        "disabled": "",
-        "disabledMessage": ""
+        "disabled": "El restablecimiento de la contraseña está desactivado",
+        "disabledMessage": "No es posible restablecer la contraseña porque ha sido desactivada."
     },
     "signup": {
         "headTitle": "Crear una nueva cuenta",
         "title": "Inscribirse",
         "disabled": "Registro está deshabilitado",
-        "disabledMessage": "No es posible crear una cuenta porque ha sido deshabilitada."
+        "disabledMessage": "No es posible crear una cuenta porque ha sido deshabilitada.",
+        "requireFirstUser": "¡Bienvenido a Baserow!",
+        "requireFirstUserMessage": "Por favor llena la forma de abajo para crear el usuario administrador."
     },
     "forgotPassword": {
         "title": "Se te olvidó tu contraseña",
@@ -242,14 +247,18 @@
         "baserowInstanceId": "ID de instancia",
         "instanceIdDescription": "El ID de instancia es el identificador único de su copia de Baserow.",
         "accountRestrictions": "Restricciones de cuenta",
-        "settingAllowResetPasswordName": "",
-        "settingAllowResetPasswordDescription": "",
-        "settingAllowResetPasswordWarning": "",
+        "settingAllowResetPasswordName": "Permitir el restablecimiento de la contraseña",
+        "settingAllowResetPasswordDescription": "Por defecto, los usuarios pueden solicitar un enlace para restablecer la contraseña.",
+        "settingAllowResetPasswordWarning": "Ten en cuenta que podrías bloquearte en el sistema y perder acceso sin opción de restablecerse si olvidas tu contraseña.",
         "settingAllowNewAccountsName": "Permitir crear nuevas cuentas",
         "settingAllowNewAccountsDescription": "De forma predeterminada, cualquier usuario que visite su dominio de Baserow puede registrarse para obtener una nueva cuenta.",
         "enabled": "activado",
         "settingAllowSignupsViaGroupInvitationsName": "Permitir suscripciones a través de invitaciones grupales",
-        "settingAllowSignupsViaGroupInvitationDescription": "Incluso si la creación de nuevas cuentas está deshabilitada, esta opción permite que los usuarios invitados directamente sigan creando una cuenta."
+        "settingAllowSignupsViaGroupInvitationDescription": "Incluso si la creación de nuevas cuentas está deshabilitada, esta opción permite que los usuarios invitados directamente sigan creando una cuenta.",
+        "userDeletionGraceDelay": "Eliminación de usuarios",
+        "settingUserDeletionGraceDelay": "Retraso de gracia",
+        "settingUserDeletionGraceDelayDescription": "Este es el número de días sin iniciar sesión después de los cuales una cuenta programada para ser eliminada se borra permanentemente.",
+        "invalidAccountDeletionGraceDelay": "Este valor es obligatorio y debe ser un entero positivo menor que 32000"
     },
     "copyingNotification": {
         "title": "Copiando...",
@@ -277,64 +286,109 @@
     },
     "formSidebar": {
         "actions": {
-            "addAll": "",
-            "removeAll": "",
-            "addField": ""
+            "addAll": "Añadir todo",
+            "removeAll": "Eliminar todo",
+            "addField": "Añadir campo"
         },
-        "fieldsDescription": "",
-        "prefillInfoLink": "",
+        "fieldsDescription": "Todos los campos están en la forma.",
+        "prefillInfoLink": "Rellenar los valores dinámicamente",
         "modal": {
-            "title": "",
-            "descriptionPartOne": "",
-            "descriptionPartTwo": "",
+            "title": "Rellenar los valores dinámicamente",
+            "descriptionPartOne": "Las formas pueden ser pre-rellenadas para ayudar al usuario rellenar la forma más rápido.",
+            "descriptionPartTwo": "Todos los campos disponibles en la forma se pueden pre-llenar.",
             "howToPrefill": {
-                "title": "",
-                "description": ""
+                "title": "Cómo pre-llenar una forma",
+                "description": "Si quieres pre-llenar una forma con datos, puedes hacerlo a través de parámetros de consulta añadidos a la dirección pública de la forma. Estos parámetros de consulta tienen el prefijo `pre-llenar` para evitar cualquier colisión con posibles parámetros de consulta futuros."
             },
             "format": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Formato",
+                "description": "El formato de los parámetros de consulta es:",
+                "codeSnippet": "?pre-llenar_<nombre_del_campo>=<valor>"
             },
             "example": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Ejemplo",
+                "description": "En el siguiente ejemplo queremos rellenar previamente un campo llamado `Nombre` con el valor de `Mike`",
+                "codeSnippet": "?rellenar_Nombre=Mike"
             },
             "spaces": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Espacios",
+                "description": "Los espacios en el nombre del campo se sustituyen por `+` para evitar problemas con el parámetro de consulta.",
+                "codeSnippet": "?rellenar_mi+campo=Mike"
             },
             "multipleValues": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "Valores múltiples",
+                "description": "Si quieres rellenar varios campos puedes hacerlo añadiendo un `,` entre los valores.",
+                "codeSnippet": "?rellenar_multi+seleccionar=Mike,John"
             },
             "specialFieldTypes": {
-                "title": "",
-                "description": "",
+                "title": "Tipos de campos especiales",
+                "description": "En general, el valor de relleno es el mismo que el valor del campo. Pero hay algunas excepciones en las que el valor se traduce en un valor diferente.",
                 "ratingField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Campo de clasificación",
+                    "description": "Un campo de valoración acepta un número para indicar cuántas estrellas deben rellenarse.",
+                    "codeSnippet": "?rellenar_clasificación=3"
                 },
                 "linkRowField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Campo de fila de enlace",
+                    "description": "Un campo de fila de enlace puede aceptar el valor que se muestra en el menú desplegable de selección.",
+                    "codeSnippet": "?rellenar_enlace+fila=Mike"
                 },
                 "selectField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Campo de selección simple / selección múltiple",
+                    "description": "Un campo de selección simple puede aceptar el valor que se muestra en el desplegable de selección. Lo mismo ocurre con el campo de selección múltiple, pero también puede aceptar varios valores.",
+                    "codeSnippet": "?rellenar_selección+simple=Mike"
                 },
                 "dateField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "Campo de fecha",
+                    "description": "Un campo de fecha puede aceptar una fecha en los siguientes formatos y utilizará el formato de fecha del campo para analizar la fecha.",
+                    "codeSnippet": "\n// Normas\nISO_8601\n\n// Formatos generales\n'AAAA-MM-DD',\n'AAAA-MM-DD hh:mm A',\n'AAAA-MM-DD HH:mm',\n\n// UE\n'DD/MM/AAAA',\n'DD/MM/AAAA hh:mm A',\n\"DD/MM/AAAA HH:mm\"\n\n// US\n'MM/DD/AAAA',\n'MM/DD/AAAA hh:mm A',\n'MM/DD/AAAA HH:mm'"
                 }
             }
         }
+    },
+    "deleteAccountSettings": {
+        "title": "Borrar cuenta",
+        "groupNotice": "Los grupos huérfanos se borraran",
+        "orphanGroups": "También se borrará permanentemente después del tiempo de gracia",
+        "orphanGroupMemberCount": "compartido con nadie|compartido con un usuario|compartido con {cuenta} usuarios",
+        "password": "Contraseña",
+        "passwordConfirm": "Repetir contraseña",
+        "repeatPasswordMatchError": "Este campo debe coincidir con el primer campo de contraseña.",
+        "submitButton": "Borrar cuenta",
+        "errorInvalidPasswordTitle": "Contraseña inválida",
+        "errorInvalidPasswordMessage": "No se ha podido eliminar tu cuenta porque tu contraseña no es válida.",
+        "errorUserIsLastAdminTitle": "Último administrador",
+        "errorUserIsLastAdminMessage": "No se ha podido eliminar tu cuenta porque eres el último administrador de esta instancia de Baserow.",
+        "accountDeletedSuccessTitle": "Eliminación de la cuenta programada",
+        "accountDeletedSuccessMessage": "Se ha programado la eliminación de tu cuenta.",
+        "groupLoadingError": "La comprobación de los grupos ha fallado",
+        "groupLoadingErrorDescription": "La comprobación de los grupos a eliminar ha fallado, favor de actualizar la página.",
+        "description": "Puedes programar la eliminación de tu cuenta introduciendo tu contraseña y haciendo clic en el botón. Tu cuenta será eliminada permanentemente después de {días}. Mientras tanto, si vuelves a conectarte, se cancelará la eliminación de tu cuenta.",
+        "groupNoticeDescription": "Cuando tu cuenta se elimina permanentemente, todos los grupos y datos asociados para los que eres el último usuario activo con permisos de administrador también se eliminarán. Los grupos que se muestran a continuación son los que se borrarán porque tú eres el único administrador. Para evitar que se borren, primero dale a otro usuario permisos de administrador antes de borrar tu cuenta."
+    },
+    "clearingNotification": {
+        "title": "Borrando...",
+        "content": "Preparando tus datos"
+    },
+    "dashboardSidebar": {
+        "links": "Enlaces",
+        "knowledgeBase": "Base de conocimientos",
+        "tutorials": "Tutoriales",
+        "userSettings": "Configuración de usuario",
+        "logoff": "Cerrar sesión",
+        "groups": "Grupos",
+        "trash": "Basura"
+    },
+    "pastingNotification": {
+        "content": "Preparar tus datos",
+        "title": "Pegando..."
+    },
+    "job": {
+        "errorJobAlreadyRunningDescription": "Ya se está corriendo otro trabajo de importación. Tienes que esperar a que termine ese antes de iniciar otro.",
+        "statePending": "Esperando para empezar...",
+        "stateStarted": "Empezó...",
+        "stateFinished": "Terminado",
+        "stateFailed": "Fallido",
+        "errorJobAlreadyRunningTitle": "Ya está corriendo"
     }
 }

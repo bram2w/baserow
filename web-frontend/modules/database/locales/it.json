@@ -43,6 +43,11 @@
             "title": "Webhook disattivato",
             "content": "Questo webhook è stato disattivato a causa di troppi fallimenti consecutivi. Controlla il registro delle chiamate per maggiori dettagli. Clicca sul pulsante qui sotto per attivarlo di nuovo. Non dimenticare di salvare il webhook dopo averlo attivato.",
             "activate": "Attiva"
+        },
+        "deprecatedEventType": {
+            "convert": "Converti",
+            "title": "Tipo di evento deprecato",
+            "description": "Questo webhook non viene richiamato se più righe vengono modificate contemporaneamente tramite chiamata batch. Per favore, utilizza l'evento di tipo batch opportuno. Questo tipo di evento utilizza un formato adatto per inviare righe multiple nel corpo del messaggio."
         }
     },
     "webhook": {
@@ -138,7 +143,8 @@
         "filterLink": "Qui puoi trovare un elenco di tutti i filtri.",
         "filterType": "- `AND`: indica che le righe devono corrispondere a tutti i filtri forniti.\n- `OR`: indica che le righe devono corrispondere solo a uno dei filtri.\n\nQuesto funziona solo se vengono forniti due o più filtri.",
         "include": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da includere, fornendo il parametro di query include.\n\n#### Con `user_field_names`:\n\n`include` deve essere un elenco separato da virgole di nomi campo da includere nei risultati. Ad esempio se si fornisce il seguente parametro GET: `include=My Field,-My Field 2` allora solo quei campi saranno inclusi (a meno che non siano esplicitamente esclusi).\n\nIl nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi campo contengono virgolette, allora devono essere evasi usando il carattere `\\`. Es: `Name \\\"`.\n\n#### Senza `user_field_names`:\n\n`include` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da includere nei risultati. Ad esempio: se si fornisce il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno i soli inclusi (a meno che non siano esplicitamente esclusi).",
-        "exclude": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da escludere, fornendo il parametro di query exclude.\n\n #### Con `user_field_names`:\n\n `exclude` deve essere un elenco separato da virgole di nomi campo da escludere dai risultati. As esempio se si fornisce il seguente parametro GET: `exclude=My Field,-My Field 2` allora quei campi saranno esclusi.\n\n Il nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi dei campi contengono virgolette, allora devono essere evasi usando il carattere ```. Es: `Name \\\"`.\n\n #### Senza `nomi_di_campo_utente`:\n\n `exclude` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da escludere dai risultati. Ad esempio: Se fornisci il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno esclusi."
+        "exclude": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da escludere, fornendo il parametro di query exclude.\n\n #### Con `user_field_names`:\n\n `exclude` deve essere un elenco separato da virgole di nomi campo da escludere dai risultati. As esempio se si fornisce il seguente parametro GET: `exclude=My Field,-My Field 2` allora quei campi saranno esclusi.\n\n Il nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi dei campi contengono virgolette, allora devono essere evasi usando il carattere ```. Es: `Name \\\"`.\n\n #### Senza `nomi_di_campo_utente`:\n\n `exclude` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da escludere dai risultati. Ad esempio: Se fornisci il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno esclusi.",
+        "viewId": "Di default nessuno dei filtri o ordinamenti fuori da quelli definiti nei parametri query del URL verrà applicato. Puoi aggiungere filtri e ordinamenti fornendo i relativi `id` come parametro GET per il parametro `view_id`. Per esempio, scrivendo `view_id=1` allora verranno utilizzati i filtri e l'ordinamento della vista con `id` 1. Puoi trovare l'id della vista nel menu di modifica della singola vista. L'id è il numero tra parentesi dopo il nome.\n\n #### With `filter__{field}__{filter}` \n\n Verranno applicati sia il filtro fornito nei parametri query del URL che quello impostato nella vista. \n\n #### With `order_by` \n\n Se viene fornito uno specifico `order_by`, l'ordinamento impostato nella vista viene ignorato."
     },
     "apiDocsIntro": {
         "intro": "Il database {name} fornisce un modo semplice per integrare i dati con qualsiasi sistema esterno. L'API segue la semantica REST, usa JSON per codificare gli oggetti e si basa su codici HTTP standard, errori leggibili dalla macchina e dall'uomo per segnalare i risultati delle operazioni.",
@@ -337,7 +343,13 @@
         "reportMessage": "Le seguenti righe non possono essere importate:",
         "stateRowCreation": "Importando...",
         "reportTitleSuccess": "Import riuscito ma...",
-        "stateCreateTable": "Creando la tabella..."
+        "stateCreateTable": "Creando la tabella...",
+        "additionalImportTitle": "Importa in {table}",
+        "showTable": "mostra tabella",
+        "fieldMappingDescription": "Abbiamo provato a mappare automaticamente le tue colonne nei nostri formati. Puoi modificarli qui sotto. Ogni formato incompatibile rimarrà vuoto al termine dell'importazione.",
+        "fieldMappingTitle": "Rimappa i campi",
+        "importButton": "Importa",
+        "selectImportMessage": "Per favore scegli i dati da importare."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Clicca per modificare la formula",
@@ -373,7 +385,9 @@
         "noFilterText": "I filtri ti permettono di mostrare le righe che corrispondono alle condizioni.",
         "where": "Dove",
         "and": "E",
-        "or": "O"
+        "or": "O",
+        "relatedFieldNotFound": "Il campo relativo non è stato trovato.",
+        "filterTypeNotFound": "Il tipo di filtro è incompatibile."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "immagine",
@@ -428,7 +442,8 @@
         "renameView": "Rinomina vista",
         "webhooks": "Webhook",
         "deleteView": "Elimina vista",
-        "duplicateView": "Duplica vista"
+        "duplicateView": "Duplica vista",
+        "importFile": "Importa file"
     },
     "deleteViewModal": {
         "title": "Elimina {name}",
@@ -449,7 +464,8 @@
         "insertRight": "Inserisci a destra",
         "createFilter": "Crea filtro",
         "sortField": "Ordina",
-        "hideField": "Nascondi campo"
+        "hideField": "Nascondi campo",
+        "duplicate": "Duplica campo"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "La riga non corrisponde ai filtri",
@@ -462,7 +478,8 @@
         "enlargeRow": "Allarga riga",
         "deleteRow": "Elimina riga",
         "rowCount": "Nessuna riga | 1 riga | {conteggio} righe",
-        "duplicateRow": "Duplica riga"
+        "duplicateRow": "Duplica riga",
+        "selectRow": "Seleziona riga"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
@@ -602,7 +619,8 @@
         "decoding": "Decodificando i dati",
         "parsing": "Analizzando i dati",
         "preparing": "Preparando i dati",
-        "inProgress": "In corso..."
+        "inProgress": "In corso...",
+        "fieldDefaultName": "Campi {count}"
     },
     "apiDocsTableCreateRows": {
         "description": "Crea nuove {name} righe.",
@@ -614,5 +632,18 @@
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "Documentazione API"
+    },
+    "duplicateFieldContext": {
+        "cloneData": "Copia i dati",
+        "soon": "Presto disponibile",
+        "duplicate": "Duplica campo"
+    },
+    "formViewField": {
+        "required": "richiesto",
+        "showWhenMatchingConditions": "mostra quando le condizioni sono soddisfatte",
+        "addCondition": "Aggiungi condizione"
+    },
+    "formViewMeta": {
+        "includeRowId": "Usa {row_id} per includere l'id di riga nel tuo URL."
     }
 }

@@ -9,7 +9,8 @@
     "sidebarApplication": {
         "renameApplication": "Umbenennen {type}",
         "viewTrash": "Ansicht Papierkorb",
-        "deleteApplication": "Löschen {type}"
+        "deleteApplication": "Löschen {type}",
+        "duplicateApplication": "duplizieren {type}"
     },
     "sidebar": {
         "createGroup": "Gruppe erstellen",
@@ -146,7 +147,8 @@
         "fromParent": "von {parent}",
         "name": "{user} gelöscht {type} {title} {parent}",
         "restore": "Wiederherstellen",
-        "unnamed": "Unbenannt {type} {id}"
+        "unnamed": "Unbenannt {type} {id}",
+        "andMore": "... und {count} mehr"
     },
     "trashModal": {
         "emptyTitle": "Keine Gruppen gefunden",

@@ -43,6 +43,11 @@
             "title": "Webhook is uitgeschakeld",
             "content": "Deze webhook is uitgeschakeld omdat er te veel opeenvolgende mislukkingen zijn geweest. Controleer het call log voor meer details. Klik op de knop hieronder om de webhook weer te activeren. Vergeet niet om de webhook op te slaan na het activeren.",
             "activate": "Activeren"
+        },
+        "deprecatedEventType": {
+            "title": "Verouderd gebeurtenistype",
+            "description": "Deze webhook ontvangt geen informatie over alle gewijzigde rijen tegelijk. Converteer het naar een batch-stijl evenement type. Dit verandert de JSON body payload naar een formaat dat meerdere rijen bevat.",
+            "convert": "Omzetten"
         }
     },
     "webhook": {
@@ -138,7 +143,8 @@
         "filterLink": "Een lijst van alle filters is hier beschikbaar.",
         "filterType": "- `AND`: Geeft aan dat de rijen aan alle opgegeven filters moeten voldoen.\n- `OR`: Geeft aan dat de rijen slechts aan één van de filters hoeven te voldoen.\n\n Dit werkt alleen als er twee of meer filters zijn opgegeven.",
         "include": "Alle velden worden standaard opgenomen in het antwoord. U kunt een sub-set van velden selecteren om op te nemen door de include query parameter op te geven.\n\n#### Met `user_field_names`:\n\n`include` moet een door komma's gescheiden lijst zijn van veldnamen die moeten worden opgenomen in de resultaten. Als u bijvoorbeeld de volgende GET-parameter opgeeft: `include=My Field,-My Field 2` dan zullen alleen die velden worden opgenomen (tenzij ze expliciet zijn uitgesloten)\n\n#### Zonder `user_field_names`:\n\n`include` moet een door komma's gescheiden lijst zijn van `field_` gevolgd door de id van het veld dat moet worden meegenomen in de resultaten. Bijvoorbeeld: Als je de volgende GET parameter `exclude=field_1,field_2` opgeeft, dan worden alleen de velden met id `1` en id `2`meegenomen (tenzij ze expliciet worden uitgesloten).",
-        "exclude": "Alle velden worden standaard opgenomen in het antwoord. Je kunt een sub-set van velden selecteren voor uitsluiting door de exclude query parameter op te geven.\n\n#### Met `user_field_names`:\n\n`exclude` moet een door komma's gescheiden lijst zijn van veldnamen die moeten worden uitgesloten van de resultaten. Als je bijvoorbeeld de volgende GET-parameter opgeeft: `exclude=My Field,-My Field 2` dan zullen die velden worden uitgesloten\n\n#### Zonder `user_field_names`:\n\n`exclude` moet een door komma's gescheiden lijst zijn van `field_` gevolgd door de id van het veld dat moet worden uitgesloten van de resultaten. Bijvoorbeeld: Als je de volgende GET parameter `exclude=field_1,field_2` opgeeft, dan worden de velden met id `1` en id `2` uitgesloten."
+        "exclude": "Alle velden worden standaard opgenomen in het antwoord. Je kunt een sub-set van velden selecteren voor uitsluiting door de exclude query parameter op te geven.\n\n#### Met `user_field_names`:\n\n`exclude` moet een door komma's gescheiden lijst zijn van veldnamen die moeten worden uitgesloten van de resultaten. Als je bijvoorbeeld de volgende GET-parameter opgeeft: `exclude=My Field,-My Field 2` dan zullen die velden worden uitgesloten\n\n#### Zonder `user_field_names`:\n\n`exclude` moet een door komma's gescheiden lijst zijn van `field_` gevolgd door de id van het veld dat moet worden uitgesloten van de resultaten. Bijvoorbeeld: Als je de volgende GET parameter `exclude=field_1,field_2` opgeeft, dan worden de velden met id `1` en id `2` uitgesloten.",
+        "viewId": "Standaard worden geen filters en sorteringen toegepast die buiten de query parameters zijn gedefinieerd. U kunt de filters en sorteringen van een view toevoegen door zijn `id` in de `view_id` GET parameter op te geven. Bijvoorbeeld, als u de volgende GET parameter `view_id=1` opgeeft, dan zullen de filters en sorteringen die zijn gedefinieerd in de view met id `1` worden toegepast. U kunt de `view_id` vinden in het context menu van een gegeven view. Het is het getal tussen haakjes achter de view naam. \n\n #### Met `filter__{field}__{filter}` \n\n Zowel het filter dat in de query parameter is opgegeven als de filters die in de view zijn gedefinieerd zullen worden toegepast.\n\n #### Met `order_by` \n\n Als `order_by` wordt meegegeven dan zal de sortering gedefinieerd in de view worden genegeerd."
     },
     "apiDocsIntro": {
         "intro": "De {name} database biedt een gemakkelijke manier om de gegevens te integreren met elk extern systeem. De API volgt REST semantiek, gebruikt JSON om objecten te coderen, en is gebaseerd op standaard HTTP codes, machineleesbare en door mensen leesbare fouten om operatie-uitkomsten te signaleren.",
@@ -337,7 +343,13 @@
         "stateRowCreation": "Importeren...",
         "reportMessage": "De volgende rij indexen konden niet worden geïmporteerd:",
         "stateCreateTable": "Tabel maken...",
-        "statePreValidation": "Valideren van gegevens..."
+        "statePreValidation": "Valideren van gegevens...",
+        "additionalImportTitle": "Importeren in {table}",
+        "showTable": "toon tabel",
+        "importButton": "Importeren",
+        "fieldMappingTitle": "Veld vertaling",
+        "fieldMappingDescription": "Wij hebben de kolommen van de Baserow-velden in uw tabel automatisch toegewezen. U kunt ze hieronder wijzigen. Elke niet-compatibele cel zal leeg blijven na de import.",
+        "selectImportMessage": "Selecteer gegevens om te importeren."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klik om de formule te bewerken",
@@ -373,7 +385,9 @@
         "noFilterText": "Met filters kun je rijen tonen die aan je voorwaarden voldoen.",
         "where": "Waar",
         "and": "En",
-        "or": "Of"
+        "or": "Of",
+        "relatedFieldNotFound": "Het gerelateerde veld is niet gevonden.",
+        "filterTypeNotFound": "Het filtertype is niet compatibel."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "afbeelding",
@@ -428,7 +442,8 @@
         "renameView": "Weergave hernoemen",
         "deleteView": "Weergave verwijderen",
         "webhooks": "Webhooks",
-        "duplicateView": "View dupliceren"
+        "duplicateView": "View dupliceren",
+        "importFile": "Bestand importeren"
     },
     "deleteViewModal": {
         "title": "Verwijder {name}",
@@ -449,7 +464,8 @@
         "sortField": "Sorteren",
         "hideField": "Veld verbergen",
         "insertLeft": "Links invoegen",
-        "insertRight": "Rechts invoegen"
+        "insertRight": "Rechts invoegen",
+        "duplicate": "Dupliceer veld"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "Rij komt niet overeen met filters",
@@ -462,7 +478,8 @@
         "enlargeRow": "Vergroot rij",
         "deleteRow": "Rij verwijderen",
         "rowCount": "Geen rijen | 1 rij | {count} rijen",
-        "duplicateRow": "Rij dupliceren"
+        "duplicateRow": "Rij dupliceren",
+        "selectRow": "Rij selecteren"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
@@ -610,9 +627,23 @@
         "loading": "Bestand laden",
         "inProgress": "In uitvoering...",
         "parsing": "Gegevens parseren",
-        "preparing": "Gegevens voorbereiden"
+        "preparing": "Gegevens voorbereiden",
+        "fieldDefaultName": "Veld {count}"
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "API-documentatie"
+    },
+    "formViewField": {
+        "required": "verplicht",
+        "showWhenMatchingConditions": "tonen wanneer aan de voorwaarden is voldaan",
+        "addCondition": "Voorwaarde toevoegen"
+    },
+    "duplicateFieldContext": {
+        "duplicate": "Dupliceer veld",
+        "cloneData": "Gegevens kopiëren",
+        "soon": "Binnenkort beschikbaar"
+    },
+    "formViewMeta": {
+        "includeRowId": "Gebruik {row_id} om de nieuw aangemaakte rij id in de URL op te nemen."
     }
 }

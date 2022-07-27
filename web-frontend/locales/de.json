@@ -26,7 +26,8 @@
         "copy": "Kopieren",
         "paste": "Einfügen",
         "activate": "Aktivieren",
-        "deactivate": "Deaktivieren"
+        "deactivate": "Deaktivieren",
+        "duplicate": "Duplizieren"
     },
     "adminType": {
         "settings": "Einstellungen"
@@ -138,7 +139,10 @@
         "lowerThan": "niedriger als",
         "lengthIsLowerThan": "Länge ist niedriger als",
         "hasFileType": "hat Dateityp",
-        "isDaysAgo": "ist Tage alt"
+        "isDaysAgo": "ist Tage alt",
+        "inThisWeek": "in dieser Woche",
+        "isMonthsAgo": "ist Monate her",
+        "isYearsAgo": "ist Jahre her"
     },
     "viewType": {
         "grid": "Gitternetz",
@@ -173,7 +177,10 @@
         "eventType": {
             "rowCreated": "Wenn eine Zeile erstellt wurde",
             "rowUpdated": "Wenn eine Zeile aktualisiert wurde",
-            "rowDeleted": "Wenn eine Zeile gelöscht wurde"
+            "rowDeleted": "Wenn eine Zeile gelöscht wurde",
+            "rowsCreated": "Zeilen werden erstellt",
+            "rowsUpdated": "Zeilen werden aktualisiert",
+            "rowsDeleted": "Zeilen werden gelöscht"
         }
     },
     "clientHandler": {
@@ -212,7 +219,15 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Bitte stellen Sie zuerst die zugehörigen Tabellen wieder her.",
         "cannotRestoreAsRelatedTableTrashedDescription": "Sie können dieses Feld nicht wiederherstellen, da es von anderen Tabellen abhängt, die noch nicht gelöscht sind. Bitte stellen Sie zuerst die anderen Bezugstabellen wieder her.",
         "groupUserIsLastAdminTitle": "Kann die Gruppe nicht verlassen",
-        "groupUserIsLastAdminDescription": "Es ist nicht möglich, die Gruppe zu verlassen, weil Sie der letzte Administrator sind oder weil die Konten anderer Administratoren zur Löschung anstehen. Bitte löschen Sie die Gruppe oder geben Sie einem anderen Benutzer Admin-Rechte."
+        "groupUserIsLastAdminDescription": "Es ist nicht möglich, die Gruppe zu verlassen, weil Sie der letzte Administrator sind oder weil die Konten anderer Administratoren zur Löschung anstehen. Bitte löschen Sie die Gruppe oder geben Sie einem anderen Benutzer Admin-Rechte.",
+        "errorMaxJobCountExceededTitle": "Die Aktion konnte nicht gestartet werden.",
+        "errorMaxJobCountExceededDescription": "Sie können keine weiteren dieser Aktionen starten, da noch andere im Hintergrund laufen. Bitte versuchen Sie es erneut, sobald die vorherigen Aktionen abgeschlossen sind.",
+        "failedToLockFieldDueToConflictTitle": "Feld kann nicht geändert werden",
+        "failedToLockTableDueToConflictTitle": "Feld kann nicht erstellt werden",
+        "failedToUndoRedoDueToConflictTitle": "Kann nicht rückgängig machen/wiederherstellen",
+        "failedToUndoRedoDueToConflictDescription": "Ein anderer Vorgang wird gerade ausgeführt und blockiert Ihre Rückgängigmachung oder Wiederherstellung. Bitte warten Sie, bis dieser Vorgang beendet ist, bevor Sie es erneut versuchen.",
+        "failedToLockFieldDueToConflictDescription": "Dieses Feld wird gerade von einem anderen Vorgang aktualisiert oder verwendet. Bitte warten Sie, bis dieser Vorgang abgeschlossen ist, bevor Sie es erneut versuchen.",
+        "failedToLockTableDueToConflictDescription": "Ein anderer Vorgang aktualisiert oder verwendet gerade diese Tabelle. Bitte warten Sie, bis er beendet ist, bevor Sie es erneut versuchen."
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",

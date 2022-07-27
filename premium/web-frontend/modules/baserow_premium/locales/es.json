@@ -27,7 +27,8 @@
         "comment": "Comentario"
     },
     "rowComment": {
-        "you": "Tú"
+        "you": "Tú",
+        "anonymous": "Anónimo"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Registrar una licencia",
@@ -244,5 +245,15 @@
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "¿Por cual campo de selección individual debe colorearse la fila?"
+    },
+    "redirectToBaserowModal": {
+        "title": "Redirigiendo a http://baserow.io",
+        "content": "Estás abandonando tu instancia auto-alojada y estás siendo redirigido a http://baserow.io."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "Esta cuenta está suplantada. Una actualización de la página la detendrá.",
+        "impersonateStop": "Detener",
+        "premium": "Premium",
+        "premiumDescription": "Tu cuenta tiene acceso a las funciones premium a nivel mundial"
     }
 }
