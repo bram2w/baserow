@@ -18,13 +18,16 @@
         "exporterType": {
             "json": "Esporta in JSON",
             "xml": "Esporta in XML"
-        }
+        },
+        "deactivated": "Disponibile nella versione premium"
     },
     "rowCommentSidebar": {
         "onlyPremium": "I commenti di riga sono disponibili solo nella versione premium.",
         "readOnlyNoComment": "Nessun commento per questa riga.",
         "noComment": "Non ci sono ancora commenti per questa riga. Usa il modulo qui sotto per aggiungere un commento.",
-        "comment": "Commento"
+        "comment": "Commento",
+        "more": "Maggiori informazioni",
+        "name": "Commenti di riga"
     },
     "rowComment": {
         "you": "Tu",
@@ -255,5 +258,17 @@
         "impersonateDescription": "Questo account è impersonato. Aggiorna la pagina per ritornare ad usare il tuo account.",
         "impersonateStop": "Stop",
         "premium": "Premium"
+    },
+    "premiumFeatures": {
+        "kanbanView": "Vista Kanban",
+        "admin": "Pagina di amministrazione",
+        "rowColoring": "Colorazione righe",
+        "rowComments": "Commenti di riga",
+        "exports": "Esportazione in formato JSON e XML"
+    },
+    "premiumModal": {
+        "title": "Fai l'upgrade per usare {name}",
+        "viewPricing": "Vedi prezzi",
+        "description": "Il tuo account non ha accesso alle funzionalità premio. Fai l'upgrade alla versione premium per usare {name}. Puoi fare l'upgrade acquistando una licenza. Clicca sul pulsante qui sotto per vedere i prezzi."
     }
 }

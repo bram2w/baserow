@@ -10,7 +10,8 @@
         "renameApplication": "Renommer {type}",
         "viewTrash": "Voir la corbeille",
         "deleteApplication": "Supprimer {type}",
-        "duplicateApplication": "Dupliquer {type}"
+        "duplicateApplication": "Dupliquer {type}",
+        "snapshots": "Sauvegardes"
     },
     "sidebar": {
         "createGroup": "Créer un groupe",
@@ -390,5 +391,10 @@
     "clearingNotification": {
         "content": "Préparation des données",
         "title": "Nettoyage..."
+    },
+    "datetime": {
+        "daysAgo": "Il y a 0 jour | Il y a 1 jour | Il y a {n} jours",
+        "yearsAgo": "il y a 0 an | il y a 1 an | il y a {n} ans",
+        "monthsAgo": "il y a 0 mois | il y a 1 mois | il y a {n} mois"
     }
 }

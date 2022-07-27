@@ -227,7 +227,19 @@
         "failedToLockTableDueToConflictDescription": "Deze tabel wordt momenteel bijgewerkt of gebruikt voor een andere bewerking. Wacht tot deze bewerking is voltooid voordat u het opnieuw probeert.",
         "failedToUndoRedoDueToConflictTitle": "Kan niet ongedaan/gedaan maken",
         "failedToUndoRedoDueToConflictDescription": "Er is een andere bewerking bezig die je ongedaan of gedaan blokkeert, wacht a.u.b. tot deze klaar is voordat je het opnieuw probeert.",
-        "failedToLockFieldDueToConflictDescription": "Dit veld wordt momenteel bijgewerkt of gebruikt in een andere bewerking. Wacht tot deze bewerking is voltooid voordat u het opnieuw probeert."
+        "failedToLockFieldDueToConflictDescription": "Dit veld wordt momenteel bijgewerkt of gebruikt in een andere bewerking. Wacht tot deze bewerking is voltooid voordat u het opnieuw probeert.",
+        "snapshotOperationLimitExceededTitle": "Limiet bereikt",
+        "snapshotOperationLimitExceededDescription": "U hebt een limiet bereikt voor het aantal lopende snapshotoperaties. Wacht alstublieft tot de vorige operatie voltooid is.",
+        "maximumSnapshotsReachedDescription": "Het maximum aantal snapshots in een groep is bereikt.",
+        "snapshotBeingRestoredDescription": "Het is niet mogelijk om snapshots te gebruiken die op dat moment worden hersteld.",
+        "snapshotBeingDeletedTitle": "De snapshot wordt verwijderd",
+        "maximumSnapshotsReachedTitle": "Limiet snapshots bereikt",
+        "snapshotBeingCreatedDescription": "Het is niet mogelijk om meerdere snapshots tegelijk te maken.",
+        "snapshotBeingRestoredTitle": "De snapshot wordt hersteld",
+        "snapshotBeingDeletedDescription": "Het is niet mogelijk om snapshots te gebruiken die op dat moment worden verwijderd.",
+        "snapshotBeingCreatedTitle": "Er wordt al een snapshot gemaakt",
+        "snapshotNameNotUniqueTitle": "De naam van de snapshot moet uniek zijn.",
+        "snapshotNameNotUniqueDescription": "Alle snapshotnamen moeten uniek zijn per toepassing."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",

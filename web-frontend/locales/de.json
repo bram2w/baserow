@@ -227,7 +227,19 @@
         "failedToUndoRedoDueToConflictTitle": "Kann nicht rückgängig machen/wiederherstellen",
         "failedToUndoRedoDueToConflictDescription": "Ein anderer Vorgang wird gerade ausgeführt und blockiert Ihre Rückgängigmachung oder Wiederherstellung. Bitte warten Sie, bis dieser Vorgang beendet ist, bevor Sie es erneut versuchen.",
         "failedToLockFieldDueToConflictDescription": "Dieses Feld wird gerade von einem anderen Vorgang aktualisiert oder verwendet. Bitte warten Sie, bis dieser Vorgang abgeschlossen ist, bevor Sie es erneut versuchen.",
-        "failedToLockTableDueToConflictDescription": "Ein anderer Vorgang aktualisiert oder verwendet gerade diese Tabelle. Bitte warten Sie, bis er beendet ist, bevor Sie es erneut versuchen."
+        "failedToLockTableDueToConflictDescription": "Ein anderer Vorgang aktualisiert oder verwendet gerade diese Tabelle. Bitte warten Sie, bis er beendet ist, bevor Sie es erneut versuchen.",
+        "snapshotBeingCreatedDescription": "Es ist nicht möglich, mehrere Snapshots gleichzeitig zu erstellen.",
+        "maximumSnapshotsReachedDescription": "Die maximale Anzahl von Snapshots in einer Gruppe wurde erreicht.",
+        "snapshotBeingRestoredDescription": "Es ist nicht möglich, Snapshots zu verwenden, die derzeit wiederhergestellt werden.",
+        "snapshotBeingDeletedDescription": "Snapshots, die gerade gelöscht werden, können nicht verwendet werden.",
+        "snapshotNameNotUniqueDescription": "Alle Snapshot-Namen müssen pro Anwendung eindeutig sein.",
+        "maximumSnapshotsReachedTitle": "Limit für Snapshots erreicht",
+        "snapshotBeingCreatedTitle": "Ein Snapshot wird bereits erstellt",
+        "snapshotBeingRestoredTitle": "Der Snapshot wird wiederhergestellt",
+        "snapshotBeingDeletedTitle": "Der Snapshot wird gelöscht",
+        "snapshotOperationLimitExceededTitle": "Limit erreicht",
+        "snapshotNameNotUniqueTitle": "Der Name des Snapshots muss eindeutig sein.",
+        "snapshotOperationLimitExceededDescription": "Sie haben ein Limit für die Anzahl der laufenden Snapshot-Vorgänge erreicht. Bitte warten Sie, bis der vorherige Vorgang abgeschlossen ist."
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",

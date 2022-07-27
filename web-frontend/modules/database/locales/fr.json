@@ -645,5 +645,30 @@
         "duplicate": "Dupliquer le champ",
         "cloneData": "Copier les données",
         "soon": "Bientôt disponible"
+    },
+    "snapshotsModal": {
+        "title": "sauvegardes",
+        "snapshotRestoredErrorMessage": "La sauvegarde n'a pas pu être restaurée. Veuillez réessayer plus tard.",
+        "description": "Les sauvegardes sont une copie complète de votre base de données au moment où elles ont été créés. Une duplication des données sera créée lors de la restauration. Les sauvegardes sont automatiquement supprimées après un an.",
+        "descriptionLimits": "Vous pouvez avoir un maximum de 0 sauvegarde par groupe. | Vous pouvez avoir un maximum de 1 sauvegarde par groupe. | Vous pouvez avoir un maximum de {n} sauvegardes par groupe.",
+        "createLabel": "Créer une nouvelle sauvegarde",
+        "create": "Créer une sauvegarde",
+        "snapshotDeletedErrorTitle": "Une erreur est survenue",
+        "snapshotDeletedErrorMessage": "La sauvegarde n'a pas pu être supprimée. Veuillez réessayer plus tard.",
+        "limitReached": "La limite du nombre maximum de sauvegardes a été atteinte.",
+        "snapshot": "Sauvegarde",
+        "importingState": "En cours de création",
+        "snapshotRestoredErrorTitle": "Une erreur s'est produite",
+        "reset": "Créer une autre"
+    },
+    "deleteSnapshotModal": {
+        "content": "Êtes-vous sûr·e de vouloir supprimer définitivement la sauvegarde {nom} ?",
+        "confirm": "Supprimer",
+        "title": "Supprimer la sauvegarde"
+    },
+    "snapshotListItem": {
+        "restore": "restaurer",
+        "delete": "supprimer",
+        "created": "créée"
     }
 }

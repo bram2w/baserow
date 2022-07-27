@@ -227,7 +227,19 @@
         "errorMaxJobCountExceededDescription": "Vous ne pouvez plus démarrer ce type d'action car d’autres sont encore en cours d’exécution en arrière-plan. Veuillez réessayer une fois les actions précédentes terminées.",
         "failedToLockFieldDueToConflictDescription": "Une autre opération est en train de mettre à jour ou d'utiliser ce champ, veuillez attendre qu'elle se termine avant de réessayer.",
         "failedToUndoRedoDueToConflictDescription": "Une autre opération est en cours d'exécution et bloque votre annulation ou votre rétablissement, veuillez attendre qu'elle se termine avant de réessayer.",
-        "failedToLockTableDueToConflictTitle": "Impossible de créer le champ"
+        "failedToLockTableDueToConflictTitle": "Impossible de créer le champ",
+        "maximumSnapshotsReachedTitle": "Limite du nombre de sauvegarde atteinte",
+        "snapshotBeingCreatedDescription": "Il n'est pas possible de créer plusieurs sauvegardes en même temps.",
+        "snapshotNameNotUniqueDescription": "Tous les noms de sauvegardes doivent être uniques par application.",
+        "snapshotOperationLimitExceededTitle": "Limite atteinte",
+        "snapshotOperationLimitExceededDescription": "Vous avez atteint la limite du nombre d'opérations de sauvegardes en cours. Veuillez attendre la fin de l'opération précédente.",
+        "snapshotBeingRestoredDescription": "Il n'est pas possible d'utiliser les sauvegardes qui sont en cours de restauration.",
+        "snapshotBeingDeletedTitle": "La sauvegarde est en cours de suppression",
+        "snapshotBeingDeletedDescription": "Il n'est pas possible d'utiliser les sauvegardes qui sont en cours de suppression.",
+        "snapshotNameNotUniqueTitle": "Le nom de la sauvegarde doit être unique.",
+        "snapshotBeingCreatedTitle": "Une sauvegarde est déjà en cours de création",
+        "snapshotBeingRestoredTitle": "La sauvegarde est en cours de restauration",
+        "maximumSnapshotsReachedDescription": "Le nombre maximum de sauvegardes d'un groupe a été atteint."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
