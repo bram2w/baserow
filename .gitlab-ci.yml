@@ -366,7 +366,7 @@ backend-test-group-1:
     - PYTEST_EXTRA_ARGS=$([[ "$RUN_MORNING_TESTS" = "true" ]] && echo '--run-once-per-day-in-ci' || echo "")
     - |
       docker run \
-        -e PYTEST_SPLITS=3 \
+        -e PYTEST_SPLITS=4 \
         -e PYTEST_SPLIT_GROUP=$PYTEST_SPLIT_GROUP \
         --name=baserow_backend_test_container \
         --add-host="db:$DB_IP" \
@@ -405,6 +405,11 @@ backend-test-group-3:
   variables:
     PYTEST_SPLIT_GROUP: 3
 
+backend-test-group-4:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 4
+
 # Collects together all the separate backend coverage databases from previous jobs and
 # combines them to generate a single report for gitlab to use. Gitlab itself does not
 # correctly merge these if you just add them all separately into artifacts->reports->
@@ -427,6 +432,8 @@ collect-backend-coverage:
     - job: backend-test-group-2
       artifacts: true
     - job: backend-test-group-3
+      artifacts: true
+    - job: backend-test-group-4
       artifacts: true
   script:
     - . /baserow/venv/bin/activate
@@ -454,6 +461,7 @@ build-final-backend-image:
     - job: backend-test-group-1
     - job: backend-test-group-2
     - job: backend-test-group-3
+    - job: backend-test-group-4
     - job: backend-lint
   variables:
     IMAGE_NAME: $BACKEND_IMAGE_NAME
