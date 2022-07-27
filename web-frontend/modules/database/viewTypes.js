@@ -724,6 +724,14 @@ export class GalleryViewType extends BaseBufferedRowView {
     return GalleryView
   }
 
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-public-gallery-view'
+  }
+
   getDefaultFieldOptionValues() {
     // The default values should be the same as in the `GalleryViewFieldOptions`
     // model in the backend to stay consistent.

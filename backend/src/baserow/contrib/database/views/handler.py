@@ -25,13 +25,14 @@ from django.db.models.query import QuerySet
 from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.field_filters import FilterBuilder
+from baserow.contrib.database.fields.field_filters import FilterBuilder, FILTER_TYPE_AND
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     extract_allowed,
@@ -1841,13 +1842,13 @@ class ViewHandler:
         """
 
         view_type = view_type_registry.get_by_model(view.specific_class)
-        hidden_field_options = view_type.get_hidden_field_options(view)
+        hidden_field_ids = view_type.get_hidden_fields(view)
         restricted_rows = []
         for serialized_row in serialized_rows:
             if allowed_row_ids is None or serialized_row["id"] in allowed_row_ids:
                 row_copy = deepcopy(serialized_row)
-                for hidden_field_option in hidden_field_options:
-                    row_copy.pop(f"field_{hidden_field_option.field_id}", None)
+                for hidden_field_id in hidden_field_ids:
+                    row_copy.pop(f"field_{hidden_field_id}", None)
                 restricted_rows.append(row_copy)
         return restricted_rows
 
@@ -1904,6 +1905,90 @@ class ViewHandler:
             return True
         except jwt.InvalidTokenError:
             return False
+
+    def get_public_rows_queryset_and_field_ids(
+        self,
+        view: View,
+        search: str = None,
+        order_by: str = None,
+        include_fields: str = None,
+        exclude_fields: str = None,
+        filter_type: str = None,
+        filter_object: dict = None,
+        table_model: Type[GeneratedTableModel] = None,
+        view_type=None,
+    ):
+        """
+        This function constructs a queryset which applies all the filters
+        and restrictions required to only return rows that are supposed to
+        be visible on a public view plus any additional filters given as
+        parameters.
+
+        It also returns the field_ids of the fields which are visibile and
+        the field_options.
+        :param view: The public view to get rows for.
+        :param search: A string to search for in the rows.
+        :param order_by: A string to order the rows by.
+        :param include_fields: A comma separated list of field_ids to include.
+        :param exclude_fields: A comma separated list of field_ids to exclude.
+        :param filter_type: The type of filter to apply.
+        :param filter_object: A dictionary to filter the rows by.
+        :param table_model: A model which can be passed if it's already instantiated.
+        :param view_type: The view_type which can be passed if it's already
+            instantiated.
+        :return: A tuple containing:
+            - A queryset of rows.
+            - A list of field_ids of the fields that are visible.
+            - A list of field_options of the fields that are visible.
+        """
+
+        if table_model is None:
+            table_model = view.table.get_model()
+
+        if view_type is None:
+            view_type = view_type_registry.get_by_model(view)
+
+        if filter_type is None:
+            filter_type = FILTER_TYPE_AND
+
+        if filter_object is None:
+            filter_object = {}
+
+        publicly_visible_field_options = view_type.get_visible_field_options_in_order(
+            view
+        )
+        publicly_visible_field_ids = {
+            o.field_id for o in publicly_visible_field_options
+        }
+
+        field_ids = get_include_exclude_field_ids(
+            view.table, include_fields, exclude_fields
+        )
+
+        # We have to still make a model with all fields as the public rows should still
+        # be filtered by hidden fields.
+        queryset = table_model.objects.all().enhance_by_fields()
+        queryset = self.apply_filters(view, queryset)
+
+        if order_by:
+            queryset = queryset.order_by_fields_string(
+                order_by, False, publicly_visible_field_ids
+            )
+
+        queryset = queryset.filter_by_fields_object(
+            filter_object, filter_type, publicly_visible_field_ids
+        )
+
+        if search:
+            queryset = queryset.search_all_fields(search, publicly_visible_field_ids)
+
+        field_ids = (
+            list(set(field_ids) & set(publicly_visible_field_ids))
+            if field_ids
+            else publicly_visible_field_ids
+        )
+
+        return queryset, field_ids, publicly_visible_field_options
 
 
 @dataclass

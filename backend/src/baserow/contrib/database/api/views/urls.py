@@ -17,6 +17,7 @@ from .views import (
     RotateViewSlugView,
     PublicViewAuthView,
     PublicViewLinkRowFieldLookupView,
+    PublicViewInfoView,
 )
 
 
@@ -78,5 +79,10 @@ urlpatterns = view_type_registry.api_urls + [
         r"(?P<slug>[-\w]+)/public/auth/$",
         PublicViewAuthView.as_view(),
         name="public_auth",
+    ),
+    re_path(
+        r"(?P<slug>[-\w]+)/public/info/$",
+        PublicViewInfoView.as_view(),
+        name="public_info",
     ),
 ]

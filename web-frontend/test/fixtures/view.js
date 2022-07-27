@@ -37,7 +37,7 @@ export function createPublicGridView(
     sortings,
   }
   mock
-    .onGet(`/database/views/grid/${viewSlug}/public/info/`)
+    .onGet(`/database/views/${viewSlug}/public/info/`)
     .reply(200, { view: publicGridView, fields })
 }
 

@@ -27,6 +27,8 @@ export const mutations = {
 }
 
 export const actions = {
+  ...galleryBufferedRows.actions,
+  ...galleryFieldOptions.actions,
   async fetchInitial({ dispatch, commit }, { viewId, fields }) {
     const data = await dispatch('fetchInitialRows', {
       viewId,
@@ -35,8 +37,6 @@ export const actions = {
     })
     await dispatch('forceUpdateAllFieldOptions', data.field_options)
   },
-  ...galleryBufferedRows.actions,
-  ...galleryFieldOptions.actions,
 }
 
 export const getters = {

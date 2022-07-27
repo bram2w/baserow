@@ -12,6 +12,8 @@ import {
   calculateSingleRowSearchMatches,
   getRowSortFunction,
   matchSearchFilters,
+  getFilters,
+  getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 
@@ -41,41 +43,6 @@ function extractMetadataAndPopulateRow(data, rowIndex) {
   const metadata = data.row_metadata || {}
   const row = data.results[rowIndex]
   populateRow(row, metadata[row.id])
-}
-
-function getOrderBy(getters, rootGetters) {
-  if (getters.isPublic) {
-    const view = rootGetters['view/get'](getters.getLastGridId)
-    return view.sortings
-      .map((sort) => {
-        return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
-      })
-      .join(',')
-  } else {
-    return ''
-  }
-}
-
-function getFilters(getters, rootGetters) {
-  const filters = {}
-
-  if (getters.isPublic) {
-    const view = rootGetters['view/get'](getters.getLastGridId)
-
-    if (!view.filters_disabled) {
-      view.filters.forEach((filter) => {
-        const name = `filter__field_${filter.field}__${filter.type}`
-        if (!Object.prototype.hasOwnProperty.call(filters, name)) {
-          filters[name] = []
-        }
-        filters[name].push(filter.value)
-      })
-    }
-
-    filters.filter_type = [view.filter_type]
-  }
-
-  return filters
 }
 
 export const state = () => ({
@@ -133,10 +100,6 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
-  // if this grid is shared publicly or not
-  public: false,
-  // The token needed to authorize the access to password protected public URL
-  publicAuthToken: null,
   fieldAggregationData: {},
 })
 
@@ -154,10 +117,6 @@ export const mutations = {
     state.addRowHover = false
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
-  },
-  SET_PUBLIC(state, { isPublic, publicAuthToken }) {
-    state.public = isPublic
-    state.publicAuthToken = publicAuthToken
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm
@@ -612,10 +571,10 @@ export const actions = {
           limit: requestLimit,
           signal: lastQueryController.signal,
           search: getters.getServerSearchTerm,
-          publicUrl: getters.isPublic,
-          publicAuthToken: getters.getPublicAuthToken,
-          orderBy: getOrderBy(getters, rootGetters),
-          filters: getFilters(getters, rootGetters),
+          publicUrl: rootGetters['page/view/public/getIsPublic'],
+          publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+          filters: getFilters(rootGetters, getters.getLastGridId),
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -772,10 +731,10 @@ export const actions = {
       limit,
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
-      publicUrl: getters.isPublic,
-      publicAuthToken: getters.getPublicAuthToken,
-      orderBy: getOrderBy(getters, rootGetters),
-      filters: getFilters(getters, rootGetters),
+      publicUrl: rootGetters['page/view/public/getIsPublic'],
+      publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+      filters: getFilters(rootGetters, getters.getLastGridId),
     })
     data.results.forEach((part, index) => {
       extractMetadataAndPopulateRow(data, index)
@@ -820,9 +779,9 @@ export const actions = {
         gridId,
         search: getters.getServerSearchTerm,
         signal: lastRefreshRequestController.signal,
-        publicUrl: getters.isPublic,
-        publicAuthToken: getters.getPublicAuthToken,
-        filters: getFilters(getters, rootGetters),
+        publicUrl: rootGetters['page/view/public/getIsPublic'],
+        publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+        filters: getFilters(rootGetters, getters.getLastGridId),
       })
       .then((response) => {
         const count = response.data.count
@@ -844,10 +803,10 @@ export const actions = {
             includeFieldOptions,
             signal: lastRefreshRequestController.signal,
             search: getters.getServerSearchTerm,
-            publicUrl: getters.isPublic,
-            publicAuthToken: getters.getPublicAuthToken,
-            orderBy: getOrderBy(getters, rootGetters),
-            filters: getFilters(getters, rootGetters),
+            publicUrl: rootGetters['page/view/public/getIsPublic'],
+            publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+            orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+            filters: getFilters(rootGetters, getters.getLastGridId),
           })
           .then(({ data }) => ({
             data,
@@ -870,7 +829,7 @@ export const actions = {
         })
         dispatch('updateSearch', { fields })
         if (includeFieldOptions) {
-          if (getters.isPublic) {
+          if (rootGetters['page/view/public/getIsPublic']) {
             // If the view is public, then we're in read only mode and we want to
             // keep our existing field options state. So in that case, we only need
             // to add the missing ones.
@@ -1003,8 +962,11 @@ export const actions = {
    * to prevent wrong information.
    * If a request is already in progress, it is aborted in favour of the new one.
    */
-  async fetchAllFieldAggregationData({ getters, commit }, { view }) {
-    const isPublic = getters.isPublic
+  async fetchAllFieldAggregationData(
+    { rootGetters, getters, commit },
+    { view }
+  ) {
+    const isPublic = rootGetters['page/view/public/getIsPublic']
     const search = getters.getActiveSearchTerm
 
     if (isPublic) {
@@ -1317,10 +1279,10 @@ export const actions = {
       offset: startIndex,
       limit,
       search: getters.getServerSearchTerm,
-      publicUrl: getters.isPublic,
-      publicAuthToken: getters.getPublicAuthToken,
-      orderBy: getOrderBy(getters, rootGetters),
-      filters: getFilters(getters, rootGetters),
+      publicUrl: rootGetters['page/view/public/getIsPublic'],
+      publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+      filters: getFilters(rootGetters, getters.getLastGridId),
       includeFields: fields,
       excludeFields,
     })
@@ -2178,9 +2140,6 @@ export const actions = {
       commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
     }
   },
-  setPublic({ commit }, { isPublic, publicAuthToken = null }) {
-    commit('SET_PUBLIC', { isPublic, publicAuthToken })
-  },
   /**
    * Clears the values of all multi-selected cells by updating them to their null values.
    */
@@ -2222,12 +2181,6 @@ export const actions = {
 export const getters = {
   isLoaded(state) {
     return state.loaded
-  },
-  isPublic(state) {
-    return state.public
-  },
-  getPublicAuthToken(state) {
-    return state.publicAuthToken
   },
   getLastGridId(state) {
     return state.lastGridId

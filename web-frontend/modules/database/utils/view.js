@@ -216,3 +216,38 @@ export function newFieldMatchesActiveSearchTerm(
   }
   return false
 }
+
+export function getOrderBy(rootGetters, viewId) {
+  if (rootGetters['page/view/public/getIsPublic']) {
+    const view = rootGetters['view/get'](viewId)
+    return view.sortings
+      .map((sort) => {
+        return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
+      })
+      .join(',')
+  } else {
+    return ''
+  }
+}
+
+export function getFilters(rootGetters, viewId) {
+  const filters = {}
+
+  if (rootGetters['page/view/public/getIsPublic']) {
+    const view = rootGetters['view/get'](viewId)
+
+    if (!view.filters_disabled) {
+      view.filters.forEach((filter) => {
+        const name = `filter__field_${filter.field}__${filter.type}`
+        if (!Object.prototype.hasOwnProperty.call(filters, name)) {
+          filters[name] = []
+        }
+        filters[name].push(filter.value)
+      })
+    }
+
+    filters.filter_type = [view.filter_type]
+  }
+
+  return filters
+}

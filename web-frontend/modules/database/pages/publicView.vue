@@ -1,7 +1,7 @@
 <template>
   <div>
     <Notifications></Notifications>
-    <div class="grid-view__public-shared-page">
+    <div class="public-view__table">
       <Table
         :database="database"
         :table="table"
@@ -16,19 +16,15 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
 import Table from '@baserow/modules/database/components/table/Table'
-import GridService from '@baserow/modules/database/services/view/grid'
-import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import ViewService from '@baserow/modules/database/services/view'
 import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/constants'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { mapGetters } from 'vuex'
 
 export default {
-  components: { Notifications, Table },
-  /**
-   * Fetches and prepares all the table, field and view data for the provided
-   * public grid view.
-   */
+  components: { Table, Notifications },
   async asyncData({ store, params, error, app, redirect, route }) {
     const slug = params.slug
 
@@ -39,12 +35,9 @@ export default {
     )
 
     try {
-      await store.dispatch('page/view/grid/setPublic', {
-        isPublic: true,
-        publicAuthToken,
-      })
+      await store.dispatch('page/view/public/setIsPublic', true)
 
-      const { data } = await GridService(app.$client).fetchPublicViewInfo(
+      const { data } = await ViewService(app.$client).fetchPublicViewInfo(
         slug,
         publicAuthToken
       )
@@ -58,11 +51,12 @@ export default {
           },
         ],
       })
+
       const database = applications[0]
       const table = database.tables[0]
       await store.dispatch('table/forceSelect', { database, table })
 
-      await store.dispatch('field/forceSetFields', {
+      const { fields } = await store.dispatch('field/forceSetFields', {
         fields: data.fields,
       })
 
@@ -73,16 +67,16 @@ export default {
       const { view } = await store.dispatch('view/forceCreate', {
         data: data.view,
       })
+
       await store.dispatch('view/select', view)
 
       // It might be possible that the view also has some stores that need to be
       // filled with initial data, so we're going to call the fetch function here.
       const type = app.$registry.get('view', view.type)
-      await type.fetch({ store }, view, data.fields, 'page/')
+      await type.fetch({ store }, view, fields, 'page/')
       return {
         database,
         table,
-        view,
       }
     } catch (e) {
       const statusCode = e.response?.status
@@ -99,14 +93,10 @@ export default {
       }
     }
   },
-  head() {
-    return {
-      title: this.view.name || '',
-    }
-  },
   computed: {
     ...mapGetters({
       fields: 'field/getAll',
+      view: 'view/getSelected',
     }),
   },
   mounted() {
