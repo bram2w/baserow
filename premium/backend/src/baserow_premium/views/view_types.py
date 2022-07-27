@@ -136,8 +136,8 @@ class KanbanViewType(ViewType):
         table: Table,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
-        files_zip: ZipFile,
-        storage: Storage,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
     ) -> View:
         """
         Imports the serialized kanban view field options.
