@@ -645,5 +645,30 @@
         "duplicate": "Feld duplizieren",
         "cloneData": "Daten kopieren",
         "soon": "In Kürze verfügbar"
+    },
+    "snapshotsModal": {
+        "descriptionLimits": "Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben.",
+        "createLabel": "Erstelle einen neuen Snapshot",
+        "description": "Snapshots sind eine vollständige Kopie Ihrer Datenbank zu dem Zeitpunkt, an dem sie erstellt wurden. Bei der Wiederherstellung wird ein Duplikat dieser Daten erstellt. Snapshots werden nach einem Jahr automatisch gelöscht.",
+        "create": "Snapshot erstellen",
+        "snapshotRestoredErrorTitle": "Ein Fehler ist aufgetreten",
+        "title": "snapshots",
+        "snapshotRestoredErrorMessage": "Der Snapshot konnte nicht wiederhergestellt werden. Bitte versuchen Sie es später noch einmal.",
+        "snapshotDeletedErrorTitle": "Fehler aufgetreten",
+        "snapshotDeletedErrorMessage": "Der Snapshot konnte nicht gelöscht werden. Bitte versuchen Sie es später noch einmal.",
+        "limitReached": "Das Limit der maximalen Snapshots wurde erreicht.",
+        "snapshot": "Snapshot",
+        "importingState": "Erstellen",
+        "reset": "Erstellen eines weiteren"
+    },
+    "snapshotListItem": {
+        "created": "erstellt",
+        "restore": "wiederherstellen",
+        "delete": "Löschen"
+    },
+    "deleteSnapshotModal": {
+        "title": "Snapshot löschen",
+        "content": "Sind Sie sicher, dass Sie den Snapshot {name} dauerhaft löschen möchten?",
+        "confirm": "Löschen"
     }
 }

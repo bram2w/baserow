@@ -18,13 +18,16 @@
         "exporterType": {
             "json": "Exporteren naar JSON",
             "xml": "Exporteren naar XML"
-        }
+        },
+        "deactivated": "Beschikbaar in de premium versie"
     },
     "rowCommentSidebar": {
         "onlyPremium": "Rij-opmerkingen zijn beschikbaar in de premium versie.",
         "readOnlyNoComment": "Geen opmerkingen voor deze rij.",
         "noComment": "Er zijn nog geen opmerkingen voor deze rij. Gebruik het formulier hieronder om een opmerking toe te voegen.",
-        "comment": "Opmerking"
+        "comment": "Opmerking",
+        "more": "Meer informatie",
+        "name": "Rij opmerkingen"
     },
     "rowComment": {
         "you": "Jij",
@@ -254,5 +257,17 @@
         "impersonateStop": "Stop",
         "premium": "Premium",
         "premiumDescription": "Uw account heeft toegang tot de premium functies"
+    },
+    "premiumFeatures": {
+        "rowColoring": "Rij kleuren",
+        "rowComments": "Rij opmerkingen",
+        "kanbanView": "Kanban-weergave",
+        "exports": "JSON- en XML-export",
+        "admin": "Admin functionaliteit"
+    },
+    "premiumModal": {
+        "title": "Upgrade om de {name} te gebruiken",
+        "viewPricing": "Bekijk prijzen",
+        "description": "Uw account heeft geen toegang tot de premium functies. Upgrade naar de premium versie om {name} te kunnen gebruiken. U kunt uw account upgraden door een licentie aan te schaffen. Klik op de knop hieronder om de prijzen te bekijken."
     }
 }

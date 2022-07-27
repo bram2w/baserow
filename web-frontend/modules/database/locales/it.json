@@ -645,5 +645,30 @@
     },
     "formViewMeta": {
         "includeRowId": "Usa {row_id} per includere l'id di riga nel tuo URL."
+    },
+    "snapshotsModal": {
+        "title": "snapshot",
+        "description": "Gli snapshot sono copie esatte dei tuoi database prese al momento in cui sono vengono create. Al momento del ripristino, verrà creato un clone dei dati originali. Gli snapshot vengono cancellati automaticamente dopo un anno.",
+        "createLabel": "Crea uno snapshot",
+        "snapshotRestoredErrorTitle": "Errore",
+        "snapshotRestoredErrorMessage": "Lo snapshot non può essere ripristinato. Riprova più tardi.",
+        "snapshotDeletedErrorTitle": "Errore",
+        "snapshotDeletedErrorMessage": "Lo snapshot non può essere eliminato. Riprova più tardi.",
+        "limitReached": "Il limite massimo di snapshot è stato raggiunto.",
+        "snapshot": "Snapshot",
+        "importingState": "Creando",
+        "reset": "Creane un'altro",
+        "descriptionLimits": "Puoi avere un massimo di {n} snapshot per gruppo. | Puoi avere un massimo di {n} snapshot per gruppo. | Puoi avere un massimo di {n} snapshot per gruppo.",
+        "create": "Crea uno snapshot"
+    },
+    "deleteSnapshotModal": {
+        "title": "Elimina snapshot",
+        "content": "Sei sicuro di voler eliminare definitivamente lo snapshot {name}?",
+        "confirm": "Elimina"
+    },
+    "snapshotListItem": {
+        "restore": "ripristina",
+        "delete": "elimina",
+        "created": "creato"
     }
 }

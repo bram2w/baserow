@@ -227,7 +227,19 @@
         "errorMaxJobCountExceededTitle": "Non è possibile avviare l'azione.",
         "errorMaxJobCountExceededDescription": "Non puoi avviare altre azioni dello stesso tipo finché le precedenti non sono terminate. Per favore, riprova più tardi.",
         "failedToLockFieldDueToConflictTitle": "Non è possibile modificare il campo",
-        "failedToUndoRedoDueToConflictTitle": "Non è possibile annullare/ripristinare"
+        "failedToUndoRedoDueToConflictTitle": "Non è possibile annullare/ripristinare",
+        "maximumSnapshotsReachedDescription": "Il numero massimo di snapshot nel gruppo è stato raggiunto.",
+        "snapshotBeingCreatedTitle": "Uno snapshot è già stato creato",
+        "snapshotBeingDeletedDescription": "Non è possibile utilizzare snapshot che sono stati eliminati.",
+        "maximumSnapshotsReachedTitle": "Limite snapshot raggiunto",
+        "snapshotBeingRestoredTitle": "Lo snapshot sarà ripristinato",
+        "snapshotBeingRestoredDescription": "Non è possibile usare snapshot che sono già stati ripristinati.",
+        "snapshotBeingDeletedTitle": "Lo snapshot è stato eliminato",
+        "snapshotBeingCreatedDescription": "Non è possibile creare più snapshot contemporaneamente.",
+        "snapshotNameNotUniqueTitle": "Il nome dello snapshot deve essere unico.",
+        "snapshotOperationLimitExceededTitle": "Limite raggiunto",
+        "snapshotNameNotUniqueDescription": "Tutti i nomi devono essere unici per applicazione.",
+        "snapshotOperationLimitExceededDescription": "Hai raggiunto il limite delle operazioni contemporanee possibili. Attenti finché le operazioni precedenti sono concluse."
     },
     "importerType": {
         "csv": "Importa un file CSV",

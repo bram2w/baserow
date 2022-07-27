@@ -645,5 +645,30 @@
     },
     "formViewMeta": {
         "includeRowId": "Gebruik {row_id} om de nieuw aangemaakte rij id in de URL op te nemen."
+    },
+    "snapshotsModal": {
+        "title": "snapshots",
+        "description": "Snapshots zijn een volledige kopie van uw database van het moment waarop ze werden aangemaakt. Een duplicaat van die gegevens wordt gemaakt bij het terugzetten. Snapshots worden na een jaar automatisch verwijderd.",
+        "descriptionLimits": "U kunt een maximum aan {n} snapshots per groep hebben. | U kunt een maximum van {n} snapshot per groep hebben. | U kunt een maximum aan {n} snapshots per groep hebben.",
+        "reset": "Maak een andere",
+        "limitReached": "Het limiet van het maximum aantal snapshots is bereikt.",
+        "snapshotDeletedErrorMessage": "De momentopname kon niet worden verwijderd. probeer het later opnieuw.",
+        "snapshot": "Snapshot",
+        "snapshotRestoredErrorTitle": "Fout opgetreden",
+        "createLabel": "Maak een nieuwe snapshot",
+        "create": "Snapshot maken",
+        "snapshotRestoredErrorMessage": "De snapshot kan niet worden hersteld. probeer het later opnieuw.",
+        "snapshotDeletedErrorTitle": "Fout opgetreden",
+        "importingState": "Maken"
+    },
+    "deleteSnapshotModal": {
+        "title": "Snapshot verwijderen",
+        "content": "Weet u zeker dat u momentopname {name} permanent wilt verwijderen?",
+        "confirm": "Verwijderen"
+    },
+    "snapshotListItem": {
+        "delete": "verwijderen",
+        "created": "gemaakt",
+        "restore": "herstellen"
     }
 }

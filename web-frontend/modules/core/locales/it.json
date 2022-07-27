@@ -10,7 +10,8 @@
         "renameApplication": "Rinomina {type}",
         "viewTrash": "Visualizza cestino",
         "deleteApplication": "Elimina {type}",
-        "duplicateApplication": "Duplica {type}"
+        "duplicateApplication": "Duplica {type}",
+        "snapshots": "Snapshot"
     },
     "sidebar": {
         "createGroup": "Crea gruppo",
@@ -390,5 +391,10 @@
     "pastingNotification": {
         "content": "Preparando i dati",
         "title": "Incollando..."
+    },
+    "datetime": {
+        "daysAgo": "0 giorni fa | 1 giorno fa | {n} giorni fa",
+        "yearsAgo": "0 anni fa | 1 anno fa | {n} anni fa",
+        "monthsAgo": "0 mesi fa | 1 mese fa | {n} mesi fa"
     }
 }
