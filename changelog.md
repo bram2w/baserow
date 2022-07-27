@@ -21,6 +21,7 @@ For example:
 * Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call. [#951](https://gitlab.com/bramw/baserow/-/issues/951)
 * Applications can now be duplicated. [#960](https://gitlab.com/bramw/baserow/-/issues/960)
 * Added option to use view's filters and sorting when listing rows. [#190](https://gitlab.com/bramw/baserow/-/issues/190)
+* Added public gallery view [#1057](https://gitlab.com/bramw/baserow/-/issues/1057)
 * Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
 * Made it possible to import data into an existing table. [#342](https://gitlab.com/bramw/baserow/-/issues/342)
 * New templates:
@@ -77,6 +78,7 @@ For example:
   body will contain only the first changed row instead of all rows. It is highly
   recommended to convert all webhooks to the new types.
 * Fix not being able to paste multiple cells when a formula field of array or single select type was in an error state. [#1084](https://gitlab.com/bramw/baserow/-/issues/1084)
+* API endpoint `/database/views/grid/${viewSlug}/public/info/` has been replaced by `/database/views/${viewSlug}/public/info/` [#1057](https://gitlab.com/bramw/baserow/-/issues/1057)
   recommended converting all webhooks to the new types.
 
 

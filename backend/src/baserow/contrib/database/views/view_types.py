@@ -1,10 +1,11 @@
 from collections import defaultdict
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Set
 from zipfile import ZipFile
 
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
 from django.contrib.auth.models import AbstractUser
+from django.db.models import Q
 from django.urls import path, include
 
 from rest_framework.serializers import PrimaryKeyRelatedField
@@ -61,6 +62,7 @@ class GridViewType(ViewType):
     can_aggregate_field = True
     can_share = True
     can_decorate = True
+    has_public_info = True
     when_shared_publicly_requires_realtime_events = True
     allowed_fields = ["row_identifier_type"]
     field_options_allowed_fields = [
@@ -240,9 +242,6 @@ class GridViewType(ViewType):
             .order_by("-field__primary", "order", "field__id")
         )
 
-    def get_hidden_field_options(self, grid_view):
-        return grid_view.get_field_options(create_if_missing=False).filter(hidden=True)
-
     def get_aggregations(self, grid_view):
         """
         Returns the (Field, aggregation_type) list computed from the field options for
@@ -295,6 +294,16 @@ class GridViewType(ViewType):
 
         ViewHandler().clear_full_aggregation_cache(grid_view)
 
+    def get_hidden_fields(
+        self,
+        view: View,
+        field_ids_to_check: Optional[List[int]] = None,
+    ) -> Set[int]:
+        queryset = view.get_field_options(create_if_missing=False).filter(hidden=True)
+        if field_ids_to_check is not None:
+            queryset = queryset.filter(field_id__in=field_ids_to_check)
+        return set(queryset.values_list("field_id", flat=True))
+
 
 class GalleryViewType(ViewType):
     type = "gallery"
@@ -318,6 +327,8 @@ class GalleryViewType(ViewType):
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
     can_decorate = True
+    can_share = True
+    has_public_info = True
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.gallery import urls as api_urls
@@ -448,6 +459,28 @@ class GalleryViewType(ViewType):
         values["card_cover_image_field"] = view.card_cover_image_field_id
 
         return values
+
+    def get_visible_field_options_in_order(self, gallery_view: GalleryView):
+        return (
+            gallery_view.get_field_options(create_if_missing=True)
+            .filter(Q(hidden=False))
+            .order_by("order", "field__id")
+        )
+
+    def get_hidden_fields(
+        self,
+        view: View,
+        field_ids_to_check: Optional[List[int]] = None,
+    ) -> Set[int]:
+        field_queryset = view.table.field_set
+        if field_ids_to_check is not None:
+            field_queryset = field_queryset.filter(id__in=field_ids_to_check)
+        return set(
+            field_queryset.exclude(
+                galleryviewfieldoptions__hidden=False,
+                galleryviewfieldoptions__gallery_view_id=view.id,
+            ).values_list("id", flat=True)
+        )
 
 
 class FormViewType(ViewType):

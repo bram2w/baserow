@@ -7,6 +7,10 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
+
 
 @pytest.mark.django_db
 def test_list_rows(api_client, data_fixture):
@@ -300,3 +304,373 @@ def test_update_gallery_view(api_client, data_fixture):
     assert response_json["type"] == "gallery"
     assert response_json["filter_type"] == "AND"
     assert response_json["filters_disabled"] is False
+
+
+@pytest.mark.django_db
+def test_get_public_gallery_view(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    gallery_view = data_fixture.create_gallery_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, public_field, hidden=False
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, hidden_field, hidden=True
+    )
+
+    # This view sort shouldn't be exposed as it is for a hidden field
+    data_fixture.create_view_sort(view=gallery_view, field=hidden_field, order="ASC")
+    visible_sort = data_fixture.create_view_sort(
+        view=gallery_view, field=public_field, order="DESC"
+    )
+
+    # View filters should not be returned at all for any and all fields regardless of
+    # if they are hidden.
+    data_fixture.create_view_filter(
+        view=gallery_view, field=hidden_field, type="contains", value="hidden"
+    )
+    data_fixture.create_view_filter(
+        view=gallery_view, field=public_field, type="contains", value="public"
+    )
+
+    # Can access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": gallery_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "fields": [
+            {
+                "id": public_field.id,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "name": "public",
+                "order": 0,
+                "primary": False,
+                "text_default": "",
+                "type": "text",
+            }
+        ],
+        "view": {
+            "id": gallery_view.slug,
+            "name": gallery_view.name,
+            "order": 0,
+            "public": True,
+            "slug": gallery_view.slug,
+            "sortings": [
+                # Note the sorting for the hidden field is not returned
+                {
+                    "field": visible_sort.field.id,
+                    "id": visible_sort.id,
+                    "order": "DESC",
+                    "view": gallery_view.slug,
+                }
+            ],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "gallery",
+            "card_cover_image_field": None,
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_public_doesnt_show_hidden_columns(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    gallery_view = data_fixture.create_gallery_view(table=table, user=user, public=True)
+
+    public_field_option = data_fixture.create_gallery_view_field_option(
+        gallery_view, public_field, hidden=False
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, hidden_field, hidden=True
+    )
+
+    RowHandler().create_row(user, table, values={})
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+        )
+        + "?include=field_options"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{public_field.id}": None,
+                "id": 1,
+                "order": "1.00000000000000000000",
+            }
+        ],
+        "field_options": {
+            f"{public_field.id}": {
+                "hidden": False,
+                "order": public_field_option.order,
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_filter(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    gallery_view = data_fixture.create_gallery_view(table=table, user=user, public=True)
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, public_field, hidden=False
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, hidden_field, hidden=True
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__contains=a"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == first_row.id
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    get_params = [
+        f"filter__field_{public_field.id}__contains=a",
+        f"filter__field_{public_field.id}__contains=b",
+        f"filter_type=OR",
+    ]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    get_params = [f"filter__field_{hidden_field.id}__contains=y"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FILTER_FIELD_NOT_FOUND"
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__random=y"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__higher_than=1"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_order(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    gallery_view = data_fixture.create_gallery_view(table=table, user=user, public=True)
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, public_field, hidden=False
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, hidden_field, hidden=True
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, link_row_field, hidden=False
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    second_row = RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?order_by=-field_{public_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == second_row.id
+    assert response_json["results"][1]["id"] == first_row.id
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?order_by=field_{hidden_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_FOUND"
+
+    url = reverse(
+        "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?order_by=field_{link_row_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE"
+
+
+@pytest.mark.django_db
+def test_list_rows_public_filters_by_visible_and_hidden_columns(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    gallery_view = data_fixture.create_gallery_view(table=table, user=user, public=True)
+
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, public_field, hidden=False
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, hidden_field, hidden=True
+    )
+
+    data_fixture.create_view_filter(
+        view=gallery_view, field=hidden_field, type="equal", value="y"
+    )
+    data_fixture.create_view_filter(
+        view=gallery_view, field=public_field, type="equal", value="a"
+    )
+    # A row whose hidden column doesn't match the first filter
+    RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "not y"}, user_field_names=True
+    )
+    # A row whose public column doesn't match the second filter
+    RowHandler().create_row(
+        user, table, values={"public": "not a", "hidden": "y"}, user_field_names=True
+    )
+    # A row which matches all filters
+    visible_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+        )
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert len(response_json["results"]) == 1
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == visible_row.id
+
+
+@pytest.mark.django_db
+def test_list_rows_public_only_searches_by_visible_columns(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    gallery_view = data_fixture.create_gallery_view(table=table, user=user, public=True)
+
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, public_field, hidden=False
+    )
+    data_fixture.create_gallery_view_field_option(
+        gallery_view, hidden_field, hidden=True
+    )
+
+    search_term = "search_term"
+    RowHandler().create_row(
+        user,
+        table,
+        values={"public": "other", "hidden": search_term},
+        user_field_names=True,
+    )
+    RowHandler().create_row(
+        user,
+        table,
+        values={"public": "other", "hidden": "other"},
+        user_field_names=True,
+    )
+    visible_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": search_term, "hidden": "other"},
+        user_field_names=True,
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
+        )
+        + f"?search={search_term}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert len(response_json["results"]) == 1
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == visible_row.id

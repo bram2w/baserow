@@ -13,11 +13,13 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.views.models import View, GridView
 from baserow.contrib.database.views.registries import (
     view_type_registry,
 )
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -510,3 +512,325 @@ def test_rotate_slug(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["slug"] != old_slug
     assert len(response_json["slug"]) == 43
+
+
+@pytest.mark.django_db
+def test_anon_user_cant_get_info_about_a_non_public_view(api_client, data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user, public=False)
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_user_in_wrong_group_cant_get_info_about_a_non_public_view(
+    api_client, data_fixture
+):
+    user = data_fixture.create_user()
+    other_user, other_user_token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user, public=False)
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:public_info",
+            kwargs={"slug": grid_view.slug},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {other_user_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_user_in_same_group_can_get_info_about_a_non_public_view(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user, public=False)
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:public_info",
+            kwargs={"slug": grid_view.slug},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert "fields" in response_json
+    assert "view" in response_json
+
+
+@pytest.mark.django_db
+def test_cannot_get_info_about_not_eligibile_view_type(api_client, data_fixture):
+    user = data_fixture.create_user()
+    form_view = data_fixture.create_form_view(user=user, public=True)
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:public_info",
+            kwargs={"slug": form_view.slug},
+        ),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_cannot_get_info_about_trashed_view(api_client, data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user, public=True)
+
+    TrashHandler.trash(
+        user, grid_view.table.database.group, None, grid_view.table.database.group
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:public_info",
+            kwargs={"slug": grid_view.slug},
+        ),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_anon_user_cant_get_info_about_a_public_password_protected_view(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user, public=True)
+
+    # set password for the current view using the API
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": "12345678"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug})
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    response_json = response.json()
+    public_view_token = response_json.get("access_token", None)
+    assert public_view_token is None
+
+
+@pytest.mark.django_db
+def test_user_with_invalid_token_cant_get_info_about_a_public_password_protected_view(
+    api_client, data_fixture
+):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_public_password_protected_grid_view(
+        user=user, password="12345678"
+    )
+
+    # can't get info about the view
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT token",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_user_with_password_can_get_info_about_a_public_password_protected_view(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    password = "12345678"
+    grid_view = data_fixture.create_public_password_protected_grid_view(
+        user=user, password=password
+    )
+
+    # The body of the request must contains a password field
+    response = api_client.post(
+        reverse("api:database:views:public_auth", kwargs={"slug": grid_view.slug}),
+        {"wrong_body_param": password},
+        format="json",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    # Get the authorization token
+    response = api_client.post(
+        reverse("api:database:views:public_auth", kwargs={"slug": grid_view.slug}),
+        {"password": password},
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    public_view_token = response_json.get("access_token", None)
+    assert public_view_token is not None
+
+    # Get access as with the authorization token
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "fields": [],
+        "view": {
+            "id": grid_view.slug,
+            "name": grid_view.name,
+            "order": 0,
+            "public": True,
+            "slug": grid_view.slug,
+            "sortings": [],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
+        },
+    }
+
+    # The original user can still access data
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "fields": [],
+        "view": {
+            "id": grid_view.slug,
+            "name": grid_view.name,
+            "order": 0,
+            "public": True,
+            "slug": grid_view.slug,
+            "sortings": [],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "grid",
+            "row_identifier_type": grid_view.row_identifier_type,
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_rotating_slug_of_a_public_password_protected_view_invalidate_previous_tokens(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    (
+        grid_view,
+        public_view_token,
+    ) = data_fixture.create_public_password_protected_grid_view_with_token(
+        user=user, password="12345678"
+    )
+
+    # rotating slug invalidate previous tokens
+    response = api_client.post(
+        reverse("api:database:views:rotate_slug", kwargs={"view_id": grid_view.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["id"] == grid_view.id
+    new_slug = response_json["slug"]
+    assert new_slug != grid_view.slug
+
+    # Cannot access data anymore with the initial token
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": new_slug}),
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_view_creator_can_always_get_data_of_a_public_password_protected(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    password = "12345678"
+    grid_view = data_fixture.create_public_password_protected_grid_view(
+        user=user, password=password
+    )
+
+    # anon user cannot access
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    # user in a valid group can access data, event without password
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_user_in_wrong_group_need_the_password_to_access_password_protected_view(
+    api_client, data_fixture
+):
+    user = data_fixture.create_user()
+    _, other_user_token = data_fixture.create_user_and_token()
+
+    (
+        grid_view,
+        public_view_token,
+    ) = data_fixture.create_public_password_protected_grid_view_with_token(
+        user=user, password="12345678"
+    )
+
+    # user2 cannot access data
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_user_token}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    # Get access as with the authorization token
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+        HTTP_AUTHORIZATION=f"JWT {other_user_token}",
+    )
+    assert response.status_code == HTTP_200_OK

@@ -9,6 +9,7 @@ from typing import (
     List,
     Iterable,
     Tuple,
+    Set,
 )
 from zipfile import ZipFile
 
@@ -119,6 +120,12 @@ class ViewType(
     can_share = False
     """
     Indicates if the view supports being shared via a public link.
+    """
+
+    has_public_info = False
+    """
+    Indicates if the view supports public information being returned by
+    the PublicViewInfoView.
     """
 
     field_options_model_class = None
@@ -495,21 +502,6 @@ class ViewType(
             "`get_visible_field_options_in_order`"
         )
 
-    def get_hidden_field_options(self, view: "View") -> django_models.QuerySet:
-        """
-        Should return a queryset of all field options which are hidden in the
-        provided view.
-
-        :param view: The view to query.
-        :type view: View
-        :return: A queryset of the views specific view options which are 'hidden'.
-        """
-
-        raise NotImplementedError(
-            "An exportable or publicly sharable view must implement "
-            "`get_hidden_field_options`"
-        )
-
     def get_aggregations(
         self, view: "View"
     ) -> Iterable[Tuple[django_models.Field, str]]:
@@ -590,6 +582,27 @@ class ViewType(
         """
 
         return queryset
+
+    def get_hidden_fields(
+        self,
+        view: "View",
+        field_ids_to_check: Optional[List[int]] = None,
+    ) -> Set[int]:
+        """
+        Should be implemented to return the set of fields ids which hidden in the
+        provided view of this type. A hidden field as defined by this function will be
+        completely excluded from any publicly shared version of this view.
+
+        :param view: The view to find hidden field ids for.
+        :param field_ids_to_check: An optional list of field ids to restrict the check
+            down to.
+        :return: A set of field ids which are hidden in this view.
+        """
+
+        raise NotImplementedError(
+            "An exportable or publicly sharable view must implement "
+            "`get_hidden_fields`"
+        )
 
 
 class ViewTypeRegistry(

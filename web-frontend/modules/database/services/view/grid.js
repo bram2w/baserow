@@ -115,13 +115,6 @@ export default (client) => {
 
       return client.post(`/database/views/grid/${gridId}/`, data)
     },
-    fetchPublicViewInfo(viewSlug, publicAuthToken = null) {
-      const config = {}
-      if (publicAuthToken) {
-        addPublicAuthTokenHeader(config, publicAuthToken)
-      }
-      return client.get(`/database/views/grid/${viewSlug}/public/info/`, config)
-    },
     fetchFieldAggregations({ gridId, search, signal = null }) {
       const params = new URLSearchParams()
 

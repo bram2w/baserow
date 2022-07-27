@@ -88,7 +88,7 @@ class ViewFixtures:
             grid_view=grid_view, field=field, **kwargs
         )
 
-    def create_gallery_view(self, user=None, **kwargs):
+    def create_gallery_view(self, user=None, create_options=True, **kwargs):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -99,7 +99,8 @@ class ViewFixtures:
             kwargs["order"] = 0
 
         gallery_view = GalleryView.objects.create(**kwargs)
-        self.create_gallery_view_field_options(gallery_view)
+        if create_options:
+            self.create_gallery_view_field_options(gallery_view)
         return gallery_view
 
     def create_gallery_view_field_options(self, gallery_view, **kwargs):

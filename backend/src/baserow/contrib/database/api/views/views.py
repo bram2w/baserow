@@ -100,6 +100,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewDecorationNotSupported,
     NoAuthorizationToPubliclySharedView,
 )
+from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer
 
 from .serializers import (
     ViewSerializer,
@@ -1784,3 +1785,67 @@ class PublicViewAuthView(APIView):
         access_token = handler.encode_public_view_token(view)
         serializer = PublicViewAuthResponseSerializer({"access_token": access_token})
         return Response(serializer.data)
+
+
+class PublicViewInfoView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                required=True,
+                description="The slug of the view to get public information " "about.",
+            )
+        ],
+        tags=["Database table view"],
+        operation_id="get_public_view_info",
+        description=(
+            "Returns the required public information to display a single "
+            "shared view."
+        ),
+        request=None,
+        responses={
+            200: PublicViewInfoSerializer,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
+        }
+    )
+    @transaction.atomic
+    def get(self, request: Request, slug: str) -> Response:
+
+        handler = ViewHandler()
+        view = handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            authorization_token=get_public_view_authorization_token(request),
+        )
+        view_specific = view.specific
+        view_type = view_type_registry.get_by_model(view_specific)
+
+        if not view_type.has_public_info:
+            raise ViewDoesNotExist()
+
+        field_options = view_type.get_visible_field_options_in_order(view_specific)
+        fields = specific_iterator(
+            Field.objects.filter(id__in=field_options.values_list("field_id"))
+            .select_related("content_type")
+            .prefetch_related("select_options")
+        )
+
+        return Response(
+            PublicViewInfoSerializer(
+                view=view,
+                fields=fields,
+            ).data
+        )

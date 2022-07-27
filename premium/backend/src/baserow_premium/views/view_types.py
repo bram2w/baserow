@@ -54,6 +54,8 @@ class KanbanViewType(ViewType):
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
     can_decorate = True
+    # TODO: When we make kanban views publicly sharable flip this to True
+    when_shared_publicly_requires_realtime_events = False
 
     def get_api_urls(self):
         from baserow_premium.api.views.kanban import urls as api_urls

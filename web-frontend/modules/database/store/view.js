@@ -87,9 +87,12 @@ export const mutations = {
   ADD_ITEM(state, item) {
     state.items = [...state.items, item].sort((a, b) => a.order - b.order)
   },
-  UPDATE_ITEM(state, { id, values }) {
+  UPDATE_ITEM(state, { id, values, repopulate }) {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
+    if (repopulate === true) {
+      populateView(state.items[index], this.$registry)
+    }
   },
   ORDER_ITEMS(state, order) {
     state.items.forEach((view) => {
@@ -325,8 +328,8 @@ export const actions = {
   /**
    * Forcefully update an existing view without making a request to the backend.
    */
-  forceUpdate({ commit }, { view, values }) {
-    commit('UPDATE_ITEM', { id: view.id, values })
+  forceUpdate({ commit }, { view, values, repopulate = false }) {
+    commit('UPDATE_ITEM', { id: view.id, values, repopulate })
   },
   /**
    * Duplicates an existing view.

@@ -6,6 +6,8 @@ import {
   getRowSortFunction,
   matchSearchFilters,
   calculateSingleRowSearchMatches,
+  getFilters,
+  getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 
@@ -256,7 +258,7 @@ export default ({ service, customPopulateRow }) => {
       context,
       { viewId, fields, initialRowArguments = {} }
     ) {
-      const { commit, getters } = context
+      const { commit, getters, rootGetters } = context
       commit('SET_VIEW_ID', viewId)
       commit('SET_SEARCH', {
         activeSearchTerm: '',
@@ -266,6 +268,10 @@ export default ({ service, customPopulateRow }) => {
         offset: 0,
         limit: getters.getRequestSize,
         search: getters.getServerSearchTerm,
+        publicUrl: rootGetters['page/view/public/getIsPublic'],
+        publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+        orderBy: getOrderBy(rootGetters, getters.getViewId),
+        filters: getFilters(rootGetters, getters.getViewId),
         ...initialRowArguments,
       })
       const rows = Array(data.count).fill(null)
@@ -282,7 +288,7 @@ export default ({ service, customPopulateRow }) => {
      * missing ones if needed.
      */
     async fetchMissingRowsInNewRange(
-      { dispatch, getters, commit },
+      { dispatch, getters, commit, rootGetters },
       parameters
     ) {
       const { startIndex, endIndex } = parameters
@@ -335,6 +341,10 @@ export default ({ service, customPopulateRow }) => {
           limit: rangeToFetch.limit,
           signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
+          publicUrl: rootGetters['page/view/public/getIsPublic'],
+          publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          orderBy: getOrderBy(rootGetters, getters.getViewId),
+          filters: getFilters(rootGetters, getters.getViewId),
         })
         commit('UPDATE_ROWS', {
           offset: rangeToFetch.offset,
@@ -365,7 +375,7 @@ export default ({ service, customPopulateRow }) => {
      * changed and we can't trust what's in the store anymore.
      */
     async refresh(
-      { dispatch, commit, getters },
+      { dispatch, commit, getters, rootGetters },
       { fields, includeFieldOptions = false }
     ) {
       // If another refresh or fetch request is currently running, we need to cancel
@@ -388,6 +398,9 @@ export default ({ service, customPopulateRow }) => {
           viewId: getters.getViewId,
           signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
+          publicUrl: rootGetters['page/view/public/getIsPublic'],
+          publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          filters: getFilters(rootGetters, getters.getViewId),
         })
 
         // Create a new empty array containing un-fetched rows.
@@ -428,6 +441,10 @@ export default ({ service, customPopulateRow }) => {
             includeFieldOptions,
             signal: lastRequestController.signal,
             search: getters.getServerSearchTerm,
+            publicUrl: rootGetters['page/view/public/getIsPublic'],
+            publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+            orderBy: getOrderBy(rootGetters, getters.getViewId),
+            filters: getFilters(rootGetters, getters.getViewId),
           })
 
           results.forEach((row, index) => {

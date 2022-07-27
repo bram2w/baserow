@@ -31,7 +31,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
   </div>
    
   <div
-    class="grid-view__public-shared-page"
+    class="public-view__table"
   >
     <div>
       <header

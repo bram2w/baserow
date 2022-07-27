@@ -83,7 +83,7 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
         GridViewType.getType(),
         GalleryViewType.getType(),
         KanbanViewType.getType(),
-      ].includes(view.type) && !store.getters['view/grid/isPublic']
+      ].includes(view.type) && !store.getters['page/view/public/getIsPublic']
     )
   }
 }
@@ -132,7 +132,7 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
         GridViewType.getType(),
         GalleryViewType.getType(),
         KanbanViewType.getType(),
-      ].includes(view.type) && !store.getters['view/grid/isPublic']
+      ].includes(view.type) && !store.getters['page/view/public/getIsPublic']
     )
   }
 

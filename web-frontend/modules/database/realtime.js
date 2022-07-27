@@ -267,10 +267,16 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('force_view_refresh', ({ store, app }, data) => {
+  realtime.registerEvent('force_view_refresh', async ({ store, app }, data) => {
     const view = store.getters['view/get'](data.view_id)
     if (view !== undefined) {
       if (store.getters['view/getSelectedId'] === view.id) {
+        await store.dispatch('view/forceUpdate', {
+          view,
+          values: data.view,
+          repopulate: true,
+        })
+
         app.$bus.$emit('table-refresh', {
           tableId: store.getters['table/getSelectedId'],
           includeFieldOptions: true,
