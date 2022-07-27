@@ -8,6 +8,8 @@ from django.db.models import UniqueConstraint, Q
 from django.contrib.postgres.fields import ArrayField
 
 from rest_framework.exceptions import NotAuthenticated
+from baserow.core.jobs.models import Job
+from baserow.core.jobs.mixins import JobWithUserDataMixin
 
 from baserow.core.user_files.models import UserFile
 
@@ -34,6 +36,7 @@ __all__ = [
     "TrashEntry",
     "UserFile",
     "Action",
+    "Snapshot",
 ]
 
 
@@ -272,7 +275,7 @@ class Application(
     PolymorphicContentTypeMixin,
     models.Model,
 ):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=160)
     order = models.PositiveIntegerField()
     content_type = models.ForeignKey(
@@ -416,3 +419,39 @@ class TrashEntry(models.Model):
                 fields=["-trashed_at", "trash_item_type", "group", "application"]
             )
         ]
+
+
+class DuplicateApplicationJob(JobWithUserDataMixin, Job):
+
+    user_data_to_save = ["user_websocket_id"]
+
+    original_application = models.ForeignKey(
+        Application,
+        null=True,
+        related_name="duplicated_by_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The Baserow application to duplicate.",
+    )
+    duplicated_application = models.OneToOneField(
+        Application,
+        null=True,
+        related_name="duplicated_from_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The duplicated Baserow application.",
+    )
+
+
+class Snapshot(models.Model):
+    name = models.CharField(max_length=160)
+    snapshot_from_application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, null=False, related_name="snapshot_to"
+    )
+    snapshot_to_application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, null=True, related_name="snapshot_from"
+    )
+    mark_for_deletion = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("name", "snapshot_from_application")

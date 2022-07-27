@@ -22,8 +22,11 @@
       </div>
       <div class="trash-entry__deleted-at-display">{{ timeAgo }}</div>
       <ul v-if="trashEntry.names" class="trash-entry__items">
-        <li v-for="(name, index) in trashEntry.names" :key="index">
+        <li v-for="(name, index) in firstNames" :key="index">
           {{ name }}
+        </li>
+        <li v-if="otherNamesCount">
+          {{ $t('trashEntry.andMore', { count: otherNamesCount }) }}
         </li>
       </ul>
     </div>
@@ -77,6 +80,14 @@ export default {
       } else {
         return this.trashEntry.name
       }
+    },
+    firstNames() {
+      return this.trashEntry.names.slice(0, 10)
+    },
+    otherNamesCount() {
+      return this.trashEntry.names.length > 10
+        ? this.trashEntry.names.length - 10
+        : 0
     },
   },
   methods: {

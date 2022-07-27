@@ -24,11 +24,13 @@ from baserow.contrib.database.table.cache import (
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
+from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     OrderableMixin,
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
+from baserow.core.jobs.mixins import JobWithUserDataMixin
 from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
@@ -654,3 +656,23 @@ class Table(
     # tables.
     def get_collision_safe_order_id_idx_name(self):
         return f"tbl_order_id_{self.id}_idx"
+
+
+class DuplicateTableJob(JobWithUserDataMixin, Job):
+
+    user_data_to_save = ["user_websocket_id"]
+
+    original_table = models.ForeignKey(
+        Table,
+        null=True,
+        related_name="duplicated_by_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The Baserow table to duplicate.",
+    )
+    duplicated_table = models.OneToOneField(
+        Table,
+        null=True,
+        related_name="duplicated_from_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The duplicated Baserow table.",
+    )

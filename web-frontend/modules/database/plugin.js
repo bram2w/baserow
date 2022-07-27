@@ -42,6 +42,9 @@ import {
   NotEmptyViewFilterType,
   DateEqualsTodayViewFilterType,
   DateEqualsDaysAgoViewFilterType,
+  DateEqualsMonthsAgoViewFilterType,
+  DateEqualsYearsAgoViewFilterType,
+  DateEqualsCurrentWeekViewFilterType,
   DateEqualsCurrentMonthViewFilterType,
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
@@ -61,9 +64,9 @@ import {
   JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
 import {
-  RowCreatedWebhookEventType,
-  RowUpdatedWebhookEventType,
-  RowDeletedWebhookEventType,
+  RowsCreatedWebhookEventType,
+  RowsUpdatedWebhookEventType,
+  RowsDeletedWebhookEventType,
 } from '@baserow/modules/database/webhookEventTypes'
 import {
   ImageFilePreview,
@@ -233,6 +236,18 @@ export default (context) => {
   )
   app.$registry.register(
     'viewFilter',
+    new DateEqualsMonthsAgoViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsYearsAgoViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsCurrentWeekViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
     new DateEqualsCurrentMonthViewFilterType(context)
   )
   app.$registry.register(
@@ -306,15 +321,15 @@ export default (context) => {
   app.$registry.register('exporter', new CSVTableExporterType(context))
   app.$registry.register(
     'webhookEvent',
-    new RowCreatedWebhookEventType(context)
+    new RowsCreatedWebhookEventType(context)
   )
   app.$registry.register(
     'webhookEvent',
-    new RowUpdatedWebhookEventType(context)
+    new RowsUpdatedWebhookEventType(context)
   )
   app.$registry.register(
     'webhookEvent',
-    new RowDeletedWebhookEventType(context)
+    new RowsDeletedWebhookEventType(context)
   )
 
   // Text functions

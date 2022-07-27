@@ -170,7 +170,6 @@ export class ViewType extends Registerable {
     context,
     view,
     fields,
-    primary,
     storePrefix = '',
     includeFieldOptions = false
   ) {}
@@ -228,38 +227,21 @@ export class ViewType extends Registerable {
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowCreated(
-    context,
-    tableId,
-    fields,
-    primary,
-    values,
-    metadata,
-    storePrefix
-  ) {}
+  rowCreated(context, tableId, fields, values, metadata, storePrefix) {}
 
   /**
    * Event that is called when a row is updated from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowUpdated(
-    context,
-    tableId,
-    fields,
-    primary,
-    row,
-    values,
-    metadata,
-    storePrefix
-  ) {}
+  rowUpdated(context, tableId, fields, row, values, metadata, storePrefix) {}
 
   /**
    * Event that is called when a row is deleted from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowDeleted(context, tableId, fields, primary, row, storePrefix) {}
+  rowDeleted(context, tableId, fields, row, storePrefix) {}
 
   /**
    * Event that is called when a piece of metadata is updated for a particular row.
@@ -295,6 +277,13 @@ export class ViewType extends Registerable {
    * If the view type is disabled, this text will be visible explaining why.
    */
   getDeactivatedText() {}
+
+  /**
+   * When the disabled view type is clicked, this modal will be shown.
+   */
+  getDeactivatedClickModal() {
+    return null
+  }
 
   /**
    * Indicates if the view type is disabled.
@@ -357,11 +346,10 @@ export class GridViewType extends ViewType {
     return 'database-public-grid-view'
   }
 
-  async fetch({ store }, view, fields, primary, storePrefix = '') {
+  async fetch({ store }, view, fields, storePrefix = '') {
     await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
       gridId: view.id,
       fields,
-      primary,
     })
   }
 
@@ -369,14 +357,12 @@ export class GridViewType extends ViewType {
     { store },
     view,
     fields,
-    primary,
     storePrefix = '',
     includeFieldOptions = false
   ) {
     await store.dispatch(storePrefix + 'view/grid/refresh', {
       view,
       fields,
-      primary,
       includeFieldOptions,
     })
   }
@@ -460,7 +446,6 @@ export class GridViewType extends ViewType {
       storePrefix + 'view/grid/updateSearch',
       {
         fields: rootGetters['field/getAll'],
-        primary: rootGetters['field/getPrimary'],
       },
       {
         root: true,
@@ -482,7 +467,6 @@ export class GridViewType extends ViewType {
     { store },
     tableId,
     fields,
-    primary,
     values,
     metadata,
     storePrefix = ''
@@ -491,14 +475,12 @@ export class GridViewType extends ViewType {
       await store.dispatch(storePrefix + 'view/grid/createdNewRow', {
         view: store.getters['view/getSelected'],
         fields,
-        primary,
         values,
         metadata,
       })
       await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
-        primary,
       })
       store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
         view: store.getters['view/getSelected'],
@@ -510,7 +492,6 @@ export class GridViewType extends ViewType {
     { store },
     tableId,
     fields,
-    primary,
     row,
     values,
     metadata,
@@ -520,7 +501,6 @@ export class GridViewType extends ViewType {
       await store.dispatch(storePrefix + 'view/grid/updatedExistingRow', {
         view: store.getters['view/getSelected'],
         fields,
-        primary,
         row,
         values,
         metadata,
@@ -528,7 +508,6 @@ export class GridViewType extends ViewType {
       await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
-        primary,
       })
       store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
         view: store.getters['view/getSelected'],
@@ -536,18 +515,16 @@ export class GridViewType extends ViewType {
     }
   }
 
-  async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
+  async rowDeleted({ store }, tableId, fields, row, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/grid/deletedExistingRow', {
         view: store.getters['view/getSelected'],
         fields,
-        primary,
         row,
       })
       await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
-        primary,
       })
       store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
         view: store.getters['view/getSelected'],
@@ -584,11 +561,10 @@ class BaseBufferedRowView extends ViewType {
     return {}
   }
 
-  async fetch({ store }, view, fields, primary, storePrefix = '') {
+  async fetch({ store }, view, fields, storePrefix = '') {
     await store.dispatch(`${storePrefix}view/${this.getType()}/fetchInitial`, {
       viewId: view.id,
       fields,
-      primary,
     })
   }
 
@@ -596,13 +572,11 @@ class BaseBufferedRowView extends ViewType {
     { store },
     view,
     fields,
-    primary,
     storePrefix = '',
     includeFieldOptions = false
   ) {
     await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
       fields,
-      primary,
       includeFieldOptions,
     })
   }
@@ -679,7 +653,6 @@ class BaseBufferedRowView extends ViewType {
     { store },
     tableId,
     fields,
-    primary,
     values,
     metadata,
     storePrefix = ''
@@ -690,7 +663,6 @@ class BaseBufferedRowView extends ViewType {
         {
           view: store.getters['view/getSelected'],
           fields,
-          primary,
           values,
         }
       )
@@ -701,7 +673,6 @@ class BaseBufferedRowView extends ViewType {
     { store },
     tableId,
     fields,
-    primary,
     row,
     values,
     metadata,
@@ -713,7 +684,6 @@ class BaseBufferedRowView extends ViewType {
         {
           view: store.getters['view/getSelected'],
           fields,
-          primary,
           row,
           values,
         }
@@ -721,14 +691,13 @@ class BaseBufferedRowView extends ViewType {
     }
   }
 
-  async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
+  async rowDeleted({ store }, tableId, fields, row, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(
         storePrefix + 'view/' + this.getType() + '/afterExistingRowDeleted',
         {
           view: store.getters['view/getSelected'],
           fields,
-          primary,
           row,
         }
       )
@@ -760,6 +729,14 @@ export class GalleryViewType extends BaseBufferedRowView {
 
   getComponent() {
     return GalleryView
+  }
+
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-public-gallery-view'
   }
 
   getDefaultFieldOptionValues() {
@@ -797,7 +774,6 @@ export class GalleryViewType extends BaseBufferedRowView {
       storePrefix + 'view/gallery/updateSearch',
       {
         fields: rootGetters['field/getAll'],
-        primary: rootGetters['field/getPrimary'],
       },
       {
         root: true,
@@ -871,7 +847,6 @@ export class FormViewType extends ViewType {
     { store },
     view,
     fields,
-    primary,
     storePrefix = '',
     includeFieldOptions = false
   ) {
@@ -899,6 +874,9 @@ export class FormViewType extends ViewType {
           enabled: false,
           required: true,
           order: maxPossibleOrderValue,
+          show_when_matching_conditions: false,
+          condition_type: 'AND',
+          conditions: [],
         },
       },
       { root: true }
@@ -913,7 +891,7 @@ export class FormViewType extends ViewType {
     )
   }
 
-  async fetch({ store }, view, fields, primary, storePrefix = '') {
+  async fetch({ store }, view, fields, storePrefix = '') {
     await store.dispatch(storePrefix + 'view/form/fetchInitial', {
       formId: view.id,
     })

@@ -68,16 +68,19 @@ class DatabaseConfig(AppConfig):
             DeleteTableActionType,
             OrderTableActionType,
             UpdateTableActionType,
+            DuplicateTableActionType,
         )
 
         action_type_registry.register(CreateTableActionType())
         action_type_registry.register(DeleteTableActionType())
         action_type_registry.register(OrderTableActionType())
         action_type_registry.register(UpdateTableActionType())
+        action_type_registry.register(DuplicateTableActionType())
 
         from .rows.actions import (
             CreateRowActionType,
             CreateRowsActionType,
+            ImportRowsActionType,
             DeleteRowActionType,
             DeleteRowsActionType,
             MoveRowActionType,
@@ -87,6 +90,7 @@ class DatabaseConfig(AppConfig):
 
         action_type_registry.register(CreateRowActionType())
         action_type_registry.register(CreateRowsActionType())
+        action_type_registry.register(ImportRowsActionType())
         action_type_registry.register(DeleteRowActionType())
         action_type_registry.register(DeleteRowsActionType())
         action_type_registry.register(MoveRowActionType())
@@ -207,13 +211,13 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(FormulaFieldConverter())
 
         from .fields.actions import (
-            CreateFieldTypeAction,
-            DeleteFieldTypeAction,
+            CreateFieldActionType,
+            DeleteFieldActionType,
             UpdateFieldActionType,
         )
 
-        action_type_registry.register(CreateFieldTypeAction())
-        action_type_registry.register(DeleteFieldTypeAction())
+        action_type_registry.register(CreateFieldActionType())
+        action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
 
         from .views.view_types import GridViewType, GalleryViewType, FormViewType
@@ -233,6 +237,9 @@ class DatabaseConfig(AppConfig):
             DateNotEqualViewFilterType,
             DateEqualsTodayViewFilterType,
             DateEqualsDaysAgoViewFilterType,
+            DateEqualsMonthsAgoViewFilterType,
+            DateEqualsYearsAgoViewFilterType,
+            DateEqualsCurrentWeekViewFilterType,
             DateEqualsCurrentMonthViewFilterType,
             DateEqualsCurrentYearViewFilterType,
             HigherThanViewFilterType,
@@ -269,6 +276,9 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
         view_filter_type_registry.register(DateEqualsDaysAgoViewFilterType())
+        view_filter_type_registry.register(DateEqualsMonthsAgoViewFilterType())
+        view_filter_type_registry.register(DateEqualsYearsAgoViewFilterType())
+        view_filter_type_registry.register(DateEqualsCurrentWeekViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsDayOfMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
@@ -342,13 +352,19 @@ class DatabaseConfig(AppConfig):
         register_formula_functions(formula_function_registry)
 
         from .rows.webhook_event_types import (
+            RowsCreatedEventType,
             RowCreatedEventType,
+            RowsUpdatedEventType,
             RowUpdatedEventType,
+            RowsDeletedEventType,
             RowDeletedEventType,
         )
 
+        webhook_event_type_registry.register(RowsCreatedEventType())
         webhook_event_type_registry.register(RowCreatedEventType())
+        webhook_event_type_registry.register(RowsUpdatedEventType())
         webhook_event_type_registry.register(RowUpdatedEventType())
+        webhook_event_type_registry.register(RowsDeletedEventType())
         webhook_event_type_registry.register(RowDeletedEventType())
 
         from .airtable.airtable_column_types import (
@@ -396,9 +412,11 @@ class DatabaseConfig(AppConfig):
         from baserow.core.jobs.registries import job_type_registry
         from .airtable.job_type import AirtableImportJobType
         from .file_import.job_type import FileImportJobType
+        from baserow.contrib.database.table.job_types import DuplicateTableJobType
 
         job_type_registry.register(AirtableImportJobType())
         job_type_registry.register(FileImportJobType())
+        job_type_registry.register(DuplicateTableJobType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

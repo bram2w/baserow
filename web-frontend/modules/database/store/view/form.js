@@ -128,9 +128,15 @@ export const actions = {
     updateValues.field_options[field.id] = values
 
     try {
-      await ViewService(this.$client).updateFieldOptions({
+      const { data } = await ViewService(this.$client).updateFieldOptions({
         viewId: form.id,
         values: updateValues,
+      })
+      // Because the updated field options could contain a newly create condition,
+      // we must update it our own copy to make sure we have the correct id.
+      commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+        fieldId: field.id,
+        values: data.field_options[field.id.toString()],
       })
     } catch (error) {
       commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {

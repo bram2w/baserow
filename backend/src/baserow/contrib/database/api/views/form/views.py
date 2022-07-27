@@ -21,7 +21,9 @@ from baserow.contrib.database.views.exceptions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView
-from baserow.contrib.database.views.validators import required_validator
+from baserow.contrib.database.views.validators import (
+    no_empty_form_values_when_required_validator,
+)
 
 from .errors import (
     ERROR_FORM_DOES_NOT_EXIST,
@@ -120,10 +122,10 @@ class SubmitFormViewView(APIView):
             model._field_objects[option.field_id]["name"]: {
                 "required": True,
                 "default": empty,
-                "validators": [required_validator],
+                "validators": [no_empty_form_values_when_required_validator],
             }
             for option in options
-            if option.required
+            if option.is_required()
         }
         field_ids = [option.field_id for option in options]
         validation_serializer = get_row_serializer_class(
@@ -131,5 +133,6 @@ class SubmitFormViewView(APIView):
         )
         data = validate_data(validation_serializer, request.data)
 
-        handler.submit_form_view(form, data, model, options)
+        instance = handler.submit_form_view(form, data, model, options)
+        form.row_id = instance.id
         return Response(FormViewSubmittedSerializer(form).data)

@@ -4,6 +4,7 @@ from baserow.core.models import Application, TrashEntry, Group
 from baserow.core.registries import application_type_registry
 from baserow.core.signals import application_created, group_restored
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
+from baserow.core.snapshots.handler import SnapshotHandler
 
 
 class ApplicationTrashableItemType(TrashableItemType):
@@ -31,6 +32,8 @@ class ApplicationTrashableItemType(TrashableItemType):
         """
         Deletes an application and the related relations in the correct way.
         """
+
+        SnapshotHandler().delete_by_application(trashed_item)
 
         application = trashed_item.specific
         application_type = application_type_registry.get_by_model(application)

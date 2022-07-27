@@ -110,13 +110,11 @@ describe('Grid view store', () => {
       sortings: [],
     }
     const fields = []
-    const primary = {}
     const getScrollTop = () => 0
 
     await store.dispatch('grid/createdNewRow', {
       view,
       fields,
-      primary,
       values: { id: 1, order: '1.00000000000000000000' },
       getScrollTop,
     })
@@ -129,7 +127,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/createdNewRow', {
       view,
       fields,
-      primary,
       values: { id: 8, order: '4.50000000000000000000' },
       getScrollTop,
     })
@@ -143,7 +140,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/createdNewRow', {
       view,
       fields,
-      primary,
       values: { id: 102, order: '102.00000000000000000000' },
       getScrollTop,
     })
@@ -166,7 +162,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/createdNewRow', {
       view,
       fields,
-      primary,
       values: { id: 2, order: '2.00000000000000000000' },
       getScrollTop,
     })
@@ -194,13 +189,14 @@ describe('Grid view store', () => {
         ],
         sortings: [],
       },
-      fields,
-      primary: {
-        id: 1,
-        name: 'Test 1',
-        type: 'text',
-        primary: true,
-      },
+      fields: [
+        {
+          id: 1,
+          name: 'Test 1',
+          type: 'text',
+          primary: true,
+        },
+      ],
       values: { id: 16, order: '11.50000000000000000000', field_1: 'value' },
       getScrollTop,
     })
@@ -250,19 +246,19 @@ describe('Grid view store', () => {
       ],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const getScrollTop = () => 0
 
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 2, order: '2.00000000000000000000', field_1: 'Value 2' },
       values: { field_1: 'Value 2 updated' },
       getScrollTop,
@@ -282,7 +278,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 1, order: '1.00000000000000000000', field_1: 'Value 1' },
       values: { field_1: 'Value 1 updated' },
       getScrollTop,
@@ -301,7 +296,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 3, order: '3.00000000000000000000', field_1: 'Value 3' },
       values: { field_1: 'Value 3 updated' },
       getScrollTop,
@@ -320,7 +314,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 4, order: '4.00000000000000000000', field_1: 'empty' },
       values: { field_1: 'Value 4 updated' },
       getScrollTop,
@@ -341,7 +334,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 4,
         order: '4.00000000000000000000',
@@ -378,7 +370,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 10, order: '10.00000000000000000000', field_1: 'Value 10' },
       values: { field_1: 'Value 10 updated' },
       getScrollTop,
@@ -403,7 +394,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 15, order: '15.00000000000000000000', field_1: 'Value 15' },
       values: { field_1: 'Value 15 updated' },
       getScrollTop,
@@ -425,7 +415,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 12, order: '12.00000000000000000000', field_1: 'Value 12' },
       values: {
         order: '13.50000000000000000000',
@@ -451,7 +440,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 12,
         order: '13.50000000000000000000',
@@ -478,7 +466,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 13,
         order: '13.00000000000000000000',
@@ -502,7 +489,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 2,
         order: '2.00000000000000000000',
@@ -527,7 +513,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 2,
         order: '20.99999999999999999999',
@@ -565,7 +550,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 11,
         order: '14.99999999999999999996',
@@ -610,7 +594,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 11,
         order: '14.99999999999999999999',
@@ -673,13 +656,11 @@ describe('Grid view store', () => {
       sortings: [],
     }
     const fields = []
-    const primary = {}
     const getScrollTop = () => 0
 
     await store.dispatch('grid/deletedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 3, order: '3.00000000000000000000' },
       getScrollTop,
     })
@@ -697,7 +678,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/deletedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 20, order: '20.00000000000000000000' },
       getScrollTop,
     })
@@ -715,7 +695,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/deletedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 13, order: '13.00000000000000000000' },
       getScrollTop,
     })
@@ -747,13 +726,14 @@ describe('Grid view store', () => {
         ],
         sortings: [],
       },
-      fields,
-      primary: {
-        id: 1,
-        name: 'Test 1',
-        type: 'text',
-        primary: true,
-      },
+      fields: [
+        {
+          id: 1,
+          name: 'Test 1',
+          type: 'text',
+          primary: true,
+        },
+      ],
       row: { id: 16, order: '11.50000000000000000000', field_1: 'value' },
       getScrollTop,
     })
@@ -783,13 +763,11 @@ describe('Grid view store', () => {
       sortings: [],
     }
     const fields = []
-    const primary = {}
     const getScrollTop = () => 0
 
     await store.dispatch('grid/createdNewRow', {
       view,
       fields,
-      primary,
       values: { id: 1, order: '1.00000000000000000000' },
       metadata: { test: 'test' },
       getScrollTop,
@@ -801,7 +779,6 @@ describe('Grid view store', () => {
     await store.dispatch('grid/updatedExistingRow', {
       view,
       fields,
-      primary,
       row: { id: 1, order: '1.00000000000000000000' },
       values: { field_1: 'Value updated' },
       metadata: { test: 'test updated' },

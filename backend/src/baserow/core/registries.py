@@ -1,4 +1,13 @@
+from typing import Any, Dict, Optional, TYPE_CHECKING
+from zipfile import ZipFile
+
+from django.core.files.storage import Storage
+from django.db.transaction import Atomic
+
+from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
+from baserow.core.utils import ChildProgressBuilder, Progress
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
+from .export_serialized import CoreExportSerializedStructure
 from .registry import (
     Instance,
     Registry,
@@ -8,9 +17,9 @@ from .registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
-from .export_serialized import CoreExportSerializedStructure
-from baserow.core.utils import ChildProgressBuilder
-from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
+
+if TYPE_CHECKING:
+    from .models import Application, Group
 
 
 class Plugin(APIUrlsInstanceMixin, Instance):
@@ -163,6 +172,8 @@ class ApplicationType(
     instance_serializer_class = None
     """This serializer that is used to serialize the instance model."""
 
+    supports_snapshots = True
+
     def pre_delete(self, application):
         """
         A hook that is called before the application instance is deleted.
@@ -171,7 +182,28 @@ class ApplicationType(
         :type application: Application
         """
 
-    def export_serialized(self, application, files_zip, storage):
+    def export_safe_transaction_context(self, application: "Application") -> Atomic:
+        """
+        Should return an Atomic context (such as transaction.atomic or
+        baserow.contrib.database.db.atomic.read_repeatable_single_database_atomic_transaction)
+        which can be used to safely run a database transaction to export an application
+        of this type.
+
+        :param application: The application that we are about to export.
+        :return: An Atomic context object that will be used to open a transaction safely
+            to export an application of this type.
+        """
+
+        raise NotImplementedError(
+            "Must be implemented by the specific application type"
+        )
+
+    def export_serialized(
+        self,
+        application: "Application",
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
         """
         Exports the application to a serialized dict that can be imported by the
         `import_serialized` method. The dict is JSON serializable.
@@ -196,35 +228,28 @@ class ApplicationType(
 
     def import_serialized(
         self,
-        group,
-        serialized_values,
-        id_mapping,
-        files_zip,
-        storage,
-        progress_builder=None,
-    ):
+        group: "Group",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress_builder: Optional[Progress] = None,
+    ) -> "Application":
         """
         Imports the exported serialized application by the `export_serialized` as a new
         application to a group.
 
         :param group: The group that the application must be added to.
-        :type group: Group
         :param serialized_values: The exported serialized values by the
             `export_serialized` method.
-        :type serialized_values: dict`
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
-        :type id_mapping: dict
         :param files_zip: A zip file buffer where files related to the template can
             be extracted from.
-        :type files_zip: ZipFile
         :param storage: The storage where the files can be copied to.
-        :type storage: Storage or None
         :param progress_builder: If provided will be used to build a child progress bar
             and report on this methods progress to the parent of the progress_builder.
-        :type: Optional[ChildProgressBuilder]
         :return: The newly created application.
-        :rtype: Application
         """
 
         if "applications" not in id_mapping:

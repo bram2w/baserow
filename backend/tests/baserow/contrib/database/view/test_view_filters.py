@@ -1603,6 +1603,392 @@ def test_last_modified_date_equals_days_ago_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_date_equals_months_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table, date_include_time=False)
+    handler = ViewHandler()
+    model = table.get_model()
+    row_jan = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 1, 1),
+        }
+    )
+    row_feb = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 2, 3),
+        }
+    )
+    row_march = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 3, 1),
+        }
+    )
+    row_march_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 3, 15),
+        }
+    )
+    row_may = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 4, 1),
+        }
+    )
+    row_none = model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+    row_old_year = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2010, 1, 1),
+        }
+    )
+
+    day_in_march = "2022-03-31 10:00"
+
+    months_ago = 0
+    with freeze_time(day_in_march):
+        filter = data_fixture.create_view_filter(
+            view=grid_view,
+            field=date_field,
+            type="date_equals_months_ago",
+            value=f"Europe/Berlin?{months_ago}",
+        )
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 2
+        assert row_march in rows
+        assert row_march_2 in rows
+
+    months_ago = 1
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_feb in rows
+
+    months_ago = 2
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_jan in rows
+
+    months_ago = 3
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 0
+
+
+@pytest.mark.django_db
+def test_datetime_equals_months_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    handler = ViewHandler()
+    model = table.get_model()
+    row_jan = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-01-01 00:00",
+        }
+    )
+    row_feb = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-02-03 23:59",
+        }
+    )
+    row_march = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-03-01 15:15",
+        }
+    )
+    row_march_2 = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-03-31 23:59",
+        }
+    )
+    row_may = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-04-01 00:00",
+        }
+    )
+    row_none = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": None,
+        }
+    )
+    row_old_year = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2010-01-01 15:15",
+        }
+    )
+
+    day_in_march = "2022-03-31 10:00"
+
+    months_ago = 0
+    with freeze_time(day_in_march):
+        filter = data_fixture.create_view_filter(
+            view=grid_view,
+            field=datetime_field,
+            type="date_equals_months_ago",
+            value=f"Europe/Berlin?{months_ago}",
+        )
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 2
+        assert row_march in rows
+        assert row_march_2 in rows
+
+    months_ago = 1
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_feb in rows
+
+    months_ago = 2
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_jan in rows
+
+    months_ago = 3
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 0
+
+
+@pytest.mark.django_db
+def test_datetime_equals_months_ago_filter_type_timezone(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    handler = ViewHandler()
+    model = table.get_model()
+    row_jan = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-01-01 00:00",
+        }
+    )
+
+    day_in_feb = "2022-02-01 00:00"
+
+    # without timezone shifting the day
+    months_ago = 0
+
+    with freeze_time(day_in_feb):
+        filter = data_fixture.create_view_filter(
+            view=grid_view,
+            field=datetime_field,
+            type="date_equals_months_ago",
+            value=f"Europe/Berlin?{months_ago}",
+        )
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 0
+
+    # with timezone moving the day to january
+    with freeze_time(day_in_feb):
+        filter.value = f"America/Havana?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+
+
+@pytest.mark.django_db
+def test_date_equals_years_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table, date_include_time=False)
+    handler = ViewHandler()
+    model = table.get_model()
+    row_2022 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 1, 1),
+        }
+    )
+    row_2022_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 12, 30),
+        }
+    )
+    row_2021 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 3, 1),
+        }
+    )
+    row_2020 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2020, 3, 15),
+        }
+    )
+    row_none = model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+
+    day_in_2022 = "2022-03-31 10:00"
+
+    years_ago = 0
+    with freeze_time(day_in_2022):
+        filter = data_fixture.create_view_filter(
+            view=grid_view,
+            field=date_field,
+            type="date_equals_years_ago",
+            value=f"Europe/Berlin?{years_ago}",
+        )
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 2
+        assert row_2022 in rows
+        assert row_2022_2 in rows
+
+    years_ago = 1
+    with freeze_time(day_in_2022):
+        filter.value = f"Europe/Berlin?{years_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_2021 in rows
+
+    years_ago = 2
+    with freeze_time(day_in_2022):
+        filter.value = f"Europe/Berlin?{years_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_2020 in rows
+
+    years_ago = 3
+    with freeze_time(day_in_2022):
+        filter.value = f"Europe/Berlin?{years_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 0
+
+
+@pytest.mark.django_db
+def test_datetime_equals_years_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    handler = ViewHandler()
+    model = table.get_model()
+    row_2022 = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-01-01 00:00",
+        }
+    )
+    row_2022_2 = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2022-02-03 23:59",
+        }
+    )
+    row_2021 = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2021-03-01 15:15",
+        }
+    )
+    row_2020 = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2020-03-31 23:59",
+        }
+    )
+    row_none = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": None,
+        }
+    )
+
+    day_in_march = "2022-03-31 10:00"
+
+    months_ago = 0
+    with freeze_time(day_in_march):
+        filter = data_fixture.create_view_filter(
+            view=grid_view,
+            field=datetime_field,
+            type="date_equals_years_ago",
+            value=f"Europe/Berlin?{months_ago}",
+        )
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 2
+        assert row_2022 in rows
+        assert row_2022_2 in rows
+
+    months_ago = 1
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_2021 in rows
+
+    months_ago = 2
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+        assert row_2020 in rows
+
+    months_ago = 3
+    with freeze_time(day_in_march):
+        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 0
+
+
+@pytest.mark.django_db
+def test_datetime_equals_years_ago_filter_type_timezone(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    handler = ViewHandler()
+    model = table.get_model()
+    row_dec = model.objects.create(
+        **{
+            f"field_{datetime_field.id}": "2021-12-30 00:00",
+        }
+    )
+
+    day_in_2022 = "2022-01-01 00:00"
+
+    # without timezone shifting the day
+    months_ago = 0
+
+    with freeze_time(day_in_2022):
+        filter = data_fixture.create_view_filter(
+            view=grid_view,
+            field=datetime_field,
+            type="date_equals_years_ago",
+            value=f"Europe/Berlin?{months_ago}",
+        )
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 0
+
+    # with timezone moving the day to january
+    with freeze_time(day_in_2022):
+        filter.value = f"America/Havana?{months_ago}"
+        filter.save()
+        rows = handler.apply_filters(grid_view, model.objects.all()).all()
+        assert len(rows) == 1
+
+
+@pytest.mark.django_db
 def test_last_modified_day_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -1999,7 +2385,7 @@ def test_last_modified_year_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
-def test_date_day_month_year_filter_type(data_fixture):
+def test_date_day_week_month_year_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
@@ -2021,6 +2407,11 @@ def test_date_day_month_year_filter_type(data_fixture):
     row_3 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 1, 2),
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 4),
         }
     )
     model.objects.create(
@@ -2045,7 +2436,7 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row.id not in ids
 
-        view_filter.type = "date_equals_month"
+        view_filter.type = "date_equals_week"
         view_filter.save()
 
         ids = [
@@ -2055,16 +2446,28 @@ def test_date_day_month_year_filter_type(data_fixture):
         assert row_2.id in ids
         assert row_3.id in ids
 
-        view_filter.type = "date_equals_year"
+        view_filter.type = "date_equals_month"
         view_filter.save()
 
         ids = [
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
         ]
         assert len(ids) == 3
+        assert row_2.id in ids
+        assert row_3.id in ids
+        assert row_4.id in ids
+
+        view_filter.type = "date_equals_year"
+        view_filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 4
         assert row.id in ids
         assert row_2.id in ids
         assert row_3.id in ids
+        assert row_4.id in ids
 
     view_filter.type = "date_equals_today"
     view_filter.save()

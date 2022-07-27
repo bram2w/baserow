@@ -4,6 +4,8 @@ from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
 )
+
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.test_utils.helpers import is_dict_subset
 
@@ -359,3 +361,50 @@ def test_batch_update_rows_multiple_select_field_maintain_relationships(
     assert getattr(row_2, f"field_{multiple_select_field.id}").count() == 0
     assert getattr(row_1, f"field_{multiple_select_field_b.id}").count() == 1
     assert getattr(row_2, f"field_{multiple_select_field_b.id}").count() == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.field_formula
+@pytest.mark.api_rows
+def test_batch_update_rows_when_single_select_formula_in_an_error_state(
+    api_client, data_fixture
+):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user, table=table)
+    option_field = data_fixture.create_single_select_field(user, table=table)
+    option_a = data_fixture.create_select_option(
+        field=option_field, value="A", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=option_field, value="B", color="red"
+    )
+
+    formula_field = FieldHandler().create_field(
+        user, table, "formula", formula=f"field('{option_field.name}')", name="formula"
+    )
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+
+    # Now break the formula field by deleting it's option field. Under the hood it is
+    # still represented by a JSONB column in the database even though it is broken.
+
+    FieldHandler().delete_field(user, option_field)
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {
+        "items": [
+            {f"id": row_1.id, f"field_{text_field.id}": "a"},
+            {f"id": row_2.id, f"field_{text_field.id}": "b"},
+        ]
+    }
+
+    response = api_client.patch(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK

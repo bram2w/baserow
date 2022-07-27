@@ -272,6 +272,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     {"id": 2, "value": ""},
                 ],
                 "id": 2,
+                "self_link_row": [],
                 "link_row": [
                     {"id": 1, "value": "linked_row_1"},
                     {"id": 2, "value": "linked_row_2"},

@@ -21,7 +21,6 @@
       :class="{ 'context--loading-overlay': view._.loading }"
     >
       <ViewFilterForm
-        :primary="primary"
         :fields="fields"
         :view="view"
         :read-only="readOnly"
@@ -39,10 +38,6 @@ export default {
   name: 'ViewFilter',
   components: { ViewFilterForm },
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,

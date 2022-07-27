@@ -1,9 +1,12 @@
 import pytest
+from unittest.mock import patch
+
 from django.test.utils import CaptureQueriesContext
 from django.db import connection
 from django.shortcuts import reverse
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_202_ACCEPTED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
@@ -11,6 +14,8 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.models import Database
+from baserow.core.job_types import DuplicateApplicationJobType
+from baserow.core.jobs.handler import JobHandler
 
 
 @pytest.mark.django_db
@@ -293,7 +298,7 @@ def test_delete_application(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_tables(api_client, data_fixture):
+def test_order_applications(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -353,3 +358,115 @@ def test_order_tables(api_client, data_fixture):
     assert application_1.order == 3
     assert application_2.order == 2
     assert application_3.order == 1
+
+
+@pytest.mark.django_db
+def test_duplicate_application_errors(api_client, data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    group_1 = data_fixture.create_group(user=user_1)
+    _, token_2 = data_fixture.create_user_and_token(
+        email="test_2@test.nl", password="password", first_name="Test2"
+    )
+
+    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+
+    # user_2 cannot duplicate a table of other groups
+    response = api_client.post(
+        reverse(
+            "api:applications:async_duplicate",
+            kwargs={"application_id": application_1.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    # cannot duplicate non-existent application
+    response = api_client.post(
+        reverse("api:applications:async_duplicate", kwargs={"application_id": 99999}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_duplicate_application_schedule_job(
+    mock_run_async_job, api_client, data_fixture
+):
+    user_1, _ = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    group_1 = data_fixture.create_group(user=user_1)
+    user_2, token_2 = data_fixture.create_user_and_token(
+        email="test_3@test.nl",
+        password="password",
+        first_name="Test3",
+        group=group_1,
+    )
+    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+
+    # user can duplicate an application created by other in the same group
+    response = api_client.post(
+        reverse(
+            "api:applications:async_duplicate",
+            kwargs={"application_id": application_1.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    job = response.json()
+    assert job["id"] is not None
+    assert job["state"] == "pending"
+    assert job["type"] == "duplicate_application"
+
+    job = JobHandler().get_job(user_2, job["id"])
+    assert job.user_id == user_2.id
+    assert job.progress_percentage == 0
+    assert job.state == "pending"
+    assert job.error == ""
+
+    mock_run_async_job.delay.assert_called_once()
+    args = mock_run_async_job.delay.call_args
+    assert args[0][0] == job.id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_duplicate_job_response_serializer(api_client, data_fixture):
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    group = data_fixture.create_group(user=user)
+    application = data_fixture.create_database_application(group=group, order=1)
+
+    job = JobHandler().create_and_start_job(
+        user,
+        DuplicateApplicationJobType.type,
+        application_id=application.id,
+    )
+
+    # check that now the job ended correctly and the application was duplicated
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job_rsp = response.json()
+    assert job_rsp["state"] == "finished"
+    assert job_rsp["type"] == "duplicate_application"
+    assert job_rsp["original_application"]["id"] == application.id
+    assert job_rsp["original_application"]["name"] == application.name
+    assert job_rsp["original_application"]["type"] == "database"
+    assert job_rsp["duplicated_application"]["id"] != application.id
+    assert job_rsp["duplicated_application"]["name"] == f"{application.name} 2"
+    assert job_rsp["duplicated_application"]["type"] == "database"

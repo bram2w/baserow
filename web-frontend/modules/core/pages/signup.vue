@@ -6,24 +6,19 @@
       </h1>
       <LangPicker />
     </div>
-    <template v-if="settings.show_admin_signup_page">
-      <div class="alert">
-        <div class="alert__title">{{ $t('signup.requireFirstUser') }}</div>
-        <p class="alert__content">
-          {{ $t('signup.requireFirstUserMessage') }}
-        </p>
-      </div>
+    <template v-if="shouldShowAdminSignupPage">
+      <Alert :title="$t('signup.requireFirstUser')">{{
+        $t('signup.requireFirstUserMessage')
+      }}</Alert>
     </template>
     <template v-if="!isSignupEnabled">
-      <div class="alert alert--simple alert--error alert--has-icon">
-        <div class="alert__icon">
-          <i class="fas fa-exclamation"></i>
-        </div>
-        <div class="alert__title">{{ $t('signup.disabled') }}</div>
-        <p class="alert__content">
-          {{ $t('signup.disabledMessage') }}
-        </p>
-      </div>
+      <Alert
+        simple
+        type="error"
+        icon="exclamation"
+        :title="$t('signup.disabled')"
+        >{{ $t('signup.disabledMessage') }}</Alert
+      >
       <nuxt-link
         :to="{ name: 'login' }"
         class="button button--large button--primary"
@@ -33,7 +28,7 @@
       </nuxt-link>
     </template>
     <AuthRegister v-else :invitation="invitation" @success="success">
-      <ul v-if="!settings.show_admin_signup_page" class="action__links">
+      <ul v-if="!shouldShowAdminSignupPage" class="action__links">
         <li>
           <nuxt-link :to="{ name: 'login' }">
             <i class="fas fa-arrow-left"></i>
@@ -69,16 +64,18 @@ export default {
           this.invitation?.id)
       )
     },
+    shouldShowAdminSignupPage() {
+      return this.settings.show_admin_signup_page
+    },
     ...mapGetters({
       settings: 'settings/get',
     }),
   },
   methods: {
     success() {
-      if (this.settings.show_admin_signup_page) {
+      this.$nuxt.$router.push({ name: 'dashboard' }, () => {
         this.$store.dispatch('settings/hideAdminSignupPage')
-      }
-      this.$nuxt.$router.push({ name: 'dashboard' })
+      })
     },
   },
 }

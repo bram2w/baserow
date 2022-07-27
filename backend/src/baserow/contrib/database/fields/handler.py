@@ -1,4 +1,5 @@
 import logging
+import traceback
 from copy import deepcopy
 from typing import (
     Dict,
@@ -17,7 +18,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
 from django.db.models import QuerySet
-from django.db.utils import ProgrammingError, DataError
+from django.db.utils import ProgrammingError, DataError, DatabaseError
 from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import (
@@ -55,6 +56,7 @@ from .exceptions import (
     InvalidBaserowFieldName,
     MaxFieldNameLengthExceeded,
     IncompatibleFieldTypeForUniqueValues,
+    FailedToLockFieldDueToConflict,
 )
 from .field_cache import FieldCache
 from .models import Field, SelectOption, SpecificFieldForUpdate
@@ -137,15 +139,12 @@ class FieldHandler:
         Selects a field with a given id from the database.
 
         :param field_id: The identifier of the field that must be returned.
-        :type field_id: int
         :param field_model: If provided that model's objects are used to select the
             field. This can for example be useful when you want to select a TextField or
             other child of the Field model.
-        :type field_model: Type[Field]
         :param base_queryset: The base queryset from where to select the field.
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `field_model` parameter doesn't work anymore.
-        :type base_queryset: Queryset
         :raises FieldDoesNotExist: When the field with the provided id does not exist.
         :return: The requested field instance of the provided id.
         :rtype: Field
@@ -170,15 +169,36 @@ class FieldHandler:
         return field
 
     def get_specific_field_for_update(
-        self, field_id: int, field_model: Optional[Type[T]] = None
+        self,
+        field_id: int,
+        field_model: Optional[Type[T]] = None,
     ) -> SpecificFieldForUpdate:
+        """
+        Returns the .specific field which has been locked FOR UPDATE.
+
+        :param field_id: The field to lock and retrieve the specific instance of.
+        :param field_model: The field_model to query using, provide a specific one if
+            you want an exception raised if the field is not of this field_model type.
+        :return: A specific locked field instance
+        """
+
+        queryset = Field.objects.select_related("table").select_for_update(
+            of=("self", "table"), nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
+        )
+
+        try:
+            specific_field = self.get_field(
+                field_id, field_model, base_queryset=queryset
+            ).specific
+        except DatabaseError as e:
+            if "could not obtain lock on row" in traceback.format_exc():
+                raise FailedToLockFieldDueToConflict() from e
+            else:
+                raise e
+
         return cast(
             SpecificFieldForUpdate,
-            self.get_field(
-                field_id,
-                field_model,
-                base_queryset=Field.objects.select_for_update(of=("self",)),
-            ).specific,
+            specific_field,
         )
 
     def create_field(
@@ -453,7 +473,6 @@ class FieldHandler:
             # If no field converter is found we are going to alter the field using the
             # the lenient schema editor.
             with lenient_schema_editor(
-                connection,
                 from_field_type.get_alter_column_prepare_old_value(
                     connection, old_field, field
                 ),

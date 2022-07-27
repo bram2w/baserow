@@ -34,6 +34,7 @@ from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist,
+    LockConflict,
 )
 from baserow.core.models import GroupInvitation, Template
 from baserow.core.user.exceptions import (
@@ -55,6 +56,7 @@ from .errors import (
     ERROR_DISABLED_SIGNUP,
     ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
     ERROR_DISABLED_RESET_PASSWORD,
+    ERROR_UNDO_REDO_LOCK_CONFLICT,
 )
 from .exceptions import ClientSessionIdHeaderNotSetException
 from .schemas import create_user_response_schema, authenticate_user_schema
@@ -441,6 +443,12 @@ class DashboardView(APIView):
         return Response(dashboard_serializer.data)
 
 
+UNDO_REDO_EXCEPTIONS_MAP = {
+    ClientSessionIdHeaderNotSetException: ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
+    LockConflict: ERROR_UNDO_REDO_LOCK_CONFLICT,
+}
+
+
 class UndoView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -472,16 +480,14 @@ class UndoView(APIView):
         responses={200: UndoRedoResponseSerializer},
     )
     @validate_body(UndoRedoRequestSerializer)
-    @map_exceptions(
-        {ClientSessionIdHeaderNotSetException: ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET}
-    )
+    @map_exceptions(UNDO_REDO_EXCEPTIONS_MAP)
     @transaction.atomic
     def patch(self, request, data: List[ActionScopeStr]):
         session_id = get_untrusted_client_session_id(request.user)
         if session_id is None:
             raise ClientSessionIdHeaderNotSetException()
-        undone_action = ActionHandler.undo(request.user, data, session_id)
-        serializer = UndoRedoResponseSerializer(undone_action)
+        undone_actions = ActionHandler.undo(request.user, data, session_id)
+        serializer = UndoRedoResponseSerializer({"actions": undone_actions})
         return Response(serializer.data, status=200)
 
 
@@ -516,17 +522,12 @@ class RedoView(APIView):
         responses={200: UndoRedoResponseSerializer},
     )
     @validate_body(UndoRedoRequestSerializer)
-    @map_exceptions(
-        {ClientSessionIdHeaderNotSetException: ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET}
-    )
+    @map_exceptions(UNDO_REDO_EXCEPTIONS_MAP)
     @transaction.atomic
     def patch(self, request, data: List[ActionScopeStr]):
         session_id = get_untrusted_client_session_id(request.user)
         if session_id is None:
             raise ClientSessionIdHeaderNotSetException()
-        redone_action = ActionHandler.redo(
-            request.user,
-            data,
-            session_id,
-        )
-        return Response(UndoRedoResponseSerializer(redone_action).data, status=200)
+        redone_actions = ActionHandler.redo(request.user, data, session_id)
+        serializer = UndoRedoResponseSerializer({"actions": redone_actions})
+        return Response(serializer.data, status=200)

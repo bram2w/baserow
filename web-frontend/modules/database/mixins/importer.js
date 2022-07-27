@@ -11,6 +11,12 @@ export default {
     return {
       fileLoadingProgress: 0,
       state: null,
+      error: '',
+      values: {
+        getData: null,
+        header: [],
+      },
+      preview: {},
     }
   },
   computed: {
@@ -18,50 +24,65 @@ export default {
       return this.$t(`importer.${this.state}`)
     },
   },
+  watch: {
+    'values.header'(value) {
+      this.$emit('header', value)
+    },
+  },
   methods: {
+    resetImporterState() {
+      this.values.getData = null
+      this.values.header = []
+      this.preview = {}
+      this.state = null
+      this.error = ''
+    },
+    handleImporterError(error) {
+      this.resetImporterState()
+      this.fileLoadingProgress = 0
+      this.error = error
+    },
     /**
-     * Adds a header of Field 1, Field 2 etc if the first row is not already a header,
+     * Adds a header of Field 1, Field 2, etc. if the header is empty,
      * otherwise checks that the existing header has valid and non duplicate field
      * names. If there are invalid or duplicate field names they will be replaced with
      * valid unique field names instead.
      *
+     * @param header An array starting of the column name.
      * @param data An array starting with a header row if firstRowHeader is true,
      *    followed by rows of data.
-     * @param firstRowHeader Whether or not the first row in the data array is a
-     *    header row or not.
      * @return {*} An updated data object with the first row being a valid unique
      *    header row.
      */
-    ensureHeaderExistsAndIsValid(data, firstRowHeader) {
-      let head = data[0]
-      const columns = Math.max(data.map((entry) => entry.length))
+    prepareHeader(header = [], data) {
+      const columnCount = Math.max.apply(
+        null,
+        data.map((entry) => entry.length)
+      )
 
       // If the first row is not the header, a header containing columns named
       // 'Field N' needs to be generated.
-      if (!firstRowHeader) {
-        head = []
-        for (let i = 1; i <= columns; i++) {
-          head.push(`Field ${i}`)
+      if (!header || header.length === 0) {
+        const newHead = []
+        for (let i = 1; i <= columnCount; i++) {
+          newHead.push(this.$t(`importer.fieldDefaultName`, { count: i }))
         }
-        data.unshift(head)
+        return newHead
       } else {
         // The header row might not be long enough to cover all columns, ensure it does
         // first.
-
-        head = this.fill(
-          head.map((value) => `${value}`),
-          columns
-        )
-        head = this.makeHeaderUniqueAndValid(head)
-        data[0] = head
+        const newHead = header.map((value) => `${value}`)
+        for (let i = newHead.length; i < columnCount; i++) {
+          newHead.push(this.$t(`importer.fieldDefaultName`, { count: i }))
+        }
+        return this.makeHeaderUniqueAndValid(newHead)
       }
-      return data
     },
     /**
      * Fills the row with a minimum amount of empty columns.
      */
-    fill(row, columns) {
-      for (let i = row.length; i < columns; i++) {
+    fill(row, maxLength) {
+      for (let i = row.length; i < maxLength; i++) {
         row.push('')
       }
       return row
@@ -70,11 +91,13 @@ export default {
      * Generates an object that can used to render a quick preview of the provided
      * data. Can be used in combination with the TableImporterPreview component.
      */
-    getPreview(data) {
-      const head = data[0]
-      const rows = data.slice(1, 4)
+    getPreview(head, data) {
+      const rows = data.slice(0, 6)
       const remaining = data.length - rows.length - 1
-      const columns = Math.max(data.map((entry) => entry.length))
+      const columns = Math.max.apply(
+        null,
+        data.map((entry) => entry.length)
+      )
 
       rows.map((row) => this.fill(row, columns))
 

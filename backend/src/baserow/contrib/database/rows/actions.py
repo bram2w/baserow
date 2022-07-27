@@ -2,10 +2,12 @@ import dataclasses
 from copy import deepcopy
 
 from decimal import Decimal
-from typing import Any, Dict, Optional, Type, List
+from typing import Any, Dict, Optional, Type, List, Tuple
 
 from django.contrib.auth.models import AbstractUser
+from baserow.core.utils import Progress
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.signals import table_updated
 
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType, ActionScopeStr
@@ -41,7 +43,7 @@ class CreateRowActionType(ActionType):
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
-        belongs to the related group. It also calls the row_created signal.
+        belongs to the related group. It also calls the rows_created signal.
         See the baserow.contrib.database.rows.handler.RowHandler.create_row
         for more information.
         Undoing this action trashes the row and redoing restores it.
@@ -113,7 +115,7 @@ class CreateRowsActionType(ActionType):
         belongs to the related group. It also calls the rows_created signal.
         See the baserow.contrib.database.rows.handler.RowHandler.create_rows
         for more information.
-        Undoing this action trashes the rows sand redoing restores them all.
+        Undoing this action trashes the rows and redoing restores them all.
 
         :param user: The user of whose behalf the rows are created.
         :param table: The table for which the rows should be created.
@@ -133,6 +135,75 @@ class CreateRowsActionType(ActionType):
         cls.register_action(user, params, cls.scope(table.id))
 
         return rows
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        trashed_rows_trash_entry = RowHandler().delete_rows(
+            user, TableHandler().get_table(params.table_id), params.row_ids
+        )
+        params.trashed_rows_entry_id = trashed_rows_trash_entry.id
+        action_being_undone.params = params
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        TrashHandler.restore_item(
+            user,
+            "rows",
+            params.trashed_rows_entry_id,
+            parent_trash_item_id=params.table_id,
+        )
+
+
+class ImportRowsActionType(ActionType):
+    type = "import_rows"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+        row_ids: List[int]
+        trashed_rows_entry_id: Optional[int] = None
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        data=List[List[Any]],
+        progress: Optional[Progress] = None,
+    ) -> Tuple[List[GeneratedTableModel], Dict[str, Any]]:
+        """
+        Creates rows for a given table with the provided values if the user
+        belongs to the related group. It also calls the table_updated signal.
+        This action is supposed to handle bigger row amount than the createRowsAction,
+        it generates an import error report and allow to track the progress.
+        Undoing this action trashes the rows and redoing restores them all.
+        The new rows are appended to the existing rows.
+        See the baserow.contrib.database.rows.handler.RowHandler.import_rows
+        for more information.
+
+        :param user: The user of whose behalf the rows are created.
+        :param table: The table for which the rows should be imported.
+        :param data: List of rows values for rows that need to be created.
+        :param progress: An optional progress object to track the task progress.
+        :return: The created list of rows instances and the error report.
+        """
+
+        created_rows, error_report = RowHandler().import_rows(
+            user, table, data, progress=progress, send_signal=False
+        )
+
+        # Use table signal here instead of row signal because we can import a
+        # big amount of data.
+        table_updated.send(cls, table=table, user=user, force_table_refresh=True)
+
+        params = cls.Params(table.id, [row.id for row in created_rows])
+        cls.register_action(user, params, cls.scope(table.id))
+
+        return created_rows, error_report
 
     @classmethod
     def scope(cls, table_id) -> ActionScopeStr:

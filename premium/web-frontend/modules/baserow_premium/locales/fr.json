@@ -18,13 +18,16 @@
         "exporterType": {
             "json": "Exporter vers JSON",
             "xml": "Exporter vers XML"
-        }
+        },
+        "deactivated": "Disponible en version premium"
     },
     "rowCommentSidebar": {
         "onlyPremium": "Les commentaires de lignes sont disponibles dans la version premium.",
         "readOnlyNoComment": "Aucun commentaire pour cette ligne.",
         "noComment": "Aucun commentaire pour cette ligne. Utilisez le formulaire ci-dessous pour ajouter un commentaire.",
-        "comment": "Commentaire"
+        "comment": "Commentaire",
+        "more": "Plus d'informations",
+        "name": "Commentaires de ligne"
     },
     "rowComment": {
         "you": "Vous",
@@ -248,5 +251,23 @@
     "redirectToBaserowModal": {
         "title": "Redirection vers http://baserow.io",
         "content": "Vous allez quitter votre instance auto-hébergée et être redirigé vers http://baserow.io."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "L’identité de ce compte est usurpée. Une actualisation de la page l’arrêtera.",
+        "impersonateStop": "Arrêter",
+        "premium": "Premium",
+        "premiumDescription": "Votre compte a accès aux fonctionnalités premium globalement"
+    },
+    "premiumModal": {
+        "viewPricing": "Voir les prix",
+        "title": "Mise à niveau pour utiliser : {name}",
+        "description": "Votre compte n'a pas accès aux fonctionnalités premium. Passez à la version premium pour commencer à utiliser {nom}. Vous pouvez mettre votre compte à niveau en obtenant une licence. Cliquez sur le bouton ci-dessous pour voir les prix."
+    },
+    "premiumFeatures": {
+        "kanbanView": "Vue Kanban",
+        "rowComments": "Commentaires de ligne",
+        "exports": "Export JSON et XML",
+        "admin": "Administration avancée",
+        "rowColoring": "Coloration des lignes"
     }
 }

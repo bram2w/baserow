@@ -29,6 +29,7 @@ class WebhookEventType(Instance):
     """
 
     signal = None
+    should_trigger_when_all_event_types_selected = True
 
     def __init__(self):
         if not isinstance(self.signal, Signal):
@@ -39,8 +40,27 @@ class WebhookEventType(Instance):
         super().__init__()
         self.signal.connect(self.listener)
 
-    def get_test_call_before_return(self, **kwargs):
-        """Prepare a `before_return` value for a webhook event."""
+    def get_test_call_payload(self, table, model, event_id, webhook):
+        """
+        Constructs a test payload for a webhook call.
+
+        :param table: The table with changes.
+        :param model: The table's model.
+        :param event_id: The id of the event.
+        :param webhook: The webhook object related to the call.
+        :return: A JSON serializable dict with the test payload.
+        """
+
+        row = model(id=0, order=0)
+        payload = self.get_payload(
+            event_id=event_id,
+            webhook=webhook,
+            model=model,
+            table=table,
+            row=row,
+            before_return=None,
+        )
+        return payload
 
     def get_payload(self, event_id, webhook, **kwargs):
         """

@@ -21,6 +21,13 @@ export default (client) => {
         config
       )
     },
+    importData(tableId, data, config = null) {
+      return client.post(
+        `/database/tables/${tableId}/import/async/`,
+        { data },
+        config
+      )
+    },
     get(tableId) {
       return client.get(`/database/tables/${tableId}/`)
     },
@@ -31,6 +38,9 @@ export default (client) => {
       return client.post(`/database/tables/database/${databaseId}/order/`, {
         table_ids: order,
       })
+    },
+    asyncDuplicate(tableId) {
+      return client.post(`/database/tables/${tableId}/duplicate/async/`)
     },
     delete(tableId) {
       return client.delete(`/database/tables/${tableId}/`)

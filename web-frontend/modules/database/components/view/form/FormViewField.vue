@@ -71,8 +71,44 @@
             :large="true"
             :disabled="readOnly"
             @input="$emit('updated-field-options', { required: $event })"
-            >required</SwitchInput
+            >{{ $t('formViewField.required') }}</SwitchInput
           >
+          <SwitchInput
+            v-if="allowedConditionalFields.length > 0"
+            :value="fieldOptions.show_when_matching_conditions"
+            :large="true"
+            :disabled="readOnly"
+            @input="setShowWhenMatchingConditions($event)"
+            >{{ $t('formViewField.showWhenMatchingConditions') }}</SwitchInput
+          >
+          <div
+            v-if="
+              allowedConditionalFields.length > 0 &&
+              fieldOptions.show_when_matching_conditions
+            "
+            class="form-view__conditions"
+          >
+            <ViewFieldConditionsForm
+              :filters="fieldOptions.conditions"
+              :disable-filter="readOnly"
+              :filter-type="fieldOptions.condition_type"
+              :view="view"
+              :fields="allowedConditionalFields"
+              :read-only="readOnly"
+              @deleteFilter="deleteCondition(fieldOptions.conditions, $event)"
+              @updateFilter="updateCondition(fieldOptions.conditions, $event)"
+              @selectOperator="
+                $emit('updated-field-options', { condition_type: $event })
+              "
+            />
+            <a
+              class="form-view__add-condition"
+              @click="addCondition(fieldOptions.conditions)"
+            >
+              <i class="fas fa-plus"></i>
+              {{ $t('formViewField.addCondition') }}
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -81,11 +117,13 @@
 
 <script>
 import { isElement } from '@baserow/modules/core/utils/dom'
+import { clone } from '@baserow/modules/core/utils/object'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
+import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
 
 export default {
   name: 'FormViewField',
-  components: { FieldContext },
+  components: { FieldContext, ViewFieldConditionsForm },
   props: {
     table: {
       type: Object,
@@ -97,6 +135,10 @@ export default {
     },
     field: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
     fieldOptions: {
@@ -114,7 +156,14 @@ export default {
       editingName: false,
       editingDescription: false,
       value: null,
+      movedToBodyChildren: [],
     }
+  },
+  computed: {
+    allowedConditionalFields() {
+      const index = this.fields.findIndex((f) => f.id === this.field.id)
+      return this.fields.slice(0, index)
+    },
   },
   watch: {
     field: {
@@ -134,7 +183,14 @@ export default {
         if (
           this.selected &&
           // If the user not clicked inside the field.
-          !isElement(this.$el, event.target)
+          !isElement(this.$el, event.target) &&
+          // If the event was not related to deleting the filter.
+          !event.deletedFilterEvent &&
+          // If the event target is related to a child element that has moved to the
+          // body using the `moveToBody` mixin.
+          !this.movedToBodyChildren.some((child) => {
+            return isElement(child.$el, event.target)
+          })
         ) {
           this.unselect()
         }
@@ -156,6 +212,61 @@ export default {
     },
     resetValue() {
       this.value = this.getFieldType().getEmptyValue(this.field)
+    },
+    generateCompatibleCondition() {
+      const field =
+        this.allowedConditionalFields[this.allowedConditionalFields.length - 1]
+      const viewFilterTypes = this.$registry.getAll('viewFilter')
+      const compatibleType = Object.values(viewFilterTypes).find(
+        (viewFilterType) => {
+          return viewFilterType.fieldIsCompatible(field)
+        }
+      )
+      return {
+        id: 0,
+        field: field.id,
+        type: compatibleType.type,
+        value: '',
+      }
+    },
+    setShowWhenMatchingConditions(value) {
+      const values = { show_when_matching_conditions: value }
+      if (value && this.fieldOptions.conditions.length === 0) {
+        values.conditions = [this.generateCompatibleCondition()]
+      }
+      this.$emit('updated-field-options', values)
+    },
+    addCondition(conditions) {
+      const newConditions = conditions.slice()
+      newConditions.push(this.generateCompatibleCondition())
+      this.$emit('updated-field-options', { conditions: newConditions })
+    },
+    updateCondition(conditions, condition) {
+      conditions = clone(conditions.slice())
+      conditions.forEach((c, index) => {
+        if (c.id === condition.filter.id) {
+          Object.assign(conditions[index], condition.values)
+        }
+      })
+      this.$emit('updated-field-options', { conditions })
+    },
+    deleteCondition(conditions, condition) {
+      // We need to wait for the next tick, otherwise the condition is already deleted
+      // before the event completes, resulting in a click outside of the field.
+      this.$nextTick(() => {
+        conditions = conditions.filter((c) => c.id !== condition.id)
+        this.$emit('updated-field-options', { conditions })
+      })
+    },
+    /**
+     * This method is called by every child that has moved to the body, using the
+     * `moveToBody` mixin. In order to make sure that this component isn't unselected
+     * when clicking inside a child that has moved to body component, we add them to an
+     * array and check if the event target is actually a child when clicking outside of
+     * the element related to this component.
+     */
+    registerMoveToBodyChild(child) {
+      this.movedToBodyChildren.push(child)
     },
   },
 }

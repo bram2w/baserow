@@ -27,7 +27,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.2
+  baserow/baserow:1.11.0
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
@@ -50,7 +50,7 @@ docker run \
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.10.2` image by default runs all of Baserow's various services in a
+The `baserow/baserow:1.11.0` image by default runs all of Baserow's various services in a
 single container for ease of use. A quick summary of its features are:
 
 * Runs a Postgres database and Redis server by default internally and stores all data in
@@ -143,7 +143,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.10.2
+  baserow/baserow:1.11.0
 ```
 
 ### Behind a reverse proxy already handling ssl
@@ -156,7 +156,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   --restart unless-stopped \
-  baserow/baserow:1.10.2
+  baserow/baserow:1.11.0
 ```
 
 ### On a nonstandard HTTP port

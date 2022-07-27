@@ -273,10 +273,14 @@ CORS_ORIGIN_ALLOW_ALL = True
 CLIENT_SESSION_ID_HEADER = "ClientSessionId"
 MAX_CLIENT_SESSION_ID_LENGTH = 256
 
+CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER = "ClientUndoRedoActionGroupId"
+MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP = 2
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "WebSocketId",
     PUBLIC_VIEW_AUTHORIZATION_HEADER,
     CLIENT_SESSION_ID_HEADER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER,
 ]
 
 JWT_AUTH = {
@@ -295,7 +299,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.10.2",
+    "VERSION": "1.11.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -306,6 +310,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Templates"},
         {"name": "Trash"},
         {"name": "Applications"},
+        {"name": "Snapshots"},
         {"name": "Jobs"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
@@ -373,6 +378,7 @@ SPECTACULAR_SETTINGS = {
             "date_not_equal",
             "date_equals_today",
             "date_equals_days_ago",
+            "date_equals_week",
             "date_equals_month",
             "date_equals_day_of_month",
             "date_equals_year",
@@ -386,7 +392,7 @@ SPECTACULAR_SETTINGS = {
             "multiple_select_has",
             "multiple_select_has_not",
         ],
-        "EventTypesEnum": ["row.created", "row.updated", "row.deleted"],
+        "EventTypesEnum": ["rows.created", "rows.updated", "rows.deleted"],
     },
 }
 
@@ -592,14 +598,13 @@ BASEROW_JOB_SOFT_TIME_LIMIT = int(
 BASEROW_JOB_CLEANUP_INTERVAL_MINUTES = int(
     os.getenv("BASEROW_JOB_CLEANUP_INTERVAL_MINUTES", 5)  # 5 minutes
 )
-BASEROW_MAX_FILE_IMPORT_ERROR_COUNT = int(
-    os.getenv("BASEROW_MAX_FILE_IMPORT_ERROR_COUNT", 30)
+BASEROW_MAX_ROW_REPORT_ERROR_COUNT = int(
+    os.getenv("BASEROW_MAX_ROW_REPORT_ERROR_COUNT", 30)
 )
-# Allow this percentage of error in field type auto detection at import
-BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD = int(
-    os.getenv("BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD", 0)  # 0 to be safe
+BASEROW_MAX_SNAPSHOTS_PER_GROUP = int(os.getenv("BASEROW_MAX_SNAPSHOTS_PER_GROUP", -1))
+BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
+    os.getenv("BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS", 360)  # 360 days
 )
-
 
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.
@@ -680,6 +685,9 @@ BASEROW_SYNC_TEMPLATES_TIME_LIMIT = int(
 APPEND_SLASH = False
 
 BASEROW_DISABLE_MODEL_CACHE = bool(os.getenv("BASEROW_DISABLE_MODEL_CACHE", ""))
+BASEROW_NOWAIT_FOR_LOCKS = not bool(
+    os.getenv("BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR", False)
+)
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

@@ -18,13 +18,21 @@
         "exporterType": {
             "json": "Export to JSON",
             "xml": "Export to XML"
-        }
+        },
+        "deactivated": "Available in premium version"
+    },
+    "premiumModal": {
+        "title": "Upgrade to use the {name}",
+        "description": "Your account doesn’t have access to the premium features. Upgrade to the premium version to begin using {name}. You can upgrade your account by getting a license. Click on the button below to view the pricing.",
+        "viewPricing": "View pricing"
     },
     "rowCommentSidebar": {
         "onlyPremium": "Row comments are available in the premium version.",
         "readOnlyNoComment": "No comments for this row.",
         "noComment": "No comments for this row yet. Use the form below to add a comment.",
-        "comment": "Comment"
+        "comment": "Comment",
+        "more": "More information",
+        "name": "Row comments"
     },
     "rowComment": {
         "you": "You",
@@ -176,15 +184,17 @@
         "activeUsers30days": "Active users last 30 days",
         "viewAll": "View all"
     },
-    "licenses": {
-        "titleNoLicenses": "No licenses found",
-        "titleLicenses": "Licenses",
-        "noLicensesDescription": "Your Baserow instance doesn’t have any licenses registered. A premium license gives you immediate access to all of the additional features. If you already have a license, you can register it here. Alternatively you can get one by clicking on the button below.",
+    "premiumFeatures": {
         "rowComments": "Row comments",
         "kanbanView": "Kanban view",
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
-        "rowColoring": "Row coloring",
+        "rowColoring": "Row coloring"
+    },
+    "licenses": {
+        "titleNoLicenses": "No licenses found",
+        "titleLicenses": "Licenses",
+        "noLicensesDescription": "Your Baserow instance doesn’t have any licenses registered. A premium license gives you immediate access to all of the additional features. If you already have a license, you can register it here. Alternatively you can get one by clicking on the button below.",
         "getLicense": "Get a license",
         "baserowInstanceId": "Your Baserow instance ID is:",
         "registerLicense": "Register license",
@@ -248,5 +258,11 @@
     "redirectToBaserowModal": {
         "title": "Redirecting to http://baserow.io",
         "content": "You are leaving your self hosted instance and you are being redirected to http://baserow.io."
+    },
+    "premiumTopSidebar": {
+      "impersonateDescription": "This account is impersonated. A page refresh will stop it.",
+      "impersonateStop": "Stop",
+      "premium": "Premium",
+      "premiumDescription": "Your account has access to the premium features globally"
     }
 }

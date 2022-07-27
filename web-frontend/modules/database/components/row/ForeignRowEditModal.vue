@@ -6,7 +6,6 @@
     :table="table"
     :rows="[]"
     :visible-fields="fields"
-    :primary="primary"
     @hidden="$emit('hidden', $event)"
   ></RowEditModal>
 </template>
@@ -37,7 +36,6 @@ export default {
       fetchedTableAndFields: false,
       table: {},
       fields: [],
-      primary: undefined,
     }
   },
   computed: {
@@ -88,13 +86,7 @@ export default {
       fieldData.forEach((part, index) => {
         populateField(fieldData[index], this.$registry)
       })
-      const primaryIndex = fieldData.findIndex((item) => item.primary === true)
-      if (primaryIndex !== -1) {
-        this.primary = fieldData.splice(primaryIndex, 1)[0]
-        this.fields = [this.primary, ...fieldData]
-      } else {
-        this.fields = fieldData
-      }
+      this.fields = fieldData
 
       // Mark the table and fields as fetched, so that we don't have to do that a
       // second time when the user opens another row.

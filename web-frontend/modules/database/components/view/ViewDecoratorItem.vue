@@ -4,6 +4,9 @@
     <div class="decorator-item__content">
       <div class="decorator-item__title">
         {{ props.decoratorType.getName() }}
+        <div v-if="props.deactivated" class="deactivated-label">
+          <i class="fas fa-lock"></i>
+        </div>
       </div>
       <div class="decorator-item__description">
         {{ props.decoratorType.getDescription() }}
@@ -19,6 +22,11 @@ export default {
     decoratorType: {
       type: Object,
       required: true,
+    },
+    deactivated: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

@@ -163,7 +163,7 @@ describe('GridViewRows component with decoration', () => {
       primary,
     })
     await store.dispatch('view/fetchAll', { id: table.id })
-    return { application, table, primary, fields, view }
+    return { application, table, fields, view }
   }
 
   const mountComponent = async (props) => {
@@ -181,7 +181,7 @@ describe('GridViewRows component with decoration', () => {
   }
 
   test('Default component', async () => {
-    const { application, table, primary, fields, view } = await populateStore()
+    const { application, table, fields, view } = await populateStore()
 
     const fakeDecorator = new FakeDecoratorType({ app: testApp })
     const fakeValueProvider = new FakeValueProviderType({ app: testApp })
@@ -193,7 +193,6 @@ describe('GridViewRows component with decoration', () => {
       database: application,
       view,
       table,
-      primary,
       fields,
       readOnly: false,
     })
@@ -202,7 +201,7 @@ describe('GridViewRows component with decoration', () => {
   })
 
   test('View with decoration configured', async () => {
-    const { application, table, primary, fields, view } = await populateStore({
+    const { application, table, fields, view } = await populateStore({
       decorations: [
         {
           type: 'fake_decorator',
@@ -229,7 +228,6 @@ describe('GridViewRows component with decoration', () => {
       database: application,
       view,
       table,
-      primary,
       fields,
       readOnly: false,
     })
@@ -238,7 +236,7 @@ describe('GridViewRows component with decoration', () => {
   })
 
   test('Should show unavailable decorator tooltip', async () => {
-    const { application, table, primary, fields, view } = await populateStore()
+    const { application, table, fields, view } = await populateStore()
 
     const fakeDecorator = new FakeDecoratorType({ app: testApp })
     const fakeValueProvider = new FakeValueProviderType({ app: testApp })
@@ -252,7 +250,6 @@ describe('GridViewRows component with decoration', () => {
       database: application,
       view,
       table,
-      primary,
       fields,
       readOnly: false,
     })
@@ -265,7 +262,7 @@ describe('GridViewRows component with decoration', () => {
   })
 
   test('Should show cant add decorator tooltip', async () => {
-    const { application, table, primary, fields, view } = await populateStore()
+    const { application, table, fields, view } = await populateStore()
 
     const fakeDecorator = new FakeDecoratorType({ app: testApp })
     const fakeValueProvider = new FakeValueProviderType({ app: testApp })
@@ -279,7 +276,6 @@ describe('GridViewRows component with decoration', () => {
       database: application,
       view,
       table,
-      primary,
       fields,
       readOnly: false,
     })

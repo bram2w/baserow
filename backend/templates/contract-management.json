@@ -2715,13 +2715,6 @@
                                     "order": 32767
                                 },
                                 {
-                                    "id": 324485,
-                                    "field_id": 273340,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
                                     "id": 324502,
                                     "field_id": 273382,
                                     "width": 181,

@@ -1,0 +1,58 @@
+.snapshots-modal__name-input {
+  margin-right: 20px;
+}
+
+.snapshots-modal__snapshot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &:not(:last-child) {
+    margin-bottom: 20px;
+  }
+}
+
+.snapshots-modal__info {
+  min-height: 36px;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+}
+
+.snapshots-modal__list {
+  border-top: 1px solid #d9dbde;
+  padding-top: 30px;
+  margin-top: 30px;
+}
+
+.snapshots-modal__name {
+  font-weight: 600;
+  padding-bottom: 5px;
+}
+
+.snapshots-modal__detail {
+  color: $color-neutral-500;
+}
+
+.snapshots-modal__actions a {
+  display: inline-block;
+  margin-left: 20px;
+}
+
+.snapshots-modal__delete {
+  color: $color-error-500;
+}
+
+.snapshots-modal__restore--loading {
+  color: transparent;
+  position: relative;
+  cursor: wait;
+
+  &::after {
+    content: " ";
+    margin-left: -7px;
+
+    @include loading(14px);
+    @include absolute(0, auto, auto, 50%);
+  }
+}

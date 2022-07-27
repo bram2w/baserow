@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from baserow.core.action.models import Action
 from baserow.core.action.registries import action_type_registry, ActionScopeStr
+from baserow.core.exceptions import LockConflict
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,12 @@ def scopes_to_q_filter(scopes: List[ActionScopeStr]):
     return q
 
 
+class OneActionHasErrorAndCannotBeRedone(Exception):
+    """
+    Raised if an action raised an error during undo so cannot be redone.
+    """
+
+
 class ActionHandler:
     """
     Contains methods to do high level operations on ActionType's like undoing or
@@ -30,9 +37,29 @@ class ActionHandler:
     """
 
     @classmethod
+    def _undo_action(
+        cls, user: AbstractUser, action: Action, undone_at: datetime
+    ) -> None:
+        try:
+            action.error = None
+            # noinspection PyBroadException
+            action_type = action_type_registry.get(action.type)
+            # noinspection PyArgumentList
+            latest_params = action_type.Params(**deepcopy(action.params))
+
+            action_type.undo(user, latest_params, action)
+            # action.params could be changed, so save the action
+            action.undone_at = undone_at
+            action.save()
+        except Exception as exc:
+            tb = traceback.format_exc()
+            logger.warning("Undoing %s failed because of: \n%s", action, tb)
+            raise exc
+
+    @classmethod
     def undo(
         cls, user: AbstractUser, scopes: List[ActionScopeStr], session: str
-    ) -> Optional[Action]:
+    ) -> List[Action]:
         # Un-set the web_socket_id so the user doing this undo will receive any
         # events triggered by the action.
         user.web_socket_id = None
@@ -45,36 +72,68 @@ class ActionHandler:
             .first()
         )
         if latest_not_undone_action is None:
-            return None
+            return []
 
-        action_being_undone = latest_not_undone_action
-        action_being_undone.error = None
+        if latest_not_undone_action.action_group is None:
+            actions_being_undone = [latest_not_undone_action]
+        else:
+            actions_being_undone = list(
+                Action.objects.filter(
+                    undone_at__isnull=True,
+                    action_group=latest_not_undone_action.action_group,
+                    session=session,
+                    user=user,
+                )
+                .order_by("-created_on", "-id")[
+                    : settings.MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP
+                ]
+                .select_for_update(of=("self",))
+            )
+
+        undone_at = timezone.now()
+        action_being_undone_ids = [action.id for action in actions_being_undone]
+        try:
+            # Wrap all the action group to ensure any errors get rolled back.
+            with transaction.atomic():
+                for action in actions_being_undone:
+                    cls._undo_action(user, action, undone_at)
+        except LockConflict:
+            raise
+        except Exception:
+            # if any single action fails, rollback and set the same error for all.
+            tb = traceback.format_exc()
+            if action.action_group is not None:
+                logger.warning("Rolling back action group %s:", action.action_group)
+            Action.objects.filter(pk__in=action_being_undone_ids).update(
+                error=tb, undone_at=undone_at
+            )
+
+        # refresh actions from db to ensure everything is updated
+        return list(Action.objects.filter(pk__in=action_being_undone_ids))
+
+    @classmethod
+    def _redo_action(cls, user: AbstractUser, action: Action) -> None:
         # noinspection PyBroadException
         try:
-            # Wrap with an inner transaction to ensure any errors get rolled back.
-            with transaction.atomic():
-                action_type = action_type_registry.get(latest_not_undone_action.type)
-                # noinspection PyArgumentList
-                latest_params = action_type.Params(
-                    **deepcopy(latest_not_undone_action.params)
-                )
+            action_being_redone = action
+            action_type = action_type_registry.get(action.type)
+            # noinspection PyArgumentList
+            latest_params = action_type.Params(**deepcopy(action.params))
 
-                action_type.undo(user, latest_params, action_being_undone)
-        except Exception:
+            action_type.redo(user, latest_params, action_being_redone)
+
+            # action.params could be changed, so save the action
+            action.undone_at = None
+            action.save()
+        except Exception as exc:
             tb = traceback.format_exc()
-            logger.warning(
-                f"Undoing {latest_not_undone_action} failed because of: \n{tb}"
-            )
-            latest_not_undone_action.error = tb
-        finally:
-            latest_not_undone_action.undone_at = timezone.now()
-            latest_not_undone_action.save()
-        return latest_not_undone_action
+            logger.warning("Redoing %s failed because of: \n%s", action, tb)
+            raise exc
 
     @classmethod
     def redo(
         cls, user: AbstractUser, scopes: List[ActionScopeStr], session: str
-    ) -> Optional[Action]:
+    ) -> List[Action]:
         # Un-set the web_socket_id so the user doing this redo will receive any
         # events triggered by the action.
         user.web_socket_id = None
@@ -83,18 +142,39 @@ class ActionHandler:
         latest_undone_action = (
             Action.objects.filter(user=user, undone_at__isnull=False, session=session)
             .filter(scopes_filter)
-            .order_by("-undone_at", "-id")
+            .order_by("-undone_at", "-created_on", "-id")
             .select_for_update(of=("self",))
             .first()
         )
 
         if latest_undone_action is None:
-            return None
+            return []
+
+        if latest_undone_action.action_group is None:
+            actions_being_redone = [latest_undone_action]
+        else:
+
+            actions_being_redone = list(
+                Action.objects.filter(
+                    undone_at__isnull=False,
+                    action_group=latest_undone_action.action_group,
+                    session=session,
+                    user=user,
+                )
+                .order_by("created_on", "id")[
+                    : settings.MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP
+                ]
+                .select_for_update(of=("self",))
+            )
+
+        actions_being_redone_ids = [action.id for action in actions_being_redone]
+        if not actions_being_redone:
+            return []
 
         normal_action_happened_since_undo = (
             Action.objects.filter(
                 user=user,
-                created_on__gt=latest_undone_action.undone_at,
+                created_on__gt=actions_being_redone[0].undone_at,
                 undone_at__isnull=True,
                 session=session,
             )
@@ -102,39 +182,44 @@ class ActionHandler:
             .exists()
         )
         if normal_action_happened_since_undo:
-            return None
+            return []
 
-        if latest_undone_action.error:
-            # We are redoing an undo action that failed and so we have nothing to redo
-            # However we mark it as redone so the user can try undo again
-            # to see if it works this time.
-            latest_undone_action.undone_at = None
-            latest_undone_action.save()
+        actions_has_errors = Action.objects.filter(
+            pk__in=actions_being_redone_ids, error__isnull=False
+        ).exists()
+        if actions_has_errors:
+            # We are redoing an action group that failed during the undo and so we
+            # actually have nothing to redo. In this case, we mark it as redone so
+            # the user can try undo them again to see if it works this time.
+            Action.objects.filter(pk__in=actions_being_redone_ids).update(
+                undone_at=None
+            )
         else:
-            action_being_redone = latest_undone_action
-            # noinspection PyBroadException
             try:
-                # Wrap with an inner transaction to ensure any errors get rolled back.
+                # Wrap all the action group to ensure any errors get rolled back.
                 with transaction.atomic():
-                    action_type = action_type_registry.get(latest_undone_action.type)
-                    # noinspection PyArgumentList
-                    latest_params = action_type.Params(
-                        **deepcopy(latest_undone_action.params)
-                    )
-
-                    action_type.redo(user, latest_params, action_being_redone)
+                    for action in actions_being_redone:
+                        cls._redo_action(user, action)
+            except LockConflict:
+                raise
             except Exception:
+                # if just one action fails, rollback and set the same error for all.
                 tb = traceback.format_exc()
-                logger.warning(
-                    f"Redoing {normal_action_happened_since_undo} failed because of: \n"
-                    f"{tb}",
+                if latest_undone_action.action_group is not None:
+                    logger.warning(
+                        "Rolling back action group %s:",
+                        latest_undone_action.action_group,
+                    )
+                Action.objects.filter(pk__in=actions_being_redone_ids).update(
+                    error=tb, undone_at=None
                 )
-                latest_undone_action.error = tb
-            finally:
-                latest_undone_action.undone_at = None
-                latest_undone_action.save()
 
-        return latest_undone_action
+        # refresh actions from db to ensure everything is updated
+        return list(
+            Action.objects.filter(pk__in=actions_being_redone_ids).order_by(
+                "created_on", "id"
+            )
+        )
 
     @classmethod
     def clean_up_old_actions(cls):

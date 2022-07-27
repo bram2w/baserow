@@ -31,10 +31,6 @@ export default {
       type: Array,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,

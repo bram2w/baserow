@@ -28,6 +28,7 @@ from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
 )
 from baserow.contrib.database.fields.models import (
+    LinkRowField,
     TextField,
     LongTextField,
     BooleanField,
@@ -36,6 +37,7 @@ from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -77,7 +79,7 @@ def test_create_database_minimum_table(send_mock, data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     handler = TableHandler()
-    handler.create_minimal_table(user=user, database=database, name="Test table")
+    handler.create_table(user=user, database=database, name="Test table")
 
     assert Table.objects.all().count() == 1
     assert TextField.objects.all().count() == 1
@@ -94,7 +96,7 @@ def test_create_database_minimum_table(send_mock, data_fixture):
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["table"].id == table.id
-    assert send_mock.call_args[1]["user"] is None
+    assert send_mock.call_args[1]["user"] == user
 
     with pytest.raises(UserNotInGroup):
         handler.create_table(user=user_2, database=database, name="")
@@ -119,7 +121,7 @@ def test_create_example_table(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     table_handler = TableHandler()
-    job = table_handler.create_minimal_table(
+    table, _ = table_handler.create_table(
         user, database, name="Table 1", fill_example=True
     )
 
@@ -130,7 +132,7 @@ def test_create_example_table(data_fixture):
     assert BooleanField.objects.all().count() == 1
     assert GridViewFieldOptions.objects.all().count() == 2
 
-    model = job.table.get_model(attribute_names=True)
+    model = table.get_model(attribute_names=True)
 
     assert model.objects.count() == 2
 
@@ -143,17 +145,15 @@ def test_fill_table_with_initial_data(data_fixture):
     table_handler = TableHandler()
 
     with pytest.raises(InvalidInitialTableData):
-        table_handler.create_table(user, database, name="Table 1", data=[], sync=True)
+        table_handler.create_table(user, database, name="Table 1", data=[])
 
     with pytest.raises(InvalidInitialTableData):
-        table_handler.create_table(user, database, name="Table 1", data=[[]], sync=True)
+        table_handler.create_table(user, database, name="Table 1", data=[[]])
 
     with override_settings(INITIAL_TABLE_DATA_LIMIT=2), pytest.raises(
         InitialTableDataLimitExceeded
     ):
-        table_handler.create_table(
-            user, database, name="Table 1", data=[[], [], []], sync=True
-        )
+        table_handler.create_table(user, database, name="Table 1", data=[[], [], []])
     with override_settings(MAX_FIELD_LIMIT=2), pytest.raises(MaxFieldLimitExceeded):
         table_handler.create_table(
             user,
@@ -168,11 +168,11 @@ def test_fill_table_with_initial_data(data_fixture):
         ["2-1", "2-2", "2-3"],
         ["3-1", "3-2"],
     ]
-    job = table_handler.create_table(
-        user, database, name="Table 1", data=data, first_row_header=True, sync=True
+    table, _ = table_handler.create_table(
+        user, database, name="Table 1", data=data, first_row_header=True
     )
 
-    text_fields = TextField.objects.filter(table=job.table)
+    text_fields = TextField.objects.filter(table=table)
     assert text_fields[0].name == "A"
     assert text_fields[1].name == "B"
     assert text_fields[2].name == "C"
@@ -181,7 +181,7 @@ def test_fill_table_with_initial_data(data_fixture):
 
     assert GridView.objects.all().count() == 1
 
-    model = job.table.get_model()
+    model = table.get_model()
     results = model.objects.all()
 
     assert results.count() == 3
@@ -213,18 +213,18 @@ def test_fill_table_with_initial_data(data_fixture):
         ["2-1", "2-2", "2-3"],
         ["3-1", "3-2"],
     ]
-    job = table_handler.create_table(
-        user, database, name="Table 2", data=data, first_row_header=False, sync=True
+    table, _ = table_handler.create_table(
+        user, database, name="Table 2", data=data, first_row_header=False
     )
 
-    text_fields = TextField.objects.filter(table=job.table)
+    text_fields = TextField.objects.filter(table=table)
     assert text_fields[0].name == "Field 1"
     assert text_fields[1].name == "Field 2"
     assert text_fields[2].name == "Field 3"
 
     assert GridView.objects.all().count() == 2
 
-    model = job.table.get_model()
+    model = table.get_model()
     results = model.objects.all()
 
     assert getattr(results[0], f"field_{text_fields[0].id}") == "1-1"
@@ -243,12 +243,12 @@ def test_fill_table_with_initial_data(data_fixture):
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
     ]
     with override_settings(MAX_FIELD_LIMIT=5):
-        job = table_handler.create_table(
-            user, database, name="Table 3", data=data, first_row_header=True, sync=True
+        table, _ = table_handler.create_table(
+            user, database, name="Table 3", data=data, first_row_header=True
         )
 
     assert GridView.objects.all().count() == 3
-    assert job.table.field_set.count() == 5
+    assert table.field_set.count() == 5
 
     too_long_field_name = "x" * 256
     field_name_with_ok_length = "x" * 255
@@ -259,18 +259,18 @@ def test_fill_table_with_initial_data(data_fixture):
     ]
     with pytest.raises(MaxFieldNameLengthExceeded):
         table_handler.create_table(
-            user, database, name="Table 3", data=data, first_row_header=True, sync=True
+            user, database, name="Table 3", data=data, first_row_header=True
         )
 
     data = [
         [field_name_with_ok_length, "B", "C", "D", "E"],
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
     ]
-    job = table_handler.create_table(
-        user, database, name="Table 3", data=data, first_row_header=True, sync=True
+    table, _ = table_handler.create_table(
+        user, database, name="Table 3", data=data, first_row_header=True
     )
 
-    assert job.table.field_set.count() == 5
+    assert table.field_set.count() == 5
 
 
 @pytest.mark.django_db
@@ -538,6 +538,38 @@ def test_count_rows_ignores_templates(data_fixture, tmpdir):
     settings.APPLICATION_TEMPLATES_DIR = old_templates
 
 
+@pytest.mark.django_db(transaction=True)
+def test_count_rows_table_gets_deleted(data_fixture):
+    table = data_fixture.create_database_table()
+    table_deleted = data_fixture.create_database_table(create_table=False)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_text_field(table=table)
+    model = table.get_model()
+
+    count_expected = random.randint(0, 100)
+
+    for i in range(count_expected):
+        model.objects.create(**{f"field_{field.id}": i})
+
+    TableHandler().count_rows()
+
+    table.refresh_from_db()
+    table_deleted.refresh_from_db()
+    assert table.row_count == count_expected
+    assert table_deleted.row_count is None
+
+
+@pytest.mark.django_db
+def test_exception_is_raised_if_something_goes_wrong(data_fixture):
+    data_fixture.create_database_table()
+
+    with patch("baserow.contrib.database.table.models.Table.get_model") as mock:
+        mock.side_effect = Exception("Something went wrong")
+
+        with pytest.raises(Exception):
+            TableHandler().count_rows()
+
+
 @pytest.mark.django_db
 @pytest.mark.disabled_in_ci
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
@@ -599,3 +631,37 @@ def test_get_total_row_count_of_group(data_fixture):
     TableHandler.count_rows()
 
     assert TableHandler.get_total_row_count_of_group(group.id) == 10
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_duplicate_interesting_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+
+    original_table_name = "original-table-name"
+    table, _, _, _ = setup_interesting_test_table(
+        data_fixture, user, database, original_table_name
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+    assert (
+        table_handler.get_table(duplicated_table.id).name == f"{original_table_name} 2"
+    )
+
+    # check link_row fields referencing other tables has been cloned correctly,
+    # while self-referencing fields now points to the new duplicated table
+    for field_object in duplicated_table.get_model()._field_objects.values():
+        field_instance = field_object["field"]
+        if not isinstance(field_instance, LinkRowField):
+            continue
+
+        if field_instance.name == "self_link_row":
+            assert field_instance.link_row_table_id == duplicated_table.id
+        else:
+            linkrow_fields = field_instance.link_row_table.linkrowfield_set.all()
+            original_link, duplicated_link = linkrow_fields
+            assert original_link.name == duplicated_link.name
+            assert original_link.link_row_table_id == duplicated_link.link_row_table_id

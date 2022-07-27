@@ -7,7 +7,15 @@
           <div class="row-comments__empty-text">
             {{ $t('rowCommentSidebar.onlyPremium') }}
           </div>
+          <a class="button button--primary" @click="$refs.premiumModal.show()">
+            {{ $t('rowCommentSidebar.more') }}
+            <i class="fas fa-unlock"></i>
+          </a>
         </div>
+        <PremiumModal
+          ref="premiumModal"
+          :name="$t('rowCommentSidebar.name')"
+        ></PremiumModal>
       </div>
     </template>
     <template v-else>
@@ -68,6 +76,7 @@ import { PremiumPlugin } from '@baserow_premium/plugins'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
 
 export default {
   name: 'RowCommentsSidebar',
@@ -75,6 +84,7 @@ export default {
     AutoExpandableTextareaInput,
     InfiniteScroll,
     RowComment,
+    PremiumModal,
   },
   props: {
     database: {

@@ -37,7 +37,7 @@ services:
   db:
     # Please ensure the postgres-client's major version in the backend image is kept in
     # sync with this major version so pg_dump remains compatible.
-    image: postgres:11.3
+    image: postgres:11
     environment:
       - POSTGRES_USER=${DATABASE_USER:-baserow}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}

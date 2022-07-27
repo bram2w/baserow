@@ -19,7 +19,6 @@
       ref="context"
       :view="view"
       :fields="fields"
-      :primary="primary"
       :read-only="readOnly"
       :disable-sort="disableSort"
       @changed="$emit('changed')"
@@ -34,10 +33,6 @@ export default {
   name: 'ViewSort',
   components: { ViewSortContext },
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,

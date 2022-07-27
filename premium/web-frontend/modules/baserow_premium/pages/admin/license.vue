@@ -296,12 +296,12 @@ export default {
         search
       )
     },
-    async addUser(userId) {
+    async addUser(event) {
       this.addUserLoading = true
       try {
         const { data } = await LicenseService(this.$client).addUser(
           this.license.id,
-          userId
+          event.id
         )
         this.license.users.push(data)
         this.license.seats_taken += 1

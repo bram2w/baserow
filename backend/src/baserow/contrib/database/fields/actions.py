@@ -551,7 +551,7 @@ class UpdateFieldActionType(ActionType):
         action.params = params
 
 
-class CreateFieldTypeAction(ActionType):
+class CreateFieldActionType(ActionType):
     type = "create_field"
 
     @dataclasses.dataclass
@@ -625,7 +625,7 @@ class CreateFieldTypeAction(ActionType):
         TrashHandler().restore_item(user, "field", params.field_id)
 
 
-class DeleteFieldTypeAction(ActionType):
+class DeleteFieldActionType(ActionType):
     type = "delete_field"
 
     @dataclasses.dataclass

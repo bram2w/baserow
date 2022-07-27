@@ -9,7 +9,9 @@
     "sidebarApplication": {
         "renameApplication": "Renommer {type}",
         "viewTrash": "Voir la corbeille",
-        "deleteApplication": "Supprimer {type}"
+        "deleteApplication": "Supprimer {type}",
+        "duplicateApplication": "Dupliquer {type}",
+        "snapshots": "Sauvegardes"
     },
     "sidebar": {
         "createGroup": "Créer un groupe",
@@ -146,7 +148,8 @@
         "fromParent": "provenant de {parent}",
         "name": "{user} a supprimé {type} {title} {parent}",
         "restore": "Restaurer",
-        "unnamed": "Sans nom {type} {id}"
+        "unnamed": "Sans nom {type} {id}",
+        "andMore": "... et {count} de plus"
     },
     "trashModal": {
         "emptyTitle": "Aucun groupe trouvé",
@@ -194,7 +197,7 @@
     "dashboard": {
         "title": "Statistiques",
         "alertTitle": "Soutenez-nous !",
-        "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à nous étoiler et à le partager avec vos relations. En partageant Baserow vous nous aidez à améliorer le produit et à le rendre encore plus utile pour vous.",
+        "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à rajouter une étoile sur Gitlab et à partager l'information avec vos relations. En partageant Baserow vous nous aidez à l'améliorer et à le rendre encore plus utile pour vous.",
         "tweetContent": "Découvrez @baserow, une base de données no-code libre, une alternative à Airtable !",
         "redditTitle": "Baserow - Une base de données no-code libre",
         "noGroupTitle": "Aucun groupe",
@@ -388,5 +391,10 @@
     "clearingNotification": {
         "content": "Préparation des données",
         "title": "Nettoyage..."
+    },
+    "datetime": {
+        "daysAgo": "Il y a 0 jour | Il y a 1 jour | Il y a {n} jours",
+        "yearsAgo": "il y a 0 an | il y a 1 an | il y a {n} ans",
+        "monthsAgo": "il y a 0 mois | il y a 1 mois | il y a {n} mois"
     }
 }

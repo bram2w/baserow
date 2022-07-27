@@ -318,7 +318,7 @@
         "firstRowHeader": "",
         "limitError": ""
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "",
         "importLabel": "",
         "newTable": "",

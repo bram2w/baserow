@@ -2,19 +2,27 @@ from unittest.mock import patch, call, ANY
 
 import pytest
 
+from django.db import transaction
+
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer
 from baserow.contrib.database.views.handler import ViewHandler
 
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_view_filter_created_for_public_view_force_refresh_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(table=table)
-    public_view = data_fixture.create_grid_view(user=user, table=table, public=True)
+    public_view = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[field]
+    )
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
+    )
     ViewHandler().create_filter(
         user=user, view=public_view, type_name="equal", value="test", field=field
     )
@@ -34,12 +42,17 @@ def test_when_view_filter_created_for_public_view_force_refresh_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_view_filter_updated_for_public_view_force_refresh_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(table=table)
-    public_view = data_fixture.create_grid_view(user=user, table=table, public=True)
+    public_view = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[field]
+    )
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
+    )
     view_filter = data_fixture.create_view_filter(
         user=user, view=public_view, field=field
     )
@@ -60,12 +73,17 @@ def test_when_view_filter_updated_for_public_view_force_refresh_event_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_view_filter_deleted_for_public_view_force_refresh_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(table=table)
-    public_view = data_fixture.create_grid_view(user=user, table=table, public=True)
+    public_view = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[field]
+    )
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
+    )
     view_filter = data_fixture.create_view_filter(
         user=user, view=public_view, field=field
     )
@@ -86,29 +104,42 @@ def test_when_view_filter_deleted_for_public_view_force_refresh_event_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_field_hidden_in_public_view_field_force_refresh_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table)
-    public_grid_view = data_fixture.create_grid_view(table=table, public=True)
+    public_grid_view = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[text_field]
+    )
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
+    )
 
     # No public events should be sent to form views
     public_form_view = data_fixture.create_form_view(
         user=user, table=table, public=True
     )
     handler = ViewHandler()
-    handler.update_field_options(
-        user=user,
-        view=public_form_view,
-        field_options={str(text_field.id): {"hidden": True}},
-    )
 
-    handler.update_field_options(
-        user=user,
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_form_view,
+            field_options={str(text_field.id): {"hidden": True}},
+        )
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_grid_view,
+            field_options={str(text_field.id): {"hidden": True}},
+        )
+
+    view_serialized = PublicViewInfoSerializer(
         view=public_grid_view,
-        field_options={str(text_field.id): {"hidden": True}},
-    )
+        fields=[],
+    ).data
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -120,6 +151,7 @@ def test_when_field_hidden_in_public_view_field_force_refresh_sent(
                     "type": "force_view_refresh",
                     "view_id": public_grid_view.slug,
                     "fields": [],
+                    "view": view_serialized["view"],
                 },
                 None,
             ),
@@ -130,16 +162,16 @@ def test_when_field_hidden_in_public_view_field_force_refresh_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_field_unhidden_in_public_view_force_refresh_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table)
-    public_grid_view = data_fixture.create_grid_view(
-        table=table, public=True, create_options=False
+    public_grid_view = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[text_field]
     )
-    data_fixture.create_grid_view_field_option(
-        grid_view=public_grid_view, field=text_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
     handler = ViewHandler()
 
@@ -147,16 +179,25 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
     public_form_view = data_fixture.create_form_view(
         user=user, table=table, public=True
     )
-    handler.update_field_options(
-        user=user,
-        view=public_form_view,
-        field_options={str(text_field.id): {"hidden": False}},
-    )
-    handler.update_field_options(
-        user=user,
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_form_view,
+            field_options={str(text_field.id): {"hidden": False}},
+        )
+
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_grid_view,
+            field_options={str(text_field.id): {"hidden": False}},
+        )
+
+    view_serialized = PublicViewInfoSerializer(
         view=public_grid_view,
-        field_options={str(text_field.id): {"hidden": False}},
-    )
+        fields=[],
+    ).data
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -178,6 +219,7 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
                             "text_default": "",
                         }
                     ],
+                    "view": view_serialized["view"],
                 },
                 None,
             ),
@@ -188,20 +230,17 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_grid_view = data_fixture.create_grid_view(
-        table=table, public=True, create_options=False
+    public_grid_view = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[visible_field], hidden_fields=[hidden_field]
     )
-    data_fixture.create_grid_view_field_option(
-        grid_view=public_grid_view, field=visible_field, hidden=False
-    )
-    data_fixture.create_grid_view_field_option(
-        grid_view=public_grid_view, field=hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
     handler = ViewHandler()
 
@@ -209,23 +248,30 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
     public_form_view = data_fixture.create_form_view(
         user=user, table=table, public=True
     )
-    handler.update_field_options(
-        user=user,
-        view=public_form_view,
-        field_options={
-            str(visible_field.id): {"width": 100},
-            str(hidden_field.id): {"width": 100},
-        },
-    )
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_form_view,
+            field_options={
+                str(visible_field.id): {"order": 2},
+                str(hidden_field.id): {"order": 1},
+            },
+        )
 
-    handler.update_field_options(
-        user=user,
+    with transaction.atomic():
+        handler.update_field_options(
+            user=user,
+            view=public_grid_view,
+            field_options={
+                str(visible_field.id): {"order": 2},
+                str(hidden_field.id): {"order": 1},
+            },
+        )
+
+    view_serialized = PublicViewInfoSerializer(
         view=public_grid_view,
-        field_options={
-            str(visible_field.id): {"width": 100},
-            str(hidden_field.id): {"width": 100},
-        },
-    )
+        fields=[],
+    ).data
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -247,6 +293,7 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
                             "text_default": "",
                         }
                     ],
+                    "view": view_serialized["view"],
                 },
                 None,
             ),

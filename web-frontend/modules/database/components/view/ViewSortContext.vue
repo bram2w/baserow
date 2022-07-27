@@ -18,108 +18,102 @@
         }"
         :set="(field = getField(sort.field))"
       >
-        <a
-          v-if="!disableSort"
-          class="sortings__remove"
-          @click.stop="deleteSort(sort)"
-        >
-          <i class="fas fa-times"></i>
-        </a>
-        <div class="sortings__description">
-          <template v-if="index === 0">{{
-            $t('viewSortContext.sortBy')
-          }}</template>
-          <template v-if="index > 0">{{
-            $t('viewSortContext.thenBy')
-          }}</template>
-        </div>
-        <div class="sortings__field">
-          <Dropdown
-            :value="sort.field"
-            :disabled="disableSort"
-            class="dropdown--floating dropdown--tiny"
-            @input="updateSort(sort, { field: $event })"
-          >
-            <DropdownItem
-              :key="'sort-field-' + sort.id + '-' + primary.id"
-              :name="primary.name"
-              :value="primary.id"
-              :disabled="
-                sort.field !== primary.id && !isFieldAvailable(primary)
-              "
-            ></DropdownItem>
-            <DropdownItem
-              v-for="field in fields"
-              :key="'sort-field-' + sort.id + '-' + field.id"
-              :name="field.name"
-              :value="field.id"
-              :disabled="sort.field !== field.id && !isFieldAvailable(field)"
-            ></DropdownItem>
-          </Dropdown>
-        </div>
-        <div
-          class="sortings__order"
-          :class="{ 'sortings__order--disabled': disableSort }"
-        >
+        <template v-if="field">
           <a
-            class="sortings__order-item"
-            :class="{ active: sort.order === 'ASC' }"
-            @click="updateSort(sort, { order: 'ASC' })"
+            v-if="!disableSort"
+            class="sortings__remove"
+            @click.stop="deleteSort(sort)"
           >
-            <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 1)
-              }}</template>
-              <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getSortIndicator(field, 1)"
-              ></i>
-            </div>
-            <div>
-              <i class="fas fa-long-arrow-alt-right"></i>
-            </div>
-            <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 2)
-              }}</template>
-              <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getSortIndicator(field, 2)"
-              ></i>
-            </div>
+            <i class="fas fa-times"></i>
           </a>
-          <a
-            class="sortings__order-item"
-            :class="{ active: sort.order === 'DESC' }"
-            @click="updateSort(sort, { order: 'DESC' })"
+          <div class="sortings__description">
+            <template v-if="index === 0">{{
+              $t('viewSortContext.sortBy')
+            }}</template>
+            <template v-if="index > 0">{{
+              $t('viewSortContext.thenBy')
+            }}</template>
+          </div>
+          <div class="sortings__field">
+            <Dropdown
+              :value="sort.field"
+              :disabled="disableSort"
+              class="dropdown--floating dropdown--tiny"
+              @input="updateSort(sort, { field: $event })"
+            >
+              <DropdownItem
+                v-for="field in fields"
+                :key="'sort-field-' + sort.id + '-' + field.id"
+                :name="field.name"
+                :value="field.id"
+                :disabled="sort.field !== field.id && !isFieldAvailable(field)"
+              ></DropdownItem>
+            </Dropdown>
+          </div>
+          <div
+            class="sortings__order"
+            :class="{ 'sortings__order--disabled': disableSort }"
           >
-            <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 2)
-              }}</template>
-              <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getSortIndicator(field, 2)"
-              ></i>
-            </div>
-            <div>
-              <i class="fas fa-long-arrow-alt-right"></i>
-            </div>
-            <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 1)
-              }}</template>
-              <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getSortIndicator(field, 1)"
-              ></i>
-            </div>
-          </a>
-        </div>
+            <a
+              class="sortings__order-item"
+              :class="{ active: sort.order === 'ASC' }"
+              @click="updateSort(sort, { order: 'ASC' })"
+            >
+              <div>
+                <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                  getSortIndicator(field, 1)
+                }}</template>
+                <i
+                  v-if="getSortIndicator(field, 0) === 'icon'"
+                  class="fa"
+                  :class="'fa-' + getSortIndicator(field, 1)"
+                ></i>
+              </div>
+              <div>
+                <i class="fas fa-long-arrow-alt-right"></i>
+              </div>
+              <div>
+                <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                  getSortIndicator(field, 2)
+                }}</template>
+                <i
+                  v-if="getSortIndicator(field, 0) === 'icon'"
+                  class="fa"
+                  :class="'fa-' + getSortIndicator(field, 2)"
+                ></i>
+              </div>
+            </a>
+            <a
+              class="sortings__order-item"
+              :class="{ active: sort.order === 'DESC' }"
+              @click="updateSort(sort, { order: 'DESC' })"
+            >
+              <div>
+                <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                  getSortIndicator(field, 2)
+                }}</template>
+                <i
+                  v-if="getSortIndicator(field, 0) === 'icon'"
+                  class="fa"
+                  :class="'fa-' + getSortIndicator(field, 2)"
+                ></i>
+              </div>
+              <div>
+                <i class="fas fa-long-arrow-alt-right"></i>
+              </div>
+              <div>
+                <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                  getSortIndicator(field, 1)
+                }}</template>
+                <i
+                  v-if="getSortIndicator(field, 0) === 'icon'"
+                  class="fa"
+                  :class="'fa-' + getSortIndicator(field, 1)"
+                ></i>
+              </div>
+            </a>
+          </div>
+        </template>
       </div>
       <template
         v-if="view.sortings.length < availableFieldsLength && !disableSort"
@@ -136,15 +130,6 @@
         </a>
         <Context ref="addContext" class="sortings__add-context">
           <ul ref="items" class="context__menu">
-            <li v-show="isFieldAvailable(primary)">
-              <a @click="addSort(primary)">
-                <i
-                  class="context__menu-icon fas fa-fw"
-                  :class="'fa-' + primary._.type.iconClass"
-                ></i>
-                {{ primary.name }}
-              </a>
-            </li>
             <li
               v-for="field in fields"
               v-show="isFieldAvailable(field)"
@@ -173,10 +158,6 @@ export default {
   name: 'ViewSortContext',
   mixins: [context],
   props: {
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -204,11 +185,7 @@ export default {
      * Calculates the total amount of available fields.
      */
     availableFieldsLength() {
-      const fields = this.fields.filter((field) =>
-        this.getCanSortInView(field)
-      ).length
-      const primary = this.getCanSortInView(this.primary) ? 1 : 0
-      return fields + primary
+      return this.fields.filter(this.getCanSortInView).length
     },
   },
   methods: {
@@ -216,9 +193,6 @@ export default {
       return this.$registry.get('field', field.type).getCanSortInView(field)
     },
     getField(fieldId) {
-      if (this.primary.id === fieldId) {
-        return this.primary
-      }
       for (const i in this.fields) {
         if (this.fields[i].id === fieldId) {
           return this.fields[i]

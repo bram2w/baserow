@@ -9,7 +9,9 @@
     "sidebarApplication": {
         "renameApplication": "Hernoem {type}",
         "viewTrash": "Bekijk Prullenbak",
-        "deleteApplication": "Verwijder {type}"
+        "deleteApplication": "Verwijder {type}",
+        "duplicateApplication": "Dupliceer {type}",
+        "snapshots": "Snapshots"
     },
     "sidebar": {
         "createGroup": "Groep aanmaken",
@@ -146,7 +148,8 @@
         "fromParent": "van {parent}",
         "name": "{user} heeft {type} {title} {parent} verwijderd",
         "restore": "Herstel",
-        "unnamed": "Naamloos {type} {id}"
+        "unnamed": "Naamloos {type} {id}",
+        "andMore": "... en {count} meer"
     },
     "trashModal": {
         "emptyTitle": "Geen groepen gevonden",
@@ -388,5 +391,10 @@
     "pastingNotification": {
         "title": "Plakken...",
         "content": "Voorbereiding van uw gegevens"
+    },
+    "datetime": {
+        "yearsAgo": "0 jaar geleden | 1 jaar geleden | {n} jaar geleden",
+        "daysAgo": "0 dagen geleden | 1 dag geleden | {n} dagen geleden",
+        "monthsAgo": "0 maanden geleden | 1 maand geleden | {n} maanden geleden"
     }
 }

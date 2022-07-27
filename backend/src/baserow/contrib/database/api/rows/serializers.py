@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Dict
+from typing import Dict, List
 
 from django.conf import settings
 from rest_framework import serializers
@@ -291,7 +291,24 @@ def get_example_row_metadata_field_serializer():
     )
 
 
-def remap_serialized_row_to_user_field_names(serialized_row: Dict, model: ModelBase):
+def remap_serialized_rows_to_user_field_names(
+    serialized_rows: List[Dict], model: ModelBase
+) -> List[Dict]:
+    """
+    Remap the values of rows from field ids to the user defined field names.
+
+    :param serialized_rows: The rows whose fields to remap.
+    :param model: The model for which to generate a serializer.
+    """
+
+    return [
+        remap_serialized_row_to_user_field_names(row, model) for row in serialized_rows
+    ]
+
+
+def remap_serialized_row_to_user_field_names(
+    serialized_row: Dict, model: ModelBase
+) -> Dict:
     """
     Remap the values of a row from field ids to the user defined field names.
 
@@ -332,6 +349,7 @@ class ListRowsQueryParamsSerializer(serializers.Serializer):
     include = serializers.CharField(required=False)
     exclude = serializers.CharField(required=False)
     filter_type = serializers.CharField(required=False, default="")
+    view_id = serializers.IntegerField(required=False)
 
 
 class BatchUpdateRowsSerializer(serializers.Serializer):

@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.db import transaction
-from baserow.api.sessions import get_untrusted_client_session_id
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,7 +10,13 @@ from rest_framework.views import APIView
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
+from baserow.api.schemas import (
+    get_error_schema,
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+)
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.contrib.database.api.fields.errors import (
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
@@ -17,15 +24,21 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_RESERVED_BASEROW_FIELD_NAME,
     ERROR_INVALID_BASEROW_FIELD_NAME,
 )
+from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
-
-
+from baserow.contrib.database.file_import.job_type import FileImportJobType
 from baserow.contrib.database.handler import DatabaseHandler
+from baserow.contrib.database.table.actions import (
+    CreateTableActionType,
+    DeleteTableActionType,
+    OrderTableActionType,
+    UpdateTableActionType,
+)
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
@@ -34,19 +47,14 @@ from baserow.contrib.database.table.exceptions import (
     InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
 )
-from baserow.contrib.database.table.actions import (
-    DeleteTableActionType,
-    OrderTableActionType,
-    UpdateTableActionType,
-)
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
-from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
-from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
-
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_TABLE_NOT_IN_DATABASE,
@@ -58,8 +66,13 @@ from .errors import (
 from .serializers import (
     TableSerializer,
     TableCreateSerializer,
+    TableImportSerializer,
     TableUpdateSerializer,
     OrderTablesSerializer,
+)
+
+FileImportJobSerializerClass = FileImportJobType().get_serializer_class(
+    base_class=JobSerializer
 )
 
 
@@ -117,6 +130,7 @@ class TablesView(APIView):
                 "value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="create_database_table",
@@ -166,29 +180,25 @@ class TablesView(APIView):
         """Creates a new table in a database."""
 
         database = DatabaseHandler().get_database(database_id)
+        database.group.has_user(request.user, raise_error=True)
 
-        session = get_untrusted_client_session_id(request.user)
-
-        if not data["data"]:
-            file_import_job = TableHandler().create_minimal_table(
-                request.user,
-                database,
-                data["name"],
-                fill_example=True,
-                session=session,
-            )
-        else:
-            file_import_job = TableHandler().create_table(
-                request.user,
-                database,
-                data["name"],
-                data=data["data"],
-                first_row_header=data["first_row_header"],
-                session=session,
-                sync=True,
+        limit = settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT
+        if limit and len(data) > limit:
+            raise InitialSyncTableDataLimitExceeded(
+                f"It is not possible to import more than "
+                f"{settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT} rows "
+                "when creating a table synchronously. Use Asynchronous "
+                "alternative instead."
             )
 
-        table = TableHandler().get_table(file_import_job.table.id)
+        table, _ = action_type_registry.get_by_type(CreateTableActionType).do(
+            request.user,
+            database,
+            name=data["name"],
+            data=data["data"],
+            first_row_header=data["first_row_header"],
+        )
+
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -208,19 +218,16 @@ class AsyncCreateTableView(APIView):
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
-        operation_id="create_async_database_table",
+        operation_id="create_database_table_async",
         description=(
             "Creates a job that creates a new table for the database related to the "
             "provided `database_id` parameter if the authorized user has access to the "
-            "database's group."
+            "database's group. This endpoint is asynchronous and return "
+            "the created job to track the progress of the task."
         ),
         request=TableCreateSerializer,
         responses={
-            200: {
-                "type": "integer",
-                "description": "Id of the file import job for the new table.",
-                "example": 1,
-            },
+            202: FileImportJobSerializerClass,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -244,28 +251,20 @@ class AsyncCreateTableView(APIView):
         """Creates a job to create a new table in a database."""
 
         database = DatabaseHandler().get_database(database_id)
+        database.group.has_user(request.user, raise_error=True)
 
-        session = get_untrusted_client_session_id(request.user)
+        file_import_job = JobHandler().create_and_start_job(
+            request.user,
+            "file_import",
+            database=database,
+            name=data["name"],
+            data=data["data"],
+            first_row_header=data["first_row_header"],
+            sync=True if data["data"] is None else False,
+        )
 
-        if not data["data"]:
-            file_import_job = TableHandler().create_minimal_table(
-                request.user,
-                database,
-                data["name"],
-                fill_example=True,
-                session=session,
-            )
-        else:
-            file_import_job = TableHandler().create_table(
-                request.user,
-                database,
-                data["name"],
-                data=data["data"],
-                first_row_header=data["first_row_header"],
-                session=session,
-            )
-
-        return Response(file_import_job.id)
+        serializer = job_type_registry.get_serializer(file_import_job, JobSerializer)
+        return Response(serializer.data)
 
 
 class TableView(APIView):
@@ -315,6 +314,7 @@ class TableView(APIView):
                 description="Updates the table related to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="update_database_table",
@@ -344,7 +344,7 @@ class TableView(APIView):
 
         table = action_type_registry.get_by_type(UpdateTableActionType).do(
             request.user,
-            TableHandler().get_table_for_update(table_id),
+            TableHandler().get_table(table_id),
             name=data["name"],
         )
 
@@ -360,6 +360,7 @@ class TableView(APIView):
                 description="Deletes the table related to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="delete_database_table",
@@ -387,10 +388,67 @@ class TableView(APIView):
         """Deletes an existing table."""
 
         action_type_registry.get_by_type(DeleteTableActionType).do(
-            request.user, TableHandler().get_table_for_update(table_id)
+            request.user,
+            TableHandler().get_table(
+                table_id,
+            ),
         )
 
         return Response(status=204)
+
+
+class AsyncTableImportView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Import data into the table related to the provided value.",
+            )
+        ],
+        tags=["Database tables"],
+        operation_id="import_data_database_table_async",
+        description=(
+            "Import data in the specified table if the authorized user has access to "
+            "the related database's group. This endpoint is asynchronous and return "
+            "the created job to track the progress of the task."
+        ),
+        request=TableImportSerializer,
+        responses={
+            202: FileImportJobSerializerClass,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    @validate_body(TableImportSerializer)
+    def post(self, request, data, table_id):
+        """Import data into an existing table"""
+
+        table_handler = TableHandler()
+        table = table_handler.get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
+
+        data = data["data"]
+
+        file_import_job = JobHandler().create_and_start_job(
+            request.user,
+            "file_import",
+            data=data,
+            table=table,
+        )
+
+        serializer = job_type_registry.get_serializer(file_import_job, JobSerializer)
+        return Response(serializer.data)
 
 
 class OrderTablesView(APIView):
@@ -406,6 +464,7 @@ class OrderTablesView(APIView):
                 "to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
         operation_id="order_database_tables",
@@ -443,3 +502,54 @@ class OrderTablesView(APIView):
         )
 
         return Response(status=204)
+
+
+class AsyncDuplicateTableView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The table to duplicate.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database tables"],
+        operation_id="duplicate_database_table",
+        description=(
+            "Duplicates the table with the provided `table_id` parameter "
+            "if the authorized user has access to the database's group."
+        ),
+        responses={
+            202: DuplicateTableJobType().get_serializer_class(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    def post(self, request, table_id):
+        """Creates a job to duplicate a table in a database."""
+
+        job = JobHandler().create_and_start_job(
+            request.user, DuplicateTableJobType.type, table_id=table_id
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)

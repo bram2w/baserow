@@ -4,10 +4,7 @@
 
 ### PostgreSQL
 
-By default Baserow uses PostgreSQL for persistent storage. In the near future MySQL and 
-SQLite are also going to by supported, but this is not yet the case. Most things will
-probably work with the other engines, but it will probably fail when converting a field
-to another type. However, it hasn't yet been tested if the other engines work.
+Baserow uses PostgreSQL for persistent storage.
 
 https://www.postgresql.org/
 

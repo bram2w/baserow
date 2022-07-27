@@ -21,7 +21,6 @@
       :view="view"
       :table="table"
       :fields="fields"
-      :primary="primary"
       :read-only="readOnly"
       @changed="$emit('changed')"
     ></ViewDecoratorContext>
@@ -36,10 +35,6 @@ export default {
   components: { ViewDecoratorContext },
   props: {
     database: {
-      type: Object,
-      required: true,
-    },
-    primary: {
       type: Object,
       required: true,
     },

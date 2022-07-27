@@ -12,6 +12,7 @@ from baserow.contrib.database.views.models import ViewDecoration
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.action.scopes import ViewActionScopeType
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
 @pytest.mark.django_db
@@ -40,9 +41,7 @@ def test_can_undo_create_decoration(premium_data_fixture):
         user, [ViewActionScopeType.value(view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == CreateDecorationActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [CreateDecorationActionType])
 
     assert ViewDecoration.objects.count() == 0
 
@@ -72,9 +71,7 @@ def test_can_undo_redo_create_decoration(premium_data_fixture):
         user, [ViewActionScopeType.value(view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == CreateDecorationActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [CreateDecorationActionType])
 
     assert ViewDecoration.objects.count() == 1
 
@@ -110,9 +107,7 @@ def test_can_undo_update_decoration(premium_data_fixture):
         user, [ViewActionScopeType.value(view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == UpdateDecorationActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [UpdateDecorationActionType])
 
     view_decoration.refresh_from_db()
     assert view_decoration.type == decorator_type_name
@@ -147,9 +142,7 @@ def test_can_undo_redo_update_decoration(premium_data_fixture):
         user, [ViewActionScopeType.value(view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == UpdateDecorationActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [UpdateDecorationActionType])
 
     view_decoration.refresh_from_db()
     assert view_decoration.type == "background_color"
@@ -187,9 +180,7 @@ def test_can_undo_delete_decoration(premium_data_fixture):
         user, [ViewActionScopeType.value(view.id)], session_id
     )
 
-    assert action_undone is not None
-    assert action_undone.type == DeleteDecorationActionType.type
-    assert action_undone.error is None
+    assert_undo_redo_actions_are_valid(action_undone, [DeleteDecorationActionType])
 
     assert ViewDecoration.objects.count() == 1
 
@@ -226,8 +217,6 @@ def test_can_undo_redo_delete_decoration(premium_data_fixture):
         user, [ViewActionScopeType.value(view.id)], session_id
     )
 
-    assert action_redone is not None
-    assert action_redone.type == DeleteDecorationActionType.type
-    assert action_redone.error is None
+    assert_undo_redo_actions_are_valid(action_redone, [DeleteDecorationActionType])
 
     assert ViewDecoration.objects.count() == 0

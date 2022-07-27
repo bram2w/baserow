@@ -5,30 +5,38 @@ from django.db import transaction
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.trash.models import TrashedRows
 from baserow.contrib.database.views.handler import ViewHandler, PublicViewRows
 from baserow.core.trash.handler import TrashHandler
-from baserow.contrib.database.trash.models import TrashedRows
 
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_row_created_public_views_receive_restricted_row_created_ws_event(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group,
+    data_fixture,
+    public_realtime_view_tester,
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_only_showing_one_field = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_only_showing_one_field = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_showing_all_fields = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_showing_all_fields = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field, hidden_field],
+        order=1,
     )
     # No public events should be sent to this form view
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_only_showing_one_field, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
     row = RowHandler().create_row(
         user=user,
@@ -45,14 +53,16 @@ def test_when_row_created_public_views_receive_restricted_row_created_ws_event(
             call(
                 f"view-{public_view_only_showing_one_field.slug}",
                 {
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -61,16 +71,18 @@ def test_when_row_created_public_views_receive_restricted_row_created_ws_event(
             call(
                 f"view-{public_view_showing_all_fields.slug}",
                 {
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        f"field_{visible_field.id}": "Visible",
-                        # This field is not hidden for this public view and so should be
-                        # included
-                        f"field_{hidden_field.id}": "Hidden",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            f"field_{visible_field.id}": "Visible",
+                            # This field is not hidden for this public view and so
+                            # should be included
+                            f"field_{hidden_field.id}": "Hidden",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -83,25 +95,28 @@ def test_when_row_created_public_views_receive_restricted_row_created_ws_event(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_row_created_public_views_receive_row_created_only_when_filters_match(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_showing_row = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_showing_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_hiding_row = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_hiding_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[hidden_field],
+        hidden_fields=[visible_field],
+        order=1,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_showing_row, hidden_field, hidden=True
-    )
-    data_fixture.create_grid_view_field_option(
-        public_view_hiding_row, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -137,14 +152,16 @@ def test_when_row_created_public_views_receive_row_created_only_when_filters_mat
             call(
                 f"view-{public_view_showing_row.slug}",
                 {
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -157,23 +174,24 @@ def test_when_row_created_public_views_receive_row_created_only_when_filters_mat
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_rows_created_public_views_receive_restricted_row_created_ws_event(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_only_showing_one_field = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_only_showing_one_field = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_showing_all_fields = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_showing_all_fields = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[visible_field, hidden_field], order=1
     )
     # No public events should be sent to this form view
     data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_only_showing_one_field, hidden_field, hidden=True
-    )
 
     rows_to_create = [
         {f"field_{visible_field.id}": "Visible", f"field_{hidden_field.id}": "Hidden"},
@@ -248,25 +266,28 @@ def test_batch_rows_created_public_views_receive_restricted_row_created_ws_event
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_rows_created_public_views_receive_row_created_when_filters_match(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_showing_row = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_showing_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_hiding_row = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_hiding_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[hidden_field],
+        hidden_fields=[visible_field],
+        order=1,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_showing_row, hidden_field, hidden=True
-    )
-    data_fixture.create_grid_view_field_option(
-        public_view_hiding_row, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -328,23 +349,24 @@ def test_batch_rows_created_public_views_receive_row_created_when_filters_match(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_row_deleted_public_views_receive_restricted_row_deleted_ws_event(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_only_showing_one_field = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_only_showing_one_field = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_showing_all_fields = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_showing_all_fields = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[visible_field, hidden_field], order=1
     )
-    # Should not appear in any results
+    # No public events should be sent to this form view
     data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_only_showing_one_field, hidden_field, hidden=True
-    )
     model = table.get_model()
     row = model.objects.create(
         **{
@@ -360,32 +382,36 @@ def test_when_row_deleted_public_views_receive_restricted_row_deleted_ws_event(
             call(
                 f"view-{public_view_only_showing_one_field.slug}",
                 {
-                    "type": "row_deleted",
-                    "row_id": row.id,
+                    "type": "rows_deleted",
+                    "row_ids": [row.id],
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                 },
                 None,
             ),
             call(
                 f"view-{public_view_showing_all_fields.slug}",
                 {
-                    "type": "row_deleted",
-                    "row_id": row.id,
+                    "type": "rows_deleted",
+                    "row_ids": [row.id],
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        f"field_{visible_field.id}": "Visible",
-                        # This field is not hidden for this public view
-                        # and so should be included
-                        f"field_{hidden_field.id}": "Hidden",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            f"field_{visible_field.id}": "Visible",
+                            # This field is not hidden for this public view
+                            # and so should be included
+                            f"field_{hidden_field.id}": "Hidden",
+                        }
+                    ],
                 },
                 None,
             ),
@@ -396,25 +422,28 @@ def test_when_row_deleted_public_views_receive_restricted_row_deleted_ws_event(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_row_deleted_public_views_receive_row_deleted_only_when_filters_match(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_showing_row = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_showing_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_hiding_row = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_hiding_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[hidden_field],
+        hidden_fields=[visible_field],
+        order=1,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_showing_row, hidden_field, hidden=True
-    )
-    data_fixture.create_grid_view_field_option(
-        public_view_hiding_row, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -450,15 +479,17 @@ def test_when_row_deleted_public_views_receive_row_deleted_only_when_filters_mat
             call(
                 f"view-{public_view_showing_row.slug}",
                 {
-                    "type": "row_deleted",
+                    "type": "rows_deleted",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row_id": row.id,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "row_ids": [row.id],
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                 },
                 None,
             ),
@@ -469,23 +500,24 @@ def test_when_row_deleted_public_views_receive_row_deleted_only_when_filters_mat
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_rows_deleted_public_views_receive_restricted_row_deleted_ws_event(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_only_showing_one_field = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_only_showing_one_field = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_showing_all_fields = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_showing_all_fields = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[visible_field, hidden_field], order=1
     )
-    # Should not appear in any results
+    # No public events should be sent to this form view
     data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_only_showing_one_field, hidden_field, hidden=True
-    )
     model = table.get_model()
     row = model.objects.create(
         **{
@@ -563,25 +595,28 @@ def test_batch_rows_deleted_public_views_receive_restricted_row_deleted_ws_event
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_rows_deleted_public_views_receive_row_deleted_only_when_filters_match(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_showing_row = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_showing_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_hiding_row = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_hiding_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[hidden_field],
+        hidden_fields=[visible_field],
+        order=1,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_showing_row, hidden_field, hidden=True
-    )
-    data_fixture.create_grid_view_field_option(
-        public_view_hiding_row, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -646,20 +681,24 @@ def test_batch_rows_deleted_public_views_receive_row_deleted_only_when_filters_m
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_filters_initially_hiding_all_rows = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_filters_initially_hiding_all_rows = (
+        public_realtime_view_tester.create_public_view(
+            user,
+            table,
+            visible_fields=[visible_field],
+            hidden_fields=[hidden_field],
+            order=0,
+        )
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_filters_initially_hiding_all_rows, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -706,14 +745,16 @@ def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_s
                 {
                     # The row should appear as a created event as for the public view
                     # it effectively has been created as it didn't exist before.
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": initially_hidden_row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows": [
+                        {
+                            "id": initially_hidden_row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -726,20 +767,24 @@ def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_s
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_update_rows_not_visible_in_public_view_to_be_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_filters_initially_hiding_all_rows = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_filters_initially_hiding_all_rows = (
+        public_realtime_view_tester.create_public_view(
+            user,
+            table,
+            visible_fields=[visible_field],
+            hidden_fields=[hidden_field],
+            order=0,
+        )
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_filters_initially_hiding_all_rows, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -835,20 +880,24 @@ def test_batch_update_rows_not_visible_in_public_view_to_be_visible_event_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_update_rows_some_not_visible_in_public_view_to_be_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_filters_initially_hiding_all_rows = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_filters_initially_hiding_all_rows = (
+        public_realtime_view_tester.create_public_view(
+            user,
+            table,
+            visible_fields=[visible_field],
+            hidden_fields=[hidden_field],
+            order=0,
+        )
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_filters_initially_hiding_all_rows, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -959,20 +1008,24 @@ def test_batch_update_rows_some_not_visible_in_public_view_to_be_visible_event_s
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_update_rows_visible_in_public_view_to_some_not_be_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_filters_initially_hiding_all_rows = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_filters_initially_hiding_all_rows = (
+        public_realtime_view_tester.create_public_view(
+            user,
+            table,
+            visible_fields=[visible_field],
+            hidden_fields=[hidden_field],
+            order=0,
+        )
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_filters_initially_hiding_all_rows, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1088,20 +1141,22 @@ def test_batch_update_rows_visible_in_public_view_to_some_not_be_visible_event_s
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_row_showing = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_row_showing = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_row_showing, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1154,16 +1209,18 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
                 {
                     # The row should appear as a deleted event as for the public view
                     # it effectively has been.
-                    "type": "row_deleted",
+                    "type": "rows_deleted",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row_id": initially_visible_row.id,
-                    "row": {
-                        "id": initially_visible_row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent in its state before it
-                        # was updated
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "row_ids": [initially_visible_row.id],
+                    "rows": [
+                        {
+                            "id": initially_visible_row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent in its state before
+                            # it was updated
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                 },
                 None,
             ),
@@ -1174,20 +1231,22 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_update_rows_visible_in_public_view_to_be_not_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_row_showing = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_row_showing = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_row_showing, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1289,20 +1348,22 @@ def test_batch_update_rows_visible_in_public_view_to_be_not_visible_event_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_row_showing = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_row_showing = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_row_showing, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1353,20 +1414,24 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
             call(
                 f"view-{public_view_with_row_showing.slug}",
                 {
-                    "type": "row_updated",
+                    "type": "rows_updated",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row_before_update": {
-                        "id": initially_visible_row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
-                    "row": {
-                        "id": initially_visible_row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "StillVisibleButUpdated",
-                    },
+                    "rows_before_update": [
+                        {
+                            "id": initially_visible_row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": initially_visible_row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "StillVisibleButUpdated",
+                        }
+                    ],
                     "metadata": {},
                 },
                 None,
@@ -1378,20 +1443,22 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_update_rows_visible_in_public_view_still_be_visible_event_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_row_showing = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_row_showing = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_with_row_showing, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1503,14 +1570,14 @@ def test_batch_update_rows_visible_in_public_view_still_be_visible_event_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_update_subset_rows_visible_in_public_view_no_filters(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
 
-    public_view_with_row_showing = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_with_row_showing = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[visible_field], order=0
     )
 
     model = table.get_model()
@@ -1585,23 +1652,24 @@ def test_batch_update_subset_rows_visible_in_public_view_no_filters(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_only_showing_one_field = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_only_showing_one_field = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_showing_all_fields = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_showing_all_fields = public_realtime_view_tester.create_public_view(
+        user, table, visible_fields=[visible_field, hidden_field], order=1
     )
-    # Should not appear in any results
+    # No public events should be sent to this form view
     data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_only_showing_one_field, hidden_field, hidden=True
-    )
     model = table.get_model()
     row = model.objects.create(
         **{
@@ -1620,14 +1688,16 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
             call(
                 f"view-{public_view_only_showing_one_field.slug}",
                 {
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -1636,16 +1706,18 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
             call(
                 f"view-{public_view_showing_all_fields.slug}",
                 {
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        f"field_{visible_field.id}": "Visible",
-                        # This field is not hidden for this public view and so should be
-                        # included
-                        f"field_{hidden_field.id}": "Hidden",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            f"field_{visible_field.id}": "Visible",
+                            # This field is not hidden for this public view and so
+                            # should be included
+                            f"field_{hidden_field.id}": "Hidden",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -1658,25 +1730,28 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_when_row_restored_public_views_receive_row_created_only_when_filters_match(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_showing_row = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_showing_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_hiding_row = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_hiding_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[hidden_field],
+        hidden_fields=[visible_field],
+        order=1,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_showing_row, hidden_field, hidden=True
-    )
-    data_fixture.create_grid_view_field_option(
-        public_view_hiding_row, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1715,14 +1790,16 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
             call(
                 f"view-{public_view_showing_row.slug}",
                 {
-                    "type": "row_created",
+                    "type": "rows_created",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row": {
-                        "id": row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows": [
+                        {
+                            "id": row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                     "metadata": {},
                     "before_row_id": None,
                 },
@@ -1735,25 +1812,28 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters_match(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
-    public_view_showing_row = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view_showing_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    public_view_hiding_row = data_fixture.create_grid_view(
-        user, table=table, public=True, order=1
+    public_view_hiding_row = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[hidden_field],
+        hidden_fields=[visible_field],
+        order=1,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(
-        public_view_showing_row, hidden_field, hidden=True
-    )
-    data_fixture.create_grid_view_field_option(
-        public_view_hiding_row, hidden_field, hidden=True
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
     )
 
     # Match the visible field
@@ -1835,19 +1915,23 @@ def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(public_view, hidden_field, hidden=True)
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
+    )
 
     # Match the visible field
     data_fixture.create_view_filter(
@@ -1900,20 +1984,24 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
                 {
                     # The row should appear as a deleted event as for the public view
                     # it effectively has been.
-                    "type": "row_updated",
+                    "type": "rows_updated",
                     "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
-                    "row_before_update": {
-                        "id": visible_moving_row.id,
-                        "order": "1.00000000000000000000",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
-                    "row": {
-                        "id": visible_moving_row.id,
-                        "order": "0.99999999999999999999",
-                        # Only the visible field should be sent
-                        f"field_{visible_field.id}": "Visible",
-                    },
+                    "rows_before_update": [
+                        {
+                            "id": visible_moving_row.id,
+                            "order": "1.00000000000000000000",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": visible_moving_row.id,
+                            "order": "0.99999999999999999999",
+                            # Only the visible field should be sent
+                            f"field_{visible_field.id}": "Visible",
+                        }
+                    ],
                     "metadata": {},
                 },
                 None,
@@ -1925,19 +2013,23 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_given_row_invisible_in_public_view_when_moved_no_update_sent(
-    mock_broadcast_to_channel_group, data_fixture
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table)
     hidden_field = data_fixture.create_text_field(table=table)
 
-    public_view = data_fixture.create_grid_view(
-        user, create_options=False, table=table, public=True, order=0
+    public_view = public_realtime_view_tester.create_public_view(
+        user,
+        table,
+        visible_fields=[visible_field],
+        hidden_fields=[hidden_field],
+        order=0,
     )
-    # Should not appear in any results
-    data_fixture.create_form_view(user, table=table, public=True)
-    data_fixture.create_grid_view_field_option(public_view, hidden_field, hidden=True)
+    public_realtime_view_tester.create_other_views_that_should_not_get_realtime_signals(
+        user, table, mock_broadcast_to_channel_group
+    )
 
     # Match the visible field
     data_fixture.create_view_filter(

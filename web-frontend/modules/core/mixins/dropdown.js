@@ -75,6 +75,23 @@ export default {
     // When the component is mounted we want to forcefully reload the selectedName and
     // selectedIcon.
     this.forceRefreshSelectedValue()
+
+    // The child dropdown item components determine what the possible options are.
+    // Because is not no "Vue way" of watching these components, we're using the
+    // mutation observer to monitor changes. This is needed because we need to
+    // update the select value display value.
+    this.observer = new MutationObserver(() => {
+      this.forceRefreshSelectedValue()
+    })
+    this.observer.observe(this.$refs.items, {
+      attributes: false,
+      childList: true,
+      characterData: false,
+      subtree: false,
+    })
+  },
+  beforeDestroy() {
+    this.observer.disconnect()
   },
   methods: {
     focusout(event) {

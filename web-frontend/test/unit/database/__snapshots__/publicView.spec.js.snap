@@ -1,0 +1,604 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
+<div>
+  <div
+    class="notifications"
+  >
+    <div
+      class="top-right-notifications"
+    >
+      <!---->
+       
+      <!---->
+       
+      <!---->
+       
+    </div>
+     
+    <div
+      class="bottom-right-notifications"
+    >
+      <!---->
+       
+      <!---->
+       
+      <!---->
+       
+      <!---->
+       
+    </div>
+  </div>
+   
+  <div
+    class="public-view__table"
+  >
+    <div>
+      <header
+        class="layout__col-2-1 header"
+      >
+        <div
+          class="header__loading"
+          style="display: none;"
+        />
+         
+        <ul
+          class="header__filter"
+        >
+          <li
+            class="header__filter-item header__filter-item--grids"
+          >
+            <a
+              class="header__filter-link header__filter-link--disabled"
+            >
+              <i
+                class="header__filter-icon header-filter-icon--view fas fa-fw color-primary fa-bars"
+              />
+               
+              <span
+                class="header__filter-name header__filter-name--forced"
+              >
+                <span
+                  class=""
+                  contenteditable="false"
+                >
+                  my public grid view name
+                </span>
+              </span>
+            </a>
+             
+            <!---->
+          </li>
+           
+          <!---->
+           
+          <li
+            class="header__filter-item"
+          >
+            <div>
+              <a
+                class="header__filter-link"
+              >
+                <i
+                  class="header__filter-icon fas fa-filter"
+                />
+                 
+                <span
+                  class="header__filter-name"
+                >
+                  viewFilter.filter - 0
+                </span>
+              </a>
+               
+            </div>
+          </li>
+           
+          <li
+            class="header__filter-item"
+          >
+            <div>
+              <a
+                class="header__filter-link"
+              >
+                <i
+                  class="header__filter-icon fas fa-sort"
+                />
+                 
+                <span
+                  class="header__filter-name"
+                >
+                  viewSort.sort - 0
+                </span>
+              </a>
+               
+            </div>
+          </li>
+           
+          <!---->
+           
+          <!---->
+        </ul>
+         
+        <ul
+          class="header__filter header__filter--full-width"
+          database="[object Object]"
+          table="[object Object]"
+        >
+          <li
+            class="header__filter-item"
+          >
+            <div>
+              <a
+                class="header__filter-link"
+              >
+                <i
+                  class="header__filter-icon fas fa-eye-slash"
+                />
+                 
+                <span
+                  class="header__filter-name"
+                >
+                  gridViewHide.hideField - 0
+                </span>
+              </a>
+               
+            </div>
+          </li>
+           
+          <li
+            class="header__filter-item header__filter-item--right"
+          >
+            <div>
+              <a
+                class="header__filter-link"
+              >
+                <i
+                  class="header__search-icon fas fa-search"
+                />
+                
+    
+  
+              </a>
+               
+            </div>
+          </li>
+        </ul>
+      </header>
+       
+      <div
+        class="layout__col-2-2 content"
+      >
+        <div
+          class="grid-view"
+        >
+          <div
+            class="scrollbars"
+            style="left: 270px;"
+          >
+            <!---->
+             
+            <!---->
+          </div>
+           
+          <div
+            class="grid-view__left"
+            style="width: 270px;"
+          >
+            <div
+              class="grid-view__inner"
+              style="min-width: 270px;"
+            >
+              <div
+                class="grid-view__head"
+              >
+                <div
+                  class="grid-view__column"
+                  style="width: 70px;"
+                >
+                  <!---->
+                </div>
+                 
+                <div
+                  class="grid-view__column"
+                  filters=""
+                  style="width: 200px;"
+                >
+                  <div
+                    class="grid-view__description"
+                  >
+                    <div
+                      class="grid-view__description-icon"
+                    >
+                      <i
+                        class="fas fa-font"
+                      />
+                    </div>
+                     
+                    <div
+                      class="grid-view__description-name"
+                    >
+                      
+      Name
+    
+                    </div>
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <!---->
+                  </div>
+                </div>
+                 
+                <!---->
+              </div>
+               
+              <div
+                class="grid-view__body"
+              >
+                <div
+                  class="grid-view__body-inner"
+                >
+                  <div
+                    class="grid-view__placeholder"
+                    style="height: 33px; width: 270px;"
+                  >
+                    <div
+                      class="grid-view__placeholder-column"
+                      style="left: 199px;"
+                    />
+                  </div>
+                   
+                  <div
+                    class="grid-view__rows"
+                    style="transform: translateY(0px) translateX(0px);"
+                  >
+                    <div
+                      class="grid-view__row"
+                    >
+                      <!---->
+                       
+                      <div
+                        class="grid-view__column"
+                        style="width: 70px;"
+                      >
+                        <div
+                          class="grid-view__row-info"
+                        >
+                          <div
+                            class="grid-view__row-count"
+                            title="1"
+                          >
+                            
+            1
+          
+                          </div>
+                           
+                          <!---->
+                           
+                          <a
+                            class="grid-view__row-more"
+                          >
+                            <i
+                              class="fas fa-expand"
+                            />
+                          </a>
+                           
+                        </div>
+                      </div>
+                       
+                      <div
+                        class="grid-view__column"
+                        style="width: 200px;"
+                      >
+                        <div
+                          class="grid-view__cell"
+                        >
+                          <div
+                            class="grid-field-text"
+                          >
+                            
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                   
+                  <!---->
+                </div>
+              </div>
+               
+              <div
+                class="grid-view__foot"
+              >
+                <div
+                  class="grid-view__foot-info"
+                >
+                  
+        gridView.rowCount - 1
+      
+                </div>
+                 
+                <!---->
+              </div>
+            </div>
+             
+            <div
+              style="display: none;"
+            >
+              <div
+                class="grid-view__field-dragging"
+                style="width: 0px; left: 0px;"
+              />
+               
+              <div
+                class="grid-view__field-target"
+                style="left: 0px;"
+              />
+            </div>
+          </div>
+           
+          <div
+            class="grid-view__divider"
+            style="left: 270px;"
+          />
+           
+          <div
+            class="grid-view__divider-width"
+            style="left: 270px;"
+          />
+           
+          <div
+            class="grid-view__right"
+            style="left: 270px;"
+          >
+            <div
+              class="grid-view__inner"
+              style="min-width: 800px;"
+            >
+              <div
+                class="grid-view__head"
+              >
+                <!---->
+                 
+                <div
+                  class="grid-view__column"
+                  filters=""
+                  style="width: 200px;"
+                >
+                  <div
+                    class="grid-view__description"
+                  >
+                    <div
+                      class="grid-view__description-icon"
+                    >
+                      <i
+                        class="fas fa-font"
+                      />
+                    </div>
+                     
+                    <div
+                      class="grid-view__description-name"
+                    >
+                      
+      Last name
+    
+                    </div>
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <div
+                      class="grid-view__description-width"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="grid-view__column"
+                  filters=""
+                  style="width: 200px;"
+                >
+                  <div
+                    class="grid-view__description"
+                  >
+                    <div
+                      class="grid-view__description-icon"
+                    >
+                      <i
+                        class="fas fa-align-left"
+                      />
+                    </div>
+                     
+                    <div
+                      class="grid-view__description-name"
+                    >
+                      
+      Notes
+    
+                    </div>
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <div
+                      class="grid-view__description-width"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="grid-view__column"
+                  filters=""
+                  style="width: 200px;"
+                >
+                  <div
+                    class="grid-view__description"
+                  >
+                    <div
+                      class="grid-view__description-icon"
+                    >
+                      <i
+                        class="fas fa-check-square"
+                      />
+                    </div>
+                     
+                    <div
+                      class="grid-view__description-name"
+                    >
+                      
+      Active
+    
+                    </div>
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <div
+                      class="grid-view__description-width"
+                    />
+                  </div>
+                </div>
+                 
+                <!---->
+              </div>
+               
+              <div
+                class="grid-view__body"
+              >
+                <div
+                  class="grid-view__body-inner"
+                >
+                  <div
+                    class="grid-view__placeholder"
+                    style="height: 33px; width: 600px;"
+                  >
+                    <div
+                      class="grid-view__placeholder-column"
+                      style="left: 199px;"
+                    />
+                    <div
+                      class="grid-view__placeholder-column"
+                      style="left: 399px;"
+                    />
+                    <div
+                      class="grid-view__placeholder-column"
+                      style="left: 599px;"
+                    />
+                  </div>
+                   
+                  <div
+                    class="grid-view__rows"
+                    style="transform: translateY(0px) translateX(0px);"
+                  >
+                    <div
+                      class="grid-view__row"
+                    >
+                      <!---->
+                       
+                      <div
+                        class="grid-view__column"
+                        style="width: 200px;"
+                      >
+                        <div
+                          class="grid-view__cell"
+                        >
+                          <div
+                            class="grid-field-text"
+                          >
+                            name
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="grid-view__column"
+                        style="width: 200px;"
+                      >
+                        <div
+                          class="grid-view__cell grid-field-long-text__cell"
+                        >
+                          <div
+                            class="grid-field-long-text"
+                          >
+                            last_name
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                   
+                  <!---->
+                </div>
+              </div>
+               
+              <div
+                class="grid-view__foot"
+              >
+                <div
+                  class="grid-view__foot-logo"
+                >
+                  <a
+                    href="https://baserow.io"
+                    target="_blank"
+                    title="Baserow - open source no-code database tool and Airtable alternative"
+                  >
+                    <img
+                      alt="Baserow - open source no-code database tool and Airtable alternative"
+                      height="14"
+                      src="@baserow/modules/core/static/img/logo.svg"
+                    />
+                  </a>
+                </div>
+                 
+                <!---->
+              </div>
+            </div>
+             
+            <div
+              style="display: none;"
+            >
+              <div
+                class="grid-view__field-dragging"
+                style="width: 0px; left: 0px;"
+              />
+               
+              <div
+                class="grid-view__field-target"
+                style="left: 0px;"
+              />
+            </div>
+          </div>
+           
+          <div
+            class="grid-view__row-dragging-container"
+            style="display: none;"
+          >
+            <div
+              class="grid-view__row-dragging"
+              style="width: 870px; top: 0px;"
+            />
+             
+            <div
+              class="grid-view__row-target"
+              style="width: 870px; top: 0px;"
+            />
+          </div>
+           
+           
+        </div>
+         
+        <!---->
+      </div>
+    </div>
+  </div>
+</div>
+`;

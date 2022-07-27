@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import patch, call
 
 import pytest
-from django.db import connection
+from django.db import connection, transaction
 from freezegun import freeze_time
 
 from baserow.contrib.database.table.models import Table
@@ -51,7 +51,8 @@ def test_can_backup_and_restore_baserow_reverting_changes(data_fixture, environ)
         # Add a new row after we took the back-up that we want to reset by restoring.
         model.objects.create(**{"name": "E"})
         # Delete a table to check it is recreated.
-        TrashHandler.permanently_delete(table_to_delete)
+        with transaction.atomic():
+            TrashHandler.permanently_delete(table_to_delete)
 
         assert model.objects.count() == 5
         assert Table.objects.count() == 1

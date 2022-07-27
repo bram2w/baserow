@@ -3,7 +3,6 @@
     :database="database"
     :table="table"
     :fields="fields"
-    :primary="primary"
     :views="views"
     :view="view"
     :table-loading="tableLoading"
@@ -38,7 +37,6 @@ export default {
       database: {},
       table: {},
       fields: [],
-      primary: {},
       views: [],
       view: {},
       tableLoading: true,
@@ -86,13 +84,7 @@ export default {
           fieldsData.forEach((part, index, d) => {
             populateField(fieldsData[index], this.$registry)
           })
-          const primaryIndex = fieldsData.findIndex(
-            (item) => item.primary === true
-          )
-          const primary =
-            primaryIndex !== -1 ? fieldsData.splice(primaryIndex, 1)[0] : null
           this.fields = fieldsData
-          this.primary = primary
 
           // Fetch and prepare the views of the given table.
           const { data: viewsData } = await ViewService(this.$client).fetchAll(
@@ -153,7 +145,6 @@ export default {
             { store: this.$store },
             view,
             this.fields,
-            this.primary,
             'template/'
           )
           this.tableLoading = false

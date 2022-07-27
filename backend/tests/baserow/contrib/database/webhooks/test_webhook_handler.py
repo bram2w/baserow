@@ -23,15 +23,15 @@ def test_find_webhooks_to_call(data_fixture):
         table=table_1, include_all_events=True, active=True
     )
     webhook_2 = data_fixture.create_table_webhook(
-        table=table_1, include_all_events=False, events=["row.created"], active=True
+        table=table_1, include_all_events=False, events=["rows.created"], active=True
     )
     data_fixture.create_table_webhook(
-        table=table_1, include_all_events=False, events=["row.updated"], active=False
+        table=table_1, include_all_events=False, events=["rows.updated"], active=False
     )
     webhook_4 = data_fixture.create_table_webhook(
         table=table_1,
         include_all_events=False,
-        events=["row.updated", "row.deleted"],
+        events=["rows.updated", "rows.deleted"],
         active=True,
     )
     webhook_5 = data_fixture.create_table_webhook(
@@ -42,45 +42,98 @@ def test_find_webhooks_to_call(data_fixture):
     webhook_6 = data_fixture.create_table_webhook(
         table=table_2,
         include_all_events=False,
-        events=["row.updated"],
+        events=["rows.updated"],
         active=True,
     )
 
     handler = WebhookHandler()
 
-    webhooks = handler.find_webhooks_to_call(table_1.id, "row.created")
+    webhooks = handler.find_webhooks_to_call(table_1.id, "rows.created")
     webhook_ids = [webhook.id for webhook in webhooks]
     assert len(webhook_ids) == 2
     assert webhook_1.id in webhook_ids
     assert webhook_2.id in webhook_ids
 
-    webhooks = handler.find_webhooks_to_call(table_1.id, "row.updated")
+    webhooks = handler.find_webhooks_to_call(table_1.id, "rows.updated")
     webhook_ids = [webhook.id for webhook in webhooks]
     assert len(webhook_ids) == 2
     assert webhook_1.id in webhook_ids
     assert webhook_4.id in webhook_ids
 
-    webhooks = handler.find_webhooks_to_call(table_1.id, "row.deleted")
+    webhooks = handler.find_webhooks_to_call(table_1.id, "rows.deleted")
     webhook_ids = [webhook.id for webhook in webhooks]
     assert len(webhook_ids) == 2
     assert webhook_1.id in webhook_ids
     assert webhook_4.id in webhook_ids
 
-    webhooks = handler.find_webhooks_to_call(table_2.id, "row.created")
+    webhooks = handler.find_webhooks_to_call(table_2.id, "rows.created")
     webhook_ids = [webhook.id for webhook in webhooks]
     assert len(webhook_ids) == 1
     assert webhook_5.id in webhook_ids
 
-    webhooks = handler.find_webhooks_to_call(table_2.id, "row.updated")
+    webhooks = handler.find_webhooks_to_call(table_2.id, "rows.updated")
     webhook_ids = [webhook.id for webhook in webhooks]
     assert len(webhook_ids) == 2
     assert webhook_5.id in webhook_ids
     assert webhook_6.id in webhook_ids
 
-    webhooks = handler.find_webhooks_to_call(table_2.id, "row.deleted")
+    webhooks = handler.find_webhooks_to_call(table_2.id, "rows.deleted")
     webhook_ids = [webhook.id for webhook in webhooks]
     assert len(webhook_ids) == 1
     assert webhook_5.id in webhook_ids
+
+
+@pytest.mark.django_db
+def test_find_webhooks_to_call_deprecated_event_types(data_fixture):
+    table_1 = data_fixture.create_database_table()
+    new_webhook_all_events = data_fixture.create_table_webhook(
+        table=table_1, include_all_events=True, active=True
+    )
+    deprecated_webhook = data_fixture.create_table_webhook(
+        table=table_1,
+        include_all_events=False,
+        events=["row.created", "row.updated", "row.deleted"],
+        active=True,
+    )
+    handler = WebhookHandler()
+
+    webhooks = handler.find_webhooks_to_call(table_1.id, "rows.created")
+    webhook_ids = [webhook.id for webhook in webhooks]
+    assert len(webhook_ids) == 1
+    assert new_webhook_all_events.id in webhook_ids
+    assert deprecated_webhook.id not in webhook_ids
+
+    webhooks = handler.find_webhooks_to_call(table_1.id, "rows.updated")
+    webhook_ids = [webhook.id for webhook in webhooks]
+    assert len(webhook_ids) == 1
+    assert new_webhook_all_events.id in webhook_ids
+    assert deprecated_webhook.id not in webhook_ids
+
+    webhooks = handler.find_webhooks_to_call(table_1.id, "rows.deleted")
+    webhook_ids = [webhook.id for webhook in webhooks]
+    assert len(webhook_ids) == 1
+    assert new_webhook_all_events.id in webhook_ids
+    assert deprecated_webhook.id not in webhook_ids
+
+    # deprecated event types
+
+    webhooks = handler.find_webhooks_to_call(table_1.id, "row.created")
+    webhook_ids = [webhook.id for webhook in webhooks]
+    assert len(webhook_ids) == 1
+    assert new_webhook_all_events.id not in webhook_ids
+    assert deprecated_webhook.id in webhook_ids
+
+    webhooks = handler.find_webhooks_to_call(table_1.id, "row.updated")
+    webhook_ids = [webhook.id for webhook in webhooks]
+    assert len(webhook_ids) == 1
+    assert new_webhook_all_events.id not in webhook_ids
+    assert deprecated_webhook.id in webhook_ids
+
+    webhooks = handler.find_webhooks_to_call(table_1.id, "row.deleted")
+    webhook_ids = [webhook.id for webhook in webhooks]
+    assert len(webhook_ids) == 1
+    assert new_webhook_all_events.id not in webhook_ids
+    assert deprecated_webhook.id in webhook_ids
 
 
 @pytest.mark.django_db()
@@ -118,7 +171,7 @@ def test_get_all_table_webhooks(data_fixture, django_assert_num_queries):
 
     webhook_1 = data_fixture.create_table_webhook(
         table=table,
-        events=["row.created", "row.updated"],
+        events=["rows.created", "rows.updated"],
         headers={"Baserow-test-2": "Value 2"},
         include_all_events=False,
     )
@@ -184,7 +237,7 @@ def test_create_webhook(data_fixture):
 
     # if "include_all_events" is True and we pass in events that are not empty
     # the handler will not create the entry in the events table.
-    events = ["row.created"]
+    events = ["rows.created"]
     webhook = webhook_handler.create_table_webhook(
         user=user, table=table, events=events, headers={}, **dict(webhook_data)
     )
@@ -202,7 +255,7 @@ def test_create_webhook(data_fixture):
     assert webhook.include_all_events is False
     webhook_events = webhook.events.all()
     assert len(webhook_events) == 1
-    assert webhook_events[0].event_type == "row.created"
+    assert webhook_events[0].event_type == "rows.created"
     webhook_headers = webhook.headers.all()
     assert len(webhook_headers) == 2
     assert webhook_headers[0].name == "Baserow-test-1"
@@ -232,7 +285,7 @@ def test_update_webhook(data_fixture):
     table = data_fixture.create_database_table(user=user)
     webhook = data_fixture.create_table_webhook(
         table=table,
-        events=["row.created"],
+        events=["rows.created"],
         headers={"Baserow-test-1": "Value 1", "Baserow-test-2": "Value 2"},
     )
 
@@ -262,24 +315,24 @@ def test_update_webhook(data_fixture):
 
     events_before = list(webhook.events.all())
     webhook = handler.update_table_webhook(
-        user=user, webhook=webhook, events=["row.created", "row.updated"]
+        user=user, webhook=webhook, events=["rows.created", "rows.updated"]
     )
     events = webhook.events.all().order_by("id")
     assert len(events) == 2
     assert events[0].id == events_before[0].id
-    assert events[0].event_type == events_before[0].event_type == "row.created"
-    assert events[1].event_type == "row.updated"
+    assert events[0].event_type == events_before[0].event_type == "rows.created"
+    assert events[1].event_type == "rows.updated"
 
     webhook = handler.update_table_webhook(
-        user=user, webhook=webhook, events=["row.updated"]
+        user=user, webhook=webhook, events=["rows.updated"]
     )
     events_2 = webhook.events.all().order_by("id")
     assert len(events_2) == 1
     assert events_2[0].id == events[1].id
-    assert events_2[0].event_type == events[1].event_type == "row.updated"
+    assert events_2[0].event_type == events[1].event_type == "rows.updated"
 
     webhook = handler.update_table_webhook(
-        user=user, webhook=webhook, include_all_events=True, events=["row.created"]
+        user=user, webhook=webhook, include_all_events=True, events=["rows.created"]
     )
     assert webhook.events.all().count() == 0
 
@@ -305,7 +358,7 @@ def test_delete_webhook(data_fixture):
     webhook = data_fixture.create_table_webhook(
         user=user,
         headers={"A": "B"},
-        events=["row.created"],
+        events=["rows.created"],
         include_all_events=False,
     )
     data_fixture.create_table_webhook()
@@ -330,23 +383,24 @@ def test_trigger_test_call(data_fixture):
     handler = WebhookHandler()
 
     with pytest.raises(UserNotInGroup):
-        handler.trigger_test_call(user=user_2, table=table, event_type="row.created")
+        handler.trigger_test_call(user=user_2, table=table, event_type="rows.created")
 
     responses.add(responses.POST, "http://localhost", json={}, status=200)
 
     request, response = handler.trigger_test_call(
         user=user,
         table=table,
-        event_type="row.created",
+        event_type="rows.created",
         headers={"Baserow-add-1": "Value 1"},
         request_method="POST",
         url="http://localhost",
         use_user_field_names=False,
     )
     assert response.ok
-    assert request.headers["Baserow-add-1"] == "Value 1"
-    assert request.headers["Content-type"] == "application/json"
-    assert request.headers["X-Baserow-Event"] == "row.created"
+
+    assert response.request.headers["Baserow-add-1"] == "Value 1"
+    assert response.request.headers["Content-type"] == "application/json"
+    assert response.request.headers["X-Baserow-Event"] == "rows.created"
     assert "X-Baserow-Delivery" in request.headers
 
     assert request.method == "POST"
@@ -354,13 +408,14 @@ def test_trigger_test_call(data_fixture):
 
     request_body = json.loads(request.body)
     assert request_body["table_id"] == table.id
-    assert request_body["event_type"] == "row.created"
-    assert request_body["row_id"] == 0
-    assert request_body["values"] == {
-        "id": 0,
-        f"field_{field.id}": None,
-        "order": "0.00000000000000000000",
-    }
+    assert request_body["event_type"] == "rows.created"
+    assert request_body["items"] == [
+        {
+            "id": 0,
+            f"field_{field.id}": None,
+            "order": "0.00000000000000000000",
+        }
+    ]
 
 
 @pytest.mark.django_db

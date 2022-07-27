@@ -9,7 +9,9 @@
     "sidebarApplication": {
         "renameApplication": "Umbenennen {type}",
         "viewTrash": "Ansicht Papierkorb",
-        "deleteApplication": "Löschen {type}"
+        "deleteApplication": "Löschen {type}",
+        "duplicateApplication": "duplizieren {type}",
+        "snapshots": "Snapshots"
     },
     "sidebar": {
         "createGroup": "Gruppe erstellen",
@@ -146,7 +148,8 @@
         "fromParent": "von {parent}",
         "name": "{user} gelöscht {type} {title} {parent}",
         "restore": "Wiederherstellen",
-        "unnamed": "Unbenannt {type} {id}"
+        "unnamed": "Unbenannt {type} {id}",
+        "andMore": "... und {count} mehr"
     },
     "trashModal": {
         "emptyTitle": "Keine Gruppen gefunden",
@@ -388,5 +391,10 @@
         "stateFailed": "Gescheitert",
         "errorJobAlreadyRunningTitle": "Wird bereits ausgeführt",
         "errorJobAlreadyRunningDescription": "Es läuft bereits ein anderer Importauftrag. Sie müssen warten, bis dieser beendet ist, bevor Sie einen weiteren Auftrag starten."
+    },
+    "datetime": {
+        "daysAgo": "vor 0 Tagen | vor 1 Tag | vor {n} Tagen",
+        "monthsAgo": "vor 0 Monaten | vor 1 Monat | vor {n} Monaten",
+        "yearsAgo": "vor 0 Jahren | vor 1 Jahr | vor {n} Jahren"
     }
 }

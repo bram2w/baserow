@@ -9,6 +9,7 @@ from typing import (
     List,
     Iterable,
     Tuple,
+    Set,
 )
 from zipfile import ZipFile
 
@@ -121,6 +122,12 @@ class ViewType(
     Indicates if the view supports being shared via a public link.
     """
 
+    has_public_info = False
+    """
+    Indicates if the view supports public information being returned by
+    the PublicViewInfoView.
+    """
+
     field_options_model_class = None
     """
     The model class of the through table that contains the field options. The model
@@ -148,6 +155,12 @@ class ViewType(
     and view events will be available to subscribe to and sent to said subscribers.
     """
 
+    field_options_allowed_fields = []
+    """
+    The field names that are allowed to set when creating and updating the field
+    options
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.can_share:
@@ -166,7 +179,10 @@ class ViewType(
             }
 
     def export_serialized(
-        self, view: "View", files_zip: ZipFile, storage: Optional[Storage] = None
+        self,
+        view: "View",
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
     ) -> Dict[str, Any]:
         """
         Exports the view to a serialized dict that can be imported by the
@@ -229,7 +245,7 @@ class ViewType(
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
-        files_zip: ZipFile,
+        files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ) -> "View":
         """
@@ -400,22 +416,41 @@ class ViewType(
             attrs,
         )
 
-    def before_field_options_update(self, view, field_options, fields):
+    def before_field_options_update(
+        self, view: "View", field_options: Dict[str, Any], fields: List["Field"]
+    ) -> Dict[str, Any]:
         """
         Called before the field options are updated related to the provided view.
 
         :param view: The view for which the field options need to be updated.
-        :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
-        :type field_options: dict
         :param fields: Optionally a list of fields can be provided so that they don't
             have to be fetched again.
         :return: The updated field options.
-        :rtype: dict
         """
 
         return field_options
+
+    def after_field_options_update(
+        self,
+        view: "View",
+        field_options: Dict[str, Any],
+        fields: List["Field"],
+        update_field_option_instances: List[Any],
+    ):
+        """
+        Called after the field options have been updated. This hook can be used to
+        update values that haven't been updated.
+
+        :param view: The view for which the field options need to be updated.
+        :param field_options: A dict with the field ids as the key and a dict
+            containing the values that need to be updated as value.
+        :param fields: Optionally a list of fields can be provided so that they don't
+            have to be fetched again.
+        :param update_field_option_instances: The instances of the field options that
+            have been updated.
+        """
 
     def after_field_type_change(self, field: "Field") -> None:
         """
@@ -465,21 +500,6 @@ class ViewType(
         raise NotImplementedError(
             "An exportable or publicly sharable view must implement "
             "`get_visible_field_options_in_order`"
-        )
-
-    def get_hidden_field_options(self, view: "View") -> django_models.QuerySet:
-        """
-        Should return a queryset of all field options which are hidden in the
-        provided view.
-
-        :param view: The view to query.
-        :type view: View
-        :return: A queryset of the views specific view options which are 'hidden'.
-        """
-
-        raise NotImplementedError(
-            "An exportable or publicly sharable view must implement "
-            "`get_hidden_field_options`"
         )
 
     def get_aggregations(
@@ -548,6 +568,41 @@ class ViewType(
         values.update({key: getattr(view, key) for key in self.allowed_fields})
 
         return values
+
+    def enhance_field_options_queryset(
+        self, queryset: django_models.QuerySet
+    ) -> django_models.QuerySet:
+        """
+        This hook can be used to enhance the fetch field options queryset. If the
+        field options have a relationship, `select_related` or `prefetch_related` can
+        be applied here to improve performance.
+
+        :param queryset: The queryset that must be enhanced.
+        :return: The enhanced queryset.
+        """
+
+        return queryset
+
+    def get_hidden_fields(
+        self,
+        view: "View",
+        field_ids_to_check: Optional[List[int]] = None,
+    ) -> Set[int]:
+        """
+        Should be implemented to return the set of fields ids which hidden in the
+        provided view of this type. A hidden field as defined by this function will be
+        completely excluded from any publicly shared version of this view.
+
+        :param view: The view to find hidden field ids for.
+        :param field_ids_to_check: An optional list of field ids to restrict the check
+            down to.
+        :return: A set of field ids which are hidden in this view.
+        """
+
+        raise NotImplementedError(
+            "An exportable or publicly sharable view must implement "
+            "`get_hidden_fields`"
+        )
 
 
 class ViewTypeRegistry(

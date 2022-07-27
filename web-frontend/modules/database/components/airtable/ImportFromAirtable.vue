@@ -104,7 +104,6 @@ export default {
             this.$t('importFromAirtable.errorJobAlreadyRunningDescription')
           ),
         })
-        this.loading = false
       }
     },
     stopPollAndHandleError(error, specificErrorMap = null) {
@@ -140,14 +139,14 @@ export default {
         this.$emit('hidden')
       }
     },
-    onJobFailure() {
+    onJobFailed() {
       const error = new ResponseErrorMessage(
         this.$t('importFromAirtable.importError'),
         this.job.human_readable_error
       )
       this.stopPollAndHandleError(error)
     },
-    onJobError(error) {
+    onJobPollingError(error) {
       this.stopPollAndHandleError(error)
     },
   },

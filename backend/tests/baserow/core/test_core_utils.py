@@ -20,6 +20,7 @@ from baserow.core.utils import (
     grouper,
     Progress,
     ChildProgressBuilder,
+    MirrorDict,
 )
 
 
@@ -345,3 +346,12 @@ def test_progress_higher_total_than_parent():
     args = mock_event.call_args
     assert args[0][0] == 2
     assert args[0][1] is None
+
+
+def test_mirror_dict():
+    mirror_dict = MirrorDict()
+    assert mirror_dict["test"] == "test"
+    assert mirror_dict[1] == 1
+    assert mirror_dict.get("test") == "test"
+    assert mirror_dict.get(1) == 1
+    assert mirror_dict.get("test", default="abc") == "test"

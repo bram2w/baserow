@@ -13,7 +13,7 @@ from .templates import urls as templates_urls
 from .applications import urls as application_urls
 from .trash import urls as trash_urls
 from .jobs import urls as jobs_urls
-
+from .snapshots import urls as snapshots_urls
 
 app_name = "baserow.api"
 
@@ -38,6 +38,7 @@ urlpatterns = (
         path("applications/", include(application_urls, namespace="applications")),
         path("trash/", include(trash_urls, namespace="trash")),
         path("jobs/", include(jobs_urls, namespace="jobs")),
+        path("snapshots/", include(snapshots_urls, namespace="snapshots")),
         path("_health/", public_health_check, name="public_health_check"),
     ]
     + application_type_registry.api_urls

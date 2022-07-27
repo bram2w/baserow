@@ -1,3 +1,4 @@
+from typing import Any
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -58,7 +59,7 @@ class Job(CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin, models.Model):
 
     objects = JobQuerySet.as_manager()
 
-    def get_from_cached_value_or_from_self(self, name: str) -> any:
+    def get_from_cached_value_or_from_self(self, name: str) -> Any:
         """
         Because the `progress_percentage` and `state` are updated via a transaction,
         we also temporarily store the progress in the Redis cache. This is needed

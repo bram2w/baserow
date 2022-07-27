@@ -1,10 +1,12 @@
+import contextlib
 from collections import defaultdict
-from typing import Iterable
+from typing import Iterable, Optional, Tuple, List, Any
 
-from django.db import DEFAULT_DB_ALIAS
+from django.contrib.contenttypes.models import ContentType
+from django.db import DEFAULT_DB_ALIAS, transaction
 from django.db.models import QuerySet, Model
 from django.db.transaction import Atomic, get_connection
-from django.contrib.contenttypes.models import ContentType
+from psycopg2 import sql
 
 
 class LockedAtomicTransaction(Atomic):
@@ -131,3 +133,32 @@ def specific_iterator(queryset: QuerySet) -> Iterable[Model]:
         ordered_specific_objects.append(specific_object)
 
     return ordered_specific_objects
+
+
+class IsolationLevel:
+    READ_COMMITTED = "READ COMMITTED"
+    REPEATABLE_READ = "REPEATABLE READ"
+    SERIALIZABLE = "SERIALIZABLE"
+
+
+@contextlib.contextmanager
+def transaction_atomic(
+    using=None,
+    savepoint=True,
+    durable=False,
+    isolation_level: Optional[str] = None,
+    first_sql_to_run_in_transaction_with_args: Optional[
+        Tuple[sql.SQL, List[Any]]
+    ] = None,
+):
+    with transaction.atomic(using, savepoint, durable) as a:
+        if isolation_level or first_sql_to_run_in_transaction_with_args:
+            cursor = get_connection(using).cursor()
+
+            if isolation_level:
+                cursor.execute("SET TRANSACTION ISOLATION LEVEL %s" % isolation_level)
+
+            if first_sql_to_run_in_transaction_with_args:
+                first_sql, first_args = first_sql_to_run_in_transaction_with_args
+                cursor.execute(first_sql, first_args)
+        yield a

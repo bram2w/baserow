@@ -457,6 +457,16 @@
   }
 }
 
+.form-view__conditions {
+  margin-top: 6px;
+}
+
+.form-view__add-condition {
+  display: inline-block;
+  margin-top: 6px;
+  color: $color-neutral-700;
+}
+
 .form-view__actions {
   display: flex;
   align-items: center;
@@ -499,6 +509,10 @@
 
 .form-view__meta-controls {
   padding: 20px;
+}
+
+.form-view__meta-controls-help {
+  margin-top: 20px;
 }
 
 .form-view__submitted {

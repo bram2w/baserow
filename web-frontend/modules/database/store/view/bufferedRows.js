@@ -6,6 +6,8 @@ import {
   getRowSortFunction,
   matchSearchFilters,
   calculateSingleRowSearchMatches,
+  getFilters,
+  getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 
@@ -254,9 +256,9 @@ export default ({ service, customPopulateRow }) => {
      */
     async fetchInitialRows(
       context,
-      { viewId, fields, primary, initialRowArguments = {} }
+      { viewId, fields, initialRowArguments = {} }
     ) {
-      const { commit, getters } = context
+      const { commit, getters, rootGetters } = context
       commit('SET_VIEW_ID', viewId)
       commit('SET_SEARCH', {
         activeSearchTerm: '',
@@ -266,6 +268,10 @@ export default ({ service, customPopulateRow }) => {
         offset: 0,
         limit: getters.getRequestSize,
         search: getters.getServerSearchTerm,
+        publicUrl: rootGetters['page/view/public/getIsPublic'],
+        publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+        orderBy: getOrderBy(rootGetters, getters.getViewId),
+        filters: getFilters(rootGetters, getters.getViewId),
         ...initialRowArguments,
       })
       const rows = Array(data.count).fill(null)
@@ -282,7 +288,7 @@ export default ({ service, customPopulateRow }) => {
      * missing ones if needed.
      */
     async fetchMissingRowsInNewRange(
-      { dispatch, getters, commit },
+      { dispatch, getters, commit, rootGetters },
       parameters
     ) {
       const { startIndex, endIndex } = parameters
@@ -335,6 +341,10 @@ export default ({ service, customPopulateRow }) => {
           limit: rangeToFetch.limit,
           signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
+          publicUrl: rootGetters['page/view/public/getIsPublic'],
+          publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          orderBy: getOrderBy(rootGetters, getters.getViewId),
+          filters: getFilters(rootGetters, getters.getViewId),
         })
         commit('UPDATE_ROWS', {
           offset: rangeToFetch.offset,
@@ -365,8 +375,8 @@ export default ({ service, customPopulateRow }) => {
      * changed and we can't trust what's in the store anymore.
      */
     async refresh(
-      { dispatch, commit, getters },
-      { fields, primary, includeFieldOptions = false }
+      { dispatch, commit, getters, rootGetters },
+      { fields, includeFieldOptions = false }
     ) {
       // If another refresh or fetch request is currently running, we need to cancel
       // it because the response is most likely going to be outdated and we don't
@@ -388,6 +398,9 @@ export default ({ service, customPopulateRow }) => {
           viewId: getters.getViewId,
           signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
+          publicUrl: rootGetters['page/view/public/getIsPublic'],
+          publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          filters: getFilters(rootGetters, getters.getViewId),
         })
 
         // Create a new empty array containing un-fetched rows.
@@ -428,6 +441,10 @@ export default ({ service, customPopulateRow }) => {
             includeFieldOptions,
             signal: lastRequestController.signal,
             search: getters.getServerSearchTerm,
+            publicUrl: rootGetters['page/view/public/getIsPublic'],
+            publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+            orderBy: getOrderBy(rootGetters, getters.getViewId),
+            filters: getFilters(rootGetters, getters.getViewId),
           })
 
           results.forEach((row, index) => {
@@ -458,7 +475,7 @@ export default ({ service, customPopulateRow }) => {
     /**
      * Check if the provided row matches the provided view filters.
      */
-    rowMatchesFilters(context, { view, fields, primary, row, overrides = {} }) {
+    rowMatchesFilters(context, { view, fields, row, overrides = {} }) {
       const values = JSON.parse(JSON.stringify(row))
       Object.assign(values, overrides)
 
@@ -469,7 +486,7 @@ export default ({ service, customPopulateRow }) => {
             this.$registry,
             view.filter_type,
             view.filters,
-            primary === null ? fields : [primary, ...fields],
+            fields,
             values
           )
     },
@@ -478,12 +495,11 @@ export default ({ service, customPopulateRow }) => {
      * store. Because some rows haven't been fetched from the backend, we need to
      * figure out which `null` object could have been the row in the store.
      */
-    findIndexOfNotExistingRow({ getters }, { view, fields, primary, row }) {
+    findIndexOfNotExistingRow({ getters }, { view, fields, row }) {
       const sortFunction = getRowSortFunction(
         this.$registry,
         view.sortings,
-        fields,
-        primary
+        fields
       )
       const allRows = getters.getRows
       let index = allRows.findIndex((existingRow) => {
@@ -516,15 +532,11 @@ export default ({ service, customPopulateRow }) => {
      * hasn't been fetched yet, it will then point to the `null` object representing
      * the row.
      */
-    findIndexOfExistingRow(
-      { dispatch, getters },
-      { view, fields, primary, row }
-    ) {
+    findIndexOfExistingRow({ dispatch, getters }, { view, fields, row }) {
       const sortFunction = getRowSortFunction(
         this.$registry,
         view.sortings,
-        fields,
-        primary
+        fields
       )
       const allRows = getters.getRows
       let index = allRows.findIndex((existingRow) => {
@@ -559,12 +571,11 @@ export default ({ service, customPopulateRow }) => {
      */
     async createNewRow(
       { dispatch, commit, getters },
-      { view, table, fields, primary, values }
+      { view, table, fields, values }
     ) {
       // First prepare an object that we can send to the backend.
-      const allFields = [primary].concat(fields)
       const preparedValues = {}
-      allFields.forEach((field) => {
+      fields.forEach((field) => {
         const name = `field_${field.id}`
         const fieldType = this.$registry.get('field', field._.type.type)
 
@@ -590,7 +601,6 @@ export default ({ service, customPopulateRow }) => {
       return await dispatch('afterNewRowCreated', {
         view,
         fields,
-        primary,
         values: data,
       })
     },
@@ -609,7 +619,7 @@ export default ({ service, customPopulateRow }) => {
      */
     async afterNewRowCreated(
       { dispatch, getters, commit },
-      { view, fields, primary, values }
+      { view, fields, values }
     ) {
       let row = clone(values)
       populateRow(row)
@@ -617,13 +627,11 @@ export default ({ service, customPopulateRow }) => {
       const rowMatchesFilters = await dispatch('rowMatchesFilters', {
         view,
         fields,
-        primary,
         row,
       })
       await dispatch('updateSearchMatchesForRow', {
         view,
         fields,
-        primary,
         row,
       })
       if (!rowMatchesFilters || !row._.matchSearch) {
@@ -633,7 +641,6 @@ export default ({ service, customPopulateRow }) => {
       const { index, isCertain } = await dispatch('findIndexOfNotExistingRow', {
         view,
         fields,
-        primary,
         row,
       })
 
@@ -651,10 +658,9 @@ export default ({ service, customPopulateRow }) => {
      */
     async updateRowValue(
       { commit, dispatch },
-      { table, view, row, field, fields, primary, value, oldValue }
+      { table, view, row, field, fields, value, oldValue }
     ) {
       const fieldType = this.$registry.get('field', field._.type.type)
-      const allFields = [primary].concat(fields)
       const newValues = {}
       const newValuesForUpdate = {}
       const oldValues = {}
@@ -666,7 +672,7 @@ export default ({ service, customPopulateRow }) => {
       )
       oldValues[fieldName] = oldValue
 
-      allFields.forEach((fieldToCall) => {
+      fields.forEach((fieldToCall) => {
         const fieldType = this.$registry.get('field', fieldToCall._.type.type)
         const fieldToCallName = `field_${fieldToCall.id}`
         const currentFieldValue = row[fieldToCallName]
@@ -685,7 +691,6 @@ export default ({ service, customPopulateRow }) => {
       await dispatch('afterExistingRowUpdated', {
         view,
         fields,
-        primary,
         row,
         values: newValues,
       })
@@ -698,10 +703,9 @@ export default ({ service, customPopulateRow }) => {
         )
         commit('UPDATE_ROW', { row, values: data })
       } catch (error) {
-        dispatch('updatedExistingRow', {
+        dispatch('afterExistingRowUpdated', {
           view,
           fields,
-          primary,
           row,
           values: oldValues,
         })
@@ -722,7 +726,7 @@ export default ({ service, customPopulateRow }) => {
      */
     async afterExistingRowUpdated(
       { dispatch, commit },
-      { view, fields, primary, row, values }
+      { view, fields, row, values }
     ) {
       const oldRow = clone(row)
       let newRow = Object.assign(clone(row), values)
@@ -732,25 +736,21 @@ export default ({ service, customPopulateRow }) => {
       const oldMatchesFilters = await dispatch('rowMatchesFilters', {
         view,
         fields,
-        primary,
         row: oldRow,
       })
       const newMatchesFilters = await dispatch('rowMatchesFilters', {
         view,
         fields,
-        primary,
         row: newRow,
       })
       await dispatch('updateSearchMatchesForRow', {
         view,
         fields,
-        primary,
         row: oldRow,
       })
       await dispatch('updateSearchMatchesForRow', {
         view,
         fields,
-        primary,
         row: newRow,
       })
 
@@ -763,7 +763,6 @@ export default ({ service, customPopulateRow }) => {
         await dispatch('afterExistingRowDeleted', {
           view,
           fields,
-          primary,
           row,
         })
       } else if (!oldRowMatches && newRowMatches) {
@@ -772,7 +771,6 @@ export default ({ service, customPopulateRow }) => {
         await dispatch('afterNewRowCreated', {
           view,
           fields,
-          primary,
           values: newRow,
         })
       } else if (oldRowMatches && newRowMatches) {
@@ -782,14 +780,12 @@ export default ({ service, customPopulateRow }) => {
           {
             view,
             fields,
-            primary,
             row: oldRow,
           }
         )
         const findNewRow = await dispatch('findIndexOfNotExistingRow', {
           view,
           fields,
-          primary,
           row: newRow,
         })
         let { index: newIndex } = findNewRow
@@ -831,23 +827,18 @@ export default ({ service, customPopulateRow }) => {
      * removed from is. Based on the provided values of the row we can figure out if
      * it was in the store and we can figure out what index it has.
      */
-    async afterExistingRowDeleted(
-      { dispatch, commit },
-      { view, fields, primary, row }
-    ) {
+    async afterExistingRowDeleted({ dispatch, commit }, { view, fields, row }) {
       row = clone(row)
       populateRow(row)
 
       const rowMatchesFilters = await dispatch('rowMatchesFilters', {
         view,
         fields,
-        primary,
         row,
       })
       await dispatch('updateSearchMatchesForRow', {
         view,
         fields,
-        primary,
         row,
       })
       if (!rowMatchesFilters || !row._.matchSearch) {
@@ -857,7 +848,6 @@ export default ({ service, customPopulateRow }) => {
       const { index } = await dispatch('findIndexOfExistingRow', {
         view,
         fields,
-        primary,
         row,
       })
       commit('DELETE_ROW_AT_INDEX', { index })
@@ -876,10 +866,7 @@ export default ({ service, customPopulateRow }) => {
      * need to updated and will make a call to the backend. If something goes wrong,
      * the row is moved back to the position.
      */
-    async stopRowDrag(
-      { dispatch, commit, getters },
-      { table, view, fields, primary }
-    ) {
+    async stopRowDrag({ dispatch, commit, getters }, { table, view, fields }) {
       const row = getters.getDraggingRow
 
       if (row === null) {
@@ -902,7 +889,7 @@ export default ({ service, customPopulateRow }) => {
           )
           commit('UPDATE_ROW', { row, values: data })
         } catch (error) {
-          dispatch('cancelRowDrag', { view, fields, primary, row, stop: false })
+          dispatch('cancelRowDrag', { view, fields, row, stop: false })
           throw error
         }
       }
@@ -913,7 +900,7 @@ export default ({ service, customPopulateRow }) => {
      */
     cancelRowDrag(
       { dispatch, getters, commit },
-      { view, fields, primary, row, stop = true }
+      { view, fields, row, stop = true }
     ) {
       if (stop) {
         const rows = getters.getRows
@@ -924,7 +911,6 @@ export default ({ service, customPopulateRow }) => {
       dispatch('afterExistingRowUpdated', {
         view,
         fields,
-        primary,
         row,
         values: row,
       })
@@ -958,7 +944,6 @@ export default ({ service, customPopulateRow }) => {
       { commit, dispatch, getters, state },
       {
         fields,
-        primary = null,
         activeSearchTerm = state.activeSearchTerm,
         refreshMatchesOnClient = true,
       }
@@ -969,7 +954,6 @@ export default ({ service, customPopulateRow }) => {
           dispatch('updateSearchMatchesForRow', {
             row,
             fields,
-            primary,
             forced: true,
           })
         )
@@ -982,7 +966,7 @@ export default ({ service, customPopulateRow }) => {
      */
     updateSearchMatchesForRow(
       { commit, getters, rootGetters },
-      { row, fields, primary = null, overrides, forced = false }
+      { row, fields, overrides, forced = false }
     ) {
       // Avoid computing search on table loading
       if (getters.getActiveSearchTerm || forced) {
@@ -990,7 +974,7 @@ export default ({ service, customPopulateRow }) => {
           row,
           getters.getActiveSearchTerm,
           getters.isHidingRowsNotMatchingSearch,
-          [primary, ...fields],
+          fields,
           this.$registry,
           overrides
         )

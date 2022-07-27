@@ -95,6 +95,7 @@
             :view="view"
             :field="field"
             :field-options="fieldOptions[field.id]"
+            :fields="fields"
             :read-only="readOnly"
             @hide="updateFieldOptionsOfField(view, field, { enabled: false })"
             @updated-field-options="

@@ -32,8 +32,15 @@ class WebhookHandler:
         that must be triggered on a specific event.
         """
 
+        q = Q()
+        q.add(Q(events__event_type__in=[event_type]), Q.OR)
+
+        event_type_object = webhook_event_type_registry.get(event_type)
+        if event_type_object.should_trigger_when_all_event_types_selected:
+            q.add(Q(include_all_events=True), Q.OR)
+
         return TableWebhook.objects.filter(
-            Q(events__event_type__in=[event_type]) | Q(include_all_events=True),
+            q,
             table_id=table_id,
             active=True,
         ).prefetch_related("headers")
@@ -365,19 +372,10 @@ class WebhookHandler:
 
         event_id = str(uuid.uuid4())
         model = table.get_model()
-        row = model(id=0, order=0)
+
         event = webhook_event_type_registry.get(event_type)
-        before_return = event.get_test_call_before_return(
-            table=table, row=row, model=model
-        )
-        payload = event.get_payload(
-            event_id=event_id,
-            webhook=webhook,
-            model=model,
-            table=table,
-            row=row,
-            before_return=before_return,
-        )
+
+        payload = event.get_test_call_payload(table, model, event_id, webhook)
         headers.update(self.get_headers(event_type, event_id))
 
         return self.make_request(webhook.request_method, webhook.url, headers, payload)

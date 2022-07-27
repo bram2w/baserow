@@ -26,7 +26,8 @@
         "copy": "Kopiëren",
         "activate": "Activeren",
         "deactivate": "Deactiveren",
-        "paste": "Plakken"
+        "paste": "Plakken",
+        "duplicate": "Dupliceer"
     },
     "adminType": {
         "settings": "Instellingen"
@@ -138,7 +139,10 @@
         "lowerThan": "lager dan",
         "lengthIsLowerThan": "lengte is minder dan",
         "hasFileType": "heeft bestandstype",
-        "isDaysAgo": "is dagen geleden"
+        "isDaysAgo": "is dagen geleden",
+        "inThisWeek": "in deze week",
+        "isMonthsAgo": "is maanden geleden",
+        "isYearsAgo": "is jaren geleden"
     },
     "viewType": {
         "grid": "Raster",
@@ -173,7 +177,10 @@
         "eventType": {
             "rowCreated": "Wanneer een rij is aangemaakt",
             "rowUpdated": "Wanneer een rij is bijgewerkt",
-            "rowDeleted": "Wanneer een rij is verwijderd"
+            "rowDeleted": "Wanneer een rij is verwijderd",
+            "rowsCreated": "Rijen zijn gemaakt",
+            "rowsDeleted": "Rijen zijn verwijderd",
+            "rowsUpdated": "Rijen zijn bijgewerkt"
         }
     },
     "clientHandler": {
@@ -212,7 +219,27 @@
         "groupUserIsLastAdminTitle": "Kan de groep niet verlaten",
         "groupUserIsLastAdminDescription": "Het is niet mogelijk om de groep te verlaten omdat je de laatste beheerder bent. Verwijder de groep, of geef een andere gebruiker beheerdersrechten.",
         "cannotRestoreAsRelatedTableTrashedTitle": "Herstel eerst de gerelateerde tabellen.",
-        "cannotRestoreAsRelatedTableTrashedDescription": "Je kunt dit veld niet herstellen omdat het afhankelijk is van andere tabellen die nog in de Prullenbak zitten. Herstel eerst de andere gerelateerde tabellen."
+        "cannotRestoreAsRelatedTableTrashedDescription": "Je kunt dit veld niet herstellen omdat het afhankelijk is van andere tabellen die nog in de Prullenbak zitten. Herstel eerst de andere gerelateerde tabellen.",
+        "errorMaxJobCountExceededTitle": "Kon de actie niet starten.",
+        "errorMaxJobCountExceededDescription": "U kunt geen van deze acties meer starten omdat er nog andere op de achtergrond lopen. Probeer het opnieuw zodra de vorige acties zijn voltooid.",
+        "failedToLockFieldDueToConflictTitle": "Kan veld niet wijzigen",
+        "failedToLockTableDueToConflictTitle": "Kan veld niet maken",
+        "failedToLockTableDueToConflictDescription": "Deze tabel wordt momenteel bijgewerkt of gebruikt voor een andere bewerking. Wacht tot deze bewerking is voltooid voordat u het opnieuw probeert.",
+        "failedToUndoRedoDueToConflictTitle": "Kan niet ongedaan/gedaan maken",
+        "failedToUndoRedoDueToConflictDescription": "Er is een andere bewerking bezig die je ongedaan of gedaan blokkeert, wacht a.u.b. tot deze klaar is voordat je het opnieuw probeert.",
+        "failedToLockFieldDueToConflictDescription": "Dit veld wordt momenteel bijgewerkt of gebruikt in een andere bewerking. Wacht tot deze bewerking is voltooid voordat u het opnieuw probeert.",
+        "snapshotOperationLimitExceededTitle": "Limiet bereikt",
+        "snapshotOperationLimitExceededDescription": "U hebt een limiet bereikt voor het aantal lopende snapshotoperaties. Wacht alstublieft tot de vorige operatie voltooid is.",
+        "maximumSnapshotsReachedDescription": "Het maximum aantal snapshots in een groep is bereikt.",
+        "snapshotBeingRestoredDescription": "Het is niet mogelijk om snapshots te gebruiken die op dat moment worden hersteld.",
+        "snapshotBeingDeletedTitle": "De snapshot wordt verwijderd",
+        "maximumSnapshotsReachedTitle": "Limiet snapshots bereikt",
+        "snapshotBeingCreatedDescription": "Het is niet mogelijk om meerdere snapshots tegelijk te maken.",
+        "snapshotBeingRestoredTitle": "De snapshot wordt hersteld",
+        "snapshotBeingDeletedDescription": "Het is niet mogelijk om snapshots te gebruiken die op dat moment worden verwijderd.",
+        "snapshotBeingCreatedTitle": "Er wordt al een snapshot gemaakt",
+        "snapshotNameNotUniqueTitle": "De naam van de snapshot moet uniek zijn.",
+        "snapshotNameNotUniqueDescription": "Alle snapshotnamen moeten uniek zijn per toepassing."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",

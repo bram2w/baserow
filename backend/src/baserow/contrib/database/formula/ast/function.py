@@ -28,8 +28,10 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
     BaserowFormulaValidType,
     UnTyped,
-    BaserowSingleArgumentTypeChecker,
+)
+from baserow.contrib.database.formula.types.type_checker import (
     BaserowArgumentTypeChecker,
+    BaserowSingleArgumentTypeChecker,
 )
 
 
@@ -211,11 +213,6 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
         func_call: BaserowFunctionCall[UnTyped],
     ) -> BaserowExpression[BaserowFormulaType]:
         arg = args[0]
-        if self.aggregate:
-            if not arg.many:
-                func_call.with_invalid_type(
-                    "first argument must be an aggregate formula"
-                )
 
         expr = self.type_function(func_call, arg)
         if self.aggregate:
@@ -373,12 +370,6 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
         args: List[BaserowExpression[BaserowFormulaValidType]],
         func_call: BaserowFunctionCall[UnTyped],
     ) -> BaserowExpression[BaserowFormulaType]:
-        if self.aggregate:
-            if not args[0].many and not args[1].many:
-                func_call.with_invalid_type(
-                    "one of the two arguments must be an aggregate formula"
-                )
-
         expr = self.type_function(func_call, args[0], args[1])
         if self.aggregate:
             expr.many = False

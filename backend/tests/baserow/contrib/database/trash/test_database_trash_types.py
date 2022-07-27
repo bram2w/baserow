@@ -475,16 +475,18 @@ def test_trash_and_restore_rows_in_batch(send_mock, data_fixture):
     customers_primary_field = field_handler.create_field(
         user=user, table=customers_table, type_name="text", name="Name", primary=True
     )
-    row1 = row_handler.create_row(
-        user=user,
-        table=customers_table,
-        values={f"field_{customers_primary_field.id}": "Row A"},
-    )
-    row2 = row_handler.create_row(
-        user=user,
-        table=customers_table,
-        values={f"field_{customers_primary_field.id}": ""},
-    )
+
+    with patch("baserow.contrib.database.rows.signals.rows_created.send"):
+        row1 = row_handler.create_row(
+            user=user,
+            table=customers_table,
+            values={f"field_{customers_primary_field.id}": "Row A"},
+        )
+        row2 = row_handler.create_row(
+            user=user,
+            table=customers_table,
+            values={f"field_{customers_primary_field.id}": ""},
+        )
 
     trashed_rows = TrashedRows.objects.create(
         table=customers_table, row_ids=[row1.id, row2.id]
@@ -1559,3 +1561,61 @@ def test_trash_restore_view(data_fixture):
     view.refresh_from_db()
 
     assert view.trashed is False
+
+
+@pytest.mark.django_db
+def test_can_perm_delete_application_with_linked_tables(data_fixture):
+    def test(table_1_order, table_2_order):
+        user = data_fixture.create_user()
+        database = data_fixture.create_database_application(user=user)
+        table_a = data_fixture.create_database_table(
+            user=user, database=database, order=table_1_order
+        )
+        table_b = data_fixture.create_database_table(
+            user=user, database=database, order=table_2_order
+        )
+
+        FieldHandler().create_field(
+            user, table_a, "link_row", link_row_table=table_b, name="link_row"
+        )
+
+        TrashHandler.trash(user, database.group, database, database)
+
+        TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+        TrashHandler.permanently_delete_marked_trash()
+
+        assert (
+            table_a.get_database_table_name()
+            not in connection.introspection.table_names()
+        )
+        assert (
+            table_b.get_database_table_name()
+            not in connection.introspection.table_names()
+        )
+        assert TrashEntry.objects.count() == 0
+
+    test(table_1_order=0, table_2_order=1)
+    test(table_1_order=1, table_2_order=0)
+
+
+@pytest.mark.django_db
+def test_can_perm_delete_application_which_links_to_self(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table_a = data_fixture.create_database_table(user=user, database=database)
+
+    FieldHandler().create_field(
+        user, table_a, "link_row", link_row_table=table_a, name="link_row"
+    )
+
+    TrashHandler.trash(user, database.group, database, database)
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert (
+        table_a.get_database_table_name() not in connection.introspection.table_names()
+    )
+    assert TrashEntry.objects.count() == 0

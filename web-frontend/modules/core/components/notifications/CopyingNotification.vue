@@ -1,11 +1,7 @@
 <template>
-  <div class="alert alert--simple alert--with-shadow alert--has-icon">
-    <div class="alert__icon">
-      <div class="loading alert__icon-loading"></div>
-    </div>
-    <div class="alert__title">{{ $t('copyingNotification.title') }}</div>
-    <p class="alert__content">{{ $t('copyingNotification.content') }}</p>
-  </div>
+  <Alert loading simple shadow :title="$t('copyingNotification.title')">
+    {{ $t('copyingNotification.content') }}
+  </Alert>
 </template>
 
 <script>

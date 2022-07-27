@@ -1,5 +1,5 @@
-from django.db import transaction
 from django.conf import settings
+from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import permission_classes as method_permission_classes
@@ -13,11 +13,14 @@ from baserow.api.decorators import (
     validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
+from baserow.api.schemas import (
+    get_error_schema,
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+)
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
-from baserow.core.db import specific_iterator
 from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_DELETE_PRIMARY_FIELD,
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
@@ -29,10 +32,23 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_SELF_REFERENCE,
     ERROR_FIELD_CIRCULAR_REFERENCE,
     ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
+    ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
 )
-from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
+from baserow.contrib.database.api.tables.errors import (
+    ERROR_TABLE_DOES_NOT_EXIST,
+    ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
+)
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
+from baserow.contrib.database.fields.actions import (
+    UpdateFieldActionType,
+    CreateFieldActionType,
+    DeleteFieldActionType,
+)
+from baserow.contrib.database.fields.dependencies.exceptions import (
+    SelfReferenceFieldDependencyError,
+    CircularFieldDependencyError,
+)
 from baserow.contrib.database.fields.exceptions import (
     CannotDeletePrimaryField,
     CannotChangeFieldType,
@@ -42,15 +58,20 @@ from baserow.contrib.database.fields.exceptions import (
     FieldWithSameNameAlreadyExists,
     InvalidBaserowFieldName,
     IncompatibleFieldTypeForUniqueValues,
+    FailedToLockFieldDueToConflict,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.exceptions import (
+    TableDoesNotExist,
+    FailedToLockTableDueToConflict,
+)
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
+from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .serializers import (
@@ -61,15 +82,6 @@ from .serializers import (
     RelatedFieldsSerializer,
     UniqueRowValueParamsSerializer,
     UniqueRowValuesSerializer,
-)
-from baserow.contrib.database.fields.dependencies.exceptions import (
-    SelfReferenceFieldDependencyError,
-    CircularFieldDependencyError,
-)
-from baserow.contrib.database.fields.actions import (
-    UpdateFieldActionType,
-    CreateFieldTypeAction,
-    DeleteFieldTypeAction,
 )
 
 
@@ -157,6 +169,7 @@ class FieldsView(APIView):
                 "value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="create_database_table_field",
@@ -208,6 +221,7 @@ class FieldsView(APIView):
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
             CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
+            FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
         }
     )
     def post(self, request, data, table_id):
@@ -215,7 +229,9 @@ class FieldsView(APIView):
 
         type_name = data.pop("type")
         field_type = field_type_registry.get(type_name)
-        table = TableHandler().get_table(table_id)
+        table = TableHandler().get_table_for_update(
+            table_id, nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
+        )
         table.database.group.has_user(request.user, raise_error=True)
 
         # field_create permission doesn't exists, so any call of this endpoint with a
@@ -227,7 +243,7 @@ class FieldsView(APIView):
         # defined in the type.
         with field_type.map_api_exceptions():
             field, updated_fields = action_type_registry.get_by_type(
-                CreateFieldTypeAction
+                CreateFieldActionType
             ).do(request.user, table, type_name, return_updated_fields=True, **data)
 
         serializer = field_type_registry.get_serializer(
@@ -286,6 +302,7 @@ class FieldView(APIView):
                 description="Updates the field related to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="update_database_table_field",
@@ -334,6 +351,7 @@ class FieldView(APIView):
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
             CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
+            FailedToLockFieldDueToConflict: ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
         }
     )
     def patch(self, request, field_id):
@@ -371,6 +389,7 @@ class FieldView(APIView):
                 description="Deletes the field related to the provided value.",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="delete_database_table_field",
@@ -410,7 +429,7 @@ class FieldView(APIView):
         field = FieldHandler().get_field(field_id)
         field_type = field_type_registry.get_by_model(field.specific_class)
         with field_type.map_api_exceptions():
-            updated_fields = action_type_registry.get_by_type(DeleteFieldTypeAction).do(
+            updated_fields = action_type_registry.get_by_type(DeleteFieldActionType).do(
                 request.user, field
             )
 

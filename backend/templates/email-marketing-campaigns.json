@@ -31,7 +31,7 @@
                         {
                             "id": 151086,
                             "type": "text",
-                            "name": "Campaign Name",
+                            "name": "Campaign name",
                             "order": 0,
                             "primary": true,
                             "text_default": ""
@@ -39,14 +39,14 @@
                         {
                             "id": 151087,
                             "type": "long_text",
-                            "name": "Subject Line",
+                            "name": "Subject line",
                             "order": 1,
                             "primary": false
                         },
                         {
                             "id": 151088,
                             "type": "date",
-                            "name": "Start Date",
+                            "name": "Start date",
                             "order": 2,
                             "primary": false,
                             "date_format": "ISO",
@@ -191,7 +191,7 @@
                         {
                             "id": 151106,
                             "type": "link_row",
-                            "name": "List(s) Used",
+                            "name": "List(s) used",
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 28614,
@@ -207,28 +207,28 @@
                         {
                             "id": 151108,
                             "type": "url",
-                            "name": "Draft Link",
+                            "name": "Draft link",
                             "order": 9,
                             "primary": false
                         },
                         {
                             "id": 151109,
                             "type": "url",
-                            "name": "Landing Page",
+                            "name": "Landing page",
                             "order": 10,
                             "primary": false
                         },
                         {
                             "id": 151111,
                             "type": "url",
-                            "name": "Short Link",
+                            "name": "Short link",
                             "order": 12,
                             "primary": false
                         },
                         {
                             "id": 151114,
                             "type": "text",
-                            "name": "Campaign Link",
+                            "name": "Campaign link",
                             "order": 14,
                             "primary": false,
                             "text_default": ""
@@ -236,7 +236,7 @@
                         {
                             "id": 152809,
                             "type": "date",
-                            "name": "End Date",
+                            "name": "End date",
                             "order": 21,
                             "primary": false,
                             "date_format": "ISO",
@@ -271,6 +271,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 156821,
@@ -424,6 +425,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 167821,
@@ -577,6 +579,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 167835,
@@ -736,6 +739,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 167849,
@@ -866,10 +870,206 @@
                             ]
                         },
                         {
+                            "id": 71591,
+                            "type": "kanban",
+                            "name": "By status",
+                            "order": 5,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "single_select_field_id": 151093,
+                            "field_options": [
+                                {
+                                    "id": 704,
+                                    "field_id": 151086,
+                                    "hidden": false,
+                                    "order": 0
+                                },
+                                {
+                                    "id": 711,
+                                    "field_id": 151107,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 709,
+                                    "field_id": 151093,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 705,
+                                    "field_id": 151087,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 706,
+                                    "field_id": 151088,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 707,
+                                    "field_id": 151090,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 708,
+                                    "field_id": 151092,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 710,
+                                    "field_id": 151106,
+                                    "hidden": false,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 712,
+                                    "field_id": 151108,
+                                    "hidden": false,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 713,
+                                    "field_id": 151109,
+                                    "hidden": false,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 714,
+                                    "field_id": 151111,
+                                    "hidden": false,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 715,
+                                    "field_id": 151114,
+                                    "hidden": false,
+                                    "order": 11
+                                },
+                                {
+                                    "id": 716,
+                                    "field_id": 152809,
+                                    "hidden": false,
+                                    "order": 12
+                                },
+                                {
+                                    "id": 717,
+                                    "field_id": 159811,
+                                    "hidden": false,
+                                    "order": 13
+                                }
+                            ]
+                        },
+                        {
+                            "id": 71592,
+                            "type": "kanban",
+                            "name": "By purpose",
+                            "order": 6,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "single_select_field_id": 151092,
+                            "field_options": [
+                                {
+                                    "id": 718,
+                                    "field_id": 151086,
+                                    "hidden": false,
+                                    "order": 0
+                                },
+                                {
+                                    "id": 725,
+                                    "field_id": 151107,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 731,
+                                    "field_id": 159811,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 719,
+                                    "field_id": 151087,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 720,
+                                    "field_id": 151088,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 721,
+                                    "field_id": 151090,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 722,
+                                    "field_id": 151092,
+                                    "hidden": true,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 723,
+                                    "field_id": 151093,
+                                    "hidden": false,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 724,
+                                    "field_id": 151106,
+                                    "hidden": false,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 726,
+                                    "field_id": 151108,
+                                    "hidden": false,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 727,
+                                    "field_id": 151109,
+                                    "hidden": false,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 728,
+                                    "field_id": 151111,
+                                    "hidden": false,
+                                    "order": 11
+                                },
+                                {
+                                    "id": 729,
+                                    "field_id": 151114,
+                                    "hidden": false,
+                                    "order": 12
+                                },
+                                {
+                                    "id": 730,
+                                    "field_id": 152809,
+                                    "hidden": false,
+                                    "order": 13
+                                }
+                            ]
+                        },
+                        {
                             "id": 58090,
                             "type": "form",
                             "name": "Campaign suggestion",
-                            "order": 5,
+                            "order": 7,
                             "public": false,
                             "title": "Campaign suggestion",
                             "description": "Include all necessary details for management to review your campaign suggestion.",
@@ -1012,196 +1212,106 @@
                             ]
                         },
                         {
-                            "id": 71591,
-                            "type": "kanban",
-                            "name": "By status",
-                            "order": 6,
+                            "id": 97923,
+                            "type": "gallery",
+                            "name": "Campaigns gallery",
+                            "order": 8,
                             "filter_type": "AND",
                             "filters_disabled": false,
                             "filters": [],
-                            "sortings": [],
-                            "single_select_field_id": 151093,
-                            "field_options": [
+                            "sortings": [
                                 {
-                                    "id": 704,
+                                    "id": 21841,
                                     "field_id": 151086,
-                                    "hidden": false,
-                                    "order": 0
-                                },
-                                {
-                                    "id": 711,
-                                    "field_id": 151107,
-                                    "hidden": false,
-                                    "order": 1
-                                },
-                                {
-                                    "id": 709,
-                                    "field_id": 151093,
-                                    "hidden": false,
-                                    "order": 2
-                                },
-                                {
-                                    "id": 705,
-                                    "field_id": 151087,
-                                    "hidden": false,
-                                    "order": 3
-                                },
-                                {
-                                    "id": 706,
-                                    "field_id": 151088,
-                                    "hidden": false,
-                                    "order": 4
-                                },
-                                {
-                                    "id": 707,
-                                    "field_id": 151090,
-                                    "hidden": false,
-                                    "order": 5
-                                },
-                                {
-                                    "id": 708,
-                                    "field_id": 151092,
-                                    "hidden": false,
-                                    "order": 6
-                                },
-                                {
-                                    "id": 710,
-                                    "field_id": 151106,
-                                    "hidden": false,
-                                    "order": 7
-                                },
-                                {
-                                    "id": 712,
-                                    "field_id": 151108,
-                                    "hidden": false,
-                                    "order": 8
-                                },
-                                {
-                                    "id": 713,
-                                    "field_id": 151109,
-                                    "hidden": false,
-                                    "order": 9
-                                },
-                                {
-                                    "id": 714,
-                                    "field_id": 151111,
-                                    "hidden": false,
-                                    "order": 10
-                                },
-                                {
-                                    "id": 715,
-                                    "field_id": 151114,
-                                    "hidden": false,
-                                    "order": 11
-                                },
-                                {
-                                    "id": 716,
-                                    "field_id": 152809,
-                                    "hidden": false,
-                                    "order": 12
-                                },
-                                {
-                                    "id": 717,
-                                    "field_id": 159811,
-                                    "hidden": false,
-                                    "order": 13
+                                    "order": "ASC"
                                 }
-                            ]
-                        },
-                        {
-                            "id": 71592,
-                            "type": "kanban",
-                            "name": "By purpose",
-                            "order": 7,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [],
-                            "single_select_field_id": 151092,
+                            ],
+                            "decorations": [],
+                            "card_cover_image_field_id": 151107,
                             "field_options": [
                                 {
-                                    "id": 718,
+                                    "id": 15899,
                                     "field_id": 151086,
                                     "hidden": false,
-                                    "order": 0
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 725,
-                                    "field_id": 151107,
-                                    "hidden": false,
-                                    "order": 1
-                                },
-                                {
-                                    "id": 731,
-                                    "field_id": 159811,
-                                    "hidden": false,
-                                    "order": 2
-                                },
-                                {
-                                    "id": 719,
+                                    "id": 15900,
                                     "field_id": 151087,
                                     "hidden": false,
-                                    "order": 3
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 720,
+                                    "id": 15901,
                                     "field_id": 151088,
                                     "hidden": false,
-                                    "order": 4
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 721,
+                                    "id": 15902,
                                     "field_id": 151090,
-                                    "hidden": false,
-                                    "order": 5
+                                    "hidden": true,
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 722,
+                                    "id": 15903,
                                     "field_id": 151092,
                                     "hidden": true,
-                                    "order": 6
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 723,
+                                    "id": 15904,
                                     "field_id": 151093,
                                     "hidden": false,
-                                    "order": 7
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 724,
+                                    "id": 15905,
                                     "field_id": 151106,
-                                    "hidden": false,
-                                    "order": 8
+                                    "hidden": true,
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 726,
+                                    "id": 15906,
+                                    "field_id": 151107,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 15907,
                                     "field_id": 151108,
-                                    "hidden": false,
-                                    "order": 9
+                                    "hidden": true,
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 727,
+                                    "id": 15908,
                                     "field_id": 151109,
-                                    "hidden": false,
-                                    "order": 10
+                                    "hidden": true,
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 728,
+                                    "id": 15909,
                                     "field_id": 151111,
-                                    "hidden": false,
-                                    "order": 11
+                                    "hidden": true,
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 729,
+                                    "id": 15910,
                                     "field_id": 151114,
-                                    "hidden": false,
-                                    "order": 12
+                                    "hidden": true,
+                                    "order": 32767
                                 },
                                 {
-                                    "id": 730,
+                                    "id": 15911,
                                     "field_id": 152809,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 15912,
+                                    "field_id": 159811,
                                     "hidden": false,
-                                    "order": 13
+                                    "order": 32767
                                 }
                             ]
                         }
@@ -1750,7 +1860,7 @@
                         {
                             "id": 151309,
                             "type": "single_select",
-                            "name": "Project Type",
+                            "name": "Project type",
                             "order": 2,
                             "primary": false,
                             "select_options": [
@@ -1818,7 +1928,7 @@
                         {
                             "id": 324508,
                             "type": "formula",
-                            "name": "Brand Count",
+                            "name": "Campaign count",
                             "order": 6,
                             "primary": false,
                             "error": null,
@@ -1835,7 +1945,7 @@
                         {
                             "id": 32043,
                             "type": "grid",
-                            "name": "All Brands",
+                            "name": "All brands",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1849,6 +1959,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 157096,
@@ -1889,7 +2000,7 @@
                                 {
                                     "id": 167672,
                                     "field_id": 159812,
-                                    "width": 361,
+                                    "width": 320,
                                     "hidden": false,
                                     "order": 32767,
                                     "aggregation_type": "",
@@ -1898,7 +2009,7 @@
                                 {
                                     "id": 399151,
                                     "field_id": 324508,
-                                    "width": 141,
+                                    "width": 160,
                                     "hidden": false,
                                     "order": 32767,
                                     "aggregation_type": "",
@@ -1967,6 +2078,65 @@
                                     "description": "Does the campaign have any active campaigns?",
                                     "enabled": true,
                                     "required": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 30391,
+                                    "field_id": 324508,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 97927,
+                            "type": "kanban",
+                            "name": "By project type",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "single_select_field_id": 151309,
+                            "field_options": [
+                                {
+                                    "id": 7046,
+                                    "field_id": 151307,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7047,
+                                    "field_id": 151308,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7048,
+                                    "field_id": 151309,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7049,
+                                    "field_id": 153467,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7050,
+                                    "field_id": 159812,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 7051,
+                                    "field_id": 324508,
+                                    "hidden": true,
                                     "order": 32767
                                 }
                             ]
@@ -2082,7 +2252,7 @@
                 },
                 {
                     "id": 28614,
-                    "name": "Email Lists",
+                    "name": "Email lists",
                     "order": 3,
                     "fields": [
                         {
@@ -2104,7 +2274,7 @@
                         {
                             "id": 152195,
                             "type": "link_row",
-                            "name": "Used In",
+                            "name": "Used in",
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 28575,
@@ -2131,7 +2301,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 0,
                             "array_formula_type": null,
-                            "formula": "count(field('Used In'))",
+                            "formula": "count(field('Used in'))",
                             "formula_type": "number"
                         },
                         {
@@ -2147,7 +2317,7 @@
                             "number_decimal_places": null,
                             "array_formula_type": "single_select",
                             "through_field_id": 152195,
-                            "through_field_name": "Used In",
+                            "through_field_name": "Used in",
                             "target_field_id": 151092,
                             "target_field_name": "Purpose"
                         }
@@ -2156,7 +2326,7 @@
                         {
                             "id": 32044,
                             "type": "grid",
-                            "name": "All Lists",
+                            "name": "All lists",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2170,6 +2340,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 157099,
@@ -2183,7 +2354,7 @@
                                 {
                                     "id": 157097,
                                     "field_id": 151311,
-                                    "width": 454,
+                                    "width": 447,
                                     "hidden": false,
                                     "order": 0,
                                     "aggregation_type": "",
@@ -2219,7 +2390,7 @@
                                 {
                                     "id": 317017,
                                     "field_id": 267940,
-                                    "width": 336,
+                                    "width": 341,
                                     "hidden": false,
                                     "order": 32767,
                                     "aggregation_type": "",
@@ -2230,7 +2401,7 @@
                         {
                             "id": 32433,
                             "type": "grid",
-                            "name": "High Value",
+                            "name": "High value",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2251,6 +2422,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 158941,
@@ -2332,6 +2504,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 317028,
@@ -2413,6 +2586,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 317034,
@@ -2644,7 +2818,7 @@
                 },
                 {
                     "id": 28574,
-                    "name": "Team Members",
+                    "name": "Team members",
                     "order": 4,
                     "fields": [
                         {
@@ -2732,7 +2906,7 @@
                         {
                             "id": 31994,
                             "type": "grid",
-                            "name": "All Team Members",
+                            "name": "All team members",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -2746,6 +2920,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 156818,
@@ -2836,6 +3011,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 167863,
@@ -2926,6 +3102,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 167867,
@@ -3016,6 +3193,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 167871,
@@ -3106,6 +3284,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 317045,
@@ -3175,7 +3354,7 @@
                         {
                             "id": 71590,
                             "type": "gallery",
-                            "name": "Team Gallery",
+                            "name": "Team gallery",
                             "order": 6,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -3187,6 +3366,8 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "card_cover_image_field_id": 324513,
                             "field_options": [
                                 {
                                     "id": 6371,
@@ -3235,12 +3416,13 @@
                         {
                             "id": 71593,
                             "type": "kanban",
-                            "name": "By Role",
+                            "name": "By role",
                             "order": 7,
                             "filter_type": "AND",
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 152813,
                             "field_options": [
                                 {

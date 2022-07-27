@@ -8,8 +8,10 @@
     },
     "sidebarApplication": {
         "renameApplication": "Rename {type}",
+        "duplicateApplication": "Duplicate {type}",
         "viewTrash": "View trash",
-        "deleteApplication": "Delete {type}"
+        "deleteApplication": "Delete {type}",
+        "snapshots": "Snapshots"
     },
     "sidebar": {
         "createGroup": "Create group",
@@ -166,6 +168,7 @@
         "fromParent": "from {parent}",
         "name": "{user} deleted {type} {title} {parent}",
         "restore": "Restore",
+        "andMore": "... and {count} more",
         "unnamed": "Unnamed {type} {id}"
     },
     "trashModal": {
@@ -388,5 +391,10 @@
         "stateFailed": "Failed",
         "errorJobAlreadyRunningTitle": "Already running",
         "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
+    },
+    "datetime": {
+        "daysAgo": "0 days ago | 1 day ago | {n} days ago",
+        "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
+        "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
     }
 }

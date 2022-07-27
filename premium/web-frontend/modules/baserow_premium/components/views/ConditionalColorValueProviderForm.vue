@@ -46,7 +46,6 @@
           :filters="color.filters"
           :disable-filter="false"
           :filter-type="color.operator"
-          :primary="primary"
           :fields="fields"
           :view="view"
           :read-only="readOnly"
@@ -95,10 +94,6 @@ export default {
       type: Object,
       required: true,
     },
-    primary: {
-      type: Object,
-      required: true,
-    },
     fields: {
       type: Array,
       required: true,
@@ -106,11 +101,6 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
-    },
-  },
-  computed: {
-    allFields() {
-      return [this.primary, ...this.fields]
     },
   },
   methods: {
@@ -138,7 +128,7 @@ export default {
           ConditionalColorValueProviderType.getDefaultColorConf(
             this.$registry,
             {
-              fields: this.allFields,
+              fields: this.fields,
             },
             true
           ),
@@ -176,7 +166,7 @@ export default {
               ConditionalColorValueProviderType.getDefaultFilterConf(
                 this.$registry,
                 {
-                  fields: this.allFields,
+                  fields: this.fields,
                 }
               ),
             ],

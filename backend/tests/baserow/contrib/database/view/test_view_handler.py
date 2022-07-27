@@ -432,7 +432,34 @@ def test_duplicate_views(reordered_mock, created_mock, data_fixture):
 
     new_view2 = handler.duplicate_view(user=user, original_view=new_view)
 
-    assert new_view2.name == grid.name + " 3"
+    assert new_view2.name == new_view.name + " 2"
+
+    new_view3 = handler.duplicate_view(user=user, original_view=grid)
+
+    assert new_view3.name == grid.name + " 3"
+
+
+@pytest.mark.django_db
+def test_duplicate_views_with_multiple_select_has_filter(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    grid = data_fixture.create_public_password_protected_grid_view(table=table, order=1)
+    data_fixture.create_view_filter(
+        view=grid,
+        field=field,
+        type="multiple_select_has",
+        value="1",
+    )
+
+    handler = ViewHandler()
+    new_view = handler.duplicate_view(user=user, original_view=grid)
+    new_filters = new_view.viewfilter_set.all()
+    assert len(new_filters) == 1
+    assert new_filters[0].view_id == new_view.id
+    assert new_filters[0].field_id == field.id
+    assert new_filters[0].type == "multiple_select_has"
+    assert new_filters[0].value == "1"
 
 
 @pytest.mark.django_db
@@ -1419,7 +1446,7 @@ def test_get_public_view_by_slug(data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.rows.signals.row_created.send")
+@patch("baserow.contrib.database.rows.signals.rows_created.send")
 def test_submit_form_view(send_mock, data_fixture):
     table = data_fixture.create_database_table()
     form = data_fixture.create_form_view(table=table)
@@ -1451,7 +1478,7 @@ def test_submit_form_view(send_mock, data_fixture):
     )
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["row"].id == instance.id
+    assert send_mock.call_args[1]["rows"][0].id == instance.id
     assert send_mock.call_args[1]["user"] is None
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["before"] is None
@@ -1475,6 +1502,42 @@ def test_submit_form_view(send_mock, data_fixture):
     assert getattr(all[1], f"field_{text_field.id}") == "Another value"
     assert getattr(all[1], f"field_{number_field.id}") == 10
     assert not getattr(all[1], f"field_{boolean_field.id}")
+
+
+@pytest.mark.django_db
+def test_submit_form_view_skip_required_with_conditions(data_fixture):
+    table = data_fixture.create_database_table()
+    form = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True
+    )
+    number_option = data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(ValidationError):
+        handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+
+    number_option.show_when_matching_conditions = True
+    number_option.save()
+
+    with pytest.raises(ValidationError):
+        handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+
+    # When there is a condition and `show_when_matching_conditions` is `True`,
+    # the backend can't validate whether the values match the filter, we we don't do
+    # a required validation at all.
+    data_fixture.create_form_view_field_options_condition(
+        field_option=number_option, field=text_field
+    )
+
+    handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+    model = table.get_model()
+    assert model.objects.all().count() == 1
 
 
 @pytest.mark.django_db
@@ -1969,3 +2032,169 @@ def test_cant_update_sort_when_view_trashed(data_fixture):
 
     with pytest.raises(ViewSortDoesNotExist):
         ViewHandler().update_sort(user, view_sort, field)
+
+
+@pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_view_filters_applied(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    model.objects.create(**{f"field_{field.id}": 1})
+    model.objects.create(**{f"field_{field.id}": 2})
+    model.objects.create(**{f"field_{field.id}": 3})
+
+    data_fixture.create_view_filter(view=grid_view, field=field, type="equal", value=1)
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(grid_view)
+
+    assert queryset.count() == 1
+    assert list(field_ids) == [field.id]
+
+
+@pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    model.objects.create(**{f"field_{field.id}": 1})
+    model.objects.create(**{f"field_{field.id}": 2})
+    model.objects.create(**{f"field_{field.id}": 3})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(grid_view, search="2")
+
+    assert queryset.count() == 1
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [2]
+
+
+@pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_view_order_by(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    model.objects.create(**{f"field_{field.id}": 1})
+    model.objects.create(**{f"field_{field.id}": 2})
+    model.objects.create(**{f"field_{field.id}": 3})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, order_by=f"-field_{field.id}"
+    )
+
+    assert queryset.count() == 3
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [3, 2, 1]
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, order_by=f"field_{field.id}"
+    )
+
+    assert queryset.count() == 3
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [1, 2, 3]
+
+
+@pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_include_exclude_fields(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+    field_two = data_fixture.create_text_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    model.objects.create(**{f"field_{field.id}": 1})
+    model.objects.create(**{f"field_{field.id}": 2})
+    model.objects.create(**{f"field_{field.id}": 3})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view,
+        include_fields="field_" + str(field.id),
+        exclude_fields="field_" + str(field_two.id),
+    )
+
+    assert queryset.count() == 3
+    assert field_ids == [field.id]
+
+
+@pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_filter(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    model.objects.create(**{f"field_{field.id}": 1})
+    model.objects.create(**{f"field_{field.id}": 2})
+    model.objects.create(**{f"field_{field.id}": 3})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view,
+        filter_object={f"filter__field_{field.id}__equal": "2"},
+    )
+
+    assert queryset.count() == 1
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [2]
+
+
+@pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_filters_stack(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+    field_2 = data_fixture.create_text_field(table=grid_view.table)
+
+    data_fixture.create_view_filter(
+        view=grid_view, field=field_2, type="equal", value="b"
+    )
+
+    model = grid_view.table.get_model()
+    model.objects.create(**{f"field_{field.id}": 2, f"field_{field_2.id}": "a"})
+    model.objects.create(**{f"field_{field.id}": 2, f"field_{field_2.id}": "b"})
+    model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": "c"})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, filter_object={f"field_{field.id}": 2}
+    )
+
+    assert queryset.count() == 1
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [2]
+
+
+@pytest.mark.django_db
+def test_can_submit_form_view_handler_with_zero_number_required(data_fixture):
+    table = data_fixture.create_database_table()
+    form = data_fixture.create_form_view(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True
+    )
+
+    handler = ViewHandler()
+
+    handler.submit_form_view(form=form, values={f"field_{number_field.id}": 0})
+    with pytest.raises(ValidationError):
+        handler.submit_form_view(form=form, values={f"field_{number_field.id}": False})

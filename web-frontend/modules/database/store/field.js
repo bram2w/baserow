@@ -15,7 +15,6 @@ export const state = () => ({
   types: {},
   loading: false,
   loaded: false,
-  primary: null,
   items: [],
 })
 
@@ -34,9 +33,6 @@ export const mutations = {
   },
   SET_LOADED(state, value) {
     state.loaded = value
-  },
-  SET_PRIMARY(state, item) {
-    state.primary = Object.assign(state.primary || {}, item)
   },
   ADD_ITEM(state, item) {
     state.items.push(item)
@@ -95,20 +91,19 @@ export const actions = {
       populateField(fields[index], this.$registry)
     })
 
-    const primaryIndex = fields.findIndex((item) => item.primary === true)
-    const primary =
-      primaryIndex !== -1 ? fields.splice(primaryIndex, 1)[0] : null
-    commit('SET_PRIMARY', primary)
     commit('SET_ITEMS', fields)
     commit('SET_LOADING', false)
     commit('SET_LOADED', true)
 
-    return { primary, fields }
+    return { fields }
   },
   /**
    * Creates a new field with the provided type for the given table.
    */
-  async create(context, { type, table, values, forceCreate = true }) {
+  async create(
+    context,
+    { type, table, values, forceCreate = true, undoRedoActionGroupId = null }
+  ) {
     const { dispatch } = context
 
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
@@ -124,8 +119,11 @@ export const actions = {
 
     const postData = clone(values)
     postData.type = type
-
-    const { data } = await FieldService(this.$client).create(table.id, postData)
+    const { data } = await FieldService(this.$client).create(
+      table.id,
+      postData,
+      undoRedoActionGroupId
+    )
     const forceCreateCallback = async () => {
       return await dispatch('forceCreate', {
         table,
@@ -145,6 +143,7 @@ export const actions = {
       forceCreateCallback: callback,
       fetchNeeded,
       newField: data,
+      undoRedoActionGroupId,
     }
   },
   /**
@@ -177,11 +176,7 @@ export const actions = {
     const { commit, dispatch } = context
     const fieldType = this.$registry.get('field', values.type)
     const data = populateField(values, this.$registry)
-    if (data.primary) {
-      commit('SET_PRIMARY', data)
-    } else {
-      commit('ADD_ITEM', data)
-    }
+    commit('ADD_ITEM', data)
 
     // Call the field created event on all the registered views because they might
     // need to change things in loaded data. For example the grid field will add the
@@ -235,11 +230,8 @@ export const actions = {
     const fieldType = this.$registry.get('field', data.type)
     data = populateField(data, this.$registry)
 
-    if (field.primary) {
-      commit('SET_PRIMARY', data)
-    } else {
-      commit('UPDATE_ITEM', { id: field.id, values: data })
-    }
+    commit('UPDATE_ITEM', { id: field.id, values: data })
+    commit('UPDATE_ITEM', { id: field.id, values: data })
 
     // The view might need to do some cleanup regarding the filters and sortings if the
     // type has changed.
@@ -332,21 +324,10 @@ export const getters = {
     return state.loaded
   },
   get: (state) => (id) => {
-    const primary = state.primary.id === id ? state.primary : undefined
-    return state.items.find((item) => item.id === id) || primary
-  },
-  getPrimary: (state) => {
-    return state.primary
+    return state.items.find((item) => item.id === id)
   },
   getAll(state) {
     return state.items
-  },
-  getAllWithPrimary(state) {
-    if (state.primary !== null) {
-      return [state.primary, ...state.items]
-    } else {
-      return state.items
-    }
   },
 }
 

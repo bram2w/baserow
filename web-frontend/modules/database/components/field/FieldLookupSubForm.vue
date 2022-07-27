@@ -1,14 +1,9 @@
 <template>
   <div>
     <div class="control">
-      <div
-        v-if="linkRowFieldsInThisTable.length === 0"
-        class="alert alert--error context__alert"
-      >
-        <p class="alert__content">
-          {{ $t('fieldLookupSubForm.noTable') }}
-        </p>
-      </div>
+      <Alert v-if="linkRowFieldsInThisTable.length === 0" minimal type="error">
+        {{ $t('fieldLookupSubForm.noTable') }}
+      </Alert>
       <div v-if="linkRowFieldsInThisTable.length > 0">
         <label class="control__label control__label--small">
           {{ $t('fieldLookupSubForm.selectThroughFieldLabel') }}

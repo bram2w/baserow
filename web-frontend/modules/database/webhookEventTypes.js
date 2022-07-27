@@ -32,56 +32,54 @@ export class WebhookEventType extends Registerable {
   }
 }
 
-export class RowCreatedWebhookEventType extends WebhookEventType {
+export class RowsCreatedWebhookEventType extends WebhookEventType {
   getType() {
-    return 'row.created'
+    return 'rows.created'
   }
 
   getName() {
     const { i18n } = this.app
-    return i18n.t('webhook.eventType.rowCreated')
+    return i18n.t('webhook.eventType.rowsCreated')
   }
 
   getExamplePayload(table, rowExample) {
     const payload = super.getExamplePayload(table, rowExample)
-    payload.row_id = rowExample.id
-    payload.values = rowExample
+    payload.items = [rowExample]
     return payload
   }
 }
 
-export class RowUpdatedWebhookEventType extends WebhookEventType {
+export class RowsUpdatedWebhookEventType extends WebhookEventType {
   getType() {
-    return 'row.updated'
+    return 'rows.updated'
   }
 
   getName() {
     const { i18n } = this.app
-    return i18n.t('webhook.eventType.rowUpdated')
+    return i18n.t('webhook.eventType.rowsUpdated')
   }
 
   getExamplePayload(table, rowExample) {
     const payload = super.getExamplePayload(table, rowExample)
-    payload.row_id = rowExample.id
-    payload.values = rowExample
-    payload.old_values = rowExample
+    payload.items = [rowExample]
+    payload.old_items = [rowExample]
     return payload
   }
 }
 
-export class RowDeletedWebhookEventType extends WebhookEventType {
+export class RowsDeletedWebhookEventType extends WebhookEventType {
   getType() {
-    return 'row.deleted'
+    return 'rows.deleted'
   }
 
   getName() {
     const { i18n } = this.app
-    return i18n.t('webhook.eventType.rowDeleted')
+    return i18n.t('webhook.eventType.rowsDeleted')
   }
 
   getExamplePayload(table, rowExample) {
     const payload = super.getExamplePayload(table, rowExample)
-    payload.row_id = rowExample.id
+    payload.row_ids = [rowExample.id]
     return payload
   }
 }

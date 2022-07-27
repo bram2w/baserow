@@ -146,8 +146,11 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       />
                       
     exporterType.csv
-  
+    
+                      <!---->
                     </a>
+                     
+                    <!---->
                   </li>
                 </ul>
               </div>
@@ -1122,7 +1125,12 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                 <a
                   class="dropdown__selected"
                 >
-                  action.makeChoice 
+                  <i
+                    class="dropdown__selected-icon fas fa-bars"
+                  />
+                  
+        mock_view_1
+       
                   <i
                     class="dropdown__toggle-icon fas fa-caret-down"
                   />
@@ -1220,8 +1228,11 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       />
                       
     exporterType.csv
-  
+    
+                      <!---->
                     </a>
+                     
+                    <!---->
                   </li>
                 </ul>
               </div>

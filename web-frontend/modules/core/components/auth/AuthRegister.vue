@@ -1,14 +1,13 @@
 <template>
   <div>
-    <div
+    <Alert
       v-if="invitation !== null"
-      class="alert alert--simple alert--primary alert--has-icon"
+      simple
+      type="primary"
+      icon="exclamation"
+      :title="$t('invitationTitle')"
     >
-      <div class="alert__icon">
-        <i class="fas fa-exclamation"></i>
-      </div>
-      <div class="alert__title">{{ $t('invitationTitle') }}</div>
-      <i18n path="invitationMessage" tag="p" class="alert__content">
+      <i18n path="invitationMessage" tag="p">
         <template #invitedBy>
           <strong>{{ invitation.invited_by }}</strong>
         </template>
@@ -16,7 +15,7 @@
           <strong>{{ invitation.group }}</strong>
         </template>
       </i18n>
-    </div>
+    </Alert>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
       <div class="control">

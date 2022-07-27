@@ -1,15 +1,15 @@
 {
     "paginator": {
-        "page": "",
+        "page": "页面",
         "of": ""
     },
     "copied": {
         "label": ""
     },
     "sidebarApplication": {
-        "renameApplication": "",
+        "renameApplication": "重命名{type}",
         "viewTrash": "",
-        "deleteApplication": ""
+        "deleteApplication": "删除{type}"
     },
     "sidebar": {
         "createGroup": "",
@@ -19,31 +19,31 @@
         "admin": "",
         "dashboard": "",
         "trash": "",
-        "settings": ""
+        "settings": "设置"
     },
     "accountForm": {
-        "nameLabel": "",
-        "languageLabel": ""
+        "nameLabel": "你的名字",
+        "languageLabel": "界面语言"
     },
     "accountSettings": {
-        "title": "",
+        "title": "账号",
         "changedTitle": "",
         "changedDescription": "",
-        "submitButton": ""
+        "submitButton": "升级账号"
     },
     "settingsModal": {
-        "title": ""
+        "title": "设置"
     },
     "passwordSettings": {
-        "title": "",
-        "changedTitle": "",
+        "title": "更改密码",
+        "changedTitle": "密码已更改",
         "changedDescription": "",
-        "oldPasswordLabel": "",
+        "oldPasswordLabel": "旧密码",
         "oldPasswordRequiredError": "",
-        "newPasswordLabel": "",
+        "newPasswordLabel": "新密码",
         "repeatNewPasswordLabel": "",
         "repeatNewPasswordMatchError": "",
-        "submitButton": "",
+        "submitButton": "更改密码",
         "errorInvalidOldPasswordTitle": "",
         "errorInvalidOldPasswordMessage": ""
     },
@@ -306,5 +306,10 @@
                 }
             }
         }
+    },
+    "deleteAccountSettings": {
+        "title": "删除账号",
+        "password": "密码",
+        "submitButton": "删除账号"
     }
 }

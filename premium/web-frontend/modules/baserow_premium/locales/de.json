@@ -18,13 +18,16 @@
         "exporterType": {
             "json": "Nach JSON exportieren",
             "xml": "Exportieren nach XML"
-        }
+        },
+        "deactivated": "Verfügbar in der Premium-Version"
     },
     "rowCommentSidebar": {
         "onlyPremium": "Zeilenkommentare sind in der Premium-Version verfügbar.",
         "readOnlyNoComment": "Keine Kommentare zu dieser Zeile.",
         "noComment": "Noch keine Kommentare zu dieser Zeile. Verwenden Sie das Formular unten, um einen Kommentar hinzuzufügen.",
-        "comment": "Kommentar"
+        "comment": "Kommentar",
+        "more": "Weitere Informationen",
+        "name": "Zeilenkommentare"
     },
     "rowComment": {
         "you": "Sie",
@@ -248,5 +251,23 @@
     "redirectToBaserowModal": {
         "title": "Weiterleitung an http://baserow.io",
         "content": "Sie verlassen Ihre selbst gehostete Instanz und werden zu http://baserow.io umgeleitet."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "Dieses Konto wird imitiert. Eine Seitenaktualisierung stoppt es.",
+        "impersonateStop": "Stopp",
+        "premium": "Premium",
+        "premiumDescription": "Ihr Konto hat Zugang zu den Premium-Funktionen account-übergreifend"
+    },
+    "premiumFeatures": {
+        "rowComments": "Zeilenkommentare",
+        "kanbanView": "Kanban-Ansicht",
+        "exports": "JSON- und XML-Export",
+        "admin": "Admin-Funktionalität",
+        "rowColoring": "Zeilenfärbung"
+    },
+    "premiumModal": {
+        "description": "Ihr Konto hat keinen Zugang zu den Premium-Funktionen. Führen Sie ein Upgrade auf die Premium-Version durch, um {name} nutzen zu können. Sie können Ihr Konto erweitern, indem Sie eine Lizenz erwerben. Klicken Sie auf den Knopf unten, um die Preise zu sehen.",
+        "title": "Führen Sie ein Upgrade durch, um {name} zu verwenden",
+        "viewPricing": "Preise anzeigen"
     }
 }

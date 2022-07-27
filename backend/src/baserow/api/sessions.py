@@ -1,12 +1,17 @@
 import re
+import uuid
 from typing import Any
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 
-from baserow.api.exceptions import InvalidClientSessionIdAPIException
+from baserow.api.exceptions import (
+    InvalidClientSessionIdAPIException,
+    InvalidUndoRedoActionGroupIdAPIException,
+)
 
 UNTRUSTED_CLIENT_SESSION_ID_USER_ATTR = "untrusted_client_session_id"
+UNDO_REDO_ACTION_GROUP_ID = "untrusted_client_action_group"
 
 
 def _raise_if_not_valid_untrusted_client_session_id(value: Any):
@@ -44,3 +49,39 @@ def set_untrusted_client_session_id(user: AbstractUser, session_id: str):
 
 def get_untrusted_client_session_id(user: AbstractUser):
     return getattr(user, UNTRUSTED_CLIENT_SESSION_ID_USER_ATTR, None)
+
+
+def _raise_if_not_valid_undo_redo_action_group_id(value: Any):
+    try:
+        uuid.UUID(str(value), version=4)
+    except ValueError:
+        raise InvalidUndoRedoActionGroupIdAPIException()
+
+
+def set_client_undo_redo_action_group_id_from_request_or_raise_if_invalid(
+    user: AbstractUser, request
+):
+    """
+    Extracts the untrusted client action group from the requests headers and sets it
+    on a custom attr on the user object for later retrieval. If the header is not set
+    then nothing will be set.
+    If the header is set but has an invalid value then an APIException will be raised.
+
+    :param user: The user to set the client id attr on.
+    :param request: The request containing the headers to check.
+    """
+
+    action_group_id = request.headers.get(
+        settings.CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER, None
+    )
+    if action_group_id is not None:
+        _raise_if_not_valid_undo_redo_action_group_id(action_group_id)
+    set_client_undo_redo_action_group_id(user, action_group_id)
+
+
+def set_client_undo_redo_action_group_id(user: AbstractUser, action_group_id: str):
+    setattr(user, UNDO_REDO_ACTION_GROUP_ID, action_group_id)
+
+
+def get_client_undo_redo_action_group_id(user: AbstractUser):
+    return getattr(user, UNDO_REDO_ACTION_GROUP_ID, None)

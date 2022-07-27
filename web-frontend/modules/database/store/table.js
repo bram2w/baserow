@@ -96,8 +96,24 @@ export const actions = {
         onUploadProgress,
       }
     )
-    // The returned data is a the job table creation id
+    // The returned data is a table creation job
     return data
+  },
+  /**
+   * Fetches one table for the authenticated user.
+   */
+  async fetch({ commit, dispatch }, { database, tableId }) {
+    commit('SET_LOADING', true)
+
+    try {
+      const { data } = await TableService(this.$client).get(tableId)
+      dispatch('forceCreate', { database, data })
+      commit('SET_LOADING', false)
+      return data
+    } catch (error) {
+      commit('SET_LOADING', false)
+      throw error
+    }
   },
   /**
    * Forcefully create an item in the store without making a call to the server.

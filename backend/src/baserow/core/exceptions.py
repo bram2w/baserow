@@ -95,6 +95,13 @@ class ApplicationTypeDoesNotExist(InstanceTypeDoesNotExist):
     pass
 
 
+class ApplicationOperationNotSupported(Exception):
+    """
+    Raised when the particular operation is not supported by the
+    application type.
+    """
+
+
 class BaseURLHostnameNotAllowed(Exception):
     """
     Raised when the provided base url is not allowed when requesting a password
@@ -130,4 +137,11 @@ class TemplateFileDoesNotExist(Exception):
 class TrashItemDoesNotExist(Exception):
     """
     Raised when the trash item does not exist in the database.
+    """
+
+
+class LockConflict(Exception):
+    """
+    Generic base class used for exceptions raised when an operation fails as part of
+    Baserow has been locked for some operation.
     """

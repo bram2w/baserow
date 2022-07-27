@@ -25,7 +25,9 @@
         "search": "Buscar",
         "copy": "Copiar",
         "activate": "Activar",
-        "deactivate": "Desactivar"
+        "deactivate": "Desactivar",
+        "paste": "Pegar",
+        "duplicate": "Duplicar"
     },
     "adminType": {
         "settings": "Ajustes"
@@ -38,7 +40,8 @@
     "settingType": {
         "account": "Cuenta",
         "password": "Contraseña",
-        "tokens": "Fichas de API"
+        "tokens": "Fichas de API",
+        "deleteAccount": "Borrar cuenta"
     },
     "userFileUploadType": {
         "file": "mi dispositivo",
@@ -136,7 +139,10 @@
         "lowerThan": "Más bajo que",
         "lengthIsLowerThan": "la longitud es menor que",
         "hasFileType": "tiene tipo de archivo",
-        "isDaysAgo": "es hace días"
+        "isDaysAgo": "es hace días",
+        "isMonthsAgo": "es hace meses",
+        "isYearsAgo": "es hace años",
+        "inThisWeek": "en esta semana"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -171,7 +177,10 @@
         "eventType": {
             "rowCreated": "Cuando se crea una fila",
             "rowUpdated": "Cuando se actualiza una fila",
-            "rowDeleted": "Cuando se elimina una fila"
+            "rowDeleted": "Cuando se elimina una fila",
+            "rowsCreated": "Se crearon las filas",
+            "rowsUpdated": "Las filas fueron actualizadas",
+            "rowsDeleted": "Se han eliminado las filas"
         }
     },
     "clientHandler": {
@@ -210,7 +219,15 @@
         "cannotRestoreAsRelatedTableTrashedTitle": "Primero restaure las tablas relacionadas.",
         "cannotRestoreAsRelatedTableTrashedDescription": "No puede restaurar este campo porque depende de otras tablas que aún están en la papelera. Primero restaure las otras tablas relacionadas.",
         "groupUserIsLastAdminTitle": "no puedo dejar el grupo",
-        "groupUserIsLastAdminDescription": "No es posible abandonar el grupo porque eres el último administrador. Elimine el grupo o otorgue permisos de administrador a otro usuario."
+        "groupUserIsLastAdminDescription": "No es posible abandonar el grupo porque eres el último administrador. Elimine el grupo o otorgue permisos de administrador a otro usuario.",
+        "errorMaxJobCountExceededTitle": "No se pudo iniciar la acción.",
+        "errorMaxJobCountExceededDescription": "No puedes iniciar ninguna otra de estas acciones ya que tienes otras en ejecución en segundo plano. Por favor, inténtalo de nuevo una vez que las acciones anteriores se hayan completado.",
+        "failedToLockFieldDueToConflictTitle": "No se puede cambiar el campo",
+        "failedToLockFieldDueToConflictDescription": "Otra operación está actualizando o usando este campo, por favor espera hasta que termine antes de intentar de nuevo.",
+        "failedToLockTableDueToConflictTitle": "No se puede crear el campo",
+        "failedToLockTableDueToConflictDescription": "Otra operación está actualizando o usando esta tabla, por favor espera hasta que termine antes de intentar de nuevo.",
+        "failedToUndoRedoDueToConflictTitle": "No se puede deshacer/rehacer",
+        "failedToUndoRedoDueToConflictDescription": "Otra operación se está ejecutando actualmente bloqueando tu deshacer o rehacer, por favor espera hasta que termine antes de intentar de nuevo."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -235,7 +252,12 @@
         "queryParameters": "Parámetros de consulta",
         "pathParameters": "Parámetros de ruta",
         "requestBodySchema": "Solicitar esquema de cuerpo",
-        "userFieldNamesDescription": "Cuando se proporciona cualquier valor para el parámetro GET `user_field_names`, los nombres de campo devueltos por este extremo serán los nombres reales de los campos.\n\n Si no se proporciona el parámetro GET `user_field_names`, todos los nombres de campo devueltos serán `field_` seguidos de la identificación del campo. Por ejemplo, `field_1` se refiere al campo con una identificación de `1`."
+        "userFieldNamesDescription": "Cuando se proporciona cualquier valor para el parámetro GET `user_field_names`, los nombres de campo devueltos por este extremo serán los nombres reales de los campos.\n\n Si no se proporciona el parámetro GET `user_field_names`, todos los nombres de campo devueltos serán `field_` seguidos de la identificación del campo. Por ejemplo, `field_1` se refiere al campo con una identificación de `1`.",
+        "createRows": "Crear filas",
+        "updateRows": "Actualizar filas",
+        "deleteRows": "Borrar filas",
+        "batchRows": "Lote",
+        "singleRow": "Único"
     },
     "exporterType": {
         "csv": "Exportar a CSV"
@@ -309,13 +331,15 @@
         "variancePopDescription": "Calcula la varianza de población de los valores y devuelve el resultado. La varianza de la población se debe utilizar cuando los valores proporcionados contienen una",
         "avgDescription": "Promedia todos los valores y devuelve el resultado.",
         "sumDescription": "Suma todos los valores y devuelve el resultado.",
-        "filterDescription": "Filtra una expresión que involucra una referencia de campo de búsqueda/vínculo o una llamada de función de búsqueda."
+        "filterDescription": "Filtra una expresión que involucra una referencia de campo de búsqueda/vínculo o una llamada de función de búsqueda.",
+        "roundDescription": "Devuelve el primer argumento redondeado al número de dígitos especificado por el segundo argumento.",
+        "intDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
     },
     "urlCheck": {
-        "invalidUrlEnvVarTitle": "",
-        "invalidUrlEnvVarDescription": ""
+        "invalidUrlEnvVarTitle": "{Nombre} inválido",
+        "invalidUrlEnvVarDescription": "La variable de entorno {name} se ha establecido en un valor no válido. El administrador de su sitio debe cambiar {name} por una URL válida que empiece por http:// o https:// y luego reiniciar Baserow para solucionar este error."
     }
 }

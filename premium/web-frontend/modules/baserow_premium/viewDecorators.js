@@ -1,4 +1,5 @@
 import { ViewDecoratorType } from '@baserow/modules/database/viewDecorators'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
 import { PremiumPlugin } from '@baserow_premium/plugins'
 
 import {
@@ -42,6 +43,10 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
     return i18n.t('viewDecoratorType.onlyForPremium')
   }
 
+  getDeactivatedClickModal() {
+    return PremiumModal
+  }
+
   isDeactivated(groupId) {
     const { store } = this.app
 
@@ -83,7 +88,7 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
         GridViewType.getType(),
         GalleryViewType.getType(),
         KanbanViewType.getType(),
-      ].includes(view.type) && !store.getters['view/grid/isPublic']
+      ].includes(view.type) && !store.getters['page/view/public/getIsPublic']
     )
   }
 }
@@ -132,13 +137,17 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
         GridViewType.getType(),
         GalleryViewType.getType(),
         KanbanViewType.getType(),
-      ].includes(view.type) && !store.getters['view/grid/isPublic']
+      ].includes(view.type) && !store.getters['page/view/public/getIsPublic']
     )
   }
 
   getDeactivatedText() {
     const { i18n } = this.app
     return i18n.t('viewDecoratorType.onlyForPremium')
+  }
+
+  getDeactivatedClickModal() {
+    return PremiumModal
   }
 
   isDeactivated(groupId) {

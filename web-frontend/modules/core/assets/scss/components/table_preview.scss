@@ -24,6 +24,7 @@
 
   .table-preview__head & {
     background-color: $color-neutral-100;
+    font-weight: bold;
   }
 
   .table-preview__row:not(:last-child) & {

@@ -27,6 +27,7 @@ class CoreConfig(AppConfig):
             UpdateApplicationActionType,
             DeleteApplicationActionType,
             OrderApplicationsActionType,
+            DuplicateApplicationActionType,
         )
 
         action_type_registry.register(CreateGroupActionType())
@@ -37,6 +38,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(UpdateApplicationActionType())
         action_type_registry.register(DeleteApplicationActionType())
         action_type_registry.register(OrderApplicationsActionType())
+        action_type_registry.register(DuplicateApplicationActionType())
 
         from baserow.core.action.scopes import (
             RootActionScopeType,
@@ -49,6 +51,15 @@ class CoreConfig(AppConfig):
         action_scope_registry.register(GroupActionScopeType())
         action_scope_registry.register(ApplicationActionScopeType())
         action_scope_registry.register(ViewActionScopeType())
+
+        from baserow.core.jobs.registries import job_type_registry
+        from .job_types import DuplicateApplicationJobType
+        from .snapshots.job_type import CreateSnapshotJobType
+        from .snapshots.job_type import RestoreSnapshotJobType
+
+        job_type_registry.register(DuplicateApplicationJobType())
+        job_type_registry.register(CreateSnapshotJobType())
+        job_type_registry.register(RestoreSnapshotJobType())
 
         # Clear the key after migration so we will trigger a new template sync.
         post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)

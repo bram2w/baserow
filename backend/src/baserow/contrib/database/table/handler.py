@@ -1,16 +1,17 @@
+import logging
+import traceback
 from typing import Any, cast, NewType, List, Tuple, Optional, Dict
-from collections import defaultdict
-from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.db import ProgrammingError, DatabaseError
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import gettext as _
 
-from baserow.core.jobs.handler import JobHandler
-from baserow.core.jobs.models import Job
+from baserow.core.utils import Progress
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -18,26 +19,38 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
-from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.core.utils import (
+    ChildProgressBuilder,
+    find_unused_name,
+    split_ending_number,
+)
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
-    InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
+    FailedToLockTableDueToConflict,
 )
-from .models import Table
-from .signals import table_updated, table_deleted, tables_reordered
+from baserow.contrib.database.rows.handler import RowHandler
 
+from .models import Table
+from .signals import table_created, table_updated, table_deleted, tables_reordered
+from .constants import TABLE_CREATION
+
+
+BATCH_SIZE = 1024
 
 TableForUpdate = NewType("TableForUpdate", Table)
+
+logger = logging.getLogger(__name__)
 
 
 class TableHandler:
@@ -67,19 +80,34 @@ class TableHandler:
 
         return table
 
-    def get_table_for_update(self, table_id: int) -> TableForUpdate:
+    def get_table_for_update(
+        self, table_id: int, nowait: bool = False
+    ) -> TableForUpdate:
         """
         Provide a type hint for tables that need to be updated.
         :param table_id: The id of the table that needs to be updated.
+        :param nowait: Whether to wait to get the lock on the table or raise a
+            DatabaseError not able to do so immediately.
         :return: The table that needs to be updated.
+        :raises: FailedToLockTableDueToConflict if nowait is True and the table was not
+            able to be locked for update immediately.
         """
 
-        return cast(
-            TableForUpdate,
-            self.get_table(
-                table_id, base_queryset=Table.objects.select_for_update(of=("self",))
-            ),
-        )
+        try:
+            return cast(
+                TableForUpdate,
+                self.get_table(
+                    table_id,
+                    base_queryset=Table.objects.select_for_update(
+                        of=("self",), nowait=nowait
+                    ),
+                ),
+            )
+        except DatabaseError as e:
+            if "could not obtain lock on row" in traceback.format_exc():
+                raise FailedToLockTableDueToConflict() from e
+            else:
+                raise e
 
     def get_tables_order(self, database: Database) -> List[int]:
         """
@@ -98,11 +126,14 @@ class TableHandler:
         name: str,
         data: Optional[List[List[Any]]] = None,
         first_row_header: bool = True,
-        session: Optional[str] = None,
-        sync: bool = False,
-    ) -> Job:
+        fill_example: bool = False,
+        progress: Optional[Progress] = None,
+    ):
         """
-        Starts a new job to create a new table from optional provided data.
+        Creates a new table from optionally provided data. If no data is specified,
+        and fill_example is True, the new table will contain demo data. If fill_example
+        is `False` the table will be empty.
+        Send a `table_created` signal at the end of the process.
 
         :param user: The user on whose behalf the table is created.
         :param database: The database that the table instance belongs to.
@@ -112,105 +143,37 @@ class TableHandler:
         :param first_row_header: Indicates if the first row are the fields. The names
             of these rows are going to be used as fields. If `fields` is provided,
             this options is ignored.
-        :param session: The user session Id used to register the action.
-        :param sync: Set to True if you want to execute the task synchronously.
-        :return: The created job instance.
-        """
-
-        database.group.has_user(user, raise_error=True)
-
-        if sync:
-            limit = settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT
-            if limit and len(data) > limit:
-                raise InitialSyncTableDataLimitExceeded(
-                    f"It is not possible to import more than "
-                    f"{settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT} rows "
-                    "when creating a table synchronously. Use Asynchronous "
-                    "alternative instead."
-                )
-
-        job = JobHandler().create_and_start_job(
-            user,
-            "file_import",
-            database=database,
-            name=name,
-            data=data,
-            first_row_header=first_row_header,
-            user_session_id=session,
-            sync=sync,
-        )
-
-        if sync:
-            job.refresh_from_db()
-
-        return job
-
-    def create_minimal_table(
-        self,
-        user: AbstractUser,
-        database: Database,
-        name: str,
-        fill_example: bool = False,
-        session: Optional[str] = None,
-    ) -> Job:
-        """
-        Creates a new minimum table with only one text field and no data.
-
-        :param user: The user on whose behalf the table is created.
-        :param database: The database that the table instance belongs to.
-        :param name: The name of the table is created.
         :param fill_example: Fill the table with example field and data.
-        :param session: The user session Id used to register the action.
-        :return: The created job instance.
+        :param progress: An optional progress instance if you want to track the progress
+            of the task.
+        :return: The created table and the error report.
         """
 
         database.group.has_user(user, raise_error=True)
 
-        with translation.override(user.profile.language):
-            if fill_example:
-                fields, data = self.get_example_table_field_and_data()
-            else:
-                fields, data = self.get_minimal_table_field_and_data()
+        if progress:
+            progress.increment(0, state=TABLE_CREATION)
+
+        if data is not None:
+            (fields, data,) = self.normalize_initial_table_data(
+                data, first_row_header=first_row_header
+            )
+        else:
+            with translation.override(user.profile.language):
+                if fill_example:
+                    fields, data = self.get_example_table_field_and_data()
+                else:
+                    fields, data = self.get_minimal_table_field_and_data()
 
         table = self.create_table_and_fields(user, database, name, fields)
 
-        job = self.import_table_data(user, table, data, session=session, sync=True)
-
-        return job
-
-    def import_table_data(
-        self,
-        user: AbstractUser,
-        table: Table,
-        data: List[List[Any]],
-        session: Optional[str] = None,
-        sync: bool = False,
-    ) -> Job:
-        """
-        Creates job to import data into the specified table.
-
-        :param user: The user on whose behalf the table is created.
-        :param table: The table we want the data to be inserted.
-        :param data: A list containing all the rows that need to be inserted is
-            expected.
-        :param session: The user session Id used to register the action.
-        :param sync: Set to True if you want to execute the task synchronously.
-        :return: The created job instance.
-        """
-
-        job = JobHandler().create_and_start_job(
-            user,
-            "file_import",
-            data=data,
-            table=table,
-            user_session_id=session,
-            sync=sync,
+        _, error_report = RowHandler().import_rows(
+            user, table, data, progress=progress, send_signal=False
         )
 
-        if sync:
-            job.refresh_from_db()
+        table_created.send(self, table=table, user=user)
 
-        return job
+        return table, error_report
 
     def create_table_and_fields(
         self,
@@ -282,28 +245,24 @@ class TableHandler:
 
         return table
 
-    def normalize_initial_table_data_and_guess_types(
+    def normalize_initial_table_data(
         self, data: List[List[Any]], first_row_header: bool
     ) -> Tuple[List, List]:
         """
         Normalizes the provided initial table data. The amount of columns will be made
-        equal for each row. The header and the rows will also be separated. Try to guess
-        the field type by counting the occurrence of all values type in data. The
-        guesser try to be as safer as possible but by setting the value
-        `settings.BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD` to something greater
-        than 0 we allow this percentage of rows to fail import to have more precise
-        types.
+        equal for each row. The header and the rows will also be separated.
 
         :param data: A list containing all the provided rows.
         :param first_row_header: Indicates if the first row is the header. For each
             of these header columns a field is going to be created.
-        :return: A list containing the field names and a list containing all the rows.
         :raises InvalidInitialTableData: When the data doesn't contain a column or row.
         :raises MaxFieldNameLengthExceeded: When the provided name is too long.
         :raises InitialTableDataDuplicateName: When duplicates exit in field names.
         :raises ReservedBaserowFieldNameException: When the field name is reserved by
             Baserow.
-        :raises InvalidBaserowFieldName: When the field name is invalid (emtpy).
+        :raises InvalidBaserowFieldName: When the field name is invalid (empty).
+        :return: A list containing the field names with a type and a list containing all
+            the rows.
         """
 
         if len(data) == 0:
@@ -351,75 +310,10 @@ class TableHandler:
         if "" in field_name_set:
             raise InvalidBaserowFieldName()
 
-        normalized_data = []
+        fields_with_type = [(field_name, "text", {}) for field_name in fields]
+        result = [[str(value) for value in row] for row in data]
 
-        # Fill missing rows and computes value type frequencies
-        value_type_frequencies = defaultdict(lambda: defaultdict(lambda: 0))
-        for row in data:
-            new_row = []
-            for index, value in enumerate(row):
-                if value is not None:
-                    if isinstance(value, int):
-                        if len(str(value)) <= 50:
-                            value_type_frequencies[index]["number_int"] += 1
-                        else:
-                            value_type_frequencies[index]["text"] += 1
-                    elif isinstance(value, float):
-                        sign, digits, exponent = Decimal(str(value)).as_tuple()
-                        if abs(exponent) <= 10 and len(digits) <= 50 + 10:
-                            value_type_frequencies[index]["number_float"] += 1
-                        else:
-                            value_type_frequencies[index]["text"] += 1
-                    else:
-                        value = "" if value is None else str(value)
-                        if len(value) > 255:
-                            value_type_frequencies[index]["long_text"] += 1
-                        else:
-                            value_type_frequencies[index]["text"] += 1
-
-                new_row.append(value)
-
-            # Fill incomplete rows with empty values
-            for i in range(len(new_row), largest_column_count):
-                new_row.append(None)
-
-            normalized_data.append(new_row)
-
-        field_with_type = []
-        tolerated_error_threshold = (
-            len(normalized_data)
-            / 100
-            * settings.BASEROW_IMPORT_TOLERATED_TYPE_ERROR_THRESHOLD
-        )
-        # Try to guess field type from type frequency
-        for index, field_name in enumerate(fields):
-            frequencies = value_type_frequencies[index]
-            if frequencies["long_text"] > tolerated_error_threshold:
-                field_with_type.append(
-                    (field_name, "long_text", {"field_options": {"width": 400}})
-                )
-            elif frequencies["text"] > tolerated_error_threshold:
-                field_with_type.append((field_name, "text", {}))
-            elif frequencies["number_float"] > tolerated_error_threshold:
-                field_with_type.append(
-                    (
-                        field_name,
-                        "number",
-                        {"number_negative": True, "number_decimal_places": 10},
-                    )
-                )
-            elif frequencies["number_int"] > tolerated_error_threshold:
-                field_with_type.append(
-                    (
-                        field_name,
-                        "number",
-                        {"number_negative": True, "field_options": {"width": 150}},
-                    )
-                )
-            else:
-                field_with_type.append((field_name, "text", {}))
-
-        return field_with_type, normalized_data
+        return fields_with_type, result
 
     def get_example_table_field_and_data(self):
         """
@@ -459,9 +353,7 @@ class TableHandler:
         table = self.get_table_for_update(table_id)
         return self.update_table(user, table, name)
 
-    def update_table(
-        self, user: AbstractUser, table: TableForUpdate, name: str
-    ) -> TableForUpdate:
+    def update_table(self, user: AbstractUser, table: Table, name: str) -> Table:
         """
         Updates an existing table instance.
 
@@ -509,6 +401,77 @@ class TableHandler:
         Table.order_objects(queryset, order)
         tables_reordered.send(self, database=database, order=order, user=user)
 
+    def find_unused_table_name(self, database: Database, proposed_name: str) -> str:
+        """
+        Finds an unused name for a table in a database.
+
+        :param database: The database that the table belongs to.
+        :param proposed_name: The name that is proposed to be used.
+        :return: A unique name to use.
+        """
+
+        existing_tables_names = list(database.table_set.values_list("name", flat=True))
+        name, _ = split_ending_number(proposed_name)
+        return find_unused_name([name], existing_tables_names, max_length=255)
+
+    def _setup_id_mapping_for_table_duplication(
+        self, serialized_table: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Sets up the id mapping for a table duplication.
+
+        :param serialized_table: The serialized table.
+        :return: The .
+        """
+
+        # TODO: fix this hack
+        return {"operation": "duplicate_table"}
+
+    def duplicate_table(
+        self,
+        user: AbstractUser,
+        table: Table,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Table:
+        """
+        Duplicates an existing table instance.
+
+        :param user: The user on whose behalf the table is duplicated.
+        :param table: The table instance that needs to be duplicated.
+        :param progress: A progress object that can be used to report progress.
+        :raises ValueError: When the provided table is not an instance of Table.
+        :return: The duplicated table instance.
+        """
+
+        if not isinstance(table, Table):
+            raise ValueError("The table is not an instance of Table")
+
+        progress = ChildProgressBuilder.build(progress_builder, child_total=2)
+
+        database = table.database
+        database.group.has_user(user, raise_error=True)
+        database_type = application_type_registry.get_by_model(database)
+
+        serialized_tables = database_type.export_tables_serialized([table])
+        progress.increment()
+
+        # Set a unique name for the table to import back as a new one.
+        exported_table = serialized_tables[0]
+        exported_table["name"] = self.find_unused_table_name(database, table.name)
+
+        imported_tables = database_type.import_tables_serialized(
+            database,
+            [exported_table],
+            self._setup_id_mapping_for_table_duplication(exported_table),
+        )
+        progress.increment()
+
+        new_table_clone = imported_tables[0]
+
+        table_created.send(self, table=new_table_clone, user=user)
+
+        return new_table_clone
+
     def delete_table_by_id(self, user: AbstractUser, table_id: int):
         """
         Moves to the trash an existing an existing table instance if the user
@@ -523,7 +486,7 @@ class TableHandler:
         table = self.get_table_for_update(table_id)
         self.delete_table(user, table)
 
-    def delete_table(self, user: AbstractUser, table: TableForUpdate):
+    def delete_table(self, user: AbstractUser, table: Table):
         """
         Moves to the trash an existing table instance if the user has access
         to the related group.
@@ -559,10 +522,16 @@ class TableHandler:
                 chunk_size=chunk_size
             )
         ):
-            count = table.get_model(field_ids=[]).objects.count()
-            table.row_count = count
-            table.row_count_updated_at = time
-            tables_to_store.append(table)
+            try:
+                count = table.get_model(field_ids=[]).objects.count()
+                table.row_count = count
+                table.row_count_updated_at = time
+                tables_to_store.append(table)
+            except ProgrammingError as e:
+                if f'"database_table_{table.id}" does not exist' in str(e):
+                    logger.warning(f"Error while counting rows {e}")
+                else:
+                    raise e
 
             # This makes sure we don't pollute the memory
             if i % chunk_size == 0:

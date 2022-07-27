@@ -47,21 +47,12 @@
     text-decoration: none;
   }
 
-  &:not(.disabled):not(.deactivated):not(.active):hover {
+  &:not(.disabled):not(.active):hover {
     background-color: $color-neutral-100;
     color: $color-primary-900;
   }
 
   &.disabled {
-    color: $color-neutral-400;
-
-    &:hover {
-      cursor: inherit;
-    }
-  }
-
-  &.deactivated {
-    background-color: $color-neutral-50;
     color: $color-neutral-400;
 
     &:hover {

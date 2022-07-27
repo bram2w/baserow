@@ -1,7 +1,8 @@
 from typing import Any, Dict
 
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractUser
 
+from baserow.core.db import transaction_atomic
 from baserow.core.utils import Progress
 from baserow.core.registry import (
     ModelInstanceMixin,
@@ -26,18 +27,26 @@ class JobType(
 ):
     """
     This abstract class represents a custom job type that can be added to the
-    job type registry. It must be extended so customisation can be done. Each job
+    job type registry. It must be extended so customization can be done. Each job
     type will have its own `run` method that will be run asynchronously.
     """
 
     job_exceptions_map = {}
+
     """
     A map of exception that can be used to map exceptions to certain task error
     messages.
     """
 
+    def transaction_atomic_context(self, job: Job):
+        """
+        This method gives the possibility to change the transaction context per request.
+        """
+
+        return transaction_atomic()
+
     def prepare_values(
-        self, values: Dict[str, Any], user: AbstractBaseUser
+        self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
         """
         The prepare_values hook gives the possibility to change the provided values

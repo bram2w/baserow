@@ -18,6 +18,7 @@
 @import 'markdown';
 @import 'rating';
 @import 'progress';
+@import 'field_mapping';
 @import 'fields/boolean';
 @import 'fields/number';
 @import 'fields/rating';
@@ -45,6 +46,7 @@
 @import 'views/grid/aggregation';
 @import 'views/gallery';
 @import 'views/sharing';
+@import 'views/public';
 @import 'decorator/list';
 @import 'decorator/item';
 @import 'decorator/context';
@@ -97,3 +99,5 @@
 @import 'webhook';
 @import 'tab';
 @import 'preview';
+@import 'deactivated_label';
+@import 'snapshots_modal';

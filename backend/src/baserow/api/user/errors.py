@@ -1,4 +1,4 @@
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
 from django.conf import settings
 
 # None of these are passwords
@@ -14,3 +14,10 @@ ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET = (
     f"The {settings.CLIENT_SESSION_ID_HEADER} must be set when using this endpoint.",
 )
 ERROR_DISABLED_RESET_PASSWORD = "ERROR_DISABLED_RESET_PASSWORD"  # nosec
+
+ERROR_UNDO_REDO_LOCK_CONFLICT = (
+    "ERROR_UNDO_REDO_LOCK_CONFLICT",
+    HTTP_409_CONFLICT,
+    "An operation is running in the background or triggered by another user preventing "
+    "your undo/redo action. Please wait until the other operation finishes.",
+)

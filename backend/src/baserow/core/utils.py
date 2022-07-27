@@ -7,10 +7,11 @@ import os
 import random
 import re
 import string
+import io
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
-from typing import List, Optional, Iterable
+from typing import List, Optional, Iterable, Tuple
 
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
@@ -288,6 +289,28 @@ def split_comma_separated_string(comma_separated_string: str) -> List[str]:
     )
 
 
+def list_to_comma_separated_string(value_list: List[str]) -> str:
+    """
+    Converts the given list to a CSV compatible value. The result string can be parsed
+    by a proper CSV parser. This function does the reverse as the previous one.
+
+    :param value_list: List of value to convert.
+    :return: A comma separated string.
+    """
+
+    out = io.StringIO()
+
+    # Use python csv handler to convert the list to a string
+    csv_writer = csv.writer(out, delimiter=",", quotechar='"', escapechar="\\")
+    csv_writer.writerow(value_list)
+
+    out.seek(0)
+    result = out.read()
+
+    # Strip removes the extra end line
+    return result.strip()
+
+
 def get_model_reference_field_name(lookup_model, target_model):
     """
     Figures out what the name of the field related to the `target_model` is in the
@@ -333,6 +356,21 @@ def remove_invalid_surrogate_characters(content: bytes) -> str:
     """
 
     return re.sub(r"\\u(d|D)([a-z|A-Z|0-9]{3})", "", content.decode("utf-8", "ignore"))
+
+
+def split_ending_number(name: str) -> Tuple[str, str]:
+    """
+    Splits a string into two parts, the first part is the string before the last
+    number, the second part is the last number.
+
+    :param string: The string to split.
+    :return: A tuple with the first part and the second part.
+    """
+
+    match = re.search(r"(.+) (\d+)$", name)
+    if match:
+        return match.group(1), match.group(2)
+    return name, ""
 
 
 def find_unused_name(
@@ -576,3 +614,21 @@ class ChildProgressBuilder:
             return parent.create_child(represents_progress, child_total)
         else:
             return Progress(child_total)
+
+
+class MirrorDict(dict):
+    """
+    This dict will always return the same value as the key. It can be used to
+    replicate non existing mapping that must return the same values
+
+    d = MirrorDict()
+    d['test'] == 'test'
+    d[1] == 1
+    d.get('test') == 'test'
+    """
+
+    def __getitem__(self, key):
+        return key
+
+    def get(self, key, default=None):
+        return key

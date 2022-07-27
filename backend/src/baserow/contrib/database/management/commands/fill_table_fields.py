@@ -1,5 +1,5 @@
-import sys
 import random
+import sys
 
 from django.core.management.base import BaseCommand
 
@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
 def fill_table_fields(limit, table):
     field_handler = FieldHandler()
-    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
+    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None, None)
     first_user = table.database.group.users.first()
     # Keep all fields but link_row and lookup
     allowed_field_list = [
@@ -64,7 +64,14 @@ def fill_table_fields(limit, table):
         # This is a helper cli command, randomness is not being used for any security
         # or crypto related reasons.
         field_type_name, all_kwargs = random.choice(allowed_field_list)  # nosec
-        kwargs = random.choice(all_kwargs)  # nosec
+        # These two kwarg types depend on another field existing, which it might
+        # not as we are picking randomly.
+        allowed_kwargs_list = [
+            kwargs
+            for kwargs in all_kwargs
+            if kwargs["name"] not in ["formula_singleselect", "formula_email"]
+        ]
+        kwargs = random.choice(allowed_kwargs_list)  # nosec
         kwargs.pop("primary", None)
         kwargs["name"] = field_handler.find_next_unused_field_name(
             table, [kwargs["name"]]
@@ -74,7 +81,7 @@ def fill_table_fields(limit, table):
 
 def create_field_for_every_type(table):
     field_handler = FieldHandler()
-    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
+    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None, None)
     first_user = table.database.group.users.first()
     i = 0
     for field_type_name, all_possible_kwargs in all_kwargs_per_type.items():

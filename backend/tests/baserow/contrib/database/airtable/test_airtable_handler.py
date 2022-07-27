@@ -520,8 +520,7 @@ def test_create_and_start_airtable_import_job_with_timezone(
         timezone="Europe/Amsterdam",
     )
 
-    job.refresh_from_db()
-    assert job.timezone == "Europe/Amsterdam"
+    assert job.timezone.zone == "Europe/Amsterdam"
 
 
 @pytest.mark.django_db

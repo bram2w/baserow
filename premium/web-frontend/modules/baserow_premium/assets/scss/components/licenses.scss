@@ -91,21 +91,8 @@
 
 .licenses__features {
   display: inline-block;
-  list-style: none;
-  margin: 0 auto 30px auto;
-  padding: 0;
   text-align: left;
-}
-
-.licenses__feature {
-  margin-bottom: 6px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.licenses__feature-icon {
-  margin-right: 4px;
-  color: $color-success-500;
+  margin: 0 auto;
 }
 
 .licenses__instance-id {

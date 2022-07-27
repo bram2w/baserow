@@ -80,7 +80,8 @@ export default {
     this.$options.computed = {
       ...(this.$options.computed || {}),
       ...mapGetters({
-        publicGrid: this.$options.propsData.storePrefix + 'view/grid/isPublic',
+        publicGrid:
+          this.$options.propsData.storePrefix + 'view/public/getIsPublic',
       }),
     }
   },

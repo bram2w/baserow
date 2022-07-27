@@ -6,6 +6,7 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_204_NO_CONTENT,
+    HTTP_409_CONFLICT,
 )
 
 from django.shortcuts import reverse
@@ -13,6 +14,7 @@ from django.conf import settings
 
 from baserow.contrib.database.fields.models import Field, TextField, NumberField
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.test_utils.helpers import independent_test_db_connection
 
 
 @pytest.mark.django_db
@@ -603,3 +605,156 @@ def test_unique_row_values_incompatible_field_type(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_field_returns_with_error_if_cant_lock_field_if_locked_for_update(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user, table=table)
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": text_field.id})
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_field where id = {text_field.id} "
+                f"FOR UPDATE"
+            )
+            response = api_client.patch(
+                url,
+                {"name": "Test 1"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_field_returns_with_error_if_cant_lock_field_if_locked_for_key_share(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user, table=table)
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": text_field.id})
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_field where id = {text_field.id} FOR KEY SHARE"
+            )
+            response = api_client.patch(
+                url,
+                {"name": "Test 1"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_field_returns_with_error_if_cant_lock_table_if_locked_for_update(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user, table=table)
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": text_field.id})
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR UPDATE"
+            )
+            response = api_client.patch(
+                url,
+                {"name": "Test 1"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_field_returns_with_error_if_cant_lock_table_if_locked_for_key_share(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user, table=table)
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": text_field.id})
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR KEY SHARE"
+            )
+            response = api_client.patch(
+                url,
+                {"name": "Test 1"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_update(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR UPDATE"
+            )
+            response = api_client.post(
+                reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+                {"name": "Test 1", "type": "text"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_key_share(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR KEY SHARE"
+            )
+            response = api_client.post(
+                reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+                {"name": "Test 1", "type": "text"},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_409_CONFLICT
+    assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"

@@ -10,9 +10,9 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.rows.signals import row_created, rows_created
+from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
-from baserow.contrib.database.table.signals import table_created
+from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
@@ -98,6 +98,13 @@ class TableTrashableItemType(TrashableItemType):
             # it still exists.
             trash_item_lookup_cache["row_table_model_cache"].pop(trashed_item.id, None)
 
+        try:
+            Table.objects_and_trash.select_for_update(of=("self",)).get(
+                id=trashed_item.id
+            )
+        except Table.DoesNotExist:
+            raise TrashItemDoesNotExist()
+
         with safe_django_schema_editor() as schema_editor:
             model = trashed_item.get_model()
             schema_editor.delete_model(model)
@@ -163,7 +170,14 @@ class FieldTrashableItemType(TrashableItemType):
             # for this field no longer exists.
             trash_item_lookup_cache["row_table_model_cache"].pop(field.table.id, None)
 
-        field = field.specific
+        try:
+            field = (
+                Field.objects_and_trash.select_for_update(of=("self",))
+                .get(id=field.id)
+                .specific
+            )
+        except Field.DoesNotExist:
+            raise TrashItemDoesNotExist()
         field_type = field_type_registry.get_by_model(field)
 
         # Remove the field from the table schema.
@@ -258,9 +272,9 @@ class RowTrashableItemType(TrashableItemType):
 
         ViewHandler().field_value_updated(updated_fields)
 
-        row_created.send(
+        rows_created.send(
             self,
-            row=trashed_item,
+            rows=[trashed_item],
             table=table,
             model=model,
             before=None,
@@ -379,14 +393,19 @@ class RowsTrashableItemType(TrashableItemType):
                 )
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
-        rows_created.send(
-            self,
-            rows=rows_to_restore,
-            table=table,
-            model=table_model,
-            before=None,
-            user=None,
-        )
+        if len(rows_to_restore) < 50:
+            rows_created.send(
+                self,
+                rows=rows_to_restore,
+                table=table,
+                model=table_model,
+                before=None,
+                user=None,
+            )
+        else:
+            # Use table signal here instead of row signal because we don't want
+            # to send too many ids in the signal
+            table_updated.send(self, table=table, user=None, force_table_refresh=True)
 
     def trash(self, item_to_trash, requesting_user):
         """

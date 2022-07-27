@@ -35,14 +35,11 @@
           :table="table"
         ></SidebarItem>
       </ul>
-      <a class="tree__sub-add" @click="$refs.createTableModal.show()">
+      <a class="tree__sub-add" @click="$refs.importFileModal.show()">
         <i class="fas fa-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>
-      <CreateTableModal
-        ref="createTableModal"
-        :application="application"
-      ></CreateTableModal>
+      <ImportFileModal ref="importFileModal" :database="application" />
     </template>
   </SidebarApplication>
 </template>
@@ -50,12 +47,16 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
-import CreateTableModal from '@baserow/modules/database/components/table/CreateTableModal'
+import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 
 export default {
   name: 'Sidebar',
-  components: { SidebarApplication, SidebarItem, CreateTableModal },
+  components: {
+    SidebarApplication,
+    SidebarItem,
+    ImportFileModal,
+  },
   props: {
     application: {
       type: Object,

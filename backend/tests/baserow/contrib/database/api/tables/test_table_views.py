@@ -1,14 +1,15 @@
-import pytest
 import json
+from pytest_unordered import unordered
 from unittest.mock import patch
 
+import pytest
 from django.db import connection
-from django.test.utils import override_settings
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
-
+from django.test.utils import override_settings
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_202_ACCEPTED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
@@ -16,6 +17,10 @@ from rest_framework.status import (
 
 from baserow.contrib.database.file_import.models import FileImportJob
 from baserow.contrib.database.table.models import Table
+from baserow.test_utils.helpers import (
+    independent_test_db_connection,
+    setup_interesting_test_table,
+)
 
 
 @pytest.mark.django_db
@@ -125,7 +130,7 @@ def test_create_table(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     json_response = response.json()
 
-    job = FileImportJob.objects.get(id=json_response)
+    job = FileImportJob.objects.get(id=json_response["id"])
 
     assert job.table is not None
     assert job.table.name == "Test 1"
@@ -177,9 +182,9 @@ def test_create_table_with_data(
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
 
-    mock_run_async_job.delay.assert_called_with(response_json)
+    mock_run_async_job.delay.assert_called_with(response_json["id"])
 
-    job = FileImportJob.objects.get(id=response_json)
+    job = FileImportJob.objects.get(id=response_json["id"])
 
     assert job.table is None
     assert job.name == "Test 1"
@@ -447,3 +452,185 @@ def test_get_database_application_with_tables(api_client, data_fixture):
     assert len(response_json["tables"]) == 2
     assert response_json["tables"][0]["id"] == table_1.id
     assert response_json["tables"][1]["id"] == table_2.id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_table_works_if_locked_for_key_share(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    new_name = "Test 1"
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR KEY SHARE "
+            )
+            response = api_client.patch(
+                reverse("api:database:tables:item", kwargs={"table_id": table.id}),
+                {"name": new_name},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["name"] == new_name
+
+
+@pytest.mark.django_db(transaction=True)
+def test_delete_table_still_if_locked_for_key_share(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    with independent_test_db_connection() as conn:
+        with conn.cursor() as cursor:
+            # nosec
+            cursor.execute(
+                f"SELECT * FROM database_table where id = {table.id} FOR KEY SHARE"
+            )
+            response = api_client.delete(
+                reverse("api:database:tables:item", kwargs={"table_id": table.id}),
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db(transaction=True)
+def test_async_duplicate_table(api_client, data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    group_1 = data_fixture.create_group(user=user_1)
+    _, token_2 = data_fixture.create_user_and_token(
+        email="test_2@test.nl", password="password", first_name="Test2"
+    )
+    _, token_3 = data_fixture.create_user_and_token(
+        email="test_3@test.nl",
+        password="password",
+        first_name="Test3",
+        group=group_1,
+    )
+
+    database = data_fixture.create_database_application(group=group_1)
+    table_1, _, _, _ = setup_interesting_test_table(
+        data_fixture, database=database, user=user_1
+    )
+
+    # user_2 cannot duplicate a table of other groups
+    response = api_client.post(
+        reverse("api:database:tables:async_duplicate", kwargs={"table_id": table_1.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    # cannot duplicate non-existent application
+    response = api_client.post(
+        reverse("api:database:tables:async_duplicate", kwargs={"table_id": 99999}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    # user can duplicate an application created by other in the same group
+    response = api_client.post(
+        reverse("api:database:tables:async_duplicate", kwargs={"table_id": table_1.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_3}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    job = response.json()
+    assert job["id"] is not None
+    assert job["state"] == "pending"
+    assert job["type"] == "duplicate_table"
+
+    # check that now the job ended correctly and the application was duplicated
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token_3}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "duplicate_table"
+    assert job["original_table"]["id"] == table_1.id
+    assert job["original_table"]["name"] == table_1.name
+    assert job["duplicated_table"]["id"] != table_1.id
+    assert job["duplicated_table"]["name"] == f"{table_1.name} 2"
+
+    # check that old tables rows are still accessible
+    rows_url = reverse("api:database:rows:list", kwargs={"table_id": table_1.id})
+    response = api_client.get(
+        f"{rows_url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) > 0
+    original_rows = response_json["results"]
+
+    # check the new rows have the same values of the old
+    duplicated_table_id = job["duplicated_table"]["id"]
+    rows_url = reverse(
+        "api:database:rows:list", kwargs={"table_id": duplicated_table_id}
+    )
+    response = api_client.get(
+        f"{rows_url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) > 0
+    duplicated_rows = response_json["results"]
+
+    def assert_row_field_value(
+        field_name, duplicated_value, original_value, ordered=True
+    ):
+        if ordered:
+            assert (
+                duplicated_value == original_value
+            ), f"{field_name}: {duplicated_value} != {original_value}"
+        else:
+            assert unordered(duplicated_value, original_value)
+
+    for original_row, duplicated_row in zip(original_rows, duplicated_rows):
+        for field_name, original_value in original_row.items():
+
+            if not original_value:
+                assert_row_field_value(
+                    field_name, duplicated_row[field_name], original_value
+                )
+            elif field_name in ["single_select", "formula_singleselect"]:
+                assert_row_field_value(
+                    field_name,
+                    duplicated_row[field_name]["value"],
+                    original_value["value"],
+                )
+            elif field_name in ["multiple_select", "lookup"] or field_name.endswith(
+                "_link_row"
+            ):
+                assert_row_field_value(
+                    field_name,
+                    [v["value"] for v in duplicated_row[field_name]],
+                    [v["value"] for v in original_value],
+                    ordered=False,
+                )
+            elif field_name == "file":
+                assert_row_field_value(
+                    field_name,
+                    [f["name"] for f in duplicated_row[field_name]],
+                    [f["name"] for f in original_value],
+                    ordered=False,
+                )
+            else:
+                assert_row_field_value(
+                    field_name, duplicated_row[field_name], original_value
+                )

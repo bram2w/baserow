@@ -43,6 +43,11 @@
             "title": "Webhook is deactivated",
             "content": "This webhook has been deactivated because there have been too many consecutive failures. Please check the call log for more details. Click on the button below to activate it again. Don't forgot to save the webhook after activating.",
             "activate": "Activate"
+        },
+        "deprecatedEventType": {
+            "title": "Deprecated event type",
+            "description": "This webhook doesn't receive information about all changed rows at once. Please convert it to batch-style event type. This changes the JSON body payload to a format that contains multiple rows.",
+            "convert": "Convert"
         }
     },
     "webhook": {
@@ -138,7 +143,8 @@
         "filterLink": "A list of all filters can be found here.",
         "filterType": "- `AND`: Indicates that the rows must match all the provided filters.\n- `OR`: Indicates that the rows only have to match one of the filters.\n\n This works only if two or more filters are provided.",
         "include": "All the fields are included in the response by default. You can select a subset of fields to include by providing the include query parameter.\n\n #### With `user_field_names`:\n\n `include` should be a comma separated list of field names to be included in results. For example if you provide the following GET param: `include=My Field,-My Field 2` then only those fields will be included (unless they are explicitly excluded).\n\n The name of fields containing commas must be surrounded by quotes: `\"Name ,\"`. If the field names contain quotes, then they must be escaped using the `\\` character. Eg: `Name \\\"`.\n\n #### Without `user_field_names`:\n\n `include` should be a comma separated list of `field_` followed by the id of the field to include in the results. For example: If you provide the following GET parameter `exclude=field_1,field_2` then the fields with id `1` and id `2` then only those fields will be included (unless they are explicitly excluded).",
-        "exclude": "All the fields are included in the response by default. You can select a subset of fields to exclude by providing the exclude query parameter.\n\n #### With `user_field_names`:\n\n `exclude` should be a comma separated list of field names to be excluded from the results. For example if you provide the following GET param: `exclude=My Field,-My Field 2` then those fields will be excluded.\n\n The name of fields containing commas must be surrounded by quotes: `\"Name ,\"`. If the field names contain quotes, then they must be escaped using the `\\` character. Eg: `Name \\\"`.\n\n #### Without `user_field_names`:\n\n `exclude` should be a comma separated list of `field_` followed by the id of the field to exclude from the results. For example: If you provide the following GET parameter `exclude=field_1,field_2` then the fields with id `1` and id `2` will be excluded."
+        "exclude": "All the fields are included in the response by default. You can select a subset of fields to exclude by providing the exclude query parameter.\n\n #### With `user_field_names`:\n\n `exclude` should be a comma separated list of field names to be excluded from the results. For example if you provide the following GET param: `exclude=My Field,-My Field 2` then those fields will be excluded.\n\n The name of fields containing commas must be surrounded by quotes: `\"Name ,\"`. If the field names contain quotes, then they must be escaped using the `\\` character. Eg: `Name \\\"`.\n\n #### Without `user_field_names`:\n\n `exclude` should be a comma separated list of `field_` followed by the id of the field to exclude from the results. For example: If you provide the following GET parameter `exclude=field_1,field_2` then the fields with id `1` and id `2` will be excluded.",
+        "viewId": "By default non of the filters and sorts outside of the ones defined in the query parameters are applied. You can add the filters and sorts of a view by providing its `id` in the `view_id` GET parameter. For example if you provide the following GET parameter `view_id=1` then the filters and sorts defined in the view with id `1` will be applied. You can find the `view_id` in the context menu of any given view. It is the number in brackets behind the view name. \n\n #### With `filter__{field}__{filter}` \n\n Both the filter provided in the query parameter and the filters defined in the view will be applied.\n\n #### With `order_by` \n\n If `order_by` is provided then the sort defined in the view will be ignored."
     },
     "apiDocsIntro": {
         "intro": "The {name} database provides an easy way to integrate the data with any external system. The API follows REST semantics, uses JSON to encode objects and relies on standard HTTP codes, machine and human readable errors to signal operation outcomes.",
@@ -302,6 +308,7 @@
         "emptyCSV": "This CSV file is empty."
     },
     "importer": {
+        "fieldDefaultName": "Field {count}",
         "loading": "Loading file",
         "decoding": "Decoding data",
         "parsing": "Parsing data",
@@ -341,11 +348,14 @@
         "firstRowHeader": "First row is header",
         "limitError": "It is not possible to import more than {limit} rows."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Create new table",
+        "additionalImportTitle": "Import into {table}",
         "importLabel": "Would you like to import existing data?",
         "newTable": "Start with a new table",
         "addButton": "Add table",
+        "showTable": "show table",
+        "importButton": "Import",
         "uploading": "Uploading...",
         "preparing": "Preparing data...",
         "importError": "Something went wrong during the file import",
@@ -356,7 +366,10 @@
         "reportMessage": "The following row indexes couldn't be imported:",
         "stateRowCreation": "Importing...",
         "statePreValidation": "Validating data...",
-        "stateCreateTable": "Creating table..."
+        "stateCreateTable": "Creating table...",
+        "fieldMappingTitle": "Field mapping",
+        "fieldMappingDescription": "We have automatically mapped the columns of the Baserow fields in your table. You can change them below. Any incompatible cell will remain empty after the import.",
+        "selectImportMessage": "Please select data to import."
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Click to edit the formula",
@@ -392,7 +405,9 @@
         "noFilterText": "Filters allow you to show rows that apply to your conditions.",
         "where": "Where",
         "and": "And",
-        "or": "Or"
+        "or": "Or",
+        "relatedFieldNotFound": "The related field is not found.",
+        "filterTypeNotFound": "The filter type is not compatible."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "image",
@@ -472,6 +487,7 @@
         "duplicateView": "Duplicate view",
         "renameView": "Rename view",
         "webhooks": "Webhooks",
+        "importFile": "Import file",
         "deleteView": "Delete view"
     },
     "deleteViewModal": {
@@ -492,6 +508,7 @@
         "insertLeft": "Insert left",
         "insertRight": "Insert right",
         "createFilter": "Create filter",
+        "duplicate": "Duplicate field",
         "sortField": "Sort",
         "hideField": "Hide field"
     },
@@ -501,6 +518,7 @@
         "rowHasMoved": "Row has moved"
     },
     "gridView": {
+        "selectRow": "Select row",
         "insertRowAbove": "Insert row above",
         "insertRowBelow": "Insert row below",
         "duplicateRow": "Duplicate row",
@@ -514,6 +532,9 @@
     "gridViewIdentifierOptions": {
         "id": "Row identifier",
         "count": "Count"
+    },
+    "formViewMeta": {
+        "includeRowId": "Use {row_id} to include the newly created row id in the URL."
     },
     "previewAny": {
         "externalWarning": "Opening your file via an external service exposes your file to their servers."
@@ -614,5 +635,40 @@
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "API documentation"
+    },
+    "formViewField": {
+        "required": "required",
+        "showWhenMatchingConditions": "show when conditions are met",
+        "addCondition": "Add condition"
+    },
+    "duplicateFieldContext": {
+        "duplicate": "Duplicate field",
+        "cloneData": "Copy data",
+        "soon": "Available soon"
+    },
+    "snapshotsModal": {
+        "title": "snapshots",
+        "description": "Snapshots are a full copy of your database of the moment when they were created. A duplication of that data will be created when restoring. Snapshots are automatically deleted after one year.",
+        "descriptionLimits": "You can have a maximum of {n} snapshots per group. | You can have a maximum of {n} snapshot per group. | You can have a maximum of {n} snapshots per group.",
+        "createLabel": "Create a new snapshot",
+        "create": "Create snapshot",
+        "snapshotRestoredErrorTitle": "Error occurred",
+        "snapshotRestoredErrorMessage": "The snapshot couldn't be restored. please try again later.",
+        "snapshotDeletedErrorTitle": "Error occurred",
+        "snapshotDeletedErrorMessage": "The snapshot couldn't be deleted. please try again later.",
+        "limitReached": "The limit of maximum snapshots has been reached.",
+        "snapshot": "Snapshot",
+        "importingState": "Creating",
+        "reset": "Create another"
+    },
+    "deleteSnapshotModal": {
+        "title": "Delete snapshot",
+        "content": "Are you sure you want to permanently delete snapshot {name}?",
+        "confirm": "Delete"
+    },
+    "snapshotListItem": {
+        "restore": "restore",
+        "delete": "delete",
+        "created": "created"
     }
 }

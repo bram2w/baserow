@@ -24,7 +24,7 @@
       @refresh="$emit('refresh', $event)"
       @dragging="$emit('dragging', $event)"
       @field-created="$emit('field-created', $event)"
-      @update-inserted-field-order="updateInsertedFieldOrder"
+      @move-field="moveField"
     ></GridViewFieldType>
     <div
       v-if="includeAddField && !readOnly"
@@ -104,20 +104,24 @@ export default {
     /**
      * After newField is created pressing "insert left" or "insert right" button,
      * we need to move the newField into the correct order position.
-     * This function find the correct order position and update the fieldOptions accordingly.
+     * Also necessary when we duplicate a field.
+     * This function move the field thanks to the store.
      **/
-    async updateInsertedFieldOrder({ position, newField, fromField }) {
-      const newOrder = this.fields.map((field) => field.id)
-      const oldIndex = newOrder.indexOf(newField.id)
-      const offset = position === 'left' ? 0 : 1
-      const newIndex = newOrder.indexOf(fromField.id) + offset
-      newOrder.splice(newIndex, 0, newOrder.splice(oldIndex, 1)[0])
-
+    async moveField({
+      position,
+      newField,
+      fromField,
+      undoRedoActionGroupId = null,
+    }) {
       try {
         await this.$store.dispatch(
-          `${this.storePrefix}view/grid/updateFieldOptionsOrder`,
+          `${this.storePrefix}view/grid/updateSingleFieldOptionOrder`,
           {
-            order: newOrder,
+            fieldToMove: newField,
+            position,
+            fromField,
+            undoRedoActionGroupId,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {

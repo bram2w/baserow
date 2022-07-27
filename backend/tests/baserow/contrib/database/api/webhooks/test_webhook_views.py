@@ -24,7 +24,7 @@ def test_list_webhooks(api_client, data_fixture):
     )
     call_1 = data_fixture.create_table_webhook_call(webhook=webhook_1)
     webhook_2 = data_fixture.create_table_webhook(
-        table=table, include_all_events=False, events=["row.created"]
+        table=table, include_all_events=False, events=["rows.created"]
     )
     data_fixture.create_table_webhook()
 
@@ -74,7 +74,7 @@ def test_list_webhooks(api_client, data_fixture):
     }
 
     assert response_json[1]["id"] == webhook_2.id
-    assert response_json[1]["events"] == ["row.created"]
+    assert response_json[1]["events"] == ["rows.created"]
 
 
 @pytest.mark.django_db
@@ -138,7 +138,7 @@ def test_create_webhooks(api_client, data_fixture):
             "url": "https://mydomain.com/endpoint",
             "name": "My Webhook 2",
             "include_all_events": False,
-            "events": ["row.created"],
+            "events": ["rows.created"],
             "headers": {"Baserow-add-1": "Value 1"},
             "request_method": "PATCH",
             "use_user_field_names": False,
@@ -154,7 +154,7 @@ def test_create_webhooks(api_client, data_fixture):
     assert response_json["name"] == "My Webhook 2"
     assert response_json["include_all_events"] is False
     assert response_json["failed_triggers"] == 0
-    assert response_json["events"] == ["row.created"]
+    assert response_json["events"] == ["rows.created"]
     assert response_json["headers"] == {"Baserow-add-1": "Value 1"}
     assert response_json["calls"] == []
     assert TableWebhook.objects.all().count() == 2
@@ -164,7 +164,7 @@ def test_create_webhooks(api_client, data_fixture):
         {
             "url": "https://mydomain.com/endpoint",
             "name": "My Webhook 2",
-            "events": ["row.created"],
+            "events": ["rows.created"],
             "headers": {"Test:": "Value 1"},
             "request_method": "PATCH",
         },
@@ -197,7 +197,7 @@ def test_create_webhooks(api_client, data_fixture):
         {
             "url": "https://mydomain.com:8a/endpoint",
             "name": "My Webhook 2",
-            "events": ["row.created"],
+            "events": ["rows.created"],
             "request_method": "PATCH",
         },
         format="json",
@@ -214,7 +214,7 @@ def test_create_webhooks(api_client, data_fixture):
         {
             "url": "https://md.com/" + (2001 - len("https://md.com/")) * "a",
             "name": "My Webhook 2",
-            "events": ["row.created"],
+            "events": ["rows.created"],
             "request_method": "PATCH",
         },
         format="json",
@@ -318,7 +318,7 @@ def test_update_webhook(api_client, data_fixture):
             "url": "https://mydomain.com/endpoint",
             "name": "My Webhook 2",
             "include_all_events": False,
-            "events": ["row.created"],
+            "events": ["rows.created"],
             "headers": {"Baserow-add-1": "Value 1"},
             "request_method": "PATCH",
             "use_user_field_names": False,
@@ -335,7 +335,7 @@ def test_update_webhook(api_client, data_fixture):
     assert response_json["name"] == "My Webhook 2"
     assert response_json["include_all_events"] is False
     assert response_json["failed_triggers"] == 0
-    assert response_json["events"] == ["row.created"]
+    assert response_json["events"] == ["rows.created"]
     assert response_json["headers"] == {"Baserow-add-1": "Value 1"}
     assert response_json["calls"] == []
 
@@ -401,7 +401,7 @@ def test_trigger_test_call(api_client, data_fixture):
         reverse("api:database:webhooks:test", kwargs={"table_id": 0}),
         {
             "url": "http://baserow.io",
-            "event_type": "row.created",
+            "event_type": "rows.created",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
@@ -413,7 +413,7 @@ def test_trigger_test_call(api_client, data_fixture):
         reverse("api:database:webhooks:test", kwargs={"table_id": table.id}),
         {
             "url": "http://baserow.io",
-            "event_type": "row.created",
+            "event_type": "rows.created",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token_2}",
@@ -425,7 +425,7 @@ def test_trigger_test_call(api_client, data_fixture):
         reverse("api:database:webhooks:test", kwargs={"table_id": table.id}),
         {
             "url": "http://baserow.io",
-            "event_type": "row.created",
+            "event_type": "rows.created",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
@@ -441,7 +441,7 @@ def test_trigger_test_call(api_client, data_fixture):
         reverse("api:database:webhooks:test", kwargs={"table_id": table.id}),
         {
             "url": "http://baserow.io/invalid",
-            "event_type": "row.created",
+            "event_type": "rows.created",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",

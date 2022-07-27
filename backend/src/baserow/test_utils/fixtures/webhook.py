@@ -42,7 +42,7 @@ class TableWebhookFixture:
             kwargs["webhook"] = self.create_table_webhook(user=None)
 
         if "event_type" not in kwargs:
-            kwargs["event_type"] = "row.created"
+            kwargs["event_type"] = "rows.created"
 
         if "called_url" not in kwargs:
             kwargs["called_url"] = self.fake.url()

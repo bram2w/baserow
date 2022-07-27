@@ -225,35 +225,19 @@ export default {
         return
       }
 
-      const oldOrder = this.fields.map((field) => field.id)
-      // Create an array of field ids in the correct order excluding the field that
-      // needs to be repositioned because that one will be added later.
-      const newOrder = this.fields
-        .filter((field) => field.id !== this.field.id)
-        .map((field) => field.id)
-      if (this.targetFieldId === 0) {
-        // If the target field id is 0 the field needs to be moved to the beginning.
-        newOrder.unshift(this.field.id)
-      } else {
-        // Calculate after which field the field that needs to be repositioned needs to
-        // be placed.
-        const targetIndex = newOrder.findIndex(
-          (id) => id === this.targetFieldId
-        )
-        newOrder.splice(targetIndex + 1, 0, this.field.id)
+      // If targetfieldId is 0 then the field should be moved to the left of the
+      // first field, otherwise it should be moved at the right of the target field
+      const position = this.targetFieldId === 0 ? 'left' : 'right'
+      const fromField = {
+        id: this.targetFieldId === 0 ? this.fields[0].id : this.targetFieldId,
       }
-
-      // Check if the new order differs from the old order. If that is not the case we
-      // don't need to update the field options because nothing will be changed.
-      if (JSON.stringify(oldOrder) === JSON.stringify(newOrder)) {
-        return
-      }
-
       try {
         await this.$store.dispatch(
-          `${this.storePrefix}view/grid/updateFieldOptionsOrder`,
+          `${this.storePrefix}view/grid/updateSingleFieldOptionOrder`,
           {
-            order: newOrder,
+            fieldToMove: this.field,
+            position,
+            fromField,
             readOnly: this.readOnly,
           }
         )

@@ -373,13 +373,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -414,7 +415,6 @@ describe('Buffered rows view store helper', () => {
     let index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 0,
         order: '0.00000000000000000000',
@@ -426,7 +426,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '3.50000000000000000000',
@@ -438,7 +437,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '5.00000000000000000000',
@@ -450,7 +448,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 13,
         order: '13.50000000000000000000',
@@ -462,7 +459,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 100,
         order: '100.00000000000000000000',
@@ -480,13 +476,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -523,7 +520,6 @@ describe('Buffered rows view store helper', () => {
     let index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 4,
         order: '4.00000000000000000000',
@@ -535,7 +531,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 2,
         order: '2.00000000000000000000',
@@ -547,7 +542,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 13,
         order: '13.00000000000000000000',
@@ -559,7 +553,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfNotExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 100,
         order: '100.00000000000000000000',
@@ -577,13 +570,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -618,7 +612,6 @@ describe('Buffered rows view store helper', () => {
     let index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 1,
         order: '1.00000000000000000000',
@@ -630,7 +623,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -642,7 +634,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 4,
         order: '4.00000000000000000000',
@@ -654,7 +645,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '5.00000000000000000000',
@@ -666,7 +656,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 10,
         order: '10.00000000000000000000',
@@ -678,7 +667,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 14,
         order: '14.00000000000000000000',
@@ -690,7 +678,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 15,
         order: '15.00000000000000000000',
@@ -709,13 +696,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -752,7 +740,6 @@ describe('Buffered rows view store helper', () => {
     let index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 1,
         order: '1.00000000000000000000',
@@ -764,7 +751,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 0,
         order: '0.00000000000000000000',
@@ -776,7 +762,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 4,
         order: '4.00000000000000000000',
@@ -788,7 +773,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 6,
         order: '6.00000000000000000000',
@@ -800,7 +784,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 12,
         order: '12.00000000000000000000',
@@ -812,7 +795,6 @@ describe('Buffered rows view store helper', () => {
     index = await store.dispatch('test/findIndexOfExistingRow', {
       view,
       fields,
-      primary,
       row: {
         id: 15,
         order: '15.00000000000000000000',
@@ -838,13 +820,14 @@ describe('Buffered rows view store helper', () => {
       ],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
 
     const testStore = bufferedRows({ service: null, populateRow: null })
     store.registerModule('test', testStore)
@@ -853,7 +836,6 @@ describe('Buffered rows view store helper', () => {
       await store.dispatch('test/rowMatchesFilters', {
         view,
         fields,
-        primary,
         row: { id: 12, order: '12.00000000000000000000', field_1: 'Value 12' },
       })
     ).toBe(true)
@@ -861,7 +843,6 @@ describe('Buffered rows view store helper', () => {
       await store.dispatch('test/rowMatchesFilters', {
         view,
         fields,
-        primary,
         row: {
           id: 12,
           order: '12.00000000000000000000',
@@ -873,7 +854,6 @@ describe('Buffered rows view store helper', () => {
       await store.dispatch('test/rowMatchesFilters', {
         view,
         fields,
-        primary,
         row: {
           id: 12,
           order: '12.00000000000000000000',
@@ -887,7 +867,6 @@ describe('Buffered rows view store helper', () => {
       await store.dispatch('test/rowMatchesFilters', {
         view,
         fields,
-        primary,
         row: {
           id: 12,
           order: '12.00000000000000000000',
@@ -905,13 +884,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -945,7 +925,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 2,
         order: '2.00000000000000000000',
@@ -971,7 +950,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 4,
         order: '4.00000000000000000000',
@@ -998,7 +976,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 13,
         order: '13.00000000000000000000',
@@ -1025,7 +1002,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 16,
         order: '16.00000000000000000000',
@@ -1059,7 +1035,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 17,
         order: '17.00000000000000000000',
@@ -1093,7 +1068,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 0,
         order: '0.00000000000000000000',
@@ -1137,13 +1111,14 @@ describe('Buffered rows view store helper', () => {
       ],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1177,7 +1152,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterNewRowCreated', {
       view,
       fields,
-      primary,
       values: {
         id: 4,
         order: '4.00000000000000000000',
@@ -1206,13 +1180,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1252,7 +1227,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '5.00000000000000000000',
@@ -1281,7 +1255,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '5.00000000000000000000',
@@ -1308,7 +1281,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '6.50000000000000000000',
@@ -1334,7 +1306,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '7.50000000000000000000',
@@ -1374,13 +1345,14 @@ describe('Buffered rows view store helper', () => {
       ],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1415,7 +1387,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 1,
         order: '1.00000000000000000000',
@@ -1443,7 +1414,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 4,
         order: '4.00000000000000000000',
@@ -1471,7 +1441,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 4,
         order: '4.00000000000000000000',
@@ -1498,7 +1467,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 15,
         order: '15.00000000000000000000',
@@ -1537,13 +1505,14 @@ describe('Buffered rows view store helper', () => {
         },
       ],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1570,7 +1539,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1589,7 +1557,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1607,7 +1574,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1625,7 +1591,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1643,7 +1608,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1661,7 +1625,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1679,7 +1642,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 3,
         order: '3.00000000000000000000',
@@ -1710,13 +1672,14 @@ describe('Buffered rows view store helper', () => {
         },
       ],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1747,7 +1710,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowUpdated', {
       view,
       fields,
-      primary,
       row: {
         id: 7,
         order: '7.00000000000000000000',
@@ -1776,13 +1738,14 @@ describe('Buffered rows view store helper', () => {
       filters: [],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1817,7 +1780,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowDeleted', {
       view,
       fields,
-      primary,
       row: {
         id: 1,
         order: '1.00000000000000000000',
@@ -1840,7 +1802,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowDeleted', {
       view,
       fields,
-      primary,
       row: {
         id: 15,
         order: '15.00000000000000000000',
@@ -1861,7 +1822,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowDeleted', {
       view,
       fields,
-      primary,
       row: {
         id: 9,
         order: '9.00000000000000000000',
@@ -1881,7 +1841,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowDeleted', {
       view,
       fields,
-      primary,
       row: {
         id: 5,
         order: '5.00000000000000000000',
@@ -1900,7 +1859,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowDeleted', {
       view,
       fields,
-      primary,
       row: {
         id: 14,
         order: '14.00000000000000000000',
@@ -1932,13 +1890,14 @@ describe('Buffered rows view store helper', () => {
       ],
       sortings: [],
     }
-    const fields = []
-    const primary = {
-      id: 1,
-      name: 'Test 1',
-      type: 'text',
-      primary: true,
-    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+    ]
     const populateRow = (row) => {
       row._ = {}
       return row
@@ -1973,7 +1932,6 @@ describe('Buffered rows view store helper', () => {
     await store.dispatch('test/afterExistingRowDeleted', {
       view,
       fields,
-      primary,
       row: {
         id: 100,
         order: '100.00000000000000000000',
@@ -2072,8 +2030,7 @@ describe('Buffered rows search', () => {
     store.registerModule(storeName, bufferedRowsModule)
 
     await store.dispatch(`${storeName}/refresh`, {
-      fields: [],
-      primary: createPrimaryField(),
+      fields: [createPrimaryField()],
     })
 
     const rowsInStore = store.getters[`${storeName}/getRows`]
@@ -2097,8 +2054,7 @@ describe('Buffered rows search', () => {
 
     await store.dispatch(`${storeName}/afterNewRowCreated`, {
       view,
-      fields: [],
-      primary: createPrimaryField(),
+      fields: [createPrimaryField()],
       values: newMatchingRow,
     })
 
@@ -2124,7 +2080,6 @@ describe('Buffered rows search', () => {
     await store.dispatch(`${storeName}/afterNewRowCreated`, {
       view,
       fields: [],
-      primary: createPrimaryField(),
       values: newNotMatchingRow,
     })
 
@@ -2152,8 +2107,7 @@ describe('Buffered rows search', () => {
 
     await store.dispatch(`${storeName}/afterExistingRowUpdated`, {
       view,
-      fields: [],
-      primary: createPrimaryField(),
+      fields: [createPrimaryField()],
       row: matchingRow,
       values: newValues,
     })

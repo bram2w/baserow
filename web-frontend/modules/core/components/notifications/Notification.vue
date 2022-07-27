@@ -1,17 +1,15 @@
 <template>
-  <div
-    class="alert alert--simple alert--with-shadow alert--has-icon"
-    :class="notificationClass"
+  <Alert
+    simple
+    shadow
+    close-button
+    icon="exclamation"
+    :type="notification.type"
+    :title="notification.title"
+    @close="close(notification)"
   >
-    <a class="alert__close" @click="close(notification)">
-      <i class="fas fa-times"></i>
-    </a>
-    <div class="alert__icon">
-      <i class="fas fa-exclamation"></i>
-    </div>
-    <div class="alert__title">{{ notification.title }}</div>
-    <p class="alert__content">{{ notification.message }}</p>
-  </div>
+    {{ notification.message }}
+  </Alert>
 </template>
 
 <script>
@@ -21,11 +19,6 @@ export default {
     notification: {
       type: Object,
       required: true,
-    },
-  },
-  computed: {
-    notificationClass() {
-      return 'alert--' + this.notification.type
     },
   },
   mounted() {

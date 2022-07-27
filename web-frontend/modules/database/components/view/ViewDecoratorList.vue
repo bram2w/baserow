@@ -1,14 +1,23 @@
 <template>
   <div class="decorator-list">
     <div
-      v-for="decoratorType in viewDecoratorTypes"
+      v-for="(decoratorType, index) in viewDecoratorTypes"
       :key="decoratorType.getType()"
       v-tooltip="getTooltip(decoratorType)"
       class="decorator-list__item"
       :class="{ 'decorator-list__item--disabled': isDisabled(decoratorType) }"
-      @click="addDecoration(decoratorType)"
+      @click="addDecoration(decoratorType, index)"
     >
-      <ViewDecoratorItem :decorator-type="decoratorType" />
+      <ViewDecoratorItem
+        :deactivated="isDeactivated(decoratorType)"
+        :decorator-type="decoratorType"
+      />
+      <component
+        v-if="decoratorType.getDeactivatedClickModal() !== null"
+        :is="decoratorType.getDeactivatedClickModal()"
+        ref="deactivatedClickModal"
+        :name="decoratorType.getName()"
+      ></component>
     </div>
   </div>
 </template>
@@ -37,24 +46,29 @@ export default {
     },
   },
   methods: {
+    isDeactivated(decoratorType) {
+      return decoratorType.isDeactivated(this.database.group.id)
+    },
     isDisabled(decoratorType) {
-      return (
-        decoratorType.isDeactivated(this.database.group.id) ||
-        !decoratorType.canAdd({ view: this.view })[0]
-      )
+      return !decoratorType.canAdd({ view: this.view })[0]
     },
     getTooltip(decoratorType) {
-      if (decoratorType.isDeactivated(this.database.group.id)) {
-        return decoratorType.getDeactivatedText()
-      }
       const [canAdd, disabledReason] = decoratorType.canAdd({ view: this.view })
       if (!canAdd) {
         return disabledReason
       }
+      if (this.isDeactivated(decoratorType)) {
+        return decoratorType.getDeactivatedText()
+      }
       return ''
     },
-    addDecoration(decoratorType) {
+    addDecoration(decoratorType, index) {
       if (this.isDisabled(decoratorType)) {
+        return
+      } else if (this.isDeactivated(decoratorType)) {
+        if (decoratorType.getDeactivatedClickModal() !== null) {
+          this.$refs.deactivatedClickModal[index].show()
+        }
         return
       }
       this.$emit('select', decoratorType)

@@ -4,7 +4,7 @@ from django.db import transaction
 from django.dispatch import receiver
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
-from baserow.contrib.database.api.views.grid.serializers import PublicFieldSerializer
+from baserow.contrib.database.api.views.serializers import PublicFieldSerializer
 from baserow.contrib.database.fields import signals as field_signals
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.views.models import View
@@ -69,15 +69,18 @@ def _get_views_where_field_visible_and_hidden_fields_in_view(
         if not view_type.when_shared_publicly_requires_realtime_events:
             continue
 
-        hidden_field_options_qs = view_type.get_hidden_field_options(view)
-        if hidden_fields_field_ids_filter is not None:
-            hidden_field_options_qs = hidden_field_options_qs.filter(
-                field_id__in=[field.id, *hidden_fields_field_ids_filter]
-            )
-        hidden_fields = set(hidden_field_options_qs.values_list("field_id", flat=True))
-
-        if field.id not in hidden_fields:
-            views_where_field_was_visible.append((view, hidden_fields))
+        if hidden_fields_field_ids_filter is None:
+            restrict_hidden_check_to_field_ids = None
+        else:
+            restrict_hidden_check_to_field_ids = [
+                field.id,
+                *hidden_fields_field_ids_filter,
+            ]
+        hidden_field_ids = view_type.get_hidden_fields(
+            view, restrict_hidden_check_to_field_ids
+        )
+        if field.id not in hidden_field_ids:
+            views_where_field_was_visible.append((view, hidden_field_ids))
     return views_where_field_was_visible
 
 

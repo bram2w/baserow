@@ -128,7 +128,7 @@ export default {
       return this.defaultValues ? this.defaultValues.id : null
     },
     ...mapGetters({
-      fields: 'field/getAllWithPrimary',
+      fields: 'field/getAll',
     }),
   },
   validations() {

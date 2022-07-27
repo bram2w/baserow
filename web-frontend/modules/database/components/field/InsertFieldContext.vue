@@ -3,6 +3,7 @@
     ref="createFieldContext"
     :table="table"
     :force-typed="forcedType"
+    :use-action-group-id="true"
     @field-created="$emit('field-created', $event)"
     @field-created-callback-done="updateInsertedFieldOrder"
   ></CreateFieldContext>
@@ -36,12 +37,13 @@ export default {
     }
   },
   methods: {
-    updateInsertedFieldOrder({ newField }) {
+    updateInsertedFieldOrder({ newField, undoRedoActionGroupId }) {
       // GridViewHead will update the order of the fields and call the backend endpoint
-      this.$emit('update-inserted-field-order', {
+      this.$emit('move-field', {
         newField,
         position: this.position,
         fromField: this.fromField,
+        undoRedoActionGroupId,
       })
     },
     toggle(ref, position) {

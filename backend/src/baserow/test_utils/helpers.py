@@ -1,6 +1,11 @@
+import contextlib
 from contextlib import contextmanager
 from decimal import Decimal
+from typing import Any, Dict, List, Optional, Type
 
+import psycopg2
+from django.contrib.auth.models import AbstractUser
+from django.db import connection
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.timezone import make_aware, utc
 from freezegun import freeze_time
@@ -10,7 +15,11 @@ from baserow.contrib.database.fields.field_helpers import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
+from baserow.contrib.database.models import Database
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.action.models import Action
+from baserow.core.action.registries import ActionType
+from baserow.core.models import Group
 
 
 def _parse_datetime(datetime):
@@ -37,7 +46,14 @@ def is_dict_subset(subset: dict, superset: dict) -> bool:
     return subset == superset
 
 
-def setup_interesting_test_table(data_fixture, user_kwargs=None):
+def setup_interesting_test_table(
+    data_fixture,
+    user: Optional[AbstractUser] = None,
+    database: Optional[Database] = None,
+    name: Optional[str] = None,
+    file_suffix: Optional[str] = None,
+    user_kwargs: Optional[Dict[str, Any]] = None,
+):
     """
     Constructs a testing table with every field type, their sub types and any other
     interesting baserow edge cases worth testing when writing a comphensive "does this
@@ -47,12 +63,14 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     :return:
     """
 
-    if not user_kwargs:
+    if user_kwargs is None:
         user_kwargs = {}
 
-    user = data_fixture.create_user(**user_kwargs)
-    database = data_fixture.create_database_application(user=user)
-    table = data_fixture.create_database_table(database=database, user=user)
+    user = user or data_fixture.create_user(**user_kwargs)
+    database = database or data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        database=database, user=user, name=name or "interesting_test_table"
+    )
     link_table = data_fixture.create_database_table(
         database=database, user=user, name="link_table"
     )
@@ -67,7 +85,7 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     )
     handler = FieldHandler()
     all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
-        link_table, decimal_link_table, file_link_table
+        table, link_table, decimal_link_table, file_link_table
     )
     name_to_field_id = {}
     i = 0
@@ -125,6 +143,7 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         "created_on_date_eu": None,
         # We will setup link rows manually later
         "link_row": None,
+        "self_link_row": None,
         "decimal_link_row": None,
         "file_link_row": None,
         "file": [
@@ -149,7 +168,9 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
                 "uploaded_at": "2020-02-01 01:23",
             },
         ],
-        "single_select": SelectOption.objects.get(value="A"),
+        "single_select": SelectOption.objects.get(
+            value="A", field_id=name_to_field_id["single_select"]
+        ),
         "multiple_select": None,
         "phone_number": "+4412345678",
         "formula_text": "test FORMULA",
@@ -161,6 +182,18 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         "formula_singleselect": "",
         "formula_email": "test@example.com",
     }
+
+    with freeze_time("2020-02-01 01:23"):
+        data_fixture.create_user_file(
+            original_name=f"a.txt",
+            unique=f"hashed{file_suffix}",
+            sha256_hash="name",
+        )
+        data_fixture.create_user_file(
+            original_name=f"b.txt",
+            unique=f"other{file_suffix}",
+            sha256_hash="name",
+        )
 
     missing_fields = set(name_to_field_id.keys()) - set(values.keys()) - {"lookup"}
     assert missing_fields == set(), (
@@ -223,11 +256,12 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
             other_table_primary_decimal_field.id: None,
         },
     )
+    file_suffix = file_suffix or ""
     with freeze_time("2020-01-01 12:00"):
         user_file_1 = data_fixture.create_user_file(
-            original_name="name.txt",
-            unique="test",
-            sha256_hash="hash",
+            original_name=f"name{file_suffix}.txt",
+            unique=f"test{file_suffix}",
+            sha256_hash=f"hash{file_suffix}",
         )
     linked_row_7 = row_handler.create_row(
         user=user,
@@ -270,15 +304,49 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
 
     # multiple select
     getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
-        SelectOption.objects.get(value="D").id
+        SelectOption.objects.get(
+            value="D", field_id=name_to_field_id["multiple_select"]
+        ).id
     )
     getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
-        SelectOption.objects.get(value="C").id
+        SelectOption.objects.get(
+            value="C", field_id=name_to_field_id["multiple_select"]
+        ).id
     )
     getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
-        SelectOption.objects.get(value="E").id
+        SelectOption.objects.get(
+            value="E", field_id=name_to_field_id["multiple_select"]
+        ).id
     )
     return table, user, row, blank_row
+
+
+def setup_interesting_test_database(
+    data_fixture,
+    user: Optional[AbstractUser] = None,
+    group: Optional[Group] = None,
+    database: Optional[Database] = None,
+    name: Optional[str] = None,
+    user_kwargs=None,
+):
+    if user_kwargs is None:
+        user_kwargs = {}
+
+    user = user or data_fixture.create_user(**user_kwargs)
+    database = database or data_fixture.create_database_application(
+        user=user, group=group, name=name
+    )
+
+    for table_name in ["A", "B", "C"]:
+        setup_interesting_test_table(
+            data_fixture,
+            user=user,
+            database=database,
+            name=table_name,
+            file_suffix=table_name,
+        )
+
+    return database
 
 
 @contextmanager
@@ -294,3 +362,45 @@ def register_instance_temporarily(registry, instance):
         yield instance
     finally:
         registry.unregister(instance)
+
+
+def assert_undo_redo_actions_are_valid(
+    actions: List[Action], expected_action_types: List[Type[ActionType]]
+):
+    assert len(actions) == len(
+        expected_action_types
+    ), f"Expected {len(actions)} actions but got {len(expected_action_types)} action_types"
+
+    for action, expected_action_type in zip(actions, expected_action_types):
+        assert (
+            action.type == expected_action_type.type
+        ), f"Action expected of type {expected_action_type} but got {action.type}"
+        assert (
+            action is not None
+        ), "Action is None, but should be of type {expected_action_type}"
+        assert action.error is None, "Action has error: {action.error}"
+
+
+def assert_undo_redo_actions_fails_with_error(
+    actions: List[Action], expected_action_types: List[Type[ActionType]]
+):
+    assert actions, "Actions list should not be empty"
+
+    for action, expected_action_type in zip(actions, expected_action_types):
+        assert action, "Action is None, but should be of type {expected_action_type}"
+        assert action.error is not None, "Action has no error, but should have one"
+
+
+@contextlib.contextmanager
+def independent_test_db_connection():
+    d = connection.settings_dict
+    conn = psycopg2.connect(
+        host=d["HOST"],
+        database=d["NAME"],
+        user=d["USER"],
+        password=d["PASSWORD"],
+        port=d["PORT"],
+    )
+    conn.autocommit = False
+    yield conn
+    conn.close()

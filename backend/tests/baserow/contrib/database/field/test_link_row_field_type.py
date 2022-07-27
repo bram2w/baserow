@@ -6,12 +6,12 @@ from django.db import connections
 from django.shortcuts import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
+from baserow.contrib.database.fields.dependencies.exceptions import (
+    SelfReferenceFieldDependencyError,
+)
 from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
-)
-from baserow.contrib.database.fields.dependencies.exceptions import (
-    SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
@@ -752,7 +752,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     assert len(response_json[f"field_{link_row_field.id}"]) == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.field_link_row
 def test_import_export_link_row_field(data_fixture):
     user = data_fixture.create_user()
@@ -1242,3 +1242,24 @@ def test_lookup_field_cannot_self_reference_itself_via_same_table_link_row(
             through_field_id=link_row.id,
             target_field_id=lookup.id,
         )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_no_pending_operations_after_creating_self_linking_model(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    field_handler = FieldHandler()
+    field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Test",
+        link_row_table=table,
+    )
+    table.get_model()
+    # Make sure that there are no pending operations in the app registry. Because a
+    # Django ManyToManyField registers pending operations every time a table model is
+    # generated, which can causes a memory leak if they are not triggered.
+    assert len(apps._pending_operations) == 0

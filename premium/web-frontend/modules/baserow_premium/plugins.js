@@ -1,5 +1,5 @@
 import { BaserowPlugin } from '@baserow/modules/core/plugins'
-import IsImpersonating from '@baserow_premium/components/sidebar/IsImpersonating'
+import PremiumTopSidebar from '@baserow_premium/components/sidebar/PremiumTopSidebar'
 
 export class PremiumPlugin extends BaserowPlugin {
   static getType() {
@@ -25,6 +25,6 @@ export class PremiumPlugin extends BaserowPlugin {
   }
 
   getSidebarTopComponent() {
-    return IsImpersonating
+    return PremiumTopSidebar
   }
 }

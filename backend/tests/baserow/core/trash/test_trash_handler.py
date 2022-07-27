@@ -207,7 +207,7 @@ def test_an_app_marked_for_perm_deletion_no_longer_shows_up_in_trash_structure(
         assert group["applications"].count() == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_perm_deleting_a_parent_with_a_trashed_child_also_cleans_up_the_child_entry(
     data_fixture,
 ):

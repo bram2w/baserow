@@ -79,7 +79,6 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
     BaserowFormulaValidType,
     UnTyped,
-    BaserowArgumentTypeChecker,
 )
 from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaTextType,
@@ -92,6 +91,10 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaSingleSelectType,
     BaserowFormulaCharType,
     literal,
+)
+from baserow.contrib.database.formula.types.type_checker import (
+    MustBeManyExprChecker,
+    BaserowArgumentTypeChecker,
 )
 
 
@@ -1068,7 +1071,7 @@ def _calculate_aggregate_orders(join_ids: JoinIdsType):
 
 class BaserowArrayAgg(OneArgumentBaserowFunction):
     type = "array_agg"
-    arg_type = [BaserowFormulaValidType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
     aggregate = True
 
     def type_function(
@@ -1126,7 +1129,7 @@ class BaserowArrayAgg(OneArgumentBaserowFunction):
 
 class Baserow2dArrayAgg(OneArgumentBaserowFunction):
     type = "array_agg_unnesting"
-    arg_type = [BaserowFormulaArrayType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaArrayType)]
     aggregate = True
 
     def type_function(
@@ -1157,7 +1160,7 @@ class Baserow2dArrayAgg(OneArgumentBaserowFunction):
 
 class BaserowCount(OneArgumentBaserowFunction):
     type = "count"
-    arg_type = [BaserowFormulaValidType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
     aggregate = True
 
     def type_function(
@@ -1216,7 +1219,7 @@ class BaserowFilter(TwoArgumentBaserowFunction):
 
 class BaserowAny(OneArgumentBaserowFunction):
     type = "any"
-    arg_type = [BaserowFormulaBooleanType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaBooleanType)]
     aggregate = True
 
     def type_function(
@@ -1232,7 +1235,7 @@ class BaserowAny(OneArgumentBaserowFunction):
 
 class BaserowEvery(OneArgumentBaserowFunction):
     type = "every"
-    arg_type = [BaserowFormulaBooleanType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaBooleanType)]
     aggregate = True
 
     def type_function(
@@ -1249,9 +1252,9 @@ class BaserowEvery(OneArgumentBaserowFunction):
 class BaserowMax(OneArgumentBaserowFunction):
     type = "max"
     arg_type = [
-        BaserowFormulaTextType,
-        BaserowFormulaNumberType,
-        BaserowFormulaCharType,
+        MustBeManyExprChecker(
+            BaserowFormulaTextType, BaserowFormulaNumberType, BaserowFormulaCharType
+        ),
     ]
     aggregate = True
 
@@ -1269,9 +1272,9 @@ class BaserowMax(OneArgumentBaserowFunction):
 class BaserowMin(OneArgumentBaserowFunction):
     type = "min"
     arg_type = [
-        BaserowFormulaTextType,
-        BaserowFormulaNumberType,
-        BaserowFormulaCharType,
+        MustBeManyExprChecker(
+            BaserowFormulaTextType, BaserowFormulaNumberType, BaserowFormulaCharType
+        ),
     ]
     aggregate = True
 
@@ -1289,7 +1292,7 @@ class BaserowMin(OneArgumentBaserowFunction):
 class BaserowAvg(OneArgumentBaserowFunction):
     type = "avg"
     arg_type = [
-        BaserowFormulaNumberType,
+        MustBeManyExprChecker(BaserowFormulaNumberType),
     ]
     aggregate = True
 
@@ -1306,7 +1309,7 @@ class BaserowAvg(OneArgumentBaserowFunction):
 
 class BaserowStdDevPop(OneArgumentBaserowFunction):
     type = "stddev_pop"
-    arg_type = [BaserowFormulaNumberType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
     aggregate = True
 
     def type_function(
@@ -1322,7 +1325,7 @@ class BaserowStdDevPop(OneArgumentBaserowFunction):
 
 class BaserowStdDevSample(OneArgumentBaserowFunction):
     type = "stddev_sample"
-    arg_type = [BaserowFormulaNumberType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
     aggregate = True
 
     def type_function(
@@ -1338,7 +1341,7 @@ class BaserowStdDevSample(OneArgumentBaserowFunction):
 
 class BaserowAggJoin(TwoArgumentBaserowFunction):
     type = "join"
-    arg1_type = [BaserowFormulaTextType]
+    arg1_type = [MustBeManyExprChecker(BaserowFormulaTextType)]
     arg2_type = [BaserowFormulaTextType]
     aggregate = True
 
@@ -1389,7 +1392,7 @@ class BaserowAggJoin(TwoArgumentBaserowFunction):
 class BaserowSum(OneArgumentBaserowFunction):
     type = "sum"
     aggregate = True
-    arg_type = [BaserowFormulaNumberType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
 
     def type_function(
         self,
@@ -1405,7 +1408,7 @@ class BaserowSum(OneArgumentBaserowFunction):
 class BaserowVarianceSample(OneArgumentBaserowFunction):
     type = "variance_sample"
     aggregate = True
-    arg_type = [BaserowFormulaNumberType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
 
     def type_function(
         self,
@@ -1421,7 +1424,7 @@ class BaserowVarianceSample(OneArgumentBaserowFunction):
 class BaserowVariancePop(OneArgumentBaserowFunction):
     type = "variance_pop"
     aggregate = True
-    arg_type = [BaserowFormulaNumberType]
+    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
 
     def type_function(
         self,

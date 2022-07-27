@@ -8,8 +8,13 @@ from rest_framework.status import (
 )
 
 from django.shortcuts import reverse
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
-from baserow.contrib.database.views.models import FormView
+from baserow.contrib.database.views.models import (
+    FormView,
+    FormViewFieldOptionsCondition,
+)
 
 
 @pytest.mark.django_db
@@ -275,6 +280,9 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "description": "Text field description",
         "required": True,
         "order": 1,
+        "condition_type": "AND",
+        "conditions": [],
+        "show_when_matching_conditions": False,
         "field": {"id": text_field.id, "type": "text", "text_default": ""},
     }
     assert response_json["fields"][1] == {
@@ -282,6 +290,9 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "description": "",
         "required": False,
         "order": 2,
+        "condition_type": "AND",
+        "conditions": [],
+        "show_when_matching_conditions": False,
         "field": {
             "id": number_field.id,
             "type": "number",
@@ -362,6 +373,7 @@ def test_submit_form_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "row_id": 1,
         "submit_action": "MESSAGE",
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
@@ -460,6 +472,67 @@ def test_submit_form_view(api_client, data_fixture):
     response_json = response.json()
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert len(response_json["detail"]) == 7
+
+
+@pytest.mark.django_db
+def test_submit_form_view_skip_required_with_conditions(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True
+    )
+    number_option = data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "test",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 1
+
+    number_option.show_when_matching_conditions = True
+    number_option.save()
+
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "test",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 1
+
+    # When there is a condition and `show_when_matching_conditions` is `True`,
+    # the backend can't validate whether the values match the filter, we we don't do
+    # a required validation at all.
+    data_fixture.create_form_view_field_options_condition(
+        field_option=number_option, field=text_field
+    )
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "test",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -659,12 +732,727 @@ def test_test_enable_form_view_file_field_options(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
+    print(response_json)
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED"
     assert (
         response_json["detail"]
         == "The file field type is not compatible with the form view."
     )
+
+
+@pytest.mark.django_db
+def test_get_form_view_field_options(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=True,
+    )
+    text_field_option_2 = data_fixture.create_form_view_field_option(
+        form_view=form_view, field=text_field_2
+    )
+    condition_1 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field_2
+    )
+
+    with CaptureQueriesContext(connection) as captured:
+        url = reverse(
+            "api:database:views:field_options", kwargs={"view_id": form_view.id}
+        )
+        response = api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        response_json = response.json()
+
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "order": 32767,
+                "show_when_matching_conditions": True,
+                "condition_type": "AND",
+                "conditions": [
+                    {
+                        "id": condition_1.id,
+                        "field": text_field_2.id,
+                        "type": "equal",
+                        "value": condition_1.value,
+                    }
+                ],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "order": 32767,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "conditions": [],
+            },
+        }
+    }
+
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option_3 = data_fixture.create_form_view_field_option(
+        form_view=form_view, field=text_field_3
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field_2
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_2, field=text_field_3
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_3, field=text_field
+    )
+
+    with django_assert_num_queries(len(captured.captured_queries)):
+        api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_create(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "condition_type": "OR",
+                    "conditions": [
+                        {
+                            "id": 0,
+                            "field": text_field_2.id,
+                            "type": "equal",
+                            "value": "test",
+                        }
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    condition = FormViewFieldOptionsCondition.objects.all().first()
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "OR",
+                "order": 32767,
+                "conditions": [
+                    {
+                        "id": condition.id,
+                        "field": text_field_2.id,
+                        "type": "equal",
+                        "value": "test",
+                    }
+                ],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_update(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    condition_1 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field_2
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "conditions": [
+                        {
+                            "id": condition_1.id,
+                            "field": text_field_3.id,
+                            "type": "not_equal",
+                            "value": "test",
+                        }
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [
+                    {
+                        "id": condition_1.id,
+                        "field": text_field_3.id,
+                        "type": "not_equal",
+                        "value": "test",
+                    }
+                ],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [],
+            },
+            str(text_field_3.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_update_position(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    text_field_option_2 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_2,
+        show_when_matching_conditions=False,
+    )
+    text_field_option_3 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_3,
+        show_when_matching_conditions=True,
+    )
+    condition = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_3, field=text_field_2
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "order": 1,
+                    "show_when_matching_conditions": False,
+                    "conditions": [],
+                },
+                str(text_field_3.id): {
+                    "order": 2,
+                    "show_when_matching_conditions": True,
+                },
+                str(text_field_2.id): {
+                    "order": 3,
+                    "show_when_matching_conditions": False,
+                    "conditions": [],
+                },
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 1,
+                "conditions": [],
+            },
+            str(text_field_3.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "AND",
+                "order": 2,
+                "conditions": [
+                    {
+                        "id": condition.id,
+                        "field": text_field_2.id,
+                        "type": condition.type,
+                        "value": condition.value,
+                    }
+                ],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 3,
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_delete(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field_2
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "conditions": [],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [],
+            },
+            str(text_field_3.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_create_invalid_field(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    field_in_another_table = data_fixture.create_text_field()
+    data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "condition_type": "OR",
+                    "conditions": [
+                        {
+                            "id": 0,
+                            "field": field_in_another_table.id,
+                            "type": "equal",
+                            "value": "test",
+                        }
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_FIELD_NOT_IN_TABLE"
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_create_num_queries(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    form_view = data_fixture.create_form_view(table=table)
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+
+    with CaptureQueriesContext(connection) as captured:
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field.id): {
+                        "conditions": [
+                            {
+                                "id": 0,
+                                "field": text_field_2.id,
+                                "type": "equal",
+                                "value": "test",
+                            }
+                        ],
+                    },
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    # Delete newly created form condition because we want to do the same below with
+    # the same amount of queries.
+    FormViewFieldOptionsCondition.objects.all().delete()
+
+    # Even though we're adding more conditions, we expect to execute the sam amount
+    # of queries.
+    with django_assert_num_queries(len(captured.captured_queries)):
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field.id): {
+                        "conditions": [
+                            {
+                                "id": 0,
+                                "field": text_field.id,
+                                "type": "equal",
+                                "value": "test",
+                            },
+                            {
+                                "id": 0,
+                                "field": text_field_2.id,
+                                "type": "equal",
+                                "value": "test",
+                            },
+                        ],
+                    },
+                    str(text_field_2.id): {
+                        "conditions": [
+                            {
+                                "id": 0,
+                                "field": text_field.id,
+                                "type": "equal",
+                                "value": "test",
+                            }
+                        ],
+                    },
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_update_num_queries(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+    )
+    text_field_option_2 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_2,
+    )
+    text_field_option_3 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_3,
+    )
+    condition_1 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field
+    )
+    condition_1_2 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field
+    )
+    condition_2 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_2, field=text_field
+    )
+    condition_3 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_3, field=text_field
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+
+    with CaptureQueriesContext(connection) as captured:
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field_3.id): {
+                        "conditions": [
+                            {
+                                "id": condition_3.id,
+                                "field": condition_3.id,
+                                "type": condition_3.type,
+                                "value": condition_3.type,
+                            }
+                        ],
+                    }
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    # Even though we're update more conditions, we expect to execute the same amount
+    # of queries.
+    with django_assert_num_queries(len(captured.captured_queries)):
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field.id): {
+                        "conditions": [
+                            {
+                                "id": condition_1.id,
+                                "field": condition_1.id,
+                                "type": condition_1.type,
+                                "value": condition_1.type,
+                            },
+                            {
+                                "id": condition_1_2.id,
+                                "field": condition_1_2.field_id,
+                                "type": condition_1_2.type,
+                                "value": condition_1_2.type,
+                            },
+                        ],
+                    },
+                    str(text_field_2.id): {
+                        "conditions": [
+                            {
+                                "id": condition_2.id,
+                                "field": condition_2.id,
+                                "type": condition_2.type,
+                                "value": condition_2.type,
+                            }
+                        ],
+                    },
+                    str(text_field_3.id): {
+                        "conditions": [
+                            {
+                                "id": 0,
+                                "field": condition_3.id,
+                                "type": condition_3.type,
+                                "value": condition_3.type,
+                            },
+                            {
+                                "id": condition_3.id,
+                                "field": condition_3.id,
+                                "type": condition_3.type,
+                                "value": condition_3.type,
+                            },
+                        ],
+                    },
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_delete_num_queries(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+    )
+    text_field_option_2 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_2,
+    )
+    text_field_option_3 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_3,
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_2, field=text_field
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_3, field=text_field
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+
+    with CaptureQueriesContext(connection) as captured:
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field_3.id): {
+                        "conditions": [],
+                    }
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    # Even though we're deleting more conditions, we expect to execute the same amount
+    # of queries.
+    with django_assert_num_queries(len(captured.captured_queries)):
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field.id): {
+                        "conditions": [],
+                    },
+                    str(text_field_2.id): {
+                        "conditions": [],
+                    },
+                    str(text_field_3.id): {
+                        "conditions": [],
+                    },
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
 
 
 @pytest.mark.django_db
@@ -734,6 +1522,7 @@ def test_submit_password_protected_form_view_requires_authorization(
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "row_id": 1,
         "submit_action": "MESSAGE",
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
@@ -756,6 +1545,7 @@ def test_submit_password_protected_form_view_requires_authorization(
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "row_id": 2,
         "submit_action": "MESSAGE",
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
@@ -807,3 +1597,42 @@ def test_changing_password_of_a_public_password_protected_form_view_invalidate_p
         HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_submit_form_view_for_required_number_field_with_0(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(
+        table=table,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, number_negative=False, number_decimal_places=0
+    )
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=True, enabled=True, order=2
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {
+            f"field_{number_field.id}": "0",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_200_OK, (
+        "Got an error response "
+        "instead of the expected "
+        "200 OK with body: " + str(response.json())
+    )
+    response_json = response.json()
+    assert response_json == {
+        "row_id": 1,
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
+    }

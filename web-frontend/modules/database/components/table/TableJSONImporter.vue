@@ -99,15 +99,9 @@ export default {
   mixins: [form, importer],
   data() {
     return {
-      values: {
-        firstRowHeader: true,
-        getData: null,
-      },
       encoding: 'utf-8',
       filename: '',
-      error: '',
       rawData: null,
-      preview: {},
     }
   },
   validations: {
@@ -141,12 +135,11 @@ export default {
 
       if (file.size > maxSize) {
         this.filename = ''
-        this.values.getData = null
-        this.error = this.$t('tableJSONImporter.limitFileSize', {
-          limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
-        })
-        this.preview = {}
-        this.state = null
+        this.handleImporterError(
+          this.$t('tableJSONImporter.limitFileSize', {
+            limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
+          })
+        )
       } else {
         this.state = 'loading'
         this.$emit('changed')
@@ -165,6 +158,7 @@ export default {
     },
     async reload() {
       let json
+      this.resetImporterState()
 
       try {
         const decoder = new TextDecoder(this.encoding)
@@ -175,36 +169,31 @@ export default {
         await this.$ensureRender()
         json = JSON.parse(decoded)
       } catch (error) {
-        this.values.getData = null
-        this.error = this.$t('tableJSONImporter.processingError', {
-          error: error.message,
-        })
-        this.preview = {}
-        this.state = null
+        this.handleImporterError(
+          this.$t('tableJSONImporter.processingError', {
+            error: error.message,
+          })
+        )
         return
       }
 
       if (json.length === 0) {
-        this.values.getData = null
-        this.error = this.$t('tableJSONImporter.emptyError')
-        this.preview = {}
+        this.handleImporterError(this.$t('tableJSONImporter.emptyError'))
         return
       }
 
       if (!Array.isArray(json)) {
-        this.values.getData = null
-        this.error = this.$t('tableJSONImporter.arrayError')
-        this.preview = {}
+        this.handleImporterError(this.$t('tableJSONImporter.arrayError'))
         return
       }
 
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       if (limit !== null && json.length > limit - 1) {
-        this.values.getData = null
-        this.error = this.error = this.$t('tableJSONImporter.limitError', {
-          limit,
-        })
-        this.preview = {}
+        this.handleImporterError(
+          this.$t('tableJSONImporter.limitError', {
+            limit,
+          })
+        )
         return
       }
 
@@ -224,21 +213,19 @@ export default {
 
         header.forEach((key) => {
           const exists = Object.prototype.hasOwnProperty.call(entry, key)
-          const value = exists ? entry[key].toString() : ''
+          const value = exists ? JSON.stringify(entry[key]) : ''
           row.push(value)
         })
 
         data.push(row)
       })
-      data.unshift(header)
 
-      const dataWithHeader = this.ensureHeaderExistsAndIsValid(data, true)
+      this.values.header = this.prepareHeader(header, data)
       this.values.getData = () => {
-        return dataWithHeader
+        return data
       }
       this.state = null
-      this.error = ''
-      this.preview = this.getPreview(dataWithHeader)
+      this.preview = this.getPreview(this.values.header, data)
     },
   },
 }

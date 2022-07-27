@@ -43,6 +43,11 @@
             "title": "Webhook ist deaktiviert",
             "content": "Dieser Webhook wurde deaktiviert, weil zu viele aufeinanderfolgende Fehler aufgetreten sind. Bitte überprüfen Sie das Anrufprotokoll für weitere Details. Klicken Sie auf die Schaltfläche unten, um ihn wieder zu aktivieren. Vergessen Sie nicht, den Webhook nach dem Aktivieren zu speichern.",
             "activate": "Aktivierung"
+        },
+        "deprecatedEventType": {
+            "description": "Dieser Webhook empfängt keine Informationen über alle geänderten Zeilen auf einmal. Bitte konvertieren Sie ihn in den Ereignistyp \"Batch\". Dadurch wird die JSON-Nutzlast in ein Format geändert, das mehrere Zeilen enthält.",
+            "title": "Veralteter Ereignistyp",
+            "convert": "Konvertieren"
         }
     },
     "webhook": {
@@ -138,7 +143,8 @@
         "filterLink": "Eine Liste mit allen Filtern finden Sie hier.",
         "filterType": "- `AND`: Gibt an, dass die Zeilen allen angegebenen Filtern entsprechen müssen.\n- `OR`: Gibt an, dass die Zeilen nur einem der Filter entsprechen müssen.\n\n Dies funktioniert nur, wenn zwei oder mehr Filter vorhanden sind.",
         "include": "Alle Felder werden standardmäßig in die Antwort aufgenommen. Sie können eine Teilmenge der einzuschließenden Felder auswählen, indem Sie den Abfrageparameter include angeben.\n\n #### Mit `user_field_names`:\n\n Include\" sollte eine durch das Komma getrennte Liste von Feldnamen sein, die in die Ergebnisse aufgenommen werden sollen. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `include=My Field,-My Field 2`, dann werden nur diese Felder eingeschlossen (es sei denn, sie werden ausdrücklich ausgeschlossen).\n\n Der Name des Feldes, das die Felder enthält, muss mit einem Hinweis versehen werden: `name ,'. Enthält der Feldname Schrägstriche, so müssen diese unter Verwendung des Zeichens `\\` geschützt werden. Ex : `name \\'.\n\n #### Ohne `user_field_names`:\n\n `include` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, das in die Ergebnisse aufgenommen werden soll. Zum Beispiel: Wenn Sie den folgenden GET-Parameter `exclude=field_1,field_2` angeben, werden nur die Felder mit der ID `1` und der ID `2` einbezogen (es sei denn, sie werden ausdrücklich ausgeschlossen).",
-        "exclude": "Alle Felder werden standardmäßig in die Antwort aufgenommen. Sie können eine Untergruppe von Feldern auswählen, die ausgeschlossen werden sollen, indem Sie den Abfrageparameter exclude angeben.\n\n #### Mit \"user_field_names\":\n\n`exclude` sollte eine durch das Komma getrennte Liste von Feldern sein, die von den Ergebnissen ausgeschlossen werden sollen. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `exclude=My Field,-My Field 2` dann werden diese Felder ausgeschlossen.\n\n Der Name des Feldes, das die Felder enthält, muss mit einem Hinweis versehen sein: \"name,\". Wenn der Feldname Schrägstriche enthält, müssen diese ebenfalls mit dem Zeichen \"name\" geschützt werden. Ex : `name\\\"`.\n\n #### Ohne `user_field_names`:\n\n `exclude` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, das von den Ergebnissen ausgeschlossen werden soll. Zum Beispiel: Wenn Sie den folgenden GET-Parameter `exclude=field_1,field_2` angeben, werden die Felder mit der id `1` und id `2` ausgeschlossen."
+        "exclude": "Alle Felder werden standardmäßig in die Antwort aufgenommen. Sie können eine Untergruppe von Feldern auswählen, die ausgeschlossen werden sollen, indem Sie den Abfrageparameter exclude angeben.\n\n #### Mit \"user_field_names\":\n\n`exclude` sollte eine durch das Komma getrennte Liste von Feldern sein, die von den Ergebnissen ausgeschlossen werden sollen. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `exclude=My Field,-My Field 2` dann werden diese Felder ausgeschlossen.\n\n Der Name des Feldes, das die Felder enthält, muss mit einem Hinweis versehen sein: \"name,\". Wenn der Feldname Schrägstriche enthält, müssen diese ebenfalls mit dem Zeichen \"name\" geschützt werden. Ex : `name\\\"`.\n\n #### Ohne `user_field_names`:\n\n `exclude` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, das von den Ergebnissen ausgeschlossen werden soll. Zum Beispiel: Wenn Sie den folgenden GET-Parameter `exclude=field_1,field_2` angeben, werden die Felder mit der id `1` und id `2` ausgeschlossen.",
+        "viewId": "Standardmäßig werden keine Filter und Sortierungen außerhalb der in den Abfrageparametern definierten angewendet. Sie können die Filter und Sortierungen einer Ansicht hinzufügen, indem Sie deren `id` im GET-Parameter `view_id` angeben. Wenn Sie z. B. den folgenden GET-Parameter angeben: \"view_id=1\", werden die in der Ansicht mit der ID \"1\" definierten Filter und Sortierungen angewandt. Sie können die `view_id` im Kontextmenü einer beliebigen Ansicht finden. Es ist die Zahl in Klammern hinter dem Namen der Ansicht. \n\n #### Mit `filter__{field}__{filter}` \n\n Es werden sowohl der im Abfrageparameter angegebene Filter als auch die in der Ansicht definierten Filter angewendet.\n\n #### Mit `order_by` \n\n Wenn `order_by` angegeben wird, wird die in der Ansicht definierte Sortierung ignoriert."
     },
     "apiDocsIntro": {
         "intro": "Die Datenbank {name} bietet eine einfache Möglichkeit, die Daten in ein beliebiges externes System zu integrieren. Die API folgt der REST-Semantik, verwendet JSON zur Kodierung von Objekten und stützt sich auf Standard-HTTP-Codes sowie maschinen- und menschenlesbare Fehler zur Signalisierung von Operationsergebnissen.",
@@ -322,7 +328,7 @@
         "firstRowHeader": "Erste Zeile ist Kopfzeile",
         "limitError": "Es ist nicht möglich, mehr als {limit} Zeilen zu importieren."
     },
-    "createTableModal": {
+    "importFileModal": {
         "title": "Neue Tabelle erstellen",
         "importLabel": "Möchten Sie vorhandene Daten importieren?",
         "newTable": "Beginnen Sie mit einer neuen Tabelle",
@@ -332,7 +338,18 @@
         "importError": "Beim Dateiimport ist etwas schief gelaufen",
         "statePreValidation": "Validierung von Daten...",
         "stateCreateTable": "Tabelle wird erstellt...",
-        "reportMessage": "Die folgenden Zeilenindizes konnten nicht importiert werden:"
+        "reportMessage": "Die folgenden Zeilenindizes konnten nicht importiert werden:",
+        "additionalImportTitle": "In {table} importieren",
+        "showTable": "Tabelle anzeigen",
+        "importButton": "Importieren",
+        "openCreatedTable": "Erstellte Tabelle öffnen",
+        "showReport": "Fehlerbericht anzeigen",
+        "stateRowCreation": "Importieren...",
+        "fieldMappingTitle": "Feldzuordnung",
+        "fieldMappingDescription": "Wir haben die Spalten der Baserow-Felder in Ihrer Tabelle automatisch zugewiesen. Sie können sie unten ändern. Jede nicht kompatible Zelle bleibt nach dem Import leer.",
+        "selectImportMessage": "Bitte wählen Sie die zu importierenden Daten aus.",
+        "reportTitleSuccess": "Import erfolgreich, aber...",
+        "reportTitleFailure": "Fehlerhafte Zeilen"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klicken Sie zum Bearbeiten der Formel",
@@ -368,7 +385,9 @@
         "noFilterText": "Mit Hilfe von Filtern können Sie Zeilen anzeigen, die auf Ihre Bedingungen zutreffen.",
         "where": "Wo",
         "and": "Und",
-        "or": "Oder"
+        "or": "Oder",
+        "relatedFieldNotFound": "Das zugehörige Feld wurde nicht gefunden.",
+        "filterTypeNotFound": "Der Filtertyp ist nicht kompatibel."
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "Bild",
@@ -423,7 +442,8 @@
         "renameView": "Ansicht umbenennen",
         "deleteView": "Ansicht löschen",
         "webhooks": "Webhooks",
-        "duplicateView": "Ansicht duplizieren"
+        "duplicateView": "Ansicht duplizieren",
+        "importFile": "Datei importieren"
     },
     "deleteViewModal": {
         "title": "Löschen {name}",
@@ -444,7 +464,8 @@
         "sortField": "Sortieren",
         "hideField": "Feld ausblenden",
         "insertLeft": "Links einfügen",
-        "insertRight": "Rechts einfügen"
+        "insertRight": "Rechts einfügen",
+        "duplicate": "Feld duplizieren"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "Zeile entspricht nicht den Filtern",
@@ -456,7 +477,9 @@
         "insertRowBelow": "Zeile unten einfügen",
         "enlargeRow": "Zeile vergrößern",
         "deleteRow": "Zeile löschen",
-        "rowCount": "Keine Zeilen | 1 Zeile | {count} Zeilen"
+        "rowCount": "Keine Zeilen | 1 Zeile | {count} Zeilen",
+        "selectRow": "Zeile auswählen",
+        "duplicateRow": "Zeile duplizieren"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
@@ -553,7 +576,8 @@
         "stateImportingTable": "Tabelle importieren {table}",
         "airtableShareLinkDescription": "Um Ihre Airtable Base zu importieren, müssen Sie einen Link zu Ihrer gesamten Base haben. Klicken Sie in Airtable auf die \"Share\" taste in der oberen rechten Ecke, nachdem Sie Ihre Base geöffnet haben. Danach müssen Sie die Option \"Access to base\" wählen. Im modal drücken Sie auf \"Create a shared link to the whole base\" und dann auf \"Private read-only link\". Kopieren Sie den Link und fügen Sie ihn in das unten stehende Feld ein.",
         "errorJobAlreadyRunningTitle": "Schon läuft",
-        "errorJobAlreadyRunningDescription": "Ein weiterer Importauftrag ist bereits in Arbeit. Sie müssen abwarten, bis dieser Vorgang abgeschlossen ist, bevor Sie einen weiteren beginnen."
+        "errorJobAlreadyRunningDescription": "Ein weiterer Importauftrag ist bereits in Arbeit. Sie müssen abwarten, bis dieser Vorgang abgeschlossen ist, bevor Sie einen weiteren beginnen.",
+        "linkError": "Der Link sollte wie folgt aussehen: https://airtable.com/shrxxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
         "addSelectField": "einzelnes Auswahlfeld hinzufügen"
@@ -599,10 +623,52 @@
         "decoding": "Dekodierung von Daten",
         "inProgress": "In Arbeit...",
         "parsing": "Analysieren von Daten",
-        "preparing": "Aufbereitung der Daten"
+        "preparing": "Aufbereitung der Daten",
+        "fieldDefaultName": "Feld {count}"
     },
     "apiDocsTableDeleteRows": {
         "description": "Löscht die vorhandenen Zeilen {name}.",
         "items": "Ein Array von Zeilennummern, die gelöscht werden sollen."
+    },
+    "formViewMeta": {
+        "includeRowId": "Verwenden Sie {row_id}, um die neu erstellte Zeilen-ID in die URL aufzunehmen."
+    },
+    "databaseDashboardSidebarLinks": {
+        "apiDocumentation": "API-Dokumentation"
+    },
+    "formViewField": {
+        "required": "erforderlich",
+        "showWhenMatchingConditions": "anzeigen, wenn die Bedingungen erfüllt sind",
+        "addCondition": "Bedingung hinzufügen"
+    },
+    "duplicateFieldContext": {
+        "duplicate": "Feld duplizieren",
+        "cloneData": "Daten kopieren",
+        "soon": "In Kürze verfügbar"
+    },
+    "snapshotsModal": {
+        "descriptionLimits": "Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben.",
+        "createLabel": "Erstelle einen neuen Snapshot",
+        "description": "Snapshots sind eine vollständige Kopie Ihrer Datenbank zu dem Zeitpunkt, an dem sie erstellt wurden. Bei der Wiederherstellung wird ein Duplikat dieser Daten erstellt. Snapshots werden nach einem Jahr automatisch gelöscht.",
+        "create": "Snapshot erstellen",
+        "snapshotRestoredErrorTitle": "Ein Fehler ist aufgetreten",
+        "title": "snapshots",
+        "snapshotRestoredErrorMessage": "Der Snapshot konnte nicht wiederhergestellt werden. Bitte versuchen Sie es später noch einmal.",
+        "snapshotDeletedErrorTitle": "Fehler aufgetreten",
+        "snapshotDeletedErrorMessage": "Der Snapshot konnte nicht gelöscht werden. Bitte versuchen Sie es später noch einmal.",
+        "limitReached": "Das Limit der maximalen Snapshots wurde erreicht.",
+        "snapshot": "Snapshot",
+        "importingState": "Erstellen",
+        "reset": "Erstellen eines weiteren"
+    },
+    "snapshotListItem": {
+        "created": "erstellt",
+        "restore": "wiederherstellen",
+        "delete": "Löschen"
+    },
+    "deleteSnapshotModal": {
+        "title": "Snapshot löschen",
+        "content": "Sind Sie sicher, dass Sie den Snapshot {name} dauerhaft löschen möchten?",
+        "confirm": "Löschen"
     }
 }

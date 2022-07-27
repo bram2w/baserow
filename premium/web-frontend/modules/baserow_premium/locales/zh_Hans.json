@@ -52,54 +52,54 @@
         "disconnectDescription": ""
     },
     "registerLicenseForm": {
-        "licenseKey": ""
+        "licenseKey": "许可证码"
     },
     "groupsAdminTable": {
-        "allGroups": "",
+        "allGroups": "所有集体",
         "id": "",
-        "name": "",
-        "members": "",
-        "applications": "",
-        "created": ""
+        "name": "名字",
+        "members": "成员",
+        "applications": "应用",
+        "created": "创建"
     },
     "editGroupContext": {
         "delete": ""
     },
     "deleteGroupModal": {
-        "title": "",
-        "confirmation": "",
+        "title": "删除 {name}",
+        "confirmation": "你确定要删除集体：{name}？",
         "comment": "",
-        "delete": ""
+        "delete": "删除集体{name}"
     },
     "activeUsers": {
-        "newUsers": "",
+        "newUsers": "新用户",
         "activeUsers": ""
     },
     "usersAdminTable": {
-        "allUsers": "",
+        "allUsers": "所有用户",
         "id": "",
-        "username": "",
-        "name": "",
-        "groups": "",
-        "lastLogin": "",
-        "dateJoined": "",
+        "username": "用户名",
+        "name": "名字",
+        "groups": "集体",
+        "lastLogin": "上次登录",
+        "dateJoined": "注册",
         "active": ""
     },
     "editUserContext": {
-        "changePassword": "",
+        "changePassword": "更改密码",
         "delete": ""
     },
     "changePasswordForm": {
-        "newPassword": "",
+        "newPassword": "新密码",
         "repeatPassword": "",
-        "changePassword": "",
+        "changePassword": "更改密码",
         "error": {
             "doesntMatch": ""
         }
     },
     "userForm": {
-        "fullName": "",
-        "email": "",
+        "fullName": "全名",
+        "email": "邮箱",
         "isActive": "",
         "warning": {
             "changeEmail": "",
@@ -112,21 +112,21 @@
         }
     },
     "changeUserPasswordModal": {
-        "changePassword": ""
+        "changePassword": "为{usermane}更改密码"
     },
     "deleteUserModal": {
-        "title": "",
-        "confirmation": "",
+        "title": "删除{username}",
+        "confirmation": "你确定要删除这个用户：{name}？",
         "comment1": "",
         "comment2": "",
-        "delete": ""
+        "delete": "删除用户{username}"
     },
     "editUserModal": {
-        "delete": "",
-        "edit": ""
+        "delete": "删除用户",
+        "edit": "编辑{ username }"
     },
     "crudTableSearchContext": {
-        "search": ""
+        "search": "搜索"
     },
     "tableJSONExporter": {
         "encoding": ""
@@ -135,10 +135,10 @@
         "encoding": ""
     },
     "kanbanViewStackContext": {
-        "createCard": "",
+        "createCard": "新建卡",
         "editStack": "",
         "deleteStack": "",
-        "delete": "",
+        "delete": "删除 {name}",
         "deleteDescription": ""
     },
     "kanbanViewHeader": {
@@ -155,8 +155,8 @@
     },
     "kanbanViewStack": {
         "uncategorized": "",
-        "tryAgain": "",
-        "new": ""
+        "tryAgain": "重试",
+        "new": "新"
     },
     "dashboard": {
         "title": "",
@@ -164,7 +164,7 @@
         "totalUsers": "",
         "totalGroups": "",
         "totalApplications": "",
-        "newUsers": "",
+        "newUsers": "新用户",
         "newUsers24h": "",
         "newUsers7days": "",
         "newUsers30days": "",
@@ -172,7 +172,7 @@
         "activeUsers24h": "",
         "activeUsers7days": "",
         "activeUsers30days": "",
-        "viewAll": ""
+        "viewAll": "查看全部"
     },
     "licenses": {
         "titleNoLicenses": "",
