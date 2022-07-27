@@ -50,6 +50,7 @@ For example:
 * Introduced environment variable to disable Google docs file preview. [#1074](https://gitlab.com/bramw/baserow/-/issues/1074)
 * Made it possible to select the entire row via the row context menu. [#1061](https://gitlab.com/bramw/baserow/-/issues/1061)
 * Replaced all custom alert code with `Alert` component [#1016](https://gitlab.com/bramw/baserow/-/issues/1016)
+* Add ability to create and restore snapshots. [#141](https://gitlab.com/bramw/baserow/-/issues/141)
 
 ### Bug Fixes
 

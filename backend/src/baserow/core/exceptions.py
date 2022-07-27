@@ -95,6 +95,13 @@ class ApplicationTypeDoesNotExist(InstanceTypeDoesNotExist):
     pass
 
 
+class ApplicationOperationNotSupported(Exception):
+    """
+    Raised when the particular operation is not supported by the
+    application type.
+    """
+
+
 class BaseURLHostnameNotAllowed(Exception):
     """
     Raised when the provided base url is not allowed when requesting a password

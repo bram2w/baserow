@@ -57,6 +57,16 @@
             </a>
           </li>
           <li>
+            <a @click="openSnapshots">
+              <i class="context__menu-icon fas fa-fw fa-history"></i>
+              {{ $t('sidebarApplication.snapshots') }}
+            </a>
+          </li>
+          <SnapshotsModal
+            ref="snapshotsModal"
+            :application="application"
+          ></SnapshotsModal>
+          <li>
             <a @click="showApplicationTrashModal">
               <i class="context__menu-icon fas fa-fw fa-recycle"></i>
               {{ $t('sidebarApplication.viewTrash') }}
@@ -94,10 +104,11 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import ApplicationService from '@baserow/modules/core/services/application'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
+import SnapshotsModal from '@baserow/modules/core/components/snapshots/SnapshotsModal'
 
 export default {
   name: 'SidebarApplication',
-  components: { TrashModal },
+  components: { TrashModal, SnapshotsModal },
   mixins: [jobProgress],
   props: {
     application: {
@@ -253,6 +264,10 @@ export default {
     showApplicationTrashModal() {
       this.$refs.context.hide()
       this.$refs.applicationTrashModal.show()
+    },
+    openSnapshots() {
+      this.$refs.context.hide()
+      this.$refs.snapshotsModal.show()
     },
   },
 }

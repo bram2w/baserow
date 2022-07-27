@@ -172,6 +172,8 @@ class ApplicationType(
     instance_serializer_class = None
     """This serializer that is used to serialize the instance model."""
 
+    supports_snapshots = True
+
     def pre_delete(self, application):
         """
         A hook that is called before the application instance is deleted.

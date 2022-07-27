@@ -645,5 +645,30 @@
         "duplicate": "Duplicate field",
         "cloneData": "Copy data",
         "soon": "Available soon"
+    },
+    "snapshotsModal": {
+        "title": "snapshots",
+        "description": "Snapshots are a full copy of your database of the moment when they were created. A duplication of that data will be created when restoring. Snapshots are automatically deleted after one year.",
+        "descriptionLimits": "You can have a maximum of {n} snapshots per group. | You can have a maximum of {n} snapshot per group. | You can have a maximum of {n} snapshots per group.",
+        "createLabel": "Create a new snapshot",
+        "create": "Create snapshot",
+        "snapshotRestoredErrorTitle": "Error occurred",
+        "snapshotRestoredErrorMessage": "The snapshot couldn't be restored. please try again later.",
+        "snapshotDeletedErrorTitle": "Error occurred",
+        "snapshotDeletedErrorMessage": "The snapshot couldn't be deleted. please try again later.",
+        "limitReached": "The limit of maximum snapshots has been reached.",
+        "snapshot": "Snapshot",
+        "importingState": "Creating",
+        "reset": "Create another"
+    },
+    "deleteSnapshotModal": {
+        "title": "Delete snapshot",
+        "content": "Are you sure you want to permanently delete snapshot {name}?",
+        "confirm": "Delete"
+    },
+    "snapshotListItem": {
+        "restore": "restore",
+        "delete": "delete",
+        "created": "created"
     }
 }

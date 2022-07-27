@@ -9,6 +9,7 @@ from .trash.tasks import (
 )
 from .usage.tasks import run_calculate_storage
 from .user.tasks import check_pending_account_deletion
+from .snapshots.tasks import delete_expired_snapshots
 
 
 @app.task(
@@ -31,4 +32,5 @@ __all__ = [
     "sync_templates_task",
     "run_calculate_storage",
     "check_pending_account_deletion",
+    "delete_expired_snapshots",
 ]

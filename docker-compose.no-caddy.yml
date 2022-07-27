@@ -149,6 +149,7 @@ services:
       FEATURE_FLAGS:
       ADDITIONAL_MODULES:
       BASEROW_MAX_IMPORT_FILE_SIZE_MB:
+      BASEROW_MAX_SNAPSHOTS_PER_GROUP:
     depends_on:
       - backend
     networks:

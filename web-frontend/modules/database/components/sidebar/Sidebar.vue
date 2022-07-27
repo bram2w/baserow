@@ -52,7 +52,11 @@ import SidebarApplication from '@baserow/modules/core/components/sidebar/Sidebar
 
 export default {
   name: 'Sidebar',
-  components: { SidebarApplication, SidebarItem, ImportFileModal },
+  components: {
+    SidebarApplication,
+    SidebarItem,
+    ImportFileModal,
+  },
   props: {
     application: {
       type: Object,

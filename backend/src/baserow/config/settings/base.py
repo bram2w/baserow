@@ -310,6 +310,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Templates"},
         {"name": "Trash"},
         {"name": "Applications"},
+        {"name": "Snapshots"},
         {"name": "Jobs"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
@@ -600,7 +601,10 @@ BASEROW_JOB_CLEANUP_INTERVAL_MINUTES = int(
 BASEROW_MAX_ROW_REPORT_ERROR_COUNT = int(
     os.getenv("BASEROW_MAX_ROW_REPORT_ERROR_COUNT", 30)
 )
-
+BASEROW_MAX_SNAPSHOTS_PER_GROUP = int(os.getenv("BASEROW_MAX_SNAPSHOTS_PER_GROUP", -1))
+BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
+    os.getenv("BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS", 360)  # 360 days
+)
 
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.
