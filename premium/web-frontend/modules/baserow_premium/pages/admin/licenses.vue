@@ -10,28 +10,9 @@
       <p class="placeholder__content">
         {{ $t('licenses.noLicensesDescription') }}
       </p>
-      <ul class="licenses__features">
-        <li class="licenses__feature">
-          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          {{ $t('licenses.rowComments') }}
-        </li>
-        <li class="licenses__feature">
-          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          {{ $t('licenses.kanbanView') }}
-        </li>
-        <li class="licenses__feature">
-          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          {{ $t('licenses.exports') }}
-        </li>
-        <li class="licenses__feature">
-          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          {{ $t('licenses.admin') }}
-        </li>
-        <li class="licenses__feature">
-          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          {{ $t('licenses.rowColoring') }}
-        </li>
-      </ul>
+      <PremiumFeatures
+        class="licenses__features margin-bottom-2"
+      ></PremiumFeatures>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.registerModal.show()">
           <i class="fas fa-plus"></i>
@@ -160,12 +141,13 @@
 import LicenseService from '@baserow_premium/services/license'
 import RegisterLicenseModal from '@baserow_premium/components/license/RegisterLicenseModal'
 import RedirectToBaserowModal from '@baserow_premium/components/RedirectToBaserowModal'
+import PremiumFeatures from '@baserow_premium/components/PremiumFeatures'
 import moment from '@baserow/modules/core/moment'
 import SettingsService from '@baserow/modules/core/services/settings'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
-  components: { RedirectToBaserowModal, RegisterLicenseModal },
+  components: { RedirectToBaserowModal, RegisterLicenseModal, PremiumFeatures },
   layout: 'app',
   middleware: 'staff',
   async asyncData({ app, error }) {

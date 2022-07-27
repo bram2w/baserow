@@ -154,9 +154,6 @@
             "formLinkName": "form"
         }
     },
-    "premium": {
-        "deactivated": "Available in premium version"
-    },
     "trashType": {
         "group": "group",
         "application": "application",

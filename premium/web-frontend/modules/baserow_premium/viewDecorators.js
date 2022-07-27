@@ -1,4 +1,5 @@
 import { ViewDecoratorType } from '@baserow/modules/database/viewDecorators'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
 import { PremiumPlugin } from '@baserow_premium/plugins'
 
 import {
@@ -40,6 +41,10 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
   getDeactivatedText() {
     const { i18n } = this.app
     return i18n.t('viewDecoratorType.onlyForPremium')
+  }
+
+  getDeactivatedClickModal() {
+    return PremiumModal
   }
 
   isDeactivated(groupId) {
@@ -139,6 +144,10 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
   getDeactivatedText() {
     const { i18n } = this.app
     return i18n.t('viewDecoratorType.onlyForPremium')
+  }
+
+  getDeactivatedClickModal() {
+    return PremiumModal
   }
 
   isDeactivated(groupId) {

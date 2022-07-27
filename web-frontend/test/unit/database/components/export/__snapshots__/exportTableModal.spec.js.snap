@@ -146,8 +146,11 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       />
                       
     exporterType.csv
-  
+    
+                      <!---->
                     </a>
+                     
+                    <!---->
                   </li>
                 </ul>
               </div>
@@ -1225,8 +1228,11 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       />
                       
     exporterType.csv
-  
+    
+                      <!---->
                     </a>
+                     
+                    <!---->
                   </li>
                 </ul>
               </div>

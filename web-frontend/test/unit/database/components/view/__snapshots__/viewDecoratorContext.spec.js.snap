@@ -26,7 +26,8 @@ exports[`GridViewRows component with decoration Default component 1`] = `
           >
             
       Fake decorator
-    
+      
+            <!---->
           </div>
            
           <div
@@ -38,6 +39,8 @@ exports[`GridViewRows component with decoration Default component 1`] = `
           </div>
         </div>
       </div>
+       
+      <!---->
     </div>
   </div>
 </div>
@@ -80,7 +83,8 @@ exports[`GridViewRows component with decoration Should show cant add decorator t
             >
               
       Fake decorator
-    
+      
+              <!---->
             </div>
              
             <div
@@ -92,6 +96,8 @@ exports[`GridViewRows component with decoration Should show cant add decorator t
             </div>
           </div>
         </div>
+         
+        <!---->
       </div>
     </div>
   </div>
@@ -117,7 +123,7 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
       class="decorator-list"
     >
       <div
-        class="decorator-list__item decorator-list__item--disabled"
+        class="decorator-list__item"
       >
         <div
           class="decorator-item"
@@ -135,7 +141,14 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
             >
               
       Fake decorator
-    
+      
+              <div
+                class="deactivated-label"
+              >
+                <i
+                  class="fas fa-lock"
+                />
+              </div>
             </div>
              
             <div
@@ -147,6 +160,8 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
             </div>
           </div>
         </div>
+         
+        <!---->
       </div>
     </div>
   </div>
@@ -188,7 +203,8 @@ exports[`GridViewRows component with decoration View with decoration configured 
                 >
                   
       Fake decorator
-    
+      
+                  <!---->
                 </div>
                  
                 <div
@@ -267,7 +283,8 @@ exports[`GridViewRows component with decoration View with decoration configured 
                 >
                   
       Fake decorator
-    
+      
+                  <!---->
                 </div>
                  
                 <div
