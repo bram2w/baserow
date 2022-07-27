@@ -1,0 +1,9 @@
+.deactivated-label {
+  display: inline-block;
+  background-color: $color-primary-200;
+  border-radius: 3px;
+  color: $color-primary-500;
+  margin: 0 4px;
+
+  @include center-text(14px, 9px);
+}

@@ -279,6 +279,13 @@ export class ViewType extends Registerable {
   getDeactivatedText() {}
 
   /**
+   * When the disabled view type is clicked, this modal will be shown.
+   */
+  getDeactivatedClickModal() {
+    return null
+  }
+
+  /**
    * Indicates if the view type is disabled.
    */
   isDeactivated(groupId) {

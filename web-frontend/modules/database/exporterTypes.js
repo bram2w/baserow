@@ -73,6 +73,13 @@ export class TableExporterType extends Registerable {
   getDeactivatedText() {}
 
   /**
+   * When the disabled exporter is clicked, this modal will be shown.
+   */
+  getDeactivatedClickModal() {
+    return null
+  }
+
+  /**
    * Indicates if the exporter type is disabled.
    */
   isDeactivated(groupId) {

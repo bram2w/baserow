@@ -240,15 +240,6 @@
     text-decoration: none;
     background-color: $color-neutral-100;
   }
-
-  &.select__footer-create-link--disabled {
-    color: $color-neutral-400;
-
-    &:hover {
-      cursor: inherit;
-      text-decoration: none;
-    }
-  }
 }
 
 .select__footer-create-icon {

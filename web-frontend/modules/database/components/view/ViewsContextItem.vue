@@ -6,25 +6,26 @@
       active: view._.selected,
       'select__item--loading': view._.loading,
       'select__item--no-options': readOnly,
-      disabled: deactivated,
     }"
   >
-    <a
-      class="select__item-link"
-      @click="!deactivated && $emit('selected', view)"
-    >
+    <a class="select__item-link" @click="select(view)">
       <div class="select__item-name">
         <i
           class="select__item-icon fas fa-fw"
-          :class="
-            (deactivated ? '' : view._.type.colorClass) +
-            ' fa-' +
-            view._.type.iconClass
-          "
+          :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
         ></i>
         <EditableViewName ref="rename" :view="view"></EditableViewName>
+        <div v-if="deactivated" class="deactivated-label">
+          <i class="fas fa-lock"></i>
+        </div>
       </div>
     </a>
+    <component
+      v-if="deactivatedClickModal !== null"
+      :is="deactivatedClickModal"
+      ref="deactivatedClickModal"
+      :name="viewType.getName()"
+    ></component>
     <template v-if="!readOnly">
       <a
         ref="contextLink"
@@ -74,23 +75,31 @@ export default {
     },
   },
   computed: {
+    viewType() {
+      return this.$registry.get('view', this.view.type)
+    },
     deactivatedText() {
-      return this.$registry
-        .get('view', this.view.type)
-        .getDeactivatedText({ view: this.view })
+      return this.viewType.getDeactivatedText({ view: this.view })
     },
     deactivated() {
       return (
-        !this.readOnly &&
-        this.$registry
-          .get('view', this.view.type)
-          .isDeactivated(this.database.group.id)
+        !this.readOnly && this.viewType.isDeactivated(this.database.group.id)
       )
+    },
+    deactivatedClickModal() {
+      return this.deactivated ? this.viewType.getDeactivatedClickModal() : null
     },
   },
   methods: {
     enableRename() {
       this.$refs.rename.edit()
+    },
+    select(view) {
+      if (this.deactivated) {
+        this.$refs.deactivatedClickModal.show()
+        return
+      }
+      this.$emit('selected', view)
     },
   },
 }

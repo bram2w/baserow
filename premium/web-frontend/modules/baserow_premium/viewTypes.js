@@ -5,11 +5,16 @@ import {
 import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
 import KanbanView from '@baserow_premium/components/views/kanban/KanbanView'
 import KanbanViewHeader from '@baserow_premium/components/views/kanban/KanbanViewHeader'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
 import { PremiumPlugin } from '@baserow_premium/plugins'
 
 class PremiumViewType extends ViewType {
   getDeactivatedText() {
     return this.app.i18n.t('premium.deactivated')
+  }
+
+  getDeactivatedClickModal() {
+    return PremiumModal
   }
 
   isDeactivated(groupId) {
