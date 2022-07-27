@@ -238,6 +238,7 @@ export default {
             fieldToMove: this.field,
             position,
             fromField,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {

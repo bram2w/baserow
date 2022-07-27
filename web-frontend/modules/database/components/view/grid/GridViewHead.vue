@@ -116,7 +116,13 @@ export default {
       try {
         await this.$store.dispatch(
           `${this.storePrefix}view/grid/updateSingleFieldOptionOrder`,
-          { fieldToMove: newField, position, fromField, undoRedoActionGroupId }
+          {
+            fieldToMove: newField,
+            position,
+            fromField,
+            undoRedoActionGroupId,
+            readOnly: this.readOnly,
+          }
         )
       } catch (error) {
         notifyIf(error, 'view')
