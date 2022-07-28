@@ -13,8 +13,8 @@
         :decorator-type="decoratorType"
       />
       <component
-        v-if="decoratorType.getDeactivatedClickModal() !== null"
         :is="decoratorType.getDeactivatedClickModal()"
+        v-if="decoratorType.getDeactivatedClickModal() !== null"
         ref="deactivatedClickModal"
         :name="decoratorType.getName()"
       ></component>
