@@ -466,3 +466,14 @@ class PublicViewInfoSerializer(serializers.Serializer):
         kwargs["context"] = kwargs.get("context", {})
         kwargs["context"]["fields"] = kwargs.pop("fields", [])
         super().__init__(instance=kwargs.pop("view", None), *args, **kwargs)
+
+
+class FieldWithFiltersAndSortsSerializer(FieldSerializer):
+    filters = ViewFilterSerializer(many=True, source="viewfilter_set")
+    sortings = ViewSortSerializer(many=True, source="viewsort_set")
+
+    class Meta(FieldSerializer.Meta):
+        fields = FieldSerializer.Meta.fields + (
+            "filters",
+            "sortings",
+        )

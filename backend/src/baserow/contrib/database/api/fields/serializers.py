@@ -35,22 +35,6 @@ class FieldSerializer(serializers.ModelSerializer):
         return field.type
 
 
-class FieldWithFiltersAndSortsSerializer(FieldSerializer):
-    from baserow.contrib.database.api.views.serializers import (
-        ViewSortSerializer,
-        ViewFilterSerializer,
-    )
-
-    filters = ViewFilterSerializer(many=True, source="viewfilter_set")
-    sortings = ViewSortSerializer(many=True, source="viewsort_set")
-
-    class Meta(FieldSerializer.Meta):
-        fields = FieldSerializer.Meta.fields + (
-            "filters",
-            "sortings",
-        )
-
-
 class RelatedFieldsSerializer(serializers.Serializer):
     related_fields = serializers.SerializerMethodField(
         help_text="A list of related fields which also changed.",
