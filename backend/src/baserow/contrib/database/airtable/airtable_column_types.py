@@ -206,7 +206,15 @@ class DateAirtableColumnType(AirtableColumnType):
         if baserow_field.date_include_time:
             return f"{value.isoformat()}"
         else:
-            return value.strftime("%Y-%m-%d")
+            # WORKAROUND: if the year value is < 1000, Python has a bug that will not
+            # add leading zeros to generate the year in four digits format, hence,
+            # we're adding the missing zeros if needed. source:
+            # https://stackoverflow.com/questions/71118275/parsing-three-digit-years-using-datetime
+            formatted_date = value.strftime("%Y-%m-%d")
+            zeros = 4 - formatted_date.index("-")
+            if zeros:
+                formatted_date = f"{'0' * zeros}{formatted_date}"
+            return formatted_date
 
 
 class FormulaAirtableColumnType(AirtableColumnType):

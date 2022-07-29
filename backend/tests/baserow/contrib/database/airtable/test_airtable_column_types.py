@@ -201,6 +201,12 @@ def test_airtable_import_date_column(data_fixture, api_client):
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
+            {}, airtable_field, baserow_field, "0999-02-04T14:51:00.000Z", UTC, {}
+        )
+        == "0999-02-04"
+    )
+    assert (
+        airtable_column_type.to_baserow_export_serialized_value(
             {}, airtable_field, baserow_field, None, UTC, {}
         )
         is None
