@@ -13,6 +13,8 @@ For example:
 
 ### Bug Fixes
 
+* Fix various misspellings. Contributed by [@Josh Soref](https://github.com/jsoref/) using [check-spelling.dev](https://check-spelling.dev/)
+
 ### Breaking Changes
 
 ## Released (2022-07-27 1.11.0)
@@ -218,7 +220,7 @@ For example:
 * Add loading bar when syncing templates to make it obvious Baserow is still loading.
 * Fixed bug where old values are missing in the update trigger of the webhook.
 * Scroll to the first error message if the form submission fail
-* Improved backup_baserow spltting multiselect through tables in separate batches.
+* Improved backup_baserow splitting multiselect through tables in separate batches.
 * Fixed a bug that truncated characters for email in the sidebar
 * **breaking change** The API endpoint `/api/database/formula/<field_id>/type/` now requires
   `table_id` instead of `field_id`, and also `name` in the request body.

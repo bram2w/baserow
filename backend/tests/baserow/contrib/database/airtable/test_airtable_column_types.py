@@ -40,7 +40,7 @@ from baserow.contrib.database.airtable.registry import airtable_column_type_regi
 
 @pytest.mark.django_db
 @responses.activate
-def test_unkown_column_type():
+def test_unknown_column_type():
     airtable_field = {"id": "fldTn59fpliSFcwpFA9", "name": "Unknown", "type": "unknown"}
     (
         baserow_field,

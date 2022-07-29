@@ -108,7 +108,7 @@ export default {
   },
   methods: {
     /**
-     * When a group invation has been rejected or accepted, it can be removed from the
+     * When a group invitation has been rejected or accepted, it can be removed from the
      * list because in both situations the invitation itself is deleted.
      */
     removeInvitation(invitation) {

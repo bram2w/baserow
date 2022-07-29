@@ -940,7 +940,7 @@ class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
         # Add meta ref name to avoid name collision
         return super().get_serializer_class(
             *args,
-            meta_ref_name=f"Generetad{self.type.capitalize()}{kwargs['base_class'].__name__}",
+            meta_ref_name=f"Generated{self.type.capitalize()}{kwargs['base_class'].__name__}",
             **kwargs,
         )
 

@@ -41,7 +41,7 @@ numbers of tables.
 
 Another problem with pg_dump taking out an ACCESS SHARE lock on all tables during the
 back-up process is that during this time users cannot delete or alter tables and will
-recieve database errors.
+receive database errors.
 
 ## Option 2: run pg_dump multiple times on sub sets of the database 
 

@@ -947,7 +947,7 @@ def test_change_type_to_link_row_field_when_field_with_same_related_name_already
     model.objects.create(**{f"field_{field.id}": "9223372036854775807"})
     model.objects.create(**{f"field_{field.id}": "100"})
 
-    # Change the field type to a link_row and test if names are changed corectly.
+    # Change the field type to a link_row and test if names are changed correctly.
     new_link_row_field = handler.update_field(
         user=user,
         field=field,

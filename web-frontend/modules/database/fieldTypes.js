@@ -278,7 +278,7 @@ export class FieldType extends Registerable {
   /**
    * Should return a for humans readable representation of the value. This is for
    * example used by the link row field and row modal. This is not a problem with most
-   * fields like text or number, but some store a more complex object object like
+   * fields like text or number, but some store a more complex object like
    * the single select or file field. In this case, the object might needs to be
    * converted to string.
    */

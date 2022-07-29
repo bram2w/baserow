@@ -1,5 +1,5 @@
 /**
- * Clones the provided Javascript object and returns that one.
+ * Clones the provided JavaScript object and returns that one.
  *
  * @param o
  * @return {object}

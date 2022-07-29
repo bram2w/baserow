@@ -95,7 +95,7 @@ class UserHandler:
         :param password: The password of the user.
         :param language: The language selected by the user.
         :param group_invitation_token: If provided and valid, the invitation will be
-            accepted and and initial group will not be created.
+            accepted and initial group will not be created.
         :param template: If provided, that template will be installed into the newly
             created group.
         :raises: UserAlreadyExist: When a user with the provided username (email)
@@ -338,7 +338,7 @@ class UserHandler:
         will be deleted after a predefined grace delay unless the user
         cancel his account deletion by log in again.
         To be valid, the current user password must be provided.
-        This action sends an email to the user to explain the proccess.
+        This action sends an email to the user to explain the process.
 
         :param user: The user to flag as `to_be_deleted`.
         :param password: The current user password.
@@ -443,7 +443,7 @@ class UserHandler:
         with transaction.atomic():
             for group in groups_to_be_deleted:
                 # Here we use the trash handler to be sure that we delete every thing
-                # related the the groups like
+                # related the groups like
                 TrashHandler.permanently_delete(group)
             users_to_delete.delete()
 

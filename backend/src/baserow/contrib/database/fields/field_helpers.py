@@ -8,7 +8,7 @@ def construct_all_possible_field_kwargs(
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     Some baserow field types have multiple different 'modes' which result in
-    different different database columns and modes of operation being
+    different database columns and modes of operation being
     created. This function creates a dictionary of field type to a list of
     kwarg dicts, one for each interesting possible 'subtype' of the field.
     """

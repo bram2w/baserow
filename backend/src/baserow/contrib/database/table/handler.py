@@ -379,7 +379,7 @@ class TableHandler:
     def order_tables(self, user: AbstractUser, database: Database, order: List[int]):
         """
         Updates the order of the tables in the given database. The order of the views
-        that are not in the `order` parameter set set to `0`.
+        that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
         :param database: The database of which the views must be updated.

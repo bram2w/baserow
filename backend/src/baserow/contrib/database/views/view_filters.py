@@ -765,7 +765,7 @@ class ManyToManyHasBaseViewFilter(ViewFilterType):
 
         try:
             # We annotate the queryset with an aggregated Array containing all the ids
-            # of the related field. Then we filter on this annoted column by checking
+            # of the related field. Then we filter on this annotated column by checking
             # which of the items in the array overlap with a new Array containing the
             # value of the filter. That way we can make sure that chaining more than
             # one filter works correctly.

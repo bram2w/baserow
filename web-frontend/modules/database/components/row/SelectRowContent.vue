@@ -156,7 +156,7 @@ export default {
     // We want to start with some initial data when the modal opens for the first time.
     await this.fetch(1)
 
-    // Becuase most of the template depends on having some initial data we mark the
+    // Because most of the template depends on having some initial data we mark the
     // state as loaded after that. Only a loading animation is shown if there isn't any
     // data.
     this.loaded = true
@@ -197,7 +197,7 @@ export default {
       return false
     },
     /**
-     * Because the rows are split in a left and right section we need Javascript to
+     * Because the rows are split in a left and right section we need JavaScript to
      * show a hover effect of the whole row. This method makes sure the correct row has
      * the correct hover state.
      */

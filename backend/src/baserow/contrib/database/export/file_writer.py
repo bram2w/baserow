@@ -187,7 +187,7 @@ class QuerysetSerializer(abc.ABC):
         """
         An internal standard method which generates a serializer function for a given
         field_object. It will delegate to the field_types get_export_value on
-        how to convert a given field to a python value to be then writen to the file.
+        how to convert a given field to a python value to be then written to the file.
 
         :param field_object: The field object to generate a serializer for.
         :return: A callable function which when given a row will return a tuple of the

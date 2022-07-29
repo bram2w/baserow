@@ -109,7 +109,7 @@ https://stylelint.io/
 
 ### ESLint
 
-ESLint is used to make sure all the Javascript code is in the correct format. It is 
+ESLint is used to make sure all the JavaScript code is in the correct format. It is 
 used when the `make eslint` is called and it runs live in the development environment
 via prettier.
 

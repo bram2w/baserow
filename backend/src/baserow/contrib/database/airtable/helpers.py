@@ -43,7 +43,7 @@ def set_select_options_on_field(field: Field, type_options: dict) -> Field:
     it will return Airtable choices. This for example happens in
     `FieldType::export_serialized`.
 
-    :param field: The field where where the select must be set on.
+    :param field: The field where the select must be set on.
     :param type_options: The options where to extract the Airtable choices from.
     :return: The updated field object.
     """

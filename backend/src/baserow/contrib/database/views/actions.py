@@ -480,7 +480,7 @@ class OrderViewsActionType(ActionType):
         """
         Updates the order of the views in the given table.
         See baserow.contrib.views.handler.ViewsHandler.order_views for further details.
-        The order of the views that are not in the `order` parameter set set to `0`.
+        The order of the views that are not in the `order` parameter set to `0`.
         Undoing this action restores the original order of the views.
         Redoing this action reorders the views to the new order.
 

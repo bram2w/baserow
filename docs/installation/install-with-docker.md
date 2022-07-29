@@ -61,7 +61,7 @@ single container for ease of use. A quick summary of its features are:
   connect to an external Postgres.
 * Runs all services behind a pre-configured Caddy reverse proxy. Set
   `BASEROW_CADDY_ADDRESSES` to `https://YOUR_DOMAIN.com` and it will
-  [automaticly enable https](https://caddyserver.com/docs/automatic-https#overview) for
+  [automatically enable https](https://caddyserver.com/docs/automatic-https#overview) for
   you and store the keys and certs in `/baserow/data/caddy`.
 * Provides a CLI for execing admin commands against a running Baserow container or
   running one off commands against just a Baserow data volume.
@@ -472,7 +472,7 @@ FROM baserow/baserow:1.10.2
 # useful for storing your own environment variable overrides.
 COPY custom_env.sh /baserow/supervisor/env/custom_env.sh
 
-# Set the DATA_DIR environment variable to change where Baserow stores its persistant 
+# Set the DATA_DIR environment variable to change where Baserow stores its persistent 
 # data. At startup Baserow will attempt to chown and setup this folder correctly.
 ENV DATA_DIR=/baserow/data
 

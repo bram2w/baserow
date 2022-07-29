@@ -434,7 +434,7 @@ function _filterFieldsByStringLiteral(tokenTextUptoCursor, fields) {
     // Strip off the final quote if it exists
     fieldFilter = withoutFrontQuote.slice(0, withoutFrontQuote.length - 1)
   } else {
-    // Allow filtering on incomplete fields like `field('aaa` shoudl result in a
+    // Allow filtering on incomplete fields like `field('aaa` should result in a
     // filter of 'aaa'.
     fieldFilter = withoutFrontQuote
   }

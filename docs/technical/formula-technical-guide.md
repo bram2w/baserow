@@ -62,7 +62,7 @@ result.
 
 Plugins can easily add new Baserow formula functions and types by implementing
 a `BaserowFunctionDefinition` and registering it in the `formula_function_registry`.
-Hint: Use the various `{Zero/One/Two/Three}ArgumentBaserowFunctionDefintion` sub-classes
+Hint: Use the various `{Zero/One/Two/Three}ArgumentBaserowFunctionDefinition` sub-classes
 get a nicer set of functions to implement corresponding to the arguments.
 
 ### Formula Operators

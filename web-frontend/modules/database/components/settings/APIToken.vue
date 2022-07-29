@@ -420,13 +420,13 @@ export default {
      * Changes the token permission state of a provided database and his tables of the
      * given operation. Also updates the permissions with the backend.
      */
-    toggleDatabase(database, sibblings, operation, value) {
+    toggleDatabase(database, siblings, operation, value) {
       const oldPermissions = JSON.parse(JSON.stringify(this.token.permissions))
 
       // First we want to add all the databases that already have an active state to
       // the permissions because the permissions are not going to controlled on
       // database level.
-      sibblings
+      siblings
         .filter(
           (database) => this.isDatabaseActive(database, operation) === true
         )

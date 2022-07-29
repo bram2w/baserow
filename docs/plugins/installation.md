@@ -56,7 +56,7 @@ RUN /baserow/plugins/install_plugin.sh \
 # plugin exactly matches the provided hash. 
 #
 # We recommend you provide this flag to make sure the downloaded plugin has not
-# been malciously modified. 
+# been maliciously modified. 
 #
 # To get the hash of a plugin simply run the docker build with a nonsense --hash
 # value. Then the build will fail and `install_plugin.sh` will print the hash of the 

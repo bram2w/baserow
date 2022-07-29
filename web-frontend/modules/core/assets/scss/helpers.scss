@@ -119,7 +119,7 @@
   display: block !important;
 }
 
-// Sometimes we forcefully want to disable the the user-select property to initial
+// Sometimes we forcefully want to disable the user-select property to initial
 // because the element is for example being edited via a contenteditable attribute
 // which does not work in combination with the user-select: none; property in Safari.
 .forced-user-select-initial {

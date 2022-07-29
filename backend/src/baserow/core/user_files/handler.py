@@ -83,7 +83,7 @@ class UserFileHandler:
 
     def generate_unique(self, sha256_hash, extension, length=32, max_tries=1000):
         """
-        Generates a unique non existing string for a new user file.
+        Generates a unique nonexistent string for a new user file.
 
         :param sha256_hash: The hash of the file name. Needed because they are
             required to be unique together.

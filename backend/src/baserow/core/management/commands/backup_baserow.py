@@ -16,7 +16,7 @@ class Command(BaseCommand):
         restored using the restore_baserow Baserow management command.
         To provide the database password you should either have a valid .pgpass file
         containing the password for the requested connection in the expected postgres
-        location (seehttps://www.postgresql.org/docs/current/libpq-pgpass.html) or set
+        location (see https://www.postgresql.org/docs/current/libpq-pgpass.html) or set
         the PGPASSFILE environment variable.
 
         WARNING: This command is only safe to run on a database which is not actively

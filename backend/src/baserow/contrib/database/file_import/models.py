@@ -31,7 +31,7 @@ class FileImportJob(JobWithUserDataMixin, Job):
         help_text="The database where we want to create the table",
     )
     name = models.CharField(
-        max_length=255, default="", help_text="The name the the created table."
+        max_length=255, default="", help_text="The name the created table."
     )
     table = models.ForeignKey(
         Table,

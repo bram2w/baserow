@@ -68,7 +68,7 @@ def test_last_modified_field_type(data_fixture):
     row_updated_on = row.updated_on
     assert row_last_modified_2 == row_updated_on
 
-    # Trying to update the the last_modified field will raise error
+    # Trying to update the last_modified field will raise error
     with pytest.raises(ValidationError):
         row_handler.update_row_by_id(
             user=user,

@@ -627,7 +627,7 @@ class FieldType(
         Defines whether the sql provided by the get_alter_column_prepare_{old,new}_value
         hooks should be forced to run when converting between two fields of this field
         type which have the same database column type.
-        You only need to implement this when when you have validation and/or data
+        You only need to implement this when you have validation and/or data
         manipulation running as part of your alter_column_prepare SQL which must be
         run even when from_field and to_field are the same Baserow field type and sql
         column type. If your field has the same baserow type but will convert into
@@ -1426,7 +1426,7 @@ class FieldConverter(Instance):
             def alter_field(self, from_field, to_field, from_model, to_model,
                             from_model_field, to_model_field, user, connection):
                 # This is just for example purposes, but it will delete the old text
-                # field field and create a new date field. You can be very creative
+                # field and create a new date field. You can be very creative
                 # here in how you want to convert field and the data. It is for example
                 # possible to load all the old data in memory, convert it and then
                 # update the new data. Performance should always be kept in mind
@@ -1448,10 +1448,10 @@ class FieldConverter(Instance):
         :param from_model: The old model containing only the old field.
         :type from_model: Model
         :param from_field: The old field instance. It should only be used for type and
-            property comparison with the the to_field because else things might break.
+            property comparison with the to_field because else things might break.
         :type from_field: Field
         :param to_field: The new field instance. It should only be used for type and
-            property comparison with the the from_field because else things might
+            property comparison with the from_field because else things might
             break.
         :type to_field: Field
         :return: If True then the alter_field method of this converter will be used

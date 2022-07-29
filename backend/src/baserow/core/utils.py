@@ -388,7 +388,7 @@ def find_unused_name(
 
     :param variants_to_try: An iterable of name variant we want to try.
     :param existing_names: An iterable of all pre existing values.
-    :parm max_length: Set this value if you have a length limit to the new name.
+    :param max_length: Set this value if you have a length limit to the new name.
     :param suffix: The suffix you want to append to the name to avoid
       duplicate. The string is going to be formated with a number.
     :return: The first available unused name.

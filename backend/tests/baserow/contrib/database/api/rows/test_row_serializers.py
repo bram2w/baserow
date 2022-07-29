@@ -372,8 +372,8 @@ def test_remap_serialized_row_to_user_field_names(data_fixture):
         user_field_names=False,
     )(row).data
 
-    remaped_row = remap_serialized_row_to_user_field_names(serialized_row, model)
-    assert remaped_row == {
+    remapped_row = remap_serialized_row_to_user_field_names(serialized_row, model)
+    assert remapped_row == {
         "id": 1,
         "order": "1.00000000000000000000",
         "Link": [{"id": 1, "value": "Lookup 1"}],

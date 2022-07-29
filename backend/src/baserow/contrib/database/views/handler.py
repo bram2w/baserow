@@ -330,7 +330,7 @@ class ViewHandler:
     def order_views(self, user: AbstractUser, table: Table, order: List[int]):
         """
         Updates the order of the views in the given table. The order of the views
-        that are not in the `order` parameter set set to `0`.
+        that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the views are ordered.
         :param table: The table of which the views must be updated.
@@ -1859,7 +1859,7 @@ class ViewHandler:
         By changing the `slug` or the `public_view_password`, previous tokens cannot
         be decoded anymore so the user will be forced to the password input page.
         Server's SECRET_KEY is used to be sure that the JWT cannot be guessed.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :return: A string to use as secret to encode/decode JWT for the view.
         """
 
@@ -1868,7 +1868,7 @@ class ViewHandler:
     def encode_public_view_token(self, view: View) -> str:
         """
         Create a non-expiring JWT token that authorize public requests for this view.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :return: A string to use as JWT token to authorize the access for the view.
         """
 
@@ -1882,7 +1882,7 @@ class ViewHandler:
     def decode_public_view_token(self, view: View, token: str) -> Dict[str, Any]:
         """
         Decode the token using the view's secret.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :param token: The JWT token to decode.
         :return: The payload decoded or, if invalid, a jwt.InvalidTokenError is raised.
         """
@@ -1895,7 +1895,7 @@ class ViewHandler:
     def is_public_view_token_valid(self, view: View, token: str) -> bool:
         """
         Verify if the token provided is valid for the public view or not.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :param token: The JWT token to decode.
         :return: True if the token is valid for the view, False otherwise.
         """

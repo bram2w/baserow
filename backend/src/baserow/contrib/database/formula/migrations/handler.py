@@ -180,7 +180,7 @@ class FormulaMigrationHandler:
         latest_version = migrations.get_latest_version()
         if oldest_version_in_db_currently > latest_version:
             # When downgrading only recalculate the attributes and the graph.
-            # Don't bother recalculating the cell values as it's very very slow and
+            # Don't bother recalculating the cell values as it's very, very slow and
             # only likely to introduce back bugs that were fixed in newer versions.
 
             attribute_filter = ALL_FORMULAS
