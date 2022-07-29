@@ -859,7 +859,7 @@ class CoreHandler:
     ) -> List[int]:
         """
         Updates the order of the applications in the given group. The order of the
-        applications that are not in the `order` parameter set set to `0`.
+        applications that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
         :param group: The group of which the applications must be updated.

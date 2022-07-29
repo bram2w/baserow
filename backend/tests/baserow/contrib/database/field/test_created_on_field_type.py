@@ -66,7 +66,7 @@ def test_created_on_field_type(data_fixture):
     row_created_on = row.created_on
     assert row_create_datetime == row_created_on
 
-    # Trying to update the the created_on field will raise error
+    # Trying to update the created_on field will raise error
     with pytest.raises(ValidationError):
         row_handler.update_row_by_id(
             user=user,

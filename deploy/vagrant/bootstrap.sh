@@ -17,7 +17,7 @@ sed "s/git clone --branch master.*/cp -r \/local_baserow_repo baserow/" | # Copy
 sed 's/https:\\\/\\\/api.domain.com/http:\\\/\\\/api.baserow.vagrant.test/g' | # Fixup the sed commands for the URL env vars
 sed 's/https:\\\/\\\/baserow.domain.com/http:\\\/\\\/baserow.vagrant.test/g' |
 sed 's/https:\\\/\\\/media.domain.com/http:\\\/\\\/media.baserow.vagrant.test/g' |
-sed 's/api.domain.com/api.baserow.vagrant.test/g' | # Fixup the sed commands for the ngnix config
+sed 's/api.domain.com/api.baserow.vagrant.test/g' | # Fixup the sed commands for the nginx config
 sed 's/baserow.domain.com/baserow.vagrant.test/g' |
 sed 's/media.domain.com/media.baserow.vagrant.test/g' > install-on-ubuntu.sh
 

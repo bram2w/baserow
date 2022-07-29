@@ -143,7 +143,7 @@ export class ApplicationType extends Registerable {
    * be taken. For example when a database is selected the user will be redirected to
    * the first table of that database.
    *
-   * @return Whether selecting was successfull.
+   * @return Whether selecting was successful.
    */
   select(application, context) {
     return true

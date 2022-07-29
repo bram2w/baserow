@@ -20,7 +20,7 @@ class DatabaseSerializer(ApplicationSerializer):
     @extend_schema_field(TableSerializer(many=True))
     def get_tables(self, instance):
         """
-        Because the the instance doesn't know at this point it is a Database we have to
+        Because the instance doesn't know at this point it is a Database we have to
         select the related tables this way.
 
         :param instance: The database application instance.

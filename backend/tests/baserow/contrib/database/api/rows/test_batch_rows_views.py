@@ -854,7 +854,7 @@ def test_batch_update_rows_invalid_table_id(api_client, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.api_rows
-def test_batch_update_rows_notexisting_row_ids(api_client, data_fixture):
+def test_batch_update_rows_nonexistent_row_ids(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     invalid_row_ids = [32, 3465]

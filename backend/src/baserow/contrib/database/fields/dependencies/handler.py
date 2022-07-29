@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple, Iterable
 
 from django.db.models import Q
 
-from baserow.contrib.database.fields.dependencies.depedency_rebuilder import (
+from baserow.contrib.database.fields.dependencies.dependency_rebuilder import (
     rebuild_field_dependencies,
     update_fields_with_broken_references,
     break_dependencies_for_field,

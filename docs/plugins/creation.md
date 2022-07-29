@@ -250,7 +250,7 @@ also make sure to registry a new field type in the frontend registry also.
 ## Publishing your Plugin
 
 The easiest way to share you plugin with others is by making a public git repository
-using Gitlab, Github or some other git host. Once you have pushed your plugin folder to
+using GitLab, GitHub or some other git host. Once you have pushed your plugin folder to
 the git repository then anyone can then install your plugin following the steps in
 the [Plugin Installation](./installation.md) guide.
 

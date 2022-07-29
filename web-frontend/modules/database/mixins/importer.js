@@ -146,7 +146,7 @@ export default {
       }
     },
     /**
-     * Given a column name this function will return a new name which is guarrenteed
+     * Given a column name this function will return a new name which is guaranteed
      * to be unique and valid. If the originally provided name is unique and valid
      * then it will be returned untouched.
      *

@@ -8,7 +8,7 @@
 
 The following config is the easiest way of deploying Baserow with docker-compose and
 just uses the all-in-one image and a single container. If you use this config then you
-should instead refer to the the [Install with Docker](./install-with-docker.md)
+should instead refer to the [Install with Docker](./install-with-docker.md)
 guide on the specifics of how to work with this image.
 
 ```yaml

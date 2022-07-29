@@ -26,7 +26,7 @@ def test_list_view_decorations(api_client, data_fixture):
     decoration_2 = data_fixture.create_view_decoration(
         view=view_1,
         type="tmp_decorator_type_2",
-        value_provider_type="conditionnal_color",
+        value_provider_type="conditional_color",
         order=2,
     )
     data_fixture.create_view_decoration(view=view_2, order=3)

@@ -150,7 +150,7 @@
         "intro": "The {name} database provides an easy way to integrate the data with any external system. The API follows REST semantics, uses JSON to encode objects and relies on standard HTTP codes, machine and human readable errors to signal operation outcomes.",
         "autoDocDescription": "This documentation is generated automatically based on the tables and fields that are in your database. If you make changes to your database, table or fields it could be that the API interface has also changed. Therefore, make sure that you update your API implementation accordingly.",
         "databaseId": "The ID of this database is:",
-        "jsClient": "Javascript example API client:",
+        "jsClient": "JavaScript example API client:",
         "pythonClient": "Python example API client:"
     },
     "apiDocsTableListFields": {

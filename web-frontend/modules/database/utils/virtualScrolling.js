@@ -90,7 +90,7 @@ export const recycleSlots = (slots, items, getPosition, min = items.length) => {
   items.forEach((item, position) => {
     let index = itemSlotIndexMap[item?.id]
 
-    // If item isn't in a slot yet we use the first emtpy slot index.
+    // If item isn't in a slot yet we use the first empty slot index.
     if (index === undefined) {
       index = emptySlots.shift()
     }

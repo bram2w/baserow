@@ -68,7 +68,7 @@ def test_run_import_from_airtable(
     assert job.state == JOB_FINISHED
     assert job.database_id == created_database.id
 
-    # The cache entry will be removed when when job completes.
+    # The cache entry will be removed when job completes.
     assert cache.get(job_progress_key(job.id)) is None
 
     job_copy = AirtableImportJob.objects.using("default-copy").get(pk=job.id)

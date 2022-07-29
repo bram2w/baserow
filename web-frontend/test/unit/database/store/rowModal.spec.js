@@ -210,7 +210,7 @@ describe('rowModal store', () => {
     valuesOfComponent1 = store.getters['test/get'](1)
     expect(valuesOfComponent1.row.field_1).toBe('Test 2')
 
-    // Because the row id doesn't match, we dont't expect the value to be updated.
+    // Because the row id doesn't match, we don't expect the value to be updated.
     await store.dispatch('test/updated', {
       tableId: 10,
       values: { id: 101, field_1: 'Test 4' },

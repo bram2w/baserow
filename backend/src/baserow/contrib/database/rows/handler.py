@@ -629,7 +629,7 @@ class RowHandler:
 
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the row must be updated.
-        :param row: The the row that must be updated.
+        :param row: the row that must be updated.
         :param values: The values that must be updated. The keys must be the field ids.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.

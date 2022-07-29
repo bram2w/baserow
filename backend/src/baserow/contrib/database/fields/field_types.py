@@ -510,7 +510,7 @@ class RatingFieldType(FieldType):
 
     def force_same_type_alter_column(self, from_field, to_field):
         """
-        Force field alter column hook to be called when chaging max_value.
+        Force field alter column hook to be called when changing max_value.
         """
 
         return to_field.max_value != from_field.max_value
@@ -2377,7 +2377,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if len(selected_ids) != len(unique_values):
             invalid_ids = sorted(list(unique_values - set(selected_ids)))
             if continue_on_error:
-                # Replace values by error for failling rows
+                # Replace values by error for failing rows
                 for invalid_id in invalid_ids:
                     for row_index in value_map[invalid_id]:
                         values_by_row[
@@ -2477,7 +2477,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new new model is registered. Not triggering them
+        # they are triggered when a new model is registered. Not triggering them
         # can cause a memory leak because everytime a table model is generated, it will
         # register new pending operations.
         apps = model._meta.apps

@@ -394,7 +394,7 @@ class Table(
             will be added to the model. This can be done to improve speed if for
             example only a single field needs to be mutated.
         :type field_names: None or list
-        :param attribute_names: If True, the the model attributes will be based on the
+        :param attribute_names: If True, the model attributes will be based on the
             field name instead of the field id.
         :type attribute_names: bool
         :param manytomany_models: In some cases with related fields a model has to be

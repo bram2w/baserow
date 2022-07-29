@@ -107,7 +107,7 @@
         echo "Building from $BUILD_FROM_IMAGE."
       fi
 
-      # * Use `--build-arg BUILDKIT_INLINE_CACHE=1` to ensure this image's itermediate
+      # * Use `--build-arg BUILDKIT_INLINE_CACHE=1` to ensure this image's intermediate
       #    layers will be cached so builds caching from this image can use those layers.
       # * $CACHE_ARG is a --cache-from if we have an existing image that we can use
       #    to speed up this build.
@@ -521,7 +521,7 @@
           if [[ -z "$SECOND_PARENT_COMMIT" ]] ; then
             # If there is no second parent commit then there is only one parent commit
             # and so we can safely check to see if that parent commit has a successful
-            # job run as this commit does not change any relavent files.
+            # job run as this commit does not change any relevant files.
             PREVIOUS_COMMIT_SHA=$(git rev-parse HEAD~1)
             echo "Found single previous commit $PREVIOUS_COMMIT_SHA, checking for job.."
             exit_with_copied_artifacts_if_successful_job_for_commit $PREVIOUS_COMMIT_SHA $CI_JOB_NAME

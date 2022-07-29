@@ -25,7 +25,7 @@ There are also commands to easily run the tests.
 ## Continuous integration
 
 To make sure nothing was missed during development we also have a continuous 
-integration pipeline that runs every time a branch is pushed. All the commands expained 
+integration pipeline that runs every time a branch is pushed. All the commands explained 
 above will execute in an isolated environment. In order to improve speed
 they are separated by lint and test stages. It is not allowed to merge a branch if 
 one of these jobs fails.

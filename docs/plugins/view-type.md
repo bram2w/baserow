@@ -118,7 +118,7 @@ export default {
 ```
 
 You can inspect the `web-frontend/modules/database/viewTypes.js::ViewType` for all the
-methods and properties that can be overriden here. The component that is returned by
+methods and properties that can be overridden here. The component that is returned by
 the `getComponent` method is will be added to the body of the page when a view of this
 type is selected.
 

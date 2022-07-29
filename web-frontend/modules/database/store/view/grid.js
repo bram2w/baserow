@@ -553,7 +553,7 @@ export const actions = {
       (lastRequestOffset !== requestOffset || lastRequestLimit !== requestLimit)
     ) {
       fireScrollTop.processing = true
-      // If another request is runnig we need to cancel that one because it won't
+      // If another request is running we need to cancel that one because it won't
       // what we need at the moment.
       if (lastRequest !== null) {
         lastQueryController.abort()
@@ -1430,7 +1430,7 @@ export const actions = {
     const isLast = index === allRowsCopy.length - 1
 
     if (
-      // All of these scenario's mean that that the row belongs in the buffer that
+      // All of these scenario's mean that the row belongs in the buffer that
       // we have loaded currently.
       (isFirst && getters.getBufferStartIndex === 0) ||
       (isLast && getters.getBufferEndIndex === getters.getCount) ||
@@ -1639,7 +1639,7 @@ export const actions = {
     { getters, commit, dispatch },
     { table, view, fields, getScrollTop, data, rowIndex, fieldIndex }
   ) {
-    // If the origin origin row and field index are not provided, we need to use the
+    // If the origin row and field index are not provided, we need to use the
     // head indexes of the multiple select.
     const rowHeadIndex = rowIndex || getters.getMultiSelectHeadRowIndex
     const fieldHeadIndex = fieldIndex || getters.getMultiSelectHeadFieldIndex

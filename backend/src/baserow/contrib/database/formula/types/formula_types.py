@@ -686,7 +686,7 @@ def literal(
     """
     A helper function for building BaserowExpressions with literals
     :param arg: The literal
-    :return: The literal wrapped in the corrosponding valid typed BaserowExpression
+    :return: The literal wrapped in the corresponding valid typed BaserowExpression
         literal.
     """
 

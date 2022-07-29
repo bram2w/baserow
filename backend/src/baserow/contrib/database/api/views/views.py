@@ -546,7 +546,7 @@ class DuplicateViewView(APIView):
         operation_id="duplicate_database_table_view",
         description=(
             "Duplicates an existing view if the user has access to it. "
-            "When a view is duplicated everthing is copied except:"
+            "When a view is duplicated everything is copied except:"
             "\n- The name is appended with the copy number. "
             "Ex: `View Name` -> `View Name (2)` and `View (2)` -> `View (3)`"
             "\n- If the original view is publicly shared, the new view will not be"

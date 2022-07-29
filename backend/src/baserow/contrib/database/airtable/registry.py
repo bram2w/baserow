@@ -19,7 +19,7 @@ class AirtableColumnType(Instance):
         :param raw_airtable_column: The raw Airtable column values that must be
             converted.
         :param timezone: The main timezone used for date conversions if needed.
-        :return: The Baserow field type relatd to the Airtable column. If None is
+        :return: The Baserow field type related to the Airtable column. If None is
             provided, then the column is ignored in the conversion.
         """
 

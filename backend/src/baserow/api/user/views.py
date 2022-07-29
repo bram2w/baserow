@@ -118,7 +118,7 @@ class RefreshJSONWebToken(RegularRefreshJSONWebToken):
         tags=["User"],
         operation_id="token_refresh",
         description=(
-            "Refreshes an existing JWT token. If the the token is valid, a new "
+            "Refreshes an existing JWT token. If the token is valid, a new "
             "token will be included in the response. It will be valid for {valid} "
             "minutes.".format(
                 valid=int(settings.JWT_AUTH["JWT_EXPIRATION_DELTA"].seconds / 60)

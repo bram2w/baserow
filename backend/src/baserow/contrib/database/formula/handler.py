@@ -88,7 +88,7 @@ class FormulaHandler:
         Converts the provided baserow expression to a django expression that can be
         used in an update statement. Compared to the django expression from the
         alternate insert method below this expression will contain column references
-        to other tables/non formula columns instead of directly subsituted values.
+        to other tables/non formula columns instead of directly substituted values.
 
         :param expression: A fully typed internal Baserow expression.
         :param model: The model class (database table) that the expression will be run

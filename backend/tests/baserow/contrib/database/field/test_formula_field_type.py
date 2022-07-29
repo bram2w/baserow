@@ -927,7 +927,7 @@ def test_accessing_cached_internal_formula_second_time_does_no_queries(
 
 
 @pytest.mark.django_db
-def test_saving_after_properties_have_been_cached_does_recaclulation(data_fixture):
+def test_saving_after_properties_have_been_cached_does_recalculation(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     handler = FieldHandler()

@@ -16,7 +16,7 @@ plan and the paid Postgres plan provided by Render.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://gitlab.com/bramw/baserow/tree/master)
 The button above can be used to install Baserow on [Render](https://render.com) with one
-click. You may need to manually enter the the `https://gitlab.com/bramw/baserow/`
+click. You may need to manually enter the `https://gitlab.com/bramw/baserow/`
 repository URL and choose the branch
 `master`.
 

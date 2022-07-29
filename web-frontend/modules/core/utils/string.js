@@ -48,7 +48,7 @@ export const isValidURL = (str) => {
 export const isValidEmail = (str) => {
   // Please keep these regex in sync with the backend
   // See baserow.contrib.database.fields.field_types.EmailFieldType
-  // Javascript does not support using \w to match unicode letters like python.
+  // JavaScript does not support using \w to match unicode letters like python.
   // Instead we match all unicode letters including ones with modifiers by using the
   // regex \p{L}\p{M}* taken from https://www.regular-expressions.info/unicode.html
   // Unicode Categories section.

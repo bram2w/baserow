@@ -55,7 +55,7 @@ need three pieces of information:
    values like `root` or `table10` or `group20`. An actions category describes in which
    logical part of Baserow the action was performed. The `ActionType` implementation
    decides what to set its category to when calling `cls.register_action`. When an
-   undo/redo occurs the web-frontend sends the categorys the user is currently looking
+   undo/redo occurs the web-frontend sends the categories the user is currently looking
    at. For example if I have table 20 open, with group 6 in the side bar and I press
    undo/redo the category sent will be:
 
@@ -76,7 +76,7 @@ which were done in:
 
 For example, if I renamed table 20, then the table_update action would be in group 6
 category. If I was then looking at table 20 in the UI and pressed undo, the UI would
-send the group 6 category as one of the active categorys as table 20 is in group 6.
+send the group 6 category as one of the active categories as table 20 is in group 6.
 Meaning I could then undo this rename. If i was to first switch to group 5 and press
 undo, the UI would send group 5 as the category and I wouldn't be able to undo the
 rename of table 20 until I switched back into a part of the UI where the group 6
@@ -111,7 +111,7 @@ category is active.
     1. `ActionHandler.undo` is called.
         1. It finds the latest action for `User A` in
            session `example_client_session_id` and in any of the following
-           categorys `["root", "group1", "application2", "table10"]`. These were
+           categories `["root", "group1", "application2", "table10"]`. These were
            calculated from the category parameter provided to the endpoint.
         1. The table rename action is found as it's session matches, it is in
            category `group`, it was done by `User A` and it has not yet been undone (
