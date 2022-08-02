@@ -508,20 +508,20 @@ class TableHandler:
         table_deleted.send(self, table_id=table_id, table=table, user=user)
 
     @classmethod
-    def count_rows(cls):
+    def count_rows(cls) -> int:
         """
         Counts how many rows each user table has and stores the count
         for later reference.
+        :returns: The number of tables counted.
         """
 
         chunk_size = 200
         tables_to_store = []
         time = timezone.now()
-        for i, table in enumerate(
-            Table.objects.filter(database__group__template__isnull=True).iterator(
-                chunk_size=chunk_size
-            )
-        ):
+        i = 0
+        for table in Table.objects.filter(
+            database__group__template__isnull=True
+        ).iterator(chunk_size=chunk_size):
             try:
                 count = table.get_model(field_ids=[]).objects.count()
                 table.row_count = count
@@ -539,11 +539,14 @@ class TableHandler:
                     tables_to_store, ["row_count", "row_count_updated_at"]
                 )
                 tables_to_store = []
+            i += 1
 
         if len(tables_to_store) > 0:
             Table.objects.bulk_update(
                 tables_to_store, ["row_count", "row_count_updated_at"]
             )
+
+        return i
 
     @classmethod
     def get_total_row_count_of_group(cls, group_id: int) -> int:
