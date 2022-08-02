@@ -1,35 +1,33 @@
 import datetime
+
+from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import IntegrityError
 from django.db.models.query import QuerySet
 from django.utils import timezone
-from django.conf import settings
-from baserow.core.models import Group, Snapshot
-from baserow.core.models import Application, User
-from baserow.core.handler import CoreHandler
+
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationOperationNotSupported,
 )
-from baserow.core.snapshots.exceptions import (
-    SnapshotDoesNotExist,
-    MaximumSnapshotsReached,
-    SnapshotIsBeingCreated,
-    SnapshotIsBeingRestored,
-    SnapshotIsBeingDeleted,
-    SnapshotNameNotUnique,
-)
-
+from baserow.core.handler import CoreHandler
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.models import Job
+from baserow.core.models import Application, Group, Snapshot, User
 from baserow.core.registries import application_type_registry
 from baserow.core.signals import application_created
-from django.core.files.storage import default_storage
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.handler import JobHandler
-from .job_type import (
-    CreateSnapshotJobType,
-    RestoreSnapshotJobType,
+from baserow.core.snapshots.exceptions import (
+    MaximumSnapshotsReached,
+    SnapshotDoesNotExist,
+    SnapshotIsBeingCreated,
+    SnapshotIsBeingDeleted,
+    SnapshotIsBeingRestored,
+    SnapshotNameNotUnique,
 )
-from .tasks import delete_application_snapshot
 from baserow.core.utils import Progress
+
+from .job_type import CreateSnapshotJobType, RestoreSnapshotJobType
+from .tasks import delete_application_snapshot
 
 
 class SnapshotHandler:

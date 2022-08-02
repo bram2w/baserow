@@ -1,5 +1,6 @@
-from baserow.contrib.database.views.registries import DecoratorType
 from baserow_premium.license.handler import check_active_premium_license_for_group
+
+from baserow.contrib.database.views.registries import DecoratorType
 
 
 class PremiumDecoratorType(DecoratorType):

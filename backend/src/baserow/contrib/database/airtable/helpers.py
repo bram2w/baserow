@@ -1,6 +1,6 @@
 from typing import List
 
-from baserow.contrib.database.fields.models import SelectOption, Field
+from baserow.contrib.database.fields.models import Field, SelectOption
 
 from .constants import AIRTABLE_BASEROW_COLOR_MAPPING
 

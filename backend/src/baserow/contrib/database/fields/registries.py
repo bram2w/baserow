@@ -1,49 +1,43 @@
-from typing import Any, Dict, List, TYPE_CHECKING, NoReturn, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Union
 from zipfile import ZipFile
 
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
 from django.db import models as django_models
-from django.db.models import (
-    BooleanField,
-    DurationField,
-    Q,
-    QuerySet,
-)
-from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.db.models import BooleanField, DurationField, Q, QuerySet
+from django.db.models.fields.related import ForeignKey, ManyToManyField
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.core.registry import (
-    Instance,
-    Registry,
-    ModelInstanceMixin,
-    ModelRegistryMixin,
+    APIUrlsInstanceMixin,
+    APIUrlsRegistryMixin,
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
-    MapAPIExceptionsInstanceMixin,
-    APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin,
     ImportExportMixin,
+    Instance,
+    MapAPIExceptionsInstanceMixin,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    Registry,
 )
+
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .fields import DurationFieldUsingPostgresFormatting
-from .models import SelectOption, Field, LinkRowField
+from .models import Field, LinkRowField, SelectOption
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.table.models import (
-        GeneratedTableModel,
-        Table,
-        FieldObject,
-    )
-    from baserow.contrib.database.fields.dependencies.types import (
-        FieldDependencies,
-    )
+    from baserow.contrib.database.fields.dependencies.handler import FieldDependants
+    from baserow.contrib.database.fields.dependencies.types import FieldDependencies
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
-    from baserow.contrib.database.fields.dependencies.handler import FieldDependants
     from baserow.contrib.database.fields.field_cache import FieldCache
+    from baserow.contrib.database.table.models import (
+        FieldObject,
+        GeneratedTableModel,
+        Table,
+    )
 
 StartingRowType = Union["GeneratedTableModel", List["GeneratedTableModel"]]
 

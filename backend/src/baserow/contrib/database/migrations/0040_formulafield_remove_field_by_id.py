@@ -5,10 +5,10 @@ from typing import Dict, Optional
 from django.db import migrations, models
 
 from baserow.contrib.database.formula import (
-    MaximumFormulaSizeError,
     BaserowFormula,
     BaserowFormulaVisitor,
     FormulaHandler,
+    MaximumFormulaSizeError,
 )
 
 

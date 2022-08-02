@@ -1,4 +1,4 @@
-from http.client import _is_legal_header_name, _is_illegal_header_value
+from http.client import _is_illegal_header_value, _is_legal_header_name
 from urllib.parse import urlparse
 
 from django.conf import settings

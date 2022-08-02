@@ -1,10 +1,10 @@
+from django.core.files.storage import default_storage
+from django.core.management.base import BaseCommand
+
 from PIL import Image
 
-from django.core.management.base import BaseCommand
-from django.core.files.storage import default_storage
-
-from baserow.core.user_files.models import UserFile
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.user_files.models import UserFile
 
 
 class Command(BaseCommand):

@@ -1,6 +1,7 @@
 from django.conf import settings
+
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,39 +11,36 @@ from baserow.api.applications.errors import (
     ERROR_APPLICATION_NOT_IN_GROUP,
 )
 from baserow.api.decorators import map_exceptions, validate_body
-from baserow.api.errors import (
-    ERROR_GROUP_DOES_NOT_EXIST,
-    ERROR_USER_NOT_IN_GROUP,
-)
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.exceptions import (
-    UserNotInGroup,
+    ApplicationDoesNotExist,
     ApplicationNotInGroup,
     GroupDoesNotExist,
-    ApplicationDoesNotExist,
     TrashItemDoesNotExist,
+    UserNotInGroup,
 )
-from baserow.core.trash.handler import TrashHandler
 from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
-    ParentIdMustNotBeProvidedException,
     ParentIdMustBeProvidedException,
+    ParentIdMustNotBeProvidedException,
     RelatedTableTrashedException,
 )
+from baserow.core.trash.handler import TrashHandler
 
 from .errors import (
     ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
-    ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
-    ERROR_PARENT_ID_MUST_BE_PROVIDED,
-    ERROR_TRASH_ITEM_DOES_NOT_EXIST,
     ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED,
+    ERROR_PARENT_ID_MUST_BE_PROVIDED,
+    ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
+    ERROR_TRASH_ITEM_DOES_NOT_EXIST,
 )
 from .serializers import (
     TrashContentsSerializer,
-    TrashStructureSerializer,
     TrashEntryRequestSerializer,
+    TrashStructureSerializer,
 )
 
 

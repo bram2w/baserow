@@ -1,5 +1,4 @@
 import pytest
-
 from rest_framework.serializers import Serializer
 
 from baserow.api.user_files.serializers import UserFileField

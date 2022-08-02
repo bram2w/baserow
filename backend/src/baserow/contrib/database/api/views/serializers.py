@@ -1,25 +1,24 @@
 from django.utils.functional import lazy
 
-from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
-
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-    view_filter_type_registry,
-    decorator_value_provider_type_registry,
-    decorator_type_registry,
-)
 from baserow.contrib.database.views.models import (
     View,
+    ViewDecoration,
     ViewFilter,
     ViewSort,
-    ViewDecoration,
+)
+from baserow.contrib.database.views.registries import (
+    decorator_type_registry,
+    decorator_value_provider_type_registry,
+    view_filter_type_registry,
+    view_type_registry,
 )
 
 

@@ -1,6 +1,5 @@
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-
 ERROR_GROUP_USER_IS_LAST_ADMIN = (
     "ERROR_GROUP_USER_IS_LAST_ADMIN",
     HTTP_400_BAD_REQUEST,

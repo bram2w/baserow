@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from baserow.contrib.database.fields.registries import field_type_registry
 

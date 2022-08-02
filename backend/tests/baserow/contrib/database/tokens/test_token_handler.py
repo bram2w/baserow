@@ -1,25 +1,25 @@
-import pytest
 import string
-
-from pytz import timezone
-from freezegun import freeze_time
 from datetime import datetime
-from pytest_unordered import unordered
 
 from django.http import HttpRequest
+
+import pytest
+from freezegun import freeze_time
+from pytest_unordered import unordered
+from pytz import timezone
 from rest_framework.request import Request
 
-from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
-from baserow.contrib.database.tokens.models import Token, TokenPermission
-from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.exceptions import (
-    TokenDoesNotExist,
     MaximumUniqueTokenTriesError,
-    TokenDoesNotBelongToUser,
     NoPermissionToTable,
+    TokenDoesNotBelongToUser,
+    TokenDoesNotExist,
 )
+from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.contrib.database.tokens.models import Token, TokenPermission
+from baserow.core.exceptions import UserNotInGroup
 
 
 @pytest.mark.django_db

@@ -1,13 +1,14 @@
 from unittest.mock import patch
 
-import pytest
 from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import utc, make_aware
+from django.utils.timezone import make_aware, utc
+
+import pytest
 from freezegun import freeze_time
 from rest_framework.fields import DateTimeField
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from baserow.contrib.database.rows.handler import RowHandler
 

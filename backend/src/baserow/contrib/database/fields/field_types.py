@@ -1,131 +1,127 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from random import randrange, randint, sample
-from typing import Any, Callable, Dict, List, Tuple, TYPE_CHECKING, Optional
+from random import randint, randrange, sample
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 from zipfile import ZipFile
-
-from pytz import all_timezones, timezone
-from dateutil import parser
-from dateutil.parser import ParserError
 
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage, Storage
-from django.db import models, OperationalError
-from django.db.models import Case, When, Q, F, Func, Value, CharField, DateTimeField
+from django.core.files.storage import Storage, default_storage
+from django.db import OperationalError, models
+from django.db.models import Case, CharField, DateTimeField, F, Func, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
+from dateutil import parser
+from dateutil.parser import ParserError
+from pytz import all_timezones, timezone
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
+    ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+    ERROR_INVALID_LOOKUP_TARGET_FIELD,
+    ERROR_INVALID_LOOKUP_THROUGH_FIELD,
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
-    ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
-    ERROR_WITH_FORMULA,
     ERROR_TOO_DEEPLY_NESTED_FORMULA,
-    ERROR_INVALID_LOOKUP_THROUGH_FIELD,
-    ERROR_INVALID_LOOKUP_TARGET_FIELD,
+    ERROR_WITH_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer,
     FileFieldRequestSerializer,
-    SelectOptionSerializer,
     FileFieldResponseSerializer,
+    LinkRowValueSerializer,
     MustBeEmptyField,
+    SelectOptionSerializer,
 )
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.formula import (
-    BaserowExpression,
-    BaserowFormulaTextType,
-    BaserowFormulaNumberType,
-    BaserowFormulaBooleanType,
-    BaserowFormulaDateType,
-    BaserowFormulaCharType,
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
-    BaserowFormulaType,
+    BaserowExpression,
+    BaserowFormulaBooleanType,
+    BaserowFormulaCharType,
+    BaserowFormulaDateType,
     BaserowFormulaException,
     BaserowFormulaInvalidType,
+    BaserowFormulaNumberType,
     BaserowFormulaSingleSelectType,
+    BaserowFormulaTextType,
+    BaserowFormulaType,
     FormulaHandler,
     literal,
 )
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
+
 from .constants import UPSERT_OPTION_DICT_KEY
 from .dependencies.exceptions import (
-    SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
+    SelfReferenceFieldDependencyError,
 )
-from .dependencies.handler import FieldDependencyHandler, FieldDependants
+from .dependencies.handler import FieldDependants, FieldDependencyHandler
 from .dependencies.models import FieldDependency
 from .dependencies.types import FieldDependencies
 from .exceptions import (
-    LinkRowTableNotInSameDatabase,
-    LinkRowTableNotProvided,
-    IncompatiblePrimaryFieldTypeError,
     AllProvidedMultipleSelectValuesMustBeIntegers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     FieldDoesNotExist,
-    InvalidLookupThroughField,
+    IncompatiblePrimaryFieldTypeError,
     InvalidLookupTargetField,
+    InvalidLookupThroughField,
+    LinkRowTableNotInSameDatabase,
+    LinkRowTableNotProvided,
 )
-from .field_filters import (
-    contains_filter,
-    AnnotatedQ,
-    filename_contains_filter,
-)
+from .field_filters import AnnotatedQ, contains_filter, filename_contains_filter
 from .field_sortings import AnnotatedOrder
 from .fields import (
-    SingleSelectForeignKey,
     BaserowExpressionField,
-    MultipleSelectManyToManyField,
     BaserowLastModifiedField,
+    MultipleSelectManyToManyField,
+    SingleSelectForeignKey,
 )
 from .handler import FieldHandler
 from .models import (
-    TextField,
-    LongTextField,
-    URLField,
-    NumberField,
-    RatingField,
-    BooleanField,
-    DateField,
-    LastModifiedField,
-    CreatedOnField,
-    LinkRowField,
-    EmailField,
-    FileField,
-    SingleSelectField,
-    MultipleSelectField,
-    SelectOption,
     AbstractSelectOption,
-    PhoneNumberField,
-    FormulaField,
+    BooleanField,
+    CreatedOnField,
+    DateField,
+    EmailField,
     Field,
+    FileField,
+    FormulaField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
     LookupField,
+    MultipleSelectField,
+    NumberField,
+    PhoneNumberField,
+    RatingField,
+    SelectOption,
+    SingleSelectField,
+    TextField,
+    URLField,
 )
 from .registries import (
     FieldType,
     ReadOnlyFieldType,
-    field_type_registry,
     StartingRowType,
+    field_type_registry,
 )
-from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.table.models import GeneratedTableModel, Table
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
+    from baserow.contrib.database.table.models import GeneratedTableModel, Table
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):

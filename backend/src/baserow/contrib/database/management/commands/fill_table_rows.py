@@ -6,6 +6,7 @@ from math import ceil
 from django.core.management.base import BaseCommand
 from django.db.models import Max
 from django.db.models.fields.related import ForeignKey
+
 from faker import Faker
 
 from baserow.contrib.database.rows.handler import RowHandler

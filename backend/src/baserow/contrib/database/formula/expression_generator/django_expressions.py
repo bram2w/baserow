@@ -1,5 +1,5 @@
 from django.contrib.postgres.aggregates.mixins import OrderableAggMixin
-from django.db.models import Transform, Aggregate, Expression, Field, Value, F
+from django.db.models import Aggregate, Expression, F, Field, Transform, Value
 
 
 # noinspection PyAbstractClass

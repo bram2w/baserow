@@ -1,43 +1,44 @@
-import os
 import datetime
+import os
 from decimal import Decimal
 from unittest.mock import MagicMock
-import pytest
-from freezegun import freeze_time
-from itsdangerous.exc import SignatureExpired, BadSignature
 
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from django.db import connections
 
-from baserow.contrib.database.models import (
-    Database,
-    Table,
-    GridView,
-    TextField,
-    LongTextField,
-    BooleanField,
-    DateField,
-)
+import pytest
+from freezegun import freeze_time
+from itsdangerous.exc import BadSignature, SignatureExpired
+
 from baserow.contrib.database.fields.models import SelectOption
+from baserow.contrib.database.models import (
+    BooleanField,
+    Database,
+    DateField,
+    GridView,
+    LongTextField,
+    Table,
+    TextField,
+)
 from baserow.contrib.database.views.models import GridViewFieldOptions
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist,
+    GroupInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
+    DisabledSignupError,
+    InvalidPassword,
+    PasswordDoesNotMatchValidation,
+    ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
     UserNotFound,
-    PasswordDoesNotMatchValidation,
-    InvalidPassword,
-    DisabledSignupError,
-    ResetPasswordDisabledError,
 )
 from baserow.core.user.handler import UserHandler
 

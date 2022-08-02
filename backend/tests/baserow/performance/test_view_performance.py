@@ -1,5 +1,6 @@
-import pytest
 from django.urls import reverse
+
+import pytest
 from pyinstrument import Profiler
 from rest_framework.status import HTTP_200_OK
 

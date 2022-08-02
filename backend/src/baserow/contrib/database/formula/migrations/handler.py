@@ -3,18 +3,17 @@ import traceback
 import typing
 from typing import Set
 
-from django.db.models import Q, Min, QuerySet
+from django.db.models import Min, Q, QuerySet
+
 from tqdm import tqdm
 
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.formula import (
-    FormulaHandler,
-)
+from baserow.contrib.database.formula import FormulaHandler
 from baserow.contrib.database.formula.migrations.migrations import (
-    NO_FORMULAS,
     ALL_FORMULAS,
-    FormulaMigrations,
     FORMULA_MIGRATIONS,
+    NO_FORMULAS,
+    FormulaMigrations,
 )
 from baserow.core.db import LockedAtomicTransaction
 

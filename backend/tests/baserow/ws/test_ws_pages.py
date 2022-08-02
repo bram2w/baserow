@@ -1,5 +1,4 @@
 import pytest
-
 from channels.testing import WebsocketCommunicator
 
 from baserow.config.asgi import application

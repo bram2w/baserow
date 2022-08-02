@@ -1,10 +1,9 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
 from django.db.models import Q
 
 from baserow.core.mixins import ParentGroupTrashableModelMixin
 from baserow.core.models import Group
-
 
 User = get_user_model()
 

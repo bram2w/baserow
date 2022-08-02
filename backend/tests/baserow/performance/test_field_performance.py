@@ -1,11 +1,12 @@
-import pytest
 from django.urls import reverse
+
+import pytest
 from pyinstrument import Profiler
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import TextField, Field
+from baserow.contrib.database.fields.models import Field, TextField
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.test_utils.helpers import setup_interesting_test_table
 

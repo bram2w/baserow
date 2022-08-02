@@ -1,5 +1,7 @@
 from datetime import timedelta
+
 from django.conf import settings
+
 from baserow.config.celery import app
 
 

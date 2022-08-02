@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.openapi import OpenApiTypes
 
 from baserow_premium.license.models import License
+from drf_spectacular.openapi import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 
 User = get_user_model()
 

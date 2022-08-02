@@ -1,12 +1,12 @@
-import sys
-import os
 import json
+import os
+import sys
 
-from django.db import transaction
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
-from baserow.core.models import Group
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Group
 
 
 class Command(BaseCommand):

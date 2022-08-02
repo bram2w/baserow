@@ -1,40 +1,38 @@
-from typing import Optional, Type, Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 from django.db.models import (
-    Expression,
-    Value,
-    F,
-    DecimalField,
     BooleanField,
-    fields,
+    DecimalField,
+    Expression,
     ExpressionWrapper,
-    Model,
-    Q,
+    F,
     FilteredRelation,
-    Subquery,
     JSONField,
+    Model,
     OuterRef,
+    Q,
+    Subquery,
+    Value,
+    fields,
 )
 from django.db.models.functions import Cast, JSONObject
 
 from baserow.contrib.database.formula.ast.exceptions import UnknownFieldReference
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowStringLiteral,
+    BaserowBooleanLiteral,
+    BaserowDecimalLiteral,
+    BaserowExpression,
+    BaserowFieldReference,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
-    BaserowFieldReference,
-    BaserowExpression,
-    BaserowDecimalLiteral,
-    BaserowBooleanLiteral,
+    BaserowStringLiteral,
 )
 from baserow.contrib.database.formula.ast.visitors import BaserowFormulaASTVisitor
 from baserow.contrib.database.formula.exceptions import formula_exception_handler
-from baserow.contrib.database.formula.parser.exceptions import (
-    MaximumFormulaSizeError,
-)
+from baserow.contrib.database.formula.parser.exceptions import MaximumFormulaSizeError
 from baserow.contrib.database.formula.types.formula_type import (
-    BaserowFormulaType,
     BaserowFormulaInvalidType,
+    BaserowFormulaType,
 )
 
 

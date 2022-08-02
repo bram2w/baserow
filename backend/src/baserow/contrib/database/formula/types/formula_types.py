@@ -1,34 +1,31 @@
 import datetime
 from decimal import Decimal
-from typing import List, Type, Optional, Any, Union
+from typing import Any, List, Optional, Type, Union
+
+from django.db import models
+from django.db.models import JSONField, Q, Value
+from django.utils import timezone
 
 from dateutil import parser
-from django.db import models
-from django.db.models import Q, JSONField, Value
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.fields import Field
 
-from baserow.contrib.database.fields.mixins import (
-    get_date_time_format,
-)
+from baserow.contrib.database.fields.mixins import get_date_time_format
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowExpression,
-    BaserowFunctionCall,
-    BaserowStringLiteral,
-    BaserowIntegerLiteral,
     BaserowBooleanLiteral,
     BaserowDecimalLiteral,
+    BaserowExpression,
+    BaserowFunctionCall,
+    BaserowIntegerLiteral,
+    BaserowStringLiteral,
 )
-from baserow.contrib.database.formula.registries import (
-    formula_function_registry,
-)
+from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import UnknownFormulaType
 from baserow.contrib.database.formula.types.formula_type import (
+    BaserowFormulaInvalidType,
+    BaserowFormulaType,
     BaserowFormulaValidType,
     UnTyped,
-    BaserowFormulaType,
-    BaserowFormulaInvalidType,
 )
 
 

@@ -1,13 +1,12 @@
 from django.utils.functional import lazy
 
-from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
-
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.api.groups.serializers import GroupSerializer
-from baserow.core.registries import application_type_registry
 from baserow.core.models import Application
+from baserow.core.registries import application_type_registry
 
 
 class ApplicationSerializer(serializers.ModelSerializer):

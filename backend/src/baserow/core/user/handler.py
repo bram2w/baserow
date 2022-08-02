@@ -1,45 +1,45 @@
-from typing import Optional
 from datetime import timedelta
-from urllib.parse import urlparse, urljoin
+from typing import Optional
+from urllib.parse import urljoin, urlparse
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser, update_last_login
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Count, Q
+from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeTimedSerializer
 
-from django.conf import settings
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-from django.db.models import Q, Count
-from django.db import transaction
-from django.utils import translation
-from django.utils.translation import gettext as _
-from django.contrib.auth.models import update_last_login, AbstractUser
-
-from baserow.core.signals import before_user_deleted
+from baserow.core.exceptions import (
+    BaseURLHostnameNotAllowed,
+    GroupInvitationEmailMismatch,
+)
 from baserow.core.handler import CoreHandler
-from baserow.core.trash.handler import TrashHandler
+from baserow.core.models import Group, Template, UserLogEntry, UserProfile
 from baserow.core.registries import plugin_registry
-from baserow.core.exceptions import BaseURLHostnameNotAllowed
-from baserow.core.exceptions import GroupInvitationEmailMismatch
-from baserow.core.models import Template, UserProfile, Group, UserLogEntry
+from baserow.core.signals import before_user_deleted
+from baserow.core.trash.handler import TrashHandler
 
+from .emails import (
+    AccountDeleted,
+    AccountDeletionCanceled,
+    AccountDeletionScheduled,
+    ResetPasswordEmail,
+)
 from .exceptions import (
+    DisabledSignupError,
+    InvalidPassword,
+    PasswordDoesNotMatchValidation,
+    ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
     UserNotFound,
-    PasswordDoesNotMatchValidation,
-    InvalidPassword,
-    DisabledSignupError,
-    ResetPasswordDisabledError,
-)
-from .emails import (
-    ResetPasswordEmail,
-    AccountDeletionScheduled,
-    AccountDeletionCanceled,
-    AccountDeleted,
 )
 from .utils import normalize_email_address
-
 
 User = get_user_model()
 

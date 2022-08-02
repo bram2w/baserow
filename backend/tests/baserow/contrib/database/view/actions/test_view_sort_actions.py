@@ -1,4 +1,5 @@
 import pytest
+
 from baserow.contrib.database.views.actions import (
     CreateViewSortActionType,
     DeleteViewSortActionType,

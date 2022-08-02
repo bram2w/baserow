@@ -8,6 +8,7 @@ install-dev-dependencies:
 lint:
 	flake8 src tests ../premium/backend && \
 	black . ../premium/backend --extend-exclude='/generated/' --check && \
+	isort --check --skip generated src tests ../premium/backend && \
 	bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ \
 	|| exit;
 
@@ -15,6 +16,9 @@ lint-python: lint
 
 format:
 	black . ../premium/backend --extend-exclude='/generated/' || exit;
+
+sort:
+	isort --skip generated  src tests ../premium/backend || exit;
 
 test:
 	pytest tests ../premium/backend/tests || exit;

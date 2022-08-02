@@ -1,9 +1,8 @@
-from django.urls import path, include
+from django.urls import include, path
 
-from .license import urls as license_urls
 from .admin import urls as admin_urls
+from .license import urls as license_urls
 from .row_comments import urls as row_comments_urls
-
 
 app_name = "baserow_premium.api"
 

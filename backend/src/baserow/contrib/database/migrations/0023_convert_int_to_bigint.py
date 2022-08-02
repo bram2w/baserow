@@ -1,7 +1,8 @@
 # We need to change all NumberFields that are Integers to use DecimalField in Django
 # and NUMERIC(50, 0) in Postgres. This migration converts all the existing Integer data
 # types in fields to Decimal.
-from django.db import migrations, connection
+from django.db import connection, migrations
+
 from baserow.contrib.database.fields.models import Field as FieldModel
 
 

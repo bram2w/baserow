@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -6,16 +6,17 @@ from django.db.transaction import Atomic
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.utils import ChildProgressBuilder, Progress
+
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 from .export_serialized import CoreExportSerializedStructure
 from .registry import (
+    APIUrlsInstanceMixin,
+    APIUrlsRegistryMixin,
+    ImportExportMixin,
     Instance,
-    Registry,
     ModelInstanceMixin,
     ModelRegistryMixin,
-    APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin,
-    ImportExportMixin,
+    Registry,
 )
 
 if TYPE_CHECKING:

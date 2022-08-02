@@ -1,6 +1,6 @@
-from baserow.api.user.registries import UserDataType
-
 from baserow_premium.license.handler import has_active_premium_license_for
+
+from baserow.api.user.registries import UserDataType
 
 
 class PremiumUserDataType(UserDataType):

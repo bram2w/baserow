@@ -1,16 +1,16 @@
-from rest_framework import serializers
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 
 from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
 )
-from baserow.contrib.database.fields.registries import field_type_registry
 
 
 class FormViewFieldOptionsConditionSerializer(serializers.ModelSerializer):

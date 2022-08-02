@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from baserow.core.models import User, Snapshot
+from baserow.core.models import Snapshot, User
 
 
 class UserSerializer(serializers.ModelSerializer):

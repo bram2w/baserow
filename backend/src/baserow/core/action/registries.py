@@ -3,6 +3,7 @@ import dataclasses
 from typing import Any, NewType, Optional
 
 from django.contrib.auth.models import AbstractUser
+
 from rest_framework import serializers
 
 from baserow.api.sessions import (
@@ -10,7 +11,7 @@ from baserow.api.sessions import (
     get_untrusted_client_session_id,
 )
 from baserow.core.action.models import Action
-from baserow.core.registry import Registry, Instance
+from baserow.core.registry import Instance, Registry
 
 # An alias type of a str (its exactly a str, just with a different name in the type
 # system). We use this instead of a normal str for type safety ensuring

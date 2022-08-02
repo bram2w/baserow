@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
+    InstanceTypeDoesNotExist,
     LockConflict,
 )
 

@@ -1,7 +1,8 @@
 from unittest.mock import patch
 
-import pytest
 from django.db import transaction
+
+import pytest
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (

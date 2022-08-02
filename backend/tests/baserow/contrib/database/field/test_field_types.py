@@ -1,18 +1,17 @@
-import pytest
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
+
+import pytest
 from faker import Faker
 
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.field_types import (
-    PhoneNumberFieldType,
-)
+from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    LongTextField,
-    URLField,
     EmailField,
+    LongTextField,
     PhoneNumberField,
+    URLField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler

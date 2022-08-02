@@ -9,5 +9,4 @@ https://docs.djangoproject.com/en/2.2/howto/deployment/wsgi/
 
 from django.core.wsgi import get_wsgi_application
 
-
 application = get_wsgi_application()

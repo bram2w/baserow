@@ -18,7 +18,6 @@ def broadcast_to_users(self, user_ids, payload, ignore_web_socket_id=None):
     """
 
     from asgiref.sync import async_to_sync
-
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
@@ -52,7 +51,6 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
     """
 
     from asgiref.sync import async_to_sync
-
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()

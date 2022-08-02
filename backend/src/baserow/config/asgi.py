@@ -1,10 +1,9 @@
 import django
+from django.core.asgi import get_asgi_application
 
 from channels.routing import ProtocolTypeRouter
 
 from baserow.ws.routers import websocket_router
-from django.core.asgi import get_asgi_application
-
 
 django.setup()
 

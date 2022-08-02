@@ -1,12 +1,13 @@
-from unittest.mock import patch, call, ANY
+from unittest.mock import ANY, call, patch
+
+from django.db import transaction
 
 import pytest
-from django.db import transaction
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.trash.models import TrashedRows
-from baserow.contrib.database.views.handler import ViewHandler, PublicViewRows
+from baserow.contrib.database.views.handler import PublicViewRows, ViewHandler
 from baserow.core.trash.handler import TrashHandler
 
 

@@ -1,34 +1,34 @@
-from .registries import ViewAggregationType
-from django.db.models import Count, Min, Max, Sum, StdDev, Variance, Avg
+from django.db.models import Avg, Count, Max, Min, StdDev, Sum, Variance
 
 from baserow.contrib.database.db.aggregations import Percentile
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.field_types import (
-    CreatedOnFieldType,
-    MultipleSelectFieldType,
-    TextFieldType,
-    LongTextFieldType,
-    URLFieldType,
-    NumberFieldType,
-    RatingFieldType,
-    DateFieldType,
-    LastModifiedFieldType,
-    LinkRowFieldType,
     BooleanFieldType,
+    CreatedOnFieldType,
+    DateFieldType,
     EmailFieldType,
     FileFieldType,
-    SingleSelectFieldType,
-    PhoneNumberFieldType,
     FormulaFieldType,
+    LastModifiedFieldType,
+    LinkRowFieldType,
+    LongTextFieldType,
+    MultipleSelectFieldType,
+    NumberFieldType,
+    PhoneNumberFieldType,
+    RatingFieldType,
+    SingleSelectFieldType,
+    TextFieldType,
+    URLFieldType,
 )
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
-    BaserowFormulaTextType,
-    BaserowFormulaNumberType,
+    BaserowFormulaBooleanType,
     BaserowFormulaCharType,
     BaserowFormulaDateType,
-    BaserowFormulaBooleanType,
+    BaserowFormulaNumberType,
+    BaserowFormulaTextType,
 )
 
+from .registries import ViewAggregationType
 
 # See official django documentation for list of aggregator:
 # https://docs.djangoproject.com/en/4.0/ref/models/querysets/#aggregation-functions

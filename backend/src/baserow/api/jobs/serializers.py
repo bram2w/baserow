@@ -1,7 +1,8 @@
 from django.utils.functional import lazy
-from rest_framework import serializers
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 
 from baserow.core.jobs.models import Job
 from baserow.core.jobs.registries import job_type_registry

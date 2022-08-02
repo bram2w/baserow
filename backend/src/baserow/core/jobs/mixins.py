@@ -1,6 +1,8 @@
 from typing import Any
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
 from baserow.api.sessions import (
     get_untrusted_client_session_id,
     set_untrusted_client_session_id,

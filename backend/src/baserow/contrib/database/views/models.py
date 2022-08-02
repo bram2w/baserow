@@ -5,23 +5,23 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.db.models import Q
 
-from baserow.core.utils import get_model_reference_field_name
-from baserow.core.models import UserFile
-from baserow.core.mixins import (
-    OrderableMixin,
-    PolymorphicContentTypeMixin,
-    CreatedAndUpdatedOnMixin,
-    TrashableModelMixin,
-)
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.views.registries import (
-    view_type_registry,
     view_filter_type_registry,
+    view_type_registry,
 )
+from baserow.core.mixins import (
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    TrashableModelMixin,
+)
+from baserow.core.models import UserFile
+from baserow.core.utils import get_model_reference_field_name
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
 

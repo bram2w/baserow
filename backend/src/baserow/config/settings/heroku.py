@@ -1,6 +1,7 @@
-from .base import *  # noqa: F403, F401
 import os
 import ssl
+
+from .base import *  # noqa: F403, F401
 
 if REDIS_PROTOCOL == "rediss" or "rediss" in REDIS_URL:  # noqa: F405
     # We need to set the certificate check to None, otherwise it is not compatible with

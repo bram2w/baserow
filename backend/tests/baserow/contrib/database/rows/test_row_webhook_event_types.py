@@ -1,8 +1,8 @@
 import pytest
 
-from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
 from baserow.contrib.database.ws.rows.signals import before_rows_update
 
 

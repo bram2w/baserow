@@ -1,13 +1,14 @@
 from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractUser
+
 from rest_framework import serializers
 
 from baserow.api.applications.serializers import ApplicationSerializer
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import DuplicateApplicationActionType
-from baserow.core.exceptions import UserNotInGroup, GroupDoesNotExist
+from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 from baserow.core.jobs.types import AnyJob

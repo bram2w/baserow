@@ -1,5 +1,6 @@
-import pytest
+from django.shortcuts import reverse
 
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -7,13 +8,9 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
-
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import ViewSort
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-)
+from baserow.contrib.database.views.registries import view_type_registry
 
 
 @pytest.mark.django_db

@@ -1,9 +1,8 @@
-from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from baserow.core.models import UserLogEntry
-
 
 User = get_user_model()
 

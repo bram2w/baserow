@@ -5,7 +5,6 @@ from rest_framework.serializers import ModelSerializer
 
 from baserow.core.models import Group, GroupUser
 
-
 User = get_user_model()
 
 

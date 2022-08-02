@@ -1,14 +1,14 @@
-from unittest.mock import patch, call
-
-import pytest
-from freezegun import freeze_time
+from unittest.mock import call, patch
 
 from django.test.utils import override_settings
 
-from baserow.contrib.database.rows.handler import RowHandler
+import pytest
+from baserow_premium.license.exceptions import NoPremiumLicenseError
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.handler import RowCommentHandler
-from baserow_premium.license.exceptions import NoPremiumLicenseError
+from freezegun import freeze_time
+
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db

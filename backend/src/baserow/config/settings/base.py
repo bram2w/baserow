@@ -3,7 +3,7 @@ import importlib
 import os
 from decimal import Decimal
 from pathlib import Path
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin, urlparse
 
 import dj_database_url
 from celery.schedules import crontab

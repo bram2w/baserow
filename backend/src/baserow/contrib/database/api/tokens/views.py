@@ -1,17 +1,14 @@
 from django.db import transaction
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body, map_exceptions
+from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroup
-from baserow.core.handler import CoreHandler
 from baserow.contrib.database.api.errors import ERROR_DATABASE_DOES_NOT_BELONG_TO_GROUP
 from baserow.contrib.database.api.tables.errors import (
     ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP,
@@ -19,11 +16,13 @@ from baserow.contrib.database.api.tables.errors import (
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
-from baserow.contrib.database.tokens.models import Token
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.contrib.database.tokens.models import Token
+from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 
-from .serializers import TokenSerializer, TokenCreateSerializer, TokenUpdateSerializer
 from .errors import ERROR_TOKEN_DOES_NOT_EXIST
+from .serializers import TokenCreateSerializer, TokenSerializer, TokenUpdateSerializer
 
 
 class TokensView(APIView):

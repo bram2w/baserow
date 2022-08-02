@@ -1,7 +1,8 @@
-from typing import cast, Optional
-from django.db.models import QuerySet
-from baserow.contrib.database.models import Database
+from typing import Optional, cast
 
+from django.db.models import QuerySet
+
+from baserow.contrib.database.models import Database
 from baserow.core.handler import CoreHandler
 
 

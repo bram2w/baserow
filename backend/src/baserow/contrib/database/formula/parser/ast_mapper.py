@@ -1,20 +1,20 @@
 from decimal import Decimal
 
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowStringLiteral,
+    BaserowBooleanLiteral,
+    BaserowDecimalLiteral,
+    BaserowExpression,
+    BaserowFieldReference,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
-    BaserowFieldReference,
-    BaserowExpression,
-    BaserowDecimalLiteral,
-    BaserowBooleanLiteral,
+    BaserowStringLiteral,
 )
 from baserow.contrib.database.formula.parser.exceptions import (
-    InvalidNumberOfArguments,
     BaserowFormulaSyntaxError,
-    UnknownOperator,
     FieldByIdReferencesAreDeprecated,
+    InvalidNumberOfArguments,
     MaximumFormulaSizeError,
+    UnknownOperator,
 )
 from baserow.contrib.database.formula.parser.generated.BaserowFormula import (
     BaserowFormula,

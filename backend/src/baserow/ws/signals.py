@@ -1,11 +1,10 @@
 from django.db import transaction
 from django.dispatch import receiver
 
-from baserow.api.applications.serializers import (
-    get_application_serializer,
-)
+from baserow.api.applications.serializers import get_application_serializer
 from baserow.api.groups.serializers import GroupSerializer, GroupUserGroupSerializer
 from baserow.core import signals
+
 from .tasks import broadcast_to_group, broadcast_to_users
 
 

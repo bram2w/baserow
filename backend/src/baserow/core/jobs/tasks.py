@@ -3,8 +3,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
 
-from baserow.core.jobs.registries import job_type_registry
 from baserow.config.celery import app
+from baserow.core.jobs.registries import job_type_registry
 
 
 @app.task(
@@ -15,14 +15,13 @@ from baserow.config.celery import app
 def run_async_job(self, job_id: int):
     """Run the job task asynchronously"""
 
-    from celery.exceptions import SoftTimeLimitExceeded
-
     from django.core.cache import cache
 
-    from baserow.core.jobs.models import Job
-    from baserow.core.jobs.handler import JobHandler
+    from celery.exceptions import SoftTimeLimitExceeded
 
     from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED, JOB_STARTED
+    from baserow.core.jobs.handler import JobHandler
+    from baserow.core.jobs.models import Job
 
     from .cache import job_progress_key
 

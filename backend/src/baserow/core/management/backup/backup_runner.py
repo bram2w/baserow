@@ -6,10 +6,11 @@ import subprocess  # nosec
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
+
+from django.utils import timezone
 
 import psycopg2
-from django.utils import timezone
 
 from baserow.contrib.database.fields.models import LinkRowField, MultipleSelectField
 from baserow.contrib.database.table.models import Table

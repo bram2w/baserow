@@ -1,7 +1,6 @@
-import pytest
-
 from unittest.mock import patch
 
+import pytest
 from baserow_premium.license.tasks import license_check
 
 

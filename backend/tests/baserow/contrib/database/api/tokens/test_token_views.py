@@ -1,6 +1,7 @@
+from django.shortcuts import reverse
+
 import pytest
 from pytest_unordered import unordered
-
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -8,8 +9,6 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
 )
-
-from django.shortcuts import reverse
 
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.models import Token, TokenPermission

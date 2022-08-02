@@ -4,76 +4,74 @@ from typing import List, Optional, Type
 
 from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
-    Expression,
-    Value,
+    Avg,
     Case,
-    When,
-    fields,
-    Func,
-    F,
-    ExpressionWrapper,
-    Model,
     Count,
-    Sum,
+    Expression,
+    ExpressionWrapper,
+    F,
+    Func,
     JSONField,
-    Variance,
     Max,
     Min,
-    Avg,
+    Model,
     StdDev,
+    Sum,
+    Value,
+    Variance,
+    When,
+    fields,
 )
 from django.db.models.functions import (
-    Upper,
-    Lower,
-    Concat,
-    Coalesce,
     Cast,
-    Greatest,
+    Coalesce,
+    Concat,
     Extract,
-    Replace,
-    StrIndex,
-    Length,
-    Reverse,
+    Greatest,
     JSONObject,
     Least,
     Left,
+    Length,
+    Lower,
+    Replace,
+    Reverse,
     Right,
+    StrIndex,
+    Upper,
 )
 
-from baserow.contrib.database.fields.models import (
-    NUMBER_MAX_DECIMAL_PLACES,
-)
+from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
 from baserow.contrib.database.formula.ast.function import (
     BaserowFunctionDefinition,
     NumOfArgsGreaterThan,
     OneArgumentBaserowFunction,
-    TwoArgumentBaserowFunction,
     ThreeArgumentBaserowFunction,
+    TwoArgumentBaserowFunction,
     ZeroArgumentBaserowFunction,
     aggregate_wrapper,
 )
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFunctionCall,
     BaserowExpression,
+    BaserowFunctionCall,
 )
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    AndExpr,
+    BaserowStringAgg,
     EqualsExpr,
-    NotExpr,
-    NotEqualsExpr,
     GreaterThanExpr,
     GreaterThanOrEqualExpr,
-    LessThanExpr,
     LessThanEqualOrExpr,
-    AndExpr,
+    LessThanExpr,
+    NotEqualsExpr,
+    NotExpr,
     OrExpr,
-    BaserowStringAgg,
 )
 from baserow.contrib.database.formula.expression_generator.exceptions import (
     BaserowToDjangoExpressionGenerationError,
 )
 from baserow.contrib.database.formula.expression_generator.generator import (
-    WrappedExpressionWithMetadata,
     JoinIdsType,
+    WrappedExpressionWithMetadata,
 )
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
@@ -81,20 +79,20 @@ from baserow.contrib.database.formula.types.formula_type import (
     UnTyped,
 )
 from baserow.contrib.database.formula.types.formula_types import (
-    BaserowFormulaTextType,
+    BaserowFormulaArrayType,
+    BaserowFormulaBooleanType,
+    BaserowFormulaCharType,
+    BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
     BaserowFormulaNumberType,
-    BaserowFormulaBooleanType,
-    calculate_number_type,
-    BaserowFormulaDateIntervalType,
-    BaserowFormulaArrayType,
     BaserowFormulaSingleSelectType,
-    BaserowFormulaCharType,
+    BaserowFormulaTextType,
+    calculate_number_type,
     literal,
 )
 from baserow.contrib.database.formula.types.type_checker import (
-    MustBeManyExprChecker,
     BaserowArgumentTypeChecker,
+    MustBeManyExprChecker,
 )
 
 

@@ -1,13 +1,12 @@
+from collections import defaultdict
 from typing import Dict, Union
 
-from collections import defaultdict
-from baserow.contrib.database.views.models import View
-from baserow.contrib.database.views.handler import ViewHandler
+from django.db.models import Count, Q
 
-from django.db.models import Q, Count
-
-from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.fields.models import SingleSelectField
+from baserow.contrib.database.table.models import GeneratedTableModel
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import View
 
 
 def get_rows_grouped_by_single_select_field(

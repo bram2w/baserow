@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from baserow.core.action.models import Action
-from baserow.core.action.registries import action_type_registry, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, action_type_registry
 from baserow.core.exceptions import LockConflict
 
 logger = logging.getLogger(__name__)

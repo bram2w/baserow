@@ -1,13 +1,13 @@
 from datetime import date
 
-from django.utils.translation import gettext as _, override
+from django.utils.translation import gettext as _
+from django.utils.translation import override
 
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import Plugin
 
 from .table.handler import TableHandler
-from baserow.contrib.database.rows.handler import RowHandler
-
 
 LOREM = (
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce "

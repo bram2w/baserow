@@ -2,10 +2,9 @@ from django.urls import re_path
 
 from baserow.contrib.database.api.webhooks.views import (
     TableWebhooksView,
-    TableWebhookView,
     TableWebhookTestCallView,
+    TableWebhookView,
 )
-
 
 app_name = "baserow.contrib.database.api.webhooks"
 

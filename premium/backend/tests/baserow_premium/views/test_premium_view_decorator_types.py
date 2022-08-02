@@ -1,12 +1,12 @@
-import pytest
 from unittest.mock import patch
 
 from django.test.utils import override_settings
 
+import pytest
+from baserow_premium.license.exceptions import NoPremiumLicenseError
+
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import ViewDecoration
-
-from baserow_premium.license.exceptions import NoPremiumLicenseError
 
 
 @pytest.mark.django_db

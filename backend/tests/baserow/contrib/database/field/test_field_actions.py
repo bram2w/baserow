@@ -1,24 +1,23 @@
 from decimal import Decimal
 from typing import cast
 
-import pytest
 from django.db import connection, transaction
 from django.urls import reverse
+
+import pytest
 from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.actions import UpdateFieldActionType
-from baserow.contrib.database.fields.field_types import (
-    TextFieldType,
-)
+from baserow.contrib.database.fields.field_types import TextFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    TextField,
     LinkRowField,
-    NumberField,
     MultipleSelectField,
+    NumberField,
     RatingField,
     SpecificFieldForUpdate,
+    TextField,
 )
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.action.handler import ActionHandler
@@ -27,8 +26,8 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.models import GROUP_USER_PERMISSION_ADMIN
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import (
-    setup_interesting_test_table,
     assert_undo_redo_actions_are_valid,
+    setup_interesting_test_table,
 )
 
 

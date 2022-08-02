@@ -1,10 +1,9 @@
-from dateutil import parser
-
-from django.db import models
 from django.contrib.auth import get_user_model
-from django.utils.timezone import utc, now, make_aware
+from django.db import models
 from django.utils.functional import cached_property
+from django.utils.timezone import make_aware, now, utc
 
+from dateutil import parser
 
 User = get_user_model()
 

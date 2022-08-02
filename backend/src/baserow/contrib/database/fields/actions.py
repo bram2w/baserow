@@ -1,25 +1,22 @@
 import dataclasses
 from copy import deepcopy
-from typing import Optional, Tuple, List, Dict, Any, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.core.management.color import no_style
 from django.db import connection
 from django.db.models import ManyToManyField
+
 from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
-)
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, SpecificFieldForUpdate
-from baserow.contrib.database.fields.registries import (
-    field_type_registry,
-)
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.scopes import TableActionScopeType
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionType, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed
 

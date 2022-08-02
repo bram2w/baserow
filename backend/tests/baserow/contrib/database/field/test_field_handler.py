@@ -2,42 +2,39 @@ from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
-import pytest
 from django.conf import settings
 from django.db import models
+
+import pytest
 from faker import Faker
 
+from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.exceptions import (
-    FieldTypeDoesNotExist,
-    MaxFieldNameLengthExceeded,
-    PrimaryFieldAlreadyExists,
+    CannotChangeFieldType,
     CannotDeletePrimaryField,
     FieldDoesNotExist,
-    IncompatiblePrimaryFieldTypeError,
-    CannotChangeFieldType,
-    MaxFieldLimitExceeded,
+    FieldTypeDoesNotExist,
     FieldWithSameNameAlreadyExists,
-    ReservedBaserowFieldNameException,
     IncompatibleFieldTypeForUniqueValues,
+    IncompatiblePrimaryFieldTypeError,
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+    PrimaryFieldAlreadyExists,
+    ReservedBaserowFieldNameException,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
-from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
-)
-from baserow.contrib.database.fields.constants import (
-    UPSERT_OPTION_DICT_KEY,
-)
+from baserow.contrib.database.fields.field_types import LongTextFieldType, TextFieldType
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field,
-    TextField,
-    NumberField,
     BooleanField,
-    SelectOption,
-    LongTextField,
+    Field,
     FormulaField,
+    LongTextField,
+    NumberField,
+    SelectOption,
+    TextField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler

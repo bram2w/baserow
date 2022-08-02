@@ -5,10 +5,7 @@ from django.db import ProgrammingError
 from django.db.models.signals import post_migrate, pre_migrate
 
 from baserow.contrib.database.table.cache import clear_generated_model_cache
-from baserow.core.registries import (
-    plugin_registry,
-    application_type_registry,
-)
+from baserow.core.registries import application_type_registry, plugin_registry
 from baserow.core.trash.registries import trash_item_type_registry
 from baserow.core.usage.registries import group_storage_usage_item_registry
 from baserow.ws.registries import page_registry
@@ -55,8 +52,8 @@ class DatabaseConfig(AppConfig):
         self.prevent_generated_model_for_registering()
 
         from baserow.core.action.registries import (
-            action_type_registry,
             action_scope_registry,
+            action_type_registry,
         )
 
         from .action.scopes import TableActionScopeType
@@ -66,9 +63,9 @@ class DatabaseConfig(AppConfig):
         from .table.actions import (
             CreateTableActionType,
             DeleteTableActionType,
+            DuplicateTableActionType,
             OrderTableActionType,
             UpdateTableActionType,
-            DuplicateTableActionType,
         )
 
         action_type_registry.register(CreateTableActionType())
@@ -80,9 +77,9 @@ class DatabaseConfig(AppConfig):
         from .rows.actions import (
             CreateRowActionType,
             CreateRowsActionType,
-            ImportRowsActionType,
             DeleteRowActionType,
             DeleteRowsActionType,
+            ImportRowsActionType,
             MoveRowActionType,
             UpdateRowActionType,
             UpdateRowsActionType,
@@ -98,22 +95,22 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(UpdateRowsActionType())
 
         from baserow.contrib.database.views.actions import (
-            CreateViewActionType,
-            DuplicateViewActionType,
-            DeleteViewActionType,
-            OrderViewsActionType,
-            UpdateViewActionType,
-            CreateViewFilterActionType,
-            UpdateViewFilterActionType,
-            DeleteViewFilterActionType,
-            CreateViewSortActionType,
-            UpdateViewSortActionType,
-            DeleteViewSortActionType,
-            UpdateViewFieldOptionsActionType,
-            RotateViewSlugActionType,
             CreateDecorationActionType,
-            UpdateDecorationActionType,
+            CreateViewActionType,
+            CreateViewFilterActionType,
+            CreateViewSortActionType,
             DeleteDecorationActionType,
+            DeleteViewActionType,
+            DeleteViewFilterActionType,
+            DeleteViewSortActionType,
+            DuplicateViewActionType,
+            OrderViewsActionType,
+            RotateViewSlugActionType,
+            UpdateDecorationActionType,
+            UpdateViewActionType,
+            UpdateViewFieldOptionsActionType,
+            UpdateViewFilterActionType,
+            UpdateViewSortActionType,
         )
 
         action_type_registry.register(CreateViewActionType())
@@ -133,41 +130,38 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(UpdateDecorationActionType())
         action_type_registry.register(DeleteDecorationActionType())
 
-        from .views.registries import (
-            view_type_registry,
-            view_filter_type_registry,
-            view_aggregation_type_registry,
-        )
-        from .fields.registries import field_type_registry, field_converter_registry
+        from .airtable.registry import airtable_column_type_registry
         from .export.registries import table_exporter_registry
-        from .formula.registries import (
-            formula_function_registry,
+        from .fields.registries import field_converter_registry, field_type_registry
+        from .formula.registries import formula_function_registry
+        from .plugins import DatabasePlugin
+        from .views.registries import (
+            view_aggregation_type_registry,
+            view_filter_type_registry,
+            view_type_registry,
         )
         from .webhooks.registries import webhook_event_type_registry
-        from .airtable.registry import airtable_column_type_registry
-
-        from .plugins import DatabasePlugin
 
         plugin_registry.register(DatabasePlugin())
 
         from .fields.field_types import (
-            TextFieldType,
-            LongTextFieldType,
-            URLFieldType,
-            NumberFieldType,
-            RatingFieldType,
             BooleanFieldType,
-            DateFieldType,
-            LastModifiedFieldType,
             CreatedOnFieldType,
-            LinkRowFieldType,
+            DateFieldType,
             EmailFieldType,
             FileFieldType,
-            SingleSelectFieldType,
-            MultipleSelectFieldType,
-            PhoneNumberFieldType,
             FormulaFieldType,
+            LastModifiedFieldType,
+            LinkRowFieldType,
+            LongTextFieldType,
             LookupFieldType,
+            MultipleSelectFieldType,
+            NumberFieldType,
+            PhoneNumberFieldType,
+            RatingFieldType,
+            SingleSelectFieldType,
+            TextFieldType,
+            URLFieldType,
         )
 
         field_type_registry.register(TextFieldType())
@@ -189,13 +183,13 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(LookupFieldType())
 
         from .fields.field_converters import (
-            LinkRowFieldConverter,
             FileFieldConverter,
-            TextFieldToMultipleSelectFieldConverter,
-            MultipleSelectFieldToTextFieldConverter,
-            MultipleSelectFieldToSingleSelectFieldConverter,
-            SingleSelectFieldToMultipleSelectFieldConverter,
             FormulaFieldConverter,
+            LinkRowFieldConverter,
+            MultipleSelectFieldToSingleSelectFieldConverter,
+            MultipleSelectFieldToTextFieldConverter,
+            SingleSelectFieldToMultipleSelectFieldConverter,
+            TextFieldToMultipleSelectFieldConverter,
         )
 
         field_converter_registry.register(LinkRowFieldConverter())
@@ -220,45 +214,45 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
 
-        from .views.view_types import GridViewType, GalleryViewType, FormViewType
+        from .views.view_types import FormViewType, GalleryViewType, GridViewType
 
         view_type_registry.register(GridViewType())
         view_type_registry.register(GalleryViewType())
         view_type_registry.register(FormViewType())
 
         from .views.view_filters import (
-            EqualViewFilterType,
-            NotEqualViewFilterType,
-            EmptyViewFilterType,
-            NotEmptyViewFilterType,
-            DateEqualViewFilterType,
-            DateBeforeViewFilterType,
+            BooleanViewFilterType,
+            ContainsNotViewFilterType,
+            ContainsViewFilterType,
             DateAfterViewFilterType,
-            DateNotEqualViewFilterType,
-            DateEqualsTodayViewFilterType,
+            DateBeforeViewFilterType,
+            DateEqualsCurrentMonthViewFilterType,
+            DateEqualsCurrentWeekViewFilterType,
+            DateEqualsCurrentYearViewFilterType,
+            DateEqualsDayOfMonthViewFilterType,
             DateEqualsDaysAgoViewFilterType,
             DateEqualsMonthsAgoViewFilterType,
+            DateEqualsTodayViewFilterType,
             DateEqualsYearsAgoViewFilterType,
-            DateEqualsCurrentWeekViewFilterType,
-            DateEqualsCurrentMonthViewFilterType,
-            DateEqualsCurrentYearViewFilterType,
-            HigherThanViewFilterType,
-            LowerThanViewFilterType,
-            DateEqualsDayOfMonthViewFilterType,
-            ContainsViewFilterType,
+            DateEqualViewFilterType,
+            DateNotEqualViewFilterType,
+            EmptyViewFilterType,
+            EqualViewFilterType,
             FilenameContainsViewFilterType,
             HasFileTypeViewFilterType,
-            ContainsNotViewFilterType,
-            BooleanViewFilterType,
+            HigherThanViewFilterType,
+            LengthIsLowerThanViewFilterType,
+            LinkRowContainsViewFilterType,
+            LinkRowHasNotViewFilterType,
+            LinkRowHasViewFilterType,
+            LinkRowNotContainsViewFilterType,
+            LowerThanViewFilterType,
+            MultipleSelectHasNotViewFilterType,
+            MultipleSelectHasViewFilterType,
+            NotEmptyViewFilterType,
+            NotEqualViewFilterType,
             SingleSelectEqualViewFilterType,
             SingleSelectNotEqualViewFilterType,
-            LinkRowHasViewFilterType,
-            LinkRowHasNotViewFilterType,
-            LinkRowContainsViewFilterType,
-            LinkRowNotContainsViewFilterType,
-            MultipleSelectHasViewFilterType,
-            MultipleSelectHasNotViewFilterType,
-            LengthIsLowerThanViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
@@ -295,17 +289,17 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
 
         from .views.view_aggregations import (
-            EmptyCountViewAggregationType,
-            NotEmptyCountViewAggregationType,
-            MinViewAggregationType,
-            MaxViewAggregationType,
-            SumViewAggregationType,
             AverageViewAggregationType,
-            MedianViewAggregationType,
             DecileViewAggregationType,
-            VarianceViewAggregationType,
+            EmptyCountViewAggregationType,
+            MaxViewAggregationType,
+            MedianViewAggregationType,
+            MinViewAggregationType,
+            NotEmptyCountViewAggregationType,
             StdDevViewAggregationType,
+            SumViewAggregationType,
             UniqueCountViewAggregationType,
+            VarianceViewAggregationType,
         )
 
         view_aggregation_type_registry.register(EmptyCountViewAggregationType())
@@ -324,7 +318,7 @@ class DatabaseConfig(AppConfig):
 
         application_type_registry.register(DatabaseApplicationType())
 
-        from .ws.pages import TablePageType, PublicViewPageType
+        from .ws.pages import PublicViewPageType, TablePageType
 
         page_registry.register(TablePageType())
         page_registry.register(PublicViewPageType())
@@ -334,10 +328,10 @@ class DatabaseConfig(AppConfig):
         table_exporter_registry.register(CsvTableExporter())
 
         from .trash.trash_types import (
-            TableTrashableItemType,
-            RowTrashableItemType,
-            RowsTrashableItemType,
             FieldTrashableItemType,
+            RowsTrashableItemType,
+            RowTrashableItemType,
+            TableTrashableItemType,
             ViewTrashableItemType,
         )
 
@@ -352,12 +346,12 @@ class DatabaseConfig(AppConfig):
         register_formula_functions(formula_function_registry)
 
         from .rows.webhook_event_types import (
-            RowsCreatedEventType,
             RowCreatedEventType,
+            RowDeletedEventType,
+            RowsCreatedEventType,
+            RowsDeletedEventType,
             RowsUpdatedEventType,
             RowUpdatedEventType,
-            RowsDeletedEventType,
-            RowDeletedEventType,
         )
 
         webhook_event_type_registry.register(RowsCreatedEventType())
@@ -368,19 +362,19 @@ class DatabaseConfig(AppConfig):
         webhook_event_type_registry.register(RowDeletedEventType())
 
         from .airtable.airtable_column_types import (
-            TextAirtableColumnType,
-            DateAirtableColumnType,
-            NumberAirtableColumnType,
-            SelectAirtableColumnType,
-            MultiSelectAirtableColumnType,
-            RatingAirtableColumnType,
-            FormulaAirtableColumnType,
             CheckboxAirtableColumnType,
-            PhoneAirtableColumnType,
+            DateAirtableColumnType,
             ForeignKeyAirtableColumnType,
+            FormulaAirtableColumnType,
             MultilineTextAirtableColumnType,
             MultipleAttachmentAirtableColumnType,
+            MultiSelectAirtableColumnType,
+            NumberAirtableColumnType,
+            PhoneAirtableColumnType,
+            RatingAirtableColumnType,
             RichTextTextAirtableColumnType,
+            SelectAirtableColumnType,
+            TextAirtableColumnType,
         )
 
         airtable_column_type_registry.register(TextAirtableColumnType())
@@ -409,10 +403,11 @@ class DatabaseConfig(AppConfig):
 
         group_storage_usage_item_registry.register(FormViewGroupStorageUsageItem())
 
+        from baserow.contrib.database.table.job_types import DuplicateTableJobType
         from baserow.core.jobs.registries import job_type_registry
+
         from .airtable.job_type import AirtableImportJobType
         from .file_import.job_type import FileImportJobType
-        from baserow.contrib.database.table.job_types import DuplicateTableJobType
 
         job_type_registry.register(AirtableImportJobType())
         job_type_registry.register(FileImportJobType())

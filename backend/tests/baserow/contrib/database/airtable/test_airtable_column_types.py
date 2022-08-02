@@ -1,41 +1,40 @@
 import pytest
 import responses
-
 from pytz import UTC, timezone
 
-from baserow.contrib.database.fields.models import (
-    TextField,
-    LongTextField,
-    URLField,
-    NumberField,
-    RatingField,
-    BooleanField,
-    DateField,
-    LastModifiedField,
-    CreatedOnField,
-    LinkRowField,
-    EmailField,
-    FileField,
-    SingleSelectField,
-    MultipleSelectField,
-    PhoneNumberField,
-)
 from baserow.contrib.database.airtable.airtable_column_types import (
-    TextAirtableColumnType,
-    DateAirtableColumnType,
-    NumberAirtableColumnType,
-    SelectAirtableColumnType,
-    RatingAirtableColumnType,
-    FormulaAirtableColumnType,
     CheckboxAirtableColumnType,
-    PhoneAirtableColumnType,
+    DateAirtableColumnType,
     ForeignKeyAirtableColumnType,
+    FormulaAirtableColumnType,
     MultilineTextAirtableColumnType,
     MultipleAttachmentAirtableColumnType,
-    RichTextTextAirtableColumnType,
     MultiSelectAirtableColumnType,
+    NumberAirtableColumnType,
+    PhoneAirtableColumnType,
+    RatingAirtableColumnType,
+    RichTextTextAirtableColumnType,
+    SelectAirtableColumnType,
+    TextAirtableColumnType,
 )
 from baserow.contrib.database.airtable.registry import airtable_column_type_registry
+from baserow.contrib.database.fields.models import (
+    BooleanField,
+    CreatedOnField,
+    DateField,
+    EmailField,
+    FileField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
+    MultipleSelectField,
+    NumberField,
+    PhoneNumberField,
+    RatingField,
+    SingleSelectField,
+    TextField,
+    URLField,
+)
 
 
 @pytest.mark.django_db

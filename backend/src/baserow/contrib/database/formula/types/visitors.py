@@ -1,5 +1,5 @@
 import typing
-from typing import Any, Set, List
+from typing import Any, List, Set
 
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
@@ -7,25 +7,25 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.dependencies.types import FieldDependencies
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFunctionCall,
-    BaserowStringLiteral,
-    BaserowFieldReference,
-    BaserowIntegerLiteral,
-    BaserowDecimalLiteral,
     BaserowBooleanLiteral,
+    BaserowDecimalLiteral,
+    BaserowFieldReference,
+    BaserowFunctionCall,
     BaserowFunctionDefinition,
+    BaserowIntegerLiteral,
+    BaserowStringLiteral,
 )
 from baserow.contrib.database.formula.ast.visitors import BaserowFormulaASTVisitor
 from baserow.contrib.database.formula.types.formula_type import (
-    UnTyped,
     BaserowFormulaValidType,
+    UnTyped,
 )
 from baserow.contrib.database.formula.types.formula_types import (
     BaserowExpression,
-    BaserowFormulaType,
-    BaserowFormulaTextType,
-    BaserowFormulaNumberType,
     BaserowFormulaBooleanType,
+    BaserowFormulaNumberType,
+    BaserowFormulaTextType,
+    BaserowFormulaType,
 )
 
 if typing.TYPE_CHECKING:
@@ -273,8 +273,8 @@ class FormulaTypingVisitor(
             return expression
 
     def _create_lookup_reference(self, target_field, referenced_field, field_reference):
-        from baserow.contrib.database.fields.registries import field_type_registry
         from baserow.contrib.database.fields.models import LinkRowField
+        from baserow.contrib.database.fields.registries import field_type_registry
 
         if isinstance(target_field, LinkRowField):
             if (

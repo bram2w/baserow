@@ -4,8 +4,8 @@ from typing import List, Optional, Type
 from django.db.models import (
     DecimalField,
     Expression,
-    Model,
     ExpressionWrapper,
+    Model,
     OuterRef,
     Subquery,
     Value,
@@ -13,10 +13,10 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFunctionCall,
-    BaserowFunctionDefinition,
     ArgCountSpecifier,
     BaserowExpression,
+    BaserowFunctionCall,
+    BaserowFunctionDefinition,
 )
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
     AndExpr,

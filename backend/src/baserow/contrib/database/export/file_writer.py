@@ -2,9 +2,10 @@ import abc
 import time
 from typing import Any, Callable
 
-import unicodecsv as csv
 from django.core.paginator import Paginator
 from django.db.models import QuerySet
+
+import unicodecsv as csv
 
 from baserow.contrib.database.export.exceptions import ExportJobCanceledException
 from baserow.contrib.database.table.models import FieldObject

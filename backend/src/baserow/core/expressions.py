@@ -1,4 +1,4 @@
-from django.db.models import Expression, DateTimeField, Value
+from django.db.models import DateTimeField, Expression, Value
 
 
 class Timezone(Expression):

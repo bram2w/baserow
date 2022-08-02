@@ -1,3 +1,5 @@
+from django.shortcuts import reverse
+
 import pytest
 from freezegun import freeze_time
 from rest_framework.status import (
@@ -8,9 +10,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
 from baserow.test_utils.helpers import is_dict_subset
-
 
 # Create
 

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Optional, Dict, List, Tuple, Set, cast
+from typing import Dict, List, Optional, Set, Tuple, cast
 
 from django.db.models import Expression, Q
 

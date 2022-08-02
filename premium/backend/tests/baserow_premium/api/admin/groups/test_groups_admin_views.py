@@ -1,15 +1,14 @@
-import pytest
-
-from django.utils.timezone import make_aware, datetime, utc
 from django.shortcuts import reverse
 from django.test.utils import override_settings
+from django.utils.timezone import datetime, make_aware, utc
 
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
     HTTP_402_PAYMENT_REQUIRED,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
-    HTTP_400_BAD_REQUEST,
 )
 
 from baserow.core.models import Group

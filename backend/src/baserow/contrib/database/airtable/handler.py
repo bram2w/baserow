@@ -1,45 +1,40 @@
-import re
 import json
+import re
+from collections import defaultdict
+from datetime import datetime
+from io import BytesIO, IOBase
+from typing import Dict, List, Optional, Tuple, Union
+from zipfile import ZIP_DEFLATED, ZipFile
+
+from django.contrib.auth import get_user_model
+from django.core.files.storage import Storage
+
 import requests
 from pytz import UTC, BaseTzInfo
-from collections import defaultdict
-from typing import List, Tuple, Union, Dict, Optional
 from requests import Response
-from io import BytesIO, IOBase
-from zipfile import ZipFile, ZIP_DEFLATED
-from datetime import datetime
 
-from django.core.files.storage import Storage
-from django.contrib.auth import get_user_model
-
-from baserow.core.handler import CoreHandler
-from baserow.core.utils import (
-    remove_invalid_surrogate_characters,
-    ChildProgressBuilder,
+from baserow.contrib.database.airtable.constants import (
+    AIRTABLE_EXPORT_JOB_CONVERTING,
+    AIRTABLE_EXPORT_JOB_DOWNLOADING_BASE,
+    AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES,
 )
-from baserow.core.models import Group
-from baserow.core.export_serialized import CoreExportSerializedStructure
-from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
-from baserow.contrib.database.models import Database
-from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.field_types import FieldType, field_type_registry
-from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.views.models import GridView
-from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.airtable.registry import (
     AirtableColumnType,
     airtable_column_type_registry,
 )
-from baserow.contrib.database.airtable.constants import (
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_BASE,
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES,
-    AIRTABLE_EXPORT_JOB_CONVERTING,
-)
+from baserow.contrib.database.application_types import DatabaseApplicationType
+from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
+from baserow.contrib.database.fields.field_types import FieldType, field_type_registry
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.models import Database
+from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.registries import view_type_registry
+from baserow.core.export_serialized import CoreExportSerializedStructure
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Group
+from baserow.core.utils import ChildProgressBuilder, remove_invalid_surrogate_characters
 
-from .exceptions import (
-    AirtableBaseNotPublic,
-    AirtableShareIsNotABase,
-)
+from .exceptions import AirtableBaseNotPublic, AirtableShareIsNotABase
 
 User = get_user_model()
 

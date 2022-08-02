@@ -2,6 +2,7 @@ from typing import List
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -9,12 +10,12 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
-from baserow.api.user.validators import password_validation, language_validation
+from baserow.api.user.validators import language_validation, password_validation
 from baserow.core.action.models import Action
-from baserow.core.action.registries import action_scope_registry, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, action_scope_registry
 from baserow.core.models import Template
-from baserow.core.user.utils import normalize_email_address
 from baserow.core.user.handler import UserHandler
+from baserow.core.user.utils import normalize_email_address
 
 User = get_user_model()
 

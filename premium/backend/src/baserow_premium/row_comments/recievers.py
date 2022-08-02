@@ -1,7 +1,8 @@
 from django.dispatch import receiver
 
-from baserow.core.trash.signals import permanently_deleted
 from baserow_premium.row_comments.models import RowComment
+
+from baserow.core.trash.signals import permanently_deleted
 
 
 @receiver(permanently_deleted, sender="row", dispatch_uid="row_comment_cleanup")

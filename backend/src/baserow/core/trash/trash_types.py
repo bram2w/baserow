@@ -1,10 +1,10 @@
 from typing import Any, Optional
 
-from baserow.core.models import Application, TrashEntry, Group
+from baserow.core.models import Application, Group, TrashEntry
 from baserow.core.registries import application_type_registry
 from baserow.core.signals import application_created, group_restored
-from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 from baserow.core.snapshots.handler import SnapshotHandler
+from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 
 
 class ApplicationTrashableItemType(TrashableItemType):

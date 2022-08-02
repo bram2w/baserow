@@ -1,14 +1,15 @@
-import pytest
 import datetime
+
 from django.utils import timezone
+
+import pytest
 from freezegun import freeze_time
 
+from baserow.contrib.database.table.models import Table
 from baserow.core.models import Snapshot
 from baserow.core.snapshots.handler import SnapshotHandler
 from baserow.core.utils import Progress
 from baserow.test_utils.fixtures import Fixtures
-
-from baserow.contrib.database.table.models import Table
 
 
 @pytest.mark.django_db

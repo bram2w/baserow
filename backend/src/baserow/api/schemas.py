@@ -1,4 +1,5 @@
 from django.conf import settings
+
 from drf_spectacular.plumbing import build_object_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter

@@ -1,6 +1,5 @@
 from drf_spectacular.plumbing import build_object_type
 
-
 row_names_response_schema = build_object_type(
     {
         "{table_id}*": {

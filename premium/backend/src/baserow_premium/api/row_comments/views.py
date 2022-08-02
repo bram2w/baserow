@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.db import transaction
+
+from baserow_premium.row_comments.handler import RowCommentHandler
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,9 +18,8 @@ from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIS
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.core.exceptions import UserNotInGroup
-from baserow_premium.row_comments.handler import RowCommentHandler
 
-from .serializers import RowCommentSerializer, RowCommentCreateSerializer
+from .serializers import RowCommentCreateSerializer, RowCommentSerializer
 
 
 class RowCommentView(APIView):

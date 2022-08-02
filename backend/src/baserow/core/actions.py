@@ -4,13 +4,10 @@ from typing import Any, List, Optional
 from django.contrib.auth.models import AbstractUser
 
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionType, ActionScopeStr
-from baserow.core.action.scopes import (
-    RootActionScopeType,
-    GroupActionScopeType,
-)
-from baserow.core.handler import GroupForUpdate, CoreHandler
-from baserow.core.models import GroupUser, Group, Application
+from baserow.core.action.registries import ActionScopeStr, ActionType
+from baserow.core.action.scopes import GroupActionScopeType, RootActionScopeType
+from baserow.core.handler import CoreHandler, GroupForUpdate
+from baserow.core.models import Application, Group, GroupUser
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 

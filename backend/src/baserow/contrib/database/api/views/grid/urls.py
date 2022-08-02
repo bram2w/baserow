@@ -1,10 +1,10 @@
 from django.urls import re_path
 
 from .views import (
+    GridViewFieldAggregationsView,
+    GridViewFieldAggregationView,
     GridViewView,
     PublicGridViewRowsView,
-    GridViewFieldAggregationView,
-    GridViewFieldAggregationsView,
 )
 
 app_name = "baserow.contrib.database.api.views.grid"

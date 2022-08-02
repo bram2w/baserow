@@ -1,30 +1,28 @@
-import pathlib
 import mimetypes
-
-from os.path import join
+import pathlib
 from io import BytesIO
-from urllib.parse import urlparse
+from os.path import join
 from typing import Optional
-
-import advocate
-from advocate.exceptions import UnacceptableAddressException
-from requests.exceptions import RequestException
-
-from PIL import Image, ImageOps
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
 
-from baserow.core.utils import sha256_hash, stream_size, random_string, truncate_middle
+import advocate
+from advocate.exceptions import UnacceptableAddressException
+from PIL import Image, ImageOps
+from requests.exceptions import RequestException
+
+from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
 from .exceptions import (
-    InvalidFileStreamError,
     FileSizeTooLargeError,
     FileURLCouldNotBeReached,
-    MaximumUniqueTriesError,
+    InvalidFileStreamError,
     InvalidFileURLError,
+    MaximumUniqueTriesError,
 )
 from .models import UserFile
 

@@ -1,24 +1,19 @@
-import pytest
-import responses
-
-from pytz import BaseTzInfo
 from unittest.mock import patch
 
-from django.db import connections
 from django.core.cache import cache
+from django.db import connections
 
-from baserow.core.utils import ChildProgressBuilder
+import pytest
+import responses
+from pytz import BaseTzInfo
 
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.cache import job_progress_key
-from baserow.core.jobs.tasks import run_async_job
-from baserow.core.jobs.constants import (
-    JOB_FAILED,
-    JOB_FINISHED,
-)
-
-from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
+from baserow.contrib.database.airtable.models import AirtableImportJob
+from baserow.core.jobs.cache import job_progress_key
+from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED
+from baserow.core.jobs.models import Job
+from baserow.core.jobs.tasks import run_async_job
+from baserow.core.utils import ChildProgressBuilder
 
 
 @pytest.mark.django_db(transaction=True, databases=["default", "default-copy"])

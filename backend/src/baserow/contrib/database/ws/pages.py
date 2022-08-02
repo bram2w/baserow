@@ -1,17 +1,17 @@
 from django.conf import settings
+
 from rest_framework.exceptions import NotAuthenticated
 
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.ws.registries import PageType
-
 from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.ws.registries import PageType
 
 
 class TablePageType(PageType):

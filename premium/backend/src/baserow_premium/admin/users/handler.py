@@ -4,8 +4,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from baserow.core.exceptions import IsNotAdminError
-from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
 from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
@@ -13,7 +11,9 @@ from baserow_premium.admin.users.exceptions import (
 )
 from baserow_premium.license.handler import check_active_premium_license
 
+from baserow.core.exceptions import IsNotAdminError
 from baserow.core.signals import before_user_deleted
+from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
 
 User = get_user_model()
 

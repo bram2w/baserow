@@ -1,13 +1,12 @@
-import pytest
-from pytz import timezone
-
-from datetime import timedelta, datetime, date
+from datetime import date, datetime, timedelta
 
 from django.test.utils import override_settings
 
-from baserow.core.models import UserLogEntry
-
+import pytest
 from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
+from pytz import timezone
+
+from baserow.core.models import UserLogEntry
 
 
 @pytest.mark.django_db

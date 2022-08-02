@@ -1,7 +1,7 @@
-import pytest
 import uuid
-
 from unittest.mock import patch
+
+import pytest
 
 from baserow.contrib.database.rows.handler import RowHandler
 

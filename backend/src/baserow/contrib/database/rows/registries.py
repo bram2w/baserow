@@ -1,12 +1,9 @@
 import abc
-from typing import List, Dict, Any, Generator
+from typing import Any, Dict, Generator, List
 
 from rest_framework.fields import Field
 
-from baserow.core.registry import (
-    Instance,
-    Registry,
-)
+from baserow.core.registry import Instance, Registry
 
 
 class RowMetadataRegistry(Registry):

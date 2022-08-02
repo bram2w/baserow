@@ -1,15 +1,14 @@
 from django.db import transaction
 
 from drf_spectacular.utils import extend_schema
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from baserow.api.decorators import validate_body
 from baserow.core.handler import CoreHandler
 
-from .serializers import SettingsSerializer, InstanceIdSerializer
+from .serializers import InstanceIdSerializer, SettingsSerializer
 
 
 class SettingsView(APIView):

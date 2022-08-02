@@ -1,6 +1,6 @@
 import pytest
 
-from baserow.contrib.database.formula import FormulaHandler, BaserowFormulaSyntaxError
+from baserow.contrib.database.formula import BaserowFormulaSyntaxError, FormulaHandler
 
 
 def test_replace_single_quoted_field_ref():

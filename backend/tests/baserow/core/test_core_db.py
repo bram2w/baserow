@@ -1,13 +1,14 @@
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.db.models import Value, CharField
+from django.db.models import CharField, Value
 from django.db.models.expressions import ExpressionWrapper
 from django.db.models.functions import Concat
 from django.test.utils import override_settings
 
+import pytest
+
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import Field, TextField, LongTextField
+from baserow.contrib.database.fields.models import Field, LongTextField, TextField
 from baserow.contrib.database.views.models import View
 from baserow.core.db import LockedAtomicTransaction, specific_iterator
 from baserow.core.models import Settings

@@ -1,17 +1,14 @@
-import pytest
 from django.db import transaction
+
+import pytest
 
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.scopes import GroupActionScopeType
-from baserow.core.exceptions import (
-    ApplicationDoesNotExist,
-    UserNotInGroup,
-)
+from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.constants import JOB_FINISHED
 from baserow.core.jobs.handler import JobHandler
-
 from baserow.core.jobs.tasks import run_async_job
 from baserow.core.models import Application
 

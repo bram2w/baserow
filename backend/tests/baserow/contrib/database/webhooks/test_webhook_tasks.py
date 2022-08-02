@@ -1,9 +1,9 @@
+from django.db import transaction
+from django.test import override_settings
+
 import pytest
 import responses
-
 from celery.exceptions import Retry
-from django.test import override_settings
-from django.db import transaction
 
 from baserow.contrib.database.webhooks.models import TableWebhookCall
 from baserow.contrib.database.webhooks.tasks import call_webhook

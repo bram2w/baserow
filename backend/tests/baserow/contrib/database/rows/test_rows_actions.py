@@ -1,30 +1,25 @@
 from decimal import Decimal
-
-import pytest
 from unittest.mock import patch
 
+import pytest
 from pytest_unordered import unordered
 
-from baserow.core.action.handler import ActionHandler
-from baserow.core.action.registries import (
-    action_type_registry,
-)
-from baserow.contrib.database.action.scopes import (
-    TableActionScopeType,
-)
+from baserow.contrib.database.action.scopes import TableActionScopeType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
     CreateRowsActionType,
-    ImportRowsActionType,
     DeleteRowActionType,
     DeleteRowsActionType,
+    ImportRowsActionType,
     MoveRowActionType,
     UpdateRowActionType,
     UpdateRowsActionType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 

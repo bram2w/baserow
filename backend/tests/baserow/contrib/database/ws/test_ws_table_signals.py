@@ -1,6 +1,6 @@
-import pytest
-
 from unittest.mock import patch
+
+import pytest
 
 from baserow.contrib.database.table.handler import TableHandler
 

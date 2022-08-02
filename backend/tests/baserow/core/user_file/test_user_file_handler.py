@@ -1,22 +1,23 @@
 import string
 from io import BytesIO
 
-import httpretty
-import pytest
-import responses
-from PIL import Image
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
+
+import httpretty
+import pytest
+import responses
 from freezegun import freeze_time
+from PIL import Image
 
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import (
-    InvalidFileStreamError,
     FileSizeTooLargeError,
     FileURLCouldNotBeReached,
-    MaximumUniqueTriesError,
+    InvalidFileStreamError,
     InvalidFileURLError,
+    MaximumUniqueTriesError,
 )
 from baserow.core.user_files.handler import UserFileHandler
 

@@ -1,9 +1,10 @@
 import inspect
 from decimal import Decimal
 
-import pytest
 from django.db.models import TextField
 from django.urls import reverse
+
+import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from baserow.contrib.database.fields.dependencies.update_collector import (
@@ -17,17 +18,15 @@ from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
     BaserowFormulaInvalidType,
-    BaserowFormulaTextType,
     BaserowFormulaNumberType,
+    BaserowFormulaTextType,
 )
 from baserow.contrib.database.formula.ast.tree import BaserowFunctionDefinition
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.table.cache import (
-    generated_models_cache,
-)
+from baserow.contrib.database.table.cache import generated_models_cache
 from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField,
     ViewSortFieldNotSupported,

@@ -1,11 +1,11 @@
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from django.dispatch import receiver
 
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
     RowSerializer,
+    get_row_serializer_class,
 )
 from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.rows.registries import row_metadata_registry

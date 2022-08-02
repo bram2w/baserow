@@ -1,7 +1,7 @@
 import pytest
 
-from baserow.core.user_files.exceptions import InvalidUserFileNameError
 from baserow.core.models import UserFile
+from baserow.core.user_files.exceptions import InvalidUserFileNameError
 
 
 @pytest.mark.django_db

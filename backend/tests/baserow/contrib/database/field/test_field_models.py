@@ -1,8 +1,8 @@
-import pytest
-
 from datetime import datetime
 
 from django.db import connection
+
+import pytest
 
 from baserow.contrib.database.fields.models import DateField, LinkRowField
 

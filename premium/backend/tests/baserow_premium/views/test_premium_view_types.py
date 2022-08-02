@@ -1,16 +1,15 @@
-import pytest
 from io import BytesIO
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.core.files.storage import FileSystemStorage
 
-from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.views.handler import ViewHandler
-
-from baserow.contrib.database.fields.handler import FieldHandler
-
+import pytest
 from baserow_premium.views.exceptions import KanbanViewFieldDoesNotBelongToSameTable
 from baserow_premium.views.models import KanbanViewFieldOptions
+
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import view_type_registry
 
 
 @pytest.mark.django_db

@@ -1,60 +1,57 @@
-from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Count, Q
 
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-
-from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
-from rest_framework.views import APIView
-
-from baserow.api.schemas import get_error_schema
-from baserow.api.decorators import validate_body, map_exceptions
-from baserow.api.user.errors import ERROR_USER_NOT_FOUND
-from baserow.api.pagination import PageNumberPagination
-from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.core.db import LockedAtomicTransaction
-
-from baserow_premium.license.models import License
-from baserow_premium.license.handler import (
-    register_license,
-    remove_license,
-    check_licenses,
-    add_user_to_license,
-    remove_user_from_license,
-    fill_remaining_seats_of_license,
-    remove_all_users_from_license,
-)
 from baserow_premium.license.exceptions import (
     InvalidPremiumLicenseError,
-    UnsupportedPremiumLicenseError,
-    PremiumLicenseInstanceIdMismatchError,
-    PremiumLicenseHasExpired,
-    PremiumLicenseAlreadyExists,
-    UserAlreadyOnPremiumLicenseError,
     NoSeatsLeftInPremiumLicenseError,
+    PremiumLicenseAlreadyExists,
+    PremiumLicenseHasExpired,
+    PremiumLicenseInstanceIdMismatchError,
+    UnsupportedPremiumLicenseError,
+    UserAlreadyOnPremiumLicenseError,
 )
+from baserow_premium.license.handler import (
+    add_user_to_license,
+    check_licenses,
+    fill_remaining_seats_of_license,
+    register_license,
+    remove_all_users_from_license,
+    remove_license,
+    remove_user_from_license,
+)
+from baserow_premium.license.models import License
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.pagination import PageNumberPagination
+from baserow.api.schemas import get_error_schema
+from baserow.api.serializers import get_example_pagination_serializer_class
+from baserow.api.user.errors import ERROR_USER_NOT_FOUND
+from baserow.core.db import LockedAtomicTransaction
 
 from .errors import (
-    ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST,
     ERROR_INVALID_PREMIUM_LICENSE,
-    ERROR_UNSUPPORTED_PREMIUM_LICENSE,
-    ERROR_PREMIUM_LICENSE_INSTANCE_ID_MISMATCH,
-    ERROR_PREMIUM_LICENSE_HAS_EXPIRED,
-    ERROR_PREMIUM_LICENSE_ALREADY_EXISTS,
-    ERROR_USER_ALREADY_ON_PREMIUM_LICENSE,
     ERROR_NO_SEATS_LEFT_IN_PREMIUM_LICENSE,
+    ERROR_PREMIUM_LICENSE_ALREADY_EXISTS,
+    ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST,
+    ERROR_PREMIUM_LICENSE_HAS_EXPIRED,
+    ERROR_PREMIUM_LICENSE_INSTANCE_ID_MISMATCH,
+    ERROR_UNSUPPORTED_PREMIUM_LICENSE,
+    ERROR_USER_ALREADY_ON_PREMIUM_LICENSE,
 )
 from .serializers import (
     PremiumLicenseSerializer,
-    RegisterPremiumLicenseSerializer,
+    PremiumLicenseUserLookupSerializer,
     PremiumLicenseUserSerializer,
     PremiumLicenseWithUsersSerializer,
-    PremiumLicenseUserLookupSerializer,
+    RegisterPremiumLicenseSerializer,
 )
-
 
 User = get_user_model()
 

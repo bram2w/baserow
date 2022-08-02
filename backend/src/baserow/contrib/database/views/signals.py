@@ -5,7 +5,6 @@ from baserow.contrib.database.fields.models import FileField
 
 from .models import GalleryView
 
-
 view_created = Signal()
 view_updated = Signal()
 view_deleted = Signal()

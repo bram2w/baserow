@@ -1,39 +1,37 @@
+from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.core.models import Application
 
-from .table.models import Table
-from .views.models import (
-    View,
-    GridView,
-    GridViewFieldOptions,
-    GalleryView,
-    GalleryViewFieldOptions,
-    FormView,
-    FormViewFieldOptions,
-    ViewFilter,
-)
 from .fields.models import (
-    Field,
-    TextField,
-    NumberField,
-    RatingField,
-    LongTextField,
     BooleanField,
     DateField,
-    LinkRowField,
-    URLField,
     EmailField,
+    Field,
+    LinkRowField,
+    LongTextField,
+    NumberField,
     PhoneNumberField,
+    RatingField,
+    TextField,
+    URLField,
 )
+from .table.models import Table
 from .tokens.models import Token, TokenPermission
+from .views.models import (
+    FormView,
+    FormViewFieldOptions,
+    GalleryView,
+    GalleryViewFieldOptions,
+    GridView,
+    GridViewFieldOptions,
+    View,
+    ViewFilter,
+)
 from .webhooks.models import (
     TableWebhook,
-    TableWebhookEvent,
     TableWebhookCall,
+    TableWebhookEvent,
     TableWebhookHeader,
 )
-
-from baserow.contrib.database.fields.dependencies.models import FieldDependency
-
 
 __all__ = [
     "Database",

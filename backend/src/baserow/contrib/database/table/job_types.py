@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.contrib.database.api.tables.serializers import TableSerializer
 from baserow.contrib.database.db.atomic import (
     read_repeatable_read_single_table_transaction,
@@ -6,12 +8,9 @@ from baserow.contrib.database.db.atomic import (
 from baserow.contrib.database.table.actions import DuplicateTableActionType
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import DuplicateTableJob
-
-from baserow.core.exceptions import UserNotInGroup, GroupDoesNotExist
-from baserow.core.jobs.registries import JobType
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
-
 from baserow.core.action.registries import action_type_registry
+from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.jobs.registries import JobType
 
 
 class DuplicateTableJobType(JobType):

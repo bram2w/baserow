@@ -1,7 +1,6 @@
 from django.urls import re_path
 
-from .views import SettingsView, InstanceIdView, UpdateSettingsView
-
+from .views import InstanceIdView, SettingsView, UpdateSettingsView
 
 app_name = "baserow.api.settings"
 

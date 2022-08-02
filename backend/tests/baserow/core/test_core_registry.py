@@ -1,23 +1,22 @@
-import pytest
-
 from django.core.exceptions import ImproperlyConfigured
 
-from rest_framework.serializers import IntegerField, ModelSerializer
+import pytest
 from rest_framework.exceptions import APIException
+from rest_framework.serializers import IntegerField, ModelSerializer
 
 from baserow.contrib.database.models import Database
-from baserow.core.registry import (
-    Instance,
-    ModelInstanceMixin,
-    Registry,
-    ModelRegistryMixin,
-    CustomFieldsInstanceMixin,
-    CustomFieldsRegistryMixin,
-    MapAPIExceptionsInstanceMixin,
-)
 from baserow.core.exceptions import (
     InstanceTypeAlreadyRegistered,
     InstanceTypeDoesNotExist,
+)
+from baserow.core.registry import (
+    CustomFieldsInstanceMixin,
+    CustomFieldsRegistryMixin,
+    Instance,
+    MapAPIExceptionsInstanceMixin,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    Registry,
 )
 
 

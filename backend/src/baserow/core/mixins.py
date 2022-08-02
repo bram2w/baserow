@@ -1,15 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Case, When, Value, Manager
+from django.db.models import Case, Manager, Value, When
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.mixins import FieldCacheMixin
 from django.utils.functional import cached_property
 
-from baserow.core.managers import (
-    make_trash_manager,
-    NoTrashManager,
-    TrashOnlyManager,
-)
+from baserow.core.managers import NoTrashManager, TrashOnlyManager, make_trash_manager
 
 
 class OrderableMixin:

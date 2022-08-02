@@ -1,5 +1,5 @@
-from baserow.core.utils import random_string
 from baserow.contrib.database.tokens.models import Token
+from baserow.core.utils import random_string
 
 
 class TokenFixtures:

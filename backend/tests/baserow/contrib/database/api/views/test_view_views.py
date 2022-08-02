@@ -1,10 +1,11 @@
 from unittest.mock import patch
 
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
+
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -14,10 +15,8 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
-from baserow.contrib.database.views.models import View, GridView
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-)
+from baserow.contrib.database.views.models import GridView, View
+from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.trash.handler import TrashHandler
 

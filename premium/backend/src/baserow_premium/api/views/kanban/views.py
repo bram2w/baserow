@@ -1,39 +1,32 @@
+from baserow_premium.license.handler import check_active_premium_license_for_group
+from baserow_premium.views.exceptions import KanbanViewHasNoSingleSelectField
+from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
+from baserow_premium.views.models import KanbanView
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import (
-    map_exceptions,
-    allowed_includes,
-)
+from baserow.api.decorators import allowed_includes, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
     RowSerializer,
+    get_row_serializer_class,
 )
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.exceptions import UserNotInGroup
 
-from baserow_premium.views.models import KanbanView
-from baserow_premium.views.exceptions import KanbanViewHasNoSingleSelectField
-from baserow_premium.license.handler import check_active_premium_license_for_group
-from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
-
 from .errors import (
+    ERROR_INVALID_SELECT_OPTION_PARAMETER,
     ERROR_KANBAN_DOES_NOT_EXIST,
     ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD,
-    ERROR_INVALID_SELECT_OPTION_PARAMETER,
 )
 from .exceptions import InvalidSelectOptionParameter
-from .serializers import (
-    KanbanViewExampleResponseSerializer,
-)
+from .serializers import KanbanViewExampleResponseSerializer
 
 
 class KanbanViewView(APIView):

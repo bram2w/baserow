@@ -1,18 +1,17 @@
-import pytest
 from django.contrib.auth import get_user_model
 from django.test.utils import override_settings
 
-from baserow.core.exceptions import IsNotAdminError
-from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
+import pytest
 from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
     UserDoesNotExistException,
 )
-from baserow_premium.admin.users.handler import (
-    UserAdminHandler,
-)
+from baserow_premium.admin.users.handler import UserAdminHandler
 from baserow_premium.license.exceptions import NoPremiumLicenseError
+
+from baserow.core.exceptions import IsNotAdminError
+from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
 
 User = get_user_model()
 invalid_passwords = [

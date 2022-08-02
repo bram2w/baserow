@@ -1,6 +1,5 @@
 from drf_spectacular.plumbing import build_object_type
 
-
 field_aggregation_response_schema = build_object_type(
     {
         "value": {

@@ -1,24 +1,22 @@
-import pytest
 import json
-import pytz
-
 from unittest.mock import MagicMock
 
-from rest_framework.status import HTTP_404_NOT_FOUND
-
-from rest_framework import status, serializers
-from rest_framework.request import Request
-from rest_framework.parsers import JSONParser
+import pytest
+import pytz
+from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
+from rest_framework.parsers import JSONParser
+from rest_framework.request import Request
+from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework.test import APIRequestFactory
 
 from baserow.api.decorators import (
+    accept_timezone,
+    allowed_includes,
     map_exceptions,
     validate_body,
-    validate_query_parameters,
     validate_body_custom_fields,
-    allowed_includes,
-    accept_timezone,
+    validate_query_parameters,
 )
 from baserow.api.exceptions import (
     QueryParameterValidationException,
@@ -26,10 +24,10 @@ from baserow.api.exceptions import (
 )
 from baserow.core.models import Group
 from baserow.core.registry import (
-    Instance,
-    Registry,
     CustomFieldsInstanceMixin,
+    Instance,
     ModelInstanceMixin,
+    Registry,
 )
 
 

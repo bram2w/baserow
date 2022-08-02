@@ -1,25 +1,23 @@
 import random
+from datetime import date, timedelta
 
 from django.db.models import Q
 from django.utils import timezone as django_timezone
-from freezegun import freeze_time
+from django.utils.timezone import datetime, make_aware
 
 import pytest
-from datetime import date, timedelta
-
+from freezegun import freeze_time
 from pyinstrument import Profiler
 from pytz import timezone
 
-from django.utils.timezone import make_aware, datetime
-
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
-from baserow.contrib.database.views.registries import (
-    view_filter_type_registry,
-    ViewFilterType,
-)
-from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import (
+    ViewFilterType,
+    view_filter_type_registry,
+)
 from baserow.contrib.database.views.view_filters import BaseDateFieldLookupFilterType
 
 

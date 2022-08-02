@@ -1,32 +1,33 @@
 from unittest.mock import patch
 
-import pytest
 from django.conf import settings
 from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
+
+import pytest
 from freezegun import freeze_time
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     Field,
-    TextField,
+    FormulaField,
     LinkRowField,
     LookupField,
-    FormulaField,
+    TextField,
 )
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.trash.models import TrashedRows
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import (
+    CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
     RelatedTableTrashedException,
-    CannotRestoreChildBeforeParent,
 )
 from baserow.core.trash.handler import TrashHandler
 

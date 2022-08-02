@@ -1,28 +1,27 @@
 import secrets
 
-from django.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
-from django.db.models import UniqueConstraint, Q
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+from django.db.models import Q, UniqueConstraint
 
 from rest_framework.exceptions import NotAuthenticated
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.mixins import JobWithUserDataMixin
 
+from baserow.core.jobs.mixins import JobWithUserDataMixin
+from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
-from .mixins import (
-    OrderableMixin,
-    PolymorphicContentTypeMixin,
-    CreatedAndUpdatedOnMixin,
-    TrashableModelMixin,
-    ParentGroupTrashableModelMixin,
-)
-from .exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
 from .action.models import Action
-
+from .exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
+from .mixins import (
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    ParentGroupTrashableModelMixin,
+    PolymorphicContentTypeMixin,
+    TrashableModelMixin,
+)
 
 __all__ = [
     "Settings",

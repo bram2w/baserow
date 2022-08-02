@@ -1,39 +1,38 @@
 import os
 import random
-
-import pytest
-from unittest.mock import patch
 from decimal import Decimal
+from unittest.mock import patch
 
+from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import connection
-from django.conf import settings
 from django.test.utils import override_settings
 
+import pytest
 from pyinstrument import Profiler
 
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
-from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
 )
-from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    BooleanField,
+    LinkRowField,
+    LongTextField,
+    TextField,
+)
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.table.exceptions import (
+    InitialTableDataLimitExceeded,
+    InvalidInitialTableData,
     TableDoesNotExist,
     TableNotInDatabase,
-    InvalidInitialTableData,
-    InitialTableDataLimitExceeded,
 )
-from baserow.contrib.database.fields.models import (
-    LinkRowField,
-    TextField,
-    LongTextField,
-    BooleanField,
-)
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler

@@ -3,7 +3,6 @@ from rest_framework.status import (
     HTTP_413_REQUEST_ENTITY_TOO_LARGE,
 )
 
-
 ERROR_INVALID_FILE = (
     "ERROR_INVALID_FILE",
     HTTP_400_BAD_REQUEST,
