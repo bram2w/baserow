@@ -40,6 +40,8 @@ Baserow by following one the guides below:
 * [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated
   and now unsupported guide on how to manually install Baserow and its required services
   on a fresh Ubuntu install. Please use the guides above instead.
+* [Supported runtime dependencies and environments](installation/supported.md): Learn about
+  the supported and recommended runtime dependencies.
 
 ## Baserow Tutorials
 
