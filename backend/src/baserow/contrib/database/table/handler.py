@@ -412,18 +412,46 @@ class TableHandler:
         name, _ = split_ending_number(proposed_name)
         return find_unused_name([name], existing_tables_names, max_length=255)
 
-    def _setup_id_mapping_for_table_duplication(
-        self, serialized_table: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _create_related_link_fields_in_existing_tables_to_import(
+        self, serialized_table: Dict[str, Any], id_mapping
+    ) -> List[Tuple[Table, Dict[str, Any]]]:
         """
-        Sets up the id mapping for a table duplication.
+        Creates extra serialized field dicts to pass to the table importer so it will
+        create the reverse link row fields in any existing tables.
 
         :param serialized_table: The serialized table.
-        :return: The .
+        :param id_mapping: The id mapping.
+        :return : A list of external tables with the link row fields to import into
+            them.
         """
 
-        # TODO: fix this hack
-        return {"operation": "duplicate_table"}
+        from baserow.contrib.database.fields.field_types import LinkRowFieldType
+
+        external_fields = []
+        for serialized_field in serialized_table["fields"]:
+
+            if serialized_field["type"] != LinkRowFieldType.type:
+                continue
+
+            link_row_table_id = serialized_field["link_row_table_id"]
+
+            # skip creating the related field for a self-referencing link_row
+            if link_row_table_id == serialized_table["id"]:
+                continue
+
+            link_row_table = self.get_table(link_row_table_id)
+            id_mapping["database_tables"][link_row_table_id] = link_row_table_id
+            serialized_related_link_row_field = {
+                "id": serialized_field["link_row_related_field_id"],
+                "name": serialized_table["name"],
+                "type": LinkRowFieldType.type,
+                "link_row_table_id": serialized_table["id"],
+                "link_row_related_field_id": serialized_field["id"],
+                "order": Field.get_last_order(link_row_table),
+            }
+            external_fields.append((link_row_table, serialized_related_link_row_field))
+
+        return external_fields
 
     def duplicate_table(
         self,
@@ -457,10 +485,18 @@ class TableHandler:
         exported_table = serialized_tables[0]
         exported_table["name"] = self.find_unused_table_name(database, table.name)
 
+        id_mapping: Dict[str, Any] = {"database_tables": {}}
+
+        link_fields_to_import_to_existing_tables = (
+            self._create_related_link_fields_in_existing_tables_to_import(
+                exported_table, id_mapping
+            )
+        )
         imported_tables = database_type.import_tables_serialized(
             database,
             [exported_table],
-            self._setup_id_mapping_for_table_duplication(exported_table),
+            id_mapping,
+            external_table_fields_to_import=link_fields_to_import_to_existing_tables,
         )
         progress.increment()
 
