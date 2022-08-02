@@ -9,4 +9,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        TableHandler.count_rows()
+        tables_counted = TableHandler.count_rows()
+        self.stdout.write(
+            self.style.SUCCESS(f"{tables_counted} table(s) have been counted.")
+        )

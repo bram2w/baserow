@@ -10,6 +10,7 @@ For example:
 ## Unreleased
 
 ### New Features
+* Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)

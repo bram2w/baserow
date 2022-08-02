@@ -7,4 +7,7 @@ class Command(BaseCommand):
     help = "Calculate the storage usage of every group"
 
     def handle(self, *args, **options):
-        UsageHandler.calculate_storage_usage()
+        groups_updated = UsageHandler.calculate_storage_usage()
+        self.stdout.write(
+            self.style.SUCCESS(f"{groups_updated} group(s) have been updated.")
+        )
