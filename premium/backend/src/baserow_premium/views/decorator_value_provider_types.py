@@ -1,23 +1,19 @@
 from typing import Any, Dict
 
-from baserow.contrib.database.fields.field_types import (
-    SingleSelectFieldType,
-)
-from baserow.contrib.database.views.models import (
-    ViewDecoration,
-)
+from baserow_premium.license.handler import check_active_premium_license_for_group
+
+from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import ViewDecoration
 from baserow.contrib.database.views.registries import (
     DecoratorValueProviderType,
     view_filter_type_registry,
 )
 
-from baserow_premium.license.handler import check_active_premium_license_for_group
-
 from .decorator_types import BackgroundColorDecoratorType, LeftBorderColorDecoratorType
 from .serializers import (
-    SelectColorValueProviderConfSerializer,
     ConditionalColorValueProviderConfColorsSerializer,
+    SelectColorValueProviderConfSerializer,
 )
 
 

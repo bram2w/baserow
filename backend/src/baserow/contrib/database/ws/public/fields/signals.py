@@ -1,4 +1,4 @@
-from typing import List, Tuple, Set, Optional, Dict, Any, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from django.db import transaction
 from django.dispatch import receiver

@@ -1,12 +1,9 @@
-from rest_framework import serializers
 from django.utils.functional import lazy
 
-from baserow.contrib.database.views.models import (
-    GridViewFieldOptions,
-)
-from baserow.contrib.database.views.registries import (
-    view_aggregation_type_registry,
-)
+from rest_framework import serializers
+
+from baserow.contrib.database.views.models import GridViewFieldOptions
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 
 
 class GridViewFieldOptionsSerializer(serializers.ModelSerializer):

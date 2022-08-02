@@ -1,8 +1,8 @@
 from drf_spectacular.openapi import AutoSchema as RegularAutoSchema
 
 from .utils import (
-    DiscriminatorMappingSerializer,
     DiscriminatorCustomFieldsMappingSerializer,
+    DiscriminatorMappingSerializer,
 )
 
 

@@ -1,7 +1,8 @@
-import regex
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 from django.utils.functional import SimpleLazyObject
+
+import regex
 
 
 def _lazy_re_compile(regex_value, flags=0):

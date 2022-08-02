@@ -1,16 +1,15 @@
 from io import BytesIO
 from unittest.mock import patch
 
-import pytest
-from django.utils.dateparse import parse_date, parse_datetime
-from django.utils.timezone import utc, make_aware
 from django.test.utils import override_settings
+from django.utils.dateparse import parse_date, parse_datetime
+from django.utils.timezone import make_aware, utc
+
+import pytest
+from baserow_premium.license.exceptions import NoPremiumLicenseError
 
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.rows.handler import RowHandler
-
-from baserow_premium.license.exceptions import NoPremiumLicenseError
-
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 

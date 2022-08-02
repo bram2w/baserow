@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from rest_framework.fields import CharField
 
 from baserow_premium.row_comments.models import RowComment
+from rest_framework import serializers
+from rest_framework.fields import CharField
 
 User = get_user_model()
 

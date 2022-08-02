@@ -1,11 +1,11 @@
 import pytest
-from baserow.core.handler import CoreHandler
 
-from baserow.core.registries import ApplicationType, ApplicationTypeRegistry
 from baserow.core.exceptions import (
     ApplicationTypeAlreadyRegistered,
     ApplicationTypeDoesNotExist,
 )
+from baserow.core.handler import CoreHandler
+from baserow.core.registries import ApplicationType, ApplicationTypeRegistry
 
 
 class FakeModel(object):

@@ -1,5 +1,6 @@
-from typing import Tuple
 from dataclasses import dataclass
+from typing import Tuple
+
 from baserow.core.registries import Instance, Registry
 
 

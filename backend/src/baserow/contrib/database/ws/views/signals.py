@@ -1,16 +1,15 @@
-from django.dispatch import receiver
 from django.db import transaction
+from django.dispatch import receiver
 
-from baserow.ws.registries import page_registry
-
+from baserow.contrib.database.api.views.serializers import (
+    ViewDecorationSerializer,
+    ViewFilterSerializer,
+    ViewSerializer,
+    ViewSortSerializer,
+)
 from baserow.contrib.database.views import signals as view_signals
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.api.views.serializers import (
-    ViewSerializer,
-    ViewFilterSerializer,
-    ViewSortSerializer,
-    ViewDecorationSerializer,
-)
+from baserow.ws.registries import page_registry
 
 
 @receiver(view_signals.view_created)

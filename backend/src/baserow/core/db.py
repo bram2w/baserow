@@ -1,11 +1,12 @@
 import contextlib
 from collections import defaultdict
-from typing import Iterable, Optional, Tuple, List, Any
+from typing import Any, Iterable, List, Optional, Tuple
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import DEFAULT_DB_ALIAS, transaction
-from django.db.models import QuerySet, Model
+from django.db.models import Model, QuerySet
 from django.db.transaction import Atomic, get_connection
+
 from psycopg2 import sql
 
 

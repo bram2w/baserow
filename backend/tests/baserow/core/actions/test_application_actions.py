@@ -1,16 +1,15 @@
 import pytest
-
 from pytest_unordered import unordered
 
-from baserow.core.action.scopes import GroupActionScopeType
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
+from baserow.core.action.scopes import GroupActionScopeType
 from baserow.core.actions import (
-    UpdateApplicationActionType,
-    DeleteApplicationActionType,
-    OrderApplicationsActionType,
     CreateApplicationActionType,
+    DeleteApplicationActionType,
     DuplicateApplicationActionType,
+    OrderApplicationsActionType,
+    UpdateApplicationActionType,
 )
 from baserow.core.models import Application
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid

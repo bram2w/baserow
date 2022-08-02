@@ -1,10 +1,9 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from drf_spectacular.utils import extend_schema_field
-
 from baserow.api.applications.serializers import ApplicationSerializer
-from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.api.tables.serializers import TableSerializer
+from baserow.contrib.database.table.models import Table
 
 
 class DatabaseSerializer(ApplicationSerializer):

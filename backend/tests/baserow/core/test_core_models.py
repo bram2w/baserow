@@ -1,13 +1,13 @@
-import pytest
-from pytz import timezone
-from freezegun import freeze_time
 from datetime import datetime
 
+import pytest
+from freezegun import freeze_time
+from pytz import timezone
 from rest_framework.exceptions import NotAuthenticated
 
-from baserow.core.models import GroupUser, Group
-from baserow.core.exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
 from baserow.contrib.database.models import Database
+from baserow.core.exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
+from baserow.core.models import Group, GroupUser
 
 
 @pytest.mark.django_db

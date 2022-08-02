@@ -1,18 +1,16 @@
 from datetime import datetime
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
 from django.core.management.color import no_style
 from django.db import connection
 from django.db.transaction import Atomic
-from django.urls import path, include
+from django.urls import include, path
 from django.utils import timezone
 
 from baserow.contrib.database.api.serializers import DatabaseSerializer
-from baserow.contrib.database.db.schema import (
-    safe_django_schema_editor,
-)
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
@@ -23,8 +21,8 @@ from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.models import Application, Group
 from baserow.core.registries import ApplicationType
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import ChildProgressBuilder
-from baserow.core.utils import grouper
+from baserow.core.utils import ChildProgressBuilder, grouper
+
 from .constants import IMPORT_SERIALIZED_IMPORTING, IMPORT_SERIALIZED_IMPORTING_TABLE
 from .db.atomic import read_repeatable_single_database_atomic_transaction
 from .export_serialized import DatabaseExportSerializedStructure

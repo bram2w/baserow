@@ -1,15 +1,13 @@
 import pytest
-
 from asgiref.sync import sync_to_async
-
-from channels.testing import WebsocketCommunicator
 from channels.db import database_sync_to_async
+from channels.testing import WebsocketCommunicator
 
 from baserow.config.asgi import application
 from baserow.ws.tasks import (
-    broadcast_to_users,
     broadcast_to_channel_group,
     broadcast_to_group,
+    broadcast_to_users,
 )
 
 

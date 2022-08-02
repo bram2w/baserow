@@ -2,19 +2,15 @@ from typing import cast
 
 import pytest
 
-from baserow.core.action.scopes import (
-    RootActionScopeType,
-)
 from baserow.core.action.handler import ActionHandler
-from baserow.core.action.registries import (
-    action_type_registry,
-)
+from baserow.core.action.registries import action_type_registry
+from baserow.core.action.scopes import RootActionScopeType
 from baserow.core.actions import (
     CreateGroupActionType,
-    UpdateGroupActionType,
     OrderGroupsActionType,
+    UpdateGroupActionType,
 )
-from baserow.core.handler import GroupForUpdate, CoreHandler
+from baserow.core.handler import CoreHandler, GroupForUpdate
 from baserow.core.models import Group
 
 

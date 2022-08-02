@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.registry import (
+    Instance,
+    ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
-    ModelInstanceMixin,
-    Instance,
 )
 
 

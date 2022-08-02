@@ -1,6 +1,5 @@
 from drf_spectacular.plumbing import build_object_type
 
-
 group_user_schema = build_object_type(
     {
         "order": {

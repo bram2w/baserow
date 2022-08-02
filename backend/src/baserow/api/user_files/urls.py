@@ -2,7 +2,6 @@ from django.urls import re_path
 
 from .views import UploadFileView, UploadViaURLView
 
-
 app_name = "baserow.api.user"
 
 urlpatterns = [

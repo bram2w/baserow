@@ -1,8 +1,8 @@
-import pytest
-
 from decimal import Decimal
 
 from django.contrib.contenttypes.models import ContentType
+
+import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import NumberField

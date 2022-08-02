@@ -1,17 +1,12 @@
-from baserow.core.handler import CoreHandler
-from baserow.core.registries import application_type_registry
-
-from baserow.core.jobs.registries import JobType
-from .models import (
-    CreateSnapshotJob,
-    RestoreSnapshotJob,
-)
-from baserow.core.snapshots.exceptions import (
-    SnapshotDoesNotExist,
-)
-from baserow.core.exceptions import UserNotInGroup
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.snapshots.errors import ERROR_SNAPSHOT_DOES_NOT_EXIST
+from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
+from baserow.core.jobs.registries import JobType
+from baserow.core.registries import application_type_registry
+from baserow.core.snapshots.exceptions import SnapshotDoesNotExist
+
+from .models import CreateSnapshotJob, RestoreSnapshotJob
 
 
 class CreateSnapshotJobType(JobType):

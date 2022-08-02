@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import math
 import os
 import random
 import re
 import string
-import io
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
-from typing import List, Optional, Iterable, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED

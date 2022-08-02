@@ -1,7 +1,8 @@
-from baserow.core.registries import Plugin
-from django.urls import path, include
+from django.urls import include, path
 
 from baserow_premium.api import urls as api_urls
+
+from baserow.core.registries import Plugin
 
 
 class PremiumPlugin(Plugin):

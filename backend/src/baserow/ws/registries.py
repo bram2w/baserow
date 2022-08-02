@@ -1,5 +1,4 @@
 from baserow.core.registry import Instance, Registry
-
 from baserow.ws.tasks import broadcast_to_channel_group
 
 

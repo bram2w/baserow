@@ -2,23 +2,24 @@ import logging
 import traceback
 from copy import deepcopy
 from typing import (
-    Dict,
     Any,
-    Optional,
-    List,
-    TypeVar,
-    Type,
-    cast,
-    Union,
-    Tuple,
     Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
 )
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
 from django.db.models import QuerySet
-from django.db.utils import ProgrammingError, DataError, DatabaseError
+from django.db.utils import DatabaseError, DataError, ProgrammingError
+
 from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import (
@@ -26,8 +27,8 @@ from baserow.contrib.database.db.schema import (
     safe_django_schema_editor,
 )
 from baserow.contrib.database.db.sql_queries import (
-    sql_drop_try_cast,
     sql_create_try_cast,
+    sql_drop_try_cast,
 )
 from baserow.contrib.database.fields.constants import (
     RESERVED_BASEROW_FIELD_NAMES,
@@ -41,35 +42,33 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed, set_allowed_attrs, find_unused_name
+from baserow.core.utils import extract_allowed, find_unused_name, set_allowed_attrs
+
 from .dependencies.handler import FieldDependencyHandler
 from .dependencies.update_collector import FieldUpdateCollector
 from .exceptions import (
-    PrimaryFieldAlreadyExists,
-    CannotDeletePrimaryField,
     CannotChangeFieldType,
-    FieldDoesNotExist,
-    IncompatiblePrimaryFieldTypeError,
-    MaxFieldLimitExceeded,
-    FieldWithSameNameAlreadyExists,
-    ReservedBaserowFieldNameException,
-    InvalidBaserowFieldName,
-    MaxFieldNameLengthExceeded,
-    IncompatibleFieldTypeForUniqueValues,
+    CannotDeletePrimaryField,
     FailedToLockFieldDueToConflict,
+    FieldDoesNotExist,
+    FieldWithSameNameAlreadyExists,
+    IncompatibleFieldTypeForUniqueValues,
+    IncompatiblePrimaryFieldTypeError,
+    InvalidBaserowFieldName,
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+    PrimaryFieldAlreadyExists,
+    ReservedBaserowFieldNameException,
 )
 from .field_cache import FieldCache
 from .models import Field, SelectOption, SpecificFieldForUpdate
-from .registries import (
-    field_type_registry,
-    field_converter_registry,
-)
+from .registries import field_converter_registry, field_type_registry
 from .signals import (
+    before_field_deleted,
     field_created,
-    field_updated,
     field_deleted,
     field_restored,
-    before_field_deleted,
+    field_updated,
 )
 
 logger = logging.getLogger(__name__)

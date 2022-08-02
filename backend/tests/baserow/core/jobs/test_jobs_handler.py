@@ -1,9 +1,10 @@
-import pytest
 from unittest.mock import patch
 
+import pytest
+
+from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
-from baserow.core.jobs.exceptions import MaxJobCountExceeded, JobDoesNotExist
 
 
 @pytest.mark.django_db(transaction=True)

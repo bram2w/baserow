@@ -1,5 +1,6 @@
-from .base import *  # noqa: F403, F401
 import snoop
+
+from .base import *  # noqa: F403, F401
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_hardcoded_secret_key")  # noqa: F405
 

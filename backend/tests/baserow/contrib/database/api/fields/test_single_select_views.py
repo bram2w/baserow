@@ -1,9 +1,7 @@
-import pytest
 from django.shortcuts import reverse
-from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_200_OK,
-)
+
+import pytest
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.models import SelectOption
 

@@ -1,9 +1,9 @@
 from django.db import models
 
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.mixins import JobWithUserDataMixin
-from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.models import Database
+from baserow.contrib.database.table.models import Table
+from baserow.core.jobs.mixins import JobWithUserDataMixin
+from baserow.core.jobs.models import Job
 
 
 # If you ever change the return value of this function please duplicate the old

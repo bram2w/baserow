@@ -2,19 +2,20 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-import pytest
 from django.db import models
 from django.utils.timezone import make_aware, utc
 
+import pytest
+
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotPossible,
-    OrderByFieldNotFound,
     FilterFieldNotFound,
+    OrderByFieldNotFound,
+    OrderByFieldNotPossible,
 )
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.exceptions import (
-    ViewFilterTypeNotAllowedForField,
     ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
 )
 
 

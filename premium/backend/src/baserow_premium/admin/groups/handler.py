@@ -1,8 +1,9 @@
+from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
+from baserow_premium.license.handler import check_active_premium_license
+
 from baserow.core.exceptions import IsNotAdminError
 from baserow.core.signals import group_deleted
 from baserow.core.trash.handler import TrashHandler
-from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
-from baserow_premium.license.handler import check_active_premium_license
 
 
 class GroupsAdminHandler:

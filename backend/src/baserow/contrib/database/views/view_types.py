@@ -1,21 +1,19 @@
 from collections import defaultdict
-from typing import Any, Dict, Optional, List, Set
+from typing import Any, Dict, List, Optional, Set
 from zipfile import ZipFile
 
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
-from django.contrib.auth.models import AbstractUser
 from django.db.models import Q
-from django.urls import path, include
+from django.urls import include, path
 
 from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.api.user_files.serializers import UserFileField
+from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
-)
-from baserow.contrib.database.api.views.grid.errors import (
-    ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
 )
 from baserow.contrib.database.api.views.form.serializers import (
     FormViewFieldOptionsSerializer,
@@ -23,33 +21,34 @@ from baserow.contrib.database.api.views.form.serializers import (
 from baserow.contrib.database.api.views.gallery.serializers import (
     GalleryViewFieldOptionsSerializer,
 )
+from baserow.contrib.database.api.views.grid.errors import (
+    ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
+)
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.registries import (
-    view_aggregation_type_registry,
-)
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_files.models import UserFile
+
 from .exceptions import (
     FormViewFieldTypeIsNotSupported,
     GridViewAggregationDoesNotSupportField,
 )
 from .handler import ViewHandler
 from .models import (
-    View,
-    GridView,
-    GridViewFieldOptions,
-    GalleryView,
-    GalleryViewFieldOptions,
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    GalleryView,
+    GalleryViewFieldOptions,
+    GridView,
+    GridViewFieldOptions,
+    View,
 )
 from .registries import ViewType, view_filter_type_registry
 

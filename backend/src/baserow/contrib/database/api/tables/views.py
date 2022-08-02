@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import transaction
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -8,28 +9,27 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
-from baserow.api.decorators import validate_body, map_exceptions
+from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
-    get_error_schema,
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    get_error_schema,
 )
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.contrib.database.api.fields.errors import (
+    ERROR_INVALID_BASEROW_FIELD_NAME,
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
     ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
     ERROR_RESERVED_BASEROW_FIELD_NAME,
-    ERROR_INVALID_BASEROW_FIELD_NAME,
 )
-from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.contrib.database.fields.exceptions import (
+    InvalidBaserowFieldName,
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
-    InvalidBaserowFieldName,
 )
 from baserow.contrib.database.file_import.job_type import FileImportJobType
 from baserow.contrib.database.handler import DatabaseHandler
@@ -40,35 +40,37 @@ from baserow.contrib.database.table.actions import (
     UpdateTableActionType,
 )
 from baserow.contrib.database.table.exceptions import (
-    TableDoesNotExist,
-    TableNotInDatabase,
-    InvalidInitialTableData,
-    InitialTableDataLimitExceeded,
     InitialSyncTableDataLimitExceeded,
     InitialTableDataDuplicateName,
+    InitialTableDataLimitExceeded,
+    InvalidInitialTableData,
+    TableDoesNotExist,
+    TableNotInDatabase,
 )
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
+from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInGroup
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
+
 from .errors import (
-    ERROR_TABLE_DOES_NOT_EXIST,
-    ERROR_TABLE_NOT_IN_DATABASE,
-    ERROR_INVALID_INITIAL_TABLE_DATA,
-    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+    ERROR_INVALID_INITIAL_TABLE_DATA,
+    ERROR_TABLE_DOES_NOT_EXIST,
+    ERROR_TABLE_NOT_IN_DATABASE,
 )
 from .serializers import (
-    TableSerializer,
+    OrderTablesSerializer,
     TableCreateSerializer,
     TableImportSerializer,
+    TableSerializer,
     TableUpdateSerializer,
-    OrderTablesSerializer,
 )
 
 FileImportJobSerializerClass = FileImportJobType().get_serializer_class(

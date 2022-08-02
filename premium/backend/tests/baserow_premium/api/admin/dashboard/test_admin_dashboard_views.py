@@ -1,9 +1,8 @@
-import pytest
-from freezegun import freeze_time
-
 from django.shortcuts import reverse
 from django.test.utils import override_settings
 
+import pytest
+from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_402_PAYMENT_REQUIRED,

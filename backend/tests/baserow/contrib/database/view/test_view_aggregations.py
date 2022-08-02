@@ -1,14 +1,14 @@
-import pytest
 import random
 from decimal import Decimal
 
+import pytest
+
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.contrib.database.views.exceptions import FieldAggregationNotSupported
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.trash.handler import TrashHandler
-
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 

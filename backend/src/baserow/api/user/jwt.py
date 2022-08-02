@@ -1,6 +1,5 @@
 from baserow.api.user.registries import user_data_registry
 
-
 from .serializers import UserSerializer
 
 

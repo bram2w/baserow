@@ -4,74 +4,75 @@ from django.conf import settings
 from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.views import ObtainJSONWebTokenView as RegularObtainJSONWebToken
 from rest_framework_jwt.views import (
-    ObtainJSONWebTokenView as RegularObtainJSONWebToken,
     RefreshJSONWebTokenView as RegularRefreshJSONWebToken,
-    VerifyJSONWebTokenView as RegularVerifyJSONWebToken,
 )
+from rest_framework_jwt.views import VerifyJSONWebTokenView as RegularVerifyJSONWebToken
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
     BAD_TOKEN_SIGNATURE,
-    EXPIRED_TOKEN_SIGNATURE,
     ERROR_HOSTNAME_IS_NOT_ALLOWED,
+    EXPIRED_TOKEN_SIGNATURE,
 )
 from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
     ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
 )
 from baserow.api.schemas import get_error_schema
+from baserow.api.sessions import get_untrusted_client_session_id
 from baserow.api.user.registries import user_data_registry
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import ActionScopeStr
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist,
+    GroupInvitationEmailMismatch,
     LockConflict,
 )
 from baserow.core.models import GroupInvitation, Template
 from baserow.core.user.exceptions import (
+    DisabledSignupError,
+    InvalidPassword,
+    ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
     UserNotFound,
-    InvalidPassword,
-    DisabledSignupError,
-    ResetPasswordDisabledError,
 )
 from baserow.core.user.handler import UserHandler
-from baserow.api.sessions import get_untrusted_client_session_id
+
 from .errors import (
     ERROR_ALREADY_EXISTS,
-    ERROR_USER_IS_LAST_ADMIN,
-    ERROR_USER_NOT_FOUND,
-    ERROR_INVALID_OLD_PASSWORD,
-    ERROR_INVALID_PASSWORD,
-    ERROR_DISABLED_SIGNUP,
     ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
     ERROR_DISABLED_RESET_PASSWORD,
+    ERROR_DISABLED_SIGNUP,
+    ERROR_INVALID_OLD_PASSWORD,
+    ERROR_INVALID_PASSWORD,
     ERROR_UNDO_REDO_LOCK_CONFLICT,
+    ERROR_USER_IS_LAST_ADMIN,
+    ERROR_USER_NOT_FOUND,
 )
 from .exceptions import ClientSessionIdHeaderNotSetException
-from .schemas import create_user_response_schema, authenticate_user_schema
+from .schemas import authenticate_user_schema, create_user_response_schema
 from .serializers import (
     AccountSerializer,
-    RegisterSerializer,
-    UserSerializer,
-    SendResetPasswordEmailBodyValidationSerializer,
-    ResetPasswordBodyValidationSerializer,
     ChangePasswordBodyValidationSerializer,
+    DashboardSerializer,
     DeleteUserBodyValidationSerializer,
     NormalizedEmailWebTokenSerializer,
-    DashboardSerializer,
+    RegisterSerializer,
+    ResetPasswordBodyValidationSerializer,
+    SendResetPasswordEmailBodyValidationSerializer,
     UndoRedoRequestSerializer,
     UndoRedoResponseSerializer,
+    UserSerializer,
 )
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER

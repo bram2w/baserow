@@ -1,18 +1,16 @@
 import re
 from collections import defaultdict
 from decimal import Decimal
-from math import floor, ceil
-from typing import cast, Any, Dict, List, NewType, Optional, Type, Tuple, Set
+from math import ceil, floor
+from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
 
-
-from django.utils.encoding import force_str
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Max, F, QuerySet
-from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.db.models import F, Max, QuerySet
+from django.db.models.fields.related import ForeignKey, ManyToManyField
+from django.utils.encoding import force_str
 
-from baserow.core.utils import Progress, grouper
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
@@ -20,20 +18,21 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.registries import FieldType
-from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.trash.models import TrashedRows
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import get_non_unique_values
+from baserow.core.utils import Progress, get_non_unique_values, grouper
+
+from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
+from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
-    before_rows_update,
     before_rows_delete,
+    before_rows_update,
     rows_created,
-    rows_updated,
     rows_deleted,
+    rows_updated,
 )
-from .constants import ROW_IMPORT_VALIDATION, ROW_IMPORT_CREATION
-from .error_report import RowErrorReport
 
 GeneratedTableModelForUpdate = NewType(
     "GeneratedTableModelForUpdate", GeneratedTableModel

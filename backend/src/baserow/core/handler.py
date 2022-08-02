@@ -1,66 +1,67 @@
 import hashlib
 import json
 import os
-
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, NewType, Optional, cast, List
-from urllib.parse import urlparse, urljoin
-from zipfile import ZipFile, ZIP_DEFLATED
+from typing import Any, Dict, List, NewType, Optional, cast
+from urllib.parse import urljoin, urlparse
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Q, Count, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils import translation
+
 from itsdangerous import URLSafeSerializer
 from tqdm import tqdm
 
 from baserow.core.user.utils import normalize_email_address
+
 from .emails import GroupInvitationEmail
 from .exceptions import (
-    UserNotInGroup,
-    GroupDoesNotExist,
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
     BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch,
+    GroupDoesNotExist,
     GroupInvitationDoesNotExist,
-    GroupUserDoesNotExist,
+    GroupInvitationEmailMismatch,
     GroupUserAlreadyExists,
+    GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
     IsNotAdminError,
-    TemplateFileDoesNotExist,
     TemplateDoesNotExist,
+    TemplateFileDoesNotExist,
+    UserNotInGroup,
 )
 from .models import (
-    Settings,
-    Group,
-    GroupUser,
-    GroupInvitation,
+    GROUP_USER_PERMISSION_ADMIN,
+    GROUP_USER_PERMISSION_CHOICES,
     Application,
+    Group,
+    GroupInvitation,
+    GroupUser,
+    Settings,
     Template,
     TemplateCategory,
-    GROUP_USER_PERMISSION_CHOICES,
-    GROUP_USER_PERMISSION_ADMIN,
 )
 from .registries import application_type_registry
 from .signals import (
     application_created,
-    application_updated,
     application_deleted,
+    application_updated,
     applications_reordered,
-    before_group_user_updated,
-    before_group_user_deleted,
     before_group_deleted,
+    before_group_user_deleted,
+    before_group_user_updated,
     group_created,
-    group_updated,
     group_deleted,
+    group_updated,
     group_user_added,
-    group_user_updated,
     group_user_deleted,
+    group_user_updated,
     groups_reordered,
 )
 from .trash.handler import TrashHandler

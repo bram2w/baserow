@@ -1,17 +1,11 @@
 import abc
-from typing import (
-    List,
-    Type,
-    TypeVar,
-)
+from typing import List, Type, TypeVar
 
-from django.db.models import Value, Expression
+from django.db.models import Expression, Value
 from django.utils.functional import classproperty
 
 from baserow.contrib.database.formula.ast import tree
-from baserow.contrib.database.formula.types.exceptions import (
-    InvalidFormulaType,
-)
+from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 
 T = TypeVar("T", bound="BaserowFormulaType")
 

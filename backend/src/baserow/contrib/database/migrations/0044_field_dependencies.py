@@ -3,11 +3,10 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 from baserow.contrib.database.formula import (
-    FormulaHandler,
-    BaserowFormulaVisitor,
     BaserowFormula,
+    BaserowFormulaVisitor,
+    FormulaHandler,
 )
-
 
 # noinspection PyPep8Naming
 

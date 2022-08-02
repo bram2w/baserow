@@ -1,7 +1,8 @@
 # noinspection PyPep8Naming
-import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+
+import pytest
 
 migrate_from = [("core", "0018_trashentry_names")]
 migrate_to = [("core", "0019_trashentry_extra_description_to_names")]

@@ -1,4 +1,4 @@
-from antlr4 import InputStream, CommonTokenStream
+from antlr4 import CommonTokenStream, InputStream
 from antlr4.BufferedTokenStream import BufferedTokenStream
 from antlr4.error.ErrorListener import ErrorListener
 

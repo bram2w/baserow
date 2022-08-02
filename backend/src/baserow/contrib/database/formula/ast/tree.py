@@ -1,16 +1,16 @@
 import abc
 import typing
 from decimal import Decimal
-from typing import List, TypeVar, Generic, Tuple, Optional, Type
+from typing import Generic, List, Optional, Tuple, Type, TypeVar
 
 from django.conf import settings
 from django.db.models import Model
 
 from baserow.contrib.database.formula.ast import visitors
 from baserow.contrib.database.formula.ast.exceptions import (
+    InvalidIntLiteralProvided,
     InvalidStringLiteralProvided,
     TooLargeStringLiteralProvided,
-    InvalidIntLiteralProvided,
 )
 from baserow.contrib.database.formula.parser.parser import (
     convert_string_to_string_literal_token,

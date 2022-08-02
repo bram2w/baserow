@@ -1,25 +1,25 @@
 from rest_framework import serializers
 
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.views.exceptions import DecoratorTypeAlreadyRegistered
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import (
-    GridView,
-    GridViewFieldOptions,
-    GalleryView,
-    GalleryViewFieldOptions,
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    GalleryView,
+    GalleryViewFieldOptions,
+    GridView,
+    GridViewFieldOptions,
+    ViewDecoration,
     ViewFilter,
     ViewSort,
-    ViewDecoration,
 )
-from baserow.contrib.database.views.exceptions import DecoratorTypeAlreadyRegistered
 from baserow.contrib.database.views.registries import (
-    decorator_type_registry,
-    decorator_value_provider_type_registry,
     DecoratorType,
     DecoratorValueProviderType,
+    decorator_type_registry,
+    decorator_value_provider_type_registry,
 )
 
 

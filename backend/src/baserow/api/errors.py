@@ -1,7 +1,4 @@
-from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-)
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 ERROR_GROUP_DOES_NOT_EXIST = (
     "ERROR_GROUP_DOES_NOT_EXIST",

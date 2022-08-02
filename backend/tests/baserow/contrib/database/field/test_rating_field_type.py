@@ -1,12 +1,12 @@
-import pytest
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
+
+import pytest
 from faker import Faker
 
-from decimal import Decimal
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import (
-    RatingField,
-)
+from baserow.contrib.database.fields.models import RatingField
 from baserow.contrib.database.rows.handler import RowHandler
 
 

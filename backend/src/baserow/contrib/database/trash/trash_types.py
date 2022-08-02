@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
 
 from django.contrib.auth import get_user_model
 from django.db import connection
@@ -7,11 +7,12 @@ from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
+from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.signals import rows_created
-from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
@@ -21,8 +22,8 @@ from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
+
 from .models import TrashedRows
-from baserow.contrib.database.fields.field_cache import FieldCache
 
 User = get_user_model()
 

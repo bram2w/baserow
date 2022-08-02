@@ -3,46 +3,48 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
+    List,
     Optional,
+    Set,
+    Tuple,
     Type,
     Union,
-    List,
-    Iterable,
-    Tuple,
-    Set,
 )
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import Storage
 from django.db import models as django_models
+
 from rest_framework.fields import CharField
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.core.registry import (
-    Instance,
-    Registry,
-    ModelInstanceMixin,
-    ModelRegistryMixin,
+    APIUrlsInstanceMixin,
+    APIUrlsRegistryMixin,
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
-    APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin,
     ImportExportMixin,
+    Instance,
     MapAPIExceptionsInstanceMixin,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    Registry,
 )
+
 from .exceptions import (
-    ViewTypeAlreadyRegistered,
-    ViewTypeDoesNotExist,
-    ViewFilterTypeAlreadyRegistered,
-    ViewFilterTypeDoesNotExist,
-    AggregationTypeDoesNotExist,
     AggregationTypeAlreadyRegistered,
+    AggregationTypeDoesNotExist,
+    DecoratorTypeAlreadyRegistered,
+    DecoratorTypeDoesNotExist,
     DecoratorValueProviderTypeAlreadyRegistered,
     DecoratorValueProviderTypeDoesNotExist,
-    DecoratorTypeDoesNotExist,
-    DecoratorTypeAlreadyRegistered,
+    ViewFilterTypeAlreadyRegistered,
+    ViewFilterTypeDoesNotExist,
+    ViewTypeAlreadyRegistered,
+    ViewTypeDoesNotExist,
 )
 
 if TYPE_CHECKING:
@@ -264,7 +266,7 @@ class ViewType(
         :return: The newly created view instance.
         """
 
-        from .models import ViewFilter, ViewSort, ViewDecoration
+        from .models import ViewDecoration, ViewFilter, ViewSort
 
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}

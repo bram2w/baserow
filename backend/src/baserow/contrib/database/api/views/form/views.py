@@ -1,18 +1,19 @@
+from django.db import transaction
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework.fields import empty
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.fields import empty
-from django.db import transaction
 
 from baserow.api.decorators import map_exceptions
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import validate_data
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
     get_example_row_serializer_class,
+    get_row_serializer_class,
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.views.exceptions import (
@@ -29,7 +30,7 @@ from .errors import (
     ERROR_FORM_DOES_NOT_EXIST,
     ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM,
 )
-from .serializers import PublicFormViewSerializer, FormViewSubmittedSerializer
+from .serializers import FormViewSubmittedSerializer, PublicFormViewSerializer
 
 
 class SubmitFormViewView(APIView):

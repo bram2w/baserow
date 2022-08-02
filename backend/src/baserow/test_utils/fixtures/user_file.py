@@ -1,5 +1,5 @@
-import pathlib
 import mimetypes
+import pathlib
 
 from baserow.core.models import UserFile
 from baserow.core.utils import random_string

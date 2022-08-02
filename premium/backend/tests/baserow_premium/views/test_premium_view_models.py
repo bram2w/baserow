@@ -1,5 +1,4 @@
 import pytest
-
 from baserow_premium.views.models import KanbanViewFieldOptions
 
 

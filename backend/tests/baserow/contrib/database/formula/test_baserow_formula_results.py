@@ -4,36 +4,37 @@ import traceback
 from datetime import timedelta
 from decimal import Decimal
 from re import search
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
-import pytest
 from django.conf import settings
 from django.urls import reverse
 from django.utils.duration import duration_string
+
+import pytest
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import FormulaField, Field
+from baserow.contrib.database.fields.models import Field, FormulaField
 from baserow.contrib.database.formula import (
-    literal,
     BaserowFormulaArrayType,
     BaserowFormulaBooleanType,
-    BaserowFormulaTextType,
     BaserowFormulaNumberType,
+    BaserowFormulaTextType,
+    literal,
 )
 from baserow.contrib.database.formula.ast.function_defs import (
     Baserow2dArrayAgg,
     BaserowAggJoin,
 )
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFunctionCall,
     BaserowFieldReference,
+    BaserowFunctionCall,
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.formula.types.formula_type import (
-    UnTyped,
     BaserowFormulaValidType,
+    UnTyped,
 )
 from baserow.contrib.database.formula.types.type_checker import MustBeManyExprChecker
 from baserow.contrib.database.rows.handler import RowHandler

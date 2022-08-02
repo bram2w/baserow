@@ -1,12 +1,12 @@
 import pytest
 
 from baserow.contrib.database.views.models import (
+    FormViewFieldOptions,
+    GalleryViewFieldOptions,
+    GridViewFieldOptions,
+    ViewDecoration,
     ViewFilter,
     ViewSort,
-    GridViewFieldOptions,
-    GalleryViewFieldOptions,
-    FormViewFieldOptions,
-    ViewDecoration,
 )
 
 

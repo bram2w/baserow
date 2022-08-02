@@ -1,8 +1,9 @@
 from unittest.mock import patch
 
-import pytest
 from django.urls import reverse
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
+
+import pytest
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from baserow.contrib.database.airtable.models import AirtableImportJob
 

@@ -1,5 +1,6 @@
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
 from django.conf import settings
+
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
 
 # None of these are passwords
 ERROR_ALREADY_EXISTS = "ERROR_EMAIL_ALREADY_EXISTS"  # nosec

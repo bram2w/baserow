@@ -1,17 +1,16 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, call
+from unittest.mock import call, patch
+
+from django.db import connection, transaction
 
 import pytest
-from django.db import connection, transaction
 from freezegun import freeze_time
 
 from baserow.contrib.database.table.models import Table
 from baserow.core.management.backup.backup_runner import BaserowBackupRunner
-from baserow.core.management.backup.exceptions import (
-    InvalidBaserowBackupArchive,
-)
+from baserow.core.management.backup.exceptions import InvalidBaserowBackupArchive
 from baserow.core.trash.handler import TrashHandler
 
 

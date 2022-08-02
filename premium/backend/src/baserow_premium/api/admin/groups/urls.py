@@ -1,7 +1,6 @@
 from django.urls import re_path
 
-from baserow_premium.api.admin.groups.views import GroupsAdminView, GroupAdminView
-
+from baserow_premium.api.admin.groups.views import GroupAdminView, GroupsAdminView
 
 app_name = "baserow_premium.api.admin.groups"
 

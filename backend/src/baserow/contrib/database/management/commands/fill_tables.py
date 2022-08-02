@@ -1,15 +1,13 @@
 import os
-
 import sys
 
 from django.core.management.base import BaseCommand
+
 from tqdm import tqdm
 
-from baserow.core.management.utils import (
-    run_command_concurrently,
-)
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.core.management.utils import run_command_concurrently
 
 
 class Command(BaseCommand):

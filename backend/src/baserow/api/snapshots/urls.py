@@ -1,11 +1,6 @@
 from django.urls import re_path
 
-from .views import (
-    SnapshotsView,
-    RestoreSnapshotView,
-    SnapshotView,
-)
-
+from .views import RestoreSnapshotView, SnapshotsView, SnapshotView
 
 app_name = "baserow.api.snapshot"
 

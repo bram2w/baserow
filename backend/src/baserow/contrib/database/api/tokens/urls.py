@@ -2,7 +2,6 @@ from django.urls import re_path
 
 from .views import TokensView, TokenView
 
-
 app_name = "baserow.contrib.database.api.tokens"
 
 urlpatterns = [

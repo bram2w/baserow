@@ -1,10 +1,6 @@
 from django.urls import re_path
 
-from .views import (
-    JobsView,
-    JobView,
-)
-
+from .views import JobsView, JobView
 
 app_name = "baserow.api.jobs"
 

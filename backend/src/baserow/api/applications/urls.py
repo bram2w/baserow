@@ -1,13 +1,12 @@
 from django.urls import re_path
 
 from .views import (
-    ApplicationsView,
     AllApplicationsView,
+    ApplicationsView,
     ApplicationView,
-    OrderApplicationsView,
     AsyncDuplicateApplicationView,
+    OrderApplicationsView,
 )
-
 
 app_name = "baserow.api.group"
 

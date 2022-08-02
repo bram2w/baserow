@@ -1,81 +1,76 @@
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, allowed_includes, validate_body
+from baserow.api.decorators import allowed_includes, map_exceptions, validate_body
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.contrib.database.api.rows.serializers import (
-    get_example_row_serializer_class,
-    get_example_row_metadata_field_serializer,
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FIELD_NOT_IN_TABLE,
+    ERROR_FILTER_FIELD_NOT_FOUND,
+    ERROR_ORDER_BY_FIELD_NOT_FOUND,
+    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
 )
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
     RowSerializer,
+    get_example_row_metadata_field_serializer,
+    get_example_row_serializer_class,
+    get_row_serializer_class,
 )
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
+from baserow.contrib.database.api.views.errors import (
+    ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST,
+    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
+    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+)
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.api.views.serializers import (
-    FieldOptionsField,
-)
-from baserow.contrib.database.api.views.errors import (
-    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
-    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
-    ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST,
-    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
-)
-from baserow.contrib.database.api.fields.errors import (
-    ERROR_FIELD_DOES_NOT_EXIST,
-    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
-    ERROR_ORDER_BY_FIELD_NOT_FOUND,
-    ERROR_FILTER_FIELD_NOT_FOUND,
-    ERROR_FIELD_NOT_IN_TABLE,
-)
+from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
-from baserow.contrib.database.rows.registries import row_metadata_registry
-from baserow.contrib.database.views.exceptions import (
-    NoAuthorizationToPubliclySharedView,
-    ViewDoesNotExist,
+from baserow.contrib.database.fields.exceptions import (
+    FieldDoesNotExist,
+    FieldNotInTable,
+    FilterFieldNotFound,
+    OrderByFieldNotFound,
+    OrderByFieldNotPossible,
 )
-from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import GridView
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-    view_filter_type_registry,
-    view_aggregation_type_registry,
-)
-from baserow.contrib.database.views.exceptions import (
-    ViewFilterTypeNotAllowedForField,
-    ViewFilterTypeDoesNotExist,
-    AggregationTypeDoesNotExist,
-)
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
-from baserow.contrib.database.fields.exceptions import (
-    FieldDoesNotExist,
-    OrderByFieldNotFound,
-    OrderByFieldNotPossible,
-    FilterFieldNotFound,
-    FieldNotInTable,
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.registries import row_metadata_registry
+from baserow.contrib.database.views.exceptions import (
+    AggregationTypeDoesNotExist,
+    NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
+    ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
+)
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.registries import (
+    view_aggregation_type_registry,
+    view_filter_type_registry,
+    view_type_registry,
 )
 from baserow.core.exceptions import UserNotInGroup
+
 from .errors import ERROR_GRID_DOES_NOT_EXIST
-from .serializers import GridViewFilterSerializer
 from .schemas import (
     field_aggregation_response_schema,
     field_aggregations_response_schema,
 )
+from .serializers import GridViewFilterSerializer
 
 
 def get_available_aggregation_type():

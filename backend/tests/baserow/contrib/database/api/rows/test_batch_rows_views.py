@@ -1,10 +1,11 @@
 from decimal import Decimal
 
-import pytest
 from django.conf import settings
 from django.db import connection
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
+
+import pytest
 from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
@@ -18,7 +19,6 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import is_dict_subset
-
 
 # Create
 

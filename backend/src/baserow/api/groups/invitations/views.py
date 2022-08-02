@@ -1,50 +1,47 @@
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Exists, OuterRef
-from django.contrib.auth import get_user_model
 
-from itsdangerous.exc import BadSignature
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from itsdangerous.exc import BadSignature
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body, map_exceptions
+from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
-    ERROR_USER_NOT_IN_GROUP,
-    ERROR_USER_INVALID_GROUP_PERMISSIONS,
+    BAD_TOKEN_SIGNATURE,
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_HOSTNAME_IS_NOT_ALLOWED,
-    BAD_TOKEN_SIGNATURE,
+    ERROR_USER_INVALID_GROUP_PERMISSIONS,
+    ERROR_USER_NOT_IN_GROUP,
 )
-from baserow.api.schemas import get_error_schema
-from baserow.api.groups.serializers import GroupUserGroupSerializer
-from baserow.api.groups.users.errors import ERROR_GROUP_USER_ALREADY_EXISTS
 from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
     ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
 )
-from baserow.core.models import GroupInvitation
-from baserow.core.handler import CoreHandler
+from baserow.api.groups.serializers import GroupUserGroupSerializer
+from baserow.api.groups.users.errors import ERROR_GROUP_USER_ALREADY_EXISTS
+from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import (
-    UserNotInGroup,
-    UserInvalidGroupPermissionsError,
+    BaseURLHostnameNotAllowed,
     GroupDoesNotExist,
     GroupInvitationDoesNotExist,
-    BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
     GroupUserAlreadyExists,
+    UserInvalidGroupPermissionsError,
+    UserNotInGroup,
 )
+from baserow.core.handler import CoreHandler
+from baserow.core.models import GroupInvitation
 
 from .serializers import (
-    GroupInvitationSerializer,
     CreateGroupInvitationSerializer,
+    GroupInvitationSerializer,
     UpdateGroupInvitationSerializer,
     UserGroupInvitationSerializer,
 )
-
 
 User = get_user_model()
 

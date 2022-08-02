@@ -2,10 +2,10 @@ import re
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.translation import gettext as _
-from django.db import transaction
 
 
 class BaseEmailMessage(EmailMultiAlternatives):

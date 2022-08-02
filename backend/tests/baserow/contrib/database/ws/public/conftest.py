@@ -1,8 +1,9 @@
 import abc
-from typing import TypeVar, Generic, Optional, List
+from typing import Generic, List, Optional, TypeVar
+
+from django.contrib.auth.models import AbstractUser
 
 import pytest
-from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.models import Table

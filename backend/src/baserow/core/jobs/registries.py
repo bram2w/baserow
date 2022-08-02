@@ -3,20 +3,20 @@ from typing import Any, Dict
 from django.contrib.auth.models import AbstractUser
 
 from baserow.core.db import transaction_atomic
-from baserow.core.utils import Progress
 from baserow.core.registry import (
-    ModelInstanceMixin,
-    Registry,
-    Instance,
     CustomFieldsInstanceMixin,
-    MapAPIExceptionsInstanceMixin,
-    ModelRegistryMixin,
     CustomFieldsRegistryMixin,
+    Instance,
+    MapAPIExceptionsInstanceMixin,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    Registry,
 )
+from baserow.core.utils import Progress
 
-from .types import AnyJob
+from .exceptions import JobTypeAlreadyRegistered, JobTypeDoesNotExist
 from .models import Job
-from .exceptions import JobTypeDoesNotExist, JobTypeAlreadyRegistered
+from .types import AnyJob
 
 
 class JobType(

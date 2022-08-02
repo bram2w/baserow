@@ -1,26 +1,26 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
-from django.urls import path, include
+from django.urls import include, path
 
-from rest_framework.serializers import PrimaryKeyRelatedField
-
-from baserow.contrib.database.fields.models import SingleSelectField, FileField
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
-from baserow.contrib.database.views.models import View
-from baserow.contrib.database.views.registries import ViewType
-from baserow.contrib.database.table.models import Table
-from baserow_premium.api.views.kanban.serializers import (
-    KanbanViewFieldOptionsSerializer,
-)
 from baserow_premium.api.views.kanban.errors import (
     ERROR_KANBAN_VIEW_FIELD_DOES_NOT_BELONG_TO_SAME_TABLE,
 )
+from baserow_premium.api.views.kanban.serializers import (
+    KanbanViewFieldOptionsSerializer,
+)
+from rest_framework.serializers import PrimaryKeyRelatedField
 
-from .models import KanbanView, KanbanViewFieldOptions
+from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.models import FileField, SingleSelectField
+from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.registries import ViewType
+
 from .exceptions import KanbanViewFieldDoesNotBelongToSameTable
+from .models import KanbanView, KanbanViewFieldOptions
 
 
 class KanbanViewType(ViewType):

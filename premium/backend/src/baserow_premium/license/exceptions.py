@@ -1,5 +1,5 @@
-from rest_framework.status import HTTP_402_PAYMENT_REQUIRED
 from rest_framework.exceptions import APIException
+from rest_framework.status import HTTP_402_PAYMENT_REQUIRED
 
 
 class NoPremiumLicenseError(APIException):

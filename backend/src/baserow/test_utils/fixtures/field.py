@@ -2,24 +2,24 @@ from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import (
-    MultipleSelectField,
-    TextField,
-    LongTextField,
-    NumberField,
-    RatingField,
     BooleanField,
-    DateField,
-    LinkRowField,
-    FileField,
-    SingleSelectField,
-    SelectOption,
-    URLField,
-    EmailField,
-    PhoneNumberField,
-    LastModifiedField,
     CreatedOnField,
+    DateField,
+    EmailField,
+    FileField,
     FormulaField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
     LookupField,
+    MultipleSelectField,
+    NumberField,
+    PhoneNumberField,
+    RatingField,
+    SelectOption,
+    SingleSelectField,
+    TextField,
+    URLField,
 )
 from baserow.contrib.database.formula import FormulaHandler
 

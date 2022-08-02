@@ -1,18 +1,17 @@
 import dataclasses
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.core.utils import Progress
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionType, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import ApplicationActionScopeType
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import ChildProgressBuilder
+from baserow.core.utils import ChildProgressBuilder, Progress
 
 
 class CreateTableActionType(ActionType):

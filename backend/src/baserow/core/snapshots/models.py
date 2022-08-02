@@ -1,6 +1,7 @@
 from django.db import models
-from baserow.core.models import Snapshot
+
 from baserow.core.jobs.models import Job
+from baserow.core.models import Snapshot
 
 
 class CreateSnapshotJob(Job):

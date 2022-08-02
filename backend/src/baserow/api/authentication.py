@@ -1,13 +1,12 @@
-import jwt
 from django.apps import apps
+
+import jwt
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import (
     JSONWebTokenAuthentication as JWTJSONWebTokenAuthentication,
 )
-from rest_framework_jwt.blacklist.exceptions import (
-    MissingToken,
-)
+from rest_framework_jwt.blacklist.exceptions import MissingToken
 from rest_framework_jwt.compat import ExpiredSignature
 
 from baserow.api.sessions import (

@@ -1,8 +1,9 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-import pytest
 from django.shortcuts import reverse
+
+import pytest
 from faker import Faker
 from freezegun import freeze_time
 from pytz import timezone
@@ -11,18 +12,18 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     CreatedOnField,
-    LastModifiedField,
-    LongTextField,
-    MultipleSelectField,
-    SelectOption,
-    URLField,
     DateField,
     EmailField,
     FileField,
+    FormulaField,
+    LastModifiedField,
+    LongTextField,
+    LookupField,
+    MultipleSelectField,
     NumberField,
     PhoneNumberField,
-    FormulaField,
-    LookupField,
+    SelectOption,
+    URLField,
 )
 
 

@@ -1,7 +1,7 @@
 from rest_framework.exceptions import ValidationError
 
-from baserow.core.user_files.models import UserFile
 from baserow.core.user_files.exceptions import InvalidUserFileNameError
+from baserow.core.user_files.models import UserFile
 
 
 def user_file_name_validator(value):

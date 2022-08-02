@@ -1,12 +1,12 @@
 import json
-from pytest_unordered import unordered
 from unittest.mock import patch
 
-import pytest
 from django.db import connection
 from django.shortcuts import reverse
-from django.test.utils import CaptureQueriesContext
-from django.test.utils import override_settings
+from django.test.utils import CaptureQueriesContext, override_settings
+
+import pytest
+from pytest_unordered import unordered
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_202_ACCEPTED,

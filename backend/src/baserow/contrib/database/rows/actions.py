@@ -1,26 +1,22 @@
 import dataclasses
 from copy import deepcopy
-
 from decimal import Decimal
-from typing import Any, Dict, Optional, Type, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.contrib.auth.models import AbstractUser
-from baserow.core.utils import Progress
-from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.signals import table_updated
 
-from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionType, ActionScopeStr
 from baserow.contrib.database.action.scopes import TableActionScopeType
 from baserow.contrib.database.rows.handler import (
     GeneratedTableModelForUpdate,
     RowHandler,
 )
-from baserow.contrib.database.table.models import (
-    GeneratedTableModel,
-    Table,
-)
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.table.signals import table_updated
+from baserow.core.action.models import Action
+from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import Progress
 
 
 class CreateRowActionType(ActionType):

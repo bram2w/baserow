@@ -2,19 +2,18 @@ from django.urls import re_path
 
 from .views import (
     AccountView,
-    ScheduleAccountDeletionView,
-    UserView,
-    SendResetPasswordEmailView,
-    ResetPasswordView,
     ChangePasswordView,
     DashboardView,
     ObtainJSONWebToken,
-    RefreshJSONWebToken,
-    VerifyJSONWebToken,
-    UndoView,
     RedoView,
+    RefreshJSONWebToken,
+    ResetPasswordView,
+    ScheduleAccountDeletionView,
+    SendResetPasswordEmailView,
+    UndoView,
+    UserView,
+    VerifyJSONWebToken,
 )
-
 
 app_name = "baserow.api.user"
 

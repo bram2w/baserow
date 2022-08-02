@@ -1,9 +1,7 @@
-from typing import List, Any, Dict
-
-import pytest
-
+from typing import Any, Dict, List
 from unittest.mock import patch
 
+import pytest
 from rest_framework import serializers
 from rest_framework.fields import Field
 

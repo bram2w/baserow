@@ -1,23 +1,20 @@
 from django.db import transaction
+
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import (
-    validate_body_custom_fields,
-    map_exceptions,
-)
+from baserow.api.decorators import map_exceptions, validate_body_custom_fields
 from baserow.api.schemas import get_error_schema
+from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
 
 from .errors import ERROR_JOB_DOES_NOT_EXIST, ERROR_MAX_JOB_COUNT_EXCEEDED
-from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
-
-from baserow.core.jobs.registries import job_type_registry
-from baserow.core.jobs.handler import JobHandler
-from .serializers import JobSerializer, CreateJobSerializer
+from .serializers import CreateJobSerializer, JobSerializer
 
 
 class JobsView(APIView):

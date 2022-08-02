@@ -2,33 +2,31 @@ import typing
 from typing import NewType
 
 from django.contrib.contenttypes.models import ContentType
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.functional import cached_property
 
 from baserow.contrib.database.fields.mixins import (
-    BaseDateMixin,
-    TimezoneMixin,
     DATE_FORMAT_CHOICES,
     DATE_TIME_FORMAT_CHOICES,
+    BaseDateMixin,
+    TimezoneMixin,
 )
 from baserow.contrib.database.formula import (
+    BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
     BASEROW_FORMULA_TYPE_CHOICES,
     FormulaHandler,
-    BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.core.mixins import (
+    CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
-    CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
-from baserow.core.utils import (
-    to_snake_case,
-    remove_special_characters,
-)
+from baserow.core.utils import remove_special_characters, to_snake_case
+
 from .fields import SerialField
 
 if typing.TYPE_CHECKING:

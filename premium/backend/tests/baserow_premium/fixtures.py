@@ -1,8 +1,7 @@
-from baserow.contrib.database.fields.models import Field
-
 from baserow_premium.license.models import License, LicenseUser
 from baserow_premium.views.models import KanbanView, KanbanViewFieldOptions
 
+from baserow.contrib.database.fields.models import Field
 
 VALID_ONE_SEAT_LICENSE = (
     # id: "1", instance_id: "1"

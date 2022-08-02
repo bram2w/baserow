@@ -2,11 +2,10 @@ from typing import Iterable, Optional, Type
 
 from django.db import transaction
 from django.dispatch import receiver
+
 from rest_framework.serializers import Serializer
 
-from baserow.contrib.database.api.fields.serializers import (
-    FieldSerializer,
-)
+from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.views.serializers import (
     FieldWithFiltersAndSortsSerializer,
 )

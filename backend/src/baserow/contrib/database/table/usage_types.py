@@ -1,5 +1,5 @@
+from django.db.models import F, Func, Sum
 from django.db.models.fields.json import KeyTextTransform
-from django.db.models import Func, F, Sum
 
 from baserow.contrib.database.fields.models import FileField
 from baserow.core.usage.registries import GroupStorageUsageItemType, UsageInBytes

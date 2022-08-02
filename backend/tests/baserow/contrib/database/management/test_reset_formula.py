@@ -1,5 +1,6 @@
-import pytest
 from django.core.management import call_command
+
+import pytest
 
 from baserow.contrib.database.fields.models import FormulaField
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType

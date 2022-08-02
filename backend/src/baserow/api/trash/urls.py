@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from .views import TrashContentsView, TrashStructureView, TrashItemView
+from .views import TrashContentsView, TrashItemView, TrashStructureView
 
 app_name = "baserow.api.trash"
 

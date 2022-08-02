@@ -1,9 +1,10 @@
 from decimal import Decimal
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
+from django.core.cache import cache
+from django.shortcuts import reverse
 
 import pytest
-from django.shortcuts import reverse
-from django.core.cache import cache
 from rest_framework import serializers
 from rest_framework.fields import Field
 from rest_framework.status import (
@@ -14,6 +15,7 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.registries import (
     RowMetadataType,
@@ -21,7 +23,6 @@ from baserow.contrib.database.rows.registries import (
 )
 from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.test_utils.helpers import register_instance_temporarily
 
 

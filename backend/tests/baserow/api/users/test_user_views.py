@@ -1,20 +1,21 @@
 import os
-import pytest
 from unittest.mock import patch
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.shortcuts import reverse
+
+import pytest
 from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
-    HTTP_204_NO_CONTENT,
     HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
 )
 
-from django.contrib.auth import get_user_model
-from django.shortcuts import reverse
-from django.conf import settings
-
-from baserow.api.user.registries import user_data_registry, UserDataType
+from baserow.api.user.registries import UserDataType, user_data_registry
 from baserow.contrib.database.models import Database, Table
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser

@@ -3,25 +3,23 @@ import binascii
 import hashlib
 import json
 import logging
-from typing import Union, List, Dict, Any
 from os.path import dirname, join
-from dateutil import parser
-
-import requests
-from requests.exceptions import RequestException
+from typing import Any, Dict, List, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User as DjangoUser
-from django.utils.timezone import now, make_aware, utc
 from django.db import transaction
 from django.db.models import Q
+from django.utils.timezone import make_aware, now, utc
 
+import requests
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-
+from dateutil import parser
+from requests.exceptions import RequestException
 from rest_framework.status import HTTP_200_OK
 
 from baserow.core.exceptions import IsNotAdminError
@@ -29,25 +27,24 @@ from baserow.core.handler import CoreHandler
 from baserow.core.models import Group
 from baserow.ws.signals import broadcast_to_users
 
-from .models import License, LicenseUser
-from .exceptions import (
-    NoPremiumLicenseError,
-    InvalidPremiumLicenseError,
-    UnsupportedPremiumLicenseError,
-    PremiumLicenseInstanceIdMismatchError,
-    PremiumLicenseAlreadyExists,
-    PremiumLicenseHasExpired,
-    UserAlreadyOnPremiumLicenseError,
-    NoSeatsLeftInPremiumLicenseError,
-    LicenseAuthorityUnavailable,
-)
 from .constants import (
-    AUTHORITY_RESPONSE_UPDATE,
     AUTHORITY_RESPONSE_DOES_NOT_EXIST,
     AUTHORITY_RESPONSE_INSTANCE_ID_MISMATCH,
     AUTHORITY_RESPONSE_INVALID,
+    AUTHORITY_RESPONSE_UPDATE,
 )
-
+from .exceptions import (
+    InvalidPremiumLicenseError,
+    LicenseAuthorityUnavailable,
+    NoPremiumLicenseError,
+    NoSeatsLeftInPremiumLicenseError,
+    PremiumLicenseAlreadyExists,
+    PremiumLicenseHasExpired,
+    PremiumLicenseInstanceIdMismatchError,
+    UnsupportedPremiumLicenseError,
+    UserAlreadyOnPremiumLicenseError,
+)
+from .models import License, LicenseUser
 
 logger = logging.getLogger(__name__)
 User = get_user_model()

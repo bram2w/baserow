@@ -1,28 +1,26 @@
 import dataclasses
-
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
+
+from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.action.scopes import TableActionScopeType
 from baserow.contrib.database.fields.handler import FieldHandler
-
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import FieldOptionsDict, ViewHandler
 from baserow.contrib.database.views.models import (
     View,
+    ViewDecoration,
     ViewFilter,
     ViewSort,
-    ViewDecoration,
 )
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import ViewActionScopeType
-from django.contrib.auth.models import AbstractUser
-
 from baserow.core.trash.handler import TrashHandler
 
 

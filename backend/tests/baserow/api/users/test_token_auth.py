@@ -1,16 +1,17 @@
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
+
+import pytest
 from freezegun import freeze_time
 from pytz import timezone
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework_jwt.settings import api_settings
 
 from baserow.core.models import UserLogEntry
-from baserow.core.registries import plugin_registry, Plugin
+from baserow.core.registries import Plugin, plugin_registry
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER

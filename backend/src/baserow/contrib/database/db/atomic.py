@@ -1,7 +1,8 @@
 from django.db.transaction import Atomic
+
 from psycopg2 import sql
 
-from baserow.core.db import transaction_atomic, IsolationLevel
+from baserow.core.db import IsolationLevel, transaction_atomic
 
 
 def read_repeatable_single_database_atomic_transaction(

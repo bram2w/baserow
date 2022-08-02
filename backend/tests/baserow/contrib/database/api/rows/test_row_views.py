@@ -1,7 +1,8 @@
 from decimal import Decimal
 
-import pytest
 from django.shortcuts import reverse
+
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,

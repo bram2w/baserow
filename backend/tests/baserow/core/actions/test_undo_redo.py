@@ -1,14 +1,15 @@
 import uuid
 from datetime import timedelta
-from typing import cast, Any
+from typing import Any, cast
 from unittest.mock import patch
 
-import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import connection, transaction
 from django.test.utils import CaptureQueriesContext, override_settings
 from django.utils import timezone
+
+import pytest
 from freezegun import freeze_time
 from pytest_unordered import unordered
 
@@ -17,19 +18,19 @@ from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
-    action_type_registry,
     ActionScopeStr,
     ActionType,
+    action_type_registry,
 )
-from baserow.core.action.scopes import RootActionScopeType, GroupActionScopeType
+from baserow.core.action.scopes import GroupActionScopeType, RootActionScopeType
 from baserow.core.actions import (
     CreateApplicationActionType,
-    DeleteGroupActionType,
     CreateGroupActionType,
+    DeleteGroupActionType,
     UpdateApplicationActionType,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Application, Group, GROUP_USER_PERMISSION_ADMIN
+from baserow.core.models import GROUP_USER_PERMISSION_ADMIN, Application, Group
 from baserow.test_utils.helpers import (
     assert_undo_redo_actions_are_valid,
     assert_undo_redo_actions_fails_with_error,

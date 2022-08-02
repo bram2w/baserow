@@ -1,19 +1,19 @@
 import re
-from typing import Dict, Any, Union, Type
+from typing import Any, Dict, Type, Union
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, F, QuerySet
+from django.db.models import F, Q, QuerySet
 
 from baserow.contrib.database.fields.exceptions import (
+    FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
-    FilterFieldNotFound,
 )
 from baserow.contrib.database.fields.field_filters import (
-    FilterBuilder,
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
+    FilterBuilder,
 )
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -24,13 +24,13 @@ from baserow.contrib.database.table.cache import (
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
+from baserow.core.jobs.mixins import JobWithUserDataMixin
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
-    OrderableMixin,
     CreatedAndUpdatedOnMixin,
+    OrderableMixin,
     TrashableModelMixin,
 )
-from baserow.core.jobs.mixins import JobWithUserDataMixin
 from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")

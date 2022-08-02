@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from baserow.core.registry import Registry, Instance
+from baserow.core.registry import Instance, Registry
 
 UsageInBytes = int
 

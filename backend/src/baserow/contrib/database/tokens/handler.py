@@ -3,16 +3,16 @@ from django.utils import timezone
 
 from rest_framework.request import Request
 
-from baserow.core.utils import random_string
-from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
+from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
+from baserow.core.utils import random_string
 
 from .exceptions import (
-    TokenDoesNotExist,
     MaximumUniqueTokenTriesError,
-    TokenDoesNotBelongToUser,
     NoPermissionToTable,
+    TokenDoesNotBelongToUser,
+    TokenDoesNotExist,
 )
 from .models import Token, TokenPermission
 

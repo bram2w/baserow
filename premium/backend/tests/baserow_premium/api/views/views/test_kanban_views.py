@@ -1,7 +1,10 @@
-import pytest
 from unittest.mock import patch
+
 from django.shortcuts import reverse
 from django.test.utils import override_settings
+
+import pytest
+from baserow_premium.views.models import KanbanView
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -9,15 +12,13 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.views.actions import UpdateViewActionType
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import View
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.action.scopes import ViewActionScopeType
-from baserow.contrib.database.views.actions import UpdateViewActionType
-from baserow.contrib.database.views.models import View
-from baserow.contrib.database.views.handler import ViewHandler
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
-
-from baserow_premium.views.models import KanbanView
 
 
 @pytest.mark.django_db

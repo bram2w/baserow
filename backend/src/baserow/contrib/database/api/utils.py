@@ -1,6 +1,7 @@
 import re
-from baserow.core.utils import split_comma_separated_string
+
 from baserow.contrib.database.fields.models import Field
+from baserow.core.utils import split_comma_separated_string
 
 
 def get_include_exclude_field_ids(table, include=None, exclude=None):

@@ -1,15 +1,14 @@
 from django.conf.urls import re_path
 
 from .views import (
-    AdminLicensesView,
-    AdminLicenseView,
-    AdminLicenseFillSeatsView,
-    AdminRemoveAllUsersFromLicenseView,
-    AdminLicenseUserView,
-    AdminLicenseLookupUsersView,
     AdminCheckLicense,
+    AdminLicenseFillSeatsView,
+    AdminLicenseLookupUsersView,
+    AdminLicensesView,
+    AdminLicenseUserView,
+    AdminLicenseView,
+    AdminRemoveAllUsersFromLicenseView,
 )
-
 
 app_name = "baserow_premium.api.license"
 

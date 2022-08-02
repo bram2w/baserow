@@ -1,13 +1,9 @@
 from django.utils.functional import lazy
+
 from rest_framework import serializers
 
-from baserow.contrib.database.views.models import (
-    ViewFilter,
-    FILTER_TYPES,
-)
-from baserow.contrib.database.views.registries import (
-    view_filter_type_registry,
-)
+from baserow.contrib.database.views.models import FILTER_TYPES, ViewFilter
+from baserow.contrib.database.views.registries import view_filter_type_registry
 
 
 class SelectColorValueProviderConfSerializer(serializers.Serializer):

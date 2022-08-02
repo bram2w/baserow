@@ -4,7 +4,6 @@ from baserow.contrib.database.fields.registries import field_type_registry
 
 from .views import FieldsView, FieldView, UniqueRowValueFieldView
 
-
 app_name = "baserow.contrib.database.api.fields"
 
 urlpatterns = field_type_registry.api_urls + [

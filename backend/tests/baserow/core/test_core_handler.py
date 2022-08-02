@@ -3,39 +3,40 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
+
+import pytest
 from itsdangerous.exc import BadSignature
 
 from baserow.contrib.database.models import Database
 from baserow.core.exceptions import (
-    UserNotInGroup,
-    ApplicationTypeDoesNotExist,
+    ApplicationDoesNotExist,
     ApplicationNotInGroup,
+    ApplicationTypeDoesNotExist,
+    BaseURLHostnameNotAllowed,
     GroupDoesNotExist,
+    GroupInvitationDoesNotExist,
+    GroupInvitationEmailMismatch,
+    GroupUserAlreadyExists,
     GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
-    ApplicationDoesNotExist,
-    UserInvalidGroupPermissionsError,
-    BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch,
-    GroupInvitationDoesNotExist,
-    GroupUserAlreadyExists,
     IsNotAdminError,
-    TemplateFileDoesNotExist,
     TemplateDoesNotExist,
+    TemplateFileDoesNotExist,
+    UserInvalidGroupPermissionsError,
+    UserNotInGroup,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
-    Settings,
-    Group,
-    GroupUser,
-    GroupInvitation,
+    GROUP_USER_PERMISSION_ADMIN,
     Application,
+    Group,
+    GroupInvitation,
+    GroupUser,
+    Settings,
     Template,
     TemplateCategory,
-    GROUP_USER_PERMISSION_ADMIN,
 )
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile

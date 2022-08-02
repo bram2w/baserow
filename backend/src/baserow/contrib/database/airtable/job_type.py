@@ -1,25 +1,22 @@
 from pytz import all_timezones
-from rest_framework import serializers
-from requests.exceptions import RequestException
 from pytz import timezone as pytz_timezone
+from requests.exceptions import RequestException
+from rest_framework import serializers
 
-from baserow.core.exceptions import UserNotInGroup, GroupDoesNotExist
-from baserow.core.handler import CoreHandler
-from baserow.core.signals import application_created
-from baserow.core.jobs.registries import JobType
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.applications.serializers import ApplicationSerializer
-
-from baserow.contrib.database.airtable.utils import extract_share_id_from_url
-from baserow.contrib.database.airtable.handler import AirtableHandler
-from baserow.contrib.database.airtable.models import AirtableImportJob
-from baserow.contrib.database.airtable.validators import (
-    is_publicly_shared_airtable_url,
-)
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.contrib.database.airtable.exceptions import (
     AirtableBaseNotPublic,
     AirtableShareIsNotABase,
 )
+from baserow.contrib.database.airtable.handler import AirtableHandler
+from baserow.contrib.database.airtable.models import AirtableImportJob
+from baserow.contrib.database.airtable.utils import extract_share_id_from_url
+from baserow.contrib.database.airtable.validators import is_publicly_shared_airtable_url
+from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.handler import CoreHandler
+from baserow.core.jobs.registries import JobType
+from baserow.core.signals import application_created
 
 
 class AirtableImportJobType(JobType):

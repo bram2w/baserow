@@ -1,6 +1,6 @@
-from typing import Dict, Any, Union
+from typing import Any, Dict, Union
 
-from django.db.models import Q, BooleanField
+from django.db.models import BooleanField, Q
 from django.db.models.expressions import F, Value
 
 from baserow.contrib.database.formula.expression_generator.django_expressions import (

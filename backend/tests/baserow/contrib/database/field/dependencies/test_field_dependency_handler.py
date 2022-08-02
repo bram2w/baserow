@@ -1,5 +1,6 @@
-import pytest
 from django.conf import settings
+
+import pytest
 from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.dependencies.circular_reference_checker import (
@@ -9,9 +10,7 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
-from baserow.contrib.database.fields.dependencies.models import (
-    FieldDependency,
-)
+from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry

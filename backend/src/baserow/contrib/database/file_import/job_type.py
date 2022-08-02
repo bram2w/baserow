@@ -2,45 +2,40 @@ import json
 
 from django.core.files.base import ContentFile
 from django.db import transaction
-from baserow.contrib.database.db.atomic import read_committed_single_table_transaction
+
 from rest_framework import serializers
 
-from baserow.core.action.registries import action_type_registry
-from baserow.core.jobs.registries import JobType
-from baserow.contrib.database.fields.exceptions import (
-    MaxFieldLimitExceeded,
-    MaxFieldNameLengthExceeded,
-    ReservedBaserowFieldNameException,
-    InvalidBaserowFieldName,
-)
-from baserow.contrib.database.table.exceptions import (
-    InvalidInitialTableData,
-    InitialTableDataLimitExceeded,
-    InitialTableDataDuplicateName,
-)
-from baserow.contrib.database.table.actions import CreateTableActionType
-from baserow.contrib.database.rows.actions import ImportRowsActionType
-
-
 from baserow.contrib.database.api.fields.errors import (
+    ERROR_INVALID_BASEROW_FIELD_NAME,
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
     ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
     ERROR_RESERVED_BASEROW_FIELD_NAME,
-    ERROR_INVALID_BASEROW_FIELD_NAME,
 )
-
 from baserow.contrib.database.api.tables.errors import (
-    ERROR_INVALID_INITIAL_TABLE_DATA,
-    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
     ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+    ERROR_INVALID_INITIAL_TABLE_DATA,
 )
-
+from baserow.contrib.database.db.atomic import read_committed_single_table_transaction
+from baserow.contrib.database.fields.exceptions import (
+    InvalidBaserowFieldName,
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+    ReservedBaserowFieldNameException,
+)
+from baserow.contrib.database.rows.actions import ImportRowsActionType
 from baserow.contrib.database.rows.exceptions import ReportMaxErrorCountExceeded
-from .models import FileImportJob
-from .serializers import (
-    ReportSerializer,
+from baserow.contrib.database.table.actions import CreateTableActionType
+from baserow.contrib.database.table.exceptions import (
+    InitialTableDataDuplicateName,
+    InitialTableDataLimitExceeded,
+    InvalidInitialTableData,
 )
+from baserow.core.action.registries import action_type_registry
+from baserow.core.jobs.registries import JobType
 
+from .models import FileImportJob
+from .serializers import ReportSerializer
 
 BATCH_SIZE = 1024
 

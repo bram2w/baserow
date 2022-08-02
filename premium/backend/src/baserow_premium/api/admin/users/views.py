@@ -1,43 +1,40 @@
 import logging
+
+from django.contrib.auth import get_user_model
 from django.db import transaction
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework.permissions import IsAdminUser
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.status import HTTP_201_CREATED
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework_jwt.views import ImpersonateJSONWebTokenView
-from rest_framework_jwt.serializers import ImpersonateAuthTokenSerializer
 
-from baserow.api.decorators import validate_body, map_exceptions
-from baserow.api.schemas import get_error_schema
-from baserow.api.user.schemas import authenticate_user_schema
-
-from baserow_premium.api.admin.users.errors import (
-    USER_ADMIN_CANNOT_DEACTIVATE_SELF,
-    USER_ADMIN_CANNOT_DELETE_SELF,
-    USER_ADMIN_UNKNOWN_USER,
-)
-from baserow_premium.api.admin.users.serializers import (
-    UserAdminUpdateSerializer,
-    UserAdminResponseSerializer,
-)
 from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
     UserDoesNotExistException,
 )
 from baserow_premium.admin.users.handler import UserAdminHandler
-
-
-from django.contrib.auth import get_user_model
-
+from baserow_premium.api.admin.users.errors import (
+    USER_ADMIN_CANNOT_DEACTIVATE_SELF,
+    USER_ADMIN_CANNOT_DELETE_SELF,
+    USER_ADMIN_UNKNOWN_USER,
+)
+from baserow_premium.api.admin.users.serializers import (
+    UserAdminResponseSerializer,
+    UserAdminUpdateSerializer,
+)
 from baserow_premium.api.admin.views import AdminListingView
 from baserow_premium.license.handler import check_active_premium_license
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED
+from rest_framework.views import APIView
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.serializers import ImpersonateAuthTokenSerializer
+from rest_framework_jwt.views import ImpersonateJSONWebTokenView
+
+from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.schemas import get_error_schema
+from baserow.api.user.schemas import authenticate_user_schema
 
 from .serializers import BaserowImpersonateAuthTokenSerializer
-
 
 logger = logging.getLogger(__name__)
 User = get_user_model()

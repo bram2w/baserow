@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError
 
-
 EMPTY_VALUES = (None, "", b"", [], (), {})
 
 

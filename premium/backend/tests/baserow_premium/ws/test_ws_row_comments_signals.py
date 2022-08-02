@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
-import pytest
-from freezegun import freeze_time
 from django.test.utils import override_settings
 
+import pytest
 from baserow_premium.row_comments.handler import RowCommentHandler
+from freezegun import freeze_time
 
 
 @pytest.mark.django_db(transaction=True)

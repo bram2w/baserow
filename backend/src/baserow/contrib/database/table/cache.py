@@ -15,7 +15,7 @@ When we construct a model we:
 """
 import typing
 import uuid
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.core.cache import caches

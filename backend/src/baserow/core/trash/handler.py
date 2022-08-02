@@ -1,24 +1,24 @@
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 
 from baserow.core.exceptions import (
+    ApplicationDoesNotExist,
     ApplicationNotInGroup,
     GroupDoesNotExist,
-    ApplicationDoesNotExist,
     TrashItemDoesNotExist,
 )
-from baserow.core.models import TrashEntry, Application, Group
+from baserow.core.models import Application, Group, TrashEntry
 from baserow.core.trash.exceptions import (
+    CannotDeleteAlreadyDeletedItem,
     CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
-    CannotDeleteAlreadyDeletedItem,
 )
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 from baserow.core.trash.signals import permanently_deleted

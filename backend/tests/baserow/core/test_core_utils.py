@@ -1,26 +1,26 @@
-import pytest
-
 from io import BytesIO
 from unittest.mock import MagicMock
 
+import pytest
+
 from baserow.core.utils import (
-    extract_allowed,
-    set_allowed_attrs,
-    to_pascal_case,
-    to_snake_case,
-    remove_special_characters,
-    dict_to_object,
-    random_string,
-    sha256_hash,
-    stream_size,
-    truncate_middle,
-    split_comma_separated_string,
-    remove_invalid_surrogate_characters,
-    find_unused_name,
-    grouper,
-    Progress,
     ChildProgressBuilder,
     MirrorDict,
+    Progress,
+    dict_to_object,
+    extract_allowed,
+    find_unused_name,
+    grouper,
+    random_string,
+    remove_invalid_surrogate_characters,
+    remove_special_characters,
+    set_allowed_attrs,
+    sha256_hash,
+    split_comma_separated_string,
+    stream_size,
+    to_pascal_case,
+    to_snake_case,
+    truncate_middle,
 )
 
 

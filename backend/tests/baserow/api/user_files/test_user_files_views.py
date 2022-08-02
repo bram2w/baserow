@@ -1,13 +1,14 @@
 from unittest.mock import patch
 
-import httpretty as httpretty
-import pytest
-from PIL import Image
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import reverse
+
+import httpretty as httpretty
+import pytest
 from freezegun import freeze_time
+from PIL import Image
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,

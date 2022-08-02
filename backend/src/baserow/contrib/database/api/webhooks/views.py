@@ -1,12 +1,12 @@
 from django.db import transaction
+
+from advocate import UnacceptableAddressException
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from requests import RequestException
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from requests import RequestException
-from advocate import UnacceptableAddressException
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
@@ -16,21 +16,22 @@ from baserow.contrib.database.api.webhooks.errors import (
     ERROR_TABLE_WEBHOOK_DOES_NOT_EXIST,
     ERROR_TABLE_WEBHOOK_MAX_LIMIT_EXCEEDED,
 )
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.webhooks.exceptions import (
     TableWebhookDoesNotExist,
     TableWebhookMaxAllowedCountExceeded,
 )
 from baserow.contrib.database.webhooks.handler import WebhookHandler
 from baserow.contrib.database.webhooks.models import TableWebhook
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInGroup
+
 from .serializers import (
     TableWebhookCreateRequestSerializer,
     TableWebhookSerializer,
-    TableWebhookUpdateRequestSerializer,
     TableWebhookTestCallRequestSerializer,
     TableWebhookTestCallResponseSerializer,
+    TableWebhookUpdateRequestSerializer,
 )
 
 

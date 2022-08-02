@@ -1,36 +1,36 @@
 import logging
 import traceback
-
 from datetime import datetime
 from decimal import Decimal
-from pytz import UTC, timezone as pytz_timezone
 
 from django.core.exceptions import ValidationError
 
+from pytz import UTC
+from pytz import timezone as pytz_timezone
+
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import (
-    TextField,
-    LongTextField,
-    URLField,
-    NumberField,
     NUMBER_MAX_DECIMAL_PLACES,
-    RatingField,
     BooleanField,
-    DateField,
-    LastModifiedField,
     CreatedOnField,
-    LinkRowField,
+    DateField,
     EmailField,
     FileField,
-    SingleSelectField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
     MultipleSelectField,
+    NumberField,
     PhoneNumberField,
+    RatingField,
+    SingleSelectField,
+    TextField,
+    URLField,
 )
+from baserow.contrib.database.fields.registries import field_type_registry
 
 from .helpers import import_airtable_date_type_options, set_select_options_on_field
 from .registry import AirtableColumnType
-
 
 logger = logging.getLogger(__name__)
 

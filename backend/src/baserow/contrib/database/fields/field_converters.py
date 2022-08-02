@@ -1,22 +1,23 @@
 from dataclasses import dataclass
-from psycopg2 import sql
 
 from django.db import models, transaction
+
+from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import (
     lenient_schema_editor,
     safe_django_schema_editor,
 )
 
-from .registries import FieldConverter, field_type_registry
 from .models import (
-    LinkRowField,
     FileField,
-    MultipleSelectField,
-    SingleSelectField,
-    SelectOption,
     FormulaField,
+    LinkRowField,
+    MultipleSelectField,
+    SelectOption,
+    SingleSelectField,
 )
+from .registries import FieldConverter, field_type_registry
 
 
 class RecreateFieldConverter(FieldConverter):

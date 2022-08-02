@@ -1,8 +1,9 @@
 from django.db import transaction
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,27 +12,31 @@ from baserow.api.applications.errors import (
     ERROR_APPLICATION_DOES_NOT_EXIST,
     ERROR_APPLICATION_NOT_IN_GROUP,
 )
-from baserow.api.decorators import validate_body, map_exceptions
-from baserow.api.errors import (
-    ERROR_USER_NOT_IN_GROUP,
-    ERROR_GROUP_DOES_NOT_EXIST,
-)
+from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
-    get_error_schema,
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    get_error_schema,
 )
-from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
-from baserow.core.exceptions import (
-    UserNotInGroup,
-    GroupDoesNotExist,
-    ApplicationDoesNotExist,
-    ApplicationNotInGroup,
+from baserow.api.utils import DiscriminatorMappingSerializer
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import (
+    CreateApplicationActionType,
+    DeleteApplicationActionType,
+    OrderApplicationsActionType,
+    UpdateApplicationActionType,
 )
 from baserow.core.db import specific_iterator
+from baserow.core.exceptions import (
+    ApplicationDoesNotExist,
+    ApplicationNotInGroup,
+    GroupDoesNotExist,
+    UserNotInGroup,
+)
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
@@ -40,20 +45,14 @@ from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
+
 from .serializers import (
-    ApplicationSerializer,
     ApplicationCreateSerializer,
+    ApplicationSerializer,
     ApplicationUpdateSerializer,
     OrderApplicationsSerializer,
     get_application_serializer,
 )
-from baserow.core.actions import (
-    CreateApplicationActionType,
-    DeleteApplicationActionType,
-    UpdateApplicationActionType,
-    OrderApplicationsActionType,
-)
-from baserow.core.action.registries import action_type_registry
 
 application_type_serializers = {
     application_type.type: (

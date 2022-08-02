@@ -1,9 +1,10 @@
 from io import BytesIO
 
-import pytest
 from django.apps.registry import apps
 from django.db import connections
 from django.shortcuts import reverse
+
+import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.dependencies.exceptions import (
@@ -14,7 +15,7 @@ from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotProvided,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
+from baserow.contrib.database.fields.models import Field, LinkRowField, TextField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler

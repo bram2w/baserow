@@ -1,8 +1,8 @@
-from typing import cast, Optional
+from typing import Optional, cast
 
 from rest_framework import serializers
 
-from baserow.core.action.registries import ActionScopeType, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, ActionScopeType
 
 
 class RootActionScopeType(ActionScopeType):

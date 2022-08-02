@@ -1,12 +1,11 @@
-import pytest
 from datetime import datetime
-from freezegun import freeze_time
 
 from django.test.utils import override_settings
-from django.utils.timezone import utc, make_aware
+from django.utils.timezone import make_aware, utc
 
+import pytest
 from baserow_premium.license.models import License
-
+from freezegun import freeze_time
 
 VALID_ONE_SEAT_LICENSE = (
     # id: "1", instance_id: "1"

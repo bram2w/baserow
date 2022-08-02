@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
-from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.table.handler import TableHandler
+from baserow_premium.license.handler import check_active_premium_license_for_group
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.models import RowComment
 from baserow_premium.row_comments.signals import row_comment_created
-from baserow_premium.license.handler import check_active_premium_license_for_group
+
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.handler import TableHandler
 
 User = get_user_model()
 

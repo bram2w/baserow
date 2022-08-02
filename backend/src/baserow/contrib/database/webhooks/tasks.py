@@ -33,8 +33,9 @@ def call_webhook(
     """
 
     from django.utils import timezone
-    from requests import RequestException
+
     from advocate import UnacceptableAddressException
+    from requests import RequestException
 
     from .handler import WebhookHandler
     from .models import TableWebhook, TableWebhookCall

@@ -3,6 +3,7 @@ import math
 import secrets
 
 from django.db import migrations, models
+
 from tqdm import tqdm
 
 

@@ -1,11 +1,11 @@
-import pytest
-
 from django.test.utils import override_settings
+
+import pytest
 
 from baserow.contrib.database.views.actions import (
     CreateDecorationActionType,
-    UpdateDecorationActionType,
     DeleteDecorationActionType,
+    UpdateDecorationActionType,
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import ViewDecoration

@@ -4,7 +4,7 @@
 # which makes it of course more robust. This migration checks all the through tables to
 # see if some names are incorrect and if so they will be corrected.
 
-from django.db import migrations, connection
+from django.db import connection, migrations
 
 
 def rename_sql(schema_editor, table, old_name, new_name):

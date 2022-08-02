@@ -1,8 +1,8 @@
-import pytest
-
-from pytz import UTC
 from datetime import datetime
+
+import pytest
 from freezegun import freeze_time
+from pytz import UTC
 
 from baserow.contrib.database.fields.models import FormulaField, TextField
 from baserow.core.registries import application_type_registry

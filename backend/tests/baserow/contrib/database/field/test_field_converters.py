@@ -1,7 +1,7 @@
 import pytest
 
-from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.field_converters import LinkRowFieldConverter
+from baserow.contrib.database.fields.models import LinkRowField
 
 
 @pytest.mark.django_db

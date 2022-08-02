@@ -1,20 +1,20 @@
-from typing import Optional, Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from django.dispatch import receiver
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
     RowSerializer,
+    get_row_serializer_class,
 )
 from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.handler import PublicViewRows, ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.ws.rows.signals import (
-    before_rows_update,
     RealtimeRowMessages,
+    before_rows_update,
 )
 from baserow.ws.registries import page_registry
 

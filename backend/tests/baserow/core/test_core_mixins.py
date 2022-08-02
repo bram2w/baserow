@@ -1,6 +1,7 @@
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+
+import pytest
 
 from baserow.contrib.database.fields.models import get_default_field_content_type
 from baserow.core.mixins import PolymorphicContentTypeMixin

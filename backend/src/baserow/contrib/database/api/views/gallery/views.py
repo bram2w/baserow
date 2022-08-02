@@ -1,4 +1,5 @@
 from django.db import transaction
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny
@@ -6,57 +7,55 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, allowed_includes
+from baserow.api.decorators import allowed_includes, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.contrib.database.api.rows.serializers import (
-    get_example_row_serializer_class,
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FILTER_FIELD_NOT_FOUND,
+    ERROR_ORDER_BY_FIELD_NOT_FOUND,
+    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
 )
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
     RowSerializer,
+    get_example_row_serializer_class,
+    get_row_serializer_class,
+)
+from baserow.contrib.database.api.views.errors import (
+    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
+    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
 )
 from baserow.contrib.database.api.views.gallery.serializers import (
     GalleryViewFieldOptionsSerializer,
 )
 from baserow.contrib.database.api.views.serializers import FieldOptionsField
+from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotFound,
-    FilterFieldNotFound,
     FieldDoesNotExist,
+    FilterFieldNotFound,
+    OrderByFieldNotFound,
     OrderByFieldNotPossible,
 )
 from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_OR,
     FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
 )
 from baserow.contrib.database.views.exceptions import (
-    ViewDoesNotExist,
     NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryView
 from baserow.contrib.database.views.registries import (
-    view_type_registry,
     view_filter_type_registry,
+    view_type_registry,
 )
 from baserow.core.exceptions import UserNotInGroup
 
-from baserow.contrib.database.api.views.errors import (
-    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
-    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
-    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
-)
-from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
-from baserow.contrib.database.api.fields.errors import (
-    ERROR_ORDER_BY_FIELD_NOT_FOUND,
-    ERROR_FILTER_FIELD_NOT_FOUND,
-    ERROR_FIELD_DOES_NOT_EXIST,
-    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
-)
 from .errors import ERROR_GALLERY_DOES_NOT_EXIST
 from .pagination import GalleryLimitOffsetPagination
 

@@ -1,52 +1,52 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
-from math import floor, ceil
+from math import ceil, floor
+
+from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db.models import DateTimeField, IntegerField, Q
+from django.db.models.functions import Cast, Length
 
 from dateutil import parser
 from dateutil.parser import ParserError
-from django.contrib.postgres.aggregates.general import ArrayAgg
-from django.db.models import Q, IntegerField, DateTimeField
-from django.db.models.functions import Cast, Length
-from pytz import timezone, all_timezones
 from dateutil.relativedelta import relativedelta
+from pytz import all_timezones, timezone
 
 from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
     AnnotatedQ,
     FilterBuilder,
-    FILTER_TYPE_AND,
-)
-from baserow.contrib.database.fields.field_filters import (
-    filename_contains_filter,
     OptionallyAnnotatedQ,
+    filename_contains_filter,
 )
 from baserow.contrib.database.fields.field_types import (
-    CreatedOnFieldType,
-    MultipleSelectFieldType,
-    TextFieldType,
-    LongTextFieldType,
-    URLFieldType,
-    NumberFieldType,
-    RatingFieldType,
-    DateFieldType,
-    LastModifiedFieldType,
-    LinkRowFieldType,
     BooleanFieldType,
+    CreatedOnFieldType,
+    DateFieldType,
     EmailFieldType,
     FileFieldType,
-    SingleSelectFieldType,
-    PhoneNumberFieldType,
     FormulaFieldType,
+    LastModifiedFieldType,
+    LinkRowFieldType,
+    LongTextFieldType,
+    MultipleSelectFieldType,
+    NumberFieldType,
+    PhoneNumberFieldType,
+    RatingFieldType,
+    SingleSelectFieldType,
+    TextFieldType,
+    URLFieldType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.core.expressions import Timezone
-from .registries import ViewFilterType
 from baserow.contrib.database.formula import (
-    BaserowFormulaTextType,
-    BaserowFormulaNumberType,
+    BaserowFormulaBooleanType,
     BaserowFormulaCharType,
     BaserowFormulaDateType,
-    BaserowFormulaBooleanType,
+    BaserowFormulaNumberType,
+    BaserowFormulaTextType,
 )
+from baserow.core.expressions import Timezone
+
+from .registries import ViewFilterType
 
 
 class NotViewFilterTypeMixin:

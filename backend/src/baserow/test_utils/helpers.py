@@ -3,11 +3,12 @@ from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Type
 
-import psycopg2
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
-from django.utils.dateparse import parse_datetime, parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import make_aware, utc
+
+import psycopg2
 from freezegun import freeze_time
 
 from baserow.contrib.database.fields.field_helpers import (

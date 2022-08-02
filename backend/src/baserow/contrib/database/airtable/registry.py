@@ -1,9 +1,9 @@
-from typing import Dict, Any, Union, Tuple
+from typing import Any, Dict, Tuple, Union
 
 from pytz import BaseTzInfo
 
-from baserow.core.registry import Instance, Registry
 from baserow.contrib.database.fields.models import Field
+from baserow.core.registry import Instance, Registry
 
 
 class AirtableColumnType(Instance):

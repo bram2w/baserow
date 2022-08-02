@@ -4,10 +4,10 @@ import pytest
 from rest_framework import serializers
 
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
-    get_example_row_serializer_class,
-    remap_serialized_row_to_user_field_names,
     RowSerializer,
+    get_example_row_serializer_class,
+    get_row_serializer_class,
+    remap_serialized_row_to_user_field_names,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
