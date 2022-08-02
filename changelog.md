@@ -65,6 +65,7 @@ For example:
 * Show modal when the users clicks on a deactivated premium features. [#1066](https://gitlab.com/bramw/baserow/-/issues/1066)
 * Replaced all custom alert code with `Alert` component [#1016](https://gitlab.com/bramw/baserow/-/issues/1016)
 * Add ability to create and restore snapshots. [#141](https://gitlab.com/bramw/baserow/-/issues/141)
+* When viewing an expanded row switch to a unique URL which links to that row. [#938](https://gitlab.com/bramw/baserow/-/issues/938)
 
 ### Bug Fixes
 

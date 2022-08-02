@@ -1,20 +1,25 @@
 <template>
-  <Table
-    :database="database"
-    :table="table"
-    :fields="fields"
-    :views="views"
-    :view="view"
-    :table-loading="tableLoading"
-    store-prefix="page/"
-    @selected-view="selectedView"
-  ></Table>
+  <div>
+    <Table
+      :database="database"
+      :table="table"
+      :fields="fields"
+      :views="views"
+      :view="view"
+      :row="row"
+      :table-loading="tableLoading"
+      store-prefix="page/"
+      @selected-view="selectedView"
+      @selected-row="selectRow"
+    ></Table>
+  </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 
 import Table from '@baserow/modules/database/components/table/Table'
+import RowService from '@baserow/modules/database/services/row'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 
 /**
@@ -49,7 +54,7 @@ export default {
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
     let viewId = params.viewId ? parseInt(params.viewId) : null
-    const data = {}
+    const data = { row: null }
 
     // Try to find the table in the already fetched applications by the
     // groupsAndApplications middleware and select that one. By selecting the table, the
@@ -110,6 +115,18 @@ export default {
       }
     }
 
+    if (params.rowId) {
+      try {
+        const { data: rowData } = await RowService(app.$client).get(
+          tableId,
+          params.rowId
+        )
+        data.row = rowData
+      } catch (e) {
+        return error({ statusCode: 404, message: 'Row not found.' })
+      }
+    }
+
     return data
   },
   head() {
@@ -155,6 +172,25 @@ export default {
           viewId: view.id,
         },
       })
+    },
+    selectRow(rowId) {
+      if (
+        this.$route.params.rowId !== undefined &&
+        this.$route.params.rowId === rowId
+      ) {
+        return
+      }
+
+      const newPath = this.$nuxt.$router.resolve({
+        name: rowId ? 'database-table-row' : 'database-table',
+        params: {
+          databaseId: this.database.id,
+          tableId: this.table.id,
+          viewId: this.view?.id,
+          rowId,
+        },
+      }).href
+      history.replaceState({}, null, newPath)
     },
   },
 }

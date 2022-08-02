@@ -40,7 +40,7 @@
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
-      @edit-modal="$refs.rowEditModal.show($event.id)"
+      @edit-modal="openRowEditModal($event.id)"
       @scroll="scroll($event.pixelY, 0)"
     >
       <template #foot>
@@ -89,7 +89,7 @@
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
-      @edit-modal="$refs.rowEditModal.show($event.id)"
+      @edit-modal="openRowEditModal($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
       <template #foot>
@@ -169,10 +169,7 @@
         <li>
           <a
             @click="
-              ;[
-                $refs.rowEditModal.show(selectedRow.id),
-                $refs.rowContext.hide(),
-              ]
+              ;[openRowEditModal(selectedRow.id), $refs.rowContext.hide()]
             "
           >
             <i class="context__menu-icon fas fa-fw fa-expand"></i>
@@ -227,6 +224,8 @@ import {
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import { isElement } from '@baserow/modules/core/utils/dom'
 import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
+import { populateRow } from '@baserow/modules/database/store/view/grid'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'GridView',
@@ -252,6 +251,10 @@ export default {
     },
     database: {
       type: Object,
+      required: true,
+    },
+    row: {
+      validator: (prop) => typeof prop === 'object' || prop === null,
       required: true,
     },
     readOnly: {
@@ -360,6 +363,11 @@ export default {
       this.storePrefix + 'view/grid/fetchAllFieldAggregationData',
       { view: this.view }
     )
+
+    if (this.row !== null) {
+      const rowClone = populateRow(clone(this.row))
+      this.$refs.rowEditModal.show(this.row.id, rowClone)
+    }
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$el.resizeEvent)
@@ -616,6 +624,8 @@ export default {
      * must be deleted.
      */
     rowEditModalHidden({ row }) {
+      this.$emit('selected-row', undefined)
+
       // It could be that the row is not in the buffer anymore and in that case we also
       // don't need to refresh the row.
       if (
@@ -631,6 +641,15 @@ export default {
         row,
         getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
       })
+    },
+    /**
+     * When the row edit modal is opened we notifiy
+     * the Table component that a new row has been selected,
+     * such that we can update the path to include the row id.
+     */
+    openRowEditModal(rowId) {
+      this.$refs.rowEditModal.show(rowId)
+      this.$emit('selected-row', rowId)
     },
     /**
      * When a cell is selected we want to make sure it is visible in the viewport, so

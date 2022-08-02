@@ -139,9 +139,11 @@
         :table="table"
         :view="view"
         :fields="fields"
+        :row="row"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @refresh="refresh"
+        @selected-row="$emit('selected-row', $event)"
       />
       <div v-if="viewLoading" class="loading-overlay"></div>
     </div>
@@ -205,6 +207,11 @@ export default {
     view: {
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === undefined,
+    },
+    row: {
+      type: Object,
+      required: false,
+      default: null,
     },
     tableLoading: {
       type: Boolean,
