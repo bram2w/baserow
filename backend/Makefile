@@ -9,6 +9,7 @@ lint:
 	flake8 src tests ../premium/backend && \
 	black . ../premium/backend --extend-exclude='/generated/' --check && \
 	isort --check --skip generated src tests ../premium/backend && \
+	./baserow makemigrations --dry-run --check && \
 	bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ \
 	|| exit;
 
