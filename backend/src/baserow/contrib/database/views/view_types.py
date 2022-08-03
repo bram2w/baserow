@@ -295,13 +295,15 @@ class GridViewType(ViewType):
 
     def get_hidden_fields(
         self,
-        view: View,
+        view: GridView,
         field_ids_to_check: Optional[List[int]] = None,
     ) -> Set[int]:
-        queryset = view.get_field_options(create_if_missing=False).filter(hidden=True)
+        field_options = [o for o in view.gridviewfieldoptions_set.all() if o.hidden]
         if field_ids_to_check is not None:
-            queryset = queryset.filter(field_id__in=field_ids_to_check)
-        return set(queryset.values_list("field_id", flat=True))
+            field_options = [
+                o for o in field_options if o.field_id in field_ids_to_check
+            ]
+        return {o.field_id for o in field_options}
 
 
 class GalleryViewType(ViewType):
@@ -468,18 +470,30 @@ class GalleryViewType(ViewType):
 
     def get_hidden_fields(
         self,
-        view: View,
+        view: GalleryView,
         field_ids_to_check: Optional[List[int]] = None,
     ) -> Set[int]:
-        field_queryset = view.table.field_set
+        hidden_field_ids = set()
+        fields = view.table.field_set.all()
+        field_options = view.galleryviewfieldoptions_set.all()
+
         if field_ids_to_check is not None:
-            field_queryset = field_queryset.filter(id__in=field_ids_to_check)
-        return set(
-            field_queryset.exclude(
-                galleryviewfieldoptions__hidden=False,
-                galleryviewfieldoptions__gallery_view_id=view.id,
-            ).values_list("id", flat=True)
-        )
+            fields = [f for f in fields if f.id in field_ids_to_check]
+
+        for field in fields:
+
+            # Find corresponding field option
+            field_option_matching = None
+            for field_option in field_options:
+                if field_option.field_id == field.id:
+                    field_option_matching = field_option
+
+            # A field is considered hidden, if it is explicitly hidden
+            # or if the field options don't exist
+            if field_option_matching is None or field_option_matching.hidden:
+                hidden_field_ids.add(field.id)
+
+        return hidden_field_ids
 
 
 class FormViewType(ViewType):

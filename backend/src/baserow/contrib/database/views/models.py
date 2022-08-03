@@ -386,6 +386,11 @@ class GridView(View):
         ID = "id"
         count = "count"
 
+    # `field_options` is a very misleading name
+    # it should probably be more like `fields_with_field_options`
+    # since this field will return instances of `Field` not of
+    # `GridViewFieldOptions`
+    # We might want to change this in the future.
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
     row_identifier_type = models.CharField(
         choices=RowIdentifierTypes.choices, default="id", max_length=10
