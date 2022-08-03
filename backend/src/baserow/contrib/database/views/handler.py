@@ -1827,7 +1827,7 @@ class ViewHandler:
         """
 
         view_type = view_type_registry.get_by_model(view.specific_class)
-        hidden_field_ids = view_type.get_hidden_fields(view)
+        hidden_field_ids = view_type.get_hidden_fields(view.specific)
         restricted_rows = []
         for serialized_row in serialized_rows:
             if allowed_row_ids is None or serialized_row["id"] in allowed_row_ids:

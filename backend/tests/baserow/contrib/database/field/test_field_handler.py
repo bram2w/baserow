@@ -3,7 +3,8 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.conf import settings
-from django.db import models
+from django.db import connection, models
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
@@ -1212,3 +1213,57 @@ def test_get_unique_row_values_single_select(data_fixture):
     # `get_alter_column_prepare_old_value` method is being used correctly.
     values = list(handler.get_unique_row_values(field=single_select_field, limit=10))
     assert values == ["Option 2", "Option 1"]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_when_public_field_updated_number_of_queries_does_not_increase_with_amount_of_grid_views(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table, order=0, name="b")
+
+    view_one = data_fixture.create_grid_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with CaptureQueriesContext(connection) as captured:
+        FieldHandler().update_field(user, visible_field, name="a")
+
+    view_two = data_fixture.create_grid_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with django_assert_num_queries(len(captured.captured_queries)):
+        FieldHandler().update_field(user, visible_field, name="abc")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_when_public_field_updated_number_of_queries_does_not_increase_with_amount_of_gallery_views(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table, order=0, name="b")
+
+    view_one = data_fixture.create_gallery_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with CaptureQueriesContext(connection) as captured:
+        FieldHandler().update_field(user, visible_field, name="a")
+
+    view_two = data_fixture.create_gallery_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with django_assert_num_queries(len(captured.captured_queries)):
+        FieldHandler().update_field(user, visible_field, name="abc")
