@@ -19,6 +19,9 @@ For example:
 * Fixed a bug when importing Airtable base with a date field less than 1000. [#1046](https://gitlab.com/bramw/baserow/-/issues/1046)
 * Prefetch field options on views that are iterated over on field update realtime events [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
 
+### Refactors
+* Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
+
 ### Breaking Changes
 
 ## Released (2022-07-27 1.11.0)
