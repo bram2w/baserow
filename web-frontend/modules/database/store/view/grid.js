@@ -1641,8 +1641,8 @@ export const actions = {
   ) {
     // If the origin row and field index are not provided, we need to use the
     // head indexes of the multiple select.
-    const rowHeadIndex = rowIndex || getters.getMultiSelectHeadRowIndex
-    const fieldHeadIndex = fieldIndex || getters.getMultiSelectHeadFieldIndex
+    const rowHeadIndex = rowIndex ?? getters.getMultiSelectHeadRowIndex
+    const fieldHeadIndex = fieldIndex ?? getters.getMultiSelectHeadFieldIndex
 
     // Based on the data, we can figure out in which cells we must paste. Here we find
     // the maximum tail indexes.
@@ -2174,6 +2174,8 @@ export const actions = {
       fields,
       getScrollTop,
       data,
+      rowIndex: minRowIndex,
+      fieldIndex: minFieldIndex,
     })
   },
 }
