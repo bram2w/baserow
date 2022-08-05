@@ -59,6 +59,7 @@ from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.utils import list_to_comma_separated_string
 
 from .constants import UPSERT_OPTION_DICT_KEY
 from .dependencies.exceptions import (
@@ -369,9 +370,9 @@ class NumberFieldType(FieldType):
             }
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
 
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
@@ -668,12 +669,21 @@ class DateFieldType(FieldType):
 
         if type(value) == str:
             try:
-                value = parser.parse(value)
-            except ParserError as exc:
-                raise ValidationError(
-                    "The provided string could not converted to a date.",
-                    code="invalid",
-                ) from exc
+                # Try first to parse isodate
+                value = parser.isoparse(value)
+            except Exception:
+                try:
+                    if instance.date_format == "EU":
+                        value = parser.parse(value, dayfirst=True)
+                    elif instance.date_format == "ISO":
+                        value = parser.parse(value, yearfirst=True)
+                    else:
+                        value = parser.parse(value)
+                except ParserError as exc:
+                    raise ValidationError(
+                        "The provided string could not converted to a date.",
+                        code="invalid",
+                    ) from exc
 
         if type(value) == date:
             value = make_aware(datetime(value.year, value.month, value.day), utc)
@@ -687,9 +697,10 @@ class DateFieldType(FieldType):
             code="invalid",
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
+
         python_format = field_object["field"].get_python_format()
         return value.strftime(python_format)
 
@@ -852,9 +863,10 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     model_field_kwargs = {}
     populate_from_field = None
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
+
         python_format = field_object["field"].get_python_format()
         field = field_object["field"]
         field_timezone = timezone(field.get_timezone())
@@ -1062,13 +1074,18 @@ class LinkRowFieldType(FieldType):
             models.Prefetch(name, queryset=related_queryset)
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         def map_to_export_value(inner_value, inner_field_object):
             return inner_field_object["type"].get_export_value(
-                inner_value, inner_field_object
+                inner_value, inner_field_object, rich_value=rich_value
             )
 
-        return self._get_and_map_pk_values(field_object, value, map_to_export_value)
+        result = self._get_and_map_pk_values(field_object, value, map_to_export_value)
+
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -1096,6 +1113,24 @@ class LinkRowFieldType(FieldType):
             )
         )
 
+    def _get_related_model_and_primary_field(self, instance):
+        """
+        Returns related model and primary field.
+        """
+
+        if hasattr(instance, "_related_model"):
+            related_model = instance._related_model
+        else:
+            related_model = instance.link_row_table.get_model()
+
+        primary_field = next(
+            object
+            for object in related_model._field_objects.values()
+            if object["field"].primary
+        )
+
+        return related_model, primary_field
+
     def _get_and_map_pk_values(
         self, field_object, value, map_func: Callable[[Any, Dict[str, Any]], Any]
     ):
@@ -1105,7 +1140,7 @@ class LinkRowFieldType(FieldType):
         the provided map_func function.
 
         For example, Table A has Field 1 which links to Table B. Table B has a text
-        primary key column. This function takes the value for a single row of of
+        primary key column. This function takes the value for a single row of
         Field 1, which is a number of related rows in Table B. It then gets
         the primary key column values for those related rows in Table B and applies
         map_func to each individual value. Finally it returns those mapped values as a
@@ -1119,12 +1154,8 @@ class LinkRowFieldType(FieldType):
 
         instance = field_object["field"]
         if hasattr(instance, "_related_model"):
-            related_model = instance._related_model
-            primary_field = next(
-                object
-                for object in related_model._field_objects.values()
-                if object["field"].primary
-            )
+            _, primary_field = self._get_related_model_and_primary_field(instance)
+
             if primary_field:
                 primary_field_name = primary_field["name"]
                 primary_field_values = []
@@ -1264,7 +1295,7 @@ class LinkRowFieldType(FieldType):
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
         # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because everytime a table model is generated, it will
+        # can cause a memory leak because every time a table model is generated, it will
         # register new pending operations.
         apps = model._meta.apps
         apps.do_pending_operations(model)
@@ -1797,7 +1828,7 @@ class FileFieldType(FieldType):
             **{"many": True, "required": False, **kwargs}
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         files = []
         for file in value:
             if "name" in file:
@@ -1805,14 +1836,21 @@ class FileFieldType(FieldType):
                 url = default_storage.url(path)
             else:
                 url = None
+
             files.append(
                 {
                     "visible_name": file["visible_name"],
+                    "name": file["name"],
                     "url": url,
                 }
             )
 
-        return files
+        if rich_value:
+            return [{"visible_name": f["visible_name"], "url": f["url"]} for f in files]
+        else:
+            return list_to_comma_separated_string(
+                [f'{file["visible_name"]} ({file["url"]})' for file in files]
+            )
 
     def get_human_readable_value(self, value, field_object):
         file_names = []
@@ -2078,9 +2116,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             "color is exposed."
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
         return value.value
 
     def get_model_field(self, instance, **kwargs):
@@ -2361,13 +2399,19 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         return sample(set([x.id for x in select_options]), random_choice)
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
-        return [item.value for item in value.all()]
+            return value if rich_value else ""
+
+        result = [item.value for item in value.all()]
+
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
 
     def get_human_readable_value(self, value, field_object):
-        export_value = self.get_export_value(value, field_object)
+        export_value = self.get_export_value(value, field_object, rich_value=True)
 
         return ", ".join(export_value)
 
@@ -2676,7 +2720,9 @@ class FormulaFieldType(ReadOnlyFieldType):
             code="read_only",
         )
 
-    def get_export_value(self, value, field_object) -> BaserowFormulaType:
+    def get_export_value(
+        self, value, field_object, rich_value=False
+    ) -> BaserowFormulaType:
         instance = field_object["field"]
         (
             field_instance,
@@ -2685,6 +2731,7 @@ class FormulaFieldType(ReadOnlyFieldType):
         return field_type.get_export_value(
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
+            rich_value=rich_value,
         )
 
     def contains_query(self, field_name, value, model_field, field: FormulaField):

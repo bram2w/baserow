@@ -3,7 +3,7 @@
     ref="cell"
     class="grid-view__cell grid-field-file__cell"
     :class="{ active: selected }"
-    @drop.prevent="uploadFiles($event)"
+    @drop.prevent="onDrop($event)"
     @dragover.prevent
     @dragenter.prevent="dragEnter($event)"
     @dragleave="dragLeave($event)"
@@ -11,7 +11,7 @@
     <div v-show="dragging" class="grid-field-file__dragging">
       <div>
         <i class="grid-field-file__drop-icon fas fa-cloud-upload-alt"></i>
-        Drop here
+        {{ $t('gridViewFieldFile.dropHere') }}
       </div>
     </div>
     <ul v-if="Array.isArray(value)" class="grid-field-file__list">
@@ -50,7 +50,7 @@
         </a>
         <div v-if="value.length == 0" class="grid-field-file__drop">
           <i class="grid-field-file__drop-icon fas fa-cloud-upload-alt"></i>
-          Drop files here
+          {{ $t('gridViewFieldFile.dropFileHere') }}
         </div>
       </li>
     </ul>
@@ -100,7 +100,13 @@ export default {
      * Method is called when the user drops his files into the field. The files should
      * automatically be uploaded to the user files and added to the field after that.
      */
-    async uploadFiles(event) {
+    async onDrop(event) {
+      const files = [...event.dataTransfer.items].map((item) =>
+        item.getAsFile()
+      )
+      await this.uploadFiles(files)
+    },
+    async uploadFiles(fileArray) {
       if (this.readOnly) {
         return
       }
@@ -111,7 +117,7 @@ export default {
       // select another cell.
       this.$emit('add-keep-alive')
 
-      const files = Array.from(event.dataTransfer.files).map((file) => {
+      const files = fileArray.map((file) => {
         return {
           id: uuid(),
           file,
@@ -232,6 +238,23 @@ export default {
         this.dragging = false
         this.dragTarget = null
       }
+    },
+    onPaste(event) {
+      if (
+        !event.clipboardData.types.includes('text/plain') ||
+        event.clipboardData.getData('text/plain').startsWith('file:///')
+      ) {
+        const { items } = event.clipboardData
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i]
+          if (item.type.includes('image')) {
+            const file = item.getAsFile()
+            this.uploadFiles([file])
+            return true
+          }
+        }
+      }
+      return false
     },
   },
 }

@@ -8,7 +8,6 @@ from baserow.contrib.database.api.export.serializers import (
 from baserow.contrib.database.export.file_writer import FileWriter, QuerysetSerializer
 from baserow.contrib.database.export.registries import TableExporter
 from baserow.contrib.database.views.view_types import GridViewType
-from baserow.core.utils import list_to_comma_separated_string
 
 
 class CsvTableExporter(TableExporter):
@@ -80,31 +79,8 @@ class CsvQuerysetSerializer(QuerysetSerializer):
             data = {}
             for field_serializer in self.field_serializers:
                 field_database_name, _, field_human_value = field_serializer(row)
-                data[field_database_name] = self._value_to_csv(field_human_value)
+                data[field_database_name] = str(field_human_value)
 
             csv_dict_writer.writerow(data)
 
         file_writer.write_rows(self.queryset, write_row)
-
-    def _value_to_csv(self, val):
-        """
-        Converts a python value to a csv suitable value. For lists it joins them with
-        commas, for dicts it turns them into a space separated key=value single column
-        value.
-
-        :param val: A python value to convert to a suitable csv value.
-        :return: A suitable csv value.
-        """
-
-        if isinstance(val, list):
-            return list_to_comma_separated_string(
-                [self._value_to_csv(inner_val) for inner_val in val]
-            )
-        if isinstance(val, dict):
-            return " ".join(
-                [
-                    f"{key}={self._value_to_csv(inner_val)}"
-                    for key, inner_val in val.items()
-                ]
-            )
-        return str(val)

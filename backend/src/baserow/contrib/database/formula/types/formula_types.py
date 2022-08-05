@@ -27,6 +27,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
 )
+from baserow.core.utils import list_to_comma_separated_string
 
 
 class BaserowFormulaTextType(BaserowFormulaValidType):
@@ -265,8 +266,11 @@ class BaserowFormulaDateIntervalType(BaserowFormulaValidType):
             **{"required": required, "allow_null": not required, **kwargs}
         )
 
-    def get_export_value(self, value, field_object) -> Any:
-        return value
+    def get_export_value(self, value, field_object, rich_value=False) -> Any:
+        if rich_value:
+            return value
+        else:
+            return value if value is not None else ""
 
     def contains_query(self, field_name, value, model_field, field):
         return Q()
@@ -275,7 +279,9 @@ class BaserowFormulaDateIntervalType(BaserowFormulaValidType):
         return None
 
     def get_human_readable_value(self, value: Any, field_object) -> str:
-        human_readable_value = self.get_export_value(value, field_object)
+        human_readable_value = self.get_export_value(
+            value, field_object, rich_value=False
+        )
         if human_readable_value is None:
             return ""
         else:
@@ -506,9 +512,9 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
             }
         )
 
-    def get_export_value(self, value, field_object) -> Any:
+    def get_export_value(self, value, field_object, rich_value=False) -> Any:
         if value is None:
-            return []
+            return [] if rich_value else ""
 
         field_instance, field_type = self.sub_type.get_baserow_field_instance_and_type()
         field_obj = {
@@ -517,10 +523,17 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
             "name": field_object["name"],
         }
 
-        return self._map_safely_across_lookup_json_value_list(
-            lambda safe_value: field_type.get_export_value(safe_value, field_obj),
+        result = self._map_safely_across_lookup_json_value_list(
+            lambda safe_value: field_type.get_export_value(
+                safe_value, field_obj, rich_value=rich_value
+            ),
             value,
         )
+
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
 
     def contains_query(self, field_name, value, model_field, field):
         return Q()
@@ -600,9 +613,9 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         instance, field_type = super().get_baserow_field_instance_and_type()
         return field_type.get_response_serializer_field(instance, **kwargs)
 
-    def get_export_value(self, value, field_object) -> Any:
+    def get_export_value(self, value, field_object, rich_value=False) -> Any:
         if value is None:
-            return value
+            return value if rich_value else ""
         return value["value"]
 
     def contains_query(self, field_name, value, model_field, field):
@@ -621,7 +634,7 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
     def get_human_readable_value(self, value, field_object) -> str:
         if value is None:
             return ""
-        return self.get_export_value(value, field_object)
+        return self.get_export_value(value, field_object, rich_value=False)
 
     def cast_to_text(
         self,

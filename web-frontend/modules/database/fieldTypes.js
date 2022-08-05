@@ -322,11 +322,30 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Some fields need two representations: a simple textual one returned by
+   * `.prepareValueForCopy()` but also a rich representation in json to avoid data
+   * loss while copying. For example: a select field can have multiple options with the
+   * same name. If we copy just text, we'll loose which option it was before if there
+   * are duplicate name but with the rich version we can restore the exact same data.
+   * The value returned by this method is then copied in a specific clipboard buffer to
+   * avoid messing up with the text buffer. The returned value must be json
+   * serializable.
+   * This method don't have to be redefined and return `prepareValueForCopy()` value
+   * by default.
+   */
+  prepareRichValueForCopy(field, value) {
+    return this.prepareValueForCopy(field, value)
+  }
+
+  /**
    * This hook is called before the field's value is overwritten by the clipboard
    * data. That data might needs to be prepared so that the field accepts it.
-   * By default the text value if the clipboard data is used.
+   * By default the input value is returned as is. You can also use the
+   * `richClipboardData` parameter to restore a field without data loss. Using this
+   * parameter only makes sense if you've also defined a specific
+   * `.prepareRichValueForCopy()` method that return this rich value.
    */
-  prepareValueForPaste(field, clipboardData) {
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
     return clipboardData
   }
 
@@ -742,26 +761,65 @@ export class LinkRowFieldType extends FieldType {
     return false
   }
 
-  prepareValueForCopy(field, value) {
-    return JSON.stringify({
-      tableId: field.link_row_table,
-      value,
+  /**
+   * The structure for updating is slightly different than what we need for displaying
+   * the value because the display value does not have to be included. Here we convert
+   * the array[object] structure to an array[id] structure.
+   */
+  prepareValueForUpdate(field, value) {
+    return value.map((item) => {
+      if (typeof item === 'object') {
+        return item.id === null ? item.value : item.id
+      } else {
+        return item
+      }
     })
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    let values
+  prepareValueForCopy(field, value) {
+    if (!Array.isArray(value)) {
+      return ''
+    }
 
-    try {
-      values = JSON.parse(clipboardData)
-    } catch (SyntaxError) {
+    const nameList = value.map(({ value }) => value)
+    // Use papa to generate a CSV string
+    return this.app.$papa.arrayToString(nameList)
+  }
+
+  prepareRichValueForCopy(field, value) {
+    return {
+      tableId: field.link_row_table,
+      value,
+    }
+  }
+
+  checkRichValueIsCompatible(value) {
+    return (
+      value === null ||
+      (typeof value === 'object' &&
+        Object.prototype.hasOwnProperty.call(value, 'tableId') &&
+        Object.prototype.hasOwnProperty.call(value, 'value') &&
+        value.value.every(
+          (row) =>
+            Object.prototype.hasOwnProperty.call(row, 'id') &&
+            Object.prototype.hasOwnProperty.call(row, 'value')
+        ))
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (
+      this.checkRichValueIsCompatible(richClipboardData) &&
+      field.link_row_table === richClipboardData.tableId
+    ) {
+      if (richClipboardData === null) {
+        return []
+      }
+      return richClipboardData.value
+    } else {
+      // No fallback to text for now
       return []
     }
-
-    if (field.link_row_table === values.tableId) {
-      return values.value
-    }
-    return []
   }
 
   toHumanReadableString(field, value) {
@@ -769,15 +827,6 @@ export class LinkRowFieldType extends FieldType {
       return value.map((link) => link.value).join(', ')
     }
     return ''
-  }
-
-  /**
-   * The structure for updating is slightly different than what we need for displaying
-   * the value because the display value does not have to be included. Here we convert
-   * the array[object] structure to an array[id] structure.
-   */
-  prepareValueForUpdate(field, value) {
-    return value.map((item) => (typeof item === 'object' ? item.id : item))
   }
 
   /**
@@ -1315,6 +1364,10 @@ class BaseDateFieldType extends FieldType {
     return this.toHumanReadableString(field, value)
   }
 
+  prepareRichValueForCopy(field, value) {
+    return value
+  }
+
   /**
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
@@ -1707,6 +1760,8 @@ export class EmailFieldType extends FieldType {
 }
 
 export class FileFieldType extends FieldType {
+  fileRegex = /^(.+\.[^\s]+) \(http[^)]+\/([^\s]+.[^\s]+)\)$/
+
   static getType() {
     return 'file'
   }
@@ -1745,28 +1800,54 @@ export class FileFieldType extends FieldType {
   }
 
   prepareValueForCopy(field, value) {
-    return JSON.stringify(value)
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    return this.app.$papa.arrayToString(
+      value.map(
+        ({ url, visible_name: visibleName }) => `${visibleName} (${url})`
+      )
+    )
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    let value
+  prepareRichValueForCopy(field, value) {
+    return value
+  }
 
-    try {
-      value = JSON.parse(clipboardData)
-    } catch (SyntaxError) {
-      return []
-    }
+  checkRichValueIsCompatible(values) {
+    return (
+      Array.isArray(values) &&
+      values.every(
+        (value) => !Object.prototype.hasOwnProperty.call(value, 'name')
+      )
+    )
+  }
 
-    if (!Array.isArray(value)) {
-      return []
-    }
-    // Each object should at least have the file name as property.
-    for (let i = 0; i < value.length; i++) {
-      if (!Object.prototype.hasOwnProperty.call(value[i], 'name')) {
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      return richClipboardData
+    } else {
+      try {
+        const files = this.app.$papa.stringToArray(clipboardData)
+        return files
+          .map((strValue) => {
+            // Try to match the expected format
+            const matches = strValue.match(this.fileRegex)
+            if (matches) {
+              return {
+                name: matches[2],
+                visible_name: matches[1],
+              }
+            } else {
+              return null
+            }
+          })
+          .filter((v) => v)
+      } catch {
         return []
       }
     }
-    return value
   }
 
   getEmptyValue(field) {
@@ -1826,6 +1907,10 @@ export class FileFieldType extends FieldType {
 
   shouldFetchFieldSelectOptions() {
     return false
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -1894,6 +1979,13 @@ export class SingleSelectFieldType extends FieldType {
     return value.value
   }
 
+  prepareRichValueForCopy(field, value) {
+    if (value === undefined) {
+      return null
+    }
+    return value
+  }
+
   _findOptionWithMatchingId(field, rawTextValue) {
     if (isNumeric(rawTextValue)) {
       const pastedOptionId = parseInt(rawTextValue, 10)
@@ -1909,16 +2001,30 @@ export class SingleSelectFieldType extends FieldType {
     )
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    const rawTextValue = clipboardData
-    if (!rawTextValue) {
-      return null
-    }
-
+  checkRichValueIsCompatible(value) {
     return (
-      this._findOptionWithMatchingId(field, rawTextValue) ||
-      this._findOptionWithMatchingValue(field, rawTextValue)
+      value === null ||
+      (typeof value === 'object' &&
+        Object.prototype.hasOwnProperty.call(value, 'id'))
     )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      if (richClipboardData === null) {
+        return null
+      }
+      return this._findOptionWithMatchingId(field, richClipboardData.id)
+    } else {
+      if (!clipboardData) {
+        return null
+      }
+
+      return (
+        this._findOptionWithMatchingId(field, clipboardData) ||
+        this._findOptionWithMatchingValue(field, clipboardData)
+      )
+    }
   }
 
   toHumanReadableString(field, value) {
@@ -2061,25 +2167,48 @@ export class MultipleSelectFieldType extends FieldType {
     }
 
     const nameList = value.map(({ value }) => value)
-    // Use papa to generate a CSV  string
-    const result = this.app.$papa.unparse([nameList])
-    return result
+    // Use papa to generate a CSV string
+    return this.app.$papa.arrayToString(nameList)
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    try {
-      const values = this.app.$papa.parse(clipboardData)
-      const data = values.data[0]
-
-      const selectOptionMap = Object.fromEntries(
-        field.select_options.map((option) => [option.value, option])
-      )
-
-      return data
-        .filter((name) => Object.keys(selectOptionMap).includes(name))
-        .map((name) => selectOptionMap[name])
-    } catch (e) {
+  prepareRichValueForCopy(field, value) {
+    if (value === undefined) {
       return []
+    }
+    return value
+  }
+
+  checkRichValueIsCompatible(value) {
+    return (
+      value === null ||
+      (Array.isArray(value) &&
+        value.every((v) => Object.prototype.hasOwnProperty.call(v, 'id')))
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      if (richClipboardData === null) {
+        return []
+      }
+      return richClipboardData
+    } else {
+      // Fallback to text version
+      try {
+        const data = this.app.$papa.stringToArray(clipboardData)
+
+        const selectOptionMap = Object.fromEntries(
+          field.select_options.map((option) => [option.value, option])
+        )
+
+        const uniqueValuesOnly = Array.from(new Set(data))
+
+        return uniqueValuesOnly
+          .filter((name) => Object.keys(selectOptionMap).includes(name))
+          .map((name) => selectOptionMap[name])
+      } catch (e) {
+        return []
+      }
     }
   }
 

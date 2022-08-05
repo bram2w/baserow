@@ -1,4 +1,5 @@
 import setupCore from '@baserow/modules/core/plugin'
+import Papa from 'papaparse'
 import axios from 'axios'
 import setupClient, {
   ClientErrorMap,
@@ -115,6 +116,13 @@ export class TestApp {
       extraPluginSetupFunc
     )
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
+    Papa.arrayToString = (array) => {
+      return Papa.unparse([array])
+    }
+    Papa.stringToArray = (str) => {
+      return Papa.parse(str).data[0]
+    }
+    this._app.$papa = Papa
     this.mockServer = new MockServer(this.mock, this.store)
     this.failTestOnErrorResponse = true
     this._app.client.interceptors.response.use(

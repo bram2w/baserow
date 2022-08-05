@@ -22,8 +22,13 @@ For example:
 
 ### Refactors
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
+* Make it possible to copy/paste/import from/to text values for multi-select and file fields. [#913](https://gitlab.com/bramw/baserow/-/issues/913)
+* Users can copy/paste images into a file field. [#367](https://gitlab.com/bramw/baserow/-/issues/367)
 
 ### Breaking Changes
+
+* The export format of file fields has changed for CSV files. The new format is `fileName1.ext (file1url),fileName2.ext (file2url), ...`.
+* The date parsing takes the date format into account when parsing unless the format respect the ISO-8601 format. This will change the value for ambiguous dates like `02/03/2020`.
 
 ## Released (2022-07-27 1.11.0)
 

@@ -238,10 +238,10 @@ def test_can_export_every_interesting_different_field_to_csv(
         "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
         "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
         '"linked_row_1,linked_row_2,unnamed row 3",,"1.234,-123.456,unnamed row 3",'
-        '"visible_name=name.txt url=http://localhost:8000/media/user_files/test_hash'
-        '.txt,unnamed row 2",'
-        '"visible_name=a.txt url=http://localhost:8000/media/user_files/hashed_name.txt'
-        ',visible_name=b.txt url=http://localhost:8000/media/user_files/other_name.txt"'
+        '"name.txt (http://localhost:8000/media/user_files/test_hash'
+        '.txt),unnamed row 2",'
+        '"a.txt (http://localhost:8000/media/user_files/hashed_name.txt)'
+        ',b.txt (http://localhost:8000/media/user_files/other_name.txt)"'
         ',A,"D,C,E",+4412345678,test FORMULA,1,True,33.3333333333,1 day,2020-01-01,A,'
         'test@example.com,"linked_row_1,linked_row_2,"\r\n'
     )

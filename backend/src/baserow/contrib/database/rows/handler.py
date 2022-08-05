@@ -358,7 +358,7 @@ class RowHandler:
 
     def get_row_names(
         self, table: "Table", row_ids: List[int], model: "GeneratedTableModel" = None
-    ) -> Dict[str, int]:
+    ) -> Dict[str, str]:
         """
         Returns the row names for all row ids specified in `row_ids` parameter from
         the given table.
