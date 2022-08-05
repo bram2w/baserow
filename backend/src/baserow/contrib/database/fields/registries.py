@@ -843,14 +843,18 @@ class FieldType(
 
         setattr(row, field_name, value)
 
-    def get_export_value(self, value: Any, field_object: "FieldObject") -> Any:
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
         """
         Should convert this field type's internal baserow value to a form suitable
         for exporting to a standalone file.
 
         :param value: The internal value to convert to a suitable export format
         :param field_object: The field object for the field to extract
-        :type field_object: FieldObject
+        :param rich_value: whether a rich value can be exported. A rich value is a
+           structured data like a dict or a list that can be JSON serializable.
+           Otherwise if this value is false, it should return a simple value.
         :return: A value suitable to be serialized and stored in a file format for
             users.
         """
@@ -868,7 +872,9 @@ class FieldType(
         :return A human readable string.
         """
 
-        human_readable_value = self.get_export_value(value, field_object)
+        human_readable_value = self.get_export_value(
+            value, field_object, rich_value=False
+        )
         if human_readable_value is None:
             return ""
         else:

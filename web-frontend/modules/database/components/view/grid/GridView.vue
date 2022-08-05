@@ -120,9 +120,9 @@
     <Context ref="rowContext">
       <ul v-show="isMultiSelectActive" class="context__menu">
         <li>
-          <a @click=";[exportMultiSelect(), $refs.rowContext.hide()]">
+          <a @click=";[copySelection(), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-copy"></i>
-            {{ $t('action.copy') }}
+            {{ $t('gridView.copyCells') }}
           </a>
         </li>
         <li>
@@ -131,7 +131,7 @@
             @click.stop="deleteRowsFromMultipleCellSelection()"
           >
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
-            {{ $t('action.delete') }}
+            {{ $t('gridView.deleteRows') }}
           </a>
         </li>
       </ul>
@@ -226,6 +226,7 @@ import { isElement } from '@baserow/modules/core/utils/dom'
 import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
 import { clone } from '@baserow/modules/core/utils/object'
+import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 
 export default {
   name: 'GridView',
@@ -235,7 +236,7 @@ export default {
     GridViewRowDragging,
     RowEditModal,
   },
-  mixins: [viewHelpers, gridViewHelpers, viewDecoration],
+  mixins: [viewHelpers, gridViewHelpers, viewDecoration, copyPasteHelper],
   props: {
     fields: {
       type: Array,
@@ -351,7 +352,7 @@ export default {
     this.$el.resizeEvent()
     window.addEventListener('resize', this.$el.resizeEvent)
     window.addEventListener('keydown', this.keyDownEvent)
-    window.addEventListener('copy', this.exportMultiSelect)
+    window.addEventListener('copy', this.copySelection)
     window.addEventListener('paste', this.pasteFromMultipleCellSelection)
     window.addEventListener('click', this.cancelMultiSelectIfActive)
     window.addEventListener('mouseup', this.multiSelectStop)
@@ -372,7 +373,7 @@ export default {
   beforeDestroy() {
     window.removeEventListener('resize', this.$el.resizeEvent)
     window.removeEventListener('keydown', this.keyDownEvent)
-    window.removeEventListener('copy', this.exportMultiSelect)
+    window.removeEventListener('copy', this.copySelection)
     window.removeEventListener('paste', this.pasteFromMultipleCellSelection)
     window.removeEventListener('click', this.cancelMultiSelectIfActive)
     window.removeEventListener('mouseup', this.multiSelectStop)
@@ -892,7 +893,7 @@ export default {
             this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
           )
         }
-        if (event.key === 'Backspace') {
+        if (event.key === 'Backspace' || event.key === 'Delete') {
           this.clearValuesFromMultipleCellSelection()
         }
       }
@@ -901,17 +902,16 @@ export default {
      * Prepare and copy the multi-select cells into the clipboard,
      * formatted as TSV
      */
-    async exportMultiSelect(event) {
+    async copySelection(event) {
       try {
         this.$store.dispatch('notification/setCopying', true)
-        const output = await this.$store.dispatch(
-          this.storePrefix + 'view/grid/exportMultiSelect',
-          this.allVisibleFields
+        const selection = await this.$store.dispatch(
+          this.storePrefix + 'view/grid/getCurrentSelection',
+          { fields: this.allVisibleFields }
         )
-        // If the output is undefined, it means that there is no multiple selection.
-        if (output !== undefined) {
-          const tsv = this.$papa.unparse(output, { delimiter: '\t' })
-          navigator.clipboard.writeText(tsv)
+        if (selection !== undefined) {
+          const [fields, rows] = selection
+          this.copySelectionToClipboard(fields, rows)
         }
       } catch (error) {
         notifyIf(error, 'view')
@@ -924,13 +924,13 @@ export default {
      * This happens when the individual cell doesn't understand the pasted data and
      * needs to emit it up. This typically happens when multiple cell values are pasted.
      */
-    async multiplePasteFromCell({ data, field, row }) {
+    async multiplePasteFromCell({ data: { textData, jsonData }, field, row }) {
       const rowIndex = this.$store.getters[
         this.storePrefix + 'view/grid/getRowIndexById'
       ](row.id)
       const fieldIndex =
         this.visibleFields.findIndex((f) => f.id === field.id) + 1
-      await this.pasteData(data, rowIndex, fieldIndex)
+      await this.pasteData(textData, jsonData, rowIndex, fieldIndex)
     },
     /**
      * Called when the user pastes data without having an individual cell selected. It
@@ -942,12 +942,9 @@ export default {
         return
       }
 
-      const parsed = await this.$papa.parsePromise(
-        event.clipboardData.getData('text'),
-        { delimiter: '\t' }
-      )
-      const data = parsed.data
-      await this.pasteData(data)
+      const [textData, jsonData] = await this.extractClipboardData(event)
+
+      await this.pasteData(textData, jsonData)
     },
     /**
      * Called when data must be pasted into the grid view. It basically forwards the
@@ -955,11 +952,11 @@ export default {
      * shows a loading animation while busy, so the user knows something is while the
      * update is in progress.
      */
-    async pasteData(data, rowIndex, fieldIndex) {
+    async pasteData(textData, jsonData, rowIndex, fieldIndex) {
       // If the data is an empty array, we don't have to do anything because there is
       // nothing to update. If the view is in read only mode, we can't paste so not
       // doing anything.
-      if (data.length === 0 || data[0].length === 0 || this.readOnly) {
+      if (textData.length === 0 || textData[0].length === 0 || this.readOnly) {
         return
       }
 
@@ -973,7 +970,8 @@ export default {
             view: this.view,
             fields: this.allVisibleFields,
             getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
-            data,
+            textData,
+            jsonData,
             rowIndex,
             fieldIndex,
           }

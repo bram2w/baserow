@@ -138,6 +138,8 @@ class QuerysetSerializer(abc.ABC):
     a file.
     """
 
+    can_handle_rich_value = False
+
     def __init__(self, queryset, ordered_field_objects):
         self.queryset = queryset
         self.field_serializers = [lambda row: ("id", "id", row.id)]
@@ -183,8 +185,7 @@ class QuerysetSerializer(abc.ABC):
         qs = ViewHandler().get_queryset(view, model=model)
         return cls(qs, fields)
 
-    @staticmethod
-    def _get_field_serializer(field_object: FieldObject) -> Callable[[Any], Any]:
+    def _get_field_serializer(self, field_object: FieldObject) -> Callable[[Any], Any]:
         """
         An internal standard method which generates a serializer function for a given
         field_object. It will delegate to the field_types get_export_value on
@@ -203,7 +204,9 @@ class QuerysetSerializer(abc.ABC):
             if value is None:
                 result = ""
             else:
-                result = field_object["type"].get_export_value(value, field_object)
+                result = field_object["type"].get_export_value(
+                    value, field_object, rich_value=self.can_handle_rich_value
+                )
 
             return (
                 field_object["name"],

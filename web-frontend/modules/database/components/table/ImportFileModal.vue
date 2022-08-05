@@ -395,6 +395,7 @@ export default {
                       row[importIndex]
                     )
                   })
+
                   return newRow
                 })
               )

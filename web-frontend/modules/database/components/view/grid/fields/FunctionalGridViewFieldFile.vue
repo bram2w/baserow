@@ -55,7 +55,7 @@ export default {
       parent.selectCell(props.field.id)
       parent.setState({})
       parent.$nextTick(() => {
-        parent.$refs.selectedField.uploadFiles(event)
+        parent.$refs.selectedField.onDrop(event)
       })
     },
     dragEnter(parent, props, event) {

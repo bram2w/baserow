@@ -769,8 +769,7 @@ def test_can_undo_redo_updating_row(data_fixture):
     )
 
     year_of_manufacturer = data_fixture.create_date_field(
-        table=table_car,
-        name="Year of manufacturer",
+        table=table_car, name="Year of manufacturer", date_format="ISO"
     )
 
     manufacturer_link_row_field = FieldHandler().create_field(

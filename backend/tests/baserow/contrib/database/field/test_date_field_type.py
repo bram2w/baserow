@@ -17,7 +17,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 def test_date_field_type_prepare_value(data_fixture):
     d = DateFieldType()
 
-    f = data_fixture.create_date_field(date_include_time=True)
+    f = data_fixture.create_date_field(date_include_time=True, date_format="ISO")
     amsterdam = timezone("Europe/Amsterdam")
     utc = timezone("UTC")
     expected_date = make_aware(datetime(2020, 4, 10, 0, 0, 0), utc)
@@ -45,7 +45,7 @@ def test_date_field_type_prepare_value(data_fixture):
     assert d.prepare_value_for_db(f, "2020-04-10 12:30:30") == expected_datetime
     assert d.prepare_value_for_db(f, "2020-04-10 00:30:30 PM") == expected_datetime
 
-    f = data_fixture.create_date_field(date_include_time=False)
+    f = data_fixture.create_date_field(date_include_time=False, date_format="ISO")
     expected_date = date(2020, 4, 10)
 
     unprepared_datetime = datetime(2020, 4, 10, 14, 30, 30)
@@ -58,6 +58,16 @@ def test_date_field_type_prepare_value(data_fixture):
     assert d.prepare_value_for_db(f, "2020-04-11") != expected_date
     assert d.prepare_value_for_db(f, "2020-04-10 12:30:30") == expected_date
     assert d.prepare_value_for_db(f, "2020-04-10 00:30:30 PM") == expected_date
+    assert d.prepare_value_for_db(f, "2020-04-10T12:30:30.12345") == expected_date
+    assert d.prepare_value_for_db(f, "2020-04-10T12:30:30.12345+02:00") == expected_date
+
+    f = data_fixture.create_date_field(date_include_time=False, date_format="US")
+    assert d.prepare_value_for_db(f, "04/10/2020") == date(2020, 4, 10)
+    assert d.prepare_value_for_db(f, "2020-04-10") == date(2020, 4, 10)
+
+    f = data_fixture.create_date_field(date_include_time=False, date_format="EU")
+    assert d.prepare_value_for_db(f, "04/10/2020") == date(2020, 10, 4)
+    assert d.prepare_value_for_db(f, "2020-04-10") == date(2020, 4, 10)
 
 
 @pytest.mark.django_db
@@ -72,7 +82,7 @@ def test_date_field_type(data_fixture):
     utc = timezone("utc")
 
     date_field_1 = field_handler.create_field(
-        user=user, table=table, type_name="date", name="Date"
+        user=user, table=table, type_name="date", name="Date", date_format="ISO"
     )
     date_field_2 = field_handler.create_field(
         user=user,
@@ -80,6 +90,7 @@ def test_date_field_type(data_fixture):
         type_name="date",
         name="Datetime",
         date_include_time=True,
+        date_format="ISO",
     )
 
     assert date_field_1.date_include_time is False
