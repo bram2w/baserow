@@ -4,7 +4,11 @@ export function getPrefills(query) {
       const keyFormatted = key
         .replace('prefill_', '') // Remove the prefix
         .replaceAll('+', ' ') // Replace + with spaces
-      prefills[keyFormatted] = query[key]
+      let valueChosen = query[key]
+      if (Array.isArray(query[key])) {
+        valueChosen = valueChosen[valueChosen.length - 1]
+      }
+      prefills[keyFormatted] = valueChosen
     }
     return prefills
   }, Object.create(null))

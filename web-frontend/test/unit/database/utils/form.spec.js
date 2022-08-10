@@ -17,6 +17,10 @@ const valuesToCall = [
     query: { 'prefill_value+with+spaces': 'value' },
     result: { 'value with spaces': 'value' },
   },
+  {
+    query: { prefill_value: ['value', 'value_2'] },
+    result: { value: 'value_2' },
+  },
 ]
 
 describe('Form utils test', () => {
