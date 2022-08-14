@@ -124,7 +124,7 @@ export default {
               ` You visited Baserow at ${browserWindowUrl} ` +
               ' which indicates you have mis-configured the Baserow ' +
               ' BASEROW_PUBLIC_URL or PUBLIC_BACKEND_URL environment variables. ' +
-              ' Please visit https://baserow.io/docs/debugging-connection-issues ' +
+              ' Please visit https://baserow.io/docs/tutorials/debugging-connection-issues ' +
               ' on how to fix this error.'
           )
         }
