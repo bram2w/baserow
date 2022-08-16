@@ -26,6 +26,9 @@ export function genericContainsFilter(
   humanReadableRowValue,
   filterValue
 ) {
+  if (humanReadableRowValue == null) {
+    return false
+  }
   humanReadableRowValue = humanReadableRowValue.toString().toLowerCase().trim()
   filterValue = filterValue.toString().toLowerCase().trim()
   return humanReadableRowValue.includes(filterValue)
