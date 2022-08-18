@@ -29,8 +29,9 @@ export default {
       const deltaMode = event.deltaMode
       let { deltaY, deltaX } = event
 
-      // shiftKey enable the horizontal scroll, so swap deltaX and deltaY
-      if (event.shiftKey) {
+      // shiftKey enable the horizontal scroll, so swap deltaX and deltaY.
+      // Mac OSX already swap the values and set DeltaY to 0, so no need to swap them again.
+      if (event.shiftKey && deltaY !== 0) {
         deltaX = deltaY
         deltaY = 0
       }
