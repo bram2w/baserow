@@ -166,6 +166,7 @@ describe('GalleryView component with decoration', () => {
       fields,
       readOnly: false,
       storePrefix: 'page/',
+      row: null,
     })
 
     expect(wrapper1.element).toMatchSnapshot()
@@ -214,6 +215,7 @@ describe('GalleryView component with decoration', () => {
       fields,
       readOnly: false,
       storePrefix: 'page/',
+      row: null,
     })
 
     expect(wrapper1.element).toMatchSnapshot()
@@ -243,6 +245,7 @@ describe('GalleryView component with decoration', () => {
       fields,
       readOnly: false,
       storePrefix: 'page/',
+      row: null,
     })
 
     expect(wrapper1.element).toMatchSnapshot()

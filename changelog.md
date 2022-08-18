@@ -12,6 +12,7 @@ For example:
 ### New Features
 * Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
 * Add `isort` settings to sort python imports.
+* Add row url parameter to `gallery` and `kanban` view.
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
