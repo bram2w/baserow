@@ -31,7 +31,9 @@ export default {
             decoration.type
           )
 
-          deco.component = deco.decoratorType.getComponent()
+          deco.component = deco.decoratorType.getComponent(
+            this.database.group.id
+          )
           deco.place = deco.decoratorType.getPlace()
 
           if (decoration.value_provider_type) {
