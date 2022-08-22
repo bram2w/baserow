@@ -67,13 +67,8 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
     return [true]
   }
 
-  getComponent() {
-    const { store } = this.app
-
-    // Read from the store
-    const additionalUserData = store.getters['auth/getAdditionalUserData']
-
-    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData)) {
+  getComponent(groupId) {
+    if (!this.isDeactivated(groupId)) {
       return LeftBorderColorViewDecorator
     }
 
@@ -116,13 +111,8 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
     return 'wrapper'
   }
 
-  getComponent() {
-    const { store } = this.app
-
-    // Read from the store
-    const additionalUserData = store.getters['auth/getAdditionalUserData']
-
-    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData)) {
+  getComponent(groupId) {
+    if (!this.isDeactivated(groupId)) {
       return BackgroundColorViewDecorator
     }
 
