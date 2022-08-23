@@ -45,6 +45,7 @@ import error from '@baserow/modules/core/mixins/error'
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 import { required } from 'vuelidate/lib/validators'
 import { mapActions } from 'vuex'
+import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 
 export default {
   components: { FormViewPoweredBy },
@@ -88,7 +89,7 @@ export default {
         // Redirect to the original view.
         // Subsequent requests will use the token saved into the store.
         const { original } = this.$route.query
-        if (original) {
+        if (original && isRelativeUrl(original)) {
           this.$nuxt.$router.push(original)
         }
       } catch (e) {
