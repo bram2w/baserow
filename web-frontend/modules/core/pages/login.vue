@@ -31,6 +31,7 @@ import { mapGetters } from 'vuex'
 import AuthLogin from '@baserow/modules/core/components/auth/AuthLogin'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
+import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 
 export default {
   components: { AuthLogin, LangPicker },
@@ -61,7 +62,7 @@ export default {
   methods: {
     success() {
       const { original } = this.$route.query
-      if (original) {
+      if (original && isRelativeUrl(original)) {
         this.$nuxt.$router.push(original)
       } else {
         this.$nuxt.$router.push({ name: 'dashboard' })
