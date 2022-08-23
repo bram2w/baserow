@@ -61,7 +61,11 @@ export default {
       )
     },
     updateValue({ id, value }) {
-      this.$emit('update', value === null || value === '' ? [] : [{ id, value }], this.value)
+      this.$emit(
+        'update',
+        value === null || value === '' ? [] : [{ id, value }],
+        this.value
+      )
     },
   },
 }
