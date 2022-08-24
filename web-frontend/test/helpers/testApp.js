@@ -103,6 +103,9 @@ export class TestApp {
         t: (key) => key,
         tc: (key) => key,
       },
+      $i18n: {
+        getBrowserLocale: () => 'en',
+      },
       $route: {
         params: {},
       },

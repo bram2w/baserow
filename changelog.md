@@ -14,6 +14,7 @@ For example:
 * Add `isort` settings to sort python imports.
 * Add row url parameter to `gallery` and `kanban` view.
 * Only allow relative urls in the in the original query parameter.
+* Infer user language when viewing a public view. [#834](https://gitlab.com/bramw/baserow/-/issues/834)
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
