@@ -16,7 +16,8 @@
           type="text"
           :placeholder="$t('selectRowContent.search')"
           class="input select-row-modal__search-input"
-          @keypress.enter="doSearch(visibleSearch)"
+          @input="doSearch(visibleSearch, false)"
+          @keypress.enter="doSearch(visibleSearch, true)"
         />
       </div>
       <div v-scroll="scroll" class="select-row-modal__rows">
@@ -119,6 +120,7 @@ import { populateRow } from '@baserow/modules/database/store/view/grid'
 
 import Paginator from '@baserow/modules/core/components/Paginator'
 import SelectRowField from './SelectRowField'
+import debounce from 'lodash/debounce'
 
 export default {
   name: 'SelectRowContent',
@@ -146,6 +148,7 @@ export default {
       page: 1,
       totalPages: null,
       lastHoveredRow: null,
+      searchDebounce: null,
     }
   },
   async mounted() {
@@ -232,10 +235,21 @@ export default {
      * Does a row search in the table related to the state. It will also reset the
      * pagination.
      */
-    async doSearch(query) {
-      this.search = query
-      this.totalPages = null
-      await this.fetch(1)
+    doSearch(query, immediate) {
+      const search = () => {
+        this.search = query
+        this.totalPages = null
+        return this.fetch(1)
+      }
+      if (this.searchDebounce) {
+        this.searchDebounce.cancel()
+      }
+      if (immediate) {
+        search()
+      } else {
+        this.searchDebounce = debounce(search, 400)
+        this.searchDebounce()
+      }
     },
     /**
      * Fetches the rows of a given page and adds them to the state. If a search query
