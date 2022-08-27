@@ -10,6 +10,7 @@ import {
 import RowService from '@baserow/modules/database/services/row'
 import FieldService from '@baserow/modules/database/services/field'
 import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
 export function populateRow(row) {
   row._ = {
@@ -333,27 +334,11 @@ export const actions = {
     { dispatch, commit, getters },
     { view, table, fields, values }
   ) {
-    // First prepare an object that we can send to the
-    const preparedValues = {}
-    fields.forEach((field) => {
-      const name = `field_${field.id}`
-      const fieldType = this.$registry.get('field', field._.type.type)
-
-      if (fieldType.isReadOnly) {
-        return
-      }
-
-      preparedValues[name] = Object.prototype.hasOwnProperty.call(values, name)
-        ? (preparedValues[name] = fieldType.prepareValueForUpdate(
-            field,
-            values[name]
-          ))
-        : fieldType.getEmptyValue(field)
-    })
+    const preparedRow = prepareRowForRequest(values, fields, this.$registry)
 
     const { data } = await RowService(this.$client).create(
       table.id,
-      preparedValues
+      preparedRow
     )
     return await dispatch('createdNewRow', {
       view,

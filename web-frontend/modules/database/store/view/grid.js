@@ -16,6 +16,7 @@ import {
   getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
 export function populateRow(row, metadata = {}) {
   row._ = {
@@ -1314,23 +1315,19 @@ export const actions = {
     { commit, getters, dispatch },
     { view, table, fields, values = {}, before = null }
   ) {
-    // Fill the not provided values with the empty value of the field type so we can
-    // immediately commit the created row to the state.
-    const valuesForApiRequest = {}
+    // Fill values with empty values of field if they are not provided
     fields.forEach((field) => {
       const name = `field_${field.id}`
       const fieldType = this.$registry.get('field', field._.type.type)
+
       if (!(name in values)) {
-        const empty = fieldType.getNewRowValue(field)
-        values[name] = empty
-      }
-      // In case the fieldType is a read only field, we need to create a second
-      // values dictionary, which gets sent to the API without the fieldType.
-      if (!fieldType.isReadOnly) {
-        const newValue = fieldType.prepareValueForUpdate(field, values[name])
-        valuesForApiRequest[name] = newValue
+        values[name] = fieldType.getNewRowValue(field)
       }
     })
+
+    // Fill the not provided values with the empty value of the field type so we can
+    // immediately commit the created row to the state.
+    const preparedRow = prepareRowForRequest(values, fields, this.$registry)
 
     // If before is not provided, then the row is added last. Because we don't know
     // the total amount of rows in the table, we are going to add find the highest
@@ -1362,7 +1359,7 @@ export const actions = {
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
-        valuesForApiRequest,
+        preparedRow,
         before !== null ? before.id : null
       )
       commit('FINALIZE_ROW_IN_BUFFER', {

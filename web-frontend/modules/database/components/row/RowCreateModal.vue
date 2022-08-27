@@ -8,11 +8,12 @@
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
         :fields="visibleFields"
-        :sortable="true"
+        :sortable="sortable"
         :hidden="false"
         :read-only="false"
         :row="row"
         :table="table"
+        :can-modify-fields="canModifyFields"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @order-fields="$emit('order-fields', $event)"
@@ -34,6 +35,7 @@
           :read-only="false"
           :row="row"
           :table="table"
+          :can-modify-fields="canModifyFields"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
@@ -80,6 +82,16 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    sortable: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    canModifyFields: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
     visibleFields: {
       type: Array,
