@@ -46,10 +46,11 @@ import FormViewPoweredBy from '@baserow/modules/database/components/view/form/Fo
 import { required } from 'vuelidate/lib/validators'
 import { mapActions } from 'vuex'
 import { isRelativeUrl } from '@baserow/modules/core/utils/url'
+import languageDetection from '@baserow/modules/core/mixins/languageDetection'
 
 export default {
   components: { FormViewPoweredBy },
-  mixins: [form, error],
+  mixins: [form, error, languageDetection],
   layout: 'login',
   data() {
     return {
