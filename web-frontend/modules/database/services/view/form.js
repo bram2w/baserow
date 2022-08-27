@@ -18,5 +18,31 @@ export default (client) => {
       const config = prepareRequestConfig({ publicAuthToken })
       return client.post(`/database/views/form/${slug}/submit/`, values, config)
     },
+    uploadFile(
+      file,
+      onUploadProgress = function () {},
+      slug,
+      publicAuthToken = null
+    ) {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const config = {
+        onUploadProgress,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+
+      return client.post(
+        `/database/views/form/${slug}/upload-file/`,
+        formData,
+        config
+      )
+    },
   }
 }

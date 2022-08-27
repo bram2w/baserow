@@ -656,14 +656,14 @@ def test_enable_form_view_file_field(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     form_view = data_fixture.create_form_view(table=table)
-    file_field = data_fixture.create_file_field(table=table)
+    created_on_field = data_fixture.create_created_on_field(table=table)
 
     with pytest.raises(FormViewFieldTypeIsNotSupported):
         ViewHandler().update_field_options(
             user=user,
             view=form_view,
             field_options={
-                file_field.id: {"enabled": True},
+                created_on_field.id: {"enabled": True},
             },
         )
 
@@ -671,7 +671,7 @@ def test_enable_form_view_file_field(data_fixture):
         user=user,
         view=form_view,
         field_options={
-            file_field.id: {"enabled": False},
+            created_on_field.id: {"enabled": False},
         },
     )
 
