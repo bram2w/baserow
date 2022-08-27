@@ -11,7 +11,7 @@
           :class="{ 'button--loading': loading }"
           :disabled="loading"
         >
-          {{ $t('action.change') }}
+          {{ $t('action.save') }}
         </button>
       </div>
     </KanbanViewOptionForm>

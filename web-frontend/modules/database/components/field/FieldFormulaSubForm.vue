@@ -172,12 +172,10 @@ export default {
       }
     },
     reset() {
-      const formula = this.values.formula
       this.fetchedTypeOptions = { error: null }
       this.formulaTypeRefreshNeeded = false
       Object.assign(this.mergedTypeOptions, this.defaultValues)
       form.methods.reset.call(this)
-      this.values.formula = formula
     },
     async refreshFormulaType() {
       if (!this.name) {

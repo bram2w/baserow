@@ -17,6 +17,7 @@ For example:
 * Only allow relative urls in the in the original query parameter.
 * Force browser language when viewing a public view. [#834](https://gitlab.com/bramw/baserow/-/issues/834)
 * Search automatically after 400ms when chosing a related field via the modal. [#1091](https://gitlab.com/bramw/baserow/-/issues/1091)
+* Add cancel button to field update context [#1020](https://gitlab.com/bramw/baserow/-/issues/1020)
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
