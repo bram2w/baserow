@@ -270,7 +270,7 @@ def test_convert_to_incompatible_field_in_form_view(data_fixture):
         user=user,
         table=table,
         field=field,
-        new_type_name="file",
+        new_type_name="created_on",
     )
     options.refresh_from_db()
     options_2.refresh_from_db()

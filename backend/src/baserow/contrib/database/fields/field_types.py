@@ -1715,7 +1715,7 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
 class FileFieldType(FieldType):
     type = "file"
     model_class = FileField
-    can_be_in_form_view = False
+    can_be_in_form_view = True
     can_get_unique_values = False
 
     def _extract_file_names(self, value):

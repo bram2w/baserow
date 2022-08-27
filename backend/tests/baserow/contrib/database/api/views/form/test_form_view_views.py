@@ -1,19 +1,28 @@
+from unittest.mock import patch
+
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
 
 import pytest
+from freezegun import freeze_time
+from PIL import Image
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
+    HTTP_413_REQUEST_ENTITY_TOO_LARGE,
 )
 
 from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptionsCondition,
 )
+from baserow.core.user_files.models import UserFile
 
 
 @pytest.mark.django_db
@@ -721,12 +730,12 @@ def test_test_enable_form_view_file_field_options(api_client, data_fixture):
     )
     table = data_fixture.create_database_table(user=user)
     form_view = data_fixture.create_form_view(table=table)
-    file_field = data_fixture.create_file_field(table=table)
+    created_on_field = data_fixture.create_created_on_field(table=table)
 
     url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
     response = api_client.patch(
         url,
-        {"field_options": {file_field.id: {"enabled": True}}},
+        {"field_options": {created_on_field.id: {"enabled": True}}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -736,7 +745,7 @@ def test_test_enable_form_view_file_field_options(api_client, data_fixture):
     assert response_json["error"] == "ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED"
     assert (
         response_json["detail"]
-        == "The file field type is not compatible with the form view."
+        == "The created_on field type is not compatible with the form view."
     )
 
 
@@ -1635,3 +1644,245 @@ def test_submit_form_view_for_required_number_field_with_0(api_client, data_fixt
         "submit_action_message": "Test",
         "submit_action_redirect_url": "https://baserow.io",
     }
+
+
+@pytest.mark.django_db
+def test_upload_file_view(api_client, data_fixture, tmpdir):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    view = data_fixture.create_form_view(public=True)
+    file_field = data_fixture.create_file_field()
+    data_fixture.create_form_view_field_option(view, field=file_field, enabled=True)
+
+    response = api_client.post(
+        reverse(
+            "api:database:views:form:upload_file",
+            kwargs={"slug": view.slug},
+        ),
+        format="multipart",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_INVALID_FILE"
+
+    response = api_client.post(
+        reverse(
+            "api:database:views:form:upload_file",
+            kwargs={"slug": view.slug},
+        ),
+        data={"file": ""},
+        format="multipart",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_INVALID_FILE"
+
+    old_limit = settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = 6
+    response = api_client.post(
+        reverse(
+            "api:database:views:form:upload_file",
+            kwargs={"slug": view.slug},
+        ),
+        data={"file": SimpleUploadedFile("test.txt", b"Hello World")},
+        format="multipart",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    settings.BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = old_limit
+    assert response.status_code == HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert response.json()["error"] == "ERROR_FILE_SIZE_TOO_LARGE"
+    assert response.json()["detail"] == (
+        "The provided file is too large. Max 0MB is allowed."
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:database:views:form:upload_file",
+            kwargs={"slug": view.slug},
+        ),
+        data={"file": "not a file"},
+        format="multipart",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_INVALID_FILE"
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        with freeze_time("2020-01-01 12:00"):
+            file = SimpleUploadedFile("test.txt", b"Hello World")
+            response = api_client.post(
+                reverse(
+                    "api:database:views:form:upload_file",
+                    kwargs={"slug": view.slug},
+                ),
+                data={"file": file},
+                format="multipart",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["size"] == 11
+    assert response_json["mime_type"] == "text/plain"
+    assert response_json["is_image"] is False
+    assert response_json["image_width"] is None
+    assert response_json["image_height"] is None
+    assert response_json["uploaded_at"] == "2020-01-01T12:00:00Z"
+    assert response_json["thumbnails"] is None
+    assert response_json["original_name"] == "test.txt"
+    assert "localhost:8000" in response_json["url"]
+
+    user_file = UserFile.objects.all().last()
+    assert user_file.name == response_json["name"]
+    assert response_json["url"].endswith(response_json["name"])
+    file_path = tmpdir.join("user_files", user_file.name)
+    assert file_path.isfile()
+
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        file = SimpleUploadedFile("test.txt", b"Hello World")
+        response_2 = api_client.post(
+            reverse(
+                "api:database:views:form:upload_file",
+                kwargs={"slug": view.slug},
+            ),
+            data={"file": file},
+            format="multipart",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    # The old file should be provided.
+    assert response_2.json()["name"] == response_json["name"]
+    assert response_json["original_name"] == "test.txt"
+
+    image = Image.new("RGB", (100, 140), color="red")
+    file = SimpleUploadedFile("test.png", b"")
+    image.save(file, format="PNG")
+    file.seek(0)
+
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        response = api_client.post(
+            reverse(
+                "api:database:views:form:upload_file",
+                kwargs={"slug": view.slug},
+            ),
+            data={"file": file},
+            format="multipart",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["mime_type"] == "image/png"
+    assert response_json["is_image"] is True
+    assert response_json["image_width"] == 100
+    assert response_json["image_height"] == 140
+    assert len(response_json["thumbnails"]) == 1
+    assert "localhost:8000" in response_json["thumbnails"]["tiny"]["url"]
+    assert "tiny" in response_json["thumbnails"]["tiny"]["url"]
+    assert response_json["thumbnails"]["tiny"]["width"] == 21
+    assert response_json["thumbnails"]["tiny"]["height"] == 21
+    assert response_json["original_name"] == "test.png"
+
+    user_file = UserFile.objects.all().last()
+    file_path = tmpdir.join("user_files", user_file.name)
+    assert file_path.isfile()
+    file_path = tmpdir.join("thumbnails", "tiny", user_file.name)
+    assert file_path.isfile()
+    thumbnail = Image.open(file_path.open("rb"))
+    assert thumbnail.height == 21
+    assert thumbnail.width == 21
+
+
+@pytest.mark.django_db
+def test_upload_file_view_with_no_public_file_field(api_client, data_fixture, tmpdir):
+    view = data_fixture.create_form_view(public=True)
+    file_field = data_fixture.create_file_field()
+    data_fixture.create_form_view_field_option(view, field=file_field, enabled=False)
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        with freeze_time("2020-01-01 12:00"):
+            file = SimpleUploadedFile("test.txt", b"Hello World")
+            response = api_client.post(
+                reverse(
+                    "api:database:views:form:upload_file",
+                    kwargs={"slug": view.slug},
+                ),
+                data={"file": file},
+                format="multipart",
+            )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_VIEW_HAS_NO_PUBLIC_FILE_FIELD"
+
+
+@pytest.mark.django_db
+def test_upload_file_form_view_does_not_exist(api_client, data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        with freeze_time("2020-01-01 12:00"):
+            file = SimpleUploadedFile("test.txt", b"Hello World")
+            response = api_client.post(
+                reverse(
+                    "api:database:views:form:upload_file",
+                    kwargs={"slug": 99999999},
+                ),
+                data={"file": file},
+                format="multipart",
+            )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_upload_file_view_form_is_password_protected(api_client, data_fixture, tmpdir):
+    password = "password"
+    view = data_fixture.create_public_password_protected_form_view(password=password)
+    file_field = data_fixture.create_file_field()
+    data_fixture.create_form_view_field_option(view, field=file_field, enabled=True)
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        with freeze_time("2020-01-01 12:00"):
+            file = SimpleUploadedFile("test.txt", b"Hello World")
+            response = api_client.post(
+                reverse(
+                    "api:database:views:form:upload_file",
+                    kwargs={"slug": view.slug},
+                ),
+                data={"file": file},
+                format="multipart",
+            )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"
+
+    response = api_client.post(
+        reverse("api:database:views:public_auth", kwargs={"slug": view.slug}),
+        {"password": password},
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    public_view_token = response_json.get("access_token", None)
+    assert public_view_token is not None
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        with freeze_time("2020-01-01 12:00"):
+            file = SimpleUploadedFile("test.txt", b"Hello World")
+            response = api_client.post(
+                reverse(
+                    "api:database:views:form:upload_file",
+                    kwargs={"slug": view.slug},
+                ),
+                data={"file": file},
+                format="multipart",
+                HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+            )
+
+    assert response.status_code == HTTP_200_OK

@@ -14,6 +14,7 @@ For example:
 * Add `isort` settings to sort python imports.
 * Allow creating new rows when selecting a related row [#1064](https://gitlab.com/bramw/baserow/-/issues/1064).
 * Add row url parameter to `gallery` and `kanban` view.
+* Enable `file field` in `form` views. [#525](https://gitlab.com/bramw/baserow/-/issues/525)
 * Only allow relative urls in the in the original query parameter.
 * Force browser language when viewing a public view. [#834](https://gitlab.com/bramw/baserow/-/issues/834)
 * Search automatically after 400ms when chosing a related field via the modal. [#1091](https://gitlab.com/bramw/baserow/-/issues/1091)

@@ -90,6 +90,8 @@ import FieldFormulaSubForm from '@baserow/modules/database/components/field/Fiel
 import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 import ViewService from '@baserow/modules/database/services/view'
+import FormService from '@baserow/modules/database/services/view/form'
+import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 
 export class FieldType extends Registerable {
   /**
@@ -167,7 +169,7 @@ export class FieldType extends Registerable {
   /*
    * Optional properties for the FormViewFieldComponent
    */
-  getFormViewFieldComponentProperties() {
+  getFormViewFieldComponentProperties(context) {
     return {}
   }
 
@@ -1787,12 +1789,23 @@ export class FileFieldType extends FieldType {
     return RowEditFieldFile
   }
 
-  getCardComponent() {
-    return RowCardFieldFile
+  getFormViewFieldComponentProperties({ $store, $client, slug }) {
+    const userFileUploadTypes = [UploadFileUserFileUploadType.getType()]
+    return {
+      userFileUploadTypes,
+      uploadFile: (file, progress) => {
+        return FormService($client).uploadFile(
+          file,
+          progress,
+          slug,
+          $store.getters['page/view/public/getAuthToken']
+        )
+      },
+    }
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getCardComponent() {
+    return RowCardFieldFile
   }
 
   toHumanReadableString(field, value) {
