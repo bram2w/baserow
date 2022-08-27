@@ -22,9 +22,11 @@ import ViewService from '@baserow/modules/database/services/view'
 import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/constants'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import { mapGetters } from 'vuex'
+import languageDetection from '@baserow/modules/core/mixins/languageDetection'
 
 export default {
   components: { Table, Notifications },
+  mixins: [languageDetection],
   async asyncData({ store, params, error, app, redirect, route }) {
     const slug = params.slug
 
@@ -93,20 +95,11 @@ export default {
       }
     }
   },
-  data() {
-    return {
-      originalLangugaeBeforeDetect: null,
-    }
-  },
   computed: {
     ...mapGetters({
       fields: 'field/getAll',
       view: 'view/getSelected',
     }),
-  },
-  created() {
-    this.originalLangugaeBeforeDetect = this.$i18n.locale
-    this.$i18n.locale = this.$i18n.getBrowserLocale()
   },
   mounted() {
     if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
@@ -117,7 +110,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.$i18n.locale = this.originalLangugaeBeforeDetect
     if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
       this.$realtime.subscribe(null)
       this.$realtime.disconnect()
