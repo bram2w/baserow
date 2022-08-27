@@ -11,7 +11,7 @@
       ></i>
       {{ field.name }}
       <a
-        v-if="!readOnly"
+        v-if="!readOnly && canModifyFields"
         ref="contextLink"
         class="control__context"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
@@ -65,6 +65,11 @@ export default {
     sortable: {
       type: Boolean,
       default: false,
+    },
+    canModifyFields: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
     canBeHidden: {
       type: Boolean,

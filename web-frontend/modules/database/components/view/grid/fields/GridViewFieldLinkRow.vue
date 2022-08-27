@@ -106,10 +106,17 @@ export default {
      * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
-      return (
-        !isElement(this.$refs.selectModal.$el, event.target) &&
-        !isElement(this.$refs.rowEditModal.$refs.modal.$el, event.target)
-      )
+      const openModals = [
+        ...this.$refs.selectModal.$refs.modal.moveToBody.children.map(
+          (child) => child.$el
+        ),
+        this.$refs.selectModal.$el,
+        this.$refs.rowEditModal.$refs.modal.$el,
+      ]
+
+      return !openModals.some((modal) => {
+        return isElement(modal, event.target)
+      })
     },
     /**
      * Prevent unselecting the field cell by changing the event. Because the deleted

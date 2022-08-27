@@ -12,6 +12,7 @@ For example:
 ### New Features
 * Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
 * Add `isort` settings to sort python imports.
+* Allow creating new rows when selecting a related row [#1064](https://gitlab.com/bramw/baserow/-/issues/1064).
 * Add row url parameter to `gallery` and `kanban` view.
 * Only allow relative urls in the in the original query parameter.
 * Force browser language when viewing a public view. [#834](https://gitlab.com/bramw/baserow/-/issues/834)

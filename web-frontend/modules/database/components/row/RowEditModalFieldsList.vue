@@ -23,6 +23,7 @@
         :read-only="readOnly"
         :row="row"
         :table="table"
+        :can-modify-fields="canModifyFields"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @update="$emit('update', $event)"
@@ -53,6 +54,11 @@ export default {
     sortable: {
       type: Boolean,
       required: true,
+    },
+    canModifyFields: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
     hidden: {
       type: Boolean,
