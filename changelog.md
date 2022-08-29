@@ -35,6 +35,7 @@ For example:
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
 * Make it possible to copy/paste/import from/to text values for multi-select and file fields. [#913](https://gitlab.com/bramw/baserow/-/issues/913)
 * Users can copy/paste images into a file field. [#367](https://gitlab.com/bramw/baserow/-/issues/367)
+* Fixed error when sharing a view publicly with sorts more than one multi-select field. [#1082](https://gitlab.com/bramw/baserow/-/issues/1082)
 
 ### Breaking Changes
 
