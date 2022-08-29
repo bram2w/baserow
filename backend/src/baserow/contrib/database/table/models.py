@@ -173,6 +173,7 @@ class TableModelQuerySet(models.QuerySet):
         else:
             field_object_dict = self.model._field_objects
 
+        annotations = {}
         for index, order in enumerate(order_by):
             if user_field_names:
                 field_name_or_id = self._get_field_name(order)
@@ -201,10 +202,9 @@ class TableModelQuerySet(models.QuerySet):
                 )
 
             field_order = field_type.get_order(field, field_name, order_direction)
-            annotation = None
 
             if isinstance(field_order, AnnotatedOrder):
-                annotation = field_order.annotation
+                annotations = {**annotations, **field_order.annotation}
                 field_order = field_order.order
 
             if field_order:
@@ -222,8 +222,8 @@ class TableModelQuerySet(models.QuerySet):
         order_by.append("order")
         order_by.append("id")
 
-        if annotation is not None:
-            return self.annotate(**annotation).order_by(*order_by)
+        if annotations is not None:
+            return self.annotate(**annotations).order_by(*order_by)
         else:
             return self.order_by(*order_by)
 
