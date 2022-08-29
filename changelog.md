@@ -103,6 +103,8 @@ For example:
 * Fix backspace and delete keys breaking after selecting a formula text cell. [#1085](https://gitlab.com/bramw/baserow/-/issues/1085)
 * Fixed problem when new webhooks would be sent twice with both old and new payload.
 * Fixed problem causing kanban view duplication to fail silently. [#1109](https://gitlab.com/bramw/baserow/-/issues/1109)
+* Display round and trunc functions in the formula edit modal, rename int to trunc and make these functions handle weird inputs better. [#1095](https://gitlab.com/bramw/baserow/-/issues/1095)
+* Fix some rare errors when combining the if and divide formula functions. [#1086](https://gitlab.com/bramw/baserow/-/issues/1086)
 
 ### Breaking Changes
 

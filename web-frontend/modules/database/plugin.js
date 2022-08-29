@@ -146,6 +146,8 @@ import {
   BaserowLeft,
   BaserowContains,
   BaserowFilter,
+  BaserowTrunc,
+  BaserowRound,
 } from '@baserow/modules/database/formula/functions'
 import {
   BaserowFormulaArrayType,
@@ -401,6 +403,8 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowAvg(context))
   app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
+  app.$registry.register('formula_function', new BaserowTrunc(context))
+  app.$registry.register('formula_function', new BaserowRound(context))
 
   // Formula Types
   app.$registry.register('formula_type', new BaserowFormulaTextType(context))

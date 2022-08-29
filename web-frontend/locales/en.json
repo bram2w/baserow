@@ -346,7 +346,7 @@
         "sumDescription": "Sums all of the values and returns the result.",
         "filterDescription": "Filters down an expression involving a lookup/link field reference or a lookup function call.",
         "roundDescription": "Returns first argument rounded to the number of digits specified by the second argument.",
-        "intDescription": "Returns only the first argument converted into an integer by truncating any decimal places."
+        "truncDescription": "Returns only the first argument converted into an integer by truncating any decimal places."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
