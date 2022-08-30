@@ -156,12 +156,14 @@ import FieldService from '@baserow/modules/database/services/field'
 import { populateField } from '@baserow/modules/database/store/field'
 import RowService from '@baserow/modules/database/services/row'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
+import ViewService from '@baserow/modules/database/services/view'
 
 import Paginator from '@baserow/modules/core/components/Paginator'
 import SelectRowField from '@baserow/modules/database/components/row/SelectRowField'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { sortFieldsByOrderAndIdFunction } from '@baserow/modules/database/utils/view'
 
 export default {
   name: 'SelectRowContent',
@@ -191,6 +193,8 @@ export default {
       lastHoveredRow: null,
       addRowHover: false,
       searchDebounce: null,
+      firstView: null,
+      fieldOptions: {},
     }
   },
   computed: {
@@ -220,6 +224,14 @@ export default {
     },
   },
   async mounted() {
+    // We need to get the first view in order to
+    // sort the fields by their order
+    await this.fetchFirstView(this.tableId)
+
+    // Get the field options
+    // they contain the order of the fields
+    await this.fetchFieldOptions(this.firstView.id)
+
     // The first time we have to fetch the fields because they are unknown for this
     // table.
     if (!(await this.fetchFields(this.tableId))) {
@@ -297,13 +309,46 @@ export default {
         const primaryIndex = data.findIndex((item) => item.primary === true)
         this.primary =
           primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
-        this.fields = data
+        this.fields = data.sort(
+          sortFieldsByOrderAndIdFunction(this.fieldOptions)
+        )
         return true
       } catch (error) {
         notifyIf(error, 'row')
         this.$emit('hide')
         this.loading = false
         return false
+      }
+    },
+    async fetchFirstView(tableId) {
+      try {
+        const { data: views } = await ViewService(this.$client).fetchAll(
+          tableId,
+          true,
+          true
+        )
+
+        // Get the view with the smallest order
+        this.firstView = views.reduce((viewWithSmallestOrder, view) => {
+          if (viewWithSmallestOrder === null) {
+            return view
+          }
+          return view.order < viewWithSmallestOrder.order
+            ? view
+            : viewWithSmallestOrder
+        }, null)
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async fetchFieldOptions(viewId) {
+      try {
+        const {
+          data: { field_options: fieldOptions },
+        } = await ViewService(this.$client).fetchFieldOptions(viewId)
+        this.fieldOptions = fieldOptions
+      } catch (error) {
+        notifyIf(error, 'view')
       }
     },
     /**
