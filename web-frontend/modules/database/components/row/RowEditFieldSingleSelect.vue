@@ -3,7 +3,7 @@
     <FieldSelectOptionsDropdown
       :value="valueId"
       :options="field.select_options"
-      :allow-create-options="allowCreateOptions"
+      :allow-create-option="allowCreateOptions"
       :disabled="readOnly"
       :class="{ 'dropdown--error': touched && !valid }"
       @input="updateValue($event, value)"

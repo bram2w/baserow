@@ -23,6 +23,8 @@ For example:
 * Fixed a bug that prevent to use arrows keys in the grid view when a formula field is selected. [#1136](https://gitlab.com/bramw/baserow/-/issues/1136)
 * Fixed a bug that make the grid view crash when searching text and a formula field is referencing a singe-select field. [#1110](https://gitlab.com/bramw/baserow/-/issues/1110)
 * Fixed horizontal scroll on Mac OSX.
+* Fixed bug where the "Create option" button was not visible for the single and multiple
+  select fields in the row edit modal.
 
 ### Refactors
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
