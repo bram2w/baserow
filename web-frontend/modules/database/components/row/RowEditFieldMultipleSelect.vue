@@ -31,7 +31,7 @@
     <FieldSelectOptionsDropdown
       ref="dropdown"
       :options="availableSelectOptions"
-      :allow-create-options="allowCreateOptions"
+      :allow-create-option="allowCreateOptions"
       :disabled="readOnly"
       :show-input="false"
       :show-empty-value="false"
