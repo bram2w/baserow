@@ -93,6 +93,7 @@ export const actions = {
     Object.keys(rows).forEach((key) => {
       const value = rows[key]
       if (
+        value !== null &&
         value.tableId === tableId &&
         value.id === values.id &&
         !value.exists

@@ -3,11 +3,11 @@ import axios from 'axios'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { clone } from '@baserow/modules/core/utils/object'
 import {
-  getRowSortFunction,
-  matchSearchFilters,
   calculateSingleRowSearchMatches,
   getFilters,
   getOrderBy,
+  getRowSortFunction,
+  matchSearchFilters,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
@@ -932,13 +932,15 @@ export default ({ service, customPopulateRow }) => {
     ) {
       commit('SET_SEARCH', { activeSearchTerm })
       if (refreshMatchesOnClient) {
-        getters.getRows.forEach((row) =>
-          dispatch('updateSearchMatchesForRow', {
-            row,
-            fields,
-            forced: true,
-          })
-        )
+        getters.getRows.forEach((row) => {
+          if (row !== null) {
+            dispatch('updateSearchMatchesForRow', {
+              row,
+              fields,
+              forced: true,
+            })
+          }
+        })
       }
     },
     /**
