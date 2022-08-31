@@ -298,3 +298,41 @@ def test_upload_user_file_by_url_within_private_network(data_fixture, tmpdir):
         handler.upload_user_file_by_url(
             user, "http://192.168.1.1/test.txt", storage=storage
         )
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_querystring(data_fixture, tmpdir) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io/test.txt?utm_source=google&utm_medium=email&utm_campaign=fall"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=b"Hello World",
+        status=200,
+        content_type="text/plain",
+    )
+
+    responses.add(
+        responses.GET,
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert user_file.original_name == "test.txt"
+    assert user_file.original_extension == "txt"
+    assert len(user_file.unique) == 32
+    assert user_file.mime_type == "text/plain"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is False
+    assert user_file.image_width is None
+    assert user_file.image_height is None
