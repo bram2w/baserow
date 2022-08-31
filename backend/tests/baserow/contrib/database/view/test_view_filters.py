@@ -4612,8 +4612,8 @@ def test_link_row_contains_filter_type_file_field(
         primary=True, table=related_table
     )
 
-    file_one = data_fixture.create_user_file(original_name="target 1")
-    file_two = data_fixture.create_user_file(original_name="target 2")
+    file_one = data_fixture.create_user_file(original_name="target1.jpg")
+    file_two = data_fixture.create_user_file(original_name="target2.jpg")
 
     model = table.get_model()
     related_model = related_table.get_model()
@@ -4674,7 +4674,7 @@ def test_link_row_contains_filter_type_file_field(
     ]
     assert len(ids) == 3
 
-    view_filter.value = "target 1"
+    view_filter.value = "target1.jpg"
     view_filter.save()
     ids = [
         r.id for r in view_handler.apply_filters(grid_view, model.objects.all()).all()
