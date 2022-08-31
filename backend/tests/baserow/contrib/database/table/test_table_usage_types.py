@@ -29,7 +29,7 @@ def test_table_group_storage_usage_item_type(data_fixture):
     assert usage == 500
 
     user_file_2 = data_fixture.create_user_file(
-        original_name="another_file", is_image=True, size=200
+        original_name="another_file.jpg", is_image=True, size=200
     )
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_2.name}]})
