@@ -60,6 +60,9 @@ def test_user_file_deconstruct_name():
         UserFile.deconstruct_name("something_testjpg")
 
     with pytest.raises(InvalidUserFileNameError):
+        UserFile.deconstruct_name("something_test.")
+
+    with pytest.raises(InvalidUserFileNameError):
         UserFile.deconstruct_name("nothing_test.-")
 
     assert UserFile.deconstruct_name("random_hash.jpg") == {
