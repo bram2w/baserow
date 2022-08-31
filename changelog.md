@@ -20,6 +20,8 @@ For example:
 * Search automatically after 400ms when chosing a related field via the modal. [#1091](https://gitlab.com/bramw/baserow/-/issues/1091)
 * Add cancel button to field update context [#1020](https://gitlab.com/bramw/baserow/-/issues/1020)
 * Sort fields on row select modal by the order of the first view in the related table. [#1062](https://gitlab.com/bramw/baserow/-/issues/1062)
+* New signals `user_updated`, `user_deleted`, `user_restored`, `user_permanently_deleted` were added to track user changes.
+* `list_groups` endpoint now also returns the list of all group users for each group.
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)

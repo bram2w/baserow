@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from baserow.config.celery import app
 
 
@@ -87,6 +89,36 @@ def broadcast_to_group(self, group_id, payload, ignore_web_socket_id=None):
         user["user_id"]
         for user in GroupUser.objects.filter(group_id=group_id).values("user_id")
     ]
+
+    if len(user_ids) == 0:
+        return
+
+    broadcast_to_users(user_ids, payload, ignore_web_socket_id)
+
+
+@app.task(bind=True)
+def broadcast_to_groups(
+    self, group_ids: Iterable[int], payload: dict, ignore_web_socket_id: str = None
+):
+    """
+    Broadcasts a JSON payload to all users that are in the provided groups.
+
+    :param group_ids: Ids of groups to broadcast to.
+    :param payload: A dictionary object containing the payload that must be
+        broadcasted.
+    :param ignore_web_socket_id: The web socket id to which the message must not be
+        sent. This is normally the web socket id that has originally made the change
+        request.
+    """
+
+    from baserow.core.models import GroupUser
+
+    user_ids = list(
+        GroupUser.objects.filter(group_id__in=group_ids)
+        .distinct("user_id")
+        .order_by("user_id")
+        .values_list("user_id", flat=True)
+    )
 
     if len(user_ids) == 0:
         return

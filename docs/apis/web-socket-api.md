@@ -123,6 +123,10 @@ are subscribed to the page.
 * `page_add`
 * `page_discard`
 * `before_group_deleted`
+* `user_updated`
+* `user_deleted`
+* `user_restored`
+* `user_permanently_deleted`
 * `group_created`
 * `group_updated`
 * `group_deleted`

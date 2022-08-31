@@ -48,6 +48,20 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
+class PublicUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer that exposes only fields that can be shared
+    about the user for the whole group.
+    """
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "first_name")
+        extra_kwargs = {
+            "id": {"read_only": True},
+        }
+
+
 class RegisterSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=2, max_length=150)
     email = serializers.EmailField(

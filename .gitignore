@@ -127,3 +127,5 @@ junit.xml
 !plugin-boilerplate/{{ cookiecutter.project_slug }}/.env
 
 field-diagrams/
+
+*.http

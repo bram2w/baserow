@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
 
 from itsdangerous import URLSafeSerializer
@@ -153,6 +153,22 @@ class CoreHandler:
 
         return group
 
+    def get_groupuser_group_queryset(self) -> QuerySet[GroupUser]:
+        """
+        Returns GroupUser queryset that will prefetch groups and their users.
+        """
+
+        groupusers_with_user_and_profile = GroupUser.objects.select_related(
+            "user"
+        ).select_related("user__profile")
+        groupuser_groups = GroupUser.objects.select_related("group").prefetch_related(
+            Prefetch(
+                "group__groupuser_set",
+                queryset=groupusers_with_user_and_profile,
+            )
+        )
+        return groupuser_groups
+
     def create_group(self, user: User, name: str) -> GroupUser:
         """
         Creates a new group for an existing user.
@@ -243,7 +259,10 @@ class CoreHandler:
         group_user_id = group_user.id
         group_user.delete()
         group_user_deleted.send(
-            self, group_user_id=group_user_id, group_user=group_user, user=user
+            self,
+            group_user_id=group_user_id,
+            group_user=group_user,
+            user=user,
         )
 
     def delete_group_by_id(self, user: AbstractUser, group_id: int):
@@ -394,7 +413,10 @@ class CoreHandler:
         group_user.delete()
 
         group_user_deleted.send(
-            self, group_user_id=group_user_id, group_user=group_user, user=user
+            self,
+            group_user_id=group_user_id,
+            group_user=group_user,
+            user=user,
         )
 
     def get_group_invitation_signer(self):
