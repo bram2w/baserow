@@ -19,9 +19,15 @@ from baserow.core.exceptions import (
     GroupInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, Template, UserLogEntry, UserProfile
+from baserow.core.models import Group, GroupUser, Template, UserLogEntry, UserProfile
 from baserow.core.registries import plugin_registry
-from baserow.core.signals import before_user_deleted
+from baserow.core.signals import (
+    before_user_deleted,
+    user_deleted,
+    user_permanently_deleted,
+    user_restored,
+    user_updated,
+)
 from baserow.core.trash.handler import TrashHandler
 
 from .emails import (
@@ -189,7 +195,8 @@ class UserHandler:
         language: Optional[str] = None,
     ) -> AbstractUser:
         """
-        Updates the user's account editable properties
+        Updates the user's account editable properties. Handles the scenario
+        when a user edits his own account.
 
         :param user: The user instance to update.
         :param first_name: The new user first name.
@@ -204,6 +211,8 @@ class UserHandler:
         if language is not None:
             user.profile.language = language
             user.profile.save()
+
+        user_updated.send(self, performed_by=user, user=user)
 
         return user
 
@@ -374,6 +383,8 @@ class UserHandler:
             email = AccountDeletionScheduled(user, days_left, to=[user.email])
             email.send()
 
+        user_deleted.send(self, performed_by=user, user=user)
+
     def cancel_user_deletion(self, user: AbstractUser):
         """
         Cancels a previously scheduled user account deletion. This action send an email
@@ -388,6 +399,8 @@ class UserHandler:
         with translation.override(user.profile.language):
             email = AccountDeletionCanceled(user, to=[user.email])
             email.send()
+
+        user_restored.send(self, performed_by=user, user=user)
 
     def delete_expired_users(self, grace_delay: Optional[timedelta] = None):
         """
@@ -416,9 +429,14 @@ class UserHandler:
             profile__to_be_deleted=True, last_login__lt=limit_date
         )
 
-        deleted_user_info = [
-            (u.username, u.email, u.profile.language) for u in users_to_delete.all()
-        ]
+        group_users = GroupUser.objects.filter(user__in=users_to_delete)
+
+        deleted_user_info = []
+        for u in users_to_delete.all():
+            group_ids = [gu.group_id for gu in group_users if gu.user_id == u.id]
+            deleted_user_info.append(
+                (u.id, u.username, u.email, u.profile.language, group_ids)
+            )
 
         # A group need to be deleted if there was an admin before and there is no
         # *active* admin after the users deletion.
@@ -447,7 +465,8 @@ class UserHandler:
                 TrashHandler.permanently_delete(group)
             users_to_delete.delete()
 
-        for (username, email, language) in deleted_user_info:
+        for (id, username, email, language, group_ids) in deleted_user_info:
             with translation.override(language):
                 email = AccountDeleted(username, to=[email])
                 email.send()
+            user_permanently_deleted.send(self, user_id=id, group_ids=group_ids)

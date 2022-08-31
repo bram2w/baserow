@@ -23,11 +23,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser
 
-from .serializers import (
-    GroupUserGroupSerializer,
-    GroupUserSerializer,
-    UpdateGroupUserSerializer,
-)
+from .serializers import GroupUserSerializer, UpdateGroupUserSerializer
 
 
 class GroupUsersView(APIView):
@@ -95,7 +91,7 @@ class GroupUserView(APIView):
         ),
         request=UpdateGroupUserSerializer,
         responses={
-            200: GroupUserGroupSerializer,
+            200: GroupUserSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -123,7 +119,7 @@ class GroupUserView(APIView):
             base_queryset=GroupUser.objects.select_for_update(of=("self",)),
         )
         group_user = CoreHandler().update_group_user(request.user, group_user, **data)
-        return Response(GroupUserGroupSerializer(group_user).data)
+        return Response(GroupUserSerializer(group_user).data)
 
     @extend_schema(
         parameters=[

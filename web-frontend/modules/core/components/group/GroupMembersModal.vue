@@ -196,6 +196,11 @@ export default {
 
       try {
         await GroupService(this.$client).updateUser(user.id, { permissions })
+        await this.$store.dispatch('group/forceUpdateGroupUser', {
+          groupId: this.group.id,
+          id: user.id,
+          values: { permissions },
+        })
       } catch (error) {
         user.permissions = oldPermissions
         notifyIf(error, 'group')
@@ -208,7 +213,13 @@ export default {
       try {
         await GroupService(this.$client).deleteUser(user.id)
         const index = this.users.findIndex((u) => u.id === user.id)
+        const userId = this.users[index].user_id
         this.users.splice(index, 1)
+        await this.$store.dispatch('group/forceDeleteGroupUser', {
+          groupId: this.group.id,
+          id: user.id,
+          values: { user_id: userId },
+        })
       } catch (error) {
         user._.loading = false
         notifyIf(error, 'group')

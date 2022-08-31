@@ -324,7 +324,10 @@ class AcceptGroupInvitationView(APIView):
         group_user = CoreHandler().accept_group_invitation(
             request.user, group_invitation
         )
-        return Response(GroupUserGroupSerializer(group_user).data)
+        groupuser_group = (
+            CoreHandler().get_groupuser_group_queryset().get(id=group_user.id)
+        )
+        return Response(GroupUserGroupSerializer(groupuser_group).data)
 
 
 class RejectGroupInvitationView(APIView):

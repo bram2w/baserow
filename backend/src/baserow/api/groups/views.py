@@ -1,7 +1,6 @@
 from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
-from drf_spectacular.plumbing import build_array_type
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -34,11 +33,9 @@ from baserow.core.exceptions import (
     UserNotInGroup,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .errors import ERROR_GROUP_USER_IS_LAST_ADMIN
-from .schemas import group_user_schema
 from .serializers import GroupSerializer, OrderGroupsSerializer
 
 
@@ -56,13 +53,15 @@ class GroupsView(APIView):
             "are custom for each user. The order is configurable via the "
             "**order_groups** endpoint."
         ),
-        responses={200: build_array_type(group_user_schema)},
+        responses={200: GroupUserGroupSerializer(many=True)},
     )
     def get(self, request):
         """Responds with a list of serialized groups where the user is part of."""
 
-        groups = GroupUser.objects.filter(user=request.user).select_related("group")
-        serializer = GroupUserGroupSerializer(groups, many=True)
+        groupuser_groups = (
+            CoreHandler().get_groupuser_group_queryset().filter(user=request.user)
+        )
+        serializer = GroupUserGroupSerializer(groupuser_groups, many=True)
         return Response(serializer.data)
 
     @extend_schema(
@@ -75,7 +74,7 @@ class GroupsView(APIView):
             "created via other endpoints."
         ),
         request=GroupSerializer,
-        responses={200: group_user_schema},
+        responses={200: GroupUserGroupSerializer},
     )
     @transaction.atomic
     @validate_body(GroupSerializer)
@@ -160,7 +159,7 @@ class GroupView(APIView):
         ),
         request=GroupSerializer,
         responses={
-            200: group_user_schema,
+            204: None,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

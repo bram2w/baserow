@@ -69,6 +69,38 @@ export const mutations = {
     })
     state.selected = {}
   },
+  ADD_GROUP_USER(state, { groupId, values }) {
+    const groupIndex = state.items.findIndex((item) => item.id === groupId)
+    if (groupIndex !== -1) {
+      state.items[groupIndex].users.push(values)
+    }
+  },
+  UPDATE_GROUP_USER(state, { groupId, id, values }) {
+    const groupIndex = state.items.findIndex((item) => item.id === groupId)
+    if (groupIndex === -1) {
+      return
+    }
+    const usersIndex = state.items[groupIndex].users.findIndex(
+      (item) => item.id === id
+    )
+    if (usersIndex === -1) {
+      return
+    }
+    Object.assign(
+      state.items[groupIndex].users[usersIndex],
+      state.items[groupIndex].users[usersIndex],
+      values
+    )
+  },
+  DELETE_GROUP_USER(state, { groupId, id }) {
+    const groupIndex = state.items.findIndex((item) => item.id === groupId)
+    if (groupIndex === -1) {
+      return
+    }
+    state.items[groupIndex].users = state.items[groupIndex].users.filter(
+      (item) => item.id !== id
+    )
+  },
 }
 
 export const actions = {
@@ -239,6 +271,77 @@ export const actions = {
       root: true,
     })
     return dispatch('application/clearAll', group, { root: true })
+  },
+  /**
+   * Forcefully adds a group user in the list of group's users.
+   */
+  forceAddGroupUser({ commit }, { groupId, values }) {
+    commit('ADD_GROUP_USER', { groupId, values })
+  },
+  /**
+   * Forcefully updates a group user in the list of group's users
+   * and updates group's permissions attr if the group user is the
+   * same as the current user.
+   */
+  forceUpdateGroupUser({ commit, rootGetters }, { groupId, id, values }) {
+    commit('UPDATE_GROUP_USER', { groupId, id, values })
+    const userId = rootGetters['auth/getUserId']
+    if (values.user_id === userId) {
+      commit('UPDATE_ITEM', {
+        id: groupId,
+        values: { permissions: values.permissions },
+      })
+    }
+  },
+  /**
+   * Forcefully updates user's properties based on userId across all group users
+   * of all groups. Can be used e.g. to change the user's name across all group
+   * users that represent the same user in the system.
+   */
+  forceUpdateGroupUserAttributes({ commit, rootGetters }, { userId, values }) {
+    const groups = rootGetters['group/getAll']
+    for (const group of groups) {
+      const usersIndex = group.users.findIndex(
+        (item) => item.user_id === userId
+      )
+      if (usersIndex !== -1) {
+        commit('UPDATE_GROUP_USER', {
+          groupId: group.id,
+          id: group.users[usersIndex].id,
+          values,
+        })
+      }
+    }
+  },
+  /**
+   * Forcefully deletes a group user in the list of group's users. If the
+   * group user is the current user, the whole group is removed.
+   */
+  forceDeleteGroupUser({ commit, rootGetters }, { groupId, id, values }) {
+    const userId = rootGetters['auth/getUserId']
+    if (values.user_id === userId) {
+      commit('DELETE_ITEM', { id: groupId })
+    } else {
+      commit('DELETE_GROUP_USER', { groupId, id })
+    }
+  },
+  /**
+   * Forcefully deletes a user by deleting various user group instances
+   * in all groups where the user is present.
+   */
+  forceDeleteUser({ commit, rootGetters }, { userId }) {
+    const groups = rootGetters['group/getAll']
+    for (const group of groups) {
+      const usersIndex = group.users.findIndex(
+        (item) => item.user_id === userId
+      )
+      if (usersIndex !== -1) {
+        commit('DELETE_GROUP_USER', {
+          groupId: group.id,
+          id: group.users[usersIndex].id,
+        })
+      }
+    }
   },
 }
 
