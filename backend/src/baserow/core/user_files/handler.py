@@ -283,7 +283,9 @@ class UserFileHandler:
         if parsed_url.scheme not in ["http", "https"]:
             raise InvalidFileURLError("Only http and https are allowed.")
 
-        file_name = url.split("/")[-1]
+        # Pluck out the parsed URL path (in the event we've been given
+        # a URL with a querystring) and then extract the filename.
+        file_name = parsed_url.path.split("/")[-1]
 
         try:
             response = advocate.get(url, stream=True, timeout=10)
