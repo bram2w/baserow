@@ -525,7 +525,6 @@ def test_admin_fill_users_in_license(api_client, data_fixture):
     )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
-    print(response_json)
     assert len(response_json) == 2
     assert response_json[0]["id"] == normal_user.id
     assert response_json[0]["email"] == normal_user.email

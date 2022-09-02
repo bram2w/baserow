@@ -189,7 +189,8 @@
         "kanbanView": "Kanban view",
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
-        "rowColoring": "Row coloring"
+        "rowColoring": "Row coloring",
+        "surveyForm": "Survey form"
     },
     "licenses": {
         "titleNoLicenses": "No licenses found",
@@ -264,5 +265,15 @@
       "impersonateStop": "Stop",
       "premium": "Premium",
       "premiumDescription": "Your account has access to the premium features globally"
+    },
+    "formViewModeType": {
+        "survey": "Survey",
+        "surveyDescription": "One field is visible at the same time.",
+        "onlyForPremium": "Available in the premium version"
+    },
+    "formViewModePreviewSurvey": {
+        "orderFields": "Order fields",
+        "deactivated": "Survey form is available in the premium version.",
+        "more": "More information"
     }
 }

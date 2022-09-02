@@ -392,6 +392,24 @@ def test_get_view_field_options(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_view_field_options_as_template(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data_fixture.create_template(group=grid.table.database.group)
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_patch_view_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -468,6 +486,24 @@ def test_patch_view_field_options(api_client, data_fixture):
         response_json = response.json()
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response_json["error"] == "ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS"
+
+
+@pytest.mark.django_db
+def test_patch_view_field_options_as_template(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.patch(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data_fixture.create_template(group=grid.table.database.group)
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.patch(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.django_db

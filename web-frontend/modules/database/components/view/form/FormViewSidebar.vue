@@ -3,7 +3,10 @@
     <div class="form-view__sidebar-fields">
       <div class="form-view__sidebar-fields-head">
         <div class="form-view__sidebar-fields-title">Fields</div>
-        <ul v-if="!readOnly" class="form-view__sidebar-fields-actions">
+        <ul
+          v-if="!readOnly && !isDeactivated"
+          class="form-view__sidebar-fields-actions"
+        >
           <li v-show="fields.length > 0">
             <a
               @click="
@@ -37,12 +40,12 @@
           v-for="field in fields"
           :key="field.id"
           v-sortable="{
-            enabled: !readOnly,
+            enabled: !readOnly && !isDeactivated,
             id: field.id,
             update: order,
           }"
           :field="field"
-          :read-only="readOnly"
+          :read-only="readOnly || isDeactivated"
           @updated-field-options="
             updateFieldOptionsOfField(view, field, $event)
           "
@@ -52,7 +55,7 @@
       <p v-else class="form-view__sidebar-fields-description">
         {{ $t('formSidebar.fieldsDescription') }}
       </p>
-      <div v-if="!readOnly">
+      <div v-if="!readOnly && !isDeactivated">
         <a
           ref="createFieldContextLink"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
@@ -88,6 +91,10 @@ export default {
   components: { FormPrefillModal, CreateFieldContext, FormViewSidebarField },
   mixins: [formViewHelpers],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
@@ -107,6 +114,16 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
+    },
+  },
+  computed: {
+    modeType() {
+      return this.$registry.get('formViewMode', this.view.mode)
+    },
+    isDeactivated() {
+      return (
+        !this.readOnly && this.modeType.isDeactivated(this.database.group.id)
+      )
     },
   },
   methods: {

@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.db.models import Q
+from django.utils.functional import lazy
 
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
@@ -11,6 +12,7 @@ from baserow.contrib.database.fields.field_filters import (
 )
 from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.views.registries import (
+    form_view_mode_registry,
     view_filter_type_registry,
     view_type_registry,
 )
@@ -524,6 +526,12 @@ class FormView(View):
     description = models.TextField(
         blank=True,
         help_text="The description that is displayed at the beginning of the form.",
+    )
+    mode = models.TextField(
+        max_length=64,
+        default=lazy(form_view_mode_registry.get_default_choice, str)(),
+        choices=lazy(form_view_mode_registry.get_choices, list)(),
+        help_text="Configurable mode of the form.",
     )
     cover_image = models.ForeignKey(
         UserFile,

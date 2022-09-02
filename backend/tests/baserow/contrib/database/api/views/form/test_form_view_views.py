@@ -46,6 +46,7 @@ def test_create_form_view(api_client, data_fixture):
     assert len(response_json["slug"]) == 43
     assert response_json["type"] == "form"
     assert response_json["name"] == "Test Form"
+    assert response_json["mode"] == "form"
     assert response_json["table_id"] == table.id
     assert response_json["public"] is False
     assert response_json["title"] == ""
@@ -97,6 +98,7 @@ def test_create_form_view(api_client, data_fixture):
     assert response_json["slug"] != "Test"
     assert response_json["name"] == "Test Form 2"
     assert response_json["type"] == "form"
+    assert response_json["mode"] == "form"
     assert response_json["public"] is True
     assert response_json["title"] == "Title"
     assert response_json["description"] == "Description"
@@ -123,6 +125,7 @@ def test_create_form_view(api_client, data_fixture):
         reverse("api:database:views:list", kwargs={"table_id": table.id}),
         {
             "type": "form",
+            "mode": "form",
             "name": "Test",
             "cover_image": None,
             "logo_image": {"name": user_file_2.name},
@@ -132,6 +135,7 @@ def test_create_form_view(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
+    assert response_json["mode"] == "form"
     assert response_json["cover_image"] is None
     assert response_json["logo_image"]["name"] == user_file_2.name
 
@@ -169,6 +173,7 @@ def test_update_form_view(api_client, data_fixture):
     assert response_json["slug"] == str(view.slug)
     assert response_json["name"] == "Test Form 2"
     assert response_json["type"] == "form"
+    assert response_json["mode"] == "form"
     assert response_json["title"] == "Title"
     assert response_json["description"] == "Description"
     assert response_json["cover_image"]["name"] == user_file_1.name
@@ -183,6 +188,7 @@ def test_update_form_view(api_client, data_fixture):
     assert form.public is True
     assert form.title == "Title"
     assert form.description == "Description"
+    assert form.mode == "form"
     assert form.cover_image_id == user_file_1.id
     assert form.logo_image_id == user_file_2.id
     assert form.submit_text == "Patched Submit"
@@ -215,7 +221,28 @@ def test_update_form_view(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["cover_image"] is None
+    assert response_json["mode"] == "form"
     assert response_json["logo_image"]["name"] == user_file_2.name
+
+
+@pytest.mark.django_db
+def test_update_form_view_invalid_mode(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_form_view(table=table)
+
+    url = reverse("api:database:views:item", kwargs={"view_id": view.id})
+    response = api_client.patch(
+        url,
+        {"mode": "not_existing"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    print(response_json)
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["mode"][0]["code"] == "invalid_choice"
 
 
 @pytest.mark.django_db
@@ -282,6 +309,7 @@ def test_meta_submit_form_view(api_client, data_fixture):
     assert response_json["description"] == "Description"
     assert response_json["cover_image"]["name"] == user_file_1.name
     assert response_json["logo_image"]["name"] == user_file_2.name
+    assert response_json["mode"] == "form"
     assert len(response_json["fields"]) == 2
     assert response_json["fields"][0] == {
         "name": "Text field title",

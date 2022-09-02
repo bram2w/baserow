@@ -50,7 +50,7 @@ from .models import (
     GridViewFieldOptions,
     View,
 )
-from .registries import ViewType, view_filter_type_registry
+from .registries import ViewType, form_view_mode_registry, view_filter_type_registry
 
 
 class GridViewType(ViewType):
@@ -509,6 +509,7 @@ class FormViewType(ViewType):
     allowed_fields = [
         "title",
         "description",
+        "mode",
         "cover_image",
         "logo_image",
         "submit_text",
@@ -528,6 +529,7 @@ class FormViewType(ViewType):
     serializer_field_names = [
         "title",
         "description",
+        "mode",
         "cover_image",
         "logo_image",
         "submit_text",
@@ -802,6 +804,19 @@ class FormViewType(ViewType):
             .filter(enabled=True)
             .order_by("-field__primary", "order", "field__id")
         )
+
+    def before_view_create(self, values: dict, table: "Table", user: AbstractUser):
+        if "mode" in values:
+            mode_type = form_view_mode_registry.get(values["mode"])
+        else:
+            # This is the default mode that's set when nothing is provided.
+            mode_type = form_view_mode_registry.get_default_type()
+
+        mode_type.before_form_create(values, table, user)
+
+    def before_view_update(self, values: dict, view: "View", user: AbstractUser):
+        mode_type = form_view_mode_registry.get(values.get("mode", view.mode))
+        mode_type.before_form_update(values, view, user)
 
     def prepare_values(
         self, values: Dict[str, Any], table: Table, user: AbstractUser

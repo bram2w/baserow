@@ -1,6 +1,7 @@
 <template>
   <div class="form-view">
     <FormViewSidebar
+      :database="database"
       :table="table"
       :view="view"
       :fields="disabledFields"
@@ -11,6 +12,7 @@
       @refresh="$emit('refresh', $event)"
     ></FormViewSidebar>
     <FormViewPreview
+      :database="database"
       :table="table"
       :view="view"
       :fields="enabledFields"

@@ -18,6 +18,7 @@ class BaserowPremiumConfig(AppConfig):
         from baserow.contrib.database.views.registries import (
             decorator_type_registry,
             decorator_value_provider_type_registry,
+            form_view_mode_registry,
             view_type_registry,
         )
         from baserow.core.registries import plugin_registry
@@ -32,6 +33,7 @@ class BaserowPremiumConfig(AppConfig):
             ConditionalColorValueProviderType,
             SelectColorValueProviderType,
         )
+        from .views.form_view_mode_types import FormViewModeTypeSurvey
         from .views.view_types import KanbanViewType
 
         plugin_registry.register(PremiumPlugin())
@@ -44,6 +46,8 @@ class BaserowPremiumConfig(AppConfig):
         user_data_registry.register(PremiumUserDataType())
 
         view_type_registry.register(KanbanViewType())
+
+        form_view_mode_registry.register(FormViewModeTypeSurvey())
 
         decorator_type_registry.register(LeftBorderColorDecoratorType())
         decorator_type_registry.register(BackgroundColorDecoratorType())

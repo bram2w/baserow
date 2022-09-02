@@ -1448,6 +1448,14 @@ class ViewSortView(APIView):
 class ViewFieldOptionsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get_permissions(self):
+        if self.request.method == "GET":
+            # Should be `AllowAny` because the field options can be requested in a
+            # template that contains a form view for example.
+            return [AllowAny()]
+
+        return super().get_permissions()
+
     @extend_schema(
         parameters=[
             OpenApiParameter(

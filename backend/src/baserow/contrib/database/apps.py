@@ -136,6 +136,7 @@ class DatabaseConfig(AppConfig):
         from .formula.registries import formula_function_registry
         from .plugins import DatabasePlugin
         from .views.registries import (
+            form_view_mode_registry,
             view_aggregation_type_registry,
             view_filter_type_registry,
             view_type_registry,
@@ -313,6 +314,10 @@ class DatabaseConfig(AppConfig):
         view_aggregation_type_registry.register(DecileViewAggregationType())
         view_aggregation_type_registry.register(VarianceViewAggregationType())
         view_aggregation_type_registry.register(StdDevViewAggregationType())
+
+        from .views.form_view_mode_types import FormViewModeTypeForm
+
+        form_view_mode_registry.register(FormViewModeTypeForm())
 
         from .application_types import DatabaseApplicationType
 

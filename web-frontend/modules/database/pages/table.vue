@@ -85,7 +85,14 @@ export default {
     // the first available view.
     const firstView = store.getters['view/first']
     if (viewId === null && firstView !== null) {
-      viewId = firstView.id
+      const firstViewType = app.$registry.get('view', firstView.type)
+      // If the view is deactivated, it's not possible to open the view because it will
+      // put the user in an unrecoverable state. Therefore, it's better to not select a
+      // view, so that the user can choose which he wants to select in the top left
+      // corner.
+      if (!firstViewType.isDeactivated(data.database.group.id)) {
+        viewId = firstView.id
+      }
     }
 
     // If a view id is provided and the table is selected we can select the view. The
