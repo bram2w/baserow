@@ -180,6 +180,8 @@ class ViewHandler:
 
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
+        view_type.before_view_create(kwargs, table, user)
+
         model_class = view_type.model_class
         view_values = view_type.prepare_values(kwargs, table, user)
         allowed_fields = [
@@ -295,6 +297,8 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(view)
+        view_type.before_view_update(data, view, user)
+
         view_values = view_type.prepare_values(data, view.table, user)
         allowed_fields = [
             "name",

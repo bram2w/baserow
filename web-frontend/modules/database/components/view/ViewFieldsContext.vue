@@ -52,6 +52,7 @@
         >
           <a class="hidings__item-handle" data-field-handle></a>
           <SwitchInput
+            v-if="allowHidingFields"
             :value="!isHidden(field.id)"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
@@ -61,10 +62,17 @@
             ></i>
             <span>{{ field.name }}</span>
           </SwitchInput>
+          <div v-else class="hidings__item-name">
+            <i
+              class="fas fa-fw switch__icon"
+              :class="'fa-' + field._.type.iconClass"
+            ></i>
+            <span>{{ field.name }}</span>
+          </div>
         </li>
       </ul>
     </div>
-    <div v-show="query === ''" class="hidings__footer">
+    <div v-if="allowHidingFields" v-show="query === ''" class="hidings__footer">
       <button
         class="button button--ghost hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
@@ -114,6 +122,11 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    allowHidingFields: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {

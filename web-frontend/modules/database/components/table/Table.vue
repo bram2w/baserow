@@ -33,7 +33,7 @@
             </template>
             <span v-else-if="view !== null">
               <i class="header__filter-icon fas fa-caret-square-down"></i>
-              Choose view
+              {{ $t('table.chooseView') }}
             </span>
           </a>
           <ViewsContext

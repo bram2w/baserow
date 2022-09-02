@@ -136,6 +136,7 @@
   background-color: $white;
 
   &.form-view__page--rounded {
+    position: relative;
     overflow: hidden;
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;

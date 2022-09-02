@@ -181,6 +181,7 @@ import {
   VarianceViewAggregationType,
   MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
+import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -494,6 +495,8 @@ export default (context) => {
     'viewAggregation',
     new UniqueCountViewAggregationType(context)
   )
+
+  app.$registry.register('formViewMode', new FormViewFormModeType(context))
 
   registerRealtimeEvents(app.$realtime)
 }

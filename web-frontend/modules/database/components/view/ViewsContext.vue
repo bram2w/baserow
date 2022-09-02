@@ -99,6 +99,9 @@ export default {
     viewTypes() {
       return this.$registry.getAll('view')
     },
+    selectedViews() {
+      return this.views.filter((item) => item._.selected)
+    },
     ...mapState({
       isLoading: (state) => state.view.loading,
       isLoaded: (state) => state.view.loaded,
@@ -124,7 +127,7 @@ export default {
       In case there are no views, we don't need to do anything and can simply return.
     */
     scrollViewDropdownIfNeeded() {
-      if (this.views.length === 0) {
+      if (this.selectedViews.length === 0) {
         return
       }
       const dropdownElement = this.$refs.dropdown
@@ -144,8 +147,7 @@ export default {
      * view dom item based on whether or not it is selected.
      */
     getSelectedViewItem() {
-      const selectedViewArray = this.views.filter((item) => item._.selected)
-      const selectedViewItemID = selectedViewArray[0].id
+      const selectedViewItemID = this.selectedViews[0].id
       return this.$refs[`view-${selectedViewItemID}`][0].$el
     },
     /**

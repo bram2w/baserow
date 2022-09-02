@@ -106,8 +106,12 @@
     }
   }
 
-  &.disabled:hover {
+  &.disabled {
     background-color: transparent;
+
+    &:hover {
+      background-color: transparent;
+    }
   }
 }
 
@@ -143,6 +147,7 @@
   line-height: 140%;
   color: $color-neutral-600;
   padding-bottom: 6px;
+  padding-right: 10px;
 }
 
 .select__item-options {

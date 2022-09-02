@@ -50,7 +50,7 @@ from .exceptions import (
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
     from baserow.contrib.database.table.models import Table
-    from baserow.contrib.database.views.models import View
+    from baserow.contrib.database.views.models import FormView, View
 
 
 class ViewType(
@@ -460,6 +460,24 @@ class ViewType(
         possibility to check compatibility with view stuff like specific field options.
 
         :param field: The concerned field.
+        """
+
+    def before_view_create(self, values: dict, table: "Table", user: AbstractUser):
+        """
+        Hook that's called before the view is created.
+
+        :param values: The raw view values that were provided by the users.
+        :param table: The table where the view is going to be created in.
+        :param user: The user on whose behalf the view is created.
+        """
+
+    def before_view_update(self, values: dict, view: "View", user: AbstractUser):
+        """
+        Hook that's called before the view is updated.
+
+        :param values: The raw view values that were provided by the users.
+        :param view: The view that's going to be updated.
+        :param user: The user on whose behalf the view is updated.
         """
 
     def prepare_values(
@@ -977,6 +995,44 @@ class DecoratorValueProviderTypeRegistry(Registry):
     already_registered_exception_class = DecoratorValueProviderTypeAlreadyRegistered
 
 
+class FormViewModeType(Instance):
+    def before_form_create(self, values: dict, table: "Table", user: AbstractUser):
+        """
+        Hook that's called before the form view is created.
+
+        :param values: The raw form view values that were provided by the users.
+        :param table: The table where the form view is going to be created in.
+        :param user: The user on whose behalf the form view is created.
+        """
+
+    def before_form_update(self, values: dict, form: "FormView", user: AbstractUser):
+        """
+        Hook that's called before the form view is updated.
+
+        :param values: The raw form view values that were provided by the users.
+        :param view: The view that's going to be updated.
+        :param user: The user on whose behalf the form view is updated.
+        """
+
+
+class FormViewModeRegistry(Registry):
+    """
+    This registry holds all the user configurable form mode types. It doesn't offer
+    any functionality at the moment, apart from validation.
+    """
+
+    name = "form_view_mode"
+
+    def get_default_type(self):
+        return list(self.get_all())[0]
+
+    def get_default_choice(self) -> str:
+        return str(self.get_types()[0])
+
+    def get_choices(self) -> List[Tuple[str, str]]:
+        return [(t, t) for t in form_view_mode_registry.get_types()]
+
+
 # A default view type registry is created here, this is the one that is used
 # throughout the whole Baserow application to add a new view type.
 view_type_registry = ViewTypeRegistry()
@@ -984,3 +1040,4 @@ view_filter_type_registry = ViewFilterTypeRegistry()
 view_aggregation_type_registry = ViewAggregationTypeRegistry()
 decorator_type_registry = DecoratorTypeRegistry()
 decorator_value_provider_type_registry = DecoratorValueProviderTypeRegistry()
+form_view_mode_registry = FormViewModeRegistry()

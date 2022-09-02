@@ -1,4 +1,7 @@
 {
+    "table": {
+      "chooseView": "Choose view"
+    },
     "webhookModal": {
         "title": "{name} webhooks",
         "createWebhook": "Create webhook",
@@ -676,5 +679,19 @@
         "restore": "restore",
         "delete": "delete",
         "created": "created"
+    },
+    "formViewModeType": {
+        "form": "Form",
+        "formDescription": "All fields are visible and vertically stacked."
+    },
+    "formViewHeader": {
+        "mode": "Mode",
+        "preview": "Preview",
+        "fields": "Fields"
+    },
+    "formViewModePreviewForm":  {
+        "addCoverImage": "Add a cover image",
+        "addLogo": "Add a logo",
+        "noFields": "This form doesn't have any fields. Click on a field in the left sidebar to add one."
     }
 }

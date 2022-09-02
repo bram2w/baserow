@@ -17,6 +17,7 @@
         "change": "Change",
         "delete": "Delete",
         "rename": "Rename",
+        "remove": "Remove",
         "duplicate": "Duplicate",
         "add": "Add",
         "makeChoice": "Make a choice",
@@ -26,7 +27,6 @@
         "search": "Search",
         "copy": "Copy",
         "paste": "Paste",
-        "duplicate": "Duplicate",
         "activate": "Activate",
         "deactivate": "Deactivate"
     },

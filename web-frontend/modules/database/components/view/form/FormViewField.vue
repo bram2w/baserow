@@ -7,6 +7,7 @@
     >
       <div class="form-view__field-head">
         <a
+          v-if="addHandle"
           v-show="!readOnly"
           class="form-view__field-head-handle"
           data-field-handle
@@ -148,6 +149,11 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
+    },
+    addHandle: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {

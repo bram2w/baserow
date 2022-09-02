@@ -100,6 +100,7 @@ class PublicFormViewSerializer(serializers.ModelSerializer):
         fields = (
             "title",
             "description",
+            "mode",
             "cover_image",
             "logo_image",
             "submit_text",

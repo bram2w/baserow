@@ -12,6 +12,7 @@ For example:
 ### New Features
 * Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
 * Add `isort` settings to sort python imports.
+* Introduced a premium form survey style theme. [#524](https://gitlab.com/bramw/baserow/-/issues/524).
 * Allow creating new rows when selecting a related row [#1064](https://gitlab.com/bramw/baserow/-/issues/1064).
 * Add row url parameter to `gallery` and `kanban` view.
 * Enable `file field` in `form` views. [#525](https://gitlab.com/bramw/baserow/-/issues/525)
