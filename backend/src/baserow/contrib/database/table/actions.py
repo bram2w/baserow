@@ -59,7 +59,7 @@ class CreateTableActionType(ActionType):
         )
 
         params = cls.Params(table.id)
-        cls.register_action(user, params, cls.scope(table.database.id))
+        cls.register_action(user, params, cls.scope(database.id))
 
         return table, error_report
 
@@ -245,11 +245,11 @@ class DuplicateTableActionType(ActionType):
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Table:
         """
-        Duplicate the table.
+        Duplicate a table.
         Undoing this action trashes the duplicated table and redoing restores it.
 
         :param user: The user on whose behalf the table is created.
-        :param table: The name of the table is created.
+        :param table: The table instance to duplicate.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the duplication.
         :return: The duplicated table instance.

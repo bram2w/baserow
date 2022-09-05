@@ -449,7 +449,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     # Try to make a relation with a table from another database
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "Link", "type": "link_row", "link_row_table": unrelated_table_1.id},
+        {"name": "Link", "type": "link_row", "link_row_table_id": unrelated_table_1.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -461,7 +461,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     # Try to make a relation with a table that we don't have access to.
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "Link", "type": "link_row", "link_row_table": unrelated_table_2.id},
+        {"name": "Link", "type": "link_row", "link_row_table_id": unrelated_table_2.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -482,7 +482,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["error"] == "ERROR_LINK_ROW_TABLE_NOT_PROVIDED"
     assert LinkRowField.objects.all().count() == 0
 
-    # Create new link row field type.
+    # Create new link row field type using the deprecated `link_row_table` parameter.
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {
@@ -497,18 +497,18 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_200_OK, response_json
     assert response_json["name"] == "Link 1"
     assert response_json["type"] == "link_row"
-    assert response_json["link_row_table"] == customers_table.id
+    assert response_json["link_row_table_id"] == customers_table.id
     assert LinkRowField.objects.all().count() == 2
     field_id = response_json["id"]
 
     field = LinkRowField.objects.all().order_by("id").first()
     related_field = LinkRowField.objects.all().order_by("id").last()
 
-    assert response_json["link_row_related_field"] == related_field.id
-    assert response_json["link_row_related_field"] != 999999
+    assert response_json["link_row_related_field_id"] == related_field.id
+    assert response_json["link_row_related_field_id"] != 999999
 
     # Check if the correct fields are correctly linked.
     assert field.table.id == table.id
@@ -526,8 +526,8 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Link 1"
     assert response_json["type"] == "link_row"
-    assert response_json["link_row_table"] == customers_table.id
-    assert response_json["link_row_related_field"] == related_field.id
+    assert response_json["link_row_table_id"] == customers_table.id
+    assert response_json["link_row_related_field_id"] == related_field.id
 
     # Just fetching the related field and check if is has the correct values.
     response = api_client.get(
@@ -537,8 +537,8 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Example"
-    assert response_json["link_row_table"] == table.id
-    assert response_json["link_row_related_field"] == field.id
+    assert response_json["link_row_table_id"] == table.id
+    assert response_json["link_row_related_field_id"] == field.id
 
     # Only updating the name of the field without changing anything else
     response = api_client.patch(
@@ -551,14 +551,14 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Link new name"
     assert response_json["type"] == "link_row"
-    assert response_json["link_row_table"] == customers_table.id
-    assert response_json["link_row_related_field"] == related_field.id
+    assert response_json["link_row_table_id"] == customers_table.id
+    assert response_json["link_row_related_field_id"] == related_field.id
 
     # Only try to update the link_row_related_field, but this is a read only field so
     # nothing should happen.
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field_id}),
-        {"link_row_related_field": 9999},
+        {"link_row_related_field_id": 9999},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -566,12 +566,12 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Link new name"
     assert response_json["type"] == "link_row"
-    assert response_json["link_row_table"] == customers_table.id
-    assert response_json["link_row_related_field"] == related_field.id
+    assert response_json["link_row_table_id"] == customers_table.id
+    assert response_json["link_row_related_field_id"] == related_field.id
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field_id}),
-        {"link_row_table": cars_table.id},
+        {"link_row_table_id": cars_table.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -579,8 +579,8 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Link new name"
     assert response_json["type"] == "link_row"
-    assert response_json["link_row_table"] == cars_table.id
-    assert response_json["link_row_related_field"] == related_field.id
+    assert response_json["link_row_table_id"] == cars_table.id
+    assert response_json["link_row_related_field_id"] == related_field.id
 
     field.refresh_from_db()
     related_field.refresh_from_db()

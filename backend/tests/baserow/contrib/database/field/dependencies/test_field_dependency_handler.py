@@ -198,7 +198,7 @@ def test_dependencies_for_link_row_link_row_self_reference(data_fixture):
         table=table_a,
         type_name="link_row",
         name="self",
-        link_row_table=table_a.id,
+        link_row_table=table_a,
     )
     assert when_field_updated(table_a_primary) == causes(
         a_field_update_for(field=table_a_self_link, via=[table_a_self_link])

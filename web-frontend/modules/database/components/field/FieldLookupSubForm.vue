@@ -156,9 +156,9 @@ export default {
         const selectedField = this.$store.getters['field/get'](
           this.values.through_field_id
         )
-        if (selectedField && selectedField.link_row_table) {
+        if (selectedField && selectedField.link_row_table_id) {
           const { data } = await FieldService(this.$client).fetchAll(
-            selectedField.link_row_table
+            selectedField.link_row_table_id
           )
           this.fieldsInThroughTable = data
             .filter((f) => {
@@ -167,7 +167,7 @@ export default {
               // circular reference.
               return (
                 !this.defaultValues.primary ||
-                this.defaultValues.table_id !== f.link_row_table
+                this.defaultValues.table_id !== f.link_row_table_id
               )
             })
             .filter((f) => {

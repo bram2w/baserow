@@ -790,7 +790,7 @@ export class LinkRowFieldType extends FieldType {
 
   prepareRichValueForCopy(field, value) {
     return {
-      tableId: field.link_row_table,
+      tableId: field.link_row_table_id,
       value,
     }
   }
@@ -812,7 +812,7 @@ export class LinkRowFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData, richClipboardData) {
     if (
       this.checkRichValueIsCompatible(richClipboardData) &&
-      field.link_row_table === richClipboardData.tableId
+      field.link_row_table_id === richClipboardData.tableId
     ) {
       if (richClipboardData === null) {
         return []
@@ -837,7 +837,7 @@ export class LinkRowFieldType extends FieldType {
    * to be removed from the store without making an API call.
    */
   tableDeleted({ dispatch }, field, table, database) {
-    if (field.link_row_table === table.id) {
+    if (field.link_row_table_id === table.id) {
       dispatch('field/forceDelete', field, { root: true })
     }
   }
@@ -847,7 +847,9 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return this.app.i18n.t('fieldDocs.linkRow', { table: field.link_row_table })
+    return this.app.i18n.t('fieldDocs.linkRow', {
+      table: field.link_row_table_id,
+    })
   }
 
   getDocsRequestExample(field) {

@@ -42,8 +42,14 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed, find_unused_name, set_allowed_attrs
+from baserow.core.utils import (
+    ChildProgressBuilder,
+    extract_allowed,
+    find_unused_name,
+    set_allowed_attrs,
+)
 
+from .backup_handler import FieldDataBackupHandler
 from .dependencies.handler import FieldDependencyHandler
 from .dependencies.update_collector import FieldUpdateCollector
 from .exceptions import (
@@ -559,6 +565,65 @@ class FieldHandler:
             return field, updated_fields
         else:
             return field
+
+    def duplicate_field(
+        self,
+        user: AbstractUser,
+        field: Field,
+        duplicate_data: bool = False,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Tuple[Field, List[Field]]:
+        """
+        Duplicates an existing field instance.
+
+        :param user: The user on whose behalf the table is duplicated.
+        :param field: The field instance that needs to be duplicated.
+        :param duplicate_data: Whether or not the data of the field should be
+        :param progress_builder: A progress builder object that can be used to
+            report progress.
+        :raises ValueError: When the provided table is not an instance of Table.
+        :return: A tuple with duplicated field instance and a list of the fields
+            that have been updated.
+        """
+
+        if not isinstance(field, Field):
+            raise ValueError("The field is not an instance of Field")
+
+        progress = ChildProgressBuilder.build(progress_builder, child_total=3)
+
+        database = field.table.database
+        database.group.has_user(user, raise_error=True)
+
+        specific_field = field.specific
+        field_type = field_type_registry.get_by_model(specific_field)
+        serialized_field = field_type.export_serialized(specific_field)
+        progress.increment()
+
+        new_name = self.find_next_unused_field_name(
+            field.table,
+            [serialized_field.pop("name")],
+        )
+
+        # remove properties that are unqiue to the field
+        for key in ["id", "order", "primary"]:
+            serialized_field.pop(key, None)
+
+        new_field, updated_fields = self.create_field(
+            user,
+            field.table,
+            field_type.type,
+            primary=False,
+            name=new_name,
+            return_updated_fields=True,
+            **serialized_field,
+        )
+        progress.increment()
+
+        if duplicate_data and not field_type.read_only:
+            FieldDataBackupHandler.duplicate_field_data(field, new_field)
+        progress.increment()
+
+        return new_field, updated_fields
 
     def delete_field(
         self,

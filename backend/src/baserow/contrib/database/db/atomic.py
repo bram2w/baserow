@@ -119,8 +119,7 @@ def read_repeatable_read_single_table_transaction(
        https://www.postgresql.org/docs/current/mvcc-caveats.html for more info.
 
 
-    This manager uses READ COMMITTED and as such has a lower overhead, but does not get
-    the snapshot like reading guarantees that REAPEATABLE READ does.
+    This manager uses REPEATABLE READ to guarantee a valid snapshot of the data.
 
     :param table_id: The table to obtain a table and field locks for to ensure
         safe reading.

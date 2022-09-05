@@ -304,13 +304,7 @@ class ViewSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the view related to the instance is already in the context
-        # else we can call the specific_class property to find it.
-        view = self.context.get("instance_type")
-        if not view:
-            view = view_type_registry.get_by_model(instance.specific_class)
-
-        return view.type
+        return view_type_registry.get_by_model(instance.specific_class).type
 
 
 class CreateViewSerializer(serializers.ModelSerializer):
@@ -407,13 +401,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the view related to the instance is already in the context
-        # else we can call the specific_class property to find it.
-        view = self.context.get("instance_type")
-        if not view:
-            view = view_type_registry.get_by_model(instance.specific_class)
-
-        return view.type
+        return view_type_registry.get_by_model(instance.specific_class).type
 
     class Meta:
         model = View

@@ -208,12 +208,14 @@ class DatabaseConfig(AppConfig):
         from .fields.actions import (
             CreateFieldActionType,
             DeleteFieldActionType,
+            DuplicateFieldActionType,
             UpdateFieldActionType,
         )
 
         action_type_registry.register(CreateFieldActionType())
         action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
+        action_type_registry.register(DuplicateFieldActionType())
 
         from .views.view_types import FormViewType, GalleryViewType, GridViewType
 
@@ -408,15 +410,17 @@ class DatabaseConfig(AppConfig):
 
         group_storage_usage_item_registry.register(FormViewGroupStorageUsageItem())
 
-        from baserow.contrib.database.table.job_types import DuplicateTableJobType
         from baserow.core.jobs.registries import job_type_registry
 
         from .airtable.job_type import AirtableImportJobType
+        from .fields.job_types import DuplicateFieldJobType
         from .file_import.job_type import FileImportJobType
+        from .table.job_types import DuplicateTableJobType
 
         job_type_registry.register(AirtableImportJobType())
         job_type_registry.register(FileImportJobType())
         job_type_registry.register(DuplicateTableJobType())
+        job_type_registry.register(DuplicateFieldJobType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

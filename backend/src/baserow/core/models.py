@@ -9,7 +9,7 @@ from django.db.models import Q, UniqueConstraint
 
 from rest_framework.exceptions import NotAuthenticated
 
-from baserow.core.jobs.mixins import JobWithUserDataMixin
+from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
 from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
@@ -420,9 +420,7 @@ class TrashEntry(models.Model):
         ]
 
 
-class DuplicateApplicationJob(JobWithUserDataMixin, Job):
-
-    user_data_to_save = ["user_websocket_id"]
+class DuplicateApplicationJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     original_application = models.ForeignKey(
         Application,

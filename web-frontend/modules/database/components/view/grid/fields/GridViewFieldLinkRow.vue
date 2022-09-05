@@ -43,14 +43,14 @@
     </div>
     <SelectRowModal
       ref="selectModal"
-      :table-id="field.link_row_table"
+      :table-id="field.link_row_table_id"
       :value="value"
       @selected="addValue(value, $event)"
       @hidden="hideModal"
     ></SelectRowModal>
     <ForeignRowEditModal
       ref="rowEditModal"
-      :table-id="field.link_row_table"
+      :table-id="field.link_row_table_id"
       @hidden="hideModal"
     ></ForeignRowEditModal>
   </div>

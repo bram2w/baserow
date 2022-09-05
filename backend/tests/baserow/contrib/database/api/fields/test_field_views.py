@@ -4,6 +4,7 @@ from django.shortcuts import reverse
 import pytest
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_202_ACCEPTED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
@@ -13,7 +14,10 @@ from rest_framework.status import (
 
 from baserow.contrib.database.fields.models import Field, NumberField, TextField
 from baserow.contrib.database.tokens.handler import TokenHandler
-from baserow.test_utils.helpers import independent_test_db_connection
+from baserow.test_utils.helpers import (
+    independent_test_db_connection,
+    setup_interesting_test_table,
+)
 
 
 @pytest.mark.django_db
@@ -757,3 +761,139 @@ def test_create_field_returns_with_error_if_cant_lock_table_if_locked_for_key_sh
     response_json = response.json()
     assert response.status_code == HTTP_409_CONFLICT
     assert response_json["error"] == "ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_async_duplicate_field(api_client, data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    group_1 = data_fixture.create_group(user=user_1)
+    _, token_2 = data_fixture.create_user_and_token(
+        email="test_2@test.nl", password="password", first_name="Test2"
+    )
+    _, token_3 = data_fixture.create_user_and_token(
+        email="test_3@test.nl",
+        password="password",
+        first_name="Test3",
+        group=group_1,
+    )
+
+    database = data_fixture.create_database_application(group=group_1)
+    table_1, _, _, _ = setup_interesting_test_table(
+        data_fixture, database=database, user=user_1
+    )
+
+    field_set = table_1.field_set.all()
+    original_field_count = field_set.count()
+    primary_field = field_set.get(primary=True)
+
+    # user cannot duplicate a field if not belonging to the same group
+    response = api_client.post(
+        reverse(
+            "api:database:fields:async_duplicate", kwargs={"field_id": primary_field.id}
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    # user cannot duplicate a non-existent field
+    response = api_client.post(
+        reverse("api:database:fields:async_duplicate", kwargs={"field_id": 99999}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # user can duplicate a field created by other in the same group
+    response = api_client.post(
+        reverse(
+            "api:database:fields:async_duplicate", kwargs={"field_id": primary_field.id}
+        ),
+        {"duplicate_data": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_3}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    job = response.json()
+    assert job["id"] is not None
+    assert job["state"] == "pending"
+    assert job["type"] == "duplicate_field"
+
+    # check that now the job ended correctly and the field was duplicated
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token_3}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "duplicate_field"
+    assert job["original_field"]["id"] == primary_field.id
+    assert job["duplicated_field"]["id"] > primary_field.id
+    assert job["duplicated_field"]["name"] == f"{primary_field.name} 2"
+
+    # check that the table is accessible and has one more column
+    rows_url = reverse("api:database:rows:list", kwargs={"table_id": table_1.id})
+    response = api_client.get(
+        f"{rows_url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) > 0
+    assert field_set.count() == original_field_count + 1
+    for row in response_json["results"]:
+        assert row[f"{primary_field.name} 2"] is None
+
+    # user can duplicate a field with data
+    response = api_client.post(
+        reverse(
+            "api:database:fields:async_duplicate", kwargs={"field_id": primary_field.id}
+        ),
+        {"duplicate_data": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_3}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    job = response.json()
+    assert job["id"] is not None
+    assert job["state"] == "pending"
+    assert job["type"] == "duplicate_field"
+
+    # check that now the job ended correctly and the field was duplicated
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token_3}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "duplicate_field"
+    assert job["original_field"]["id"] == primary_field.id
+    assert job["duplicated_field"]["id"] > primary_field.id
+    assert job["duplicated_field"]["name"] == f"{primary_field.name} 3"
+
+    # check that the table is accessible and has one more column
+    rows_url = reverse("api:database:rows:list", kwargs={"table_id": table_1.id})
+    response = api_client.get(
+        f"{rows_url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) > 0
+    assert field_set.count() == original_field_count + 2
+    for row in response_json["results"]:
+        assert row[f"{primary_field.name} 3"] == row[primary_field.name]

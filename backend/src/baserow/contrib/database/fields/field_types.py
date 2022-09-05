@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
@@ -122,6 +123,8 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import GeneratedTableModel, Table
+
+logger = logging.getLogger(__name__)
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):
@@ -1020,15 +1023,38 @@ class LinkRowFieldType(FieldType):
     type = "link_row"
     model_class = LinkRowField
     allowed_fields = [
-        "link_row_table",
+        "link_row_table_id",
         "link_row_related_field",
+        "link_row_table",
         "link_row_relation_id",
     ]
-    serializer_field_names = ["link_row_table", "link_row_related_field"]
+    serializer_field_names = [
+        "link_row_table_id",
+        "link_row_related_field_id",
+        "link_row_table",
+        "link_row_related_field",
+    ]
     serializer_field_overrides = {
+        "link_row_table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="The id of the linked table.",
+        ),
+        "link_row_related_field_id": serializers.PrimaryKeyRelatedField(
+            read_only=True, required=False, help_text="The id of the related field."
+        ),
+        "link_row_table": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="(Deprecated) The id of the linked table.",
+        ),
         "link_row_related_field": serializers.PrimaryKeyRelatedField(
-            read_only=True, required=False
-        )
+            read_only=True,
+            required=False,
+            help_text="(Deprecated) The id of the related field.",
+        ),
     }
     api_exceptions_map = {
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -1307,12 +1333,30 @@ class LinkRowFieldType(FieldType):
         """
         This method checks if the provided link row table is an int because then it
         needs to be converted to a table instance.
+        It also provided compatibility between the old name `link_row_table` and the new
+        name `link_row_table_id`.
         """
 
-        if "link_row_table" in values and isinstance(values["link_row_table"], int):
-            from baserow.contrib.database.table.handler import TableHandler
+        from baserow.contrib.database.table.handler import TableHandler
+        from baserow.contrib.database.table.models import Table
 
-            table = TableHandler().get_table(values["link_row_table"])
+        link_row_table_id = values.pop("link_row_table_id", None)
+
+        if link_row_table_id is None:
+            link_row_table = values.pop("link_row_table", None)
+
+            if isinstance(link_row_table, Table):
+                # set in a previous call to prepare_values, so we can use it.
+                values["link_row_table"] = link_row_table
+            elif isinstance(link_row_table, int):
+                logger.warning(
+                    "The 'link_row_table' parameter is deprecated for LinkRow field."
+                    "Please, use 'link_row_table_id' instead."
+                )
+                link_row_table_id = link_row_table
+
+        if isinstance(link_row_table_id, int):
+            table = TableHandler().get_table(link_row_table_id)
             table.database.group.has_user(user, raise_error=True)
             values["link_row_table"] = table
 
@@ -1322,11 +1366,13 @@ class LinkRowFieldType(FieldType):
         values = super().export_prepared_values(field)
 
         if field.link_row_table:
-            values["link_row_table"] = field.link_row_table_id
+            values.pop("link_row_table", None)
+            values["link_row_table_id"] = field.link_row_table_id
 
         # We don't want to serialize the related field as the update call will create
         # it again.
-        values.pop("link_row_related_field")
+        values.pop("link_row_related_field", None)
+        values.pop("link_row_related_field_id", None)
 
         return values
 
@@ -1337,13 +1383,12 @@ class LinkRowFieldType(FieldType):
         raised.
         """
 
-        if "link_row_table" not in values or not values["link_row_table"]:
+        link_row_table = values.get("link_row_table")
+        if link_row_table is None:
             raise LinkRowTableNotProvided(
                 "The link_row_table argument must be provided when creating a link_row "
                 "field."
             )
-
-        link_row_table = values["link_row_table"]
 
         if table.database_id != link_row_table.database_id:
             raise LinkRowTableNotInSameDatabase(
@@ -1357,13 +1402,10 @@ class LinkRowFieldType(FieldType):
         link_row_table has changed and if it is within the same database.
         """
 
-        if (
-            "link_row_table" not in to_field_values
-            or not to_field_values["link_row_table"]
-        ):
+        link_row_table = to_field_values.get("link_row_table")
+        if link_row_table is None:
             return
 
-        link_row_table = to_field_values["link_row_table"]
         table = from_field.table
 
         if from_field.table.database_id != link_row_table.database_id:
@@ -1660,7 +1702,7 @@ class LinkRowFieldType(FieldType):
         self, old_field: LinkRowField, new_field_attrs: Dict[str, Any]
     ) -> bool:
         new_link_row_table_id = new_field_attrs.get(
-            "link_row_table", old_field.link_row_table_id
+            "link_row_table_id", old_field.link_row_table_id
         )
         return old_field.link_row_table_id != new_link_row_table_id
 

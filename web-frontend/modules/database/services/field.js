@@ -1,17 +1,21 @@
 import { UNDO_REDO_ACTION_GROUP_HEADER } from '@baserow/modules/database/utils/action'
 
 export default (client) => {
+  const getRequestConfig = ({ undoRedoActionGroupId }) => {
+    const config = {}
+    if (undoRedoActionGroupId != null) {
+      config.headers = {
+        [UNDO_REDO_ACTION_GROUP_HEADER]: undoRedoActionGroupId,
+      }
+      return config
+    }
+  }
   return {
     fetchAll(tableId) {
       return client.get(`/database/fields/table/${tableId}/`)
     },
     create(tableId, values, undoRedoActionGroupId = null) {
-      const config = {}
-      if (undoRedoActionGroupId != null) {
-        config.headers = {
-          [UNDO_REDO_ACTION_GROUP_HEADER]: undoRedoActionGroupId,
-        }
-      }
+      const config = getRequestConfig({ undoRedoActionGroupId })
       return client.post(`/database/fields/table/${tableId}/`, values, config)
     },
     get(fieldId) {
@@ -38,6 +42,18 @@ export default (client) => {
     },
     delete(fieldId) {
       return client.delete(`/database/fields/${fieldId}/`)
+    },
+    asyncDuplicate(
+      fieldId,
+      duplicateData = false,
+      undoRedoActionGroupId = null
+    ) {
+      const config = getRequestConfig({ undoRedoActionGroupId })
+      return client.post(
+        `/database/fields/${fieldId}/duplicate/async/`,
+        { duplicate_data: duplicateData },
+        config
+      )
     },
   }
 }

@@ -36,13 +36,13 @@
     <SelectRowModal
       v-if="!readOnly"
       ref="selectModal"
-      :table-id="field.link_row_table"
+      :table-id="field.link_row_table_id"
       :value="value"
       @selected="addValue(value, $event)"
     ></SelectRowModal>
     <ForeignRowEditModal
       ref="rowEditModal"
-      :table-id="field.link_row_table"
+      :table-id="field.link_row_table_id"
       @hidden="modalOpen = false"
     ></ForeignRowEditModal>
   </div>

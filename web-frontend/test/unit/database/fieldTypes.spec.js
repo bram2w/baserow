@@ -39,7 +39,7 @@ const mockedFields = {
     table_id: 42,
     type: 'link_row',
     link_row_related_field: 270,
-    link_row_table: 43,
+    link_row_table_id: 43,
   },
   number: {
     id: 4,
