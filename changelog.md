@@ -37,6 +37,7 @@ For example:
 * "Link to table" field does not allow submitting empty values. [#1159](https://gitlab.com/bramw/baserow/-/issues/1159)
 * Fixed bug where the "Create option" button was not visible for the single and multiple
   select fields in the row edit modal.
+* Added support for placeholders in form headings and fields. [#1168](https://gitlab.com/bramw/baserow/-/issues/1168)
 
 ### Refactors
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
