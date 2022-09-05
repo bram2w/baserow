@@ -24,7 +24,7 @@ from baserow.contrib.database.table.cache import (
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
-from baserow.core.jobs.mixins import JobWithUserDataMixin
+from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
@@ -658,9 +658,7 @@ class Table(
         return f"tbl_order_id_{self.id}_idx"
 
 
-class DuplicateTableJob(JobWithUserDataMixin, Job):
-
-    user_data_to_save = ["user_websocket_id"]
+class DuplicateTableJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     original_table = models.ForeignKey(
         Table,
@@ -669,6 +667,7 @@ class DuplicateTableJob(JobWithUserDataMixin, Job):
         on_delete=models.SET_NULL,
         help_text="The Baserow table to duplicate.",
     )
+
     duplicated_table = models.OneToOneField(
         Table,
         null=True,

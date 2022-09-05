@@ -134,9 +134,7 @@ class CustomFieldsInstanceMixin:
             base_class=base_class, request_serializer=request
         )
 
-        return serializer_class(
-            model_instance, context={"instance_type": self, **context}, **kwargs
-        )
+        return serializer_class(model_instance, context=context, **kwargs)
 
 
 class APIUrlsInstanceMixin:

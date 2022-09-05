@@ -7,10 +7,14 @@
     <form @submit.prevent="duplicateField()">
       <div class="control margin-bottom-1">
         <div class="control__elements">
-          <Checkbox v-model="duplicateData" :disabled="true">
-            {{ $t('duplicateFieldContext.cloneData') }} ({{
-              $t('duplicateFieldContext.soon')
-            }})
+          <Checkbox v-model="duplicateData" :disabled="formFieldTypeIsReadOnly">
+            {{
+              $t(
+                formFieldTypeIsReadOnly
+                  ? 'duplicateFieldContext.readOnlyField'
+                  : 'duplicateFieldContext.cloneData'
+              )
+            }}
           </Checkbox>
         </div>
       </div>
@@ -29,14 +33,16 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import { createNewUndoRedoActionGroupId } from '@baserow/modules/database/utils/action'
+import FieldService from '@baserow/modules/database/services/field'
+import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import error from '@baserow/modules/core/mixins/error'
 import modal from '@baserow/modules/core/mixins/modal'
-import { clone } from '@baserow/modules/core/utils/object'
-import { createNewUndoRedoActionGroupId } from '@baserow/modules/database/utils/action'
 
 export default {
   name: 'DuplicateFieldModal',
-  mixins: [modal, error],
+  mixins: [modal, error, jobProgress],
   props: {
     table: {
       type: Object,
@@ -50,64 +56,99 @@ export default {
   data() {
     return {
       loading: false,
-      duplicateData: false,
+      duplicateData: true,
+      actionGroupId: null,
     }
   },
   computed: {
     existingFieldName() {
       return this.fields.map((field) => field.name)
     },
+    formFieldTypeIsReadOnly() {
+      return this.$registry.get('field', this.fromField.type).isReadOnly
+    },
     ...mapGetters({
       fields: 'field/getAll',
     }),
   },
   methods: {
-    async duplicateField() {
-      this.hideError()
-      this.loading = true
-
-      const values = clone(this.fromField)
-      const type = values.type
-      delete values.type
-      delete values.id
-      values.primary = false
-
-      const baseName = values.name
-
-      // Prevents name collision
-      let index = 2
-      while (this.existingFieldName.includes(`${baseName} ${index}`)) {
-        index += 1
-      }
-      values.name = `${baseName} ${index}`
-
-      const actionGroupId = createNewUndoRedoActionGroupId()
-
+    onDuplicationEnd() {
+      this.loading = false
+      this.actionGroupId = null
+    },
+    showError(title, message) {
+      this.$store.dispatch(
+        'notification/error',
+        { title, message },
+        { root: true }
+      )
+    },
+    // eslint-disable-next-line require-await
+    async onJobFailed() {
+      this.onDuplicationEnd()
+      this.showError(
+        this.$t('clientHandler.notCompletedTitle'),
+        this.$t('clientHandler.notCompletedDescription')
+      )
+    },
+    // eslint-disable-next-line require-await
+    async onJobPollingError(error) {
+      this.onDuplicationEnd()
+      notifyIf(error, 'table')
+    },
+    async onJobDone() {
+      const newFieldId = this.job.duplicated_field.id
       try {
-        const { forceCreateCallback, fetchNeeded, newField } =
-          await this.$store.dispatch('field/create', {
-            type,
-            values,
-            table: this.table,
-            forceCreate: false,
-            undoRedoActionGroupId: actionGroupId,
-          })
+        const { data: newField } = await FieldService(this.$client).get(
+          newFieldId
+        )
+        this.onFieldDuplicated(newField)
+      } catch (error) {
+        this.onDuplicationEnd()
+        notifyIf(error, 'table')
+      }
+    },
+    onFieldDuplicated(newField) {
+      try {
         const callback = async () => {
-          await forceCreateCallback()
-          this.loading = false
+          await this.$store.dispatch('field/forceCreate', {
+            table: this.table,
+            values: newField,
+            relatedFields: newField.related_fields,
+          })
           this.hide()
           // GridViewHead will update the order of the fields
           this.$emit('move-field', {
             newField,
             position: 'right',
             fromField: this.fromField,
-            undoRedoActionGroupId: actionGroupId,
+            undoRedoActionGroupId: this.actionGroupId,
           })
+          this.onDuplicationEnd()
         }
-        this.$emit('field-created', { callback, newField, fetchNeeded })
+        this.$emit('field-created', { callback, newField, fetchNeeded: true })
       } catch (error) {
-        this.loading = false
+        this.onDuplicationEnd()
         this.handleError(error)
+      }
+    },
+    async duplicateField() {
+      if (this.loading || this.disabled) {
+        return
+      }
+      this.loading = true
+      this.hideError()
+      this.actionGroupId = createNewUndoRedoActionGroupId()
+      try {
+        const { data: job } = await FieldService(this.$client).asyncDuplicate(
+          this.fromField.id,
+          this.duplicateData,
+          this.actionGroupId
+        )
+        this.startJobPoller(job)
+      } catch (error) {
+        this.onDuplicationEnd()
+        notifyIf(error, 'table')
       }
     },
   },

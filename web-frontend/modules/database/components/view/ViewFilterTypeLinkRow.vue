@@ -30,7 +30,7 @@
     <SelectRowModal
       v-if="!disabled"
       ref="selectModal"
-      :table-id="field.link_row_table"
+      :table-id="field.link_row_table_id"
       @selected="setValue"
     ></SelectRowModal>
   </a>
@@ -90,7 +90,7 @@ export default {
         this.loading = true
         try {
           this.name = await RowService(this.$client).getName(
-            this.field.link_row_table,
+            this.field.link_row_table_id,
             value
           )
         } finally {

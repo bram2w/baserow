@@ -1,4 +1,3 @@
-import contextlib
 from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Type
@@ -10,6 +9,7 @@ from django.utils.timezone import make_aware, utc
 
 import psycopg2
 from freezegun import freeze_time
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -392,7 +392,7 @@ def assert_undo_redo_actions_fails_with_error(
         assert action.error is not None, "Action has no error, but should have one"
 
 
-@contextlib.contextmanager
+@contextmanager
 def independent_test_db_connection():
     d = connection.settings_dict
     conn = psycopg2.connect(
@@ -405,3 +405,38 @@ def independent_test_db_connection():
     conn.autocommit = False
     yield conn
     conn.close()
+
+
+def assert_serialized_field_values_are_the_same(
+    value_1, value_2, ordered=False, field_name=None
+):
+    if isinstance(value_1, list) and not ordered:
+        assert unordered(value_1, value_2)
+    else:
+        assert value_1 == value_2, f"{field_name or 'error'}: {value_1} != {value_2}"
+
+
+def extract_serialized_field_value(field_value):
+    if not field_value:
+        return field_value
+
+    def extract_value(value):
+        if isinstance(value, dict):
+            if "name" in value:
+                return value["name"]
+            return value["value"]
+        return value
+
+    if isinstance(field_value, list):
+        return [extract_value(value) for value in field_value]
+
+    return extract_value(field_value)
+
+
+def assert_serialized_rows_contain_same_values(row_1, row_2):
+    for field_name, row_field_value in row_1.items():
+        row_1_value = extract_serialized_field_value(row_field_value)
+        row_2_value = extract_serialized_field_value(row_2[field_name])
+        assert_serialized_field_values_are_the_same(
+            row_1_value, row_2_value, field_name=field_name
+        )

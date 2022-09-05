@@ -19,6 +19,8 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
+from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
@@ -498,6 +500,28 @@ class LookupField(FormulaField):
             + f"error={self.error},\n"
             + ")"
         )
+
+
+class DuplicateFieldJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+
+    original_field = models.ForeignKey(
+        Field,
+        null=True,
+        related_name="duplicated_by_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The Baserow field to duplicate.",
+    )
+    duplicate_data = models.BooleanField(
+        default=False,
+        help_text="Indicates if the data of the field should be duplicated.",
+    )
+    duplicated_field = models.OneToOneField(
+        Field,
+        null=True,
+        related_name="duplicated_from_jobs",
+        on_delete=models.SET_NULL,
+        help_text="The duplicated Baserow field.",
+    )
 
 
 SpecificFieldForUpdate = NewType("SpecificFieldForUpdate", Field)

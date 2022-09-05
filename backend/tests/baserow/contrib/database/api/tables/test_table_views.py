@@ -6,7 +6,6 @@ from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext, override_settings
 
 import pytest
-from pytest_unordered import unordered
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_202_ACCEPTED,
@@ -18,6 +17,7 @@ from rest_framework.status import (
 from baserow.contrib.database.file_import.models import FileImportJob
 from baserow.contrib.database.table.models import Table
 from baserow.test_utils.helpers import (
+    assert_serialized_rows_contain_same_values,
     independent_test_db_connection,
     setup_interesting_test_table,
 )
@@ -591,46 +591,5 @@ def test_async_duplicate_table(api_client, data_fixture):
     assert len(response_json["results"]) > 0
     duplicated_rows = response_json["results"]
 
-    def assert_row_field_value(
-        field_name, duplicated_value, original_value, ordered=True
-    ):
-        if ordered:
-            assert (
-                duplicated_value == original_value
-            ), f"{field_name}: {duplicated_value} != {original_value}"
-        else:
-            assert unordered(duplicated_value, original_value)
-
     for original_row, duplicated_row in zip(original_rows, duplicated_rows):
-        for field_name, original_value in original_row.items():
-
-            if not original_value:
-                assert_row_field_value(
-                    field_name, duplicated_row[field_name], original_value
-                )
-            elif field_name in ["single_select", "formula_singleselect"]:
-                assert_row_field_value(
-                    field_name,
-                    duplicated_row[field_name]["value"],
-                    original_value["value"],
-                )
-            elif field_name in ["multiple_select", "lookup"] or field_name.endswith(
-                "_link_row"
-            ):
-                assert_row_field_value(
-                    field_name,
-                    [v["value"] for v in duplicated_row[field_name]],
-                    [v["value"] for v in original_value],
-                    ordered=False,
-                )
-            elif field_name == "file":
-                assert_row_field_value(
-                    field_name,
-                    [f["name"] for f in duplicated_row[field_name]],
-                    [f["name"] for f in original_value],
-                    ordered=False,
-                )
-            else:
-                assert_row_field_value(
-                    field_name, duplicated_row[field_name], original_value
-                )
+        assert_serialized_rows_contain_same_values(original_row, duplicated_row)

@@ -7,9 +7,9 @@
         </label>
         <div class="control__elements">
           <Dropdown
-            v-model="values.link_row_table"
-            :class="{ 'dropdown--error': $v.values.link_row_table.$error }"
-            @hide="$v.values.link_row_table.$touch()"
+            v-model="values.link_row_table_id"
+            :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+            @hide="$v.values.link_row_table_id.$touch()"
           >
             <DropdownItem
               v-for="table in tables"
@@ -18,7 +18,7 @@
               :value="table.id"
             ></DropdownItem>
           </Dropdown>
-          <div v-if="$v.values.link_row_table.$error" class="error">
+          <div v-if="$v.values.link_row_table_id.$error" class="error">
             {{ $t('error.requiredField') }}
           </div>
         </div>
@@ -39,30 +39,28 @@ export default {
   mixins: [form, fieldSubForm],
   data() {
     return {
-      allowedValues: ['link_row_table'],
+      allowedValues: ['link_row_table_id'],
       values: {
-        link_row_table: null,
+        link_row_table_id: null,
       },
-      initialLinkRowTable: null,
+      initialLinkRowTableId: null,
     }
   },
   computed: {
     tables() {
       const applications = this.$store.getters['application/getAll']
       const databaseType = DatabaseApplicationType.getType()
-      const tableId = this.table.id
+      const databaseId = this.table.database_id
 
       // Search for the database of the related table and return all the siblings of
       // that table because those are the only ones the user can choose form.
       for (let i = 0; i < applications.length; i++) {
         const application = applications[i]
-        if (application.type === databaseType) {
-          for (let tableI = 0; tableI < application.tables.length; tableI++) {
-            const table = application.tables[tableI]
-            if (table.id === tableId) {
-              return application.tables
-            }
-          }
+        if (
+          application.type === databaseType &&
+          application.id === databaseId
+        ) {
+          return application.tables
         }
       }
 
@@ -70,16 +68,16 @@ export default {
     },
   },
   mounted() {
-    this.initialLinkRowTable = this.values.link_row_table
+    this.initialLinkRowTableId = this.values.link_row_table_id
   },
   validations: {
     values: {
-      link_row_table: { required },
+      link_row_table_id: { required },
     },
   },
   methods: {
     reset() {
-      this.initialLinkRowTable = this.values.link_row_table
+      this.initialLinkRowTableId = this.values.link_row_table_id
       return form.methods.reset.call(this)
     },
     isValid() {

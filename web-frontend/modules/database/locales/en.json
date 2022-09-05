@@ -1,6 +1,6 @@
 {
     "table": {
-      "chooseView": "Choose view"
+        "chooseView": "Choose view"
     },
     "webhookModal": {
         "title": "{name} webhooks",
@@ -653,7 +653,7 @@
     "duplicateFieldContext": {
         "duplicate": "Duplicate field",
         "cloneData": "Copy data",
-        "soon": "Available soon"
+        "readOnlyField": "Cell values will be filled automatically."
     },
     "snapshotsModal": {
         "title": "snapshots",
@@ -689,7 +689,7 @@
         "preview": "Preview",
         "fields": "Fields"
     },
-    "formViewModePreviewForm":  {
+    "formViewModePreviewForm": {
         "addCoverImage": "Add a cover image",
         "addLogo": "Add a logo",
         "noFields": "This form doesn't have any fields. Click on a field in the left sidebar to add one."

@@ -24,14 +24,7 @@ class FieldSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the field related to the instance is already in the context
-        # else we can call the specific_class property to find it.
-        field = self.context.get("instance_type")
-
-        if not field:
-            field = field_type_registry.get_by_model(instance.specific_class)
-
-        return field.type
+        return field_type_registry.get_by_model(instance.specific_class).type
 
 
 class RelatedFieldsSerializer(serializers.Serializer):
@@ -184,3 +177,9 @@ class UniqueRowValueParamsSerializer(serializers.Serializer):
 
 class UniqueRowValuesSerializer(serializers.Serializer):
     values = serializers.ListSerializer(child=serializers.CharField())
+
+
+class DuplicateFieldParamsSerializer(serializers.Serializer):
+    duplicate_data = serializers.BooleanField(
+        default=False, help_text="Indicates whether the data should be duplicated."
+    )

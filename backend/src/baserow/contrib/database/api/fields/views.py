@@ -1,19 +1,26 @@
+from typing import Any, Dict
+
 from django.conf import settings
 from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.decorators import permission_classes as method_permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import (
     map_exceptions,
+    validate_body,
     validate_body_custom_fields,
     validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
@@ -65,6 +72,7 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.job_types import DuplicateFieldJobType
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.exceptions import (
@@ -77,10 +85,14 @@ from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .serializers import (
     CreateFieldSerializer,
+    DuplicateFieldParamsSerializer,
     FieldSerializer,
     FieldSerializerWithRelatedFields,
     RelatedFieldsSerializer,
@@ -499,3 +511,58 @@ class UniqueRowValueFieldView(APIView):
         )
 
         return Response(UniqueRowValuesSerializer({"values": values}).data)
+
+
+class AsyncDuplicateFieldView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="field_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The field to duplicate.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table fields"],
+        operation_id="duplicate_table_field",
+        description=(
+            "Duplicates the table with the provided `table_id` parameter "
+            "if the authorized user has access to the database's group."
+        ),
+        responses={
+            202: DuplicateFieldJobType().get_serializer_class(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    @validate_body(DuplicateFieldParamsSerializer)
+    def post(self, request: Request, field_id: int, data: Dict[str, Any]) -> Response:
+        """Creates a job to duplicate a field in a table."""
+
+        job = JobHandler().create_and_start_job(
+            request.user,
+            DuplicateFieldJobType.type,
+            field_id=field_id,
+            duplicate_data=data["duplicate_data"],
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
