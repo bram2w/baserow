@@ -2,6 +2,7 @@
   <span
     ref="editable"
     :contenteditable="editing"
+    :placeholder="placeholder"
     :class="{ 'forced-user-select-initial': editing }"
     @input="update"
     @keydown="keydown"
@@ -20,6 +21,11 @@ export default {
     value: {
       type: String,
       required: true,
+    },
+    placeholder: {
+      type: String,
+      required: false,
+      default: '',
     },
   },
   data() {

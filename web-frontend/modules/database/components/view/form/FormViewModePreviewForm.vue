@@ -51,6 +51,7 @@
           <Editable
             ref="title"
             :value="view.title"
+            placeholder="Title"
             @change="updateForm({ title: $event.value })"
             @editing="editingTitle = $event"
           ></Editable>
@@ -65,6 +66,7 @@
           <Editable
             ref="description"
             :value="view.description"
+            placeholder="Description"
             @change="updateForm({ description: $event.value })"
             @editing="editingDescription = $event"
           ></Editable>
