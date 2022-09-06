@@ -42,6 +42,7 @@ For example:
   select fields in the row edit modal.
 * Resolve an issue with uploading a file via a URL when it contains a querystring. [#1034](https://gitlab.com/bramw/baserow/-/issues/1034)
 * Resolve an invalid URL in the "Backend URL mis-configuration detected" error message. [#967](https://gitlab.com/bramw/baserow/-/merge_requests/967)
+* Fixed broken call grouping when getting linked row names from server.
 
 ### Refactors
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
