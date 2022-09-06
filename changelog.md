@@ -41,6 +41,7 @@ For example:
 * Fixed bug where the "Create option" button was not visible for the single and multiple
   select fields in the row edit modal.
 * Resolve an issue with uploading a file via a URL when it contains a querystring. [#1034](https://gitlab.com/bramw/baserow/-/issues/1034)
+* Resolve an invalid URL in the "Backend URL mis-configuration detected" error message. [#967](https://gitlab.com/bramw/baserow/-/merge_requests/967)
 
 ### Refactors
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
