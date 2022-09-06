@@ -6,7 +6,7 @@ from django.shortcuts import reverse
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
 
-from baserow.api.user.serializers import UndoRedoResultCodeField
+from baserow.api.actions.serializers import UndoRedoResultCodeField
 from baserow.contrib.database.fields.models import NumberField, TextField
 from baserow.core.action.models import Action
 from baserow.core.actions import CreateGroupActionType

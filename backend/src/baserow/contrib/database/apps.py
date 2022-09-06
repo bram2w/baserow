@@ -56,9 +56,10 @@ class DatabaseConfig(AppConfig):
             action_type_registry,
         )
 
-        from .action.scopes import TableActionScopeType
+        from .action.scopes import TableActionScopeType, ViewActionScopeType
 
         action_scope_registry.register(TableActionScopeType())
+        action_scope_registry.register(ViewActionScopeType())
 
         from .table.actions import (
             CreateTableActionType,

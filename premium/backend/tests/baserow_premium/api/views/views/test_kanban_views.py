@@ -12,12 +12,12 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.action.scopes import ViewActionScopeType
 from baserow.contrib.database.views.actions import UpdateViewActionType
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
-from baserow.core.action.scopes import ViewActionScopeType
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 

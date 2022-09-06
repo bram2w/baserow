@@ -38,7 +38,7 @@
                 :fields="fields"
                 :read-only="readOnly"
                 :add-order-buttons="true"
-                :addHandle="false"
+                :add-handle="false"
                 @hide="hideField(view, field)"
                 @updated-field-options="
                   updateFieldOptionsOfField(view, field, $event)

@@ -16,6 +16,10 @@ from rest_framework_jwt.views import (
 )
 from rest_framework_jwt.views import VerifyJSONWebTokenView as RegularVerifyJSONWebToken
 
+from baserow.api.actions.serializers import (
+    UndoRedoResponseSerializer,
+    get_undo_request_serializer,
+)
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
     BAD_TOKEN_SIGNATURE,
@@ -70,13 +74,13 @@ from .serializers import (
     RegisterSerializer,
     ResetPasswordBodyValidationSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
-    UndoRedoRequestSerializer,
-    UndoRedoResponseSerializer,
     UserSerializer,
 )
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+UndoRedoRequestSerializer = get_undo_request_serializer()
 
 
 class ObtainJSONWebToken(RegularObtainJSONWebToken):
@@ -167,7 +171,7 @@ class UserView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_ALREADY_EXISTS",
-                    "ERROR_GROUP_INVITATION_DOES_NOT_EXIST"
+                    "ERROR_GROUP_INVITATION_DOES_NOT_EXIST",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "BAD_TOKEN_SIGNATURE",
                 ]
