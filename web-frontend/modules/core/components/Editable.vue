@@ -52,10 +52,8 @@ export default {
         // need to see if the scrollLeft must be changed so that we can see the cursor
         // which has been placed at the end.
         const parent = this.$el.parentElement
-        if (parent.scrollWidth > parent.clientWidth) {
-          parent.scrollLeft = parent.scrollWidth - parent.clientWidth
-          parent.classList.add('forced-text-overflow-initial')
-        }
+        parent.scrollLeft = parent.scrollWidth - parent.clientWidth
+        parent.classList.add('forced-text-overflow-initial')
       })
     },
     /**
