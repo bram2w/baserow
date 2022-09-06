@@ -60,7 +60,7 @@ def test_can_convert_between_all_fields(data_fixture):
     raise any exceptions.
     """
 
-    table, user, row, blank_row = setup_interesting_test_table(data_fixture)
+    table, user, row, blank_row, context = setup_interesting_test_table(data_fixture)
 
     handler = FieldHandler()
     row_handler = RowHandler()

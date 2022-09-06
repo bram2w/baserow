@@ -455,9 +455,7 @@ def test_import_export_lookup_field_when_through_field_trashed(
     lookup.save()
 
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a,
-        lookup_serialized,
-        id_mapping,
+        table_a, lookup_serialized, id_mapping
     )
     assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name
@@ -508,9 +506,7 @@ def test_import_export_lookup_field_trashed_target_field(data_fixture, api_clien
     lookup.save()
 
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a,
-        lookup_serialized,
-        id_mapping,
+        table_a, lookup_serialized, id_mapping
     )
     assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name

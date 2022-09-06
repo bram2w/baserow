@@ -212,7 +212,7 @@ def test_get_example_row_serializer_class():
 
 @pytest.mark.django_db
 def test_get_row_serializer_with_user_field_names(data_fixture):
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     model = table.get_model()
     queryset = model.objects.all().enhance_by_fields()
     serializer_class = get_row_serializer_class(
@@ -291,6 +291,10 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "id": SelectOption.objects.get(value="A").id,
                     "value": "A",
                 },
+                "multiple_collaborators": [
+                    {"id": context["user2"].id, "name": context["user2"].first_name},
+                    {"id": context["user3"].id, "name": context["user3"].first_name},
+                ],
                 "multiple_select": [
                     {
                         "color": "yellow",

@@ -15,7 +15,7 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 # to additional args.
 def test_getting_rows_from_large_grid_view(data_fixture, api_client):
 
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     token = data_fixture.generate_token(user)
     count = 10000
     fill_table_rows(count, table)

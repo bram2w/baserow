@@ -1,4 +1,8 @@
+import createSelectOption from '@baserow/modules/database/mixins/createSelectOption'
+import selectDropdown from '@baserow/modules/database/mixins/selectDropdown'
+
 export default {
+  mixins: [createSelectOption, selectDropdown],
   computed: {
     valueId() {
       return this.value && this.value !== null ? this.value.id : null

@@ -346,10 +346,11 @@ class SnapshotHandler:
             application, None, default_storage
         )
         progress.increment(by=50)
+        id_mapping = {"import_group_id": group.id}
         imported_database = application_type.import_serialized(
             None,
             exported_application,
-            {},
+            id_mapping,
             None,
             default_storage,
             progress_builder=progress.create_child_builder(represents_progress=50),

@@ -1,7 +1,7 @@
 import datetime
 import os
 from decimal import Decimal
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -83,68 +83,67 @@ def test_get_user(data_fixture):
 @pytest.mark.django_db
 def test_create_user(data_fixture):
     plugin_mock = MagicMock()
-    plugin_registry.registry["mock"] = plugin_mock
+    with patch.dict(plugin_registry.registry, {"mock": plugin_mock}):
+        user_handler = UserHandler()
+        valid_password = "thisIsAValidPassword"
 
-    user_handler = UserHandler()
-    valid_password = "thisIsAValidPassword"
+        data_fixture.update_settings(allow_new_signups=False)
+        with pytest.raises(DisabledSignupError):
+            user_handler.create_user("Test1", "test@test.nl", valid_password)
+        assert User.objects.all().count() == 0
+        data_fixture.update_settings(allow_new_signups=True)
 
-    data_fixture.update_settings(allow_new_signups=False)
-    with pytest.raises(DisabledSignupError):
-        user_handler.create_user("Test1", "test@test.nl", valid_password)
-    assert User.objects.all().count() == 0
-    data_fixture.update_settings(allow_new_signups=True)
+        user = user_handler.create_user("Test1", "test@test.nl", valid_password)
+        assert user.pk
+        assert user.first_name == "Test1"
+        assert user.email == "test@test.nl"
+        assert user.username == "test@test.nl"
+        assert user.profile.language == "en"
 
-    user = user_handler.create_user("Test1", "test@test.nl", valid_password)
-    assert user.pk
-    assert user.first_name == "Test1"
-    assert user.email == "test@test.nl"
-    assert user.username == "test@test.nl"
-    assert user.profile.language == "en"
+        assert Group.objects.all().count() == 1
+        group = Group.objects.all().first()
+        assert group.users.filter(id=user.id).count() == 1
+        assert group.name == "Test1's group"
 
-    assert Group.objects.all().count() == 1
-    group = Group.objects.all().first()
-    assert group.users.filter(id=user.id).count() == 1
-    assert group.name == "Test1's group"
+        assert Database.objects.all().count() == 1
+        assert Table.objects.all().count() == 2
+        assert GridView.objects.all().count() == 2
+        assert TextField.objects.all().count() == 3
+        assert LongTextField.objects.all().count() == 1
+        assert BooleanField.objects.all().count() == 2
+        assert DateField.objects.all().count() == 1
+        assert GridViewFieldOptions.objects.all().count() == 3
 
-    assert Database.objects.all().count() == 1
-    assert Table.objects.all().count() == 2
-    assert GridView.objects.all().count() == 2
-    assert TextField.objects.all().count() == 3
-    assert LongTextField.objects.all().count() == 1
-    assert BooleanField.objects.all().count() == 2
-    assert DateField.objects.all().count() == 1
-    assert GridViewFieldOptions.objects.all().count() == 3
+        tables = Table.objects.all().order_by("id")
 
-    tables = Table.objects.all().order_by("id")
+        model_1 = tables[0].get_model()
+        model_1_results = model_1.objects.all()
+        assert len(model_1_results) == 5
+        assert model_1_results[0].order == Decimal("1.00000000000000000000")
+        assert model_1_results[1].order == Decimal("2.00000000000000000000")
+        assert model_1_results[2].order == Decimal("3.00000000000000000000")
+        assert model_1_results[3].order == Decimal("4.00000000000000000000")
+        assert model_1_results[4].order == Decimal("5.00000000000000000000")
 
-    model_1 = tables[0].get_model()
-    model_1_results = model_1.objects.all()
-    assert len(model_1_results) == 5
-    assert model_1_results[0].order == Decimal("1.00000000000000000000")
-    assert model_1_results[1].order == Decimal("2.00000000000000000000")
-    assert model_1_results[2].order == Decimal("3.00000000000000000000")
-    assert model_1_results[3].order == Decimal("4.00000000000000000000")
-    assert model_1_results[4].order == Decimal("5.00000000000000000000")
+        model_2 = tables[1].get_model()
+        model_2_results = model_2.objects.all()
+        assert len(model_2_results) == 4
+        assert model_2_results[0].order == Decimal("1.00000000000000000000")
+        assert model_2_results[1].order == Decimal("2.00000000000000000000")
+        assert model_2_results[2].order == Decimal("3.00000000000000000000")
+        assert model_2_results[3].order == Decimal("4.00000000000000000000")
 
-    model_2 = tables[1].get_model()
-    model_2_results = model_2.objects.all()
-    assert len(model_2_results) == 4
-    assert model_2_results[0].order == Decimal("1.00000000000000000000")
-    assert model_2_results[1].order == Decimal("2.00000000000000000000")
-    assert model_2_results[2].order == Decimal("3.00000000000000000000")
-    assert model_2_results[3].order == Decimal("4.00000000000000000000")
+        plugin_mock.user_created.assert_called_with(user, group, None, None)
 
-    plugin_mock.user_created.assert_called_with(user, group, None, None)
+        # Test profile properties
+        user2 = user_handler.create_user(
+            "Test2", "test2@test.nl", "password", language="fr"
+        )
+        assert user2.profile.language == "fr"
+        assert Group.objects.filter(users__in=[user2.id])[0].name == "Groupe de Test2"
 
-    # Test profile properties
-    user2 = user_handler.create_user(
-        "Test2", "test2@test.nl", "password", language="fr"
-    )
-    assert user2.profile.language == "fr"
-    assert Group.objects.filter(users__in=[user2.id])[0].name == "Groupe de Test2"
-
-    with pytest.raises(UserAlreadyExist):
-        user_handler.create_user("Test1", "test@test.nl", valid_password)
+        with pytest.raises(UserAlreadyExist):
+            user_handler.create_user("Test1", "test@test.nl", valid_password)
 
 
 @pytest.mark.django_db
@@ -199,71 +198,74 @@ def test_first_ever_created_user_is_staff(data_fixture):
 @pytest.mark.django_db
 def test_create_user_with_invitation(data_fixture):
     plugin_mock = MagicMock()
-    plugin_registry.registry["mock"] = plugin_mock
-    valid_password = "thisIsAValidPassword"
+    with patch.dict(plugin_registry.registry, {"mock": plugin_mock}):
+        valid_password = "thisIsAValidPassword"
 
-    user_handler = UserHandler()
-    core_handler = CoreHandler()
+        user_handler = UserHandler()
+        core_handler = CoreHandler()
 
-    invitation = data_fixture.create_group_invitation(email="test0@test.nl")
-    signer = core_handler.get_group_invitation_signer()
+        invitation = data_fixture.create_group_invitation(email="test0@test.nl")
+        signer = core_handler.get_group_invitation_signer()
 
-    with pytest.raises(BadSignature):
-        user_handler.create_user(
-            "Test1", "test0@test.nl", valid_password, group_invitation_token="INVALID"
+        with pytest.raises(BadSignature):
+            user_handler.create_user(
+                "Test1",
+                "test0@test.nl",
+                valid_password,
+                group_invitation_token="INVALID",
+            )
+
+        with pytest.raises(GroupInvitationDoesNotExist):
+            user_handler.create_user(
+                "Test1",
+                "test0@test.nl",
+                valid_password,
+                group_invitation_token=signer.dumps(99999),
+            )
+
+        with pytest.raises(GroupInvitationEmailMismatch):
+            user_handler.create_user(
+                "Test1",
+                "test1@test.nl",
+                valid_password,
+                group_invitation_token=signer.dumps(invitation.id),
+            )
+
+        data_fixture.update_settings(
+            allow_new_signups=False, allow_signups_via_group_invitations=False
         )
+        with pytest.raises(DisabledSignupError):
+            user_handler.create_user(
+                "Test1",
+                "test0@test.nl",
+                valid_password,
+                group_invitation_token=signer.dumps(invitation.id),
+            )
 
-    with pytest.raises(GroupInvitationDoesNotExist):
-        user_handler.create_user(
+        data_fixture.update_settings(
+            allow_new_signups=False, allow_signups_via_group_invitations=True
+        )
+        user = user_handler.create_user(
             "Test1",
             "test0@test.nl",
-            valid_password,
-            group_invitation_token=signer.dumps(99999),
-        )
-
-    with pytest.raises(GroupInvitationEmailMismatch):
-        user_handler.create_user(
-            "Test1",
-            "test1@test.nl",
             valid_password,
             group_invitation_token=signer.dumps(invitation.id),
         )
 
-    data_fixture.update_settings(
-        allow_new_signups=False, allow_signups_via_group_invitations=False
-    )
-    with pytest.raises(DisabledSignupError):
-        user_handler.create_user(
-            "Test1",
-            "test0@test.nl",
-            valid_password,
-            group_invitation_token=signer.dumps(invitation.id),
-        )
+        assert Group.objects.all().count() == 1
+        assert Group.objects.all().first().id == invitation.group_id
+        assert GroupUser.objects.all().count() == 2
 
-    data_fixture.update_settings(
-        allow_new_signups=False, allow_signups_via_group_invitations=True
-    )
-    user = user_handler.create_user(
-        "Test1",
-        "test0@test.nl",
-        valid_password,
-        group_invitation_token=signer.dumps(invitation.id),
-    )
+        plugin_mock.user_created.assert_called_once()
+        args = plugin_mock.user_created.call_args
+        assert args[0][0] == user
+        assert args[0][1].id == invitation.group_id
+        assert args[0][2].email == invitation.email
+        assert args[0][2].group_id == invitation.group_id
 
-    assert Group.objects.all().count() == 1
-    assert Group.objects.all().first().id == invitation.group_id
-    assert GroupUser.objects.all().count() == 2
-
-    plugin_mock.user_created.assert_called_once()
-    args = plugin_mock.user_created.call_args
-    assert args[0][0] == user
-    assert args[0][1].id == invitation.group_id
-    assert args[0][2].email == invitation.email
-    assert args[0][2].group_id == invitation.group_id
-
-    # We do not expect any initial data to have been created.
-    assert Database.objects.all().count() == 0
-    assert Table.objects.all().count() == 0
+        # We do not expect any initial data to have been created.
+        assert Database.objects.all().count() == 0
+        assert Table.objects.all().count() == 0
 
 
 @pytest.mark.django_db

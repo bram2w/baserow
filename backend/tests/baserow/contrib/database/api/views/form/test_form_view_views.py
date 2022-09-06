@@ -778,6 +778,33 @@ def test_test_enable_form_view_file_field_options(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_form_view_multiple_collaborators_field_options(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        table=table
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {"field_options": {multiple_collaborators_field.id: {"enabled": True}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED"
+    assert (
+        response_json["detail"]
+        == "The multiple_collaborators field type is not compatible with the form view."
+    )
+
+
+@pytest.mark.django_db
 def test_get_form_view_field_options(
     api_client, data_fixture, django_assert_num_queries
 ):

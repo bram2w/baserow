@@ -82,7 +82,8 @@
         "multipleSelect": "Multiple select",
         "phoneNumber": "Phone number",
         "formula": "Formula",
-        "lookup": "Lookup"
+        "lookup": "Lookup",
+        "multipleCollaborators": "Collaborators"
     },
     "fieldErrors": {
         "invalidNumber": "Invalid number",
@@ -116,7 +117,8 @@
         "multipleSelect": "Accepts an array of integers each representing the chosen select option id.",
         "phoneNumber": "Accepts a phone number which has a maximum length of 100 characters consisting solely of digits, spaces and the following characters: Nx,._+*()#=;/- .",
         "formula": "A read-only field defined by a formula written in the Baserow formula language.",
-        "lookup": "A read-only field connected to a link row field which returns an array of values and row ids from the chosen lookup field in the linked table."
+        "lookup": "A read-only field connected to a link row field which returns an array of values and row ids from the chosen lookup field in the linked table.",
+        "multipleCollaborators": "Accepts an array of objects where each object contains a user's id."
     },
     "viewFilter": {
         "contains": "contains",

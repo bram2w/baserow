@@ -31,6 +31,7 @@ import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
+import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
@@ -44,6 +45,7 @@ import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/compo
 import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
+import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -59,6 +61,7 @@ import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
+import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -73,6 +76,7 @@ import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/R
 import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
+import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 
@@ -2577,5 +2581,187 @@ export class LookupFieldType extends FormulaFieldType {
 
   shouldFetchFieldSelectOptions() {
     return false
+  }
+}
+
+export class MultipleCollaboratorsFieldType extends FieldType {
+  static getType() {
+    return 'multiple_collaborators'
+  }
+
+  getIconClass() {
+    return 'user-friends'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.multipleCollaborators')
+  }
+
+  getFormComponent() {
+    return null
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldMultipleCollaborators
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldMultipleCollaborators
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldMultipleCollaborators
+  }
+
+  getCardComponent() {
+    return RowCardFieldMultipleCollaborators
+  }
+
+  prepareValueForUpdate(field, value) {
+    if (value === undefined || value === null) {
+      return []
+    }
+    return value
+  }
+
+  getFormViewFieldComponent() {
+    return null
+  }
+
+  getEmptyValue() {
+    return []
+  }
+
+  getCanImport() {
+    return true
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const valuesA = a[name]
+      const valuesB = b[name]
+
+      let stringA = ''
+      let stringB = ''
+
+      const groups = this.app.store.getters['group/getAll']
+
+      if (valuesA.length > 0 && groups.length > 0) {
+        stringA = valuesA
+          .map(
+            (obj) => this.app.store.getters['group/getUserById'](obj.id).name
+          )
+          .join('')
+      } else if (valuesA.length > 0) {
+        stringA = valuesA.map((obj) => obj.name).join('')
+      }
+
+      if (valuesB.length > 0 && groups.length > 0) {
+        stringB = valuesB
+          .map(
+            (obj) => this.app.store.getters['group/getUserById'](obj.id).name
+          )
+          .join('')
+      } else if (valuesB.length > 0) {
+        stringB = valuesB.map((obj) => obj.name).join('')
+      }
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    const groups = this.app.store.getters['group/getAll']
+
+    let nameList = []
+
+    if (groups.length > 0) {
+      nameList = value.map((value) => {
+        const groupUser = this.app.store.getters['group/getUserById'](value.id)
+        return groupUser.name
+      })
+    } else {
+      // public views
+      nameList = value.map((value) => {
+        return value.name
+      })
+    }
+
+    return this.app.$papa.arrayToString(nameList)
+  }
+
+  prepareRichValueForCopy(field, value) {
+    if (value === undefined) {
+      return []
+    }
+    return value
+  }
+
+  checkRichValueIsCompatible(value) {
+    return (
+      value === null ||
+      (Array.isArray(value) &&
+        value.every((v) => Object.prototype.hasOwnProperty.call(v, 'id')))
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      if (richClipboardData === null) {
+        return []
+      }
+      return richClipboardData
+    } else {
+      // Fallback to text version
+      try {
+        const data = this.app.$papa.stringToArray(clipboardData)
+        const uniqueValuesOnly = Array.from(new Set(data))
+        return uniqueValuesOnly
+          .map((emailOrName) => {
+            const groupUser =
+              this.app.store.getters['group/getUserByEmail'](emailOrName)
+            if (groupUser !== undefined) {
+              return groupUser
+            }
+            return this.app.store.getters['group/getUserByName'](emailOrName)
+          })
+          .filter((obj) => obj !== null)
+          .map((obj) => {
+            return {
+              id: obj.user_id,
+            }
+          })
+      } catch (e) {
+        return []
+      }
+    }
+  }
+
+  getDocsDataType() {
+    return 'array'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.multipleCollaborators')
+  }
+
+  getDocsRequestExample() {
+    return [{ id: 1 }]
+  }
+
+  getDocsResponseExample() {
+    return [
+      {
+        id: 1,
+        name: 'John',
+      },
+    ]
   }
 }

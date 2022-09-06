@@ -157,6 +157,7 @@ class DatabaseConfig(AppConfig):
             LinkRowFieldType,
             LongTextFieldType,
             LookupFieldType,
+            MultipleCollaboratorsFieldType,
             MultipleSelectFieldType,
             NumberFieldType,
             PhoneNumberFieldType,
@@ -183,17 +184,20 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(PhoneNumberFieldType())
         field_type_registry.register(FormulaFieldType())
         field_type_registry.register(LookupFieldType())
+        field_type_registry.register(MultipleCollaboratorsFieldType())
 
         from .fields.field_converters import (
             FileFieldConverter,
             FormulaFieldConverter,
             LinkRowFieldConverter,
+            MultipleCollaboratorsFieldConverter,
             MultipleSelectFieldToSingleSelectFieldConverter,
             MultipleSelectFieldToTextFieldConverter,
             SingleSelectFieldToMultipleSelectFieldConverter,
             TextFieldToMultipleSelectFieldConverter,
         )
 
+        field_converter_registry.register(MultipleCollaboratorsFieldConverter())
         field_converter_registry.register(LinkRowFieldConverter())
         field_converter_registry.register(FileFieldConverter())
         field_converter_registry.register(TextFieldToMultipleSelectFieldConverter())

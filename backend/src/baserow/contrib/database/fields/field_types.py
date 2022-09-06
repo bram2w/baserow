@@ -8,6 +8,8 @@ from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
@@ -32,6 +34,7 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_WITH_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
+    CollaboratorSerializer,
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
     LinkRowValueSerializer,
@@ -57,7 +60,7 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
-from baserow.core.models import UserFile
+from baserow.core.models import GroupUser, UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
@@ -71,6 +74,7 @@ from .dependencies.handler import FieldDependants, FieldDependencyHandler
 from .dependencies.models import FieldDependency
 from .dependencies.types import FieldDependencies
 from .exceptions import (
+    AllProvidedCollaboratorIdsMustBeValidUsers,
     AllProvidedMultipleSelectValuesMustBeIntegers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     FieldDoesNotExist,
@@ -102,6 +106,7 @@ from .models import (
     LinkRowField,
     LongTextField,
     LookupField,
+    MultipleCollaboratorsField,
     MultipleSelectField,
     NumberField,
     PhoneNumberField,
@@ -627,7 +632,7 @@ class BooleanFieldType(FieldType):
         return "true" if value else "false"
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         setattr(row, field_name, value == "true")
 
@@ -817,7 +822,7 @@ class DateFieldType(FieldType):
         return value.isoformat()
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         if not value:
             return value
@@ -975,7 +980,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
             )
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         """
         The `auto_now_add` and `auto_now` properties are set to False during the
@@ -1656,7 +1661,7 @@ class LinkRowFieldType(FieldType):
         return cache[cache_entry][row.id]
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         getattr(row, field_name).set(value)
 
@@ -1990,6 +1995,7 @@ class FileFieldType(FieldType):
         field_name: str,
         value: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
         files_zip: Optional[ZipFile],
         storage: Optional[Storage],
     ) -> None:
@@ -2301,7 +2307,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         return Q(**{f"{field_name}__value__icontains": value})
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         if not value:
             return
@@ -2351,15 +2357,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def enhance_queryset(self, queryset, field, name):
-        remote_field = queryset.model._meta.get_field(name).remote_field
-        remote_model = remote_field.model
-        through_model = remote_field.through
-        related_queryset = remote_model.objects.all().extra(
-            order_by=[f"{through_model._meta.db_table}.id"]
-        )
-        return queryset.prefetch_related(
-            models.Prefetch(name, queryset=related_queryset)
-        )
+        return queryset.prefetch_related(name)
 
     def prepare_value_for_db(self, instance, value):
         if value is None:
@@ -2534,7 +2532,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         return cache[cache_entry][row.id]
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         mapped_values = [
             id_mapping["database_field_select_options"][item] for item in value
@@ -3259,3 +3257,252 @@ class LookupFieldType(FormulaFieldType):
     def after_import_serialized(self, field, field_cache):
         self._rebuild_field_from_names(field)
         super().after_import_serialized(field, field_cache)
+
+
+class MultipleCollaboratorsFieldType(FieldType):
+    type = "multiple_collaborators"
+    model_class = MultipleCollaboratorsField
+    can_get_unique_values = False
+    can_be_in_form_view = False
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        field_serializer = CollaboratorSerializer(
+            **{
+                "required": required,
+                "allow_null": False,
+                **kwargs,
+            }
+        )
+        return serializers.ListSerializer(child=field_serializer, required=required)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> List[int]:
+        related_objects = getattr(row, field_name)
+        return [{"id": related_object.id} for related_object in related_objects.all()]
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        return CollaboratorSerializer(
+            **{
+                "required": required,
+                "allow_null": False,
+                "many": True,
+                **kwargs,
+            }
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return []
+
+        if len(value) == 0:
+            return []
+
+        user_ids = [v["id"] for v in value]
+        group = instance.table.database.group
+        group_users_count = GroupUser.objects.filter(
+            user_id__in=user_ids, group_id=group.id
+        ).count()
+
+        if group_users_count != len(user_ids):
+            raise AllProvidedCollaboratorIdsMustBeValidUsers(user_ids)
+
+        return user_ids
+
+    def prepare_value_for_db_in_bulk(
+        self, instance, values_by_row, continue_on_error=False
+    ):
+        # {user_id -> row_indexes}
+        rows_by_value = defaultdict(list)
+        all_user_ids = set()
+        for row_index, values in values_by_row.items():
+            user_ids = [v["id"] for v in values]
+            for user_id in user_ids:
+                rows_by_value[user_id].append(row_index)
+            all_user_ids = all_user_ids.union(user_ids)
+            values_by_row[row_index] = user_ids
+
+        group = instance.table.database.group
+
+        selected_ids = GroupUser.objects.filter(
+            user_id__in=all_user_ids, group_id=group.id
+        ).values_list("user_id", flat=True)
+
+        if len(selected_ids) != len(all_user_ids):
+            invalid_ids = sorted(list(all_user_ids - set(selected_ids)))
+            if continue_on_error:
+                for invalid_id in invalid_ids:
+                    for row_index in rows_by_value[invalid_id]:
+                        values_by_row[
+                            row_index
+                        ] = AllProvidedCollaboratorIdsMustBeValidUsers(invalid_id)
+            else:
+                # or fail fast
+                raise AllProvidedCollaboratorIdsMustBeValidUsers(invalid_ids)
+
+        return values_by_row
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "This field accepts a list of objects representing the chosen "
+            "collaborators through the object's `id` property. The id is Baserow "
+            "user id. The response objects also contains the collaborator name "
+            "directly along with its id."
+        )
+
+    def get_export_value(self, value, field_object, rich_value=False):
+        if value is None:
+            return [] if rich_value else ""
+        result = [item.email for item in value.all()]
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
+
+    def get_human_readable_value(self, value, field_object):
+        export_value = self.get_export_value(value, field_object, rich_value=True)
+        if len(export_value) == 0:
+            return ""
+        return ", ".join(export_value)
+
+    def get_model_field(self, instance, **kwargs):
+        return None
+
+    def after_model_generation(self, instance, model, field_name, manytomany_models):
+        user_meta = type(
+            "Meta",
+            (AbstractUser.Meta,),
+            {
+                "managed": False,
+                "app_label": model._meta.app_label,
+                "db_tablespace": model._meta.db_tablespace,
+                "db_table": get_user_model().objects.model._meta.db_table,
+                "apps": model._meta.apps,
+            },
+        )
+        user_model = type(
+            str(f"MultipleCollaboratorsField{instance.id}User"),
+            (AbstractUser,),
+            {
+                # We need to override the `groups` and `user_permissions` here
+                # because they're normally many to many relationships with the
+                # `Group` and `Permission` model. This is something that we do not need
+                # and we don't want to create reversed relationships for generated
+                # model.
+                "groups": None,
+                "user_permissions": None,
+                "Meta": user_meta,
+                "__module__": model.__module__,
+                "_generated_table_model": True,
+            },
+        )
+
+        related_name = f"reversed_field_{instance.id}"
+        shared_kwargs = {
+            "null": True,
+            "blank": True,
+            "db_table": instance.through_table_name,
+            "db_constraint": False,
+        }
+        additional_filters = {
+            "id__in": GroupUser.objects.filter(
+                group_id=instance.table.database.group_id
+            ).values_list("user_id", flat=True)
+        }
+
+        MultipleSelectManyToManyField(
+            to=user_model,
+            related_name=related_name,
+            additional_filters=additional_filters,
+            **shared_kwargs,
+        ).contribute_to_class(model, field_name)
+        MultipleSelectManyToManyField(
+            to=model,
+            related_name=field_name,
+            reversed_additional_filters=additional_filters,
+            **shared_kwargs,
+        ).contribute_to_class(user_model, related_name)
+
+        # Trigger the newly created pending operations of all the models related to the
+        # created CollaboratorField. They need to be called manually because normally
+        # they are triggered when a new model is registered. Not triggering them
+        # can cause a memory leak because everytime a table model is generated, it will
+        # register new pending operations.
+        apps = model._meta.apps
+        model_field = model._meta.get_field(field_name)
+        collaborator_field = user_model._meta.get_field(related_name)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(user_model)
+        apps.do_pending_operations(model_field.remote_field.through)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(collaborator_field.remote_field.through)
+        apps.clear_cache()
+
+    def enhance_queryset(self, queryset, field, name):
+        return queryset.prefetch_related(name)
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        cache_entry = f"{field_name}_relations_export"
+        if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table, we want
+            # to fetch all the relations and add it to a temporary in memory cache
+            # containing a mapping of the row ids to collaborator emails.
+            cache[cache_entry] = defaultdict(list)
+            through_model = row._meta.get_field(field_name).remote_field.through
+            through_model_fields = through_model._meta.get_fields()
+            current_field_name = through_model_fields[1].name
+            relation_field_name = through_model_fields[2].name
+            users_relation = through_model.objects.select_related(relation_field_name)
+            for relation in users_relation:
+                cache[cache_entry][
+                    getattr(relation, f"{current_field_name}_id")
+                ].append(getattr(relation, relation_field_name).email)
+        return cache[cache_entry][row.id]
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
+    ):
+        group_id = id_mapping["import_group_id"]
+        cache_entry = f"{field_name}_relations_import"
+        if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table, we want
+            # to fetch all the relations and add it to a temporary in memory cache
+            # containing a mapping of the row ids to collaborator emails.
+            cache[cache_entry] = defaultdict(list)
+
+            groupusers_from_group = GroupUser.objects.filter(
+                group_id=group_id
+            ).select_related("user")
+
+            for groupuser in groupusers_from_group:
+                cache[cache_entry][groupuser.user.email] = groupuser.user.id
+
+        user_ids = []
+        for email in value:
+            user_id = cache[cache_entry].get(email, None)
+            if user_id is not None:
+                user_ids.append(user_id)
+
+        getattr(row, field_name).set(user_ids)
+
+    def get_order(self, field, field_name, order_direction):
+        """
+        If the user wants to sort the results he expects them to be ordered
+        alphabetically based on the user's name and not in the id which is
+        stored in the table. This method generates a Case expression which maps
+        the id to the correct position.
+        """
+
+        sort_column_name = f"{field_name}_agg_sort"
+        query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
+        annotation = {sort_column_name: query}
+
+        order = F(sort_column_name)
+        if order_direction == "DESC":
+            order = order.desc(nulls_first=True)
+        else:
+            order = order.asc(nulls_first=True)
+
+        return AnnotatedOrder(annotation=annotation, order=order)

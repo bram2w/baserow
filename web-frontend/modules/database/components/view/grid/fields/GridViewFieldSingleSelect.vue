@@ -25,7 +25,7 @@
       :options="field.select_options"
       :show-input="false"
       :allow-create-option="true"
-      class="dropdown--floating grid-field-single-select__dropdown"
+      class="dropdown--floating"
       @show="editing = true"
       @hide="editing = false"
       @input="updateValue($event, value)"
@@ -36,11 +36,12 @@
 
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
-import selectOptions from '@baserow/modules/database/mixins/selectOptions'
 import singleSelectField from '@baserow/modules/database/mixins/singleSelectField'
+import FieldSelectOptionsDropdown from '@baserow/modules/database/components/field/FieldSelectOptionsDropdown'
 
 export default {
-  mixins: [gridField, selectOptions, singleSelectField],
+  components: { FieldSelectOptionsDropdown },
+  mixins: [gridField, singleSelectField],
   data() {
     return {
       editing: false,

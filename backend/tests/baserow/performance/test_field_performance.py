@@ -56,7 +56,7 @@ def test_speed_of_table_copy_via_export(data_fixture):
 # to additional args.
 def test_updating_many_fields_doesnt_slow_down_get_rows(data_fixture, api_client):
 
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     token = data_fixture.generate_token(user)
     count = 10000
     fill_table_rows(count, table)

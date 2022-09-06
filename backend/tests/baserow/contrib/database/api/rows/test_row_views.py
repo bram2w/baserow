@@ -730,7 +730,7 @@ def test_create_empty_row_for_interesting_fields(api_client, data_fixture):
     Test a common case: create a row with empty values.
     """
 
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     jwt_token = data_fixture.generate_token(user)
 
     response = api_client.post(

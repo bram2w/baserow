@@ -1,0 +1,54 @@
+.field-multiple-collaborators__items {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.field-multiple-collaborators__item {
+  height: 24px;
+  margin: 5px 4px 5px 4px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.field-multiple-collaborators__item--row-edit {
+  margin-left: 0;
+}
+
+.field-multiple-collaborators__name {
+  @extend %ellipsis;
+
+  @include collaborator-style(flex, true);
+
+  max-width: 200px;
+}
+
+.field-multiple-collaborators__initials {
+  flex: 0 0 24px;
+  font-weight: bold;
+  color: $white;
+  background-color: $color-primary-500;
+  border-radius: 100%;
+  margin-left: 0;
+  margin-right: -14px;
+
+  @include center-text(24px, 12px);
+}
+
+.field-multiple-collaborators__remove {
+  color: $color-primary-900;
+  margin-left: 5px;
+  font-size: 11px;
+  padding: 0 2px;
+
+  &:hover {
+    color: $color-neutral-500;
+  }
+}

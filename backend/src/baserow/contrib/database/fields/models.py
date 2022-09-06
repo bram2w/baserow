@@ -502,6 +502,21 @@ class LookupField(FormulaField):
         )
 
 
+class MultipleCollaboratorsField(Field):
+    THROUGH_DATABASE_TABLE_PREFIX = "database_multiplecollaborators_"
+
+    @property
+    def through_table_name(self):
+        """
+        Generating a unique through table name based on the relation id.
+
+        :return: The table name of the through model.
+        :rtype: string
+        """
+
+        return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.id}"
+
+
 class DuplicateFieldJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     original_field = models.ForeignKey(

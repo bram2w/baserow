@@ -1,0 +1,22 @@
+@mixin collaborator-style($display, $include-shadow-if-bg-same-color: false) {
+  @extend %ellipsis;
+
+  display: $display;
+  color: $color-primary-900;
+  border-radius: 20px;
+  padding: 0 10px 0 20px;
+  max-width: 100%;
+
+  @if $include-shadow-if-bg-same-color {
+    // Special case for search matches background
+    &.background-color--light-blue {
+      .grid-view__column--matches-search & {
+        @extend %option-shadow;
+      }
+    }
+
+    @include add-shadow-on-same-background();
+  }
+
+  @include fixed-height(20px, 12px);
+}

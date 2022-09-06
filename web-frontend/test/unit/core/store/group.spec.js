@@ -1,5 +1,6 @@
 import groupStore from '@baserow/modules/core/store/group'
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { expect } from '@jest/globals'
 
 describe('Group store', () => {
   let testApp = null
@@ -452,5 +453,313 @@ describe('Group store', () => {
 
     const group3 = store.getters['test/get'](3)
     expect(group3.users.length).toBe(1)
+  })
+
+  test('getAllUsers collects users from all groups', async () => {
+    const state = Object.assign(groupStore.state(), {
+      items: [
+        {
+          id: 1,
+          name: 'Group 1',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 73,
+              user_id: 256,
+              group: 1,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: 'Group 2',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2136,
+              user_id: 456,
+              group: 2,
+              name: 'Peter',
+              email: 'peter@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+            {
+              id: 173,
+              user_id: 256,
+              group: 2,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: 'Group 3',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2144,
+              user_id: 556,
+              group: 3,
+              name: 'Mark',
+              email: 'mark@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+      ],
+    })
+    groupStore.state = () => state
+    store.registerModule('test', groupStore)
+
+    const allUsers = await store.getters['test/getAllUsers']
+    expect(allUsers[256].name).toBe('John')
+    expect(allUsers[456].name).toBe('Peter')
+    expect(allUsers[556].name).toBe('Mark')
+  })
+
+  test('getAllUsersByEmail collects users by email from all groups', async () => {
+    const state = Object.assign(groupStore.state(), {
+      items: [
+        {
+          id: 1,
+          name: 'Group 1',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 73,
+              user_id: 256,
+              group: 1,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: 'Group 2',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2136,
+              user_id: 456,
+              group: 2,
+              name: 'Peter',
+              email: 'peter@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+            {
+              id: 173,
+              user_id: 256,
+              group: 2,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: 'Group 3',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2144,
+              user_id: 556,
+              group: 3,
+              name: 'Mark',
+              email: 'mark@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+      ],
+    })
+    groupStore.state = () => state
+    store.registerModule('test', groupStore)
+
+    const allUsers = await store.getters['test/getAllUsersByEmail']
+    expect(allUsers['john@example.com'].name).toBe('John')
+    expect(allUsers['peter@example.com'].name).toBe('Peter')
+    expect(allUsers['mark@example.com'].name).toBe('Mark')
+  })
+
+  test('getUserById returns user by id from any of the groups', async () => {
+    const state = Object.assign(groupStore.state(), {
+      items: [
+        {
+          id: 1,
+          name: 'Group 1',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 73,
+              user_id: 256,
+              group: 1,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: 'Group 2',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2136,
+              user_id: 456,
+              group: 2,
+              name: 'Peter',
+              email: 'peter@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+            {
+              id: 173,
+              user_id: 256,
+              group: 2,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: 'Group 3',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2144,
+              user_id: 556,
+              group: 3,
+              name: 'Mark',
+              email: 'mark@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+      ],
+    })
+    groupStore.state = () => state
+    store.registerModule('test', groupStore)
+
+    const mark = await store.getters['test/getUserById'](556)
+    expect(mark.name).toBe('Mark')
+  })
+
+  test('getUserByEmail returns user by email from any of the groups', async () => {
+    const state = Object.assign(groupStore.state(), {
+      items: [
+        {
+          id: 1,
+          name: 'Group 1',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 73,
+              user_id: 256,
+              group: 1,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: 'Group 2',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2136,
+              user_id: 456,
+              group: 2,
+              name: 'Peter',
+              email: 'peter@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+            {
+              id: 173,
+              user_id: 256,
+              group: 2,
+              name: 'John',
+              email: 'john@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: 'Group 3',
+          order: 1,
+          permissions: 'ADMIN',
+          users: [
+            {
+              id: 2144,
+              user_id: 556,
+              group: 3,
+              name: 'Mark',
+              email: 'mark@example.com',
+              permissions: 'ADMIN',
+              to_be_deleted: false,
+              created_on: '2022-08-10T14:20:05.629890Z',
+            },
+          ],
+        },
+      ],
+    })
+    groupStore.state = () => state
+    store.registerModule('test', groupStore)
+
+    const mark = await store.getters['test/getUserByEmail']('mark@example.com')
+    expect(mark.name).toBe('Mark')
   })
 })

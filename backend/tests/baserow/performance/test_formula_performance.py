@@ -22,7 +22,7 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 # to additional args.
 def test_adding_a_formula_field_compared_to_normal_field_isnt_slow(data_fixture):
 
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     count = 1000
     fill_table_rows(count, table)
 

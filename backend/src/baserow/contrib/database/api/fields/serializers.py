@@ -179,6 +179,11 @@ class UniqueRowValuesSerializer(serializers.Serializer):
     values = serializers.ListSerializer(child=serializers.CharField())
 
 
+class CollaboratorSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField(source="first_name", read_only=True)
+
+
 class DuplicateFieldParamsSerializer(serializers.Serializer):
     duplicate_data = serializers.BooleanField(
         default=False, help_text="Indicates whether the data should be duplicated."

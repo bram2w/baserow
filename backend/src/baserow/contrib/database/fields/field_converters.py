@@ -13,6 +13,7 @@ from .models import (
     FileField,
     FormulaField,
     LinkRowField,
+    MultipleCollaboratorsField,
     MultipleSelectField,
     SelectOption,
     SingleSelectField,
@@ -70,6 +71,15 @@ class LinkRowFieldConverter(RecreateFieldConverter):
                 and isinstance(to_field, LinkRowField)
                 and from_field.link_row_table_id != to_field.link_row_table_id
             )
+        )
+
+
+class MultipleCollaboratorsFieldConverter(RecreateFieldConverter):
+    type = "multiple_collaborators"
+
+    def is_applicable(self, from_model, from_field, to_field):
+        return isinstance(to_field, MultipleCollaboratorsField) or isinstance(
+            from_field, MultipleCollaboratorsField
         )
 
 
