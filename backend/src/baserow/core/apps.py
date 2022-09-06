@@ -46,13 +46,11 @@ class CoreConfig(AppConfig):
             ApplicationActionScopeType,
             GroupActionScopeType,
             RootActionScopeType,
-            ViewActionScopeType,
         )
 
         action_scope_registry.register(RootActionScopeType())
         action_scope_registry.register(GroupActionScopeType())
         action_scope_registry.register(ApplicationActionScopeType())
-        action_scope_registry.register(ViewActionScopeType())
 
         from baserow.core.jobs.registries import job_type_registry
 

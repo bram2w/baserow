@@ -5,7 +5,10 @@ from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.contrib.database.action.scopes import TableActionScopeType
+from baserow.contrib.database.action.scopes import (
+    TableActionScopeType,
+    ViewActionScopeType,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
@@ -20,7 +23,6 @@ from baserow.contrib.database.views.models import (
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionScopeStr, ActionType
-from baserow.core.action.scopes import ViewActionScopeType
 from baserow.core.trash.handler import TrashHandler
 
 

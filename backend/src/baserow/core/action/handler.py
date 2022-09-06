@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 def scopes_to_q_filter(scopes: List[ActionScopeStr]):
+    """
+    Provides a Q filter which matches the provided scopes. If no scopes are provided
+    then a Q which matches all actions will be returned.
+    """
+
     q = Q()
     for scope_str in scopes:
         q |= Q(scope=scope_str)
