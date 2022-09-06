@@ -8,7 +8,7 @@ from .managers import UserFileQuerySet
 
 User = get_user_model()
 deconstruct_user_file_regex = re.compile(
-    r"([a-zA-Z0-9]*)_([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)$"
+    r"^([a-zA-Z0-9]*)_([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)$"
 )
 
 
