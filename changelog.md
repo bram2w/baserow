@@ -35,6 +35,8 @@ For example:
 * Fixed a bug that make the grid view crash when searching text and a formula field is referencing a singe-select field. [#1110](https://gitlab.com/bramw/baserow/-/issues/1110)
 * Fixed horizontal scroll on Mac OSX.
 * Fixed bug where the row coloring didn't work in combination with group level premium.
+* Fixed bug where the link row field lookup didn't work in combination with password 
+  protected views.
 * "Link to table" field does not allow submitting empty values. [#1159](https://gitlab.com/bramw/baserow/-/issues/1159)
 * Fixed bug where the "Create option" button was not visible for the single and multiple
   select fields in the row edit modal.

@@ -90,6 +90,7 @@ export default {
         const result = fieldType.parseQueryParameter(field, prefill, {
           slug,
           client: app.$client,
+          publicAuthToken,
         })
 
         if (isPromise(result)) {
