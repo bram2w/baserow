@@ -875,13 +875,14 @@ export class LinkRowFieldType extends FieldType {
     return true
   }
 
-  async parseQueryParameter(field, value, { client, slug }) {
+  async parseQueryParameter(field, value, { client, slug, publicAuthToken }) {
     const { data } = await ViewService(client).linkRowFieldLookup(
       slug,
       field.field.id,
       1,
       value,
-      1
+      1,
+      publicAuthToken
     )
 
     const item = data.results.find((item) => item.value === value)

@@ -95,7 +95,14 @@ export default (client) => {
     rotateSlug(viewId) {
       return client.post(`/database/views/${viewId}/rotate-slug/`)
     },
-    linkRowFieldLookup(slug, fieldId, page, search = null, size = 100) {
+    linkRowFieldLookup(
+      slug,
+      fieldId,
+      page,
+      search = null,
+      size = 100,
+      publicAuthToken = null
+    ) {
       const config = {
         params: {
           page,
@@ -105,6 +112,10 @@ export default (client) => {
 
       if (search !== null) {
         config.params.search = search
+      }
+
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
       }
 
       return client.get(
