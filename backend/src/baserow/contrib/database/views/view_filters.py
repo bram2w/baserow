@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from math import ceil, floor
+from typing import Dict
 
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models import DateTimeField, IntegerField, Q
@@ -453,12 +454,33 @@ class DateAfterViewFilterType(BaseDateFieldLookupFilterType):
     query_field_lookup = "__gt"
 
 
-class DateEqualsTodayViewFilterType(ViewFilterType):
+class DateCompareTodayViewFilterType(ViewFilterType):
     """
-    The today filter checks if the field value matches with today's date.
+    The today filter checks if the field value matches the defined operator with
+    today's date.
     """
 
-    type = "date_equals_today"
+    @property
+    def type(self) -> str:
+        """
+        Returns the type of the filter (e.g. 'date_equals_today' for a
+        view_filter that filters for today).
+        """
+
+        raise NotImplementedError
+
+    def make_query_dict(self, field_name: str, now: datetime) -> Dict:
+        """
+        Creates a query dict for the specific view_filter, given the field name
+        based on today's date.
+
+        :param field_name: The field name to use in the query dict.
+        :param now: The current date.
+        :return: The query dict.
+        """
+
+        raise NotImplementedError
+
     compatible_field_types = [
         DateFieldType.type,
         LastModifiedFieldType.type,
@@ -467,7 +489,6 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
             BaserowFormulaDateType.type,
         ),
     ]
-    query_for = ["year", "month", "day"]
 
     def get_filter(self, field_name, value, model_field, field):
         timezone_string = value if value in all_timezones else "UTC"
@@ -475,28 +496,53 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
         field_has_timezone = hasattr(field, "timezone")
         now = datetime.utcnow().astimezone(timezone_object)
 
-        def make_query_dict(query_field_name):
-            query_dict = dict()
-            if "year" in self.query_for:
-                query_dict[f"{query_field_name}__year"] = now.year
-            if "month" in self.query_for:
-                query_dict[f"{query_field_name}__month"] = now.month
-            if "week" in self.query_for:
-                week = now.isocalendar()[1]
-                query_dict[f"{query_field_name}__week"] = week
-            if "day" in self.query_for:
-                query_dict[f"{query_field_name}__day"] = now.day
-
-            return query_dict
-
         if field_has_timezone:
             tmp_field_name = f"{field_name}_timezone_{timezone_string}"
             return AnnotatedQ(
                 annotation={f"{tmp_field_name}": Timezone(field_name, timezone_string)},
-                q=make_query_dict(tmp_field_name),
+                q=self.make_query_dict(tmp_field_name, now),
             )
         else:
-            return Q(**make_query_dict(field_name))
+            return Q(**self.make_query_dict(field_name, now))
+
+
+class DateEqualsTodayViewFilterType(DateCompareTodayViewFilterType):
+    """
+    The today filter checks if the field value matches with today's date.
+    """
+
+    type = "date_equals_today"
+
+    def make_query_dict(self, field_name, now):
+        return {
+            f"{field_name}__day": now.day,
+            f"{field_name}__month": now.month,
+            f"{field_name}__year": now.year,
+        }
+
+
+class DateBeforeTodayViewFilterType(DateCompareTodayViewFilterType):
+    """
+    The before today filter checks if the field value is before today's date.
+    """
+
+    type = "date_before_today"
+
+    def make_query_dict(self, field_name, now):
+        min_today = datetime.combine(now, time.min)
+        return {f"{field_name}__lt": min_today}
+
+
+class DateAfterTodayViewFilterType(DateCompareTodayViewFilterType):
+    """
+    The after today filter checks if the field value is after today's date.
+    """
+
+    type = "date_after_today"
+
+    def make_query_dict(self, field_name, now):
+        max_today = datetime.combine(now, time.max)
+        return {f"{field_name}__gt": max_today}
 
 
 class DateEqualsXAgoViewFilterType(ViewFilterType):
@@ -623,34 +669,49 @@ class DateEqualsYearsAgoViewFilterType(DateEqualsXAgoViewFilterType):
         return now + relativedelta(years=-x_units_ago)
 
 
-class DateEqualsCurrentWeekViewFilterType(DateEqualsTodayViewFilterType):
+class DateEqualsCurrentWeekViewFilterType(DateCompareTodayViewFilterType):
     """
     The current week filter works as a subset of today filter and checks if the
     field value falls into current week.
     """
 
     type = "date_equals_week"
-    query_for = ["year", "week"]
+
+    def make_query_dict(self, field_name, now):
+        week_of_year = now.isocalendar()[1]
+        return {
+            f"{field_name}__week": week_of_year,
+            f"{field_name}__year": now.year,
+        }
 
 
-class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):
+class DateEqualsCurrentMonthViewFilterType(DateCompareTodayViewFilterType):
     """
     The current month filter works as a subset of today filter and checks if the
     field value falls into current month.
     """
 
     type = "date_equals_month"
-    query_for = ["year", "month"]
+
+    def make_query_dict(self, field_name, now):
+        return {
+            f"{field_name}__month": now.month,
+            f"{field_name}__year": now.year,
+        }
 
 
-class DateEqualsCurrentYearViewFilterType(DateEqualsTodayViewFilterType):
+class DateEqualsCurrentYearViewFilterType(DateCompareTodayViewFilterType):
     """
     The current month filter works as a subset of today filter and checks if the
     field value falls into current year.
     """
 
     type = "date_equals_year"
-    query_for = ["year"]
+
+    def make_query_dict(self, field_name, now):
+        return {
+            f"{field_name}__year": now.year,
+        }
 
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):
