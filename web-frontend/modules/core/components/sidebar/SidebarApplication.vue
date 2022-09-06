@@ -7,7 +7,11 @@
     }"
   >
     <div class="tree__action tree__action--has-options" data-sortable-handle>
-      <a class="tree__link" @click="$emit('selected', application)">
+      <a
+        class="tree__link"
+        :title="application.name"
+        @click="$emit('selected', application)"
+      >
         <i
           class="tree__icon tree__icon--type fas"
           :class="'fa-' + application._.type.iconClass"
