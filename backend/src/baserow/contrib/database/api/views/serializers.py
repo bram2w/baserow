@@ -22,6 +22,15 @@ from baserow.contrib.database.views.registries import (
 )
 
 
+class ListQueryParamatersSerializer(serializers.Serializer):
+    limit = serializers.IntegerField(required=False, default=None)
+    type = serializers.ChoiceField(
+        required=False,
+        default=None,
+        choices=lazy(view_type_registry.get_types, list)(),
+    )
+
+
 class FieldOptionsField(serializers.Field):
     default_error_messages = {
         "invalid_key": "Field option key must be numeric.",
