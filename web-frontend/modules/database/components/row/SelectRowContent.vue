@@ -130,7 +130,7 @@
           <div
             class="select-row-modal__foot"
             :style="{
-              width: 3 * 200 + 'px',
+              width: fields.length * 200 + 'px',
             }"
           ></div>
         </div>
@@ -163,7 +163,11 @@ import SelectRowField from '@baserow/modules/database/components/row/SelectRowFi
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
-import { sortFieldsByOrderAndIdFunction } from '@baserow/modules/database/utils/view'
+import {
+  filterVisibleFieldsFunction,
+  sortFieldsByOrderAndIdFunction,
+} from '@baserow/modules/database/utils/view'
+import { GridViewType } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'SelectRowContent',
@@ -193,8 +197,6 @@ export default {
       lastHoveredRow: null,
       addRowHover: false,
       searchDebounce: null,
-      firstView: null,
-      fieldOptions: {},
     }
   },
   computed: {
@@ -224,14 +226,6 @@ export default {
     },
   },
   async mounted() {
-    // We need to get the first view in order to
-    // sort the fields by their order
-    await this.fetchFirstView(this.tableId)
-
-    // Get the field options
-    // they contain the order of the fields
-    await this.fetchFieldOptions(this.firstView.id)
-
     // The first time we have to fetch the fields because they are unknown for this
     // table.
     if (!(await this.fetchFields(this.tableId))) {
@@ -242,6 +236,8 @@ export default {
     if (!(await this.fetch(1))) {
       return false
     }
+
+    await this.orderFieldsByFirstGridViewFieldOptions(this.tableId)
 
     // Because most of the template depends on having some initial data we mark the
     // state as loaded after that. Only a loading animation is shown if there isn't any
@@ -309,9 +305,7 @@ export default {
         const primaryIndex = data.findIndex((item) => item.primary === true)
         this.primary =
           primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
-        this.fields = data.sort(
-          sortFieldsByOrderAndIdFunction(this.fieldOptions)
-        )
+        this.fields = data
         return true
       } catch (error) {
         notifyIf(error, 'row')
@@ -320,33 +314,38 @@ export default {
         return false
       }
     },
-    async fetchFirstView(tableId) {
+    /**
+     * This method fetches the first grid and the related field options. The ordering
+     * of that grid view will be applied to the already fetched fields. If anything
+     * goes wrong or if there isn't a grid view, the original order will be used.
+     */
+    async orderFieldsByFirstGridViewFieldOptions(tableId) {
       try {
         const { data: views } = await ViewService(this.$client).fetchAll(
           tableId,
-          true,
-          true
+          false,
+          false,
+          false,
+          // We can safely limit to `1` because the backend provides the views ordered.
+          1,
+          // We want to fetch the first grid view because for that type we're sure it's
+          // compatible with `filterVisibleFieldsFunction` and
+          // `sortFieldsByOrderAndIdFunction`. Others might also work, but this
+          // component is styled like a grid view and it makes to most sense to reflect
+          // that here.
+          GridViewType.getType()
         )
 
-        // Get the view with the smallest order
-        this.firstView = views.reduce((viewWithSmallestOrder, view) => {
-          if (viewWithSmallestOrder === null) {
-            return view
-          }
-          return view.order < viewWithSmallestOrder.order
-            ? view
-            : viewWithSmallestOrder
-        }, null)
-      } catch (error) {
-        notifyIf(error, 'view')
-      }
-    },
-    async fetchFieldOptions(viewId) {
-      try {
+        if (views.length === 0) {
+          return
+        }
+
         const {
           data: { field_options: fieldOptions },
-        } = await ViewService(this.$client).fetchFieldOptions(viewId)
-        this.fieldOptions = fieldOptions
+        } = await ViewService(this.$client).fetchFieldOptions(views[0].id)
+        this.fields = this.fields
+          .filter(filterVisibleFieldsFunction(fieldOptions))
+          .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
       } catch (error) {
         notifyIf(error, 'view')
       }

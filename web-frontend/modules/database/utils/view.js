@@ -26,6 +26,7 @@ export function getRowSortFunction($registry, sortings, fields) {
   sortFunction = sortFunction.thenBy((a, b) => a.id - b.id)
   return sortFunction
 }
+
 /**
  * Generates a sort function for fields based on order and id.
  */

@@ -18,6 +18,7 @@ from baserow.api.decorators import (
     map_exceptions,
     validate_body,
     validate_body_custom_fields,
+    validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
@@ -123,6 +124,7 @@ from .serializers import (
     CreateViewFilterSerializer,
     CreateViewSerializer,
     CreateViewSortSerializer,
+    ListQueryParamatersSerializer,
     OrderViewsSerializer,
     PublicViewAuthRequestSerializer,
     PublicViewAuthResponseSerializer,
@@ -172,6 +174,26 @@ class ViewsView(APIView):
                 "value.",
             ),
             OpenApiParameter(
+                name="type",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "Optionally filter on the view type. If provided, only views of "
+                    "that type will be returned."
+                ),
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description=(
+                    "The maximum amount of views that must be returned. This endpoint "
+                    "doesn't support pagination, but if you for example just need to "
+                    "fetch the first view, you can do that by setting a limit. There "
+                    "isn't a limit by default."
+                ),
+            ),
+            OpenApiParameter(
                 name="include",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
@@ -211,8 +233,9 @@ class ViewsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
+    @validate_query_parameters(ListQueryParamatersSerializer)
     @allowed_includes("filters", "sortings", "decorations")
-    def get(self, request, table_id, filters, sortings, decorations):
+    def get(self, request, table_id, query_params, filters, sortings, decorations):
         """
         Responds with a list of serialized views that belong to the table if the user
         has access to that group.
@@ -224,6 +247,11 @@ class ViewsView(APIView):
         )
         views = View.objects.filter(table=table).select_related("content_type", "table")
 
+        if query_params["type"]:
+            view_type = view_type_registry.get(query_params["type"])
+            content_type = ContentType.objects.get_for_model(view_type.model_class)
+            views = views.filter(content_type=content_type)
+
         if filters:
             views = views.prefetch_related("viewfilter_set")
 
@@ -232,6 +260,9 @@ class ViewsView(APIView):
 
         if decorations:
             views = views.prefetch_related("viewdecoration_set")
+
+        if query_params["limit"]:
+            views = views[: query_params["limit"]]
 
         views = specific_iterator(views)
 

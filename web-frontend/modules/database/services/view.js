@@ -7,7 +7,9 @@ export default (client) => {
       tableId,
       includeFilters = false,
       includeSortings = false,
-      includeDecorations = false
+      includeDecorations = false,
+      limit = null,
+      type = null
     ) {
       const config = {
         params: {},
@@ -28,6 +30,14 @@ export default (client) => {
 
       if (include.length > 0) {
         config.params.include = include.join(',')
+      }
+
+      if (limit !== null) {
+        config.params.limit = limit
+      }
+
+      if (type !== null) {
+        config.params.type = type
       }
 
       return client.get(`/database/views/table/${tableId}/`, config)
