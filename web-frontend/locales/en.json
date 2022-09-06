@@ -135,6 +135,8 @@
         "isAfterDate": "is after date",
         "isNotDate": "is not date",
         "isToday": "is today",
+        "beforeToday": "is before today",
+        "afterToday": "is after today",
         "isDaysAgo": "is days ago",
         "isMonthsAgo": "is months ago",
         "isYearsAgo": "is years ago",

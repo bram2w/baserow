@@ -2,7 +2,9 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import moment from '@baserow/modules/core/moment'
 import {
   DateBeforeViewFilterType,
+  DateBeforeTodayViewFilterType,
   DateAfterViewFilterType,
+  DateAfterTodayViewFilterType,
   DateEqualViewFilterType,
   DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
@@ -299,6 +301,42 @@ const dateToday = [
     rowValue: '1970-08-11T23:30:37.940086Z',
     filterValue: 'Europe/Berlin',
     expected: false,
+  },
+]
+
+const dateBeforeToday = [
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: moment().subtract(1, 'day').utc().format(),
+    filterValue: 'Europe/Berlin',
+    expected: true,
+  },
+  {
+    rowValue: moment().add(1, 'day').utc().format(),
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+]
+
+const dateAfterToday = [
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: moment().subtract(1, 'day').utc().format(),
+    filterValue: 'Europe/Berlin',
+    expected: false,
+  },
+  {
+    rowValue: moment().add(1, 'day').utc().format(),
+    filterValue: 'Europe/Berlin',
+    expected: true,
   },
 ]
 
@@ -791,6 +829,24 @@ describe('All Tests', () => {
 
   test.each(dateToday)('DateToday', (values) => {
     const result = new DateEqualsTodayViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      {}
+    )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateBeforeToday)('DateBeforeToday', (values) => {
+    const result = new DateBeforeTodayViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      {}
+    )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateAfterToday)('DateAfterToday', (values) => {
+    const result = new DateAfterTodayViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
       {}

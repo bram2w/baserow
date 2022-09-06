@@ -2383,7 +2383,7 @@ def test_last_modified_year_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
-def test_date_day_week_month_year_filter_type(data_fixture):
+def test_date_equals_day_week_month_year_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
@@ -2494,6 +2494,75 @@ def test_date_day_week_month_year_filter_type(data_fixture):
         ]
         assert len(ids) == 1
         assert row_3.id in ids
+
+
+@pytest.mark.django_db
+def test_date_before_after_today_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 2, 1),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 1),
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 2),
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 4),
+        }
+    )
+    row_5 = model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+    row_6 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2010, 1, 1),
+        }
+    )
+
+    row_7 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2020, 12, 31),
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_before_today", value="UTC"
+    )
+
+    with freeze_time("2021-01-02 01:01"):
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 3
+        assert ids == [row_2.id, row_6.id, row_7.id]
+
+        view_filter.type = "date_after_today"
+        view_filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+        assert len(ids) == 2
+        assert ids == [row_1.id, row_4.id]
 
 
 @pytest.mark.django_db
