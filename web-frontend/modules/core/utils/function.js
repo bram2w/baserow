@@ -1,7 +1,6 @@
 /**
- * This decorator helps to group multiple function calls into one during the
- * given graceDelay.
- * It's a little bit like a debounce but all the arguments are stacked and given to the
+ * This helper groups multiple function calls into one during the given graceDelay.
+ * It's similar to a debounce but all the arguments are stacked and given to the
  * callback function a the end of the delay.
  * It's useful, for example, if you want to group many calls of a
  * function that query the server into one to have only one server call.
@@ -12,14 +11,16 @@
  * Example:
  *
  * ```js
- * const getName = groupCalls(async (argList) => {
+ * const groupGetNameCalls = callGrouper(50)
+ *
+ * const getName = groupGetNameCalls(async (argList) => {
  *   const result = await (
  *     await fetch('some/url', doSomethingWithArgList(argList))
  *   ).json()
- *   return (id)=>{
+ *   return (id) => {
  *     return result[id]
  *   }
- * }, 50)
+ * })
  *
  * // Somewhere in the code
  * const name = await getName(42)
@@ -28,16 +29,16 @@
  *
  * ```
  *
- * If the two calls are triggered whithin the 50ms the `groupCalls` callback
+ * If the two calls are triggered within the 50ms the `groupCalls` callback
  * function will be called with `[42, 4]`.
  *
- * @param {function} callback the function called after the grace delay which receive an
- *   array of arguments and must return a function that return the original result for
- *   the provided args
- * @param {int} graceDelay the grace delay in ms before the provide function is called
- * @returns A function you can call with your arguments.
+ * @param {int} graceDelay the grace delay in ms during which the calls are grouped
+ * @returns A function you can call with a callback to create the final function that
+ *  behave like the original function. The callback will receive an array of all the
+ *  arguments and must return a function that returns the original result given the
+ *  provided args.
  */
-export const groupCalls = (callback, graceDelay) => {
+export const callGrouper = (graceDelay) => {
   let argsList, delay, currentResolve, currentPromise
 
   const init = () => {
@@ -48,20 +49,21 @@ export const groupCalls = (callback, graceDelay) => {
   }
   init()
 
-  return async (...args) => {
-    clearTimeout(delay)
+  return (callback) =>
+    async (...args) => {
+      clearTimeout(delay)
 
-    argsList.push(args)
+      argsList.push(args)
 
-    if (currentPromise === null) {
-      currentPromise = new Promise((resolve) => (currentResolve = resolve))
+      if (currentPromise === null) {
+        currentPromise = new Promise((resolve) => (currentResolve = resolve))
+      }
+
+      delay = setTimeout(async () => {
+        currentResolve(await callback(argsList))
+        init()
+      }, graceDelay)
+
+      return (await currentPromise)(...args)
     }
-
-    delay = setTimeout(async () => {
-      currentResolve(await callback(argsList))
-      init()
-    }, graceDelay)
-
-    return (await currentPromise)(...args)
-  }
 }
