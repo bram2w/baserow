@@ -322,6 +322,14 @@ class LinkRowField(Field):
         except Field.DoesNotExist:
             return None
 
+    @property
+    def is_self_referencing(self):
+        return self.link_row_table_id == self.table_id
+
+    @property
+    def link_row_table_has_related_field(self):
+        return self.link_row_related_field_id is not None
+
 
 class EmailField(Field):
     pass

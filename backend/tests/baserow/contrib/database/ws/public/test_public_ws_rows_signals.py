@@ -1870,9 +1870,7 @@ def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters
         },
     )
 
-    trashed_rows = TrashedRows()
-    trashed_rows.row_ids = [1, 2]
-    trashed_rows.table = table
+    trashed_rows = TrashedRows.objects.create(row_ids=[1, 2], table=table)
     trashed_rows.rows = [row, row2]
 
     trash_entry = TrashHandler.trash(

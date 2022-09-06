@@ -360,6 +360,42 @@ def test_undoing_link_row_type_change_can_still_insert_new_relations_after(
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
+@pytest.mark.field_link_row
+def test_can_undo_and_redo_linkrow_deleting_one_side_relationships(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    action_type_registry.get_by_type(UpdateFieldActionType).do(
+        user, link_field, name="A->B", has_related_field=False
+    )
+
+    link_field.refresh_from_db()
+    assert link_field.link_row_related_field_id is None
+    assert table_a.linkrowfield_set.count() == 0
+
+    actions = ActionHandler.undo(
+        user, [UpdateFieldActionType.scope(link_field.table_id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions, [UpdateFieldActionType])
+    # Make sure that the link field was restored to the other table
+    link_field.refresh_from_db()
+    assert link_field.link_row_related_field_id is not None
+    assert table_a.linkrowfield_set.count() == 1
+
+    actions = ActionHandler.redo(
+        user, [UpdateFieldActionType.scope(link_field.table_id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions, [UpdateFieldActionType])
+    # Make sure that the link field was deleted again in the other table
+    link_field.refresh_from_db()
+    assert link_field.link_row_related_field_id is None
+    assert table_a.linkrowfield_set.count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@pytest.mark.field_link_row
 def test_can_undo_and_redo_converting_link_row_to_other_type(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)

@@ -104,7 +104,16 @@ def construct_all_possible_field_kwargs(
         ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
-            {"name": "self_link_row", "link_row_table": table},
+            {
+                "name": "self_link_row",
+                "link_row_table": table,
+                "has_related_field": False,
+            },
+            {
+                "name": "link_row_without_related",
+                "link_row_table": link_table,
+                "has_related_field": False,
+            },
             {"name": "decimal_link_row", "link_row_table": decimal_link_table},
             {"name": "file_link_row", "link_row_table": file_link_table},
         ],

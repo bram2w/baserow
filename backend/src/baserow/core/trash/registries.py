@@ -110,12 +110,16 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
 
         pass
 
-    def trash(self, item_to_trash, requesting_user):
+    def trash(self, item_to_trash: Any, requesting_user, trash_entry):
         """
-        Saves trashed=True on the provided item and should be overridden to perform any
-        other cleanup and trashing other items related to item_to_trash.
+        Saves trashed=True on the provided item and should be overridden to
+        perform any other cleanup and trashing other items related to
+        item_to_trash.
 
-        :return  An iterable of trashable model instances.
+        :param item_to_trash: The item to be trashed.
+        :param requesting_user: The user who is trashing the item.
+        :param trash_entry: The trash entry useful to save additional data like
+            some related items.
         """
 
         item_to_trash.trashed = True

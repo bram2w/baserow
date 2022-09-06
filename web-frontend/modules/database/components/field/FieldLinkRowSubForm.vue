@@ -24,6 +24,13 @@
         </div>
       </div>
     </div>
+    <div v-show="values.link_row_table_id !== table.id" class="control">
+      <div class="control__elements">
+        <Checkbox v-model="values.has_related_field">{{
+          $t('fieldLinkRowSubForm.hasRelatedFieldLabel')
+        }}</Checkbox>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -39,9 +46,10 @@ export default {
   mixins: [form, fieldSubForm],
   data() {
     return {
-      allowedValues: ['link_row_table_id'],
+      allowedValues: ['link_row_table_id', 'has_related_field'],
       values: {
         link_row_table_id: null,
+        has_related_field: true,
       },
       initialLinkRowTableId: null,
     }
@@ -51,7 +59,6 @@ export default {
       const applications = this.$store.getters['application/getAll']
       const databaseType = DatabaseApplicationType.getType()
       const databaseId = this.table.database_id
-
       // Search for the database of the related table and return all the siblings of
       // that table because those are the only ones the user can choose form.
       for (let i = 0; i < applications.length; i++) {
@@ -63,12 +70,14 @@ export default {
           return application.tables
         }
       }
-
       return []
     },
   },
   mounted() {
-    this.initialLinkRowTableId = this.values.link_row_table_id
+    this.initialLinkRowTable = this.values.link_row_table_id
+    this.values.has_related_field =
+      this.initialLinkRowTable == null ||
+      this.defaultValues.link_row_related_field != null
   },
   validations: {
     values: {
@@ -77,11 +86,22 @@ export default {
   },
   methods: {
     reset() {
-      this.initialLinkRowTableId = this.values.link_row_table_id
+      this.initialLinkRowTable = this.values.link_row_table_id
+      this.defaultValues.has_related_field =
+        this.initialLinkRowTable == null ||
+        this.defaultValues.link_row_related_field != null
       return form.methods.reset.call(this)
     },
     isValid() {
       return form.methods.isValid().call(this) && this.tables.length > 0
+    },
+    getFormValues() {
+      const data = form.methods.getFormValues.call(this)
+      // self-referencing link-row fields cannot have the related field
+      if (this.values.link_row_table_id === this.table.id) {
+        data.has_related_field = false
+      }
+      return data
     },
   },
 }

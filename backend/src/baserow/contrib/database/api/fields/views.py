@@ -336,7 +336,9 @@ class FieldView(APIView):
             "response key."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
-            field_type_registry, UpdateFieldSerializer
+            field_type_registry,
+            UpdateFieldSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(

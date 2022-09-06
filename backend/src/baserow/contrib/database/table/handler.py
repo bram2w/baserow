@@ -17,6 +17,7 @@ from baserow.contrib.database.fields.exceptions import (
     MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
@@ -413,7 +414,7 @@ class TableHandler:
         return find_unused_name([name], existing_tables_names, max_length=255)
 
     def _create_related_link_fields_in_existing_tables_to_import(
-        self, serialized_table: Dict[str, Any], id_mapping
+        self, serialized_table: Dict[str, Any], id_mapping: Dict[str, Any]
     ) -> List[Tuple[Table, Dict[str, Any]]]:
         """
         Creates extra serialized field dicts to pass to the table importer so it will
@@ -429,21 +430,24 @@ class TableHandler:
 
         external_fields = []
         for serialized_field in serialized_table["fields"]:
-
             if serialized_field["type"] != LinkRowFieldType.type:
                 continue
 
-            link_row_table_id = serialized_field["link_row_table_id"]
+            link_row_table_id = serialized_field.get("link_row_table_id", None)
+            self_referencing_field = link_row_table_id == serialized_table["id"]
+            link_row_table = self.get_table(link_row_table_id)
+            has_related_field = serialized_field.get("link_row_related_field_id")
+            id_mapping["database_tables"][link_row_table_id] = link_row_table_id
 
-            # skip creating the related field for a self-referencing link_row
-            if link_row_table_id == serialized_table["id"]:
+            if self_referencing_field or not has_related_field:
                 continue
 
-            link_row_table = self.get_table(link_row_table_id)
-            id_mapping["database_tables"][link_row_table_id] = link_row_table_id
+            related_field_name = FieldHandler().find_next_unused_field_name(
+                link_row_table, [serialized_table["name"]]
+            )
             serialized_related_link_row_field = {
                 "id": serialized_field["link_row_related_field_id"],
-                "name": serialized_table["name"],
+                "name": related_field_name,
                 "type": LinkRowFieldType.type,
                 "link_row_table_id": serialized_table["id"],
                 "link_row_related_field_id": serialized_field["id"],

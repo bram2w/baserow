@@ -47,7 +47,7 @@ export function sortFieldsByOrderAndIdFunction(fieldOptions) {
     }
 
     // Then by id.
-    return a - b
+    return a.id - b.id
   }
 }
 

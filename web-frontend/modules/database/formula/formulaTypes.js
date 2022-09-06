@@ -243,7 +243,7 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
   }
 
   getFieldType() {
-    return 'text'
+    return 'date'
   }
 
   getIconClass() {

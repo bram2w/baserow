@@ -27,6 +27,7 @@ For example:
 * `list_groups` endpoint now also returns the list of all group users for each group.
 * Fields can now be duplicated with their cell values also. [#964](https://gitlab.com/bramw/baserow/-/issues/964)
 * Add a tooltip to applications and tables in the left sidebar to show the full name. [#986](https://gitlab.com/bramw/baserow/-/issues/986)
+* Allow not creating a reversed relationship with the link row field. [#1063](https://gitlab.com/bramw/baserow/-/issues/1063)
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)

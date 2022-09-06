@@ -1,6 +1,7 @@
 import re
 from typing import Any, Dict, Type, Union
 
+from django.apps import apps
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Q, QuerySet
@@ -345,6 +346,30 @@ class GeneratedTableModel(models.Model):
         abstract = True
 
 
+class DefaultAppsProxy:
+    """
+    A proxy class to the default apps registry.
+    This class is needed to make our dynamic models available in the
+    options then the relation tree is built.
+    """
+
+    def __init__(self):
+        self._extra_models = []
+
+    def add_models(self, *dynamic_models):
+        """
+        Adds a model to the default apps registry.
+        """
+
+        self._extra_models.extend(dynamic_models)
+
+    def get_models(self, *args, **kwargs):
+        return apps.get_models(*args, **kwargs) + self._extra_models
+
+    def __getattr__(self, attr):
+        return getattr(apps, attr)
+
+
 class Table(
     TrashableModelMixin, CreatedAndUpdatedOnMixin, OrderableMixin, models.Model
 ):
@@ -415,11 +440,12 @@ class Table(
         """
 
         filtered = field_names is not None or field_ids is not None
+        model_name = f"Table{self.pk}Model"
 
-        if not fields:
+        if fields is None:
             fields = []
 
-        if not manytomany_models:
+        if manytomany_models is None:
             manytomany_models = {}
 
         app_label = "database_table"
@@ -427,6 +453,7 @@ class Table(
             "Meta",
             (),
             {
+                "apps": DefaultAppsProxy(),
                 "managed": managed,
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
@@ -507,7 +534,7 @@ class Table(
 
         # Create the model class.
         model = type(
-            str(f"Table{self.pk}Model"),
+            str(model_name),
             (
                 GeneratedTableModel,
                 TrashableModelMixin,
