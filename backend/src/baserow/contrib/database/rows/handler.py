@@ -1610,9 +1610,7 @@ class RowHandler:
             self, rows=rows, user=user, table=table, model=model
         )
 
-        trashed_rows = TrashedRows()
-        trashed_rows.row_ids = row_ids
-        trashed_rows.table = table
+        trashed_rows = TrashedRows.objects.create(row_ids=row_ids, table=table)
         # It's a bit on a hack, but we're storing the fetched row objects on the
         # trashed_rows object, so that they can optionally be used later. This is for
         # example used when storing the names in the trash.

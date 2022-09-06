@@ -158,6 +158,7 @@ def setup_interesting_test_table(
         # We will setup link rows manually later
         "link_row": None,
         "self_link_row": None,
+        "link_row_without_related": None,
         "decimal_link_row": None,
         "file_link_row": None,
         "file": [
@@ -294,6 +295,8 @@ def setup_interesting_test_table(
     )
 
     link_row_field_id = name_to_field_id["link_row"]
+    link_row_field_without_related_id = name_to_field_id["link_row_without_related"]
+    self_link_row_field_id = name_to_field_id["self_link_row"]
     decimal_row_field_id = name_to_field_id["decimal_link_row"]
     file_link_row_id = name_to_field_id["file_link_row"]
     with freeze_time("2021-01-02 12:00"):
@@ -307,6 +310,11 @@ def setup_interesting_test_table(
                     linked_row_1.id,
                     linked_row_2.id,
                     linked_row_3.id,
+                ],
+                f"field_{self_link_row_field_id}": [blank_row.id],
+                f"field_{link_row_field_without_related_id}": [
+                    linked_row_1.id,
+                    linked_row_2.id,
                 ],
                 f"field_{decimal_row_field_id}": [
                     linked_row_4.id,

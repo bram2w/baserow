@@ -30,6 +30,7 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_INVALID_LOOKUP_THROUGH_FIELD,
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
+    ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
     ERROR_TOO_DEEPLY_NESTED_FORMULA,
     ERROR_WITH_FORMULA,
 )
@@ -83,6 +84,7 @@ from .exceptions import (
     InvalidLookupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
+    SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .field_filters import AnnotatedQ, contains_filter, filename_contains_filter
 from .field_sortings import AnnotatedOrder
@@ -948,7 +950,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
             connection, from_field, to_field
         )
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         Immediately after the field has been created, we need to populate the values
         with the already existing source_field_name column.
@@ -968,6 +970,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         """
         If the field type has changed, we need to update the values from
@@ -1061,10 +1064,32 @@ class LinkRowFieldType(FieldType):
             help_text="(Deprecated) The id of the related field.",
         ),
     }
+    request_serializer_field_names = [
+        "link_row_table_id",
+        "link_row_table",
+        "has_related_field",
+    ]
+    request_serializer_field_overrides = {
+        "has_related_field": serializers.BooleanField(required=False),
+        "link_row_table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="The id of the linked table.",
+        ),
+        "link_row_table": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="(Deprecated) The id of the linked table.",
+        ),
+    }
+
     api_exceptions_map = {
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
         IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+        SelfReferencingLinkRowCannotHaveRelatedField: ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
     }
     _can_order_by = False
     can_be_primary_field = False
@@ -1267,8 +1292,7 @@ class LinkRowFieldType(FieldType):
         manytomany_models[instance.table_id] = model
 
         # Check if the related table model is already in the manytomany_models.
-        is_referencing_the_same_table = instance.link_row_table_id == instance.table_id
-        if is_referencing_the_same_table:
+        if instance.is_self_referencing:
             related_model = model
         else:
             related_model = manytomany_models.get(instance.link_row_table_id)
@@ -1291,7 +1315,7 @@ class LinkRowFieldType(FieldType):
                 and related_field["field"].link_row_related_field_id == instance.id
             )
 
-        if not is_referencing_the_same_table:
+        if not instance.is_self_referencing:
             for related_field in related_model._field_objects.values():
                 if field_is_link_row_related_field(related_field):
                     related_name = related_field["name"]
@@ -1310,18 +1334,12 @@ class LinkRowFieldType(FieldType):
 
         model_field = model._meta.get_field(field_name)
         through_model = model_field.remote_field.through
-        if is_referencing_the_same_table:
-            # manually create the opposite relation on the same through_model.
-            from_field, to_field = through_model._meta.get_fields()[1:]
-            models.ManyToManyField(
-                to="self",
-                related_name=field_name,
-                null=True,
-                blank=True,
-                symmetrical=False,
-                through=through_model,
-                through_fields=(to_field.name, from_field.name),
-            ).contribute_to_class(model, related_name)
+
+        # this permits to django to find the reverse relation in the _relation_tree.
+        # Look into django.db.models.options.py - _populate_directed_relation_graph
+        # for more information.
+        model._meta.apps.add_models(model, related_model)
+        related_model._meta.apps.add_models(model, related_model)
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
@@ -1375,20 +1393,21 @@ class LinkRowFieldType(FieldType):
             values["link_row_table_id"] = field.link_row_table_id
 
         # We don't want to serialize the related field as the update call will create
-        # it again.
-        values.pop("link_row_related_field", None)
-        values.pop("link_row_related_field_id", None)
+        # it again, but we need to save the field has a related field or not.
+        values["has_related_field"] = bool(values.pop("link_row_related_field", None))
 
         return values
 
-    def before_create(self, table, primary, values, order, user):
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
         """
         It is not allowed to link with a table from another database. This method
         checks if the database ids are the same and if not a proper exception is
         raised.
         """
 
-        link_row_table = values.get("link_row_table")
+        link_row_table = allowed_field_values.get("link_row_table")
         if link_row_table is None:
             raise LinkRowTableNotProvided(
                 "The link_row_table argument must be provided when creating a link_row "
@@ -1401,7 +1420,16 @@ class LinkRowFieldType(FieldType):
                 f"as the table {table.id}."
             )
 
-    def before_update(self, from_field, to_field_values, user):
+        self_referencing_link_row = table.id == link_row_table.id
+        create_related_field = field_kwargs.get("has_related_field")
+        if self_referencing_link_row and create_related_field:
+            raise SelfReferencingLinkRowCannotHaveRelatedField(
+                f"A self referencing link row cannot have a related field."
+            )
+        if create_related_field is None:
+            field_kwargs["has_related_field"] = not self_referencing_link_row
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
         """
         It is not allowed to link with a table from another database if the
         link_row_table has changed and if it is within the same database.
@@ -1409,6 +1437,9 @@ class LinkRowFieldType(FieldType):
 
         link_row_table = to_field_values.get("link_row_table")
         if link_row_table is None:
+            field_kwargs.setdefault(
+                "has_related_field", from_field.link_row_table_has_related_field
+            )
             return
 
         table = from_field.table
@@ -1419,13 +1450,34 @@ class LinkRowFieldType(FieldType):
                 f"as the table {table.id}."
             )
 
-    def after_create(self, field, model, user, connection, before):
+        self_referencing_link_row = table.id == link_row_table.id
+        to_field_has_related_field = field_kwargs.get("has_related_field")
+
+        if self_referencing_link_row and to_field_has_related_field:
+            raise SelfReferencingLinkRowCannotHaveRelatedField(
+                f"A self referencing link row cannot have a related field."
+            )
+
+        if to_field_has_related_field is None:
+            if isinstance(from_field, LinkRowField):
+                field_kwargs["has_related_field"] = (
+                    from_field.link_row_table_has_related_field
+                    and not self_referencing_link_row
+                )
+            else:
+                field_kwargs["has_related_field"] = not self_referencing_link_row
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         When the field is created we have to add the related field to the related
         table so a reversed lookup can be done by the user.
         """
 
-        if field.link_row_related_field or field.table == field.link_row_table:
+        if (
+            field.link_row_table_has_related_field
+            or field.is_self_referencing
+            or not field_kwargs["has_related_field"]
+        ):
             return
 
         related_field_name = self.find_next_unused_related_field_name(field)
@@ -1462,24 +1514,37 @@ class LinkRowFieldType(FieldType):
         from_model_field,
         to_model_field,
         user,
+        to_field_kwargs,
     ):
+        to_instance = isinstance(to_field, self.model_class)
+        from_instance = isinstance(from_field, self.model_class)
+        from_link_row_table_has_related_field = (
+            from_instance and from_field.link_row_table_has_related_field
+        )
+        to_link_row_table_has_related_field = (
+            to_instance and to_field_kwargs["has_related_field"]
+        )
+
         if (
-            not isinstance(to_field, self.model_class)
-            and from_field.link_row_related_field is not None
+            from_link_row_table_has_related_field
+            and not to_link_row_table_has_related_field
         ):
-            # If we are not going to convert to another manytomany field the
-            # related field can be deleted.
-            from_field.link_row_related_field.delete()
-        elif (
-            isinstance(to_field, self.model_class)
-            and isinstance(from_field, self.model_class)
-            and to_field.link_row_table.id != from_field.link_row_table.id
-        ):
-            # If the table has changed we have to change the following data in the
-            # related field
+            FieldHandler().delete_field(
+                user=user,
+                field=from_field.link_row_related_field,
+                # Prevent the deletion of from_field itself as normally both link row
+                # fields are deleted together.
+                immediately_delete_only_the_provided_field=True,
+            )
+            if to_instance:
+                to_field.link_row_related_field = None
+        elif to_instance and from_instance:
             related_field_name = self.find_next_unused_related_field_name(to_field)
 
-            if from_field.link_row_related_field is None:
+            if (
+                not from_link_row_table_has_related_field
+                and to_link_row_table_has_related_field
+            ):
                 # we need to create the missing link_row_related_field
                 to_field.link_row_related_field = FieldHandler().create_field(
                     user=user,
@@ -1490,16 +1555,14 @@ class LinkRowFieldType(FieldType):
                     link_row_table=to_field.table,
                     link_row_related_field=to_field,
                     link_row_relation_id=to_field.link_row_relation_id,
+                    has_related_field=True,
                 )
                 to_field.save()
             elif (
-                # delete the previous field that is not needed anymore
-                # since we are referencing the same table now
-                to_field.link_row_related_field is not None
-                and to_field.table_id == to_field.link_row_table_id
+                from_link_row_table_has_related_field
+                and to_link_row_table_has_related_field
+                and from_field.link_row_table != to_field.link_row_table
             ):
-                to_field.link_row_related_field.delete()
-            else:
 
                 # We are changing the related fields table so we need to invalidate
                 # its old model cache as this will not happen automatically.
@@ -1523,17 +1586,21 @@ class LinkRowFieldType(FieldType):
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         """
         If the old field is not already a link row field we have to create the related
-        field into the related table.
+        field into the related table. We also need to update the related field
+        even if the link_row_table_has_related_field changes.
         """
 
-        if (
-            not isinstance(from_field, self.model_class)
-            and isinstance(to_field, self.model_class)
-            and to_field.table != to_field.link_row_table
-        ):
+        to_instance_require_related_field = (
+            isinstance(to_field, self.model_class)
+            and to_field_kwargs["has_related_field"]
+        )
+        from_instance = isinstance(from_field, self.model_class)
+
+        if not from_instance and to_instance_require_related_field:
             related_field_name = self.find_next_unused_related_field_name(to_field)
             to_field.link_row_related_field = FieldHandler().create_field(
                 user=user,
@@ -1586,6 +1653,7 @@ class LinkRowFieldType(FieldType):
         serialized = super().export_serialized(field, False)
         serialized["link_row_table_id"] = field.link_row_table_id
         serialized["link_row_related_field_id"] = field.link_row_related_field_id
+        serialized["has_related_field"] = field.link_row_table_has_related_field
         return serialized
 
     def import_serialized(
@@ -1599,9 +1667,15 @@ class LinkRowFieldType(FieldType):
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
         ]
-        link_row_related_field_id = serialized_copy.pop("link_row_related_field_id")
+        link_row_related_field_id = serialized_copy.pop(
+            "link_row_related_field_id", None
+        )
+        has_related_field = serialized_copy.pop(
+            "has_related_field", link_row_related_field_id
+        )
         related_field_found = (
             "database_fields" in id_mapping
+            and has_related_field
             and link_row_related_field_id in id_mapping["database_fields"]
         )
 
@@ -2030,15 +2104,17 @@ class SelectOptionBaseFieldType(FieldType):
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
 
-    def before_create(self, table, primary, values, order, user):
-        if "select_options" in values:
-            return values.pop("select_options")
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        if "select_options" in allowed_field_values:
+            return allowed_field_values.pop("select_options")
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         if before and len(before) > 0:
             FieldHandler().update_field_select_options(user, field, before)
 
-    def before_update(self, from_field, to_field_values, user):
+    def before_update(self, from_field, to_field_values, user, kwargs):
         if "select_options" in to_field_values:
             FieldHandler().update_field_select_options(
                 user, from_field, to_field_values["select_options"]
@@ -2969,7 +3045,7 @@ class FormulaFieldType(ReadOnlyFieldType):
             field, old_field, update_collector, field_cache, via_path_to_starting_table
         )
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         Immediately after the field has been created, we need to populate the values
         with the already existing source_field_name column.
@@ -3001,6 +3077,7 @@ class FormulaFieldType(ReadOnlyFieldType):
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         to_model = to_field.table.get_model()
         expr = FormulaHandler.baserow_expression_to_update_django_expression(
@@ -3092,13 +3169,15 @@ class LookupFieldType(FormulaFieldType):
         ),
     }
 
-    def before_create(self, table, primary, values, order, user):
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
         self._validate_through_and_target_field_values(
             table,
-            values,
+            allowed_field_values,
         )
 
-    def before_update(self, from_field, to_field_values, user):
+    def before_update(self, from_field, to_field_values, user, kwargs):
         if isinstance(from_field, LookupField):
             through_field_id = (
                 from_field.through_field.id

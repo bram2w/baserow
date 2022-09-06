@@ -48,6 +48,13 @@ class LinkRowTableNotInSameDatabase(Exception):
     """
 
 
+class SelfReferencingLinkRowCannotHaveRelatedField(Exception):
+    """
+    Raised when a self referencing link row field is trying to be created with a
+    related field.
+    """
+
+
 class MaxFieldLimitExceeded(Exception):
     """Raised when the field count exceeds the limit"""
 

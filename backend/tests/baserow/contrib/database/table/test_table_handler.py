@@ -660,7 +660,16 @@ def test_duplicate_interesting_table(data_fixture):
         if field_instance.name == "self_link_row":
             assert field_instance.link_row_table_id == duplicated_table.id
         else:
-            linkrow_fields = field_instance.link_row_table.linkrowfield_set.all()
+            linkrow_fields = field_instance.link_row_table.linkrowfield_set.filter(
+                name=field_instance.name
+            )
             original_link, duplicated_link = linkrow_fields
             assert original_link.name == duplicated_link.name
             assert original_link.link_row_table_id == duplicated_link.link_row_table_id
+            assert bool(original_link.link_row_related_field_id) == bool(
+                duplicated_link.link_row_related_field_id
+            )
+            assert (
+                original_link.link_row_table_has_related_field
+                == duplicated_link.link_row_table_has_related_field
+            )

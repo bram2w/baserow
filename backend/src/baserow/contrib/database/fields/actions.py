@@ -16,7 +16,7 @@ from baserow.contrib.database.table.scopes import TableActionScopeType
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import ChildProgressBuilder, extract_allowed
+from baserow.core.utils import ChildProgressBuilder
 
 
 class UpdateFieldActionType(ActionType):
@@ -61,14 +61,9 @@ class UpdateFieldActionType(ActionType):
         from_field_type = field_type_registry.get_by_model(field)
         from_field_type_name = from_field_type.type
         to_field_type_name = new_type_name or from_field_type_name
-        to_field_type = field_type_registry.get(to_field_type_name)
 
-        allowed_fields = ["name"] + to_field_type.allowed_fields
-        allowed_field_values = extract_allowed(kwargs, allowed_fields)
-
-        updated_field_attrs = set(allowed_field_values.keys())
         original_exported_values = cls._get_prepared_field_attrs(
-            field, updated_field_attrs, to_field_type_name
+            field, kwargs, to_field_type_name
         )
 
         # We initially create the action with blank params so we have an action id
@@ -76,7 +71,7 @@ class UpdateFieldActionType(ActionType):
         action = cls.register_action(user, {}, cls.scope(field.table_id))
 
         optional_backup_data = cls._backup_field_if_required(
-            field, allowed_field_values, action, to_field_type_name, False
+            field, kwargs, action, to_field_type_name, False
         )
 
         field, updated_fields = FieldHandler().update_field(
@@ -84,7 +79,7 @@ class UpdateFieldActionType(ActionType):
             field,
             new_type_name,
             return_updated_fields=True,
-            **allowed_field_values,
+            **kwargs,
         )
 
         action.params = cls.Params(

@@ -401,6 +401,9 @@ class TrashEntry(models.Model):
     parent_name = models.TextField(null=True, blank=True)
     extra_description = models.TextField(null=True, blank=True)
 
+    # this permits to trash items together with a single entry
+    related_items = models.JSONField(default=dict, null=True)
+
     class Meta:
         constraints = [
             UniqueConstraint(

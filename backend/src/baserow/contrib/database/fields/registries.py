@@ -460,25 +460,31 @@ class FieldType(
 
         return values
 
-    def before_create(self, table, primary, values, order, user):
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
         """
-        This cook is called just before the fields instance is created. Here some
-        additional checks can be done based on the provided values.
+        This cook is called just before the fields instance is created. Here
+        some additional checks can be done based on the provided values.
 
         :param table: The table where the field is going to be added to.
         :type table: Table
-        :param primary: Indicates whether the field is going to be a primary field.
+        :param primary: Indicates whether the field is going to be a primary
+            field.
         :type primary: bool
-        :param values: The new values that are going to be passed when creating the
-            field instance.
-        :type values: dict
+        :param allowed_field_values: The new values that are going to be passed
+            when creating the field instance.
+        :type field_values: dict
         :param order: The order that the field is going to get in the database.
         :type order: int
         :param user: The user on whose behalf the change is made.
         :type user: User
+        :param field_kwargs: The kwargs that are going to be passed when
+            creating the field instance.
+        :type field_kwargs: dict
         """
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         This hook is called right after the has been created. The schema change has
         also been done so the provided model could optionally be used.
@@ -493,9 +499,12 @@ class FieldType(
         :type connection: DatabaseWrapper
         :param before: The value returned by the before_created method.
         :type before: any
+        :param field_kwargs: The kwargs that were passed when creating the field
+            instance.
+        :type field_kwargs: dict
         """
 
-    def before_update(self, from_field, to_field_values, user):
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
         """
         This hook is called just before updating the field instance. It is called on
         the to (new) field type if it changes. Here some additional checks can be
@@ -507,6 +516,9 @@ class FieldType(
         :type to_field_values: dict
         :param user: The user on whose behalf the change is made.
         :type user: User
+        :field_kwargs: The kwargs that are going to be passed when updating the
+            field instance.
+        :type field_kwargs: dict
         """
 
     def before_schema_change(
@@ -518,6 +530,7 @@ class FieldType(
         from_model_field,
         to_model_field,
         user,
+        to_field_kwargs,
     ):
         """
         This hook is called just before the database's schema change. In some cases
@@ -540,6 +553,9 @@ class FieldType(
         :type to_model_field: models.Field
         :param user: The user on whose behalf the change is made.
         :type user: User
+        :param to_field_kwargs: The kwargs that are going to be passed when updating
+            the field instance.
+        :type to_field_kwargs: dict
         """
 
     def after_update(
@@ -552,6 +568,7 @@ class FieldType(
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         """
         This hook is called right after a field has been updated. In some cases data
@@ -578,6 +595,9 @@ class FieldType(
         :type altered_column: bool
         :param before: The value returned by the before_update method.
         :type before: any
+        :param to_field_kwargs: The kwargs that were passed when updating the field
+            instance.
+        :type to_field_kwargs: dict
         """
 
     def after_delete(self, field, model, connection):

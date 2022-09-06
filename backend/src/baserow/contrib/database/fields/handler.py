@@ -40,6 +40,7 @@ from baserow.contrib.database.fields.field_converters import (
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
@@ -270,7 +271,12 @@ class FieldHandler:
 
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_create(
-            table, primary, field_values, last_order, user
+            table,
+            primary,
+            field_values,
+            last_order,
+            user,
+            kwargs,
         )
 
         instance = model_class(
@@ -293,7 +299,14 @@ class FieldHandler:
             if do_schema_change:
                 schema_editor.add_field(to_model, model_field)
 
-        field_type.after_create(instance, to_model, user, connection, before)
+        field_type.after_create(
+            instance,
+            to_model,
+            user,
+            connection,
+            before,
+            kwargs,
+        )
 
         field_cache.cache_model_fields(to_model)
         update_collector = FieldUpdateCollector(table)
@@ -420,7 +433,7 @@ class FieldHandler:
         )
 
         field_values = to_field_type.prepare_values(field_values, user)
-        before = to_field_type.before_update(old_field, field_values, user)
+        before = to_field_type.before_update(old_field, field_values, user, kwargs)
 
         field = set_allowed_attrs(field_values, allowed_fields, field)
 
@@ -444,6 +457,7 @@ class FieldHandler:
             from_model_field,
             to_model_field,
             user,
+            kwargs,
         )
 
         # Try to find a data converter that can be applied.
@@ -523,6 +537,7 @@ class FieldHandler:
             connection,
             altered_column,
             before,
+            kwargs,
         )
 
         if after_schema_change_callback:
@@ -629,31 +644,39 @@ class FieldHandler:
         self,
         user: AbstractUser,
         field: Field,
-        create_separate_trash_entry=True,
-        update_collector=None,
-        field_cache=None,
-        apply_and_send_updates=True,
-        allow_deleting_primary=False,
+        existing_trash_entry: Optional[TrashEntry] = None,
+        update_collector: Optional[FieldUpdateCollector] = None,
+        field_cache: Optional[FieldCache] = None,
+        apply_and_send_updates: Optional[bool] = True,
+        allow_deleting_primary: Optional[bool] = False,
+        immediately_delete_only_the_provided_field: Optional[bool] = False,
     ) -> List[Field]:
         """
         Deletes an existing field if it is not a primary field.
 
         :param user: The user on whose behalf the table is created.
         :param field: The field instance that needs to be deleted.
-        :param create_separate_trash_entry: True if this deletion should create a trash
-            entry just for this one field. This should be false only when this field is
-            being deleted as part of a parent item whose trash entry will restore
-            this field.
-        :param update_collector: An optional update collector which will be used to
-            store related field updates in.
-        :param field_cache: An optional field cache to be used when fetching fields.
-        :param apply_and_send_updates: Set to False to disable related field updates
-            being applied and any signals from being sent.
-        :param allow_deleting_primary: Set to true if its OK for a primary field to be
-            deleted.
+        :param existing_trash_entry: An optional TrashEntry that the handler can
+            pass to the trash system to track cascading deletions in a single
+            trash entry.
+        :param update_collector: An optional update collector which will be used
+            to store related field updates in.
+        :param field_cache: An optional field cache to be used when fetching
+            fields.
+        :param apply_and_send_updates: Set to False to disable related field
+            updates being applied and any signals from being sent.
+        :param allow_deleting_primary: Set to true if its OK for a primary field
+            to be deleted.
+        :param immediately_delete_only_the_provided_field: If True, avoids to use
+            the trash system and directly calls delete for the field metadata
+            instead. In case we're not using the trash but just deleting the
+            field, we also skip the deletion of other related fields defined by
+            field_type.get_other_fields_to_trash_restore_always_together.
         :raises ValueError: When the provided field is not an instance of Field.
-        :raises CannotDeletePrimaryField: When we try to delete the primary field
-            which cannot be deleted.
+        :raises CannotDeletePrimaryField: When we try to delete the primary
+            field which cannot be deleted.
+        :return: A list of fields that have been updated because of the deleted
+            field.
         """
 
         if not isinstance(field, Field):
@@ -685,13 +708,18 @@ class FieldHandler:
             user=user,
         )
 
-        TrashHandler.trash(
-            user,
-            group,
-            field.table.database,
-            field,
-            create_trash_entry=create_separate_trash_entry,
-        )
+        field_type = field_type_registry.get_by_model(field)
+
+        if immediately_delete_only_the_provided_field:
+            field.delete()
+        else:
+            existing_trash_entry = TrashHandler.trash(
+                user,
+                group,
+                field.table.database,
+                field,
+                existing_trash_entry=existing_trash_entry,
+            )
         # The trash call above might have just caused a massive field update to lots of
         # different fields. We need to reset our cache accordingly.
         field_cache.reset_cache()
@@ -710,6 +738,15 @@ class FieldHandler:
                 field_cache,
                 via_path_to_starting_table,
             )
+
+        if not immediately_delete_only_the_provided_field:
+            for (
+                related_field
+            ) in field_type.get_other_fields_to_trash_restore_always_together(field):
+                if not related_field.trashed:
+                    FieldHandler().delete_field(
+                        user, related_field, existing_trash_entry=existing_trash_entry
+                    )
 
         if apply_and_send_updates:
             updated_fields = update_collector.apply_updates_and_get_updated_fields(
@@ -859,7 +896,7 @@ class FieldHandler:
         field: Field,
         update_collector: Optional[FieldUpdateCollector] = None,
         field_cache: Optional[FieldCache] = None,
-        apply_and_send_updates: bool = True,
+        send_field_restored_signal: bool = True,
     ):
         """
         Restores the provided field from being in the trashed state.
@@ -868,8 +905,8 @@ class FieldHandler:
         :param update_collector: An optional update collector that will be used to
             collect any resulting field updates due to the restore.
         :param field_cache: An optional field cache used to get fields.
-        :param apply_and_send_updates: Whether or not a field_restored signal should be
-            sent after restoring this field.
+        :param send_field_restored_signal: Whether or not a field_restored signal should
+            be sent after restoring this field.
         :raises CantRestoreTrashedItem: Raised when this field cannot yet be restored
             due to other trashed items.
         """
@@ -917,16 +954,16 @@ class FieldHandler:
                     field_cache,
                     via_path_to_starting_table,
                 )
-            if apply_and_send_updates:
-                updated_fields = update_collector.apply_updates_and_get_updated_fields(
-                    field_cache
-                )
-                ViewHandler().field_updated(updated_fields)
+            updated_fields = update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
+            ViewHandler().field_updated(updated_fields)
 
+            if send_field_restored_signal:
                 field_restored.send(
                     self, field=field, user=None, related_fields=updated_fields
                 )
-                update_collector.send_additional_field_updated_signals()
+            update_collector.send_additional_field_updated_signals()
 
             for other_required_field in other_fields_that_must_restore_at_same_time:
                 if other_required_field.trashed:

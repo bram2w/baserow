@@ -1,6 +1,7 @@
 import inspect
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import TextField
 from django.urls import reverse
 
@@ -1229,7 +1230,8 @@ def test_converting_link_row_field_with_formula_dependency(
         formula=f"lookup('{link_field.name}','{table_b_primary_field.name}')",
     )
     # Change the link field to a text field, this should break the lookup formula
-    FieldHandler().update_field(user, link_field, new_type_name="text")
+    with transaction.atomic():
+        FieldHandler().update_field(user, link_field, new_type_name="text")
 
     lookup_of_table_b_pk.refresh_from_db()
     assert lookup_of_table_b_pk.formula_type == "invalid"
@@ -1255,7 +1257,8 @@ def test_converted_reversed_link_row_field_with_formula_dependency(data_fixture)
         formula=f"lookup('{link_field.name}','{table_b_primary_field.name}')",
     )
     # Change the link field to a text field, this should break the lookup formula
-    FieldHandler().update_field(user, related_link_row_field, new_type_name="text")
+    with transaction.atomic():
+        FieldHandler().update_field(user, related_link_row_field, new_type_name="text")
 
     lookup_of_table_b_pk.refresh_from_db()
     assert lookup_of_table_b_pk.formula_type == "invalid"
