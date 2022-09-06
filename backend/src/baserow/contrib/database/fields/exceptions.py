@@ -162,6 +162,29 @@ class AllProvidedMultipleSelectValuesMustBeSelectOption(ValidationError):
         )
 
 
+class AllProvidedCollaboratorIdsMustBeValidUsers(ValidationError):
+    """
+    Raised when the provided user ids don't exist or cannot be used
+    as collaborators.
+    """
+
+    def __init__(self, ids, *args, **kwargs):
+        if not isinstance(ids, list):
+            ids = [ids]
+        self.ids = ids
+        msg = (
+            f"The provided user ids {self.ids} are not valid collaborators."
+            if len(self.ids) > 1
+            else f"The provided user id {self.ids} is not a valid collaborator."
+        )
+        super().__init__(
+            msg,
+            *args,
+            code="invalid_collaborator",
+            **kwargs,
+        )
+
+
 class InvalidLookupThroughField(Exception):
     """
     Raised when a a lookup field is attempted to be created or updated with a through

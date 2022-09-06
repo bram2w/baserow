@@ -211,6 +211,9 @@ class DatabaseApplicationType(ApplicationType):
         )
         progress = ChildProgressBuilder.build(progress_builder, child_total=child_total)
 
+        if "import_group_id" not in id_mapping and database.group is not None:
+            id_mapping["import_group_id"] = database.group.id
+
         if "database_tables" not in id_mapping:
             id_mapping["database_tables"] = {}
 
@@ -300,6 +303,7 @@ class DatabaseApplicationType(ApplicationType):
 
         # Now that everything is in place we can start filling the table with the rows
         # in an efficient matter by using the bulk_create functionality.
+        table_cache: Dict[str, Any] = {}
         for serialized_table in serialized_tables:
             table_model = serialized_table["_model"]
             field_ids = [
@@ -345,6 +349,7 @@ class DatabaseApplicationType(ApplicationType):
                             f'field_{id_mapping["database_fields"][serialized_field["id"]]}',
                             serialized_row[field_name],
                             id_mapping,
+                            table_cache,
                             files_zip,
                             storage,
                         )

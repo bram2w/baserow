@@ -823,6 +823,7 @@ class FieldType(
         field_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -836,6 +837,9 @@ class FieldType(
             be extracted from.
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
+        :param cache: An in memory dictionary that is shared between all fields while
+            importing the table. This is for example used by the collaborator field type
+            to prefetch all relations.
         :param files_zip: A zip file buffer where the files related to the template
             must be copied into.
         :param storage: The storage where the files can be copied to.
@@ -1373,6 +1377,7 @@ class ReadOnlyFieldType(FieldType):
         field_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):

@@ -71,6 +71,7 @@ def test_get_set_export_serialized_value_boolean_field(data_fixture):
             row_1, boolean_field_name, {}, None, None
         ),
         {},
+        {},
         None,
         None,
     )
@@ -81,6 +82,7 @@ def test_get_set_export_serialized_value_boolean_field(data_fixture):
             row_2, boolean_field_name, {}, None, None
         ),
         {},
+        {},
         None,
         None,
     )
@@ -90,6 +92,7 @@ def test_get_set_export_serialized_value_boolean_field(data_fixture):
         boolean_field_type.get_export_serialized_value(
             row_3, boolean_field_name, {}, None, None
         ),
+        {},
         {},
         None,
         None,

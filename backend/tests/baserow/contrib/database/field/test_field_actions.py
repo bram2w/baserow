@@ -1228,7 +1228,7 @@ def test_can_undo_redo_updating_single_select(data_fixture):
 def test_can_undo_updating_field_every_type(data_fixture, django_assert_num_queries):
     session_id = "session-id"
 
-    table, user, row, _ = setup_interesting_test_table(
+    table, user, row, _, context = setup_interesting_test_table(
         data_fixture, user_kwargs={"session_id": session_id}
     )
     model = table.get_model(attribute_names=True)
@@ -1326,7 +1326,7 @@ def test_can_undo_redo_duplicate_fields_of_interesting_table(api_client, data_fi
     database = data_fixture.create_database_application(user=user)
     field_handler = FieldHandler()
 
-    table, _, _, _ = setup_interesting_test_table(data_fixture, user, database)
+    table, _, _, _, context = setup_interesting_test_table(data_fixture, user, database)
     original_field_set = list(table.field_set.all())
 
     for field in original_field_set:

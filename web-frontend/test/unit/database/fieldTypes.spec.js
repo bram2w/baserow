@@ -166,6 +166,14 @@ const mockedFields = {
     table_id: 42,
     type: 'lookup',
   },
+  multiple_collaborators: {
+    id: 17,
+    name: 'multiple_collaborators',
+    order: 17,
+    primary: false,
+    table_id: 42,
+    type: 'multiple_collaborators',
+  },
 }
 
 const valuesToCall = [null, undefined]

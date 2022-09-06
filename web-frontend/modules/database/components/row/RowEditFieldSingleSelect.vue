@@ -18,12 +18,13 @@
 
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
-import selectOptions from '@baserow/modules/database/mixins/selectOptions'
 import singleSelectField from '@baserow/modules/database/mixins/singleSelectField'
+import FieldSelectOptionsDropdown from '@baserow/modules/database/components/field/FieldSelectOptionsDropdown'
 
 export default {
   name: 'RowEditFieldSingleSelect',
-  mixins: [rowEditField, selectOptions, singleSelectField],
+  components: { FieldSelectOptionsDropdown },
+  mixins: [rowEditField, singleSelectField],
   props: {
     allowCreateOptions: {
       type: Boolean,

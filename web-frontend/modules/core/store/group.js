@@ -371,6 +371,45 @@ export const getters = {
 
     return state.selected.id
   },
+  getAllUsers(state) {
+    const users = {}
+    for (const group of state.items) {
+      for (const user of group.users) {
+        users[user.user_id] = user
+      }
+    }
+    return users
+  },
+  getAllUsersByEmail(state) {
+    const users = {}
+    for (const group of state.items) {
+      for (const user of group.users) {
+        users[user.email] = user
+      }
+    }
+    return users
+  },
+  getAllUsersByName(state) {
+    const users = {}
+    for (const group of state.items) {
+      for (const user of group.users) {
+        users[user.name] = user
+      }
+    }
+    return users
+  },
+  getUserById: (state, getters) => (userId) => {
+    const users = getters.getAllUsers
+    return users[userId]
+  },
+  getUserByEmail: (state, getters) => (email) => {
+    const users = getters.getAllUsersByEmail
+    return users[email]
+  },
+  getUserByName: (state, getters) => (name) => {
+    const users = getters.getAllUsersByName
+    return users[name]
+  },
 }
 
 export default {

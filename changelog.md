@@ -10,6 +10,8 @@ For example:
 ## Unreleased
 
 ### New Features
+
+* Added Multiple Collaborators field type. [#1119](https://gitlab.com/bramw/baserow/-/issues/1119)
 * Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
 * Add `isort` settings to sort python imports.
 * Introduced a premium form survey style theme. [#524](https://gitlab.com/bramw/baserow/-/issues/524).

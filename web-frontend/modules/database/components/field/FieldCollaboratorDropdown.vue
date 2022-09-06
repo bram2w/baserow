@@ -1,0 +1,93 @@
+<template>
+  <div
+    class="dropdown"
+    :class="{
+      'dropdown--floating': !showInput,
+      'dropdown--disabled': disabled,
+    }"
+    :tabindex="realTabindex"
+    @contextmenu.stop
+    @focusin="show()"
+    @focusout="focusout($event)"
+  >
+    <a
+      v-if="showInput"
+      class="select-options__dropdown-selected dropdown__selected"
+      @click="show()"
+    >
+      <div v-if="hasValue()" class="select-options__dropdown-option">
+        {{ selectedName }}
+      </div>
+      <i v-if="!disabled" class="dropdown__toggle-icon fas fa-caret-down"></i>
+    </a>
+    <div class="dropdown__items" :class="{ hidden: !open }">
+      <div v-if="showSearch" class="select__search">
+        <i class="select__search-icon fas fa-search"></i>
+        <input
+          ref="search"
+          v-model="query"
+          type="text"
+          class="select__search-input"
+          :placeholder="searchText"
+          tabindex="0"
+          @keyup="search(query)"
+        />
+      </div>
+      <ul
+        ref="items"
+        v-prevent-parent-scroll
+        v-auto-overflow-scroll
+        class="select__items"
+        tabindex=""
+      >
+        <FieldCollaboratorDropdownItem
+          v-if="showEmptyValue"
+          :name="''"
+          :value="null"
+          :color="''"
+        ></FieldCollaboratorDropdownItem>
+        <FieldCollaboratorDropdownItem
+          v-for="collaborator in collaborators"
+          :key="collaborator.user_id"
+          :name="collaborator.name"
+          :value="collaborator.user_id"
+        ></FieldCollaboratorDropdownItem>
+      </ul>
+      <div v-if="isNotFound" class="select__description">
+        {{ $t('fieldmultipleCollaboratorsDropdown.notFound') }}
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import dropdown from '@baserow/modules/core/mixins/dropdown'
+import FieldCollaboratorDropdownItem from '@baserow/modules/database/components/field/FieldCollaboratorDropdownItem'
+
+export default {
+  name: 'FieldCollaboratorDropdown',
+  components: { FieldCollaboratorDropdownItem },
+  mixins: [dropdown],
+  props: {
+    collaborators: {
+      type: Array,
+      required: true,
+    },
+    showEmptyValue: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+  },
+  computed: {
+    isNotFound() {
+      return this.query !== '' && !this.hasItems
+    },
+  },
+  methods: {
+    forceRefreshSelectedValue() {
+      dropdown.methods.forceRefreshSelectedValue.call(this)
+    },
+  },
+}
+</script>

@@ -216,6 +216,9 @@
     "fieldSingleSelectDropdown": {
         "notFound": "Option not found"
     },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Collaborator not found"
+    },
     "fieldDateSubForm": {
         "dateFormatLabel": "Date format",
         "dateFormatEuropean": "European",
@@ -282,6 +285,9 @@
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Add another option"
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Add a collaborator"
     },
     "rowEditFieldFile": {
         "addFile": "Add a file",

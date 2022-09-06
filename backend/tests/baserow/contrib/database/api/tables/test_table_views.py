@@ -513,7 +513,7 @@ def test_async_duplicate_table(api_client, data_fixture):
     )
 
     database = data_fixture.create_database_application(group=group_1)
-    table_1, _, _, _ = setup_interesting_test_table(
+    table_1, _, _, _, context = setup_interesting_test_table(
         data_fixture, database=database, user=user_1
     )
 

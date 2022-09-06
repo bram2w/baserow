@@ -112,7 +112,7 @@ def test_view_empty_count_aggregation(data_fixture):
 
 @pytest.mark.django_db
 def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
-    table, _, _, _ = setup_interesting_test_table(data_fixture)
+    table, _, _, _, context = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
 
     model = table.get_model()
@@ -157,7 +157,7 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
 
 @pytest.mark.django_db
 def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
-    table, _, _, _ = setup_interesting_test_table(data_fixture)
+    table, _, _, _, context = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
 
     model = table.get_model()

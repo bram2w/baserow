@@ -128,6 +128,11 @@ def construct_all_possible_field_kwargs(
                 ],
             }
         ],
+        "multiple_collaborators": [
+            {
+                "name": "multiple_collaborators",
+            }
+        ],
         "phone_number": [{"name": "phone_number"}],
         "formula": [
             # Make one for each Baserow formula type!

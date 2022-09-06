@@ -640,7 +640,7 @@ def test_duplicate_interesting_table(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     original_table_name = "original-table-name"
-    table, _, _, _ = setup_interesting_test_table(
+    table, _, _, _, context = setup_interesting_test_table(
         data_fixture, user, database, original_table_name
     )
 

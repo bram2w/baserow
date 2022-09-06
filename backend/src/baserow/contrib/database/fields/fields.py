@@ -50,17 +50,40 @@ class MultipleSelectManyToManyDescriptor(ManyToManyDescriptor):
     MultipleSelectFieldType. This is needed in order to change the default ordering of
     the select_options that are being returned when accessing those by calling ".all()"
     on the field. The default behavior was that no ordering is applied, which in the
-    case for the MultipleSelectFieldType meant that the select options were ordered by
-    their ID. To show the select_options in the order of how the user added those to
-    the field, the "get_queryset" method was modified by applying an order_by. The
-    order_by is using the id of the through table.
+    case for the MultipleSelectFieldType meant that the relations were ordered by
+    their ID. To show the relations in the order of how the user added those to
+    the field, the `get_queryset` and `get_prefetch_queryset` method was modified by
+    applying an order_by. The `order_by` is using the id of the through table.
+
+    Optionally it's also possible to provide a `additional_filters` dict parameter.
+    It can contain additional filters that must be applied to the queryset.
+
+    The changes are compatible for a normal and prefetched queryset.
     """
+
+    def __init__(self, *args: list, **kwargs: dict):
+        """
+        :param additional_filters: Can contain additional filters that must be
+            applied to the queryset. For example `{"id__in": [1, 2]}` makes sure that
+            only results where the id is either `1` or `2` is returned.
+        """
+
+        self.additional_filters = kwargs.pop("additional_filters", None)
+        super().__init__(*args, **kwargs)
 
     @cached_property
     def related_manager_cls(self):
+        additional_filters = self.additional_filters
         manager_class = super().related_manager_cls
 
         class CustomManager(manager_class):
+            def __init__(self, instance=None):
+                super().__init__(instance=instance)
+                self.additional_filters = additional_filters
+
+                if self.additional_filters:
+                    self.core_filters.update(**additional_filters)
+
             def _apply_rel_ordering(self, queryset):
                 return queryset.extra(order_by=[f"{self.through._meta.db_table}.id"])
 
@@ -71,25 +94,49 @@ class MultipleSelectManyToManyDescriptor(ManyToManyDescriptor):
                     ]
                 except (AttributeError, KeyError):
                     queryset = super().get_queryset()
-                    return self._apply_rel_ordering(queryset)
+                    queryset = self._apply_rel_ordering(queryset)
+                    return queryset
+
+            def get_prefetch_queryset(self, instances, queryset=None):
+                returned_tuple = list(
+                    super().get_prefetch_queryset(instances, queryset)
+                )
+
+                if self.additional_filters:
+                    returned_tuple[0] = returned_tuple[0].filter(**additional_filters)
+
+                returned_tuple[0] = returned_tuple[0].extra(
+                    order_by=[f"{self.through._meta.db_table}.id"]
+                )
+
+                return tuple(returned_tuple)
 
         return CustomManager
 
 
 class MultipleSelectManyToManyField(models.ManyToManyField):
     """
-    This is a slight modification of Djangos default ManyToManyField to be used with
-    the MultipleSelectFieldType. A custom ManyToManyField is needed in order to apply
-    the custom ManyToManyDescriptor (MultipleSelectManyToManyDescriptor) to the class
-    of the model (on which the ManyToManyField gets added) as well as the related class.
+    This is a slight modification of Djangos default ManyToManyField to apply the
+    custom `MultipleSelectManyToManyDescriptor` to the class of the model.
     """
+
+    def __init__(self, *args, **kwargs):
+        self.additional_filters = kwargs.pop("additional_filters", None)
+        self.reversed_additional_filters = kwargs.pop(
+            "reversed_additional_filters", None
+        )
+        super().__init__(*args, **kwargs)
 
     def contribute_to_class(self, cls, name, **kwargs):
         super().contribute_to_class(cls, name, **kwargs)
         setattr(
             cls,
             self.name,
-            MultipleSelectManyToManyDescriptor(self.remote_field, reverse=False),
+            MultipleSelectManyToManyDescriptor(
+                self.remote_field,
+                reverse=False,
+                additional_filters=self.additional_filters,
+            ),
         )
 
     def contribute_to_related_class(self, cls, related):
@@ -101,7 +148,11 @@ class MultipleSelectManyToManyField(models.ManyToManyField):
             setattr(
                 cls,
                 related.get_accessor_name(),
-                MultipleSelectManyToManyDescriptor(self.remote_field, reverse=True),
+                MultipleSelectManyToManyDescriptor(
+                    self.remote_field,
+                    reverse=True,
+                    additional_filters=self.reversed_additional_filters,
+                ),
             )
 
 

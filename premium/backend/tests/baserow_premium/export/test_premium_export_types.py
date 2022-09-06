@@ -67,6 +67,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "file": [],
     "single_select": "",
     "multiple_select": [],
+    "multiple_collaborators": [],
     "phone_number": "",
     "formula_text": "test FORMULA",
     "formula_int": 1,
@@ -137,6 +138,10 @@ def test_can_export_every_interesting_different_field_to_json(
         "D",
         "C",
         "E"
+    ],
+    "multiple_collaborators": [
+        "user2@example.com",
+        "user3@example.com"
     ],
     "phone_number": "+4412345678",
     "formula_text": "test FORMULA",
@@ -267,6 +272,7 @@ def test_can_export_every_interesting_different_field_to_xml(
     <file/>
     <single-select/>
     <multiple-select/>
+    <multiple-collaborators/>
     <phone-number/>
     <formula-text>test FORMULA</formula-text>
     <formula-int>1</formula-int>
@@ -340,6 +346,10 @@ def test_can_export_every_interesting_different_field_to_xml(
         <item>C</item>
         <item>E</item>
     </multiple-select>
+    <multiple-collaborators>
+        <item>user2@example.com</item>
+        <item>user3@example.com</item>
+    </multiple-collaborators>
     <phone-number>+4412345678</phone-number>
     <formula-text>test FORMULA</formula-text>
     <formula-int>1</formula-int>
@@ -438,7 +448,7 @@ def strip_indents_and_newlines(xml):
 def run_export_over_interesting_test_table(
     premium_data_fixture, storage_mock, options, user_kwargs=None
 ):
-    table, user, _, _ = setup_interesting_test_table(
+    table, user, _, _, context = setup_interesting_test_table(
         premium_data_fixture, user_kwargs=user_kwargs
     )
     grid_view = premium_data_fixture.create_grid_view(table=table)

@@ -62,9 +62,7 @@ def test_import_export_formula_field(data_fixture, api_client):
         table=second_table, name="Text name", text_default="Text default"
     )
     formula_field_imported = formula_field_type.import_serialized(
-        text_field_in_diff_table.table,
-        formula_serialized,
-        id_mapping,
+        text_field_in_diff_table.table, formula_serialized, id_mapping
     )
     assert formula_field.id != formula_field_imported.id
     assert formula_field.name == formula_field_imported.name
@@ -503,7 +501,7 @@ def test_phone_number_field_type(data_fixture):
 
 @pytest.mark.django_db
 def test_human_readable_values(data_fixture):
-    table, user, row, blank_row = setup_interesting_test_table(data_fixture)
+    table, user, row, blank_row, context = setup_interesting_test_table(data_fixture)
     model = table.get_model()
     results = {}
     blank_results = {}
@@ -546,6 +544,7 @@ def test_human_readable_values(data_fixture):
         "self_link_row": "",
         "single_select": "",
         "multiple_select": "",
+        "multiple_collaborators": "",
         "text": "",
         "url": "",
         "formula_bool": "True",
@@ -587,6 +586,7 @@ def test_human_readable_values(data_fixture):
         "self_link_row": "",
         "single_select": "A",
         "multiple_select": "D, C, E",
+        "multiple_collaborators": "user2@example.com, user3@example.com",
         "text": "text",
         "url": "https://www.google.com",
         "formula_bool": "True",
@@ -637,9 +637,7 @@ def test_import_export_lookup_field(data_fixture, api_client):
     lookup.save()
 
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a,
-        lookup_serialized,
-        id_mapping,
+        table_a, lookup_serialized, id_mapping
     )
     assert lookup.id != lookup_field_imported.id
     assert lookup_field_imported.name == "lookup"

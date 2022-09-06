@@ -436,4 +436,10 @@ export const registerRealtimeEvents = (realtime) => {
       viewType.fieldOptionsUpdated(context, view, data.field_options, 'page/')
     }
   })
+
+  realtime.registerEvent('user_permanently_deleted', ({ store, app }, data) => {
+    app.$bus.$emit('table-refresh', {
+      tableId: store.getters['table/getSelectedId'],
+    })
+  })
 }
