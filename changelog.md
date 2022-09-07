@@ -11,6 +11,14 @@ For example:
 
 ### New Features
 
+### Bug Fixes
+
+### Refactors
+
+## Released (2022-09-07 1.12.0)
+
+### New Features
+
 * Added Multiple Collaborators field type. [#1119](https://gitlab.com/bramw/baserow/-/issues/1119)
 * Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
 * Add `isort` settings to sort python imports.
