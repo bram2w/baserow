@@ -27,7 +27,8 @@
         "activate": "Attiva",
         "deactivate": "Disattiva",
         "paste": "Incolla",
-        "duplicate": "Duplica"
+        "duplicate": "Duplica",
+        "remove": "Rimuovi"
     },
     "adminType": {
         "settings": "Impostazioni"
@@ -81,7 +82,8 @@
         "multipleSelect": "Selezione multipla",
         "phoneNumber": "Numero di telefono",
         "formula": "Formula",
-        "lookup": "Cerca"
+        "lookup": "Cerca",
+        "multipleCollaborators": "Collaboratori"
     },
     "fieldErrors": {
         "invalidNumber": "Numero non valido",
@@ -115,7 +117,8 @@
         "multipleSelect": "Accetta una matrice di interi, ognuno dei quali rappresenta l'id dell'opzione di selezione scelta.",
         "phoneNumber": "Accetta un numero di telefono che ha una lunghezza massima di 100 caratteri composto unicamente da cifre, spazi e dai seguenti caratteri: Nx,._+*()#=;/- .",
         "formula": "Un campo di sola lettura definito da una formula scritta nel linguaggio delle formule Baserow.",
-        "lookup": "Un campo di sola lettura collegato a un campo di riga di collegamento che restituisce una matrice di valori e id di riga dal campo di ricerca scelto nella tabella collegata."
+        "lookup": "Un campo di sola lettura collegato a un campo di riga di collegamento che restituisce una matrice di valori e id di riga dal campo di ricerca scelto nella tabella collegata.",
+        "multipleCollaborators": "Accetta una lista di oggetti contenenti l'id dell'utente."
     },
     "viewFilter": {
         "contains": "contiene",
@@ -142,7 +145,9 @@
         "isDaysAgo": "è giorni fa",
         "isMonthsAgo": "è mesi fa",
         "isYearsAgo": "è anni fa",
-        "inThisWeek": "in questa settimana"
+        "inThisWeek": "in questa settimana",
+        "beforeToday": "È prima di oggi",
+        "afterToday": "È dopo di oggi"
     },
     "viewType": {
         "grid": "Griglia",
@@ -345,7 +350,8 @@
         "sumDescription": "Somma tutti i valori e restituisce il risultato.",
         "filterDescription": "Filtra un'espressione che coinvolge un riferimento a un campo di ricerca/collegamento o una chiamata a una funzione di ricerca.",
         "roundDescription": "Ritorna il primo argomento arrotondato al numero di cifre specificato nel secondo argomento.",
-        "intDescription": "Ritorna il primo argomento convertito ad intero e troncato della parte decimale."
+        "intDescription": "Ritorna il primo argomento convertito ad intero e troncato della parte decimale.",
+        "truncDescription": "Ritorna solo il primo argomento convertito ad intero troncando i decimali."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

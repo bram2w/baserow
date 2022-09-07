@@ -479,7 +479,9 @@
         "deleteRow": "Borrar fila",
         "rowCount": "Sin filas | 1 fila | {count} filas",
         "selectRow": "Seleccionar fila",
-        "duplicateRow": "Duplicar fila"
+        "duplicateRow": "Duplicar fila",
+        "copyCells": "Copiar células",
+        "deleteRows": "Borrar filas"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
@@ -644,6 +646,59 @@
     "duplicateFieldContext": {
         "duplicate": "Duplicar campo",
         "cloneData": "Copiar datos",
-        "soon": "Disponible pronto"
+        "soon": "Disponible pronto",
+        "readOnlyField": "Los valores de las células se rellenarán automáticamente."
+    },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Colaborador no encontrado"
+    },
+    "gridViewFieldFile": {
+        "dropFileHere": "Suelta los archivos aquí",
+        "dropHere": "Dejar caer aquí"
+    },
+    "snapshotsModal": {
+        "createLabel": "Crear una nueva imagen instantánea",
+        "create": "Crear imagen",
+        "snapshotRestoredErrorTitle": "Se ha producido un error",
+        "snapshotRestoredErrorMessage": "La instantánea no ha podido ser restaurada. Favor de intentarlo más tarde.",
+        "snapshotDeletedErrorTitle": "Se ha producido un error",
+        "snapshotDeletedErrorMessage": "La imagen no ha podido ser eliminada. Favor de intentarlo otra vez mas tarde.",
+        "title": "imágenes",
+        "description": "Las imágenes instantáneas son una copia completa de su base de datos del momento en que fueron creadas. Al restaurarlas se creará una duplicación de esos datos. Las instantáneas se eliminan automáticamente después de un año.",
+        "descriptionLimits": "Puedes tener un máximo de {n} imágenes por grupo. | Puedes tener un máximo de {n} imágenes por grupo. | Puede tener un máximo de {n} imágenes por grupo.",
+        "snapshot": "Imagen",
+        "limitReached": "Se ha alcanzado el límite de imágenes máximas.",
+        "importingState": "Creando",
+        "reset": "Crear otra"
+    },
+    "deleteSnapshotModal": {
+        "content": "¿Estás seguro de que quieres eliminar permanentemente la imagen instantánea {nombre}?",
+        "confirm": "Borrar",
+        "title": "Borrar imagen instantánea"
+    },
+    "snapshotListItem": {
+        "restore": "restaurar",
+        "delete": "borrar",
+        "created": "creada"
+    },
+    "formViewModeType": {
+        "form": "Forma",
+        "formDescription": "Todos los campos son visibles y se apilan verticalmente."
+    },
+    "formViewHeader": {
+        "mode": "Modo",
+        "preview": "Vista previa",
+        "fields": "Campos"
+    },
+    "formViewModePreviewForm": {
+        "addCoverImage": "Agregar una imagen de portada",
+        "addLogo": "Añadir un logo",
+        "noFields": "Este formulario no tiene ningún campo. Haz clic en un campo de la barra lateral izquierda para añadir uno."
+    },
+    "table": {
+        "chooseView": "Elige la vista"
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Agregar un colaborador"
     }
 }

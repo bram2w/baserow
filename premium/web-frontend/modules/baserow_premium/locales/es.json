@@ -18,13 +18,16 @@
         "exporterType": {
             "json": "Exportar a JSON",
             "xml": "Exportar a XML"
-        }
+        },
+        "deactivated": "Disponible en la versión premium"
     },
     "rowCommentSidebar": {
         "onlyPremium": "Los comentarios de Fila están disponibles en la versión premium.",
         "readOnlyNoComment": "No comentarios para esta fila.",
         "noComment": "Aún no hay comentarios para esta fila. Utilice el siguiente formulario para añadir un comentario.",
-        "comment": "Comentario"
+        "comment": "Comentario",
+        "more": "Más información",
+        "name": "Comentarios de la fila"
     },
     "rowComment": {
         "you": "Tú",
@@ -255,5 +258,28 @@
         "impersonateStop": "Detener",
         "premium": "Premium",
         "premiumDescription": "Tu cuenta tiene acceso a las funciones premium a nivel mundial"
+    },
+    "premiumModal": {
+        "title": "Actualiza para utilizar el {nombre}",
+        "viewPricing": "Ver precios",
+        "description": "Tu cuenta no tiene acceso a las funciones premium. Actualiza a la versión premium para empezar a utilizar {nombre}. Puedes actualizar tu cuenta obteniendo una licencia. Haz clic en el botón de abajo para ver los precios."
+    },
+    "premiumFeatures": {
+        "rowComments": "Comentarios de la fila",
+        "kanbanView": "Vista de Kanban",
+        "exports": "Exportación JSON y XML",
+        "rowColoring": "Coloración de las filas",
+        "admin": "Funciones de administración",
+        "surveyForm": "Formulario de encuesta"
+    },
+    "formViewModeType": {
+        "surveyDescription": "Un campo es visible al mismo tiempo.",
+        "survey": "Encuesta",
+        "onlyForPremium": "Disponible en la versión premium"
+    },
+    "formViewModePreviewSurvey": {
+        "orderFields": "Campos de pedido",
+        "more": "Más información",
+        "deactivated": "El formulario de la encuesta está disponible en la versión premium."
     }
 }

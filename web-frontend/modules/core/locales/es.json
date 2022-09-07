@@ -10,7 +10,8 @@
         "renameApplication": "Renombrar {type}",
         "viewTrash": "ver papelera",
         "deleteApplication": "Borrar {type}",
-        "duplicateApplication": "Duplicar {tipo}"
+        "duplicateApplication": "Duplicar {tipo}",
+        "snapshots": "Imágenes"
     },
     "sidebar": {
         "createGroup": "Crea un grupo",
@@ -390,5 +391,10 @@
         "stateFinished": "Terminado",
         "stateFailed": "Fallido",
         "errorJobAlreadyRunningTitle": "Ya está corriendo"
+    },
+    "datetime": {
+        "daysAgo": "Hace 0 días | Hace 1 día | Hace {n} días",
+        "monthsAgo": "Hace 0 meses | Hace 1 mes | Hace {n} meses",
+        "yearsAgo": "Hace 0 años | Hace 1 año | Hace {n} años"
     }
 }
