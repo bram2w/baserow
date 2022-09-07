@@ -27,7 +27,8 @@
         "activate": "Activeren",
         "deactivate": "Deactiveren",
         "paste": "Plakken",
-        "duplicate": "Dupliceer"
+        "duplicate": "Dupliceer",
+        "remove": "Verwijder"
     },
     "adminType": {
         "settings": "Instellingen"
@@ -81,7 +82,8 @@
         "multipleSelect": "Meervoudige selectie",
         "phoneNumber": "Telefoonnummer",
         "formula": "Formule",
-        "lookup": "Lookup (opzoeken)"
+        "lookup": "Lookup (opzoeken)",
+        "multipleCollaborators": "Medewerkers"
     },
     "fieldErrors": {
         "invalidNumber": "Ongeldig nummer",
@@ -115,7 +117,8 @@
         "multipleSelect": "Accepteert een array van ronde getallen die elk de geselecteerde keuze-optie id vertegenwoordigen.",
         "phoneNumber": "Accepteert een telefoonnummer met een maximale lengte van 100 tekens, uitsluitend bestaande uit cijfers, spaties en de volgende tekens: Nx,._+*()#=;/- .",
         "formula": "Een alleen-lezen veld gedefinieerd door een formule geschreven in de Baserow formule-taal.",
-        "lookup": "Een alleen-lezen veld verbonden met een link-rij veld dat een array van waarden en rij ids van het gekozen lookup-veld in de gelinkte tabel retourneert."
+        "lookup": "Een alleen-lezen veld verbonden met een link-rij veld dat een array van waarden en rij ids van het gekozen lookup-veld in de gelinkte tabel retourneert.",
+        "multipleCollaborators": "Accepteert een array van objecten waarbij elk object een gebruikers-ID bevat."
     },
     "viewFilter": {
         "contains": "bevat",
@@ -142,7 +145,9 @@
         "isDaysAgo": "is dagen geleden",
         "inThisWeek": "in deze week",
         "isMonthsAgo": "is maanden geleden",
-        "isYearsAgo": "is jaren geleden"
+        "isYearsAgo": "is jaren geleden",
+        "afterToday": "is na vandaag",
+        "beforeToday": "is voor vandaag"
     },
     "viewType": {
         "grid": "Raster",
@@ -345,7 +350,8 @@
         "sumDescription": "Somt alle waarden op en retourneert het resultaat.",
         "filterDescription": "Filtert een uitdrukking met een lookup/link veldverwijzing of een lookup-functie oproep.",
         "intDescription": "Retourneert alleen het eerste argument dat is omgezet in een geheel getal door decimalen af te rekken.",
-        "roundDescription": "Geeft het eerste argument afgerond op het aantal cijfers dat is opgegeven door het tweede argument."
+        "roundDescription": "Geeft het eerste argument afgerond op het aantal cijfers dat is opgegeven door het tweede argument.",
+        "truncDescription": "Geeft alleen het eerste argument terug, omgezet in een geheel getal door decimalen af te kappen."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

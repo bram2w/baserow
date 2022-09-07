@@ -479,7 +479,9 @@
         "deleteRow": "Elimina riga",
         "rowCount": "Nessuna riga | 1 riga | {conteggio} righe",
         "duplicateRow": "Duplica riga",
-        "selectRow": "Seleziona riga"
+        "selectRow": "Seleziona riga",
+        "deleteRows": "Elimina righe",
+        "copyCells": "Copia celle"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
@@ -636,7 +638,8 @@
     "duplicateFieldContext": {
         "cloneData": "Copia i dati",
         "soon": "Presto disponibile",
-        "duplicate": "Duplica campo"
+        "duplicate": "Duplica campo",
+        "readOnlyField": "I valori delle celle verranno riempiti automaticamente."
     },
     "formViewField": {
         "required": "richiesto",
@@ -670,5 +673,32 @@
         "restore": "ripristina",
         "delete": "elimina",
         "created": "creato"
+    },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Collaboratore non trovato"
+    },
+    "formViewHeader": {
+        "mode": "Modalità",
+        "preview": "Anteprima",
+        "fields": "Campi"
+    },
+    "formViewModePreviewForm": {
+        "addCoverImage": "Aggiungi un'immagine di copertina",
+        "addLogo": "Aggiungi un logo",
+        "noFields": "Questo form non contiene campi. Clicca su un campo nella barra laterale di sinistra per aggiungerne uno."
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Aggiungi un collaboratore"
+    },
+    "formViewModeType": {
+        "formDescription": "Tutti i campi sono visibili verticalmente uno dopo l'altro.",
+        "form": "Form"
+    },
+    "table": {
+        "chooseView": "Scegli vista"
+    },
+    "gridViewFieldFile": {
+        "dropHere": "Trascina qui",
+        "dropFileHere": "Tracina file qui"
     }
 }

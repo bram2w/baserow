@@ -1,0 +1,400 @@
+{
+    "paginator": {
+        "page": "strona",
+        "of": "z {pages}"
+    },
+    "copied": {
+        "label": "Skopiowane!"
+    },
+    "sidebarApplication": {
+        "renameApplication": "Zmień nazwę {type}",
+        "duplicateApplication": "Duplikat {type}",
+        "viewTrash": "Wyświetl kosz",
+        "deleteApplication": "Usuń {type}",
+        "snapshots": "Migawek"
+    },
+    "sidebar": {
+        "createGroup": "Utwórz grupę",
+        "inviteOthers": "Zaproś innych",
+        "logoff": "Wyloguj",
+        "errorNoGroup": "Nie masz żadnych grup.",
+        "admin": "Admin",
+        "dashboard": "Pulpit",
+        "trash": "Śmieci",
+        "settings": "Ustawienia"
+    },
+    "accountForm": {
+        "nameLabel": "Twoje imię",
+        "languageLabel": "Język interfejsu"
+    },
+    "accountSettings": {
+        "title": "Konto",
+        "changedTitle": "Zmienione",
+        "changedDescription": "Informacje o Twoim koncie zostały zmienione.",
+        "submitButton": "Aktualizacja konta"
+    },
+    "settingsModal": {
+        "title": "Ustawienia"
+    },
+    "passwordSettings": {
+        "title": "Zmień hasło",
+        "changedTitle": "Hasło zostało zmienione",
+        "changedDescription": "Twoje hasło zostało zmienione. Następnym razem, gdy będziesz chciał się zalogować, musisz użyć nowego hasła.",
+        "oldPasswordLabel": "Stare hasło",
+        "oldPasswordRequiredError": "Wymagane jest stare hasło.",
+        "newPasswordLabel": "Nowe hasło",
+        "repeatNewPasswordLabel": "Powtórz nowe hasło",
+        "repeatNewPasswordMatchError": "To pole musi być zgodne z nowym polem hasła.",
+        "submitButton": "Zmień hasło",
+        "errorInvalidOldPasswordTitle": "Nieprawidłowe hasło",
+        "errorInvalidOldPasswordMessage": "Nie można zmienić hasła, ponieważ stare hasło jest nieprawidłowe."
+    },
+    "deleteAccountSettings": {
+        "title": "Usuń konto",
+        "description": "Możesz zaplanować usunięcie swojego konta wpisując aktualne hasło i klikając przycisk. Twoje konto zostanie trwale usunięte po upływie {days} dni. W tym czasie, jeśli zalogujesz się ponownie, usunięcie konta zostanie anulowane.",
+        "groupNotice": "Osierocone grupy zostaną usunięte",
+        "groupNoticeDescription": "Kiedy Twoje konto zostanie trwale usunięte, wszystkie grupy i powiązane dane, dla których jesteś ostatnim aktywnym użytkownikiem z uprawnieniami Administratora, również zostaną usunięte. Grupy pokazane poniżej to te, które zostaną usunięte, ponieważ jesteś jedynym adminem. Aby zapobiec ich usunięciu, musisz najpierw dać innemu użytkownikowi uprawnienia administratora, zanim usuniesz swoje konto.",
+        "orphanGroups": "Zostanie również trwale usunięty po upływie czasu karencji",
+        "orphanGroupMemberCount": "udostępnione nikomu|udostępnione jednemu użytkownikowi|udostępnione {count} użytkownikom",
+        "password": "Hasło",
+        "passwordConfirm": "Powtórz hasło",
+        "repeatPasswordMatchError": "To pole musi być zgodne z pierwszym polem hasła.",
+        "submitButton": "Usuń konto",
+        "errorInvalidPasswordTitle": "Nieprawidłowe hasło",
+        "errorInvalidPasswordMessage": "Nie można usunąć konta, ponieważ hasło jest nieprawidłowe.",
+        "errorUserIsLastAdminTitle": "Ostatni administrator",
+        "errorUserIsLastAdminMessage": "Nie można usunąć konta, ponieważ jesteś ostatnim administratorem tej instancji Baserow.",
+        "accountDeletedSuccessTitle": "Zaplanowano usunięcie konta",
+        "accountDeletedSuccessMessage": "Twoje konto zostało zaplanowane do usunięcia.",
+        "groupLoadingError": "Sprawdzanie grup nie powiodło się",
+        "groupLoadingErrorDescription": "Sprawdzenie grup do usunięcia nie powiodło się, odśwież stronę."
+    },
+    "error": {
+        "alreadyExistsTitle": "Użytkownik już istnieje",
+        "alreadyExistsMessage": "Użytkownik o podanym adresie e-mail już istnieje.",
+        "passwordRequired": "Wymagane jest hasło.",
+        "invalidEmail": "Podaj poprawny adres e-mail.",
+        "disabledAccountTitle": "Konto Wyłączone",
+        "disabledAccountMessage": "To konto użytkownika zostało wyłączone.",
+        "incorrectCredentialTitle": "Nieprawidłowe poświadczenia",
+        "incorrectCredentialMessage": "Podany adres e-mail lub hasło są nieprawidłowe.",
+        "inputRequired": "Dane wejściowe są wymagane."
+    },
+    "field": {
+        "language": "Język",
+        "emailAddress": "Adres e-mail",
+        "name": "Twoje imię",
+        "password": "Hasło",
+        "passwordRepeat": "Powtórz hasło"
+    },
+    "invitationTitle": "Zaproszenie",
+    "invitationMessage": "{invitedBy} zaprosił Cię do dołączenia do {group}.",
+    "groupForm": {
+        "nameLabel": "Nazwa"
+    },
+    "leaveGroupModal": {
+        "title": "Opuść {group}",
+        "message": "Czy na pewno chcesz opuścić grupę {group}? Nie będziesz miał już dostępu do powiązanych aplikacji, a jeśli chcesz odzyskać dostęp, jeden z adminów musi Cię ponownie zaprosić. Jeśli opuścisz grupę, nie zostanie ona usunięta. Wszyscy pozostali członkowie nadal będą mieli do niej dostęp. Nie jest możliwe opuszczenie grupy, jeśli jesteś ostatnim adminem, ponieważ pozostawi to ją bez opieki.",
+        "leave": "Opuścić grupę"
+    },
+    "dashboardGroup": {
+        "showMembers": "Członkowie",
+        "createApplication": "Utwórz nowy"
+    },
+    "groupInvitation": {
+        "title": "Zaproszenie",
+        "message": "{by} zaprosił Cię do dołączenia do {group}.",
+        "reject": "Odrzuć",
+        "accept": "Przyjmij"
+    },
+    "groupMemberModal": {
+        "membersModalTitle": "Członkowie {group}",
+        "userDescription": "{user} - dołączył {since} temu",
+        "invitationDescription": "zaproszony {since} temu",
+        "sendInvite": "Wyślij zaproszenie",
+        "userAlreadyInGroupTitle": "Użytkownik jest już w grupie.",
+        "userDescriptionPendingDeletion": "{user} - oczekiwanie na usunięcie",
+        "userAlreadyInGroupText": "Nie jest możliwe wysłanie zaproszenia, gdy użytkownik jest już członkiem grupy."
+    },
+    "groupInviteForm": {
+        "invitationFormTitle": "Zaproś przez e-mail",
+        "optionalMessagePlaceholder": "Opcjonalna wiadomość",
+        "errorInvalidEmail": "Podaj poprawny adres e-mail."
+    },
+    "groupsContext": {
+        "search": "Wyszukaj grupy",
+        "noResults": "Nie znaleziono wyników",
+        "createGroup": "Utwórz grupę"
+    },
+    "groupContext": {
+        "renameGroup": "Zmień nazwę grupy",
+        "members": "Członkowie",
+        "viewTrash": "Wyświetl kosz",
+        "leaveGroup": "Opuść grupę",
+        "deleteGroup": "Usuń grupę"
+    },
+    "createGroupModal": {
+        "createNew": "Utwórz nową grupę",
+        "add": "Dodaj grupę"
+    },
+    "templateCategories": {
+        "search": "Wyszukaj szablony",
+        "title": "Szablony"
+    },
+    "templateHeader": {
+        "use": "Użyj tego szablonu"
+    },
+    "trashSidebar": {
+        "title": "Śmieci",
+        "unnamedGroup": "Grupa bez nazwy {id}"
+    },
+    "trashContents": {
+        "message": "Przywróć usunięte elementy z przeszłości {duration}",
+        "empty": "W ciągu ostatnich trzech dni nic nie zostało usunięte.",
+        "emptyButtonTrashed": "Usuń {type} trwale",
+        "emptyButtonNotTrashed": "Opróżnij kosz tego {type}'",
+        "unnamed": "Nienazwany {type} {id}"
+    },
+    "trashEmptyModal": {
+        "titleIsTrashed": "Czy na pewno chcesz trwale usunąć {name}?",
+        "titleIsNotTrashed": "Czy na pewno chcesz opróżnić kosz {name}?",
+        "messageIsTrashed": "Spowoduje to trwałe usunięcie go i całej jego zawartości. Po czym nie będzie można ich odzyskać.",
+        "messageIsNotTrashed": "Spowoduje to trwałe usunięcie wymienionych elementów. Po czym nie będzie można ich odzyskać.",
+        "buttonIsTrashed": "Usunąć na stałe",
+        "buttonIsNotTrashed": "Pusty"
+    },
+    "trashEntry": {
+        "deletedUser": "Usunięty użytkownik",
+        "fromParent": "od {parent}",
+        "name": "{user} usunął {type} {title} {parent}",
+        "restore": "Przywróć",
+        "andMore": "...i {count} więcej",
+        "unnamed": "Nienazwany {type} {id}"
+    },
+    "trashModal": {
+        "emptyTitle": "Nie znaleziono grup",
+        "emptyMessage": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę."
+    },
+    "uploadViaURLUserFileUpload": {
+        "title": "Prześlij z adresu URL",
+        "urlLabel": "URL",
+        "urlError": "Wymagany jest prawidłowy adres URL."
+    },
+    "userFilesModal": {
+        "title": "Prześlij z"
+    },
+    "uploadFileUserFileUpload": {
+        "title": "Prześlij z mojego urządzenia",
+        "drop": "Upuść tutaj",
+        "clickOrDrop": "Kliknij lub upuść swoje pliki tutaj",
+        "retry": "Ponów próbę"
+    },
+    "createApplicationContext": {
+        "fromTemplate": "Z szablonu"
+    },
+    "applicationForm": {
+        "nameLabel": "Nazwa"
+    },
+    "connectingNotification": {
+        "title": "Ponowne łączenie",
+        "content": "Ponowne łączenie z serwerem."
+    },
+    "failedConnectingNotification": {
+        "title": "Nie udało się",
+        "content": "Połączenie z serwerem nie powiodło się. Proszę odświeżyć stronę.",
+        "action": "Odśwież stronę"
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Błąd autoryzacji",
+        "content": "Wygląda na to, że nie masz uprawnień, aby zobaczyć ten zasób.",
+        "action": "Odśwież stronę"
+    },
+    "restoreNotification": {
+        "restore": "Przywróć usunięte {type}"
+    },
+    "copyingNotification": {
+        "title": "Kopiowanie...",
+        "content": "Przygotowywanie danych"
+    },
+    "pastingNotification": {
+        "title": "Wklejanie...",
+        "content": "Przygotowywanie danych"
+    },
+    "clearingNotification": {
+        "title": "Oczyszczenie...",
+        "content": "Przygotowuję Twoje dane"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Cofanie...",
+        "undoingText": "Cofanie twojego działania",
+        "undoneTitle": "Cofnąć",
+        "undoneText": "Akcja została cofnięta",
+        "noMoreUndo": "Nie ma więcej czynności do cofnięcia",
+        "skippingUndoDueToError": "Cofnięcie nie powiodło się z powodu nieznanego błędu. Pomijam go.",
+        "redoingTitle": "Przerabianie...",
+        "redoingText": "Ponawiam działanie",
+        "redoneTitle": "Przebudowany",
+        "redoneText": "Akcja została wykonana ponownie",
+        "noMoreRedo": "Brak akcji do ponownego przetworzenia",
+        "skippingRedoDueToError": "Ponowne wykonanie nie powiodło się z powodu nieznanego błędu, pomijając go.",
+        "failed": "Nie powiodło się"
+    },
+    "errorLayout": {
+        "notFound": "Strona, której szukasz, nie została znaleziona. Może to być spowodowane tym, że adres URL jest nieprawidłowy lub że nie masz uprawnień do oglądania tej strony.",
+        "error": "Coś poszło nie tak podczas ładowania strony. Nasi programiści zostali powiadomieni o problemie. Proszę spróbować odświeżyć stronę lub powrócić do pulpitu.",
+        "backDashboard": "Powrót do pulpitu",
+        "backLogin": "Powrót do logowania",
+        "wrong": "Coś poszło nie tak"
+    },
+    "dashboard": {
+        "title": "Pulpit",
+        "alertTitle": "Potrzebujemy Twojej pomocy!",
+        "alertText": "Jeśli uważasz, że Baserow jest przydatny, to podzielenie się z nami gwiazdką jest bardzo cenne. Udzielając Baserow pomagasz nam ulepszać produkt i czynić go bardziej użytecznym dla Ciebie.",
+        "tweetContent": "Sprawdź @baserow, narzędzie open source do bazy danych typu no-code i alternatywę dla Airtable!",
+        "redditTitle": "'Baserow - Baza danych open source bez kodu",
+        "noGroupTitle": "Nie znaleziono grup",
+        "noGroupText": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę.",
+        "createGroup": "Utwórz grupę",
+        "becomeGithubSponsor": "Zostań sponsorem GitHub",
+        "starOnGitlab": "Oznacz nas gwiazdką na GitLab",
+        "shareOnTwitter": "Tweetuj o Baserow",
+        "shareOnReddit": "Udostępnij na Reddicie",
+        "shareOnFacebook": "Udostępnij na Facebooku",
+        "shareOnLinkedIn": "Udostępnij na LinkedIn"
+    },
+    "dashboardSidebar": {
+        "groups": "Grupy",
+        "links": "Linki",
+        "knowledgeBase": "Baza wiedzy",
+        "tutorials": "Poradniki",
+        "userSettings": "Ustawienia użytkownika",
+        "trash": "Śmieci",
+        "logoff": "Wyloguj"
+    },
+    "login": {
+        "title": "Zaloguj sie",
+        "forgotPassword": "Zapomniałem hasła"
+    },
+    "resetPassword": {
+        "title": "Zresetuj hasło",
+        "newPassword": "Nowe hasło",
+        "repeatNewPassword": "Powtórz nowe hasło",
+        "submit": "Zmień hasło",
+        "changed": "Hasło zostało zmienione",
+        "errorInvalidLinkTitle": "Nieprawidłowy link",
+        "errorInvalidLinkMessage": "Nie można zresetować hasła, ponieważ link jest nieprawidłowy.",
+        "errorLinkExpiredTitle": "Link wygasł",
+        "errorLinkExpiredMessage": "Link resetowania hasła wygasł. Poproś o kolejny.",
+        "disabled": "Resetowanie hasła jest wyłączone",
+        "disabledMessage": "Zresetowanie hasła nie jest możliwe, ponieważ zostało ono wyłączone."
+    },
+    "signup": {
+        "headTitle": "Stwórz nowe konto",
+        "title": "Zarejestruj się",
+        "disabled": "Rejestracja jest wyłączona",
+        "disabledMessage": "Nie ma możliwości założenia konta, ponieważ zostało ono wyłączone.",
+        "requireFirstUser": "Witamy w Baserow!",
+        "requireFirstUserMessage": "Proszę wypełnić poniższy formularz, aby utworzyć użytkownika admin."
+    },
+    "forgotPassword": {
+        "title": "Nie pamiętam hasła",
+        "message": "Proszę wpisać w formularzu swój adres e-mail. Jeśli znajdziemy konto, wyślemy e-mail z linkiem do zresetowania hasła.",
+        "submit": "Wyślij link",
+        "confirmation": "Jeśli Twój adres e-mail istnieje w naszej bazie danych, w ciągu kilku minut otrzymasz na swój adres e-mail link do zresetowania hasła.",
+        "disabled": "Zapomniane hasło jest wyłączone",
+        "disabledMessage": "Nie ma możliwości zresetowania hasła, ponieważ zostało ono wyłączone."
+    },
+    "settings": {
+        "settingsTitle": "Ustawienia administratora",
+        "baserowInstanceId": "Identyfikator ID instancji",
+        "instanceIdDescription": "ID instancji to unikalny identyfikator twojego egzemplarza Baserow.",
+        "accountRestrictions": "Ograniczenia konta",
+        "settingAllowResetPasswordName": "Zezwól na resetowanie hasła",
+        "settingAllowResetPasswordDescription": "Domyślnie użytkownicy mogą poprosić o link do resetowania hasła.",
+        "settingAllowResetPasswordWarning": "Pamiętaj, że możesz zablokować sobie dostęp do systemu i dostępu nie można przywrócić, jeśli zapomnisz hasła.",
+        "settingAllowNewAccountsName": "Umożliwienie tworzenia nowych kont",
+        "settingAllowNewAccountsDescription": "Domyślnie każdy użytkownik odwiedzający Twoją domenę Baserow może zarejestrować się na nowym koncie.",
+        "settingAllowSignupsViaGroupInvitationsName": "Zezwalaj na rejestracje za pomocą zaproszeń grupowych",
+        "settingAllowSignupsViaGroupInvitationDescription": "Nawet jeśli tworzenie nowych kont jest wyłączone, ta opcja pozwala bezpośrednio zaproszonym użytkownikom nadal tworzyć konta.",
+        "userDeletionGraceDelay": "Usuwanie użytkowników",
+        "settingUserDeletionGraceDelay": "Okres karencji",
+        "settingUserDeletionGraceDelayDescription": "Jest to liczba dni bez logowania, po których konto zaplanowane do usunięcia zostaje trwale usunięte.",
+        "invalidAccountDeletionGraceDelay": "Ta wartość jest wymagana i musi być dodatnią liczbą całkowitą mniejszą niż 32000",
+        "enabled": "włączony"
+    },
+    "formSidebar": {
+        "actions": {
+            "addAll": "Dodaj wszystko",
+            "removeAll": "Usuń wszystko",
+            "addField": "Dodaj pole"
+        },
+        "fieldsDescription": "Wszystkie pola są w formularzu.",
+        "prefillInfoLink": "Wstępnie wypełniaj wartości dynamicznie",
+        "modal": {
+            "title": "Wstępnie wypełniaj wartości dynamicznie",
+            "descriptionPartOne": "Formularze mogą być wstępnie wypełnione, aby pomóc użytkownikowi szybciej wypełnić formularz.",
+            "descriptionPartTwo": "Wszystkie pola, które są dostępne w formularzu mogą być wstępnie wypełnione.",
+            "howToPrefill": {
+                "title": "Jak wstępnie wypełnić formularz",
+                "description": "Jeśli chcesz wstępnie wypełnić formularz danymi, możesz to zrobić poprzez parametry zapytania dodane do publicznego adresu url formularza. Te parametry zapytania są poprzedzone `prefill`, aby uniknąć kolizji z potencjalnymi przyszłymi parametrami zapytania."
+            },
+            "format": {
+                "title": "Format",
+                "description": "Format parametrów zapytania jest następujący:",
+                "codeSnippet": "?prefill_<field_name>=<value>"
+            },
+            "example": {
+                "title": "Przykład",
+                "description": "W poniższym przykładzie chcemy wstępnie wypełnić pole o nazwie `Name` wartością `Mike`",
+                "codeSnippet": "?prefill_Name=Michał"
+            },
+            "spaces": {
+                "title": "Spacje",
+                "description": "Spacje w nazwie pola są zastępowane przez `+`, aby uniknąć problemów z parametrem zapytania.",
+                "codeSnippet": "?prefill_my+field=Michał"
+            },
+            "multipleValues": {
+                "title": "Wiele wartości",
+                "description": "Jeśli chcesz wypełnić wiele pól możesz to zrobić dodając `,` pomiędzy wartościami.",
+                "codeSnippet": "?prefill_multi+select=Michał,Jan"
+            },
+            "specialFieldTypes": {
+                "title": "Specjalne typy pól",
+                "description": "Ogólnie wartość wstępnego wypełnienia jest taka sama jak wartość pola. Istnieją jednak wyjątki, w których wartość jest tłumaczona na inną wartość.",
+                "ratingField": {
+                    "title": "Pole oceny",
+                    "description": "Pole oceny akceptuje liczbę wskazującą, ile gwiazdek powinno być wypełnionych.",
+                    "codeSnippet": "?prefill_rating=3"
+                },
+                "linkRowField": {
+                    "title": "Pole wiersza linku",
+                    "description": "Pole wiersza łącza może akceptować wartość wyświetlaną na liście rozwijanej wyboru.",
+                    "codeSnippet": "?prefill_link+row=Michał"
+                },
+                "selectField": {
+                    "title": "Pole pojedynczego wyboru / wielokrotnego wyboru",
+                    "description": "Pojedyncze pole wyboru może akceptować wartość wyświetlaną na liście rozwijanej wyboru. Podobnie pole wyboru wielokrotnego, ale może ono również akceptować wiele wartości.",
+                    "codeSnippet": "?prefill_single+select=Michał"
+                },
+                "dateField": {
+                    "title": "Pole daty",
+                    "description": "Pole daty może przyjąć datę w następujących formatach i użyje formatu daty pola do parsowania daty.",
+                    "codeSnippet": "\n// Normy\nISO_8601\n\n// Formaty ogólne\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
+                }
+            }
+        }
+    },
+    "job": {
+        "statePending": "Czekam na start...",
+        "stateStarted": "Zaczęło się...",
+        "stateFinished": "Gotowe",
+        "stateFailed": "Nie udało się",
+        "errorJobAlreadyRunningTitle": "Już działa",
+        "errorJobAlreadyRunningDescription": "Kolejne zadanie importu jest już uruchomione. Musisz poczekać, aż ono się skończy, zanim zaczniesz kolejne."
+    },
+    "datetime": {
+        "daysAgo": "0 dni temu | 1 dzień temu | {n} dni temu",
+        "monthsAgo": "0 miesięcy temu | 1 miesiąc temu | {n} miesięcy temu",
+        "yearsAgo": "0 lat temu | 1 rok temu | {n} lat temu"
+    }
+}

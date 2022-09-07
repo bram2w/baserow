@@ -263,11 +263,22 @@
         "rowComments": "Rij opmerkingen",
         "kanbanView": "Kanban-weergave",
         "exports": "JSON- en XML-export",
-        "admin": "Admin functionaliteit"
+        "admin": "Admin functionaliteit",
+        "surveyForm": "Enquêteformulier"
     },
     "premiumModal": {
         "title": "Upgrade om de {name} te gebruiken",
         "viewPricing": "Bekijk prijzen",
         "description": "Uw account heeft geen toegang tot de premium functies. Upgrade naar de premium versie om {name} te kunnen gebruiken. U kunt uw account upgraden door een licentie aan te schaffen. Klik op de knop hieronder om de prijzen te bekijken."
+    },
+    "formViewModeType": {
+        "onlyForPremium": "Beschikbaar in de premium versie",
+        "survey": "Enquête",
+        "surveyDescription": "Eén veld is tegelijk zichtbaar."
+    },
+    "formViewModePreviewSurvey": {
+        "orderFields": "Order velden",
+        "deactivated": "Enquêteformulier is beschikbaar in de premium versie.",
+        "more": "Meer informatie"
     }
 }

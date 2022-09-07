@@ -264,11 +264,22 @@
         "admin": "Pagina di amministrazione",
         "rowColoring": "Colorazione righe",
         "rowComments": "Commenti di riga",
-        "exports": "Esportazione in formato JSON e XML"
+        "exports": "Esportazione in formato JSON e XML",
+        "surveyForm": "Sondaggio"
     },
     "premiumModal": {
         "title": "Fai l'upgrade per usare {name}",
         "viewPricing": "Vedi prezzi",
         "description": "Il tuo account non ha accesso alle funzionalità premio. Fai l'upgrade alla versione premium per usare {name}. Puoi fare l'upgrade acquistando una licenza. Clicca sul pulsante qui sotto per vedere i prezzi."
+    },
+    "formViewModeType": {
+        "survey": "Sondaggio",
+        "surveyDescription": "Un solo campo alla volta è visibile.",
+        "onlyForPremium": "Disponibile nella versione premium"
+    },
+    "formViewModePreviewSurvey": {
+        "orderFields": "Ordina campi",
+        "more": "Maggiori informazioni",
+        "deactivated": "Modalità sondaggio è disponibile nella versione premium."
     }
 }

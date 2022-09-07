@@ -150,7 +150,7 @@
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
         "autoDocDescription": "Cette documentation est générée automatiquement à partir des table et des champs disponibles dans votre basse de données. Si vous effectuez des modifications sur la base, les tables ou bien sur les champs des tables, cela peut également modifier l'API. Par conséquent, assurez-vous de mettre à jour les clients de votre API dans ce cas.",
         "databaseId": "Identifiant de la base :",
-        "jsClient": "Client pour les examples de requêtes en Javascript :",
+        "jsClient": "Client pour les exemples de requêtes en JavaScript :",
         "pythonClient": "Client pour les examples de requêtes en Python :"
     },
     "apiDocsTableListFields": {
@@ -479,7 +479,9 @@
         "deleteRow": "Supprimer la ligne",
         "rowCount": "Acune ligne | 1 ligne | {count} lignes",
         "duplicateRow": "Dupliquer la ligne",
-        "selectRow": "Sélectionner la ligne"
+        "selectRow": "Sélectionner la ligne",
+        "copyCells": "Copier les cellules",
+        "deleteRows": "Supprimer les lignes"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -644,7 +646,8 @@
     "duplicateFieldContext": {
         "duplicate": "Dupliquer le champ",
         "cloneData": "Copier les données",
-        "soon": "Bientôt disponible"
+        "soon": "Bientôt disponible",
+        "readOnlyField": "Les valeurs des cellules seront remplies automatiquement."
     },
     "snapshotsModal": {
         "title": "sauvegardes",
@@ -670,5 +673,32 @@
         "restore": "restaurer",
         "delete": "supprimer",
         "created": "créée"
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Ajouter un collaborateur"
+    },
+    "gridViewFieldFile": {
+        "dropHere": "Déposer ici",
+        "dropFileHere": "Déposez les fichiers ici"
+    },
+    "formViewHeader": {
+        "preview": "Aperçu",
+        "mode": "Mode",
+        "fields": "Champs"
+    },
+    "formViewModePreviewForm": {
+        "addCoverImage": "Ajouter une image d'entête",
+        "noFields": "Ce formulaire ne comporte aucun champ. Cliquez sur un champ dans la barre latérale gauche pour en ajouter un.",
+        "addLogo": "Ajouter un logo"
+    },
+    "table": {
+        "chooseView": "Choisir la vue"
+    },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Collaborateur non trouvé"
+    },
+    "formViewModeType": {
+        "formDescription": "Tous les champs sont visibles et empilés verticalement.",
+        "form": "Formulaire"
     }
 }

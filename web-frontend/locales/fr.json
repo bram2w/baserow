@@ -27,7 +27,8 @@
         "activate": "Activer",
         "deactivate": "Désactiver",
         "paste": "Coller",
-        "duplicate": "Dupliquer"
+        "duplicate": "Dupliquer",
+        "remove": "Supprimer"
     },
     "adminType": {
         "settings": "Paramètres"
@@ -81,7 +82,8 @@
         "multipleSelect": "Selection multiple",
         "phoneNumber": "Téléphone",
         "formula": "Formule",
-        "lookup": "Champ rapporté"
+        "lookup": "Champ rapporté",
+        "multipleCollaborators": "Collaborateurs"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -115,7 +117,8 @@
         "multipleSelect": "Accepte un tableau d'entier correspondant chacun à l'identifiant d'une valeur sélectionnée.",
         "phoneNumber": "Accepte un numéro de téléphone d'une longueur maximum de 100 caractères qui doivent être des chiffres, des espaces ou les caractères suivants : Nx,._+*()#=;/- .",
         "formula": "Un champ en lecture seule défini par une formule rédigée dans le format spécifique de Baserow.",
-        "lookup": "Un champ en lecture seule associé à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée."
+        "lookup": "Un champ en lecture seule associé à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
+        "multipleCollaborators": "Accepte un tableau d'objets où chaque objet contient l'identifiant d'un utilisateur."
     },
     "viewFilter": {
         "contains": "contient",
@@ -142,7 +145,9 @@
         "isDaysAgo": "il y a X jours",
         "isMonthsAgo": "il y a X mois",
         "isYearsAgo": "il y a X ans",
-        "inThisWeek": "cette semaine"
+        "inThisWeek": "cette semaine",
+        "beforeToday": "est avant aujourd'hui",
+        "afterToday": "est après aujourd'hui"
     },
     "viewType": {
         "grid": "Tableau",
@@ -345,7 +350,8 @@
         "sumDescription": "Retourne la somme de toutes les valeurs en argument et retourne le résultat.",
         "filterDescription": "Filtre une expression impliquant un champ rapporté,un champ lien vers une table ou un appel de la fonction lookup.",
         "roundDescription": "Renvoie le premier argument arrondi au nombre de chiffres spécifié par le second argument.",
-        "intDescription": "Renvoie uniquement le premier argument converti en un nombre entier en tronquant les décimales éventuelles."
+        "intDescription": "Renvoie uniquement le premier argument converti en un nombre entier en tronquant les décimales éventuelles.",
+        "truncDescription": "Renvoie uniquement le premier argument converti en un nombre entier en tronquant les décimales éventuelles."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

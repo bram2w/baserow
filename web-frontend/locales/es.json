@@ -27,7 +27,8 @@
         "activate": "Activar",
         "deactivate": "Desactivar",
         "paste": "Pegar",
-        "duplicate": "Duplicar"
+        "duplicate": "Duplicar",
+        "remove": "Eliminar"
     },
     "adminType": {
         "settings": "Ajustes"
@@ -81,7 +82,8 @@
         "multipleSelect": "Selección múltiple",
         "phoneNumber": "Número de teléfono",
         "formula": "Fórmula",
-        "lookup": "Buscar"
+        "lookup": "Buscar",
+        "multipleCollaborators": "Colaboradores"
     },
     "fieldErrors": {
         "invalidNumber": "Número invalido",
@@ -115,7 +117,8 @@
         "multipleSelect": "Acepta una matriz de enteros, cada uno de los cuales representa la identificación de la opción de selección elegida.",
         "phoneNumber": "Acepta un número de teléfono que tenga una longitud máxima de 100 caracteres que consista únicamente en dígitos, espacios y los siguientes caracteres: Nx,._+*()#=;/- .",
         "formula": "Un campo de solo lectura definido por una fórmula escrita en el lenguaje de fórmulas de Baserow.",
-        "lookup": "Un campo de solo lectura conectado a un campo de fila de vínculo que devuelve una matriz de valores e ID de fila del campo de búsqueda elegido en la tabla vinculada."
+        "lookup": "Un campo de solo lectura conectado a un campo de fila de vínculo que devuelve una matriz de valores e ID de fila del campo de búsqueda elegido en la tabla vinculada.",
+        "multipleCollaborators": "Acepta una matriz de objetos donde cada objeto contiene el ID de un usuario."
     },
     "viewFilter": {
         "contains": "contiene",
@@ -142,7 +145,9 @@
         "isDaysAgo": "es hace días",
         "isMonthsAgo": "es hace meses",
         "isYearsAgo": "es hace años",
-        "inThisWeek": "en esta semana"
+        "inThisWeek": "en esta semana",
+        "afterToday": "es después de hoy",
+        "beforeToday": "es antes de hoy"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -227,7 +232,19 @@
         "failedToLockTableDueToConflictTitle": "No se puede crear el campo",
         "failedToLockTableDueToConflictDescription": "Otra operación está actualizando o usando esta tabla, por favor espera hasta que termine antes de intentar de nuevo.",
         "failedToUndoRedoDueToConflictTitle": "No se puede deshacer/rehacer",
-        "failedToUndoRedoDueToConflictDescription": "Otra operación se está ejecutando actualmente bloqueando tu deshacer o rehacer, por favor espera hasta que termine antes de intentar de nuevo."
+        "failedToUndoRedoDueToConflictDescription": "Otra operación se está ejecutando actualmente bloqueando tu deshacer o rehacer, por favor espera hasta que termine antes de intentar de nuevo.",
+        "snapshotBeingCreatedTitle": "Ya se está creando una imagen",
+        "snapshotBeingCreatedDescription": "No es posible crear varias imágenes al mismo tiempo.",
+        "snapshotBeingRestoredTitle": "Se está restaurando la imagen",
+        "maximumSnapshotsReachedTitle": "Límite de imágenes alcanzado",
+        "maximumSnapshotsReachedDescription": "Se ha alcanzado el número máximo de imágenes de un grupo.",
+        "snapshotBeingRestoredDescription": "No es posible utilizar las imágenes que se están restaurando en ese momento.",
+        "snapshotBeingDeletedTitle": "La imagen se está borrando",
+        "snapshotNameNotUniqueTitle": "El nombre de la imagen debe ser único.",
+        "snapshotBeingDeletedDescription": "No es posible utilizar las imágenes que se están borrando.",
+        "snapshotNameNotUniqueDescription": "Todos los nombres de las imágenes tienen que ser únicos por aplicación.",
+        "snapshotOperationLimitExceededTitle": "Límite alcanzado",
+        "snapshotOperationLimitExceededDescription": "Se ha alcanzado el límite del número de operaciones de imagenes instantáneas en ejecución. Favor de esperar hasta que termine la operación anterior."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -333,7 +350,8 @@
         "sumDescription": "Suma todos los valores y devuelve el resultado.",
         "filterDescription": "Filtra una expresión que involucra una referencia de campo de búsqueda/vínculo o una llamada de función de búsqueda.",
         "roundDescription": "Devuelve el primer argumento redondeado al número de dígitos especificado por el segundo argumento.",
-        "intDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales."
+        "intDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales.",
+        "truncDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"

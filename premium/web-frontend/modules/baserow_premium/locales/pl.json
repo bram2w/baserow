@@ -1,0 +1,268 @@
+{
+    "premium": {
+        "user": {
+            "isStaff": "Personel",
+            "isGroupAdmin": "Jest administratorem grupy",
+            "active": "Aktywny",
+            "deactivated": "Dezaktywowany"
+        },
+        "adminType": {
+            "dashboard": "Dashboard",
+            "users": "Użytkownicy",
+            "groups": "Grupy",
+            "licenses": "Licencje"
+        },
+        "viewType": {
+            "kanban": "Kanban"
+        },
+        "exporterType": {
+            "json": "Eksport do JSON",
+            "xml": "Eksport do XML"
+        },
+        "deactivated": "Dostępne w wersji premium"
+    },
+    "premiumModal": {
+        "title": "Uaktualnij, aby użyć {name}",
+        "description": "Twoje konto nie ma dostępu do funkcji premium. Uaktualnij do wersji premium, aby zacząć używać {name}. Możesz uaktualnić swoje konto poprzez uzyskanie licencji. Kliknij na poniższy przycisk, aby zobaczyć ceny.",
+        "viewPricing": "Zobacz cennik"
+    },
+    "rowCommentSidebar": {
+        "onlyPremium": "Komentarze wierszy dostępne są w wersji premium.",
+        "readOnlyNoComment": "Brak komentarzy do tego wiersza.",
+        "noComment": "Brak jeszcze komentarzy dla tego wiersza. Użyj poniższego formularza, aby dodać komentarz.",
+        "comment": "Komentarz",
+        "more": "Więcej informacji",
+        "name": "Komentarze do wierszy"
+    },
+    "rowComment": {
+        "you": "Ty",
+        "anonymous": "Anonimowy"
+    },
+    "registerLicenseModal": {
+        "titleRegisterLicense": "Zarejestruj licencję",
+        "registerLicense": "Zarejestruj licencję",
+        "viewPricing": "Zobacz wycenę",
+        "licenseDescription": "Licencję można uzyskać tylko na baserow.io. Jeśli już kupiłeś licencję, zostanie ona dostarczona e-mailem i możesz uzyskać dostęp z przeglądu na swoim koncie. Skopiuj i wklej klucz licencyjny w polu poniżej i kliknij przycisk, aby zarejestrować klucz licencyjny w tej instancji. Nie można używać tego samego klucza w dwóch różnych instalacjach. {pricingLink}, jeśli nie masz jeszcze klucza.",
+        "licenseError": {
+            "invalidTitle": "Nieważny",
+            "invalid": "Dostarczona licencja jest nieważna.",
+            "unsupportedTitle": "Nieobsługiwane",
+            "unsupported": "Dostarczona licencja jest niekompatybilna z Twoją wersją Baserow. Proszę zaktualizować do najnowszej wersji i spróbować ponownie.",
+            "expiredTitle": "Wygasła",
+            "expired": "Dostarczona licencja wygasła.",
+            "duplicateTitle": "Duplikuj",
+            "duplicate": "Dostarczona licencja jest już zarejestrowana w tej instancji.",
+            "instanceMismatchTitle": "Niezgodność instancji",
+            "instanceMismatch": "Podana licencja nie należy do tej instancji."
+        }
+    },
+    "disconnectLicenseModal": {
+        "disconnectLicense": "Odłącz licencję",
+        "disconnectDescription": "Czy na pewno chcesz odłączyć tę licencję? Jeśli odłączysz tę licencję, gdy jest aktywna, powiązani użytkownicy nie będą już mieli dostępu do planu. Skutecznie usunie licencję. Skontaktuj się z naszym zespołem pomocy technicznej pod adresem {contact}, jeśli chcesz użyć tej licencji w innej instancji hostowanej samodzielnie."
+    },
+    "registerLicenseForm": {
+        "licenseKey": "Klucz licencyjny"
+    },
+    "groupsAdminTable": {
+        "allGroups": "Wszystkie grupy",
+        "id": "ID",
+        "name": "Nazwa",
+        "members": "Członkowie",
+        "applications": "Aplikacje",
+        "created": "Utworzony"
+    },
+    "editGroupContext": {
+        "delete": "Usunąć na stałe"
+    },
+    "deleteGroupModal": {
+        "title": "Usuń {name}",
+        "confirmation": "Czy na pewno chcesz usunąć grupę: {name}?",
+        "comment": "Grupa zostanie trwale usunięta, wraz z powiązanymi z nią aplikacjami. Nie ma możliwości cofnięcia tej akcji.",
+        "delete": "Usuń grupę {name}"
+    },
+    "activeUsers": {
+        "newUsers": "Nowi użytkownicy",
+        "activeUsers": "Aktywni użytkownicy"
+    },
+    "usersAdminTable": {
+        "allUsers": "Wszystkich użytkowników",
+        "id": "ID",
+        "username": "Nazwa użytkownika",
+        "name": "Nazwa",
+        "groups": "Grupy",
+        "lastLogin": "Ostatnie logowanie",
+        "dateJoined": "Zapisany",
+        "active": "Aktywny"
+    },
+    "editUserContext": {
+        "changePassword": "Zmiana hasła",
+        "delete": "Trwałe usuwanie",
+        "impersonate": "Podszywać się pod"
+    },
+    "changePasswordForm": {
+        "newPassword": "Nowe hasło",
+        "repeatPassword": "Powtórz hasło",
+        "changePassword": "Zmień hasło",
+        "error": {
+            "doesntMatch": "To pole musi być zgodne z Twoim hasłem."
+        }
+    },
+    "userForm": {
+        "fullName": "Pełne imię i nazwisko",
+        "email": "E-mail",
+        "isActive": "Jest aktywny",
+        "warning": {
+            "changeEmail": "Zmiana adresu e-mail użytkownika oznacza, że kiedy zaloguje się on do systemu, będzie musiał użyć nowego adresu e-mail. Musi to zostać zakomunikowane temu użytkownikowi.",
+            "inactiveUser": "Kiedy użytkownik jest oznaczony jako nieaktywny, nie może się zalogować.",
+            "userStaff": "Uczynienie użytkownika personelem daje mu dostęp administratora do wszystkich użytkowników, wszystkich grup i możliwość cofnięcia także Twoich własnych uprawnień przynależnych do personelu."
+        },
+        "error": {
+            "invalidName": "Podaj prawidłowe imię i nazwisko, musi mieć więcej niż 2 litery i mniej niż 150.",
+            "invalidEmail": "Proszę wpisać prawidłowy adres e-mail."
+        }
+    },
+    "changeUserPasswordModal": {
+        "changePassword": "Zmień hasło dla {username}"
+    },
+    "deleteUserModal": {
+        "title": "Usuń {username}",
+        "confirmation": "Czy na pewno chcesz usunąć użytkownika: {name}?",
+        "comment1": "Konto użytkownika zostanie usunięte, jednak grupy, których członkiem jest ten użytkownik, będą nadal istnieć. Grupa użytkowników nie zostanie usunięta, nawet jeśli ten użytkownik jest ostatnim użytkownikiem w grupie. Usunięcie ostatniego użytkownika w grupie uniemożliwia każdemu dostęp do tej grupy.",
+        "comment2": "Po usunięciu użytkownika możliwe jest, że nowy użytkownik zarejestruje się ponownie używając adresu e-mail usuniętego użytkownika. Aby uniemożliwić im ponowne zarejestrowanie się, należy dezaktywować użytkownika i nie usuwać go.",
+        "delete": "Usuń użytkownika {username}"
+    },
+    "editUserModal": {
+        "delete": "Usuń użytkownika",
+        "edit": "Edytuj { username }"
+    },
+    "crudTableSearchContext": {
+        "search": "Szukaj"
+    },
+    "tableJSONExporter": {
+        "encoding": "Kodowanie"
+    },
+    "tableXMLExporter": {
+        "encoding": "Kodowanie"
+    },
+    "kanbanViewStackContext": {
+        "createCard": "Utwórz kartę",
+        "editStack": "Edytuj stos",
+        "deleteStack": "Usuń stos",
+        "delete": "Usuń {name}",
+        "deleteDescription": "Czy na pewno chcesz usunąć stos {name}? Usunięcie stosu powoduje usunięcie opcji wyboru pojedynczego pola wyboru, co może spowodować utratę danych, ponieważ wartości wierszy zostaną ustawione na puste."
+    },
+    "kanbanViewHeader": {
+        "stackBy": "Stos według",
+        "stackedBy": "Zestawione przez {fieldName}",
+        "customizeCards": "Dostosuj karty"
+    },
+    "kanbanViewOptionForm": {
+        "selectOption": "Wybierz opcję"
+    },
+    "kanbanViewStakedBy": {
+        "title": "Pole grupowe",
+        "chooseField": "Według którego pola pojedynczego wyboru należy układać karty?"
+    },
+    "kanbanViewStack": {
+        "uncategorized": "Bez kategorii",
+        "tryAgain": "Spróbuj ponownie",
+        "new": "Nowy"
+    },
+    "dashboard": {
+        "title": "Pulpit",
+        "totals": "Ogółem",
+        "totalUsers": "Użytkownicy ogółem",
+        "totalGroups": "Grupy ogółem",
+        "totalApplications": "Aplikacje ogółem",
+        "newUsers": "Nowi użytkownicy",
+        "newUsers24h": "Nowi użytkownicy w ciągu ostatnich 24 godzin",
+        "newUsers7days": "Nowi użytkownicy w ciągu ostatnich 7 dni",
+        "newUsers30days": "Nowi użytkownicy w ciągu ostatnich 30 dni",
+        "activeUsers": "Aktywni użytkownicy",
+        "activeUsers24h": "Aktywni użytkownicy w ciągu ostatnich 24 godzin",
+        "activeUsers7days": "Aktywni użytkownicy w ciągu ostatnich 7 dni",
+        "activeUsers30days": "Aktywni użytkownicy w ciągu ostatnich 30 dni",
+        "viewAll": "Zobacz wszystkie"
+    },
+    "premiumFeatures": {
+        "rowComments": "Komentarze do wierszy",
+        "kanbanView": "Widok kanban",
+        "exports": "Eksport JSON i XML",
+        "admin": "Funkcjonalność administratora",
+        "rowColoring": "Kolorowanie wierszy"
+    },
+    "licenses": {
+        "titleNoLicenses": "Nie znaleziono licencji",
+        "titleLicenses": "Licencje",
+        "noLicensesDescription": "Twoja instancja Baserow nie ma zarejestrowanych żadnych licencji. Licencja premium daje Ci natychmiastowy dostęp do wszystkich dodatkowych funkcji. Jeśli masz już licencję, możesz ją zarejestrować tutaj. Alternatywnie możesz ją uzyskać klikając na poniższy przycisk.",
+        "getLicense": "Uzyskaj licencję",
+        "baserowInstanceId": "Twój identyfikator ID instancji Baserow to:",
+        "registerLicense": "Zarejestruj licencję",
+        "licenceId": "Identyfikator ID licencji",
+        "premium": "Premium",
+        "expired": "Wygasła",
+        "validity": "Obowiązuje od {start} do {end}.",
+        "seats": "miejsca",
+        "premiumFeatures": "Funkcje premium"
+    },
+    "license": {
+        "title": "Abonament {product_code}",
+        "users": "Użytkownicy",
+        "description": "Wybierz użytkowników, którzy mogą korzystać z abonamentu {product_code}. Ta licencja umożliwia przyznanie {product_code} maksymalnie {seats} użytkownikom.",
+        "seatLeft": "Nie masz wolnych miejsc|Masz jedno miejsce|Masz jeszcze {count} miejsc/a",
+        "fillSeats": "Wypełnij miejsca użytkownikami, których nie ma w planie",
+        "removeAll": "Usuń wszystkich użytkowników",
+        "licenseId": "Identyfikator ID licencji",
+        "addUser": "Dodaj użytkownika",
+        "plan": "Abonament",
+        "premium": "premium",
+        "expired": "Wygasły",
+        "validFrom": "Obowiązuje od",
+        "validThrough": "Ważny przez",
+        "validThroughDescription": "Po wygaśnięciu licencji, Ty i wszyscy przypisani użytkownicy nie będą już mogli korzystać z dodatkowych funkcji przyznanych przez licencję.",
+        "lastCheck": "Ostatnie sprawdzenie",
+        "lastCheckDescription": "Licencja jest okresowo sprawdzana pod kątem zmian. Jeśli na przykład odnowiłeś lub uaktualniłeś swoją licencję, zmiany stają się aktywne po sprawdzeniu.",
+        "checkNow": "sprawdzić teraz",
+        "seats": "Miejsca (amount of users)",
+        "licensedTo": "Licencjonowany dla",
+        "premiumFeatures": "Funkcje premium",
+        "applications": "Aplikacje/ bazy danych",
+        "unlimited": "Nieograniczona",
+        "rowUsage": "Wykorzystanie wierszy",
+        "storeUsage": "Wykorzystanie pamięci masowej",
+        "disconnectLicense": "Odłączenie licencji",
+        "disconnectDescription": "Jeśli odłączysz tę licencję, gdy jest aktywna, powiązani użytkownicy nie będą już mieli dostępu do planu. To skutecznie usunie licencję. Skontaktuj się z naszym zespołem pomocy technicznej pod adresem {contact}, jeśli chcesz użyć tej licencji w innej instancji hostowanej samodzielnie."
+    },
+    "viewDecoratorType": {
+        "leftBorderColor": "Lewa granica",
+        "leftBorderColorDescription": "Pokoloruj lewą krawędź wiersza",
+        "backgroundColor": "Kolor tła",
+        "backgroundColorDescription": "Pokoloruj tło wiersza",
+        "onlyForPremium": "Dostępne w wersji premium",
+        "onlyOneDecoratorPerView": "Możesz mieć tylko jedną dekorację tego typu dla widoku"
+    },
+    "decoratorValueProviderType": {
+        "singleSelectColor": "Wybór pojedynczy",
+        "singleSelectColorDescription": "Pokoloruj wiersze tak samo jak pojedyncza wartość wyboru",
+        "conditionalColor": "Warunki",
+        "conditionalColorDescription": "Pokoloruj wiersze, gdy spełniają warunki"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "Według którego pojedynczego pola wyboru powinien być pokolorowany wiersz?"
+    },
+    "conditionalColorValueProviderForm": {
+        "addCondition": "dodaj warunek",
+        "colorAlwaysApply": "Ten kolor obowiązuje domyślnie. Możesz dodać warunki, klikając przycisk „Dodaj warunek”.",
+        "addColor": "dodaj kolor"
+    },
+    "redirectToBaserowModal": {
+        "title": "Przekierowanie do http://baserow.io",
+        "content": "Opuszczasz swoją samodzielnie hostowaną instancję i zostajesz przekierowany na stronę http://baserow.io."
+    },
+    "premiumTopSidebar": {
+        "impersonateDescription": "To konto jest obsługiwane przez podszytego użytkownika. Odświeżenie strony zatrzyma to.",
+        "impersonateStop": "Stop",
+        "premium": "Premium",
+        "premiumDescription": "Twoje konto ma dostęp do funkcji premium globalnie"
+    }
+}
