@@ -112,7 +112,7 @@
         "createdOnReadOnly": "The created on field is a read only field.",
         "url": "Accepts a string that must be a URL.",
         "email": "Accepts a string that must be an email address.",
-        "file": "Accepts an array of objects containing at least the name of the user file.",
+        "file": "Accepts an array of objects containing at least the name of the user file. You can use the \"File uploads\" endpoints to upload the file. The response of those calls can be provided directly as object here. The endpoints can be found in the left sidebar.",
         "singleSelect": "Accepts an integer representing the chosen select option id or null if none is selected.",
         "multipleSelect": "Accepts an array of integers each representing the chosen select option id.",
         "phoneNumber": "Accepts a phone number which has a maximum length of 100 characters consisting solely of digits, spaces and the following characters: Nx,._+*()#=;/- .",
@@ -269,12 +269,17 @@
         "moveRow": "Move row",
         "deleteRow": "Delete row",
         "deleteRows": "Delete rows",
+        "uploadFile": "Upload file",
+        "uploadFileDescription": "The `file` multipart containing the file contents.",
+        "uploadFileViaUrl": "Upload file via URL",
+        "uploadFileViaUrlDescription": "Uploads a file to Baserow by downloading it from the provided URL.",
         "queryParameters": "Query parameters",
         "pathParameters": "Path parameters",
         "requestBodySchema": "Request body schema",
         "userFieldNamesDescription": "When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.",
         "singleRow": "Single",
-        "batchRows": "Batch"
+        "batchRows": "Batch",
+        "fileUploads": "File uploads"
     },
     "exporterType": {
         "csv": "Export to CSV"

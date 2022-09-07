@@ -165,6 +165,11 @@ export default {
       required: false,
       default: '',
     },
+    fileRequest: {
+      type: String,
+      required: false,
+      default: '',
+    },
     request: {
       type: [Object, Boolean],
       required: false,
@@ -226,6 +231,11 @@ export default {
         example += '\n-H "Content-Type: application/json" \\'
       }
 
+      if (this.fileRequest !== '') {
+        index++
+        example += ` \\\n-F file=@${this.fileRequest}`
+      }
+
       example += `\n${this.url}`
 
       if (this.request !== false) {
@@ -250,6 +260,12 @@ export default {
       example += `${this.url} HTTP`
       example += '\nAuthorization: Token YOUR_API_KEY'
 
+      if (this.fileRequest !== '') {
+        example += '\nContent-Length: YOUR_CONTENT_LENGTH'
+        example +=
+          '\nContent-Type: multipart/form-data; boundary=------------------------YOUR_BOUNDARY'
+      }
+
       if (this.request !== false) {
         index += 2
         example += '\nContent-Type: application/json'
@@ -263,7 +279,14 @@ export default {
     },
     getJavaScriptExample() {
       let index = 5
-      let example = 'axios({'
+      let example = ''
+      if (this.fileRequest !== '') {
+        example += 'const formData = new FormData()'
+        example += `\nformData.append('file', '${this.fileRequest}')`
+        example += "\naxios.post('/fileupload', formData, {"
+      } else {
+        example = 'axios({'
+      }
 
       if (this.type !== '') {
         index++
@@ -273,6 +296,11 @@ export default {
       example += `\n  url: "${this.url}",`
       example += '\n  headers: {'
       example += '\n    Authorization: "Token YOUR_API_KEY"'
+
+      if (this.fileRequest !== '') {
+        index++
+        example += ',\n    "Content-Type": "multipart/form-data"'
+      }
 
       if (this.request !== false) {
         index++
@@ -308,6 +336,11 @@ export default {
       }
 
       example += '\n    }'
+
+      if (this.fileRequest !== '') {
+        index++
+        example += `\n    files={'file': open('${this.fileRequest}', 'rb')}`
+      }
 
       if (this.request !== false) {
         index++
