@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import get_error_schema
+from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.core.user_files.exceptions import (
     FileSizeTooLargeError,
     FileURLCouldNotBeReached,
@@ -28,6 +29,7 @@ from .serializers import UserFileSerializer, UserFileUploadViaURLRequestSerializ
 class UploadFileView(APIView):
     permission_classes = (IsAuthenticated,)
     parser_classes = (MultiPartParser,)
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
 
     @extend_schema(
         tags=["User files"],
@@ -63,6 +65,7 @@ class UploadFileView(APIView):
 
 class UploadViaURLView(APIView):
     permission_classes = (IsAuthenticated,)
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
 
     @extend_schema(
         tags=["User files"],

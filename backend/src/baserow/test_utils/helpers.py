@@ -343,9 +343,8 @@ def setup_interesting_test_table(
     )
 
     # multiple collaborators
-    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").set(
-        [user2.id, user3.id]
-    )
+    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").add(user2.id)
+    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").add(user3.id)
 
     context = {"user2": user2, "user3": user3}
 

@@ -113,6 +113,20 @@
           :get-batch-delete-request-example="getBatchDeleteRequestExample"
         />
       </div>
+      <APIDocsUploadFile
+        v-model="exampleData"
+        :get-upload-file-list-url="getUploadFileListUrl"
+        :get-upload-file-example="getUploadFileExample"
+        :get-upload-file-response="getUploadFileResponse"
+      />
+      <APIDocsUploadFileViaURL
+        v-model="exampleData"
+        :get-upload-file-response="getUploadFileResponse"
+        :get-upload-file-via-url-list-url="getUploadFileViaUrlListUrl"
+        :get-upload-file-via-url-request-example="
+          getUploadFileViaUrlRequestExample
+        "
+      />
       <APIDocsFilters />
       <APIDocsErrors v-model="exampleData" />
     </div>
@@ -136,9 +150,14 @@ import APIDocsTableCreateRow from '@baserow/modules/database/components/docs/sec
 import APIDocsTableUpdateRow from '@baserow/modules/database/components/docs/sections/APIDocsTableUpdateRow'
 import APIDocsTableMoveRow from '@baserow/modules/database/components/docs/sections/APIDocsTableMoveRow'
 import APIDocsTableDeleteRow from '@baserow/modules/database/components/docs/sections/APIDocsTableDeleteRow'
+import APIDocsUploadFile from '@baserow/modules/database/components/docs/sections/APIDocsUploadFile'
+import APIDocsUploadFileViaURL from '@baserow/modules/database/components/docs/sections/APIDocsUploadFileViaURL'
 import APIDocsFilters from '@baserow/modules/database/components/docs/sections/APIDocsFilters'
 import APIDocsErrors from '@baserow/modules/database/components/docs/sections/APIDocsErrors'
 import APIDocsMenu from '@baserow/modules/database/components/docs/sections/APIDocsMenu.vue'
+
+// Re-use the FileFieldType docs response example.
+import { FileFieldType } from '../fieldTypes'
 
 export default {
   name: 'APIDocsDatabase',
@@ -154,6 +173,8 @@ export default {
     APIDocsTableUpdateRow,
     APIDocsTableMoveRow,
     APIDocsTableDeleteRow,
+    APIDocsUploadFile,
+    APIDocsUploadFileViaURL,
     APIDocsFilters,
     APIDocsErrors,
     APIDocsMenu,
@@ -371,6 +392,40 @@ export default {
     },
     getDeleteListURL(table) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/batch-delete/`
+    },
+    /**
+     * Generates the 'upload file' file example.
+     */
+    getUploadFileExample() {
+      return 'photo.png'
+    },
+    /**
+     * Generates the 'upload file' and 'upload via URL' file example response.
+     */
+    getUploadFileResponse() {
+      return this.$registry
+        .get('field', FileFieldType.getType())
+        .getDocsResponseExample()[0]
+    },
+    /**
+     * Generates the 'upload file' URI.
+     */
+    getUploadFileListUrl() {
+      return this.$env.PUBLIC_BACKEND_URL + '/api/user-files/upload-file/'
+    },
+    /**
+     * Generates the 'upload file' request example.
+     */
+    getUploadFileViaUrlRequestExample() {
+      return {
+        url: 'https://baserow.io/assets/photo.png',
+      }
+    },
+    /**
+     * Generates the 'upload file via URL' URI.
+     */
+    getUploadFileViaUrlListUrl() {
+      return this.$env.PUBLIC_BACKEND_URL + '/api/user-files/upload-via-url/'
     },
     getItemURL(table, addUserFieldParam) {
       return (

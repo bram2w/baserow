@@ -180,6 +180,14 @@
         "rowId": "Moves the row related to the value.",
         "before": "Moves the row related to the given `row_id` before the row related to the provided value. If not provided, then the row will be moved to the end."
     },
+    "apiDocsUploadFile": {
+        "description": "Uploads a file to Baserow by uploading the file contents directly. A `file` multipart is expected containing the file contents. The response can then be used to [upload a file to a row]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "file": "The `file` multipart containing the file contents."
+    },
+    "apiDocsUploadFileViaURL": {
+        "description": "Uploads a file to Baserow by downloading it from the provided URL. The response can then be used to [upload a file to a row]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "url": "The URL you would like Baserow to download and upload on your behalf."
+    },
     "apiDocsTableUpdateRow": {
         "description": "Updates an existing {name} row.",
         "rowId": "The unique identifier of the row that needs to be updated.",
