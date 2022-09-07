@@ -247,7 +247,8 @@ class SnapshotHandler:
     def _schedule_deletion(self, snapshot: Snapshot):
         snapshot.mark_for_deletion = True
         snapshot.save()
-        delete_application_snapshot.delay(snapshot.snapshot_to_application.id)
+        if snapshot.snapshot_to_application is not None:
+            delete_application_snapshot.delay(snapshot.snapshot_to_application.id)
 
     def delete(self, snapshot_id: int, performed_by: User) -> None:
         """
