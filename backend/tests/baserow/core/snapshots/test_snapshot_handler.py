@@ -105,3 +105,22 @@ def test_delete_expired_snapshots(data_fixture: Fixtures, settings):
         SnapshotHandler().delete_expired()
 
     assert Snapshot.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_skip_schedule_deletion_when_snapshot_not_created_yet(data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    application = data_fixture.create_database_application(group=group, order=1)
+    snapshot = data_fixture.create_snapshot(
+        user=user,
+        snapshot_from_application=application,
+        snapshot_to_application=None,
+        created_by=user,
+        name="snapshot",
+    )
+
+    # passes when there is no exception
+    SnapshotHandler()._schedule_deletion(snapshot)
+
+    assert snapshot.mark_for_deletion is True
