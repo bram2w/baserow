@@ -3,7 +3,9 @@ from io import BytesIO
 from django.apps.registry import apps
 
 import pytest
+from faker import Faker
 
+from baserow.contrib.database.fields.field_types import MultipleCollaboratorsFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import MultipleCollaboratorsField
 from baserow.contrib.database.rows.handler import RowHandler
@@ -386,3 +388,40 @@ def test_multiple_collaborators_model_enhanced_field(
         row_3_relations = getattr(rows[2], f"field_{field.id}").all()
         row_3_relation_ids = [u.id for u in row_3_relations]
         assert row_3_relation_ids == [user_2.id, user.id]
+
+
+@pytest.mark.django_db
+def test_multiple_collaborators_field_type_random_value(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+    user3 = data_fixture.create_user(group=group)
+    database = data_fixture.create_database_application(
+        user=user, group=group, name="database"
+    )
+    table = data_fixture.create_database_table(name="table", database=database)
+    field_handler = FieldHandler()
+    cache = {}
+    fake = Faker()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multiple collaborators",
+    )
+
+    possible_collaborators = [user, user2, user3]
+    random_choice = MultipleCollaboratorsFieldType().random_value(field, fake, cache)
+    assert type(random_choice) is list
+    assert (
+        set([x.id for x in possible_collaborators]).issuperset(set(random_choice))
+        is True
+    )
+
+    random_choice = MultipleCollaboratorsFieldType().random_value(field, fake, cache)
+    assert type(random_choice) is list
+    assert (
+        set([x.id for x in possible_collaborators]).issuperset(set(random_choice))
+        is True
+    )
