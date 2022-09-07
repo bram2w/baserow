@@ -1,15 +1,13 @@
 from django.urls import re_path
 
-
 from .views import (
-    RowsView,
-    RowView,
+    BatchDeleteRowsView,
+    BatchRowsView,
     RowMoveView,
     RowNamesView,
-    BatchRowsView,
-    BatchDeleteRowsView,
+    RowsView,
+    RowView,
 )
-
 
 app_name = "baserow.contrib.database.api.rows"
 

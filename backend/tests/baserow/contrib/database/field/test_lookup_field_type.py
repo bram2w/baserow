@@ -1,7 +1,8 @@
 from io import BytesIO
 
-import pytest
 from django.urls import reverse
+
+import pytest
 from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
@@ -10,9 +11,9 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
+    BaserowFormulaArrayType,
     BaserowFormulaInvalidType,
     BaserowFormulaNumberType,
-    BaserowFormulaArrayType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.db import specific_iterator
@@ -454,9 +455,7 @@ def test_import_export_lookup_field_when_through_field_trashed(
     lookup.save()
 
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a,
-        lookup_serialized,
-        id_mapping,
+        table_a, lookup_serialized, id_mapping
     )
     assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name
@@ -507,9 +506,7 @@ def test_import_export_lookup_field_trashed_target_field(data_fixture, api_clien
     lookup.save()
 
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a,
-        lookup_serialized,
-        id_mapping,
+        table_a, lookup_serialized, id_mapping
     )
     assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name

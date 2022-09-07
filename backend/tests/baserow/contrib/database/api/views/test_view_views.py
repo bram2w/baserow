@@ -1,10 +1,11 @@
 from unittest.mock import patch
 
-import pytest
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
+
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -14,10 +15,8 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
-from baserow.contrib.database.views.models import View, GridView
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-)
+from baserow.contrib.database.views.models import GridView, View
+from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.trash.handler import TrashHandler
 
@@ -93,6 +92,56 @@ def test_list_views(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_list_views_with_limit(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    view_1 = data_fixture.create_grid_view(table=table_1, order=1)
+    data_fixture.create_grid_view(table=table_1, order=3)
+
+    response = api_client.get(
+        reverse("api:database:views:list", kwargs={"table_id": table_1.id}),
+        {"limit": 1},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == view_1.id
+
+
+@pytest.mark.django_db
+def test_list_views_with_type_filter(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table_1, order=1)
+    gallery = data_fixture.create_gallery_view(table=table_1, order=2)
+
+    response = api_client.get(
+        reverse("api:database:views:list", kwargs={"table_id": table_1.id}),
+        {"type": "grid"},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == grid.id
+
+    response = api_client.get(
+        reverse("api:database:views:list", kwargs={"table_id": table_1.id}),
+        {"type": "gallery"},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == gallery.id
 
 
 @pytest.mark.django_db
@@ -393,6 +442,24 @@ def test_get_view_field_options(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_view_field_options_as_template(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data_fixture.create_template(group=grid.table.database.group)
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_patch_view_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -469,6 +536,24 @@ def test_patch_view_field_options(api_client, data_fixture):
         response_json = response.json()
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response_json["error"] == "ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS"
+
+
+@pytest.mark.django_db
+def test_patch_view_field_options_as_template(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.patch(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data_fixture.create_template(group=grid.table.database.group)
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.patch(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.django_db

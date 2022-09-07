@@ -1,5 +1,5 @@
 /**
- * Middleware that changes the table loading state to true before the the route
+ * Middleware that changes the table loading state to true before the route
  * changes. That way we can show a loading animation to the user when switching
  * between views.
  */

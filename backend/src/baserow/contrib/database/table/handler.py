@@ -1,50 +1,49 @@
 import logging
 import traceback
-from typing import Any, cast, NewType, List, Tuple, Optional, Dict
+from typing import Any, Dict, List, NewType, Optional, Tuple, cast
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import ProgrammingError, DatabaseError
+from django.db import DatabaseError, ProgrammingError
 from django.db.models import QuerySet, Sum
-from django.utils import timezone
-from django.utils import translation
+from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
-from baserow.core.utils import Progress
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
+    InvalidBaserowFieldName,
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
-    InvalidBaserowFieldName,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     ChildProgressBuilder,
+    Progress,
     find_unused_name,
     split_ending_number,
 )
+
+from .constants import TABLE_CREATION
 from .exceptions import (
+    FailedToLockTableDueToConflict,
+    InitialTableDataDuplicateName,
+    InitialTableDataLimitExceeded,
+    InvalidInitialTableData,
     TableDoesNotExist,
     TableNotInDatabase,
-    InvalidInitialTableData,
-    InitialTableDataLimitExceeded,
-    InitialTableDataDuplicateName,
-    FailedToLockTableDueToConflict,
 )
-from baserow.contrib.database.rows.handler import RowHandler
-
 from .models import Table
-from .signals import table_created, table_updated, table_deleted, tables_reordered
-from .constants import TABLE_CREATION
-
+from .signals import table_created, table_deleted, table_updated, tables_reordered
 
 BATCH_SIZE = 1024
 
@@ -379,7 +378,7 @@ class TableHandler:
     def order_tables(self, user: AbstractUser, database: Database, order: List[int]):
         """
         Updates the order of the tables in the given database. The order of the views
-        that are not in the `order` parameter set set to `0`.
+        that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
         :param database: The database of which the views must be updated.
@@ -414,18 +413,49 @@ class TableHandler:
         name, _ = split_ending_number(proposed_name)
         return find_unused_name([name], existing_tables_names, max_length=255)
 
-    def _setup_id_mapping_for_table_duplication(
-        self, serialized_table: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _create_related_link_fields_in_existing_tables_to_import(
+        self, serialized_table: Dict[str, Any], id_mapping: Dict[str, Any]
+    ) -> List[Tuple[Table, Dict[str, Any]]]:
         """
-        Sets up the id mapping for a table duplication.
+        Creates extra serialized field dicts to pass to the table importer so it will
+        create the reverse link row fields in any existing tables.
 
         :param serialized_table: The serialized table.
-        :return: The .
+        :param id_mapping: The id mapping.
+        :return : A list of external tables with the link row fields to import into
+            them.
         """
 
-        # TODO: fix this hack
-        return {"operation": "duplicate_table"}
+        from baserow.contrib.database.fields.field_types import LinkRowFieldType
+
+        external_fields = []
+        for serialized_field in serialized_table["fields"]:
+            if serialized_field["type"] != LinkRowFieldType.type:
+                continue
+
+            link_row_table_id = serialized_field.get("link_row_table_id", None)
+            self_referencing_field = link_row_table_id == serialized_table["id"]
+            link_row_table = self.get_table(link_row_table_id)
+            has_related_field = serialized_field.get("link_row_related_field_id")
+            id_mapping["database_tables"][link_row_table_id] = link_row_table_id
+
+            if self_referencing_field or not has_related_field:
+                continue
+
+            related_field_name = FieldHandler().find_next_unused_field_name(
+                link_row_table, [serialized_table["name"]]
+            )
+            serialized_related_link_row_field = {
+                "id": serialized_field["link_row_related_field_id"],
+                "name": related_field_name,
+                "type": LinkRowFieldType.type,
+                "link_row_table_id": serialized_table["id"],
+                "link_row_related_field_id": serialized_field["id"],
+                "order": Field.get_last_order(link_row_table),
+            }
+            external_fields.append((link_row_table, serialized_related_link_row_field))
+
+        return external_fields
 
     def duplicate_table(
         self,
@@ -459,10 +489,18 @@ class TableHandler:
         exported_table = serialized_tables[0]
         exported_table["name"] = self.find_unused_table_name(database, table.name)
 
+        id_mapping: Dict[str, Any] = {"database_tables": {}}
+
+        link_fields_to_import_to_existing_tables = (
+            self._create_related_link_fields_in_existing_tables_to_import(
+                exported_table, id_mapping
+            )
+        )
         imported_tables = database_type.import_tables_serialized(
             database,
             [exported_table],
-            self._setup_id_mapping_for_table_duplication(exported_table),
+            id_mapping,
+            external_table_fields_to_import=link_fields_to_import_to_existing_tables,
         )
         progress.increment()
 
@@ -508,20 +546,20 @@ class TableHandler:
         table_deleted.send(self, table_id=table_id, table=table, user=user)
 
     @classmethod
-    def count_rows(cls):
+    def count_rows(cls) -> int:
         """
         Counts how many rows each user table has and stores the count
         for later reference.
+        :returns: The number of tables counted.
         """
 
         chunk_size = 200
         tables_to_store = []
         time = timezone.now()
-        for i, table in enumerate(
-            Table.objects.filter(database__group__template__isnull=True).iterator(
-                chunk_size=chunk_size
-            )
-        ):
+        i = 0
+        for table in Table.objects.filter(
+            database__group__template__isnull=True
+        ).iterator(chunk_size=chunk_size):
             try:
                 count = table.get_model(field_ids=[]).objects.count()
                 table.row_count = count
@@ -539,11 +577,14 @@ class TableHandler:
                     tables_to_store, ["row_count", "row_count_updated_at"]
                 )
                 tables_to_store = []
+            i += 1
 
         if len(tables_to_store) > 0:
             Table.objects.bulk_update(
                 tables_to_store, ["row_count", "row_count_updated_at"]
             )
+
+        return i
 
     @classmethod
     def get_total_row_count_of_group(cls, group_id: int) -> int:

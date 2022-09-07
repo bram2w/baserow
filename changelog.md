@@ -13,7 +13,62 @@ For example:
 
 ### Bug Fixes
 
+### Refactors
+
+## Released (2022-09-07 1.12.0)
+
+### New Features
+
+* Added Multiple Collaborators field type. [#1119](https://gitlab.com/bramw/baserow/-/issues/1119)
+* Added missing success printouts to `count_rows` and `calculate_storage_usage` commands.
+* Add `isort` settings to sort python imports.
+* Introduced a premium form survey style theme. [#524](https://gitlab.com/bramw/baserow/-/issues/524).
+* Allow creating new rows when selecting a related row [#1064](https://gitlab.com/bramw/baserow/-/issues/1064).
+* Add row url parameter to `gallery` and `kanban` view.
+* Enable `file field` in `form` views. [#525](https://gitlab.com/bramw/baserow/-/issues/525)
+* Only allow relative urls in the in the original query parameter.
+* Force browser language when viewing a public view. [#834](https://gitlab.com/bramw/baserow/-/issues/834)
+* Search automatically after 400ms when chosing a related field via the modal. [#1091](https://gitlab.com/bramw/baserow/-/issues/1091)
+* Add cancel button to field update context [#1020](https://gitlab.com/bramw/baserow/-/issues/1020)
+* Sort fields on row select modal by the order of the first view in the related table. [#1062](https://gitlab.com/bramw/baserow/-/issues/1062)
+* New signals `user_updated`, `user_deleted`, `user_restored`, `user_permanently_deleted` were added to track user changes.
+* `list_groups` endpoint now also returns the list of all group users for each group.
+* Fields can now be duplicated with their cell values also. [#964](https://gitlab.com/bramw/baserow/-/issues/964)
+* Add a tooltip to applications and tables in the left sidebar to show the full name. [#986](https://gitlab.com/bramw/baserow/-/issues/986)
+* Allow not creating a reversed relationship with the link row field. [#1063](https://gitlab.com/bramw/baserow/-/issues/1063)
+* Add API token authentication support to multipart and via-URL file uploads. [#255](https://gitlab.com/bramw/baserow/-/issues/255)
+
+### Bug Fixes
+* Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
+* Fix various misspellings. Contributed by [@Josh Soref](https://github.com/jsoref/) using [check-spelling.dev](https://check-spelling.dev/)
+* Fixed a bug when importing Airtable base with a date field less than 1000. [#1046](https://gitlab.com/bramw/baserow/-/issues/1046)
+* Prefetch field options on views that are iterated over on field update realtime events [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
+* Clearing cell values multi-selected from right to left with backspace shifts selection to the right and results in wrong deletion. [#1134](https://gitlab.com/bramw/baserow/-/issues/1134)
+* Fixed a bug that prevent to use arrows keys in the grid view when a formula field is selected. [#1136](https://gitlab.com/bramw/baserow/-/issues/1136)
+* Fixed a bug that make the grid view crash when searching text and a formula field is referencing a singe-select field. [#1110](https://gitlab.com/bramw/baserow/-/issues/1110)
+* Fixed horizontal scroll on Mac OSX.
+* Fixed bug where the row coloring didn't work in combination with group level premium.
+* Fixed bug where the link row field lookup didn't work in combination with password 
+  protected views.
+* "Link to table" field does not allow submitting empty values. [#1159](https://gitlab.com/bramw/baserow/-/issues/1159)
+* Fixed bug where the "Create option" button was not visible for the single and multiple
+  select fields in the row edit modal.
+* Resolve an issue with uploading a file via a URL when it contains a querystring. [#1034](https://gitlab.com/bramw/baserow/-/issues/1034)
+* Resolve an invalid URL in the "Backend URL mis-configuration detected" error message. [#967](https://gitlab.com/bramw/baserow/-/merge_requests/967)
+* Fixed broken call grouping when getting linked row names from server.
+* Add new filter types 'is after today' and 'is before today'. [#1093](https://gitlab.com/bramw/baserow/-/issues/1093)
+
+### Refactors
+* Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
+* Make it possible to copy/paste/import from/to text values for multi-select and file fields. [#913](https://gitlab.com/bramw/baserow/-/issues/913)
+* Users can copy/paste images into a file field. [#367](https://gitlab.com/bramw/baserow/-/issues/367)
+* Fixed error when sharing a view publicly with sorts more than one multi-select field. [#1082](https://gitlab.com/bramw/baserow/-/issues/1082)
+* Fixed crash in gallery view with searching. [#1130](https://gitlab.com/bramw/baserow/-/issues/1130)
+
 ### Breaking Changes
+
+* The export format of file fields has changed for CSV files. The new format is `fileName1.ext (file1url),fileName2.ext (file2url), ...`.
+* The date parsing takes the date format into account when parsing unless the format respect the ISO-8601 format. This will change the value for ambiguous dates like `02/03/2020`.
 
 ## Released (2022-07-27 1.11.0)
 
@@ -61,6 +116,7 @@ For example:
 * Show modal when the users clicks on a deactivated premium features. [#1066](https://gitlab.com/bramw/baserow/-/issues/1066)
 * Replaced all custom alert code with `Alert` component [#1016](https://gitlab.com/bramw/baserow/-/issues/1016)
 * Add ability to create and restore snapshots. [#141](https://gitlab.com/bramw/baserow/-/issues/141)
+* When viewing an expanded row switch to a unique URL which links to that row. [#938](https://gitlab.com/bramw/baserow/-/issues/938)
 
 ### Bug Fixes
 
@@ -75,6 +131,8 @@ For example:
 * Fix backspace and delete keys breaking after selecting a formula text cell. [#1085](https://gitlab.com/bramw/baserow/-/issues/1085)
 * Fixed problem when new webhooks would be sent twice with both old and new payload.
 * Fixed problem causing kanban view duplication to fail silently. [#1109](https://gitlab.com/bramw/baserow/-/issues/1109)
+* Display round and trunc functions in the formula edit modal, rename int to trunc and make these functions handle weird inputs better. [#1095](https://gitlab.com/bramw/baserow/-/issues/1095)
+* Fix some rare errors when combining the if and divide formula functions. [#1086](https://gitlab.com/bramw/baserow/-/issues/1086)
 
 ### Breaking Changes
 
@@ -218,7 +276,7 @@ For example:
 * Add loading bar when syncing templates to make it obvious Baserow is still loading.
 * Fixed bug where old values are missing in the update trigger of the webhook.
 * Scroll to the first error message if the form submission fail
-* Improved backup_baserow spltting multiselect through tables in separate batches.
+* Improved backup_baserow splitting multiselect through tables in separate batches.
 * Fixed a bug that truncated characters for email in the sidebar
 * **breaking change** The API endpoint `/api/database/formula/<field_id>/type/` now requires
   `table_id` instead of `field_id`, and also `name` in the request body.

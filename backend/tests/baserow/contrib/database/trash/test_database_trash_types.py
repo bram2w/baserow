@@ -1,32 +1,33 @@
 from unittest.mock import patch
 
-import pytest
 from django.conf import settings
 from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
+
+import pytest
 from freezegun import freeze_time
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     Field,
-    TextField,
+    FormulaField,
     LinkRowField,
     LookupField,
-    FormulaField,
+    TextField,
 )
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.trash.models import TrashedRows
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import (
+    CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
     RelatedTableTrashedException,
-    CannotRestoreChildBeforeParent,
 )
 from baserow.core.trash.handler import TrashHandler
 
@@ -617,7 +618,7 @@ def test_restoring_a_trashed_link_field_restores_the_opposing_field_also(
         name="Customer",
         link_row_table=customers_table,
     )
-    TrashHandler.trash(user, database.group, database, link_field_1)
+    FieldHandler().delete_field(user, link_field_1)
 
     assert LinkRowField.trash.count() == 2
 
@@ -1023,18 +1024,21 @@ def test_a_restored_field_will_have_its_name_changed_to_ensure_it_is_unique(
     row_handler = RowHandler()
 
     # Create a primary field and some example data for the customers table.
-    customers_primary_field = field_handler.create_field(
-        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    customers_field = field_handler.create_field(
+        user=user,
+        table=customers_table,
+        type_name="text",
+        name="Name",
     )
     row_handler.create_row(
         user=user,
         table=customers_table,
-        values={f"field_{customers_primary_field.id}": "John"},
+        values={f"field_{customers_field.id}": "John"},
     )
     row_handler.create_row(
         user=user,
         table=customers_table,
-        values={f"field_{customers_primary_field.id}": "Jane"},
+        values={f"field_{customers_field.id}": "Jane"},
     )
 
     link_field_1 = field_handler.create_field(
@@ -1044,8 +1048,8 @@ def test_a_restored_field_will_have_its_name_changed_to_ensure_it_is_unique(
         name="Customer",
         link_row_table=customers_table,
     )
-    TrashHandler.trash(user, database.group, database, link_field_1)
-    TrashHandler.trash(user, database.group, database, customers_primary_field)
+    field_handler.delete_field(user, link_field_1)
+    field_handler.delete_field(user, customers_field)
 
     assert LinkRowField.trash.count() == 2
 
@@ -1075,13 +1079,13 @@ def test_a_restored_field_will_have_its_name_changed_to_ensure_it_is_unique(
     assert link_field_2.link_row_related_field.name == "Table"
     assert link_field_1.link_row_related_field.name == "Table (Restored)"
 
-    TrashHandler.restore_item(user, "field", customers_primary_field.id)
-    customers_primary_field.refresh_from_db()
+    TrashHandler.restore_item(user, "field", customers_field.id)
+    customers_field.refresh_from_db()
 
     assert TextField.objects.count() == 3
     assert clashing_field.name == "Name"
     assert another_clashing_field.name == "Name (Restored)"
-    assert customers_primary_field.name == "Name (Restored) 2"
+    assert customers_field.name == "Name (Restored) 2"
 
     # Check that a normal trash and restore when there aren't any naming conflicts will
     # return the old names.
@@ -1127,9 +1131,7 @@ def test_perm_delete_related_link_row_field(data_fixture):
         link_row_table=customers_table,
     )
 
-    TrashHandler.trash(
-        user, database.group, database, link_field_1.link_row_related_field
-    )
+    field_handler.delete_field(user, link_field_1.link_row_related_field)
     assert TrashEntry.objects.count() == 1
     link_field_1.refresh_from_db()
     assert link_field_1.trashed

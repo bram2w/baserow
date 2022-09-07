@@ -2,24 +2,25 @@ from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import (
-    MultipleSelectField,
-    TextField,
-    LongTextField,
-    NumberField,
-    RatingField,
     BooleanField,
-    DateField,
-    LinkRowField,
-    FileField,
-    SingleSelectField,
-    SelectOption,
-    URLField,
-    EmailField,
-    PhoneNumberField,
-    LastModifiedField,
     CreatedOnField,
+    DateField,
+    EmailField,
+    FileField,
     FormulaField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
     LookupField,
+    MultipleCollaboratorsField,
+    MultipleSelectField,
+    NumberField,
+    PhoneNumberField,
+    RatingField,
+    SelectOption,
+    SingleSelectField,
+    TextField,
+    URLField,
 )
 from baserow.contrib.database.formula import FormulaHandler
 
@@ -218,6 +219,25 @@ class FieldFixtures:
             kwargs["order"] = 0
 
         field = MultipleSelectField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_multiple_collaborators_field(
+        self, user=None, create_field=True, **kwargs
+    ):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        field = MultipleCollaboratorsField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

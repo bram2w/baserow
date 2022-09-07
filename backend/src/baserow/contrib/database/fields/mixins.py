@@ -1,6 +1,6 @@
 from django.db import models
-import pytz
 
+import pytz
 
 DATE_FORMAT = {
     "EU": {"name": "European (D/M/Y)", "format": "%d/%m/%Y", "sql": "DD/MM/YYYY"},

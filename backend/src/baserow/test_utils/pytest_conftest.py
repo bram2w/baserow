@@ -1,9 +1,10 @@
-import os
 import contextlib
+import os
 
-import pytest
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS
+
+import pytest
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
@@ -64,8 +65,8 @@ def patch_filefield_storage(tmpdir):
     """
 
     from django.apps import apps
-    from django.db.models import FileField
     from django.core.files.storage import FileSystemStorage
+    from django.db.models import FileField
 
     # Cache the storage
     _storage = None

@@ -1,32 +1,29 @@
 from django.db import transaction
+
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_body
-from baserow.api.errors import (
-    ERROR_USER_NOT_IN_GROUP,
-)
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_WITH_FORMULA,
     ERROR_FIELD_SELF_REFERENCE,
-)
-from baserow.contrib.database.api.tables.errors import (
-    ERROR_TABLE_DOES_NOT_EXIST,
+    ERROR_WITH_FORMULA,
 )
 from baserow.contrib.database.api.formula.serializers import (
     TypeFormulaRequestSerializer,
     TypeFormulaResultSerializer,
 )
+from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
 )
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.fields.models import FormulaField
 from baserow.contrib.database.formula import BaserowFormulaException
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInGroup
 

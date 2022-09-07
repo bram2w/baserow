@@ -256,7 +256,7 @@
         "noGroupText": "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
         "createGroup": "Create group",
         "becomeGithubSponsor": "Become a GitHub sponsor",
-        "starOnGitlab": "Star us on Gitlab",
+        "starOnGitlab": "Star us on GitLab",
         "shareOnTwitter": "Tweet about Baserow",
         "shareOnReddit": "Share on Reddit",
         "shareOnFacebook": "Share on Facebook",
@@ -333,7 +333,7 @@
         "modal": {
             "title": "Pre-fill values dynamically",
             "descriptionPartOne": "Forms can be prefilled in order to help the user fill in the form faster.",
-            "descriptionPartTwo": "All fields which are availbale in the form can be prefilled.",
+            "descriptionPartTwo": "All fields which are available in the form can be prefilled.",
             "howToPrefill": {
                 "title": "How to prefill a form",
                 "description": "If you want to prefill a form with data you can do so via query parameters added to the public form url. These query parameters are prefixed with `prefill` to avoid any collision with potential future query parameters."

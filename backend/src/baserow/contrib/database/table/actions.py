@@ -1,18 +1,17 @@
 import dataclasses
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.core.utils import Progress
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionType, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import ApplicationActionScopeType
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import ChildProgressBuilder
+from baserow.core.utils import ChildProgressBuilder, Progress
 
 
 class CreateTableActionType(ActionType):
@@ -60,7 +59,7 @@ class CreateTableActionType(ActionType):
         )
 
         params = cls.Params(table.id)
-        cls.register_action(user, params, cls.scope(table.database.id))
+        cls.register_action(user, params, cls.scope(database.id))
 
         return table, error_report
 
@@ -246,11 +245,11 @@ class DuplicateTableActionType(ActionType):
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Table:
         """
-        Duplicate the table.
+        Duplicate a table.
         Undoing this action trashes the duplicated table and redoing restores it.
 
         :param user: The user on whose behalf the table is created.
-        :param table: The name of the table is created.
+        :param table: The table instance to duplicate.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the duplication.
         :return: The duplicated table instance.

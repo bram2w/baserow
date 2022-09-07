@@ -23,7 +23,7 @@ class FormulaMigration:
 
     Normally for most formula upgrades this should be ALL_FORMULAS (see
 
-    Specifically this will control which FormulaField's have `.save(recaculate=True)`
+    Specifically this will control which FormulaField's have `.save(recalculate=True)`
     called on them (which recalculates their attributes given the current formula
     version)
     """
@@ -31,7 +31,7 @@ class FormulaMigration:
 
     """
     If this version requires formulas from older versions to have their field
-    dependencies recalculated using FieldDependencyHandler.rebuild_depedencies then
+    dependencies recalculated using FieldDependencyHandler.rebuild_dependencies then
     provide a filter here matching the formula fields that should have this done.
 
     Most

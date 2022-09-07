@@ -3,23 +3,22 @@ from django.urls import re_path
 from baserow.contrib.database.views.registries import view_type_registry
 
 from .views import (
-    ViewsView,
-    ViewView,
     DuplicateViewView,
     OrderViewsView,
+    PublicViewAuthView,
+    PublicViewInfoView,
+    PublicViewLinkRowFieldLookupView,
+    RotateViewSlugView,
+    ViewDecorationsView,
+    ViewDecorationView,
+    ViewFieldOptionsView,
     ViewFiltersView,
     ViewFilterView,
     ViewSortingsView,
     ViewSortView,
-    ViewDecorationsView,
-    ViewDecorationView,
-    ViewFieldOptionsView,
-    RotateViewSlugView,
-    PublicViewAuthView,
-    PublicViewLinkRowFieldLookupView,
-    PublicViewInfoView,
+    ViewsView,
+    ViewView,
 )
-
 
 app_name = "baserow.contrib.database.api.views"
 

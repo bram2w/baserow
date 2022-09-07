@@ -1,19 +1,19 @@
 from django.http import HttpResponse
-from django.urls import path, include
+from django.urls import include, path
 
 from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView
 
-from baserow.core.registries import plugin_registry, application_type_registry
+from baserow.core.registries import application_type_registry, plugin_registry
 
+from .applications import urls as application_urls
+from .groups import urls as group_urls
+from .jobs import urls as jobs_urls
 from .settings import urls as settings_urls
+from .snapshots import urls as snapshots_urls
+from .templates import urls as templates_urls
+from .trash import urls as trash_urls
 from .user import urls as user_urls
 from .user_files import urls as user_files_urls
-from .groups import urls as group_urls
-from .templates import urls as templates_urls
-from .applications import urls as application_urls
-from .trash import urls as trash_urls
-from .jobs import urls as jobs_urls
-from .snapshots import urls as snapshots_urls
 
 app_name = "baserow.api"
 

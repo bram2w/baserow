@@ -4,7 +4,6 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-
 ERROR_FORM_DOES_NOT_EXIST = (
     "ERROR_FORM_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,
@@ -19,4 +18,10 @@ ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM = (
     "ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM",
     HTTP_401_UNAUTHORIZED,
     "The user does not have the permissions to see this password protected shared form.",
+)
+
+ERROR_VIEW_HAS_NO_PUBLIC_FILE_FIELD = (
+    "ERROR_VIEW_HAS_NO_PUBLIC_FILE_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The view has no public file field.",
 )

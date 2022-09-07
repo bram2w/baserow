@@ -1,7 +1,8 @@
 from unittest.mock import patch
 
-import pytest
 from django.db.models import Value
+
+import pytest
 
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,

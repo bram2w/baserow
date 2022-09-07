@@ -1,22 +1,14 @@
 import contextlib
-from django.db import models
-from rest_framework import serializers
-from typing import (
-    TypeVar,
-    Generic,
-    Dict,
-    List,
-    ValuesView,
-    Tuple,
-    Type,
-    Any,
-    Optional,
-)
+from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, ValuesView
 
 from django.core.exceptions import ImproperlyConfigured
+from django.db import models
 
-from baserow.api.utils import get_serializer_class, map_exceptions, ExceptionMappingType
-from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
+from rest_framework import serializers
+
+from baserow.api.utils import ExceptionMappingType, get_serializer_class, map_exceptions
+
+from .exceptions import InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
 
 
 class Instance(object):
@@ -142,9 +134,7 @@ class CustomFieldsInstanceMixin:
             base_class=base_class, request_serializer=request
         )
 
-        return serializer_class(
-            model_instance, context={"instance_type": self, **context}, **kwargs
-        )
+        return serializer_class(model_instance, context=context, **kwargs)
 
 
 class APIUrlsInstanceMixin:

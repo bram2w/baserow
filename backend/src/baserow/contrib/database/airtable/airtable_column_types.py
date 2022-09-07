@@ -1,36 +1,36 @@
 import logging
 import traceback
-
 from datetime import datetime
 from decimal import Decimal
-from pytz import UTC, timezone as pytz_timezone
 
 from django.core.exceptions import ValidationError
 
+from pytz import UTC
+from pytz import timezone as pytz_timezone
+
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import (
-    TextField,
-    LongTextField,
-    URLField,
-    NumberField,
     NUMBER_MAX_DECIMAL_PLACES,
-    RatingField,
     BooleanField,
-    DateField,
-    LastModifiedField,
     CreatedOnField,
-    LinkRowField,
+    DateField,
     EmailField,
     FileField,
-    SingleSelectField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
     MultipleSelectField,
+    NumberField,
     PhoneNumberField,
+    RatingField,
+    SingleSelectField,
+    TextField,
+    URLField,
 )
+from baserow.contrib.database.fields.registries import field_type_registry
 
 from .helpers import import_airtable_date_type_options, set_select_options_on_field
 from .registry import AirtableColumnType
-
 
 logger = logging.getLogger(__name__)
 
@@ -197,16 +197,22 @@ class DateAirtableColumnType(AirtableColumnType):
             )
         except ValueError:
             tb = traceback.format_exc()
-            print(f"Importing Airtable datetime cell failed failed because of: \n{tb}")
-            logger.error(
-                f"Importing Airtable datetime cell failed failed because of: \n{tb}"
-            )
+            print(f"Importing Airtable datetime cell failed because of: \n{tb}")
+            logger.error(f"Importing Airtable datetime cell failed because of: \n{tb}")
             return None
 
         if baserow_field.date_include_time:
             return f"{value.isoformat()}"
         else:
-            return value.strftime("%Y-%m-%d")
+            # WORKAROUND: if the year value is < 1000, Python has a bug that will not
+            # add leading zeros to generate the year in four digits format, hence,
+            # we're adding the missing zeros if needed. source:
+            # https://stackoverflow.com/questions/71118275/parsing-three-digit-years-using-datetime
+            formatted_date = value.strftime("%Y-%m-%d")
+            zeros = 4 - formatted_date.index("-")
+            if zeros:
+                formatted_date = f"{'0' * zeros}{formatted_date}"
+            return formatted_date
 
 
 class FormulaAirtableColumnType(AirtableColumnType):

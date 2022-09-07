@@ -1,19 +1,20 @@
 import re
-from typing import Dict, Any, Union, Type
+from typing import Any, Dict, Type, Union
 
+from django.apps import apps
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, F, QuerySet
+from django.db.models import F, Q, QuerySet
 
 from baserow.contrib.database.fields.exceptions import (
+    FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
-    FilterFieldNotFound,
 )
 from baserow.contrib.database.fields.field_filters import (
-    FilterBuilder,
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
+    FilterBuilder,
 )
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -24,13 +25,13 @@ from baserow.contrib.database.table.cache import (
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
+from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
-    OrderableMixin,
     CreatedAndUpdatedOnMixin,
+    OrderableMixin,
     TrashableModelMixin,
 )
-from baserow.core.jobs.mixins import JobWithUserDataMixin
 from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
@@ -173,6 +174,7 @@ class TableModelQuerySet(models.QuerySet):
         else:
             field_object_dict = self.model._field_objects
 
+        annotations = {}
         for index, order in enumerate(order_by):
             if user_field_names:
                 field_name_or_id = self._get_field_name(order)
@@ -201,10 +203,9 @@ class TableModelQuerySet(models.QuerySet):
                 )
 
             field_order = field_type.get_order(field, field_name, order_direction)
-            annotation = None
 
             if isinstance(field_order, AnnotatedOrder):
-                annotation = field_order.annotation
+                annotations = {**annotations, **field_order.annotation}
                 field_order = field_order.order
 
             if field_order:
@@ -222,8 +223,8 @@ class TableModelQuerySet(models.QuerySet):
         order_by.append("order")
         order_by.append("id")
 
-        if annotation is not None:
-            return self.annotate(**annotation).order_by(*order_by)
+        if annotations is not None:
+            return self.annotate(**annotations).order_by(*order_by)
         else:
             return self.order_by(*order_by)
 
@@ -345,6 +346,30 @@ class GeneratedTableModel(models.Model):
         abstract = True
 
 
+class DefaultAppsProxy:
+    """
+    A proxy class to the default apps registry.
+    This class is needed to make our dynamic models available in the
+    options then the relation tree is built.
+    """
+
+    def __init__(self):
+        self._extra_models = []
+
+    def add_models(self, *dynamic_models):
+        """
+        Adds a model to the default apps registry.
+        """
+
+        self._extra_models.extend(dynamic_models)
+
+    def get_models(self, *args, **kwargs):
+        return apps.get_models(*args, **kwargs) + self._extra_models
+
+    def __getattr__(self, attr):
+        return getattr(apps, attr)
+
+
 class Table(
     TrashableModelMixin, CreatedAndUpdatedOnMixin, OrderableMixin, models.Model
 ):
@@ -394,7 +419,7 @@ class Table(
             will be added to the model. This can be done to improve speed if for
             example only a single field needs to be mutated.
         :type field_names: None or list
-        :param attribute_names: If True, the the model attributes will be based on the
+        :param attribute_names: If True, the model attributes will be based on the
             field name instead of the field id.
         :type attribute_names: bool
         :param manytomany_models: In some cases with related fields a model has to be
@@ -415,11 +440,12 @@ class Table(
         """
 
         filtered = field_names is not None or field_ids is not None
+        model_name = f"Table{self.pk}Model"
 
-        if not fields:
+        if fields is None:
             fields = []
 
-        if not manytomany_models:
+        if manytomany_models is None:
             manytomany_models = {}
 
         app_label = "database_table"
@@ -427,6 +453,7 @@ class Table(
             "Meta",
             (),
             {
+                "apps": DefaultAppsProxy(),
                 "managed": managed,
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
@@ -507,7 +534,7 @@ class Table(
 
         # Create the model class.
         model = type(
-            str(f"Table{self.pk}Model"),
+            str(model_name),
             (
                 GeneratedTableModel,
                 TrashableModelMixin,
@@ -658,9 +685,7 @@ class Table(
         return f"tbl_order_id_{self.id}_idx"
 
 
-class DuplicateTableJob(JobWithUserDataMixin, Job):
-
-    user_data_to_save = ["user_websocket_id"]
+class DuplicateTableJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     original_table = models.ForeignKey(
         Table,
@@ -669,6 +694,7 @@ class DuplicateTableJob(JobWithUserDataMixin, Job):
         on_delete=models.SET_NULL,
         help_text="The Baserow table to duplicate.",
     )
+
     duplicated_table = models.OneToOneField(
         Table,
         null=True,

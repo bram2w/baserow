@@ -1,6 +1,6 @@
 import abc
 import typing
-from typing import List, Type, Union, Callable
+from typing import Callable, List, Type, Union
 
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,

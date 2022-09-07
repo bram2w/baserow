@@ -1,11 +1,11 @@
-import pytest
-
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
-
 from django.shortcuts import reverse
+
+import pytest
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
+from baserow.test_utils.helpers import is_dict_subset
 
 
 @pytest.mark.django_db
@@ -13,8 +13,12 @@ def test_list_groups(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    user_group_2 = data_fixture.create_user_group(user=user, order=2)
-    user_group_1 = data_fixture.create_user_group(user=user, order=1)
+    user_group_2 = data_fixture.create_user_group(
+        user=user, order=2, permissions="ADMIN"
+    )
+    user_group_1 = data_fixture.create_user_group(
+        user=user, order=1, permissions="MEMBER"
+    )
     data_fixture.create_group()
 
     response = api_client.get(
@@ -25,8 +29,107 @@ def test_list_groups(api_client, data_fixture):
     assert len(response_json) == 2
     assert response_json[0]["id"] == user_group_1.group.id
     assert response_json[0]["order"] == 1
+    assert response_json[0]["name"] == user_group_1.group.name
+    assert response_json[0]["permissions"] == "MEMBER"
     assert response_json[1]["id"] == user_group_2.group.id
     assert response_json[1]["order"] == 2
+    assert response_json[1]["name"] == user_group_2.group.name
+    assert response_json[1]["permissions"] == "ADMIN"
+
+
+@pytest.mark.django_db
+def test_list_groups_with_users(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    user_group_1 = data_fixture.create_user_group(
+        user=user, order=1, permissions="MEMBER"
+    )
+    user_group_1_2 = data_fixture.create_user_group(
+        order=1, permissions="ADMIN", group=user_group_1.group
+    )
+    user_group_1_3 = data_fixture.create_user_group(
+        order=1, permissions="MEMBER", group=user_group_1.group
+    )
+
+    user_group_2 = data_fixture.create_user_group(
+        user=user, order=2, permissions="ADMIN"
+    )
+    user_group_2_2 = data_fixture.create_user_group(
+        order=2, permissions="MEMBER", group=user_group_2.group
+    )
+
+    response = api_client.get(
+        reverse("api:groups:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    expected_result = [
+        {
+            "id": user_group_1.group.id,
+            "name": user_group_1.group.name,
+            "order": 1,
+            "permissions": "MEMBER",
+            "users": [
+                {
+                    "email": user_group_1.user.email,
+                    "group": user_group_1.group.id,
+                    "id": user_group_1.id,
+                    "name": user_group_1.user.first_name,
+                    "permissions": "MEMBER",
+                    "to_be_deleted": False,
+                    "user_id": user_group_1.user.id,
+                },
+                {
+                    "email": user_group_1_2.user.email,
+                    "group": user_group_1_2.group.id,
+                    "id": user_group_1_2.id,
+                    "name": user_group_1_2.user.first_name,
+                    "permissions": "ADMIN",
+                    "to_be_deleted": False,
+                    "user_id": user_group_1_2.user.id,
+                },
+                {
+                    "email": user_group_1_3.user.email,
+                    "group": user_group_1_3.group.id,
+                    "id": user_group_1_3.id,
+                    "name": user_group_1_3.user.first_name,
+                    "permissions": "MEMBER",
+                    "to_be_deleted": False,
+                    "user_id": user_group_1_3.user.id,
+                },
+            ],
+        },
+        {
+            "id": user_group_2.group.id,
+            "name": user_group_2.group.name,
+            "order": 2,
+            "permissions": "ADMIN",
+            "users": [
+                {
+                    "email": user_group_2.user.email,
+                    "group": user_group_2.group.id,
+                    "id": user_group_2.id,
+                    "name": user_group_2.user.first_name,
+                    "permissions": "ADMIN",
+                    "to_be_deleted": False,
+                    "user_id": user_group_2.user.id,
+                },
+                {
+                    "email": user_group_2_2.user.email,
+                    "group": user_group_2_2.group.id,
+                    "id": user_group_2_2.id,
+                    "name": user_group_2_2.user.first_name,
+                    "permissions": "MEMBER",
+                    "to_be_deleted": False,
+                    "user_id": user_group_2_2.user.id,
+                },
+            ],
+        },
+    ]
+
+    assert is_dict_subset(expected_result, response_json)
 
 
 @pytest.mark.django_db

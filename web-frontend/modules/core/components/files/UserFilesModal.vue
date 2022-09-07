@@ -25,6 +25,7 @@
     <template #content>
       <component
         :is="userFileUploadComponent"
+        :upload-file="uploadFile"
         @uploaded="$emit('uploaded', $event)"
       ></component>
     </template>
@@ -37,6 +38,18 @@ import modal from '@baserow/modules/core/mixins/modal'
 export default {
   name: 'UserFilesModal',
   mixins: [modal],
+  props: {
+    uploadFile: {
+      type: Function,
+      required: false,
+      default: null,
+    },
+    userFileUploadTypes: {
+      type: Array,
+      required: false,
+      default: null,
+    },
+  },
   data() {
     return {
       page: null,
@@ -44,7 +57,18 @@ export default {
   },
   computed: {
     registeredUserFileUploads() {
-      return this.$registry.getAll('userFileUpload')
+      const uploadTypes = this.$registry.getAll('userFileUpload')
+      // The `userFileUploadTypes` contains an array of allowed upload types. If not
+      // `null`, we need to remove the ones that are not allowed from `uploadTypes`
+      // because that one contains all the available upload files.
+      if (this.userFileUploadTypes !== null) {
+        Object.keys(uploadTypes).forEach((typeName) => {
+          if (!this.userFileUploadTypes.includes(typeName)) {
+            delete uploadTypes[typeName]
+          }
+        })
+      }
+      return uploadTypes
     },
     userFileUploadComponent() {
       const active = Object.values(

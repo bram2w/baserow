@@ -1,14 +1,14 @@
-import pytest
 import random
 from decimal import Decimal
 
+import pytest
+
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.contrib.database.views.exceptions import FieldAggregationNotSupported
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.trash.handler import TrashHandler
-
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
@@ -112,7 +112,7 @@ def test_view_empty_count_aggregation(data_fixture):
 
 @pytest.mark.django_db
 def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
-    table, _, _, _ = setup_interesting_test_table(data_fixture)
+    table, _, _, _, context = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
 
     model = table.get_model()
@@ -143,21 +143,21 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
             )
         )
 
-    result_not_emtpy = view_handler.get_field_aggregations(
+    result_not_empty = view_handler.get_field_aggregations(
         grid_view, aggregation_query, model=model
     )
 
     for field in model._field_objects.values():
         assert (
             result_empty[field["field"].db_column]
-            + result_not_emtpy[field["field"].db_column]
+            + result_not_empty[field["field"].db_column]
             == result_empty["total"]
         )
 
 
 @pytest.mark.django_db
 def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
-    table, _, _, _ = setup_interesting_test_table(data_fixture)
+    table, _, _, _, context = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
 
     model = table.get_model()
@@ -425,7 +425,7 @@ def test_aggregation_is_updated_when_view_is_trashed(data_fixture):
     assert field.db_column in aggregations_view_one
     assert field.db_column in aggregations_view_two
 
-    # Trash the view and verify that the aggregation is not retreivable anymore
+    # Trash the view and verify that the aggregation is not retrievable anymore
     TrashHandler().trash(user, application.group, application, trash_item=grid_view_one)
     aggregations = view_handler.get_view_field_aggregations(grid_view_one)
     assert field.db_column not in aggregations

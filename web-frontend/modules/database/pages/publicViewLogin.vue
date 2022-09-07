@@ -45,10 +45,12 @@ import error from '@baserow/modules/core/mixins/error'
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 import { required } from 'vuelidate/lib/validators'
 import { mapActions } from 'vuex'
+import { isRelativeUrl } from '@baserow/modules/core/utils/url'
+import languageDetection from '@baserow/modules/core/mixins/languageDetection'
 
 export default {
   components: { FormViewPoweredBy },
-  mixins: [form, error],
+  mixins: [form, error, languageDetection],
   layout: 'login',
   data() {
     return {
@@ -88,7 +90,7 @@ export default {
         // Redirect to the original view.
         // Subsequent requests will use the token saved into the store.
         const { original } = this.$route.query
-        if (original) {
+        if (original && isRelativeUrl(original)) {
           this.$nuxt.$router.push(original)
         }
       } catch (e) {

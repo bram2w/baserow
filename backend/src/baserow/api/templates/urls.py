@@ -1,7 +1,6 @@
 from django.urls import re_path
 
-from .views import TemplatesView, InstallTemplateView
-
+from .views import InstallTemplateView, TemplatesView
 
 app_name = "baserow.api.templates"
 

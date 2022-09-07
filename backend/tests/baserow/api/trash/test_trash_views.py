@@ -1,17 +1,18 @@
-import pytest
 from django.shortcuts import reverse
 from django.utils import timezone
+
+import pytest
 from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
-    HTTP_404_NOT_FOUND,
     HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
 )
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.core.models import Group, TrashEntry, Application
+from baserow.core.models import Application, Group, TrashEntry
 from baserow.core.trash.handler import TrashHandler
 
 

@@ -1,9 +1,9 @@
 from django.db import models
 
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.mixins import JobWithUserDataMixin
-from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.models import Database
+from baserow.contrib.database.table.models import Table
+from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.models import Job
 
 
 # If you ever change the return value of this function please duplicate the old
@@ -20,8 +20,7 @@ def default_report():
     return {"failing_rows": {}}
 
 
-class FileImportJob(JobWithUserDataMixin, Job):
-    user_data_to_save = ["user_websocket_id"]
+class FileImportJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     database = models.ForeignKey(
         Database,
@@ -31,7 +30,7 @@ class FileImportJob(JobWithUserDataMixin, Job):
         help_text="The database where we want to create the table",
     )
     name = models.CharField(
-        max_length=255, default="", help_text="The name the the created table."
+        max_length=255, default="", help_text="The name of the created table."
     )
     table = models.ForeignKey(
         Table,

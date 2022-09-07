@@ -4,24 +4,26 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.db.models import Q
+from django.utils.functional import lazy
 
-from baserow.core.utils import get_model_reference_field_name
-from baserow.core.models import UserFile
-from baserow.core.mixins import (
-    OrderableMixin,
-    PolymorphicContentTypeMixin,
-    CreatedAndUpdatedOnMixin,
-    TrashableModelMixin,
-)
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.views.registries import (
-    view_type_registry,
+    form_view_mode_registry,
     view_filter_type_registry,
+    view_type_registry,
 )
+from baserow.core.mixins import (
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    TrashableModelMixin,
+)
+from baserow.core.models import UserFile
+from baserow.core.utils import get_model_reference_field_name
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
 
@@ -386,6 +388,11 @@ class GridView(View):
         ID = "id"
         count = "count"
 
+    # `field_options` is a very misleading name
+    # it should probably be more like `fields_with_field_options`
+    # since this field will return instances of `Field` not of
+    # `GridViewFieldOptions`
+    # We might want to change this in the future.
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
     row_identifier_type = models.CharField(
         choices=RowIdentifierTypes.choices, default="id", max_length=10
@@ -519,6 +526,12 @@ class FormView(View):
     description = models.TextField(
         blank=True,
         help_text="The description that is displayed at the beginning of the form.",
+    )
+    mode = models.TextField(
+        max_length=64,
+        default=lazy(form_view_mode_registry.get_default_choice, str)(),
+        choices=lazy(form_view_mode_registry.get_choices, list)(),
+        help_text="Configurable mode of the form.",
     )
     cover_image = models.ForeignKey(
         UserFile,

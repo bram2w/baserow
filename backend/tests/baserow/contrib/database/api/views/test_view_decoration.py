@@ -1,13 +1,12 @@
-import pytest
+from django.shortcuts import reverse
 
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
 )
-
-from django.shortcuts import reverse
 
 from baserow.contrib.database.views.models import ViewDecoration
 from baserow.contrib.database.views.registries import view_type_registry
@@ -26,7 +25,7 @@ def test_list_view_decorations(api_client, data_fixture):
     decoration_2 = data_fixture.create_view_decoration(
         view=view_1,
         type="tmp_decorator_type_2",
-        value_provider_type="conditionnal_color",
+        value_provider_type="conditional_color",
         order=2,
     )
     data_fixture.create_view_decoration(view=view_2, order=3)

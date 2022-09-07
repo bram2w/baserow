@@ -1,8 +1,6 @@
 from typing import Dict, Optional
 
-from baserow.contrib.database.formula.parser.exceptions import (
-    MaximumFormulaSizeError,
-)
+from baserow.contrib.database.formula.parser.exceptions import MaximumFormulaSizeError
 from baserow.contrib.database.formula.parser.generated.BaserowFormula import (
     BaserowFormula,
 )

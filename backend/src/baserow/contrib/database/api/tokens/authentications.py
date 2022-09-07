@@ -1,12 +1,11 @@
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
-
 from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
-from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
+from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.core.exceptions import UserNotInGroup
 
 
 class TokenAuthentication(BaseAuthentication):

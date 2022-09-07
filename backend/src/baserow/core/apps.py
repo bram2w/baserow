@@ -7,27 +7,29 @@ class CoreConfig(AppConfig):
     name = "baserow.core"
 
     def ready(self):
-        from baserow.core.trash.registries import trash_item_type_registry
         from baserow.core.action.registries import (
-            action_type_registry,
             action_scope_registry,
+            action_type_registry,
         )
-        from baserow.core.trash.trash_types import GroupTrashableItemType
-        from baserow.core.trash.trash_types import ApplicationTrashableItemType
+        from baserow.core.trash.registries import trash_item_type_registry
+        from baserow.core.trash.trash_types import (
+            ApplicationTrashableItemType,
+            GroupTrashableItemType,
+        )
 
         trash_item_type_registry.register(GroupTrashableItemType())
         trash_item_type_registry.register(ApplicationTrashableItemType())
 
         from baserow.core.actions import (
-            UpdateGroupActionType,
-            CreateGroupActionType,
-            DeleteGroupActionType,
-            OrderGroupsActionType,
             CreateApplicationActionType,
-            UpdateApplicationActionType,
+            CreateGroupActionType,
             DeleteApplicationActionType,
-            OrderApplicationsActionType,
+            DeleteGroupActionType,
             DuplicateApplicationActionType,
+            OrderApplicationsActionType,
+            OrderGroupsActionType,
+            UpdateApplicationActionType,
+            UpdateGroupActionType,
         )
 
         action_type_registry.register(CreateGroupActionType())
@@ -41,21 +43,19 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DuplicateApplicationActionType())
 
         from baserow.core.action.scopes import (
-            RootActionScopeType,
-            GroupActionScopeType,
             ApplicationActionScopeType,
-            ViewActionScopeType,
+            GroupActionScopeType,
+            RootActionScopeType,
         )
 
         action_scope_registry.register(RootActionScopeType())
         action_scope_registry.register(GroupActionScopeType())
         action_scope_registry.register(ApplicationActionScopeType())
-        action_scope_registry.register(ViewActionScopeType())
 
         from baserow.core.jobs.registries import job_type_registry
+
         from .job_types import DuplicateApplicationJobType
-        from .snapshots.job_type import CreateSnapshotJobType
-        from .snapshots.job_type import RestoreSnapshotJobType
+        from .snapshots.job_type import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
         job_type_registry.register(CreateSnapshotJobType())

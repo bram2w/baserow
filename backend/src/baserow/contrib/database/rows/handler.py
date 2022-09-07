@@ -1,18 +1,16 @@
 import re
 from collections import defaultdict
 from decimal import Decimal
-from math import floor, ceil
-from typing import cast, Any, Dict, List, NewType, Optional, Type, Tuple, Set
+from math import ceil, floor
+from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
 
-
-from django.utils.encoding import force_str
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Max, F, QuerySet
-from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.db.models import F, Max, QuerySet
+from django.db.models.fields.related import ForeignKey, ManyToManyField
+from django.utils.encoding import force_str
 
-from baserow.core.utils import Progress, grouper
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
@@ -20,20 +18,21 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.registries import FieldType
-from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.trash.models import TrashedRows
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import get_non_unique_values
+from baserow.core.utils import Progress, get_non_unique_values, grouper
+
+from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
+from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
-    before_rows_update,
     before_rows_delete,
+    before_rows_update,
     rows_created,
-    rows_updated,
     rows_deleted,
+    rows_updated,
 )
-from .constants import ROW_IMPORT_VALIDATION, ROW_IMPORT_CREATION
-from .error_report import RowErrorReport
 
 GeneratedTableModelForUpdate = NewType(
     "GeneratedTableModelForUpdate", GeneratedTableModel
@@ -359,7 +358,7 @@ class RowHandler:
 
     def get_row_names(
         self, table: "Table", row_ids: List[int], model: "GeneratedTableModel" = None
-    ) -> Dict[str, int]:
+    ) -> Dict[str, str]:
         """
         Returns the row names for all row ids specified in `row_ids` parameter from
         the given table.
@@ -629,7 +628,7 @@ class RowHandler:
 
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the row must be updated.
-        :param row: The the row that must be updated.
+        :param row: the row that must be updated.
         :param values: The values that must be updated. The keys must be the field ids.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
@@ -1611,9 +1610,7 @@ class RowHandler:
             self, rows=rows, user=user, table=table, model=model
         )
 
-        trashed_rows = TrashedRows()
-        trashed_rows.row_ids = row_ids
-        trashed_rows.table = table
+        trashed_rows = TrashedRows.objects.create(row_ids=row_ids, table=table)
         # It's a bit on a hack, but we're storing the fetched row objects on the
         # trashed_rows object, so that they can optionally be used later. This is for
         # example used when storing the names in the trash.

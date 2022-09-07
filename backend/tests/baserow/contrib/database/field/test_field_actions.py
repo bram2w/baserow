@@ -1,24 +1,28 @@
 from decimal import Decimal
 from typing import cast
 
-import pytest
 from django.db import connection, transaction
 from django.urls import reverse
+
+import pytest
 from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK
 
-from baserow.contrib.database.fields.actions import UpdateFieldActionType
-from baserow.contrib.database.fields.field_types import (
-    TextFieldType,
+from baserow.contrib.database.fields.actions import (
+    DuplicateFieldActionType,
+    UpdateFieldActionType,
 )
+from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
+from baserow.contrib.database.fields.field_types import TextFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    TextField,
+    Field,
     LinkRowField,
-    NumberField,
     MultipleSelectField,
+    NumberField,
     RatingField,
     SpecificFieldForUpdate,
+    TextField,
 )
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.action.handler import ActionHandler
@@ -27,8 +31,10 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.models import GROUP_USER_PERMISSION_ADMIN
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import (
-    setup_interesting_test_table,
+    assert_serialized_field_values_are_the_same,
     assert_undo_redo_actions_are_valid,
+    extract_serialized_field_value,
+    setup_interesting_test_table,
 )
 
 
@@ -354,6 +360,42 @@ def test_undoing_link_row_type_change_can_still_insert_new_relations_after(
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
+@pytest.mark.field_link_row
+def test_can_undo_and_redo_linkrow_deleting_one_side_relationships(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    action_type_registry.get_by_type(UpdateFieldActionType).do(
+        user, link_field, name="A->B", has_related_field=False
+    )
+
+    link_field.refresh_from_db()
+    assert link_field.link_row_related_field_id is None
+    assert table_a.linkrowfield_set.count() == 0
+
+    actions = ActionHandler.undo(
+        user, [UpdateFieldActionType.scope(link_field.table_id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions, [UpdateFieldActionType])
+    # Make sure that the link field was restored to the other table
+    link_field.refresh_from_db()
+    assert link_field.link_row_related_field_id is not None
+    assert table_a.linkrowfield_set.count() == 1
+
+    actions = ActionHandler.redo(
+        user, [UpdateFieldActionType.scope(link_field.table_id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions, [UpdateFieldActionType])
+    # Make sure that the link field was deleted again in the other table
+    link_field.refresh_from_db()
+    assert link_field.link_row_related_field_id is None
+    assert table_a.linkrowfield_set.count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@pytest.mark.field_link_row
 def test_can_undo_and_redo_converting_link_row_to_other_type(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
@@ -1222,7 +1264,7 @@ def test_can_undo_redo_updating_single_select(data_fixture):
 def test_can_undo_updating_field_every_type(data_fixture, django_assert_num_queries):
     session_id = "session-id"
 
-    table, user, row, _ = setup_interesting_test_table(
+    table, user, row, _, context = setup_interesting_test_table(
         data_fixture, user_kwargs={"session_id": session_id}
     )
     model = table.get_model(attribute_names=True)
@@ -1310,3 +1352,62 @@ def test_can_undo_updating_max_value_of_rating_field(
         Decimal("2"),
         Decimal("1"),
     ]
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_can_undo_redo_duplicate_fields_of_interesting_table(api_client, data_fixture):
+    session_id = "session-id"
+    user, token = data_fixture.create_user_and_token(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    field_handler = FieldHandler()
+
+    table, _, _, _, context = setup_interesting_test_table(data_fixture, user, database)
+    original_field_set = list(table.field_set.all())
+
+    for field in original_field_set:
+        duplicated_field, updated_fields = action_type_registry.get_by_type(
+            DuplicateFieldActionType
+        ).do(user, field, duplicate_data=True)
+
+        assert field_handler.get_field(duplicated_field.id).name == f"{field.name} 2"
+
+        actions_undone = ActionHandler.undo(
+            user, [DuplicateFieldActionType.scope(table_id=field.table_id)], session_id
+        )
+
+        assert_undo_redo_actions_are_valid(actions_undone, [DuplicateFieldActionType])
+        with pytest.raises(FieldDoesNotExist):
+            field_handler.get_field(duplicated_field.id)
+
+        actions_redone = ActionHandler.redo(
+            user, [DuplicateFieldActionType.scope(table_id=field.table_id)], session_id
+        )
+
+        assert_undo_redo_actions_are_valid(actions_redone, [DuplicateFieldActionType])
+        assert field_handler.get_field(duplicated_field.id).name == f"{field.name} 2"
+
+    # check that the field values have been duplicated correctly
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json["results"]) > 0
+    assert table.field_set.count() == len(original_field_set) * 2
+    for row in response_json["results"]:
+        for field in original_field_set:
+            row_1_value = extract_serialized_field_value(row[field.db_column])
+            duplicated_field = Field.objects.get(
+                table_id=table.id, name=f"{field.name} 2"
+            )
+            row_2_value = extract_serialized_field_value(
+                row[duplicated_field.db_column]
+            )
+            assert_serialized_field_values_are_the_same(
+                row_1_value,
+                row_2_value,
+                field_name=field.name,
+            )

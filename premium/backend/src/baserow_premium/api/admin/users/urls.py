@@ -1,11 +1,10 @@
 from django.urls import re_path
 
 from baserow_premium.api.admin.users.views import (
-    UsersAdminView,
-    UserAdminView,
     UserAdminImpersonateView,
+    UserAdminView,
+    UsersAdminView,
 )
-
 
 app_name = "baserow_premium.api.admin.users"
 

@@ -1,8 +1,8 @@
-from unittest.mock import patch, call, ANY
-
-import pytest
+from unittest.mock import ANY, call, patch
 
 from django.db import transaction
+
+import pytest
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer

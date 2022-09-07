@@ -1,21 +1,20 @@
-import pytest
-
 from django.core.cache import cache
 
-from baserow.contrib.database.airtable.models import AirtableImportJob
+import pytest
 
-from baserow.core.jobs.constants import (
-    JOB_PENDING,
-    JOB_FAILED,
-    JOB_FINISHED,
-    JOB_STARTED,
-)
 from baserow.contrib.database.airtable.constants import (
-    AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES,
     AIRTABLE_EXPORT_JOB_CONVERTING,
     AIRTABLE_EXPORT_JOB_DOWNLOADING_BASE,
+    AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES,
 )
+from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.core.jobs.cache import job_progress_key
+from baserow.core.jobs.constants import (
+    JOB_FAILED,
+    JOB_FINISHED,
+    JOB_PENDING,
+    JOB_STARTED,
+)
 
 
 @pytest.mark.django_db

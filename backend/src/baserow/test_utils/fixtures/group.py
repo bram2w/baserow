@@ -1,4 +1,4 @@
-from baserow.core.models import Group, GroupUser, GroupInvitation
+from baserow.core.models import Group, GroupInvitation, GroupUser
 
 
 class GroupFixtures:

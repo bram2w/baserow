@@ -1,14 +1,13 @@
 from django.urls import re_path
 
 from .views import (
+    AsyncCreateTableView,
+    AsyncDuplicateTableView,
+    AsyncTableImportView,
+    OrderTablesView,
     TablesView,
     TableView,
-    OrderTablesView,
-    AsyncCreateTableView,
-    AsyncTableImportView,
-    AsyncDuplicateTableView,
 )
-
 
 app_name = "baserow.contrib.database.api.tables"
 

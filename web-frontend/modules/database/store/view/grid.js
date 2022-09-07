@@ -16,6 +16,7 @@ import {
   getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
 export function populateRow(row, metadata = {}) {
   row._ = {
@@ -553,7 +554,7 @@ export const actions = {
       (lastRequestOffset !== requestOffset || lastRequestLimit !== requestLimit)
     ) {
       fireScrollTop.processing = true
-      // If another request is runnig we need to cancel that one because it won't
+      // If another request is running we need to cancel that one because it won't
       // what we need at the moment.
       if (lastRequest !== null) {
         lastQueryController.abort()
@@ -1213,11 +1214,14 @@ export const actions = {
     }
   },
   /**
-   * Prepares a two dimensional array containing prepared values for copy. It only
-   * contains the cell values selected by the multiple select. If one or more rows
-   * are not in the buffer, they are fetched from the backend.
+   * Returns the fields and rows necessaries to extract data from the selection.
+   * It only contains the rows and fields selected by the multiple select.
+   * If one or more rows are not in the buffer, they are fetched from the backend.
    */
-  async exportMultiSelect({ dispatch, getters, commit }, fields) {
+  async getCurrentSelection(
+    { dispatch, getters, commit },
+    { fields, type = 'text/plain' }
+  ) {
     if (!getters.isMultiSelectActive) {
       return
     }
@@ -1240,21 +1244,7 @@ export const actions = {
       })
     }
 
-    const data = []
-    for (const row of rows) {
-      const line = []
-
-      for (const field of fields) {
-        const rawValue = row['field_' + field.id]
-        const value = this.$registry
-          .get('field', field.type)
-          .prepareValueForCopy(field, rawValue)
-        line.push(value)
-      }
-      data.push(line)
-    }
-
-    return data
+    return [fields, rows]
   },
   /**
    * This function is called if a user attempts to access rows that are
@@ -1325,23 +1315,19 @@ export const actions = {
     { commit, getters, dispatch },
     { view, table, fields, values = {}, before = null }
   ) {
-    // Fill the not provided values with the empty value of the field type so we can
-    // immediately commit the created row to the state.
-    const valuesForApiRequest = {}
+    // Fill values with empty values of field if they are not provided
     fields.forEach((field) => {
       const name = `field_${field.id}`
       const fieldType = this.$registry.get('field', field._.type.type)
+
       if (!(name in values)) {
-        const empty = fieldType.getNewRowValue(field)
-        values[name] = empty
-      }
-      // In case the fieldType is a read only field, we need to create a second
-      // values dictionary, which gets sent to the API without the fieldType.
-      if (!fieldType.isReadOnly) {
-        const newValue = fieldType.prepareValueForUpdate(field, values[name])
-        valuesForApiRequest[name] = newValue
+        values[name] = fieldType.getNewRowValue(field)
       }
     })
+
+    // Fill the not provided values with the empty value of the field type so we can
+    // immediately commit the created row to the state.
+    const preparedRow = prepareRowForRequest(values, fields, this.$registry)
 
     // If before is not provided, then the row is added last. Because we don't know
     // the total amount of rows in the table, we are going to add find the highest
@@ -1373,7 +1359,7 @@ export const actions = {
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
-        valuesForApiRequest,
+        preparedRow,
         before !== null ? before.id : null
       )
       commit('FINALIZE_ROW_IN_BUFFER', {
@@ -1430,7 +1416,7 @@ export const actions = {
     const isLast = index === allRowsCopy.length - 1
 
     if (
-      // All of these scenario's mean that that the row belongs in the buffer that
+      // All of these scenario's mean that the row belongs in the buffer that
       // we have loaded currently.
       (isFirst && getters.getBufferStartIndex === 0) ||
       (isLast && getters.getBufferEndIndex === getters.getCount) ||
@@ -1637,19 +1623,28 @@ export const actions = {
    */
   async updateDataIntoCells(
     { getters, commit, dispatch },
-    { table, view, fields, getScrollTop, data, rowIndex, fieldIndex }
+    {
+      table,
+      view,
+      fields,
+      getScrollTop,
+      textData,
+      jsonData,
+      rowIndex,
+      fieldIndex,
+    }
   ) {
-    // If the origin origin row and field index are not provided, we need to use the
+    // If the origin row and field index are not provided, we need to use the
     // head indexes of the multiple select.
-    const rowHeadIndex = rowIndex || getters.getMultiSelectHeadRowIndex
-    const fieldHeadIndex = fieldIndex || getters.getMultiSelectHeadFieldIndex
+    const rowHeadIndex = rowIndex ?? getters.getMultiSelectHeadRowIndex
+    const fieldHeadIndex = fieldIndex ?? getters.getMultiSelectHeadFieldIndex
 
     // Based on the data, we can figure out in which cells we must paste. Here we find
     // the maximum tail indexes.
     const rowTailIndex =
-      Math.min(getters.getCount, rowHeadIndex + data.length) - 1
+      Math.min(getters.getCount, rowHeadIndex + textData.length) - 1
     const fieldTailIndex =
-      Math.min(fields.length, fieldHeadIndex + data[0].length) - 1
+      Math.min(fields.length, fieldHeadIndex + textData[0].length) - 1
 
     // Expand the selection of the multiple select to the cells that we're going to
     // paste in, so the user can see which values have been updated. This is because
@@ -1701,8 +1696,8 @@ export const actions = {
     const oldRowsInOrder = clone(rowsInOrder)
     // Prepare the values that must be send to the server.
     const valuesForUpdate = []
-
     // Prepare the values for update and update the row objects.
+
     rowsInOrder.forEach((row, rowIndex) => {
       valuesForUpdate[rowIndex] = { id: row.id }
 
@@ -1713,10 +1708,16 @@ export const actions = {
         }
 
         const fieldId = `field_${field.id}`
-        const value = data[rowIndex][fieldIndex]
+        const textValue = textData[rowIndex][fieldIndex]
+        const jsonValue =
+          jsonData !== null ? jsonData[rowIndex][fieldIndex] : undefined
 
-        const fieldType = this.$registry.get('field', field._.type.type)
-        const preparedValue = fieldType.prepareValueForPaste(field, value)
+        const fieldType = this.$registry.get('field', field.type)
+        const preparedValue = fieldType.prepareValueForPaste(
+          field,
+          textValue,
+          jsonValue
+        )
         const newValue = fieldType.prepareValueForUpdate(field, preparedValue)
         valuesForUpdate[rowIndex][fieldId] = newValue
       })
@@ -2154,13 +2155,11 @@ export const actions = {
     const numberOfRowsSelected = maxRowIndex - minRowIndex + 1
 
     const selectedFields = fields.slice(minFieldIndex, maxFieldIndex + 1)
-    const emptyValues = []
 
     // Get the empty value for each selected field
-    for (const field of selectedFields) {
-      const fieldType = this.$registry.get('field', field.type)
-      emptyValues.push(fieldType.getEmptyValue(field))
-    }
+    const emptyValues = selectedFields.map((field) =>
+      this.$registry.get('field', field.type).getEmptyValue(field)
+    )
 
     // Copy the empty value array once for each row selected
     const data = []
@@ -2173,7 +2172,9 @@ export const actions = {
       view,
       fields,
       getScrollTop,
-      data,
+      textData: data,
+      rowIndex: minRowIndex,
+      fieldIndex: minFieldIndex,
     })
   },
 }
@@ -2294,10 +2295,18 @@ export const getters = {
     ]
   },
   getMultiSelectHeadFieldIndex(state) {
-    return state.multiSelectHeadFieldIndex
+    // Return the leftmost
+    return Math.min(
+      state.multiSelectHeadFieldIndex,
+      state.multiSelectTailFieldIndex
+    )
   },
   getMultiSelectHeadRowIndex(state) {
-    return state.multiSelectHeadRowIndex
+    // Return the topmost
+    return Math.min(
+      state.multiSelectHeadRowIndex,
+      state.multiSelectTailRowIndex
+    )
   },
   // Get the index of a row given it's row id.
   // This will calculate the row index from the current buffer position and offset.

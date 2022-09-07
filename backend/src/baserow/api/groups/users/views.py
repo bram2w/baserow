@@ -1,34 +1,29 @@
 from django.db import transaction
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body, map_exceptions
+from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
-    ERROR_USER_NOT_IN_GROUP,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
+    ERROR_USER_NOT_IN_GROUP,
 )
 from baserow.api.groups.users.errors import ERROR_GROUP_USER_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
-from baserow.core.models import GroupUser
-from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
-    UserNotInGroup,
-    UserInvalidGroupPermissionsError,
     GroupDoesNotExist,
     GroupUserDoesNotExist,
+    UserInvalidGroupPermissionsError,
+    UserNotInGroup,
 )
+from baserow.core.handler import CoreHandler
+from baserow.core.models import GroupUser
 
-from .serializers import (
-    GroupUserSerializer,
-    GroupUserGroupSerializer,
-    UpdateGroupUserSerializer,
-)
+from .serializers import GroupUserSerializer, UpdateGroupUserSerializer
 
 
 class GroupUsersView(APIView):
@@ -96,7 +91,7 @@ class GroupUserView(APIView):
         ),
         request=UpdateGroupUserSerializer,
         responses={
-            200: GroupUserGroupSerializer,
+            200: GroupUserSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -124,7 +119,7 @@ class GroupUserView(APIView):
             base_queryset=GroupUser.objects.select_for_update(of=("self",)),
         )
         group_user = CoreHandler().update_group_user(request.user, group_user, **data)
-        return Response(GroupUserGroupSerializer(group_user).data)
+        return Response(GroupUserSerializer(group_user).data)
 
     @extend_schema(
         parameters=[

@@ -7,13 +7,19 @@
       :primary="field.primary"
       @submitted="submit"
     >
-      <div class="context__form-actions">
+      <div
+        class="context__form-actions context__form-actions--multiple-actions"
+      >
+        <a @click="cancel">
+          {{ $t('action.cancel') }}
+        </a>
         <button
+          type="submit"
           class="button"
           :class="{ 'button--loading': loading }"
           :disabled="loading"
         >
-          {{ $t('action.change') }}
+          {{ $t('action.save') }}
         </button>
       </div>
     </FieldForm>
@@ -49,12 +55,15 @@ export default {
       // If the field values are updated via an outside source, think of real time
       // collaboration or via the modal, we want to reset the form so that it contains
       // the correct base values.
+      this.reset()
+    },
+  },
+  methods: {
+    reset() {
       this.$nextTick(() => {
         this.$refs.form && this.$refs.form.reset()
       })
     },
-  },
-  methods: {
     async submit(values) {
       this.loading = true
 
@@ -90,6 +99,10 @@ export default {
           notifyIf(error, 'field')
         }
       }
+    },
+    cancel() {
+      this.reset()
+      this.hide()
     },
   },
 }

@@ -1,7 +1,8 @@
 # noinspection PyPep8Naming
-import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+
+import pytest
 
 
 # noinspection PyPep8Naming

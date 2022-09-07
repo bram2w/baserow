@@ -1,11 +1,11 @@
-import sys
 import json
 import os
+import sys
 
 from django.core.management.base import BaseCommand
 
-from baserow.core.models import Group
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Group
 
 
 class Command(BaseCommand):

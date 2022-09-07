@@ -2,7 +2,6 @@ from django.conf import settings
 
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-
 ERROR_TABLE_WEBHOOK_DOES_NOT_EXIST = (
     "ERROR_TABLE_WEBHOOK_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,

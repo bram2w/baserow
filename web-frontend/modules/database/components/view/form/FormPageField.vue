@@ -56,10 +56,11 @@ export default {
     getFieldComponentProperties() {
       return this.$registry
         .get('field', this.field.field.type)
-        .getFormViewFieldComponentProperties()
+        .getFormViewFieldComponentProperties(this)
     },
     focus() {
       this.$el.scrollIntoView({ behavior: 'smooth' })
+      this.$emit('focussed')
     },
     isValid() {
       return this.$refs.field.isValid()

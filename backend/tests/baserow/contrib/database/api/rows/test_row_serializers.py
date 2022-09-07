@@ -4,10 +4,10 @@ import pytest
 from rest_framework import serializers
 
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class,
-    get_example_row_serializer_class,
-    remap_serialized_row_to_user_field_names,
     RowSerializer,
+    get_example_row_serializer_class,
+    get_row_serializer_class,
+    remap_serialized_row_to_user_field_names,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
@@ -212,7 +212,7 @@ def test_get_example_row_serializer_class():
 
 @pytest.mark.django_db
 def test_get_row_serializer_with_user_field_names(data_fixture):
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     model = table.get_model()
     queryset = model.objects.all().enhance_by_fields()
     serializer_class = get_row_serializer_class(
@@ -272,11 +272,15 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     {"id": 2, "value": ""},
                 ],
                 "id": 2,
-                "self_link_row": [],
                 "link_row": [
                     {"id": 1, "value": "linked_row_1"},
                     {"id": 2, "value": "linked_row_2"},
                     {"id": 3, "value": ""},
+                ],
+                "self_link_row": [{"id": 1, "value": ""}],
+                "link_row_without_related": [
+                    {"id": 1, "value": "linked_row_1"},
+                    {"id": 2, "value": "linked_row_2"},
                 ],
                 "long_text": "long_text",
                 "negative_decimal": "-1.2",
@@ -291,6 +295,10 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "id": SelectOption.objects.get(value="A").id,
                     "value": "A",
                 },
+                "multiple_collaborators": [
+                    {"id": context["user2"].id, "name": context["user2"].first_name},
+                    {"id": context["user3"].id, "name": context["user3"].first_name},
+                ],
                 "multiple_select": [
                     {
                         "color": "yellow",
@@ -372,8 +380,8 @@ def test_remap_serialized_row_to_user_field_names(data_fixture):
         user_field_names=False,
     )(row).data
 
-    remaped_row = remap_serialized_row_to_user_field_names(serialized_row, model)
-    assert remaped_row == {
+    remapped_row = remap_serialized_row_to_user_field_names(serialized_row, model)
+    assert remapped_row == {
         "id": 1,
         "order": "1.00000000000000000000",
         "Link": [{"id": 1, "value": "Lookup 1"}],

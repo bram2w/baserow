@@ -2,7 +2,6 @@ from django.urls import re_path
 
 from baserow_premium.api.admin.dashboard.views import AdminDashboardView
 
-
 app_name = "baserow_premium.api.admin.dashboard"
 
 urlpatterns = [

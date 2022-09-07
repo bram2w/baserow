@@ -1,12 +1,13 @@
-import pytest
 from django.db.models import Q
 from django.db.models.functions import Reverse, Upper
 
+import pytest
+
 from baserow.contrib.database.fields.field_filters import (
-    FilterBuilder,
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
     AnnotatedQ,
+    FilterBuilder,
 )
 
 

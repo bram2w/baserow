@@ -1,0 +1,33 @@
+.select-collaborators__dropdown-item.hover {
+  background-color: $color-neutral-100;
+}
+
+.select-collaborators__dropdown-link {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 32px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.select-collaborators__dropdown-selected {
+  display: flex;
+  align-items: center;
+}
+
+.select-collaborators__dropdown-option {
+  @include select-option-style(inline-block, false);
+}
+
+.select-collaborators__initials {
+  flex: 0 0 24px;
+  font-weight: bold;
+  color: $white;
+  background-color: $color-primary-500;
+  border-radius: 100%;
+
+  @include center-text(24px, 12px);
+}

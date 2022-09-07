@@ -42,7 +42,7 @@ expr
     | expr op=(GT | LT | GTE | LTE) expr # BinaryOp
     | expr op=(EQUAL | BANG_EQUAL) expr # BinaryOp
     | FIELD OPEN_PAREN field_reference CLOSE_PAREN # FieldReference
-    // FIELDBYID has been depricated and should not be used, it is only included here
+    // FIELDBYID has been deprecated and should not be used, it is only included here
     // for backwards compatability.
     | FIELDBYID OPEN_PAREN INTEGER_LITERAL CLOSE_PAREN # FieldByIdReference
     | LOOKUP OPEN_PAREN field_reference COMMA WHITESPACE? field_reference CLOSE_PAREN # LookupFieldReference

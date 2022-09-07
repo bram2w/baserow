@@ -2,7 +2,8 @@
 import ast
 from typing import Set
 
-from flake8_baserow.docstring import Plugin as DocstringPlugin, ERR_MSG
+from flake8_baserow.docstring import ERR_MSG
+from flake8_baserow.docstring import Plugin as DocstringPlugin
 
 
 def _results(s: str) -> Set[str]:

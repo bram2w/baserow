@@ -1,26 +1,34 @@
 from django.utils.functional import lazy
 
-from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
-
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-    view_filter_type_registry,
-    decorator_value_provider_type_registry,
-    decorator_type_registry,
-)
 from baserow.contrib.database.views.models import (
     View,
+    ViewDecoration,
     ViewFilter,
     ViewSort,
-    ViewDecoration,
 )
+from baserow.contrib.database.views.registries import (
+    decorator_type_registry,
+    decorator_value_provider_type_registry,
+    view_filter_type_registry,
+    view_type_registry,
+)
+
+
+class ListQueryParamatersSerializer(serializers.Serializer):
+    limit = serializers.IntegerField(required=False, default=None)
+    type = serializers.ChoiceField(
+        required=False,
+        default=None,
+        choices=lazy(view_type_registry.get_types, list)(),
+    )
 
 
 class FieldOptionsField(serializers.Field):
@@ -305,13 +313,7 @@ class ViewSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the view related to the instance is already in the context
-        # else we can call the specific_class property to find it.
-        view = self.context.get("instance_type")
-        if not view:
-            view = view_type_registry.get_by_model(instance.specific_class)
-
-        return view.type
+        return view_type_registry.get_by_model(instance.specific_class).type
 
 
 class CreateViewSerializer(serializers.ModelSerializer):
@@ -408,13 +410,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the view related to the instance is already in the context
-        # else we can call the specific_class property to find it.
-        view = self.context.get("instance_type")
-        if not view:
-            view = view_type_registry.get_by_model(instance.specific_class)
-
-        return view.type
+        return view_type_registry.get_by_model(instance.specific_class).type
 
     class Meta:
         model = View
@@ -466,3 +462,14 @@ class PublicViewInfoSerializer(serializers.Serializer):
         kwargs["context"] = kwargs.get("context", {})
         kwargs["context"]["fields"] = kwargs.pop("fields", [])
         super().__init__(instance=kwargs.pop("view", None), *args, **kwargs)
+
+
+class FieldWithFiltersAndSortsSerializer(FieldSerializer):
+    filters = ViewFilterSerializer(many=True, source="viewfilter_set")
+    sortings = ViewSortSerializer(many=True, source="viewsort_set")
+
+    class Meta(FieldSerializer.Meta):
+        fields = FieldSerializer.Meta.fields + (
+            "filters",
+            "sortings",
+        )

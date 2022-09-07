@@ -1,19 +1,17 @@
-import pytest
 from django.db import transaction
+
+import pytest
 
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.scopes import GroupActionScopeType
-from baserow.core.exceptions import (
-    ApplicationDoesNotExist,
-    UserNotInGroup,
-)
+from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.constants import JOB_FINISHED
 from baserow.core.jobs.handler import JobHandler
-
 from baserow.core.jobs.tasks import run_async_job
 from baserow.core.models import Application
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
 @pytest.mark.django_db
@@ -105,7 +103,7 @@ def test_can_submit_duplicate_application_job(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_cannot_undo_duplicate_application_job(data_fixture):
+def test_can_undo_duplicate_application_job(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     group = data_fixture.create_group(user=user)
@@ -130,4 +128,6 @@ def test_cannot_undo_duplicate_application_job(data_fixture):
             user, [GroupActionScopeType.value(group_id=group.id)], session_id
         )
 
-        assert actions_undone == []
+        assert_undo_redo_actions_are_valid(
+            actions_undone, [DuplicateApplicationJobType]
+        )

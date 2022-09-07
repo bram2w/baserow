@@ -1,14 +1,14 @@
-import pytest
 from unittest.mock import patch
 
 from django.test.utils import override_settings
 
-from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.views.models import ViewDecoration
-from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.fields.handler import FieldHandler
-
+import pytest
 from baserow_premium.license.exceptions import NoPremiumLicenseError
+
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import ViewDecoration
+from baserow.contrib.database.views.registries import view_type_registry
 
 
 @pytest.mark.django_db

@@ -4,7 +4,6 @@ from django.conf import settings
 
 from .exceptions import ReportMaxErrorCountExceeded
 
-
 RowIndex = TypeVar("RowIndex", bound=int)
 
 

@@ -1,131 +1,137 @@
+import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from random import randrange, randint, sample
-from typing import Any, Callable, Dict, List, Tuple, TYPE_CHECKING, Optional
+from random import randint, randrange, sample
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 from zipfile import ZipFile
 
-from pytz import all_timezones, timezone
-from dateutil import parser
-from dateutil.parser import ParserError
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage, Storage
-from django.db import models, OperationalError
-from django.db.models import Case, When, Q, F, Func, Value, CharField, DateTimeField
+from django.core.files.storage import Storage, default_storage
+from django.db import OperationalError, models
+from django.db.models import Case, CharField, DateTimeField, F, Func, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
+from dateutil import parser
+from dateutil.parser import ParserError
+from pytz import all_timezones, timezone
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
+    ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+    ERROR_INVALID_LOOKUP_TARGET_FIELD,
+    ERROR_INVALID_LOOKUP_THROUGH_FIELD,
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
-    ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
-    ERROR_WITH_FORMULA,
+    ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
     ERROR_TOO_DEEPLY_NESTED_FORMULA,
-    ERROR_INVALID_LOOKUP_THROUGH_FIELD,
-    ERROR_INVALID_LOOKUP_TARGET_FIELD,
+    ERROR_WITH_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer,
+    CollaboratorSerializer,
     FileFieldRequestSerializer,
-    SelectOptionSerializer,
     FileFieldResponseSerializer,
+    LinkRowValueSerializer,
     MustBeEmptyField,
+    SelectOptionSerializer,
 )
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.formula import (
-    BaserowExpression,
-    BaserowFormulaTextType,
-    BaserowFormulaNumberType,
-    BaserowFormulaBooleanType,
-    BaserowFormulaDateType,
-    BaserowFormulaCharType,
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
-    BaserowFormulaType,
+    BaserowExpression,
+    BaserowFormulaBooleanType,
+    BaserowFormulaCharType,
+    BaserowFormulaDateType,
     BaserowFormulaException,
     BaserowFormulaInvalidType,
+    BaserowFormulaNumberType,
     BaserowFormulaSingleSelectType,
+    BaserowFormulaTextType,
+    BaserowFormulaType,
     FormulaHandler,
     literal,
 )
-from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
-from baserow.core.models import UserFile
+from baserow.core.models import GroupUser, UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.utils import list_to_comma_separated_string
+
 from .constants import UPSERT_OPTION_DICT_KEY
 from .dependencies.exceptions import (
-    SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
+    SelfReferenceFieldDependencyError,
 )
-from .dependencies.handler import FieldDependencyHandler, FieldDependants
+from .dependencies.handler import FieldDependants, FieldDependencyHandler
 from .dependencies.models import FieldDependency
 from .dependencies.types import FieldDependencies
 from .exceptions import (
-    LinkRowTableNotInSameDatabase,
-    LinkRowTableNotProvided,
-    IncompatiblePrimaryFieldTypeError,
+    AllProvidedCollaboratorIdsMustBeValidUsers,
     AllProvidedMultipleSelectValuesMustBeIntegers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     FieldDoesNotExist,
-    InvalidLookupThroughField,
+    IncompatiblePrimaryFieldTypeError,
     InvalidLookupTargetField,
+    InvalidLookupThroughField,
+    LinkRowTableNotInSameDatabase,
+    LinkRowTableNotProvided,
+    SelfReferencingLinkRowCannotHaveRelatedField,
 )
-from .field_filters import (
-    contains_filter,
-    AnnotatedQ,
-    filename_contains_filter,
-)
+from .field_filters import AnnotatedQ, contains_filter, filename_contains_filter
 from .field_sortings import AnnotatedOrder
 from .fields import (
-    SingleSelectForeignKey,
     BaserowExpressionField,
-    MultipleSelectManyToManyField,
     BaserowLastModifiedField,
+    MultipleSelectManyToManyField,
+    SingleSelectForeignKey,
 )
 from .handler import FieldHandler
 from .models import (
-    TextField,
-    LongTextField,
-    URLField,
-    NumberField,
-    RatingField,
-    BooleanField,
-    DateField,
-    LastModifiedField,
-    CreatedOnField,
-    LinkRowField,
-    EmailField,
-    FileField,
-    SingleSelectField,
-    MultipleSelectField,
-    SelectOption,
     AbstractSelectOption,
-    PhoneNumberField,
-    FormulaField,
+    BooleanField,
+    CreatedOnField,
+    DateField,
+    EmailField,
     Field,
+    FileField,
+    FormulaField,
+    LastModifiedField,
+    LinkRowField,
+    LongTextField,
     LookupField,
+    MultipleCollaboratorsField,
+    MultipleSelectField,
+    NumberField,
+    PhoneNumberField,
+    RatingField,
+    SelectOption,
+    SingleSelectField,
+    TextField,
+    URLField,
 )
 from .registries import (
     FieldType,
     ReadOnlyFieldType,
-    field_type_registry,
     StartingRowType,
+    field_type_registry,
 )
-from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.table.models import GeneratedTableModel, Table
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
+    from baserow.contrib.database.table.models import GeneratedTableModel, Table
+
+logger = logging.getLogger(__name__)
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):
@@ -374,9 +380,9 @@ class NumberFieldType(FieldType):
             }
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
 
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
@@ -510,7 +516,7 @@ class RatingFieldType(FieldType):
 
     def force_same_type_alter_column(self, from_field, to_field):
         """
-        Force field alter column hook to be called when chaging max_value.
+        Force field alter column hook to be called when changing max_value.
         """
 
         return to_field.max_value != from_field.max_value
@@ -628,7 +634,7 @@ class BooleanFieldType(FieldType):
         return "true" if value else "false"
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         setattr(row, field_name, value == "true")
 
@@ -673,12 +679,21 @@ class DateFieldType(FieldType):
 
         if type(value) == str:
             try:
-                value = parser.parse(value)
-            except ParserError as exc:
-                raise ValidationError(
-                    "The provided string could not converted to a date.",
-                    code="invalid",
-                ) from exc
+                # Try first to parse isodate
+                value = parser.isoparse(value)
+            except Exception:
+                try:
+                    if instance.date_format == "EU":
+                        value = parser.parse(value, dayfirst=True)
+                    elif instance.date_format == "ISO":
+                        value = parser.parse(value, yearfirst=True)
+                    else:
+                        value = parser.parse(value)
+                except ParserError as exc:
+                    raise ValidationError(
+                        "The provided string could not converted to a date.",
+                        code="invalid",
+                    ) from exc
 
         if type(value) == date:
             value = make_aware(datetime(value.year, value.month, value.day), utc)
@@ -692,9 +707,10 @@ class DateFieldType(FieldType):
             code="invalid",
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
+
         python_format = field_object["field"].get_python_format()
         return value.strftime(python_format)
 
@@ -808,7 +824,7 @@ class DateFieldType(FieldType):
         return value.isoformat()
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         if not value:
             return value
@@ -857,9 +873,10 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     model_field_kwargs = {}
     populate_from_field = None
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
+
         python_format = field_object["field"].get_python_format()
         field = field_object["field"]
         field_timezone = timezone(field.get_timezone())
@@ -933,7 +950,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
             connection, from_field, to_field
         )
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         Immediately after the field has been created, we need to populate the values
         with the already existing source_field_name column.
@@ -953,6 +970,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         """
         If the field type has changed, we need to update the values from
@@ -965,7 +983,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
             )
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         """
         The `auto_now_add` and `auto_now` properties are set to False during the
@@ -1013,20 +1031,65 @@ class LinkRowFieldType(FieldType):
     type = "link_row"
     model_class = LinkRowField
     allowed_fields = [
-        "link_row_table",
+        "link_row_table_id",
         "link_row_related_field",
+        "link_row_table",
         "link_row_relation_id",
     ]
-    serializer_field_names = ["link_row_table", "link_row_related_field"]
+    serializer_field_names = [
+        "link_row_table_id",
+        "link_row_related_field_id",
+        "link_row_table",
+        "link_row_related_field",
+    ]
     serializer_field_overrides = {
+        "link_row_table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="The id of the linked table.",
+        ),
+        "link_row_related_field_id": serializers.PrimaryKeyRelatedField(
+            read_only=True, required=False, help_text="The id of the related field."
+        ),
+        "link_row_table": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="(Deprecated) The id of the linked table.",
+        ),
         "link_row_related_field": serializers.PrimaryKeyRelatedField(
-            read_only=True, required=False
-        )
+            read_only=True,
+            required=False,
+            help_text="(Deprecated) The id of the related field.",
+        ),
     }
+    request_serializer_field_names = [
+        "link_row_table_id",
+        "link_row_table",
+        "has_related_field",
+    ]
+    request_serializer_field_overrides = {
+        "has_related_field": serializers.BooleanField(required=False),
+        "link_row_table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="The id of the linked table.",
+        ),
+        "link_row_table": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="link_row_table.id",
+            help_text="(Deprecated) The id of the linked table.",
+        ),
+    }
+
     api_exceptions_map = {
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
         IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+        SelfReferencingLinkRowCannotHaveRelatedField: ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
     }
     _can_order_by = False
     can_be_primary_field = False
@@ -1067,13 +1130,18 @@ class LinkRowFieldType(FieldType):
             models.Prefetch(name, queryset=related_queryset)
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         def map_to_export_value(inner_value, inner_field_object):
             return inner_field_object["type"].get_export_value(
-                inner_value, inner_field_object
+                inner_value, inner_field_object, rich_value=rich_value
             )
 
-        return self._get_and_map_pk_values(field_object, value, map_to_export_value)
+        result = self._get_and_map_pk_values(field_object, value, map_to_export_value)
+
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -1101,6 +1169,24 @@ class LinkRowFieldType(FieldType):
             )
         )
 
+    def _get_related_model_and_primary_field(self, instance):
+        """
+        Returns related model and primary field.
+        """
+
+        if hasattr(instance, "_related_model"):
+            related_model = instance._related_model
+        else:
+            related_model = instance.link_row_table.get_model()
+
+        primary_field = next(
+            object
+            for object in related_model._field_objects.values()
+            if object["field"].primary
+        )
+
+        return related_model, primary_field
+
     def _get_and_map_pk_values(
         self, field_object, value, map_func: Callable[[Any, Dict[str, Any]], Any]
     ):
@@ -1110,7 +1196,7 @@ class LinkRowFieldType(FieldType):
         the provided map_func function.
 
         For example, Table A has Field 1 which links to Table B. Table B has a text
-        primary key column. This function takes the value for a single row of of
+        primary key column. This function takes the value for a single row of
         Field 1, which is a number of related rows in Table B. It then gets
         the primary key column values for those related rows in Table B and applies
         map_func to each individual value. Finally it returns those mapped values as a
@@ -1124,12 +1210,8 @@ class LinkRowFieldType(FieldType):
 
         instance = field_object["field"]
         if hasattr(instance, "_related_model"):
-            related_model = instance._related_model
-            primary_field = next(
-                object
-                for object in related_model._field_objects.values()
-                if object["field"].primary
-            )
+            _, primary_field = self._get_related_model_and_primary_field(instance)
+
             if primary_field:
                 primary_field_name = primary_field["name"]
                 primary_field_values = []
@@ -1210,8 +1292,7 @@ class LinkRowFieldType(FieldType):
         manytomany_models[instance.table_id] = model
 
         # Check if the related table model is already in the manytomany_models.
-        is_referencing_the_same_table = instance.link_row_table_id == instance.table_id
-        if is_referencing_the_same_table:
+        if instance.is_self_referencing:
             related_model = model
         else:
             related_model = manytomany_models.get(instance.link_row_table_id)
@@ -1234,7 +1315,7 @@ class LinkRowFieldType(FieldType):
                 and related_field["field"].link_row_related_field_id == instance.id
             )
 
-        if not is_referencing_the_same_table:
+        if not instance.is_self_referencing:
             for related_field in related_model._field_objects.values():
                 if field_is_link_row_related_field(related_field):
                     related_name = related_field["name"]
@@ -1253,23 +1334,17 @@ class LinkRowFieldType(FieldType):
 
         model_field = model._meta.get_field(field_name)
         through_model = model_field.remote_field.through
-        if is_referencing_the_same_table:
-            # manually create the opposite relation on the same through_model.
-            from_field, to_field = through_model._meta.get_fields()[1:]
-            models.ManyToManyField(
-                to="self",
-                related_name=field_name,
-                null=True,
-                blank=True,
-                symmetrical=False,
-                through=through_model,
-                through_fields=(to_field.name, from_field.name),
-            ).contribute_to_class(model, related_name)
+
+        # this permits to django to find the reverse relation in the _relation_tree.
+        # Look into django.db.models.options.py - _populate_directed_relation_graph
+        # for more information.
+        model._meta.apps.add_models(model, related_model)
+        related_model._meta.apps.add_models(model, related_model)
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
         # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because everytime a table model is generated, it will
+        # can cause a memory leak because every time a table model is generated, it will
         # register new pending operations.
         apps = model._meta.apps
         apps.do_pending_operations(model)
@@ -1281,12 +1356,30 @@ class LinkRowFieldType(FieldType):
         """
         This method checks if the provided link row table is an int because then it
         needs to be converted to a table instance.
+        It also provided compatibility between the old name `link_row_table` and the new
+        name `link_row_table_id`.
         """
 
-        if "link_row_table" in values and isinstance(values["link_row_table"], int):
-            from baserow.contrib.database.table.handler import TableHandler
+        from baserow.contrib.database.table.handler import TableHandler
+        from baserow.contrib.database.table.models import Table
 
-            table = TableHandler().get_table(values["link_row_table"])
+        link_row_table_id = values.pop("link_row_table_id", None)
+
+        if link_row_table_id is None:
+            link_row_table = values.pop("link_row_table", None)
+
+            if isinstance(link_row_table, Table):
+                # set in a previous call to prepare_values, so we can use it.
+                values["link_row_table"] = link_row_table
+            elif isinstance(link_row_table, int):
+                logger.warning(
+                    "The 'link_row_table' parameter is deprecated for LinkRow field."
+                    "Please, use 'link_row_table_id' instead."
+                )
+                link_row_table_id = link_row_table
+
+        if isinstance(link_row_table_id, int):
+            table = TableHandler().get_table(link_row_table_id)
             table.database.group.has_user(user, raise_error=True)
             values["link_row_table"] = table
 
@@ -1296,28 +1389,30 @@ class LinkRowFieldType(FieldType):
         values = super().export_prepared_values(field)
 
         if field.link_row_table:
-            values["link_row_table"] = field.link_row_table_id
+            values.pop("link_row_table", None)
+            values["link_row_table_id"] = field.link_row_table_id
 
         # We don't want to serialize the related field as the update call will create
-        # it again.
-        values.pop("link_row_related_field")
+        # it again, but we need to save the field has a related field or not.
+        values["has_related_field"] = bool(values.pop("link_row_related_field", None))
 
         return values
 
-    def before_create(self, table, primary, values, order, user):
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
         """
         It is not allowed to link with a table from another database. This method
         checks if the database ids are the same and if not a proper exception is
         raised.
         """
 
-        if "link_row_table" not in values or not values["link_row_table"]:
+        link_row_table = allowed_field_values.get("link_row_table")
+        if link_row_table is None:
             raise LinkRowTableNotProvided(
                 "The link_row_table argument must be provided when creating a link_row "
                 "field."
             )
-
-        link_row_table = values["link_row_table"]
 
         if table.database_id != link_row_table.database_id:
             raise LinkRowTableNotInSameDatabase(
@@ -1325,19 +1420,28 @@ class LinkRowFieldType(FieldType):
                 f"as the table {table.id}."
             )
 
-    def before_update(self, from_field, to_field_values, user):
+        self_referencing_link_row = table.id == link_row_table.id
+        create_related_field = field_kwargs.get("has_related_field")
+        if self_referencing_link_row and create_related_field:
+            raise SelfReferencingLinkRowCannotHaveRelatedField(
+                f"A self referencing link row cannot have a related field."
+            )
+        if create_related_field is None:
+            field_kwargs["has_related_field"] = not self_referencing_link_row
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
         """
         It is not allowed to link with a table from another database if the
         link_row_table has changed and if it is within the same database.
         """
 
-        if (
-            "link_row_table" not in to_field_values
-            or not to_field_values["link_row_table"]
-        ):
+        link_row_table = to_field_values.get("link_row_table")
+        if link_row_table is None:
+            field_kwargs.setdefault(
+                "has_related_field", from_field.link_row_table_has_related_field
+            )
             return
 
-        link_row_table = to_field_values["link_row_table"]
         table = from_field.table
 
         if from_field.table.database_id != link_row_table.database_id:
@@ -1346,13 +1450,34 @@ class LinkRowFieldType(FieldType):
                 f"as the table {table.id}."
             )
 
-    def after_create(self, field, model, user, connection, before):
+        self_referencing_link_row = table.id == link_row_table.id
+        to_field_has_related_field = field_kwargs.get("has_related_field")
+
+        if self_referencing_link_row and to_field_has_related_field:
+            raise SelfReferencingLinkRowCannotHaveRelatedField(
+                f"A self referencing link row cannot have a related field."
+            )
+
+        if to_field_has_related_field is None:
+            if isinstance(from_field, LinkRowField):
+                field_kwargs["has_related_field"] = (
+                    from_field.link_row_table_has_related_field
+                    and not self_referencing_link_row
+                )
+            else:
+                field_kwargs["has_related_field"] = not self_referencing_link_row
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         When the field is created we have to add the related field to the related
         table so a reversed lookup can be done by the user.
         """
 
-        if field.link_row_related_field or field.table == field.link_row_table:
+        if (
+            field.link_row_table_has_related_field
+            or field.is_self_referencing
+            or not field_kwargs["has_related_field"]
+        ):
             return
 
         related_field_name = self.find_next_unused_related_field_name(field)
@@ -1389,24 +1514,37 @@ class LinkRowFieldType(FieldType):
         from_model_field,
         to_model_field,
         user,
+        to_field_kwargs,
     ):
+        to_instance = isinstance(to_field, self.model_class)
+        from_instance = isinstance(from_field, self.model_class)
+        from_link_row_table_has_related_field = (
+            from_instance and from_field.link_row_table_has_related_field
+        )
+        to_link_row_table_has_related_field = (
+            to_instance and to_field_kwargs["has_related_field"]
+        )
+
         if (
-            not isinstance(to_field, self.model_class)
-            and from_field.link_row_related_field is not None
+            from_link_row_table_has_related_field
+            and not to_link_row_table_has_related_field
         ):
-            # If we are not going to convert to another manytomany field the
-            # related field can be deleted.
-            from_field.link_row_related_field.delete()
-        elif (
-            isinstance(to_field, self.model_class)
-            and isinstance(from_field, self.model_class)
-            and to_field.link_row_table.id != from_field.link_row_table.id
-        ):
-            # If the table has changed we have to change the following data in the
-            # related field
+            FieldHandler().delete_field(
+                user=user,
+                field=from_field.link_row_related_field,
+                # Prevent the deletion of from_field itself as normally both link row
+                # fields are deleted together.
+                immediately_delete_only_the_provided_field=True,
+            )
+            if to_instance:
+                to_field.link_row_related_field = None
+        elif to_instance and from_instance:
             related_field_name = self.find_next_unused_related_field_name(to_field)
 
-            if from_field.link_row_related_field is None:
+            if (
+                not from_link_row_table_has_related_field
+                and to_link_row_table_has_related_field
+            ):
                 # we need to create the missing link_row_related_field
                 to_field.link_row_related_field = FieldHandler().create_field(
                     user=user,
@@ -1417,16 +1555,14 @@ class LinkRowFieldType(FieldType):
                     link_row_table=to_field.table,
                     link_row_related_field=to_field,
                     link_row_relation_id=to_field.link_row_relation_id,
+                    has_related_field=True,
                 )
                 to_field.save()
             elif (
-                # delete the previous field that is not needed anymore
-                # since we are referencing the same table now
-                to_field.link_row_related_field is not None
-                and to_field.table_id == to_field.link_row_table_id
+                from_link_row_table_has_related_field
+                and to_link_row_table_has_related_field
+                and from_field.link_row_table != to_field.link_row_table
             ):
-                to_field.link_row_related_field.delete()
-            else:
 
                 # We are changing the related fields table so we need to invalidate
                 # its old model cache as this will not happen automatically.
@@ -1450,17 +1586,21 @@ class LinkRowFieldType(FieldType):
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         """
         If the old field is not already a link row field we have to create the related
-        field into the related table.
+        field into the related table. We also need to update the related field
+        even if the link_row_table_has_related_field changes.
         """
 
-        if (
-            not isinstance(from_field, self.model_class)
-            and isinstance(to_field, self.model_class)
-            and to_field.table != to_field.link_row_table
-        ):
+        to_instance_require_related_field = (
+            isinstance(to_field, self.model_class)
+            and to_field_kwargs["has_related_field"]
+        )
+        from_instance = isinstance(from_field, self.model_class)
+
+        if not from_instance and to_instance_require_related_field:
             related_field_name = self.find_next_unused_related_field_name(to_field)
             to_field.link_row_related_field = FieldHandler().create_field(
                 user=user,
@@ -1513,59 +1653,8 @@ class LinkRowFieldType(FieldType):
         serialized = super().export_serialized(field, False)
         serialized["link_row_table_id"] = field.link_row_table_id
         serialized["link_row_related_field_id"] = field.link_row_related_field_id
+        serialized["has_related_field"] = field.link_row_table_has_related_field
         return serialized
-
-    def import_serialized_for_table_duplication(
-        self,
-        table: "Table",
-        serialized_values: Dict[str, Any],
-        id_mapping: Dict[str, Any],
-    ) -> Field:
-        """
-        For table duplication we cannot just use the serialized_values, but we need to
-        create a brand new link row field and a new related field in the referenced
-        table.
-
-        :param table: The table to duplicate
-        :param serialized_values: The serialized exported values of the field
-        :param id_mapping: A dictionary mapping old table ids to new table ids
-        :return: The new field
-        """
-
-        serialized_copy = serialized_values.copy()
-        link_row_table_id = serialized_copy.get("link_row_table_id")
-        link_row_table = TableHandler().get_table(link_row_table_id)
-        original_table_id = [
-            k for k, v in id_mapping["database_tables"].items() if v == table.id
-        ][0]
-        original_link_row_related_field_id = serialized_copy.pop(
-            "link_row_related_field_id"
-        )
-
-        # if was a self-referencing link row field, update the link_row_table_id
-        if original_table_id == link_row_table_id:
-            serialized_copy["link_row_table_id"] = table.id
-            return super().import_serialized(table, serialized_copy, id_mapping)
-
-        field = super().import_serialized(table, serialized_copy, id_mapping)
-
-        related_field_name = self.find_next_unused_related_field_name(field)
-        last_order = Field.get_last_order(link_row_table)
-        related_serialized_copy = {
-            "id": original_link_row_related_field_id,
-            "name": related_field_name,
-            "type": serialized_copy.get("type"),
-            "link_row_table_id": table.id,
-            "link_row_related_field_id": field.id,
-            "link_row_relation_id": field.link_row_relation_id,
-            "order": last_order,
-        }
-        related_field = super().import_serialized(
-            link_row_table, related_serialized_copy, id_mapping
-        )
-        field.link_row_related_field = related_field
-        field.save()
-        return field
 
     def import_serialized(
         self,
@@ -1574,18 +1663,19 @@ class LinkRowFieldType(FieldType):
         id_mapping: Dict[str, Any],
     ) -> Optional[Field]:
 
-        if id_mapping.get("operation") == "duplicate_table":
-            return self.import_serialized_for_table_duplication(
-                table, serialized_values, id_mapping
-            )
-
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
         ]
-        link_row_related_field_id = serialized_copy.pop("link_row_related_field_id")
+        link_row_related_field_id = serialized_copy.pop(
+            "link_row_related_field_id", None
+        )
+        has_related_field = serialized_copy.pop(
+            "has_related_field", link_row_related_field_id
+        )
         related_field_found = (
             "database_fields" in id_mapping
+            and has_related_field
             and link_row_related_field_id in id_mapping["database_fields"]
         )
 
@@ -1645,7 +1735,7 @@ class LinkRowFieldType(FieldType):
         return cache[cache_entry][row.id]
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         getattr(row, field_name).set(value)
 
@@ -1691,7 +1781,7 @@ class LinkRowFieldType(FieldType):
         self, old_field: LinkRowField, new_field_attrs: Dict[str, Any]
     ) -> bool:
         new_link_row_table_id = new_field_attrs.get(
-            "link_row_table", old_field.link_row_table_id
+            "link_row_table_id", old_field.link_row_table_id
         )
         return old_field.link_row_table_id != new_link_row_table_id
 
@@ -1746,7 +1836,7 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
 class FileFieldType(FieldType):
     type = "file"
     model_class = FileField
-    can_be_in_form_view = False
+    can_be_in_form_view = True
     can_get_unique_values = False
 
     def _extract_file_names(self, value):
@@ -1859,7 +1949,7 @@ class FileFieldType(FieldType):
             **{"many": True, "required": False, **kwargs}
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         files = []
         for file in value:
             if "name" in file:
@@ -1867,14 +1957,21 @@ class FileFieldType(FieldType):
                 url = default_storage.url(path)
             else:
                 url = None
+
             files.append(
                 {
                     "visible_name": file["visible_name"],
+                    "name": file["name"],
                     "url": url,
                 }
             )
 
-        return files
+        if rich_value:
+            return [{"visible_name": f["visible_name"], "url": f["url"]} for f in files]
+        else:
+            return list_to_comma_separated_string(
+                [f'{file["visible_name"]} ({file["url"]})' for file in files]
+            )
 
     def get_human_readable_value(self, value, field_object):
         file_names = []
@@ -1972,6 +2069,7 @@ class FileFieldType(FieldType):
         field_name: str,
         value: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
         files_zip: Optional[ZipFile],
         storage: Optional[Storage],
     ) -> None:
@@ -2006,15 +2104,17 @@ class SelectOptionBaseFieldType(FieldType):
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
 
-    def before_create(self, table, primary, values, order, user):
-        if "select_options" in values:
-            return values.pop("select_options")
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        if "select_options" in allowed_field_values:
+            return allowed_field_values.pop("select_options")
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         if before and len(before) > 0:
             FieldHandler().update_field_select_options(user, field, before)
 
-    def before_update(self, from_field, to_field_values, user):
+    def before_update(self, from_field, to_field_values, user, kwargs):
         if "select_options" in to_field_values:
             FieldHandler().update_field_select_options(
                 user, from_field, to_field_values["select_options"]
@@ -2140,9 +2240,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             "color is exposed."
         )
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
+            return value if rich_value else ""
         return value.value
 
     def get_model_field(self, instance, **kwargs):
@@ -2283,7 +2383,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         return Q(**{f"{field_name}__value__icontains": value})
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         if not value:
             return
@@ -2333,15 +2433,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def enhance_queryset(self, queryset, field, name):
-        remote_field = queryset.model._meta.get_field(name).remote_field
-        remote_model = remote_field.model
-        through_model = remote_field.through
-        related_queryset = remote_model.objects.all().extra(
-            order_by=[f"{through_model._meta.db_table}.id"]
-        )
-        return queryset.prefetch_related(
-            models.Prefetch(name, queryset=related_queryset)
-        )
+        return queryset.prefetch_related(name)
 
     def prepare_value_for_db(self, instance, value):
         if value is None:
@@ -2377,7 +2469,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if len(selected_ids) != len(unique_values):
             invalid_ids = sorted(list(unique_values - set(selected_ids)))
             if continue_on_error:
-                # Replace values by error for failling rows
+                # Replace values by error for failing rows
                 for invalid_id in invalid_ids:
                     for row_index in value_map[invalid_id]:
                         values_by_row[
@@ -2423,13 +2515,19 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         return sample(set([x.id for x in select_options]), random_choice)
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value
-        return [item.value for item in value.all()]
+            return value if rich_value else ""
+
+        result = [item.value for item in value.all()]
+
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
 
     def get_human_readable_value(self, value, field_object):
-        export_value = self.get_export_value(value, field_object)
+        export_value = self.get_export_value(value, field_object, rich_value=True)
 
         return ", ".join(export_value)
 
@@ -2477,7 +2575,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new new model is registered. Not triggering them
+        # they are triggered when a new model is registered. Not triggering them
         # can cause a memory leak because everytime a table model is generated, it will
         # register new pending operations.
         apps = model._meta.apps
@@ -2510,7 +2608,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         return cache[cache_entry][row.id]
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         mapped_values = [
             id_mapping["database_field_select_options"][item] for item in value
@@ -2738,7 +2836,9 @@ class FormulaFieldType(ReadOnlyFieldType):
             code="read_only",
         )
 
-    def get_export_value(self, value, field_object) -> BaserowFormulaType:
+    def get_export_value(
+        self, value, field_object, rich_value=False
+    ) -> BaserowFormulaType:
         instance = field_object["field"]
         (
             field_instance,
@@ -2747,6 +2847,7 @@ class FormulaFieldType(ReadOnlyFieldType):
         return field_type.get_export_value(
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
+            rich_value=rich_value,
         )
 
     def contains_query(self, field_name, value, model_field, field: FormulaField):
@@ -2944,7 +3045,7 @@ class FormulaFieldType(ReadOnlyFieldType):
             field, old_field, update_collector, field_cache, via_path_to_starting_table
         )
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         Immediately after the field has been created, we need to populate the values
         with the already existing source_field_name column.
@@ -2976,6 +3077,7 @@ class FormulaFieldType(ReadOnlyFieldType):
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         to_model = to_field.table.get_model()
         expr = FormulaHandler.baserow_expression_to_update_django_expression(
@@ -3067,13 +3169,15 @@ class LookupFieldType(FormulaFieldType):
         ),
     }
 
-    def before_create(self, table, primary, values, order, user):
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
         self._validate_through_and_target_field_values(
             table,
-            values,
+            allowed_field_values,
         )
 
-    def before_update(self, from_field, to_field_values, user):
+    def before_update(self, from_field, to_field_values, user, kwargs):
         if isinstance(from_field, LookupField):
             through_field_id = (
                 from_field.through_field.id
@@ -3232,3 +3336,252 @@ class LookupFieldType(FormulaFieldType):
     def after_import_serialized(self, field, field_cache):
         self._rebuild_field_from_names(field)
         super().after_import_serialized(field, field_cache)
+
+
+class MultipleCollaboratorsFieldType(FieldType):
+    type = "multiple_collaborators"
+    model_class = MultipleCollaboratorsField
+    can_get_unique_values = False
+    can_be_in_form_view = False
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        field_serializer = CollaboratorSerializer(
+            **{
+                "required": required,
+                "allow_null": False,
+                **kwargs,
+            }
+        )
+        return serializers.ListSerializer(child=field_serializer, required=required)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> List[int]:
+        related_objects = getattr(row, field_name)
+        return [{"id": related_object.id} for related_object in related_objects.all()]
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        return CollaboratorSerializer(
+            **{
+                "required": required,
+                "allow_null": False,
+                "many": True,
+                **kwargs,
+            }
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return []
+
+        if len(value) == 0:
+            return []
+
+        user_ids = [v["id"] for v in value]
+        group = instance.table.database.group
+        group_users_count = GroupUser.objects.filter(
+            user_id__in=user_ids, group_id=group.id
+        ).count()
+
+        if group_users_count != len(user_ids):
+            raise AllProvidedCollaboratorIdsMustBeValidUsers(user_ids)
+
+        return user_ids
+
+    def prepare_value_for_db_in_bulk(
+        self, instance, values_by_row, continue_on_error=False
+    ):
+        # {user_id -> row_indexes}
+        rows_by_value = defaultdict(list)
+        all_user_ids = set()
+        for row_index, values in values_by_row.items():
+            user_ids = [v["id"] for v in values]
+            for user_id in user_ids:
+                rows_by_value[user_id].append(row_index)
+            all_user_ids = all_user_ids.union(user_ids)
+            values_by_row[row_index] = user_ids
+
+        group = instance.table.database.group
+
+        selected_ids = GroupUser.objects.filter(
+            user_id__in=all_user_ids, group_id=group.id
+        ).values_list("user_id", flat=True)
+
+        if len(selected_ids) != len(all_user_ids):
+            invalid_ids = sorted(list(all_user_ids - set(selected_ids)))
+            if continue_on_error:
+                for invalid_id in invalid_ids:
+                    for row_index in rows_by_value[invalid_id]:
+                        values_by_row[
+                            row_index
+                        ] = AllProvidedCollaboratorIdsMustBeValidUsers(invalid_id)
+            else:
+                # or fail fast
+                raise AllProvidedCollaboratorIdsMustBeValidUsers(invalid_ids)
+
+        return values_by_row
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "This field accepts a list of objects representing the chosen "
+            "collaborators through the object's `id` property. The id is Baserow "
+            "user id. The response objects also contains the collaborator name "
+            "directly along with its id."
+        )
+
+    def get_export_value(self, value, field_object, rich_value=False):
+        if value is None:
+            return [] if rich_value else ""
+        result = [item.email for item in value.all()]
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
+
+    def get_human_readable_value(self, value, field_object):
+        export_value = self.get_export_value(value, field_object, rich_value=True)
+        if len(export_value) == 0:
+            return ""
+        return ", ".join(export_value)
+
+    def get_model_field(self, instance, **kwargs):
+        return None
+
+    def after_model_generation(self, instance, model, field_name, manytomany_models):
+        user_meta = type(
+            "Meta",
+            (AbstractUser.Meta,),
+            {
+                "managed": False,
+                "app_label": model._meta.app_label,
+                "db_tablespace": model._meta.db_tablespace,
+                "db_table": get_user_model().objects.model._meta.db_table,
+                "apps": model._meta.apps,
+            },
+        )
+        user_model = type(
+            str(f"MultipleCollaboratorsField{instance.id}User"),
+            (AbstractUser,),
+            {
+                # We need to override the `groups` and `user_permissions` here
+                # because they're normally many to many relationships with the
+                # `Group` and `Permission` model. This is something that we do not need
+                # and we don't want to create reversed relationships for generated
+                # model.
+                "groups": None,
+                "user_permissions": None,
+                "Meta": user_meta,
+                "__module__": model.__module__,
+                "_generated_table_model": True,
+            },
+        )
+
+        related_name = f"reversed_field_{instance.id}"
+        shared_kwargs = {
+            "null": True,
+            "blank": True,
+            "db_table": instance.through_table_name,
+            "db_constraint": False,
+        }
+        additional_filters = {
+            "id__in": GroupUser.objects.filter(
+                group_id=instance.table.database.group_id
+            ).values_list("user_id", flat=True)
+        }
+
+        MultipleSelectManyToManyField(
+            to=user_model,
+            related_name=related_name,
+            additional_filters=additional_filters,
+            **shared_kwargs,
+        ).contribute_to_class(model, field_name)
+        MultipleSelectManyToManyField(
+            to=model,
+            related_name=field_name,
+            reversed_additional_filters=additional_filters,
+            **shared_kwargs,
+        ).contribute_to_class(user_model, related_name)
+
+        # Trigger the newly created pending operations of all the models related to the
+        # created CollaboratorField. They need to be called manually because normally
+        # they are triggered when a new model is registered. Not triggering them
+        # can cause a memory leak because everytime a table model is generated, it will
+        # register new pending operations.
+        apps = model._meta.apps
+        model_field = model._meta.get_field(field_name)
+        collaborator_field = user_model._meta.get_field(related_name)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(user_model)
+        apps.do_pending_operations(model_field.remote_field.through)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(collaborator_field.remote_field.through)
+        apps.clear_cache()
+
+    def enhance_queryset(self, queryset, field, name):
+        return queryset.prefetch_related(name)
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        cache_entry = f"{field_name}_relations_export"
+        if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table, we want
+            # to fetch all the relations and add it to a temporary in memory cache
+            # containing a mapping of the row ids to collaborator emails.
+            cache[cache_entry] = defaultdict(list)
+            through_model = row._meta.get_field(field_name).remote_field.through
+            through_model_fields = through_model._meta.get_fields()
+            current_field_name = through_model_fields[1].name
+            relation_field_name = through_model_fields[2].name
+            users_relation = through_model.objects.select_related(relation_field_name)
+            for relation in users_relation:
+                cache[cache_entry][
+                    getattr(relation, f"{current_field_name}_id")
+                ].append(getattr(relation, relation_field_name).email)
+        return cache[cache_entry][row.id]
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, cache, files_zip, storage
+    ):
+        group_id = id_mapping["import_group_id"]
+        cache_entry = f"{field_name}_relations_import"
+        if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table, we want
+            # to fetch all the relations and add it to a temporary in memory cache
+            # containing a mapping of the row ids to collaborator emails.
+            cache[cache_entry] = defaultdict(list)
+
+            groupusers_from_group = GroupUser.objects.filter(
+                group_id=group_id
+            ).select_related("user")
+
+            for groupuser in groupusers_from_group:
+                cache[cache_entry][groupuser.user.email] = groupuser.user.id
+
+        user_ids = []
+        for email in value:
+            user_id = cache[cache_entry].get(email, None)
+            if user_id is not None:
+                user_ids.append(user_id)
+
+        getattr(row, field_name).set(user_ids)
+
+    def get_order(self, field, field_name, order_direction):
+        """
+        If the user wants to sort the results he expects them to be ordered
+        alphabetically based on the user's name and not in the id which is
+        stored in the table. This method generates a Case expression which maps
+        the id to the correct position.
+        """
+
+        sort_column_name = f"{field_name}_agg_sort"
+        query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
+        annotation = {sort_column_name: query}
+
+        order = F(sort_column_name)
+        if order_direction == "DESC":
+            order = order.desc(nulls_first=True)
+        else:
+            order = order.asc(nulls_first=True)
+
+        return AnnotatedOrder(annotation=annotation, order=order)

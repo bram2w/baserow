@@ -1,11 +1,12 @@
 import uuid
 from urllib.parse import parse_qs
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+
 import jwt
 from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
-from django.conf import settings
-from django.contrib.auth import get_user_model
 from rest_framework_jwt.settings import api_settings
 
 jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER

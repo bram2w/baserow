@@ -1,10 +1,10 @@
 import uuid
 
-from django.db import models
 from django.core.validators import MaxLengthValidator, URLValidator
+from django.db import models
 
-from baserow.core.models import CreatedAndUpdatedOnMixin
 from baserow.contrib.database.table.models import Table
+from baserow.core.models import CreatedAndUpdatedOnMixin
 
 from .validators import header_name_validator, header_value_validator, url_validator
 

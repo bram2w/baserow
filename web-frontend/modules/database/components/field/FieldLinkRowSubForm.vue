@@ -7,9 +7,9 @@
         </label>
         <div class="control__elements">
           <Dropdown
-            v-model="values.link_row_table"
-            :class="{ 'dropdown--error': $v.values.link_row_table.$error }"
-            @hide="$v.values.link_row_table.$touch()"
+            v-model="values.link_row_table_id"
+            :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+            @hide="$v.values.link_row_table_id.$touch()"
           >
             <DropdownItem
               v-for="table in tables"
@@ -18,10 +18,17 @@
               :value="table.id"
             ></DropdownItem>
           </Dropdown>
-          <div v-if="$v.values.link_row_table.$error" class="error">
+          <div v-if="$v.values.link_row_table_id.$error" class="error">
             {{ $t('error.requiredField') }}
           </div>
         </div>
+      </div>
+    </div>
+    <div v-show="values.link_row_table_id !== table.id" class="control">
+      <div class="control__elements">
+        <Checkbox v-model="values.has_related_field">{{
+          $t('fieldLinkRowSubForm.hasRelatedFieldLabel')
+        }}</Checkbox>
       </div>
     </div>
   </div>
@@ -39,51 +46,62 @@ export default {
   mixins: [form, fieldSubForm],
   data() {
     return {
-      allowedValues: ['link_row_table'],
+      allowedValues: ['link_row_table_id', 'has_related_field'],
       values: {
-        link_row_table: null,
+        link_row_table_id: null,
+        has_related_field: true,
       },
-      initialLinkRowTable: null,
+      initialLinkRowTableId: null,
     }
   },
   computed: {
     tables() {
       const applications = this.$store.getters['application/getAll']
       const databaseType = DatabaseApplicationType.getType()
-      const tableId = this.table.id
-
+      const databaseId = this.table.database_id
       // Search for the database of the related table and return all the siblings of
       // that table because those are the only ones the user can choose form.
       for (let i = 0; i < applications.length; i++) {
         const application = applications[i]
-        if (application.type === databaseType) {
-          for (let tableI = 0; tableI < application.tables.length; tableI++) {
-            const table = application.tables[tableI]
-            if (table.id === tableId) {
-              return application.tables
-            }
-          }
+        if (
+          application.type === databaseType &&
+          application.id === databaseId
+        ) {
+          return application.tables
         }
       }
-
       return []
     },
   },
   mounted() {
-    this.initialLinkRowTable = this.values.link_row_table
+    this.initialLinkRowTable = this.values.link_row_table_id
+    this.values.has_related_field =
+      this.initialLinkRowTable == null ||
+      this.defaultValues.link_row_related_field != null
   },
   validations: {
     values: {
-      link_row_table: { required },
+      link_row_table_id: { required },
     },
   },
   methods: {
     reset() {
-      this.initialLinkRowTable = this.values.link_row_table
+      this.initialLinkRowTable = this.values.link_row_table_id
+      this.defaultValues.has_related_field =
+        this.initialLinkRowTable == null ||
+        this.defaultValues.link_row_related_field != null
       return form.methods.reset.call(this)
     },
     isValid() {
       return form.methods.isValid().call(this) && this.tables.length > 0
+    },
+    getFormValues() {
+      const data = form.methods.getFormValues.call(this)
+      // self-referencing link-row fields cannot have the related field
+      if (this.values.link_row_table_id === this.table.id) {
+        data.has_related_field = false
+      }
+      return data
     },
   },
 }

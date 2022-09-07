@@ -1,30 +1,25 @@
 from decimal import Decimal
-
-import pytest
 from unittest.mock import patch
 
+import pytest
 from pytest_unordered import unordered
 
-from baserow.core.action.handler import ActionHandler
-from baserow.core.action.registries import (
-    action_type_registry,
-)
-from baserow.contrib.database.action.scopes import (
-    TableActionScopeType,
-)
+from baserow.contrib.database.action.scopes import TableActionScopeType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
     CreateRowsActionType,
-    ImportRowsActionType,
     DeleteRowActionType,
     DeleteRowsActionType,
+    ImportRowsActionType,
     MoveRowActionType,
     UpdateRowActionType,
     UpdateRowsActionType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
@@ -773,9 +768,8 @@ def test_can_undo_redo_updating_row(data_fixture):
         field=fuel_type_option_field, value="electric", color="red"
     )
 
-    year_of_manifacture = data_fixture.create_date_field(
-        table=table_car,
-        name="Year of manifacture",
+    year_of_manufacturer = data_fixture.create_date_field(
+        table=table_car, name="Year of manufacturer", date_format="ISO"
     )
 
     manufacturer_link_row_field = FieldHandler().create_field(
@@ -846,7 +840,7 @@ def test_can_undo_redo_updating_row(data_fixture):
         f"field_{available_field.id}": True,
         f"field_{fuel_type_option_field.id}": option_electric.id,
         manufacturer_link_row_field.id: [tesla_manufacturer.id],
-        year_of_manifacture.id: "2018-01-01",
+        year_of_manufacturer.id: "2018-01-01",
         multiple_select_field.id: [select_option_1.id, select_option_2.id],
         9999: "Must not be added",
     }
@@ -873,7 +867,7 @@ def test_can_undo_redo_updating_row(data_fixture):
         car, f"field_{manufacturer_link_row_field.id}"
     ).values_list("id", flat=True)
     assert list(car_manufacturer) == [tesla_manufacturer.id]
-    assert str(getattr(car, f"field_{year_of_manifacture.id}")) == "2018-01-01"
+    assert str(getattr(car, f"field_{year_of_manufacturer.id}")) == "2018-01-01"
     assert not getattr(car, "field_9999", None)
     options = getattr(car, f"field_{multiple_select_field.id}").values_list(
         "id", flat=True
@@ -889,7 +883,7 @@ def test_can_undo_redo_updating_row(data_fixture):
         f"field_{fuel_type_option_field.id}": option_gasoline.id,
         manufacturer_link_row_field.id: [alfa_manufacturer.id],
         alternative_car_link_row_field.id: [car.id],
-        year_of_manifacture.id: "2015-09-01",
+        year_of_manufacturer.id: "2015-09-01",
         multiple_select_field.id: [select_option_3.id],
     }
 
@@ -915,7 +909,7 @@ def test_can_undo_redo_updating_row(data_fixture):
         car, f"field_{alternative_car_link_row_field.id}"
     ).values_list("id", flat=True)
     assert list(car_alternatives) == [car.id]
-    assert str(getattr(car, f"field_{year_of_manifacture.id}")) == "2015-09-01"
+    assert str(getattr(car, f"field_{year_of_manufacturer.id}")) == "2015-09-01"
     options = getattr(car, f"field_{multiple_select_field.id}").values_list(
         "id", flat=True
     )
@@ -947,7 +941,7 @@ def test_can_undo_redo_updating_row(data_fixture):
         car, f"field_{alternative_car_link_row_field.id}"
     ).values_list("id", flat=True)
     assert list(car_alternatives) == []
-    assert str(getattr(car, f"field_{year_of_manifacture.id}")) == "2018-01-01"
+    assert str(getattr(car, f"field_{year_of_manufacturer.id}")) == "2018-01-01"
     assert not getattr(car, "field_9999", None)
     options = getattr(car, f"field_{multiple_select_field.id}").values_list(
         "id", flat=True
@@ -980,7 +974,7 @@ def test_can_undo_redo_updating_row(data_fixture):
         car, f"field_{alternative_car_link_row_field.id}"
     ).values_list("id", flat=True)
     assert list(car_alternatives) == [car.id]
-    assert str(getattr(car, f"field_{year_of_manifacture.id}")) == "2015-09-01"
+    assert str(getattr(car, f"field_{year_of_manufacturer.id}")) == "2015-09-01"
     options = getattr(car, f"field_{multiple_select_field.id}").values_list(
         "id", flat=True
     )

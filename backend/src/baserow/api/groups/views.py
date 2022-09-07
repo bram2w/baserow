@@ -1,46 +1,42 @@
 from django.db import transaction
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from drf_spectacular.utils import extend_schema
-from drf_spectacular.plumbing import build_array_type
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body, map_exceptions
+from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
-    ERROR_USER_NOT_IN_GROUP,
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
-)
-from baserow.api.schemas import (
-    get_error_schema,
-    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    ERROR_USER_NOT_IN_GROUP,
 )
 from baserow.api.groups.users.serializers import GroupUserGroupSerializer
+from baserow.api.schemas import (
+    CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+    CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    get_error_schema,
+)
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
-from baserow.core.models import GroupUser
-from baserow.core.handler import CoreHandler
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import (
+    CreateGroupActionType,
+    DeleteGroupActionType,
+    OrderGroupsActionType,
+    UpdateGroupActionType,
+)
 from baserow.core.exceptions import (
-    UserNotInGroup,
     GroupDoesNotExist,
     GroupUserIsLastAdmin,
     UserInvalidGroupPermissionsError,
+    UserNotInGroup,
 )
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
-from .serializers import GroupSerializer, OrderGroupsSerializer
-from .schemas import group_user_schema
 from .errors import ERROR_GROUP_USER_IS_LAST_ADMIN
-from baserow.core.action.registries import action_type_registry
-from baserow.core.actions import (
-    DeleteGroupActionType,
-    CreateGroupActionType,
-    UpdateGroupActionType,
-    OrderGroupsActionType,
-)
+from .serializers import GroupSerializer, OrderGroupsSerializer
 
 
 class GroupsView(APIView):
@@ -57,13 +53,15 @@ class GroupsView(APIView):
             "are custom for each user. The order is configurable via the "
             "**order_groups** endpoint."
         ),
-        responses={200: build_array_type(group_user_schema)},
+        responses={200: GroupUserGroupSerializer(many=True)},
     )
     def get(self, request):
         """Responds with a list of serialized groups where the user is part of."""
 
-        groups = GroupUser.objects.filter(user=request.user).select_related("group")
-        serializer = GroupUserGroupSerializer(groups, many=True)
+        groupuser_groups = (
+            CoreHandler().get_groupuser_group_queryset().filter(user=request.user)
+        )
+        serializer = GroupUserGroupSerializer(groupuser_groups, many=True)
         return Response(serializer.data)
 
     @extend_schema(
@@ -76,7 +74,7 @@ class GroupsView(APIView):
             "created via other endpoints."
         ),
         request=GroupSerializer,
-        responses={200: group_user_schema},
+        responses={200: GroupUserGroupSerializer},
     )
     @transaction.atomic
     @validate_body(GroupSerializer)
@@ -161,7 +159,7 @@ class GroupView(APIView):
         ),
         request=GroupSerializer,
         responses={
-            200: group_user_schema,
+            204: None,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

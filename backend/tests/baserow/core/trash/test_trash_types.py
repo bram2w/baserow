@@ -1,5 +1,6 @@
-import pytest
 from django.db import connection
+
+import pytest
 
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table

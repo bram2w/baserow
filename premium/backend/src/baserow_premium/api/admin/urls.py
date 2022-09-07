@@ -1,8 +1,8 @@
-from django.urls import path, include
+from django.urls import include, path
 
-from .users import urls as users_urls
-from .groups import urls as groups_urls
 from .dashboard import urls as dashboard_urls
+from .groups import urls as groups_urls
+from .users import urls as users_urls
 
 app_name = "baserow_premium.api.admin"
 

@@ -1,28 +1,11 @@
-let pendingGetQueries = {}
-let delay = null
+import _ from 'lodash'
+import { callGrouper } from '@baserow/modules/core/utils/function'
+
 const GRACE_DELAY = 50 // ms before querying the backend with a get query
 
+const groupGetNameCalls = callGrouper(GRACE_DELAY)
+
 export default (client) => {
-  const getNameCallback = async () => {
-    const config = {}
-    config.params = Object.fromEntries(
-      Object.entries(pendingGetQueries).map(([tableId, rows]) => {
-        const rowIds = Object.keys(rows)
-        return [`table__${tableId}`, rowIds.join(',')]
-      })
-    )
-
-    const { data } = await client.get(`/database/rows/names/`, config)
-
-    Object.entries(data).forEach(([tableId, rows]) => {
-      Object.entries(rows).forEach(([rowId, rowName]) => {
-        pendingGetQueries[tableId][rowId].forEach((resolve) => resolve(rowName))
-      })
-    })
-    pendingGetQueries = {}
-    delay = null
-  }
-
   return {
     get(tableId, rowId) {
       return client.get(`/database/rows/table/${tableId}/${rowId}/`)
@@ -45,20 +28,31 @@ export default (client) => {
      * Returns the name of specified table row. Batch consecutive queries into one
      * during the defined GRACE_TIME.
      */
-    getName(tableId, rowId) {
-      return new Promise((resolve) => {
-        clearTimeout(delay)
-
-        if (!pendingGetQueries[tableId]) {
-          pendingGetQueries[tableId] = {}
+    getName: groupGetNameCalls(async (argList) => {
+      // [[tableId, id], ...] -> { table__<id>: Array<row ids> }
+      const tableMap = argList.reduce((acc, [tableId, rowId]) => {
+        if (!acc[`table__${tableId}`]) {
+          acc[`table__${tableId}`] = new Set()
         }
-        if (!pendingGetQueries[tableId][rowId]) {
-          pendingGetQueries[tableId][rowId] = []
-        }
-        pendingGetQueries[tableId][rowId].push(resolve)
+        acc[`table__${tableId}`].add(rowId)
+        return acc
+      }, {})
 
-        delay = setTimeout(getNameCallback, GRACE_DELAY)
-      })
+      const config = {
+        params: _.mapValues(tableMap, (rowIds) => Array.from(rowIds).join(',')),
+      }
+
+      const { data } = await client.get(`/database/rows/names/`, config)
+
+      return (tableId, rowId) => {
+        if (!data[tableId]) {
+          return null
+        }
+        return data[tableId][rowId]
+      }
+    }),
+    getIds(tableId, rowNames) {
+      return Promise.all(rowNames.map((name) => this.getId(tableId, name)))
     },
     create(tableId, values, beforeId = null) {
       const config = { params: {} }

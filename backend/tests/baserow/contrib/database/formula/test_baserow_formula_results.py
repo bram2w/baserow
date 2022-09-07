@@ -1,42 +1,42 @@
 import datetime
 import sys
 import traceback
-from datetime import timedelta
 from decimal import Decimal
 from re import search
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
-import pytest
 from django.conf import settings
 from django.urls import reverse
-from django.utils.duration import duration_string
+
+import pytest
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import FormulaField, Field
+from baserow.contrib.database.fields.models import Field, FormulaField
 from baserow.contrib.database.formula import (
-    literal,
     BaserowFormulaArrayType,
     BaserowFormulaBooleanType,
-    BaserowFormulaTextType,
     BaserowFormulaNumberType,
+    BaserowFormulaTextType,
+    literal,
 )
 from baserow.contrib.database.formula.ast.function_defs import (
     Baserow2dArrayAgg,
     BaserowAggJoin,
 )
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFunctionCall,
     BaserowFieldReference,
+    BaserowFunctionCall,
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.formula.types.formula_type import (
-    UnTyped,
     BaserowFormulaValidType,
+    UnTyped,
 )
 from baserow.contrib.database.formula.types.type_checker import MustBeManyExprChecker
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.trash.handler import TrashHandler
 
 VALID_FORMULA_TESTS = [
     ("'test'", "test"),
@@ -47,7 +47,7 @@ VALID_FORMULA_TESTS = [
     ("CONCAT('test', ' ', 'works')", "test works"),
     ("CONCAT('test', ' ', UPPER('works'))", "test WORKS"),
     (
-        "UPPER(" * 100 + "'test'" + ")" * 100,
+        "UPPER(" * 50 + "'test'" + ")" * 50,
         "TEST",
     ),
     (
@@ -80,9 +80,9 @@ VALID_FORMULA_TESTS = [
         "9" * 100 + "+1",
         "NaN",
     ),
-    ("tonumber('1')", "1.00000"),
+    ("tonumber('1')", "1.0000000000"),
     ("tonumber('a')", "NaN"),
-    ("tonumber('-12.12345')", "-12.12345"),
+    ("tonumber('-12.12345')", "-12.1234500000"),
     ("1.2 * 2", "2.4"),
     ("isblank(1)", False),
     ("isblank('')", True),
@@ -129,7 +129,7 @@ VALID_FORMULA_TESTS = [
     ("or(false, true)", True),
     ("or(true, true)", True),
     ("'a' + 'b'", "ab"),
-    ("date_interval('1 year')", duration_string(timedelta(days=365))),
+    ("date_interval('1 year')", "1 year"),
     ("date_interval('1 year') > date_interval('1 day')", True),
     ("date_interval('1 invalid')", None),
     ("todate('20200101', 'YYYYMMDD') + date_interval('1 year')", "2021-01-01"),
@@ -145,14 +145,8 @@ VALID_FORMULA_TESTS = [
         ")",
         "6",
     ),
-    (
-        "todate('20200101', 'YYYYMMDD') - todate('20210101', 'YYYYMMDD')",
-        duration_string(-timedelta(days=366)),
-    ),
-    (
-        "date_interval('1 year') - date_interval('1 day')",
-        duration_string(timedelta(days=364)),
-    ),
+    ("todate('20200101', 'YYYYMMDD') - todate('20210101', 'YYYYMMDD')", "-366 days"),
+    ("date_interval('1 year') - date_interval('1 day')", "1 year -1 days"),
     ("replace('test test', 'test', 'a')", "a a"),
     ("search('test test', 'test')", "1"),
     ("search('a', 'test')", "0"),
@@ -171,13 +165,38 @@ VALID_FORMULA_TESTS = [
     ("contains('a', 'x')", False),
     ("left('a', 2)", "a"),
     ("left('abc', 2)", "ab"),
+    ("left('abcde', -2)", "abc"),
+    ("left('abcde', 2)", "ab"),
+    ("left('abc', 2/0)", None),
+    ("right('a', 2)", "a"),
+    ("right('abc', 2)", "bc"),
+    ("right('abcde', -2)", "cde"),
+    ("right('abcde', 2)", "de"),
+    ("right('abc', 2/0)", None),
     ("when_empty(1, 2)", "1"),
     ("round(1.12345, 0)", "1"),
-    ("round(1.12345, 4)", "1.1234"),
-    ("round(1.12345, 100)", "1.12345"),
+    ("round(1.12345, 4)", "1.1235"),
+    ("round(1.12345, 100)", "1.1234500000"),
+    ("round(1234.5678, -2)", "1200"),
+    ("round(1234.5678, -2.99999)", "1200"),
+    ("round(1234.5678, -2.00001)", "1200"),
+    ("round(1234.5678, 1/0)", "NaN"),
+    ("round(1234.5678, tonumber('invalid'))", "NaN"),
+    ("round(1/0, 1/0)", "NaN"),
+    ("round(1/0, 2)", "NaN"),
+    ("round(tonumber('invalid'), 2)", "NaN"),
+    ("trunc(1.1234)", "1"),
+    ("trunc(1.56)", "1"),
+    ("trunc(-1.56)", "-1"),
+    ("trunc(1/0)", "NaN"),
+    ("trunc(tonumber('invalid'))", "NaN"),
     ("int(1.1234)", "1"),
     ("int(1.56)", "1"),
     ("int(-1.56)", "-1"),
+    ("int(1/0)", "NaN"),
+    ("int(tonumber('invalid'))", "NaN"),
+    ("1/2/4", "0.1250000000"),
+    ("divide(1, if(true,1,1))", "1.0000000000"),
 ]
 
 
@@ -602,6 +621,31 @@ def construct_some_literal_args(formula_func):
             )
         fake_args.append(literal(r))
     return fake_args
+
+
+@pytest.mark.django_db
+def test_valid_formulas(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table.get_model().objects.create()
+    for test_formula, expected_value in VALID_FORMULA_TESTS:
+        formula_field = FieldHandler().create_field(
+            user, table, "formula", formula=test_formula, name="test formula"
+        )
+        response = api_client.get(
+            reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+            {},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        response_json = response.json()
+        assert response_json["count"] == 1
+        actual_value = response_json["results"][0][formula_field.db_column]
+        assert actual_value == expected_value, (
+            f"Expected the formula: {test_formula} to be {expected_value} but instead "
+            f"it was {actual_value}"
+        )
+        TrashHandler.permanently_delete(formula_field)
 
 
 @pytest.mark.parametrize("test_input,error,detail", INVALID_FORMULA_TESTS)

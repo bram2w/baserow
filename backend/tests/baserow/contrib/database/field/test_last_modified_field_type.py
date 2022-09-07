@@ -1,14 +1,16 @@
-import pytest
-from pytz import timezone
 from datetime import datetime
-from freezegun import freeze_time
 from io import BytesIO
+
 from django.core.exceptions import ValidationError
 
-from baserow.core.handler import CoreHandler
-from baserow.contrib.database.fields.models import LastModifiedField
+import pytest
+from freezegun import freeze_time
+from pytz import timezone
+
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import LastModifiedField
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.handler import CoreHandler
 
 
 @pytest.mark.django_db
@@ -68,7 +70,7 @@ def test_last_modified_field_type(data_fixture):
     row_updated_on = row.updated_on
     assert row_last_modified_2 == row_updated_on
 
-    # Trying to update the the last_modified field will raise error
+    # Trying to update the last_modified field will raise error
     with pytest.raises(ValidationError):
         row_handler.update_row_by_id(
             user=user,

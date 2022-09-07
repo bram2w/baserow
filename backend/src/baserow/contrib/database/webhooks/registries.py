@@ -1,16 +1,11 @@
 import uuid
 
-from django.dispatch.dispatcher import Signal
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
+from django.dispatch.dispatcher import Signal
 
 from baserow.contrib.database.table.models import Table
-from baserow.core.registry import (
-    ModelRegistryMixin,
-    Registry,
-    Instance,
-)
-
+from baserow.core.registry import Instance, ModelRegistryMixin, Registry
 
 from .tasks import call_webhook
 

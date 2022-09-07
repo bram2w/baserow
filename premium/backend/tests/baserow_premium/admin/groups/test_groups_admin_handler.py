@@ -1,18 +1,16 @@
 from unittest.mock import patch
 
-import pytest
 from django.db import connection
 from django.test.utils import override_settings
 
-from baserow.contrib.database.models import Database, Table
-from baserow.core.exceptions import IsNotAdminError
-from baserow.core.models import (
-    Group,
-    GroupUser,
-)
+import pytest
 from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
 from baserow_premium.admin.groups.handler import GroupsAdminHandler
 from baserow_premium.license.exceptions import NoPremiumLicenseError
+
+from baserow.contrib.database.models import Database, Table
+from baserow.core.exceptions import IsNotAdminError
+from baserow.core.models import Group, GroupUser
 
 
 @pytest.mark.django_db

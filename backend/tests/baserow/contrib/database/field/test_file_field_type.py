@@ -1,23 +1,23 @@
-import pytest
 import json
 from io import BytesIO
-
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 
+import pytest
+
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import FileField
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
-from baserow.core.user_files.models import UserFile
 from baserow.core.user_files.exceptions import (
     InvalidUserFileNameError,
     UserFileDoesNotExist,
 )
 from baserow.core.user_files.handler import UserFileHandler
-from baserow.contrib.database.fields.models import FileField
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.user_files.models import UserFile
 
 
 @pytest.mark.django_db

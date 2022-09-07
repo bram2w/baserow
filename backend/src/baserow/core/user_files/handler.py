@@ -1,30 +1,28 @@
-import pathlib
 import mimetypes
-
-from os.path import join
+import pathlib
 from io import BytesIO
-from urllib.parse import urlparse
+from os.path import join
 from typing import Optional
-
-import advocate
-from advocate.exceptions import UnacceptableAddressException
-from requests.exceptions import RequestException
-
-from PIL import Image, ImageOps
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
 
-from baserow.core.utils import sha256_hash, stream_size, random_string, truncate_middle
+import advocate
+from advocate.exceptions import UnacceptableAddressException
+from PIL import Image, ImageOps
+from requests.exceptions import RequestException
+
+from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
 from .exceptions import (
-    InvalidFileStreamError,
     FileSizeTooLargeError,
     FileURLCouldNotBeReached,
-    MaximumUniqueTriesError,
+    InvalidFileStreamError,
     InvalidFileURLError,
+    MaximumUniqueTriesError,
 )
 from .models import UserFile
 
@@ -83,7 +81,7 @@ class UserFileHandler:
 
     def generate_unique(self, sha256_hash, extension, length=32, max_tries=1000):
         """
-        Generates a unique non existing string for a new user file.
+        Generates a unique nonexistent string for a new user file.
 
         :param sha256_hash: The hash of the file name. Needed because they are
             required to be unique together.
@@ -285,7 +283,9 @@ class UserFileHandler:
         if parsed_url.scheme not in ["http", "https"]:
             raise InvalidFileURLError("Only http and https are allowed.")
 
-        file_name = url.split("/")[-1]
+        # Pluck out the parsed URL path (in the event we've been given
+        # a URL with a querystring) and then extract the filename.
+        file_name = parsed_url.path.split("/")[-1]
 
         try:
             response = advocate.get(url, stream=True, timeout=10)

@@ -1,15 +1,13 @@
 from django.contrib.auth import get_user_model
+
 from rest_framework import serializers
-from rest_framework.fields import (
-    CharField,
-    EmailField,
-)
+from rest_framework.fields import CharField, EmailField
 from rest_framework.serializers import ModelSerializer
 from rest_framework_jwt.serializers import ImpersonateAuthTokenSerializer
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
-from baserow.core.models import GroupUser
 from baserow.api.user.validators import password_validation
+from baserow.core.models import GroupUser
 
 User = get_user_model()
 

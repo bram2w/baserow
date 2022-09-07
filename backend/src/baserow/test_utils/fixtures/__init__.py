@@ -1,21 +1,21 @@
 from faker import Faker
 
+from .airtable import AirtableFixtures
+from .application import ApplicationFixtures
+from .field import FieldFixtures
+from .file_import import FileImportFixtures
+from .group import GroupFixtures
+from .job import JobFixtures
+from .row import RowFixture
 from .settings import SettingsFixtures
+from .snapshots import SnapshotFixtures
+from .table import TableFixtures
+from .template import TemplateFixtures
+from .token import TokenFixtures
 from .user import UserFixtures
 from .user_file import UserFileFixtures
-from .group import GroupFixtures
-from .application import ApplicationFixtures
-from .table import TableFixtures
 from .view import ViewFixtures
-from .field import FieldFixtures
-from .token import TokenFixtures
-from .template import TemplateFixtures
-from .row import RowFixture
 from .webhook import TableWebhookFixture
-from .airtable import AirtableFixtures
-from .job import JobFixtures
-from .file_import import FileImportFixtures
-from .snapshots import SnapshotFixtures
 
 
 class Fixtures(

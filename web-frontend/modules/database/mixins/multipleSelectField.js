@@ -1,4 +1,8 @@
+import createSelectOption from '@baserow/modules/database/mixins/createSelectOption'
+import selectDropdown from '@baserow/modules/database/mixins/selectDropdown'
+
 export default {
+  mixins: [createSelectOption, selectDropdown],
   computed: {
     /**
      * availableSelectOptions are needed because in the case of a MultipleSelectField

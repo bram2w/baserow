@@ -2,42 +2,40 @@ from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
-import pytest
 from django.conf import settings
-from django.db import models
+from django.db import connection, models
+from django.test.utils import CaptureQueriesContext
+
+import pytest
 from faker import Faker
 
+from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.exceptions import (
-    FieldTypeDoesNotExist,
-    MaxFieldNameLengthExceeded,
-    PrimaryFieldAlreadyExists,
+    CannotChangeFieldType,
     CannotDeletePrimaryField,
     FieldDoesNotExist,
-    IncompatiblePrimaryFieldTypeError,
-    CannotChangeFieldType,
-    MaxFieldLimitExceeded,
+    FieldTypeDoesNotExist,
     FieldWithSameNameAlreadyExists,
-    ReservedBaserowFieldNameException,
     IncompatibleFieldTypeForUniqueValues,
+    IncompatiblePrimaryFieldTypeError,
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+    PrimaryFieldAlreadyExists,
+    ReservedBaserowFieldNameException,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
-from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
-)
-from baserow.contrib.database.fields.constants import (
-    UPSERT_OPTION_DICT_KEY,
-)
+from baserow.contrib.database.fields.field_types import LongTextFieldType, TextFieldType
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field,
-    TextField,
-    NumberField,
     BooleanField,
-    SelectOption,
-    LongTextField,
+    Field,
     FormulaField,
+    LongTextField,
+    NumberField,
+    SelectOption,
+    TextField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
@@ -62,7 +60,7 @@ def test_can_convert_between_all_fields(data_fixture):
     raise any exceptions.
     """
 
-    table, user, row, blank_row = setup_interesting_test_table(data_fixture)
+    table, user, row, blank_row, context = setup_interesting_test_table(data_fixture)
 
     handler = FieldHandler()
     row_handler = RowHandler()
@@ -1215,3 +1213,57 @@ def test_get_unique_row_values_single_select(data_fixture):
     # `get_alter_column_prepare_old_value` method is being used correctly.
     values = list(handler.get_unique_row_values(field=single_select_field, limit=10))
     assert values == ["Option 2", "Option 1"]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_when_public_field_updated_number_of_queries_does_not_increase_with_amount_of_grid_views(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table, order=0, name="b")
+
+    view_one = data_fixture.create_grid_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with CaptureQueriesContext(connection) as captured:
+        FieldHandler().update_field(user, visible_field, name="a")
+
+    view_two = data_fixture.create_grid_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with django_assert_num_queries(len(captured.captured_queries)):
+        FieldHandler().update_field(user, visible_field, name="abc")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_when_public_field_updated_number_of_queries_does_not_increase_with_amount_of_gallery_views(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table, order=0, name="b")
+
+    view_one = data_fixture.create_gallery_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with CaptureQueriesContext(connection) as captured:
+        FieldHandler().update_field(user, visible_field, name="a")
+
+    view_two = data_fixture.create_gallery_view(
+        user=user,
+        table=table,
+        public=True,
+    )
+
+    with django_assert_num_queries(len(captured.captured_queries)):
+        FieldHandler().update_field(user, visible_field, name="abc")

@@ -1,6 +1,6 @@
 from typing import Callable
-from django.conf import settings
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.urls import is_valid_path
 

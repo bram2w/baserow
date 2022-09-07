@@ -1,275 +1,22 @@
 import dataclasses
 from copy import deepcopy
-from typing import Optional, Tuple, List, Dict, Any, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from django.contrib.auth.models import AbstractUser
-from django.core.management.color import no_style
-from django.db import connection
-from django.db.models import ManyToManyField
-from psycopg2 import sql
 
-from baserow.contrib.database.db.schema import safe_django_schema_editor
-from baserow.contrib.database.fields.handler import (
-    FieldHandler,
+from baserow.contrib.database.fields.backup_handler import (
+    BackupData,
+    FieldDataBackupHandler,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, SpecificFieldForUpdate
-from baserow.contrib.database.fields.registries import (
-    field_type_registry,
-)
-from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.scopes import TableActionScopeType
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionType, ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed
-
-BackupData = Dict[str, Any]
-
-
-class FieldDataBackupHandler:
-    """
-    Backs up an arbitrary Baserow field by getting their model fields and deciding how
-    to backup based of it. Only the fields data (think cells) is backed up and no
-    associated field meta-data is backed up by this class.
-
-    The backup data is stored in the database and
-    no serialization/deserialization of the data occurs. So it is fast but
-    not suitable for actually backing up the data to prevent data loss, but instead
-    useful for backing up the data due to Baserow actions to facilitate undoing them.
-
-    If the model field is a many to many field then we backup by creating a duplicate
-    m2m table and copying the data into it.
-
-    Otherwise the field must be an actual column in the user table, so we duplicate
-    the column and copy the data into it.
-
-    Also knows how to restore from a backup and clean up any backups done by this
-    class even if the Field/Table etc has been permanently deleted from Baserow.
-    """
-
-    @classmethod
-    def backup_field_data(
-        cls,
-        field_to_backup: Field,
-        identifier_to_backup_into: str,
-    ) -> BackupData:
-        """
-        Backs up the provided field's data into a new column or table which will be
-        named using the identifier_to_backup_into param.
-
-        :param field_to_backup: A Baserow field that you want to backup the data for.
-        :param identifier_to_backup_into: The name that will be used when creating
-            the backup column or table.
-        :return: A dictionary than can then be passed back into the other class methods
-            to restore the backed up data or cleaned it up.
-        """
-
-        model = field_to_backup.table.get_model(
-            field_ids=[],
-            fields=[field_to_backup],
-            add_dependencies=False,
-        )
-
-        model_field_to_backup = model._meta.get_field(field_to_backup.db_column)
-
-        if isinstance(model_field_to_backup, ManyToManyField):
-            through = model_field_to_backup.remote_field.through
-            m2m_table_to_backup = through._meta.db_table
-            cls._create_duplicate_m2m_table(
-                model,
-                m2m_model_field_to_duplicate=model_field_to_backup,
-                new_m2m_table_name=identifier_to_backup_into,
-            )
-            cls._copy_m2m_data_between_tables(
-                source_table=m2m_table_to_backup,
-                target_table=identifier_to_backup_into,
-                m2m_model_field=model_field_to_backup,
-                through_model=through,
-            )
-            return {"backed_up_m2m_table_name": identifier_to_backup_into}
-        else:
-            table_name = model_field_to_backup.model._meta.db_table
-            cls._create_duplicate_nullable_column(
-                model,
-                model_field_to_duplicate=model_field_to_backup,
-                new_column_name=identifier_to_backup_into,
-            )
-            cls._copy_not_null_column_data(
-                table_name,
-                source_column=model_field_to_backup.column,
-                target_column=identifier_to_backup_into,
-            )
-            return {
-                "table_id_containing_backup_column": field_to_backup.table_id,
-                "backed_up_column_name": identifier_to_backup_into,
-            }
-
-    @classmethod
-    def restore_backup_data_into_field(
-        cls,
-        field_to_restore_backup_data_into: Field,
-        backup_data: BackupData,
-    ):
-        """
-        Given a dictionary generated by the backup_field_data this method copies the
-        backed up data back into an existing Baserow field of the same type.
-        """
-
-        model = field_to_restore_backup_data_into.table.get_model(
-            field_ids=[],
-            fields=[field_to_restore_backup_data_into],
-            add_dependencies=False,
-        )
-        model_field_to_restore_into = model._meta.get_field(
-            field_to_restore_backup_data_into.db_column
-        )
-        if isinstance(model_field_to_restore_into, ManyToManyField):
-            backed_up_m2m_table_name = backup_data["backed_up_m2m_table_name"]
-            through = model_field_to_restore_into.remote_field.through
-            target_m2m_table = through._meta.db_table
-
-            cls._truncate_table(target_m2m_table)
-            cls._copy_m2m_data_between_tables(
-                source_table=backed_up_m2m_table_name,
-                target_table=target_m2m_table,
-                m2m_model_field=model_field_to_restore_into,
-                through_model=through,
-            )
-            cls._drop_table(backed_up_m2m_table_name)
-        else:
-            backed_up_column_name = backup_data["backed_up_column_name"]
-            table_name = model_field_to_restore_into.model._meta.db_table
-            cls._copy_not_null_column_data(
-                table_name,
-                source_column=backed_up_column_name,
-                target_column=model_field_to_restore_into.column,
-            )
-            cls._drop_column(table_name, backed_up_column_name)
-
-    @classmethod
-    def clean_up_backup_data(
-        cls,
-        backup_data: BackupData,
-    ):
-        """
-        Given a dictionary generated by the backup_field_data this method deletes any
-        backup data to reclaim space used.
-        """
-
-        if "backed_up_m2m_table_name" in backup_data:
-            cls._drop_table(backup_data["backed_up_m2m_table_name"])
-        else:
-            try:
-                table = Table.objects_and_trash.get(
-                    id=backup_data["table_id_containing_backup_column"]
-                )
-                cls._drop_column(
-                    table.get_database_table_name(),
-                    backup_data["backed_up_column_name"],
-                )
-            except Table.DoesNotExist:
-                # The table has already been permanently deleted by the trash system
-                # so there is nothing for us to do.
-                pass
-
-    @staticmethod
-    def _create_duplicate_m2m_table(
-        model: GeneratedTableModel,
-        m2m_model_field_to_duplicate: ManyToManyField,
-        new_m2m_table_name: str,
-    ):
-        with safe_django_schema_editor() as schema_editor:
-            # Create a duplicate m2m table to backup the data into.
-            new_backup_table = deepcopy(m2m_model_field_to_duplicate)
-            new_backup_table.remote_field.through._meta.db_table = new_m2m_table_name
-            schema_editor.add_field(model, new_backup_table)
-
-    @staticmethod
-    def _truncate_table(target_table):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL("TRUNCATE TABLE {target_table}").format(
-                    target_table=sql.Identifier(target_table),
-                )
-            )
-
-    @staticmethod
-    def _drop_table(backup_name: str):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL("DROP TABLE {backup_table}").format(
-                    backup_table=sql.Identifier(backup_name),
-                )
-            )
-
-    @staticmethod
-    def _copy_m2m_data_between_tables(
-        source_table: str,
-        target_table: str,
-        m2m_model_field: ManyToManyField,
-        through_model: GeneratedTableModel,
-    ):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL(
-                    """
-                INSERT INTO {target_table} (id, {m2m_column}, {m2m_reverse_column})
-                SELECT id, {m2m_column}, {m2m_reverse_column} FROM {source_table}
-                """
-                ).format(
-                    source_table=sql.Identifier(source_table),
-                    target_table=sql.Identifier(target_table),
-                    m2m_column=sql.Identifier(m2m_model_field.m2m_column_name()),
-                    m2m_reverse_column=sql.Identifier(
-                        m2m_model_field.m2m_reverse_name()
-                    ),
-                )
-            )
-            # When the rows are inserted we keep the provide the old ids and because of
-            # that the auto increment is still set at `1`. This needs to be set to the
-            # maximum value because otherwise creating a new row could later fail.
-            sequence_sql = connection.ops.sequence_reset_sql(
-                no_style(), [through_model]
-            )
-            cursor.execute(sequence_sql[0])
-
-    @staticmethod
-    def _create_duplicate_nullable_column(
-        model: GeneratedTableModel, model_field_to_duplicate, new_column_name: str
-    ):
-        with safe_django_schema_editor() as schema_editor:
-            # Create a duplicate column to backup the data into.
-            new_backup_model_field = deepcopy(model_field_to_duplicate)
-            new_backup_model_field.column = new_column_name
-            # It must be nullable so INSERT's into the table still work. If we restore
-            # this backed up column back into a real column we won't copy over any
-            # NULLs created by INSERTs.
-            new_backup_model_field.null = True
-            schema_editor.add_field(model, new_backup_model_field)
-
-    @staticmethod
-    def _copy_not_null_column_data(table_name, source_column, target_column):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL(
-                    "UPDATE {table_name} SET {target_column} = {source_column} "
-                    "WHERE {source_column} IS NOT NULL"
-                ).format(
-                    table_name=sql.Identifier(table_name),
-                    target_column=sql.Identifier(target_column),
-                    source_column=sql.Identifier(source_column),
-                )
-            )
-
-    @staticmethod
-    def _drop_column(table_name: str, column_to_drop: str):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL("ALTER TABLE {table_name} DROP COLUMN {column_to_drop}").format(
-                    table_name=sql.Identifier(table_name),
-                    column_to_drop=sql.Identifier(column_to_drop),
-                )
-            )
+from baserow.core.utils import ChildProgressBuilder
 
 
 class UpdateFieldActionType(ActionType):
@@ -314,14 +61,9 @@ class UpdateFieldActionType(ActionType):
         from_field_type = field_type_registry.get_by_model(field)
         from_field_type_name = from_field_type.type
         to_field_type_name = new_type_name or from_field_type_name
-        to_field_type = field_type_registry.get(to_field_type_name)
 
-        allowed_fields = ["name"] + to_field_type.allowed_fields
-        allowed_field_values = extract_allowed(kwargs, allowed_fields)
-
-        updated_field_attrs = set(allowed_field_values.keys())
         original_exported_values = cls._get_prepared_field_attrs(
-            field, updated_field_attrs, to_field_type_name
+            field, kwargs, to_field_type_name
         )
 
         # We initially create the action with blank params so we have an action id
@@ -329,7 +71,7 @@ class UpdateFieldActionType(ActionType):
         action = cls.register_action(user, {}, cls.scope(field.table_id))
 
         optional_backup_data = cls._backup_field_if_required(
-            field, allowed_field_values, action, to_field_type_name, False
+            field, kwargs, action, to_field_type_name, False
         )
 
         field, updated_fields = FieldHandler().update_field(
@@ -337,7 +79,7 @@ class UpdateFieldActionType(ActionType):
             field,
             new_type_name,
             return_updated_fields=True,
-            **allowed_field_values,
+            **kwargs,
         )
 
         action.params = cls.Params(
@@ -676,4 +418,55 @@ class DeleteFieldActionType(ActionType):
         FieldHandler().delete_field(
             user,
             field,
+        )
+
+
+class DuplicateFieldActionType(ActionType):
+    type = "duplicate_field"
+
+    @dataclasses.dataclass
+    class Params:
+        field_id: int
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        field: Field,
+        duplicate_data: bool = False,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Tuple[Field, List[Field]]:
+        """
+        Duplicate a field. Undoing this action trashes the duplicated field and
+        redoing restores it.
+
+        :param user: The user on whose behalf the duplicated field will be
+            created.
+        :param field: The field instance to duplicate.
+        :param progress_builder: A progress builder instance that can be used to
+            track the progress of the duplication.
+        :return: A tuple with duplicated field instance and a list of the fields
+            that have been updated.
+        """
+
+        new_field_clone, updated_fields = FieldHandler().duplicate_field(
+            user, field, duplicate_data, progress_builder=progress_builder
+        )
+        cls.register_action(
+            user, cls.Params(new_field_clone.id), cls.scope(field.table_id)
+        )
+        return new_field_clone, updated_fields
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        FieldHandler().delete_field(user, FieldHandler().get_field(params.field_id))
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        TrashHandler.restore_item(
+            user, "field", params.field_id, parent_trash_item_id=None
         )

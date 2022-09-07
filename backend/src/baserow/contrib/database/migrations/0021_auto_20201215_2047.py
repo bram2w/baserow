@@ -2,8 +2,7 @@
 # completes.
 
 import django.utils.timezone
-
-from django.db import migrations, models, connection
+from django.db import connection, migrations, models
 
 from baserow.contrib.database.table.models import Table as TableModel
 

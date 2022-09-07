@@ -1,24 +1,24 @@
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 
 from baserow.core.exceptions import (
+    ApplicationDoesNotExist,
     ApplicationNotInGroup,
     GroupDoesNotExist,
-    ApplicationDoesNotExist,
     TrashItemDoesNotExist,
 )
-from baserow.core.models import TrashEntry, Application, Group
+from baserow.core.models import Application, Group, TrashEntry
 from baserow.core.trash.exceptions import (
+    CannotDeleteAlreadyDeletedItem,
     CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
-    CannotDeleteAlreadyDeletedItem,
 )
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 from baserow.core.trash.signals import permanently_deleted
@@ -32,10 +32,10 @@ class TrashHandler:
     def trash(
         requesting_user: User,
         group: Group,
-        application: Optional[Application],
+        application: Application,
         trash_item,
         parent_id=None,
-        create_trash_entry=True,
+        existing_trash_entry: Optional[TrashEntry] = None,
     ) -> TrashEntry:
         """
         Marks the provided trashable item as trashed meaning it will no longer be
@@ -49,9 +49,9 @@ class TrashHandler:
         :param group: The group the trashed item is in.
         :param application: If the item is in an application the application.
         :param trash_item: The item to be trashed.
-        :param create_trash_entry: Set to False to not create a trash entry for this
-            trashed item. Useful when a parent has been trashed and you want to trash
-            the children under the parents single trash entry.
+        :param existing_trash_entry: An optional TrashEntry that the handler can
+            pass to the trash system to track cascading deletions in a single
+            trash entry.
         :return: A newly created entry in the TrashEntry table for this item.
         """
 
@@ -64,18 +64,16 @@ class TrashHandler:
 
             _check_parent_id_valid(parent_id, trash_item_type)
 
-            trash_item_type.trash(trash_item, requesting_user)
-
-            if create_trash_entry:
+            if existing_trash_entry is None:
                 parent = trash_item_type.get_parent(trash_item, parent_id)
-                if parent is not None:
+                if parent is None:
+                    parent_name = None
+                else:
                     parent_type = trash_item_type_registry.get_by_model(parent)
                     parent_name = parent_type.get_name(parent)
-                else:
-                    parent_name = None
 
                 try:
-                    return TrashEntry.objects.create(
+                    trash_entry = TrashEntry.objects.create(
                         user_who_trashed=requesting_user,
                         group=group,
                         application=application,
@@ -91,6 +89,12 @@ class TrashHandler:
                         raise CannotDeleteAlreadyDeletedItem()
                     else:
                         raise e
+            else:
+                trash_entry = existing_trash_entry
+
+            trash_item_type.trash(trash_item, requesting_user, trash_entry)
+
+            return trash_entry
 
     @staticmethod
     def restore_item(user, trash_item_type, trash_item_id, parent_trash_item_id=None):

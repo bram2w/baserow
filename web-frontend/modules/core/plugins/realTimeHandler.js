@@ -199,6 +199,39 @@ export class RealTimeHandler {
       store.dispatch('auth/forceUpdateUserData', data.user_data)
     })
 
+    this.registerEvent('user_updated', ({ store }, data) => {
+      store.dispatch('group/forceUpdateGroupUserAttributes', {
+        userId: data.user.id,
+        values: {
+          name: data.user.first_name,
+        },
+      })
+    })
+
+    this.registerEvent('user_deleted', ({ store }, data) => {
+      store.dispatch('group/forceUpdateGroupUserAttributes', {
+        userId: data.user.id,
+        values: {
+          to_be_deleted: true,
+        },
+      })
+    })
+
+    this.registerEvent('user_restored', ({ store }, data) => {
+      store.dispatch('group/forceUpdateGroupUserAttributes', {
+        userId: data.user.id,
+        values: {
+          to_be_deleted: false,
+        },
+      })
+    })
+
+    this.registerEvent('user_permanently_deleted', ({ store }, data) => {
+      store.dispatch('group/forceDeleteUser', {
+        userId: data.user_id,
+      })
+    })
+
     this.registerEvent('group_created', ({ store }, data) => {
       store.dispatch('group/forceCreate', data.group)
     })
@@ -224,6 +257,29 @@ export class RealTimeHandler {
 
     this.registerEvent('groups_reordered', ({ store }, data) => {
       store.dispatch('group/forceOrder', data.group_ids)
+    })
+
+    this.registerEvent('group_user_added', ({ store }, data) => {
+      store.dispatch('group/forceAddGroupUser', {
+        groupId: data.group_id,
+        values: data.group_user,
+      })
+    })
+
+    this.registerEvent('group_user_updated', ({ store }, data) => {
+      store.dispatch('group/forceUpdateGroupUser', {
+        id: data.id,
+        groupId: data.group_id,
+        values: data.group_user,
+      })
+    })
+
+    this.registerEvent('group_user_deleted', ({ store }, data) => {
+      store.dispatch('group/forceDeleteGroupUser', {
+        id: data.id,
+        groupId: data.group_id,
+        values: data.group_user,
+      })
     })
 
     this.registerEvent('application_created', ({ store }, data) => {

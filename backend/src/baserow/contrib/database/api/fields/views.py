@@ -1,71 +1,83 @@
+from typing import Any, Dict
+
 from django.conf import settings
 from django.db import transaction
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.decorators import permission_classes as method_permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import (
-    validate_body_custom_fields,
     map_exceptions,
+    validate_body,
+    validate_body_custom_fields,
     validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
-    get_error_schema,
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    get_error_schema,
 )
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
-from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
-from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
+from baserow.api.utils import (
+    DiscriminatorCustomFieldsMappingSerializer,
+    type_from_data_or_registry,
+    validate_data_custom_fields,
+)
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_CANNOT_DELETE_PRIMARY_FIELD,
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
+    ERROR_CANNOT_DELETE_PRIMARY_FIELD,
+    ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
+    ERROR_FIELD_CIRCULAR_REFERENCE,
     ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FIELD_SELF_REFERENCE,
+    ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+    ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
+    ERROR_INVALID_BASEROW_FIELD_NAME,
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
     ERROR_RESERVED_BASEROW_FIELD_NAME,
-    ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
-    ERROR_INVALID_BASEROW_FIELD_NAME,
-    ERROR_FIELD_SELF_REFERENCE,
-    ERROR_FIELD_CIRCULAR_REFERENCE,
-    ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
-    ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
 )
 from baserow.contrib.database.api.tables.errors import (
-    ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
+    ERROR_TABLE_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.fields.actions import (
-    UpdateFieldActionType,
     CreateFieldActionType,
     DeleteFieldActionType,
+    UpdateFieldActionType,
 )
 from baserow.contrib.database.fields.dependencies.exceptions import (
-    SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
+    SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.exceptions import (
-    CannotDeletePrimaryField,
     CannotChangeFieldType,
+    CannotDeletePrimaryField,
+    FailedToLockFieldDueToConflict,
     FieldDoesNotExist,
+    FieldWithSameNameAlreadyExists,
+    IncompatibleFieldTypeForUniqueValues,
+    InvalidBaserowFieldName,
     MaxFieldLimitExceeded,
     ReservedBaserowFieldNameException,
-    FieldWithSameNameAlreadyExists,
-    InvalidBaserowFieldName,
-    IncompatibleFieldTypeForUniqueValues,
-    FailedToLockFieldDueToConflict,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.job_types import DuplicateFieldJobType
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.exceptions import (
-    TableDoesNotExist,
     FailedToLockTableDueToConflict,
+    TableDoesNotExist,
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
@@ -73,15 +85,20 @@ from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
+
 from .serializers import (
-    FieldSerializer,
     CreateFieldSerializer,
-    UpdateFieldSerializer,
+    DuplicateFieldParamsSerializer,
+    FieldSerializer,
     FieldSerializerWithRelatedFields,
     RelatedFieldsSerializer,
     UniqueRowValueParamsSerializer,
     UniqueRowValuesSerializer,
+    UpdateFieldSerializer,
 )
 
 
@@ -319,7 +336,9 @@ class FieldView(APIView):
             "response key."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
-            field_type_registry, UpdateFieldSerializer
+            field_type_registry,
+            UpdateFieldSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -494,3 +513,58 @@ class UniqueRowValueFieldView(APIView):
         )
 
         return Response(UniqueRowValuesSerializer({"values": values}).data)
+
+
+class AsyncDuplicateFieldView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="field_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The field to duplicate.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table fields"],
+        operation_id="duplicate_table_field",
+        description=(
+            "Duplicates the table with the provided `table_id` parameter "
+            "if the authorized user has access to the database's group."
+        ),
+        responses={
+            202: DuplicateFieldJobType().get_serializer_class(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    @validate_body(DuplicateFieldParamsSerializer)
+    def post(self, request: Request, field_id: int, data: Dict[str, Any]) -> Response:
+        """Creates a job to duplicate a field in a table."""
+
+        job = JobHandler().create_and_start_job(
+            request.user,
+            DuplicateFieldJobType.type,
+            field_id=field_id,
+            duplicate_data=data["duplicate_data"],
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)

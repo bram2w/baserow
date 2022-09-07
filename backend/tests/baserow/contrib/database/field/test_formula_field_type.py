@@ -1,9 +1,11 @@
 import inspect
 from decimal import Decimal
 
-import pytest
+from django.db import transaction
 from django.db.models import TextField
 from django.urls import reverse
+
+import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from baserow.contrib.database.fields.dependencies.update_collector import (
@@ -17,17 +19,15 @@ from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
     BaserowFormulaInvalidType,
-    BaserowFormulaTextType,
     BaserowFormulaNumberType,
+    BaserowFormulaTextType,
 )
 from baserow.contrib.database.formula.ast.tree import BaserowFunctionDefinition
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.table.cache import (
-    generated_models_cache,
-)
+from baserow.contrib.database.table.cache import generated_models_cache
 from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField,
     ViewSortFieldNotSupported,
@@ -927,7 +927,7 @@ def test_accessing_cached_internal_formula_second_time_does_no_queries(
 
 
 @pytest.mark.django_db
-def test_saving_after_properties_have_been_cached_does_recaclulation(data_fixture):
+def test_saving_after_properties_have_been_cached_does_recalculation(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     handler = FieldHandler()
@@ -1230,7 +1230,8 @@ def test_converting_link_row_field_with_formula_dependency(
         formula=f"lookup('{link_field.name}','{table_b_primary_field.name}')",
     )
     # Change the link field to a text field, this should break the lookup formula
-    FieldHandler().update_field(user, link_field, new_type_name="text")
+    with transaction.atomic():
+        FieldHandler().update_field(user, link_field, new_type_name="text")
 
     lookup_of_table_b_pk.refresh_from_db()
     assert lookup_of_table_b_pk.formula_type == "invalid"
@@ -1256,7 +1257,8 @@ def test_converted_reversed_link_row_field_with_formula_dependency(data_fixture)
         formula=f"lookup('{link_field.name}','{table_b_primary_field.name}')",
     )
     # Change the link field to a text field, this should break the lookup formula
-    FieldHandler().update_field(user, related_link_row_field, new_type_name="text")
+    with transaction.atomic():
+        FieldHandler().update_field(user, related_link_row_field, new_type_name="text")
 
     lookup_of_table_b_pk.refresh_from_db()
     assert lookup_of_table_b_pk.formula_type == "invalid"

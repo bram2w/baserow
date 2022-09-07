@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
+    InstanceTypeDoesNotExist,
     LockConflict,
 )
 
@@ -45,6 +45,13 @@ class LinkRowTableNotProvided(Exception):
 class LinkRowTableNotInSameDatabase(Exception):
     """
     Raised when the desired link row table is not in the same database as the table.
+    """
+
+
+class SelfReferencingLinkRowCannotHaveRelatedField(Exception):
+    """
+    Raised when a self referencing link row field is trying to be created with a
+    related field.
     """
 
 
@@ -158,6 +165,29 @@ class AllProvidedMultipleSelectValuesMustBeSelectOption(ValidationError):
             msg,
             *args,
             code="invalid_option",
+            **kwargs,
+        )
+
+
+class AllProvidedCollaboratorIdsMustBeValidUsers(ValidationError):
+    """
+    Raised when the provided user ids don't exist or cannot be used
+    as collaborators.
+    """
+
+    def __init__(self, ids, *args, **kwargs):
+        if not isinstance(ids, list):
+            ids = [ids]
+        self.ids = ids
+        msg = (
+            f"The provided user ids {self.ids} are not valid collaborators."
+            if len(self.ids) > 1
+            else f"The provided user id {self.ids} is not a valid collaborator."
+        )
+        super().__init__(
+            msg,
+            *args,
+            code="invalid_collaborator",
             **kwargs,
         )
 

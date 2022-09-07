@@ -1,35 +1,35 @@
 from django.db import transaction
 
-from rest_framework.parsers import MultiPartParser
-
 from drf_spectacular.utils import extend_schema
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import get_error_schema
+from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.core.user_files.exceptions import (
-    InvalidFileStreamError,
     FileSizeTooLargeError,
     FileURLCouldNotBeReached,
+    InvalidFileStreamError,
     InvalidFileURLError,
 )
 from baserow.core.user_files.handler import UserFileHandler
 
-from .serializers import UserFileSerializer, UserFileUploadViaURLRequestSerializer
 from .errors import (
-    ERROR_INVALID_FILE,
     ERROR_FILE_SIZE_TOO_LARGE,
     ERROR_FILE_URL_COULD_NOT_BE_REACHED,
+    ERROR_INVALID_FILE,
     ERROR_INVALID_FILE_URL,
 )
+from .serializers import UserFileSerializer, UserFileUploadViaURLRequestSerializer
 
 
 class UploadFileView(APIView):
     permission_classes = (IsAuthenticated,)
     parser_classes = (MultiPartParser,)
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
 
     @extend_schema(
         tags=["User files"],
@@ -65,6 +65,7 @@ class UploadFileView(APIView):
 
 class UploadViaURLView(APIView):
     permission_classes = (IsAuthenticated,)
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
 
     @extend_schema(
         tags=["User files"],

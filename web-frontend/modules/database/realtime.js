@@ -271,20 +271,21 @@ export const registerRealtimeEvents = (realtime) => {
     const view = store.getters['view/get'](data.view_id)
     if (view !== undefined) {
       if (store.getters['view/getSelectedId'] === view.id) {
-        await store.dispatch('view/forceUpdate', {
+        const updateViewPromise = store.dispatch('view/forceUpdate', {
           view,
           values: data.view,
           repopulate: true,
         })
+        const updateFieldsPromise = store.dispatch('field/forceSetFields', {
+          fields: data.fields,
+        })
+
+        // This makes sure both dispatches are executed in parallel.
+        await Promise.all([updateViewPromise, updateFieldsPromise])
 
         app.$bus.$emit('table-refresh', {
           tableId: store.getters['table/getSelectedId'],
           includeFieldOptions: true,
-          async callback() {
-            await store.dispatch('field/forceSetFields', {
-              fields: data.fields,
-            })
-          },
         })
       }
     }
@@ -434,5 +435,11 @@ export const registerRealtimeEvents = (realtime) => {
       const viewType = app.$registry.get('view', view.type)
       viewType.fieldOptionsUpdated(context, view, data.field_options, 'page/')
     }
+  })
+
+  realtime.registerEvent('user_permanently_deleted', ({ store, app }, data) => {
+    app.$bus.$emit('table-refresh', {
+      tableId: store.getters['table/getSelectedId'],
+    })
   })
 }

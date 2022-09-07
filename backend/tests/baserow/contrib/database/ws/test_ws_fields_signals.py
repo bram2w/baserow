@@ -1,8 +1,9 @@
 from unittest.mock import patch
 
-import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+
+import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.trash.handler import TrashHandler

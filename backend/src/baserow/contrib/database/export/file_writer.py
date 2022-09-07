@@ -2,9 +2,10 @@ import abc
 import time
 from typing import Any, Callable
 
-import unicodecsv as csv
 from django.core.paginator import Paginator
 from django.db.models import QuerySet
+
+import unicodecsv as csv
 
 from baserow.contrib.database.export.exceptions import ExportJobCanceledException
 from baserow.contrib.database.table.models import FieldObject
@@ -137,6 +138,8 @@ class QuerysetSerializer(abc.ABC):
     a file.
     """
 
+    can_handle_rich_value = False
+
     def __init__(self, queryset, ordered_field_objects):
         self.queryset = queryset
         self.field_serializers = [lambda row: ("id", "id", row.id)]
@@ -182,12 +185,11 @@ class QuerysetSerializer(abc.ABC):
         qs = ViewHandler().get_queryset(view, model=model)
         return cls(qs, fields)
 
-    @staticmethod
-    def _get_field_serializer(field_object: FieldObject) -> Callable[[Any], Any]:
+    def _get_field_serializer(self, field_object: FieldObject) -> Callable[[Any], Any]:
         """
         An internal standard method which generates a serializer function for a given
         field_object. It will delegate to the field_types get_export_value on
-        how to convert a given field to a python value to be then writen to the file.
+        how to convert a given field to a python value to be then written to the file.
 
         :param field_object: The field object to generate a serializer for.
         :return: A callable function which when given a row will return a tuple of the
@@ -202,7 +204,9 @@ class QuerysetSerializer(abc.ABC):
             if value is None:
                 result = ""
             else:
-                result = field_object["type"].get_export_value(value, field_object)
+                result = field_object["type"].get_export_value(
+                    value, field_object, rich_value=self.can_handle_rich_value
+                )
 
             return (
                 field_object["name"],

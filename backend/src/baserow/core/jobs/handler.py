@@ -1,26 +1,22 @@
 import logging
-from typing import Optional, Type, List
+from typing import List, Optional, Type
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import transaction
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
-from django.conf import settings
 
 from baserow.core.utils import Progress
 
-from .types import AnyJob
-from .registries import job_type_registry
-from .exceptions import (
-    JobDoesNotExist,
-    MaxJobCountExceeded,
-)
-from .models import Job
-from .tasks import run_async_job
-
 from .cache import job_progress_key
 from .constants import JOB_FAILED
+from .exceptions import JobDoesNotExist, MaxJobCountExceeded
+from .models import Job
+from .registries import job_type_registry
+from .tasks import run_async_job
+from .types import AnyJob
 
 logger = logging.getLogger(__name__)
 

@@ -3,18 +3,17 @@ import traceback
 import typing
 from typing import Set
 
-from django.db.models import Q, Min, QuerySet
+from django.db.models import Min, Q, QuerySet
+
 from tqdm import tqdm
 
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.formula import (
-    FormulaHandler,
-)
+from baserow.contrib.database.formula import FormulaHandler
 from baserow.contrib.database.formula.migrations.migrations import (
-    NO_FORMULAS,
     ALL_FORMULAS,
-    FormulaMigrations,
     FORMULA_MIGRATIONS,
+    NO_FORMULAS,
+    FormulaMigrations,
 )
 from baserow.core.db import LockedAtomicTransaction
 
@@ -180,7 +179,7 @@ class FormulaMigrationHandler:
         latest_version = migrations.get_latest_version()
         if oldest_version_in_db_currently > latest_version:
             # When downgrading only recalculate the attributes and the graph.
-            # Don't bother recalculating the cell values as it's very very slow and
+            # Don't bother recalculating the cell values as it's very, very slow and
             # only likely to introduce back bugs that were fixed in newer versions.
 
             attribute_filter = ALL_FORMULAS

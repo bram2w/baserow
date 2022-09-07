@@ -1,17 +1,18 @@
 from unittest.mock import patch
 
-import pytest
 from django.db.models import Q
+
+import pytest
 
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.models import FormulaField
 from baserow.contrib.database.formula.migrations.handler import FormulaMigrationHandler
 from baserow.contrib.database.formula.migrations.migrations import (
+    ALL_FORMULAS,
+    FORMULA_MIGRATIONS,
+    NO_FORMULAS,
     FormulaMigration,
     FormulaMigrations,
-    ALL_FORMULAS,
-    NO_FORMULAS,
-    FORMULA_MIGRATIONS,
 )
 
 

@@ -1,14 +1,15 @@
-import pytest
-from django.db import connection, transaction, ProgrammingError
+from django.db import ProgrammingError, connection, transaction
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.dummy.base import DatabaseWrapper as DummyDatabaseWrapper
 from django.db.backends.postgresql.schema import (
     DatabaseSchemaEditor as PostgresqlDatabaseSchemaEditor,
 )
 
+import pytest
+
 from baserow.contrib.database.db.schema import (
-    lenient_schema_editor,
     PostgresqlLenientDatabaseSchemaEditor,
+    lenient_schema_editor,
     safe_django_schema_editor,
 )
 from baserow.contrib.database.table.models import Table

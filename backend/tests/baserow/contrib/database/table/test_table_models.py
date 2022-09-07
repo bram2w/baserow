@@ -2,19 +2,20 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-import pytest
 from django.db import models
 from django.utils.timezone import make_aware, utc
 
+import pytest
+
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotPossible,
-    OrderByFieldNotFound,
     FilterFieldNotFound,
+    OrderByFieldNotFound,
+    OrderByFieldNotPossible,
 )
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.exceptions import (
-    ViewFilterTypeNotAllowedForField,
     ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
 )
 
 
@@ -720,3 +721,43 @@ def test_table_model_fields_requiring_refresh_after_update(data_fixture):
     )
     assert len(fields_from_normal_formula_model) == 1
     assert fields_from_normal_formula_model[0] == f"field_{formula_field.id}"
+
+
+@pytest.mark.django_db
+def test_order_by_field_string_with_multiple_field_types_requiring_aggregations(
+    data_fixture,
+):
+    table = data_fixture.create_database_table(name="Cars")
+    multiple_select_field_a = data_fixture.create_multiple_select_field(
+        table=table, name="Multi A"
+    )
+    multiple_select_field_b = data_fixture.create_multiple_select_field(
+        table=table, name="Multi B"
+    )
+
+    option_a = data_fixture.create_select_option(
+        field=multiple_select_field_a, value="A", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=multiple_select_field_a, value="B", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field_b, value="C", color="blue"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field_b, value="D", color="red"
+    )
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create()
+    getattr(row_1, "multi_a").set([option_a.id])
+    getattr(row_1, "multi_b").set([option_c.id])
+    row_2 = model.objects.create()
+    getattr(row_2, "multi_a").set([option_b.id])
+    getattr(row_2, "multi_b").set([option_d.id])
+
+    results = model.objects.all().order_by_fields_string(
+        f"field_{multiple_select_field_a.id},-field_{multiple_select_field_b.id}"
+    )
+    assert results[0].id == row_1.id
+    assert results[1].id == row_2.id

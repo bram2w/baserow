@@ -1,6 +1,6 @@
 <template>
   <PaginatedDropdown
-    v-if="readOnly && view"
+    v-if="isDropdown"
     :fetch-page="fetchPage"
     :value="filter.value"
     :fetch-on-open="true"
@@ -30,7 +30,7 @@
     <SelectRowModal
       v-if="!disabled"
       ref="selectModal"
-      :table-id="field.link_row_table"
+      :table-id="field.link_row_table_id"
       @selected="setValue"
     ></SelectRowModal>
   </a>
@@ -59,6 +59,9 @@ export default {
     valid() {
       return isNumeric(this.filter.value)
     },
+    isDropdown() {
+      return this.readOnly && this.view
+    },
   },
   watch: {
     'filter.value'() {
@@ -85,12 +88,12 @@ export default {
           .get('field', primary.type)
           .toHumanReadableString(primary, row[`field_${primary.id}`])
         this.rowInfo = null
-      } else {
+      } else if (!this.isDropdown) {
         // Get the name from server
         this.loading = true
         try {
           this.name = await RowService(this.$client).getName(
-            this.field.link_row_table,
+            this.field.link_row_table_id,
             value
           )
         } finally {
@@ -103,11 +106,15 @@ export default {
       this.$emit('input', row.id.toString())
     },
     fetchPage(page, search) {
+      const publicAuthToken =
+        this.$store.getters['page/view/public/getAuthToken']
       return ViewService(this.$client).linkRowFieldLookup(
         this.view.id,
         this.field.id,
         page,
-        search
+        search,
+        100,
+        publicAuthToken
       )
     },
   },

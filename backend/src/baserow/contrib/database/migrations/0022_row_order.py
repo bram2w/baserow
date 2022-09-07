@@ -1,7 +1,7 @@
 # Note that if you have a lot of tables, it might table a while before this migration
 # completes.
 
-from django.db import migrations, connection
+from django.db import connection, migrations
 from django.db.models import F
 
 from baserow.contrib.database.table.models import Table as TableModel

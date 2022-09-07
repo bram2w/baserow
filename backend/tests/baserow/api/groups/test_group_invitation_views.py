@@ -1,6 +1,7 @@
+from django.shortcuts import reverse
+
 import pytest
 from freezegun import freeze_time
-
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -8,10 +9,8 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
-
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser, GroupInvitation
+from baserow.core.models import GroupInvitation, GroupUser
 from baserow.core.trash.handler import TrashHandler
 
 

@@ -31,6 +31,7 @@ import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
+import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
@@ -44,6 +45,7 @@ import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/compo
 import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
+import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -59,6 +61,7 @@ import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
+import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -73,6 +76,7 @@ import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/R
 import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
+import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 
@@ -90,6 +94,8 @@ import FieldFormulaSubForm from '@baserow/modules/database/components/field/Fiel
 import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 import ViewService from '@baserow/modules/database/services/view'
+import FormService from '@baserow/modules/database/services/view/form'
+import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 
 export class FieldType extends Registerable {
   /**
@@ -167,7 +173,7 @@ export class FieldType extends Registerable {
   /*
    * Optional properties for the FormViewFieldComponent
    */
-  getFormViewFieldComponentProperties() {
+  getFormViewFieldComponentProperties(context) {
     return {}
   }
 
@@ -278,7 +284,7 @@ export class FieldType extends Registerable {
   /**
    * Should return a for humans readable representation of the value. This is for
    * example used by the link row field and row modal. This is not a problem with most
-   * fields like text or number, but some store a more complex object object like
+   * fields like text or number, but some store a more complex object like
    * the single select or file field. In this case, the object might needs to be
    * converted to string.
    */
@@ -322,11 +328,30 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Some fields need two representations: a simple textual one returned by
+   * `.prepareValueForCopy()` but also a rich representation in json to avoid data
+   * loss while copying. For example: a select field can have multiple options with the
+   * same name. If we copy just text, we'll loose which option it was before if there
+   * are duplicate name but with the rich version we can restore the exact same data.
+   * The value returned by this method is then copied in a specific clipboard buffer to
+   * avoid messing up with the text buffer. The returned value must be json
+   * serializable.
+   * This method don't have to be redefined and return `prepareValueForCopy()` value
+   * by default.
+   */
+  prepareRichValueForCopy(field, value) {
+    return this.prepareValueForCopy(field, value)
+  }
+
+  /**
    * This hook is called before the field's value is overwritten by the clipboard
    * data. That data might needs to be prepared so that the field accepts it.
-   * By default the text value if the clipboard data is used.
+   * By default the input value is returned as is. You can also use the
+   * `richClipboardData` parameter to restore a field without data loss. Using this
+   * parameter only makes sense if you've also defined a specific
+   * `.prepareRichValueForCopy()` method that return this rich value.
    */
-  prepareValueForPaste(field, clipboardData) {
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
     return clipboardData
   }
 
@@ -742,26 +767,65 @@ export class LinkRowFieldType extends FieldType {
     return false
   }
 
-  prepareValueForCopy(field, value) {
-    return JSON.stringify({
-      tableId: field.link_row_table,
-      value,
+  /**
+   * The structure for updating is slightly different than what we need for displaying
+   * the value because the display value does not have to be included. Here we convert
+   * the array[object] structure to an array[id] structure.
+   */
+  prepareValueForUpdate(field, value) {
+    return value.map((item) => {
+      if (typeof item === 'object') {
+        return item.id === null ? item.value : item.id
+      } else {
+        return item
+      }
     })
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    let values
+  prepareValueForCopy(field, value) {
+    if (!Array.isArray(value)) {
+      return ''
+    }
 
-    try {
-      values = JSON.parse(clipboardData)
-    } catch (SyntaxError) {
+    const nameList = value.map(({ value }) => value)
+    // Use papa to generate a CSV string
+    return this.app.$papa.arrayToString(nameList)
+  }
+
+  prepareRichValueForCopy(field, value) {
+    return {
+      tableId: field.link_row_table_id,
+      value,
+    }
+  }
+
+  checkRichValueIsCompatible(value) {
+    return (
+      value === null ||
+      (typeof value === 'object' &&
+        Object.prototype.hasOwnProperty.call(value, 'tableId') &&
+        Object.prototype.hasOwnProperty.call(value, 'value') &&
+        value.value.every(
+          (row) =>
+            Object.prototype.hasOwnProperty.call(row, 'id') &&
+            Object.prototype.hasOwnProperty.call(row, 'value')
+        ))
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (
+      this.checkRichValueIsCompatible(richClipboardData) &&
+      field.link_row_table_id === richClipboardData.tableId
+    ) {
+      if (richClipboardData === null) {
+        return []
+      }
+      return richClipboardData.value
+    } else {
+      // No fallback to text for now
       return []
     }
-
-    if (field.link_row_table === values.tableId) {
-      return values.value
-    }
-    return []
   }
 
   toHumanReadableString(field, value) {
@@ -772,21 +836,12 @@ export class LinkRowFieldType extends FieldType {
   }
 
   /**
-   * The structure for updating is slightly different than what we need for displaying
-   * the value because the display value does not have to be included. Here we convert
-   * the array[object] structure to an array[id] structure.
-   */
-  prepareValueForUpdate(field, value) {
-    return value.map((item) => (typeof item === 'object' ? item.id : item))
-  }
-
-  /**
    * When a table is deleted it might be the case that this is the related table of
    * the field. If so it means that this field has already been deleted and it needs
    * to be removed from the store without making an API call.
    */
   tableDeleted({ dispatch }, field, table, database) {
-    if (field.link_row_table === table.id) {
+    if (field.link_row_table_id === table.id) {
       dispatch('field/forceDelete', field, { root: true })
     }
   }
@@ -796,7 +851,9 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return this.app.i18n.t('fieldDocs.linkRow', { table: field.link_row_table })
+    return this.app.i18n.t('fieldDocs.linkRow', {
+      table: field.link_row_table_id,
+    })
   }
 
   getDocsRequestExample(field) {
@@ -824,13 +881,14 @@ export class LinkRowFieldType extends FieldType {
     return true
   }
 
-  async parseQueryParameter(field, value, { client, slug }) {
+  async parseQueryParameter(field, value, { client, slug, publicAuthToken }) {
     const { data } = await ViewService(client).linkRowFieldLookup(
       slug,
       field.field.id,
       1,
       value,
-      1
+      1,
+      publicAuthToken
     )
 
     const item = data.results.find((item) => item.value === value)
@@ -1315,6 +1373,10 @@ class BaseDateFieldType extends FieldType {
     return this.toHumanReadableString(field, value)
   }
 
+  prepareRichValueForCopy(field, value) {
+    return value
+  }
+
   /**
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
@@ -1707,6 +1769,8 @@ export class EmailFieldType extends FieldType {
 }
 
 export class FileFieldType extends FieldType {
+  fileRegex = /^(.+\.[^\s]+) \(http[^)]+\/([^\s]+.[^\s]+)\)$/
+
   static getType() {
     return 'file'
   }
@@ -1732,12 +1796,23 @@ export class FileFieldType extends FieldType {
     return RowEditFieldFile
   }
 
-  getCardComponent() {
-    return RowCardFieldFile
+  getFormViewFieldComponentProperties({ $store, $client, slug }) {
+    const userFileUploadTypes = [UploadFileUserFileUploadType.getType()]
+    return {
+      userFileUploadTypes,
+      uploadFile: (file, progress) => {
+        return FormService($client).uploadFile(
+          file,
+          progress,
+          slug,
+          $store.getters['page/view/public/getAuthToken']
+        )
+      },
+    }
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getCardComponent() {
+    return RowCardFieldFile
   }
 
   toHumanReadableString(field, value) {
@@ -1745,28 +1820,54 @@ export class FileFieldType extends FieldType {
   }
 
   prepareValueForCopy(field, value) {
-    return JSON.stringify(value)
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    return this.app.$papa.arrayToString(
+      value.map(
+        ({ url, visible_name: visibleName }) => `${visibleName} (${url})`
+      )
+    )
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    let value
+  prepareRichValueForCopy(field, value) {
+    return value
+  }
 
-    try {
-      value = JSON.parse(clipboardData)
-    } catch (SyntaxError) {
-      return []
-    }
+  checkRichValueIsCompatible(values) {
+    return (
+      Array.isArray(values) &&
+      values.every(
+        (value) => !Object.prototype.hasOwnProperty.call(value, 'name')
+      )
+    )
+  }
 
-    if (!Array.isArray(value)) {
-      return []
-    }
-    // Each object should at least have the file name as property.
-    for (let i = 0; i < value.length; i++) {
-      if (!Object.prototype.hasOwnProperty.call(value[i], 'name')) {
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      return richClipboardData
+    } else {
+      try {
+        const files = this.app.$papa.stringToArray(clipboardData)
+        return files
+          .map((strValue) => {
+            // Try to match the expected format
+            const matches = strValue.match(this.fileRegex)
+            if (matches) {
+              return {
+                name: matches[2],
+                visible_name: matches[1],
+              }
+            } else {
+              return null
+            }
+          })
+          .filter((v) => v)
+      } catch {
         return []
       }
     }
-    return value
   }
 
   getEmptyValue(field) {
@@ -1826,6 +1927,10 @@ export class FileFieldType extends FieldType {
 
   shouldFetchFieldSelectOptions() {
     return false
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -1894,6 +1999,13 @@ export class SingleSelectFieldType extends FieldType {
     return value.value
   }
 
+  prepareRichValueForCopy(field, value) {
+    if (value === undefined) {
+      return null
+    }
+    return value
+  }
+
   _findOptionWithMatchingId(field, rawTextValue) {
     if (isNumeric(rawTextValue)) {
       const pastedOptionId = parseInt(rawTextValue, 10)
@@ -1909,16 +2021,30 @@ export class SingleSelectFieldType extends FieldType {
     )
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    const rawTextValue = clipboardData
-    if (!rawTextValue) {
-      return null
-    }
-
+  checkRichValueIsCompatible(value) {
     return (
-      this._findOptionWithMatchingId(field, rawTextValue) ||
-      this._findOptionWithMatchingValue(field, rawTextValue)
+      value === null ||
+      (typeof value === 'object' &&
+        Object.prototype.hasOwnProperty.call(value, 'id'))
     )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      if (richClipboardData === null) {
+        return null
+      }
+      return this._findOptionWithMatchingId(field, richClipboardData.id)
+    } else {
+      if (!clipboardData) {
+        return null
+      }
+
+      return (
+        this._findOptionWithMatchingId(field, clipboardData) ||
+        this._findOptionWithMatchingValue(field, clipboardData)
+      )
+    }
   }
 
   toHumanReadableString(field, value) {
@@ -2061,25 +2187,48 @@ export class MultipleSelectFieldType extends FieldType {
     }
 
     const nameList = value.map(({ value }) => value)
-    // Use papa to generate a CSV  string
-    const result = this.app.$papa.unparse([nameList])
-    return result
+    // Use papa to generate a CSV string
+    return this.app.$papa.arrayToString(nameList)
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    try {
-      const values = this.app.$papa.parse(clipboardData)
-      const data = values.data[0]
-
-      const selectOptionMap = Object.fromEntries(
-        field.select_options.map((option) => [option.value, option])
-      )
-
-      return data
-        .filter((name) => Object.keys(selectOptionMap).includes(name))
-        .map((name) => selectOptionMap[name])
-    } catch (e) {
+  prepareRichValueForCopy(field, value) {
+    if (value === undefined) {
       return []
+    }
+    return value
+  }
+
+  checkRichValueIsCompatible(value) {
+    return (
+      value === null ||
+      (Array.isArray(value) &&
+        value.every((v) => Object.prototype.hasOwnProperty.call(v, 'id')))
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      if (richClipboardData === null) {
+        return []
+      }
+      return richClipboardData
+    } else {
+      // Fallback to text version
+      try {
+        const data = this.app.$papa.stringToArray(clipboardData)
+
+        const selectOptionMap = Object.fromEntries(
+          field.select_options.map((option) => [option.value, option])
+        )
+
+        const uniqueValuesOnly = Array.from(new Set(data))
+
+        return uniqueValuesOnly
+          .filter((name) => Object.keys(selectOptionMap).includes(name))
+          .map((name) => selectOptionMap[name])
+      } catch (e) {
+        return []
+      }
     }
   }
 
@@ -2432,5 +2581,187 @@ export class LookupFieldType extends FormulaFieldType {
 
   shouldFetchFieldSelectOptions() {
     return false
+  }
+}
+
+export class MultipleCollaboratorsFieldType extends FieldType {
+  static getType() {
+    return 'multiple_collaborators'
+  }
+
+  getIconClass() {
+    return 'user-friends'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.multipleCollaborators')
+  }
+
+  getFormComponent() {
+    return null
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldMultipleCollaborators
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldMultipleCollaborators
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldMultipleCollaborators
+  }
+
+  getCardComponent() {
+    return RowCardFieldMultipleCollaborators
+  }
+
+  prepareValueForUpdate(field, value) {
+    if (value === undefined || value === null) {
+      return []
+    }
+    return value
+  }
+
+  getFormViewFieldComponent() {
+    return null
+  }
+
+  getEmptyValue() {
+    return []
+  }
+
+  getCanImport() {
+    return true
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const valuesA = a[name]
+      const valuesB = b[name]
+
+      let stringA = ''
+      let stringB = ''
+
+      const groups = this.app.store.getters['group/getAll']
+
+      if (valuesA.length > 0 && groups.length > 0) {
+        stringA = valuesA
+          .map(
+            (obj) => this.app.store.getters['group/getUserById'](obj.id).name
+          )
+          .join('')
+      } else if (valuesA.length > 0) {
+        stringA = valuesA.map((obj) => obj.name).join('')
+      }
+
+      if (valuesB.length > 0 && groups.length > 0) {
+        stringB = valuesB
+          .map(
+            (obj) => this.app.store.getters['group/getUserById'](obj.id).name
+          )
+          .join('')
+      } else if (valuesB.length > 0) {
+        stringB = valuesB.map((obj) => obj.name).join('')
+      }
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    const groups = this.app.store.getters['group/getAll']
+
+    let nameList = []
+
+    if (groups.length > 0) {
+      nameList = value.map((value) => {
+        const groupUser = this.app.store.getters['group/getUserById'](value.id)
+        return groupUser.name
+      })
+    } else {
+      // public views
+      nameList = value.map((value) => {
+        return value.name
+      })
+    }
+
+    return this.app.$papa.arrayToString(nameList)
+  }
+
+  prepareRichValueForCopy(field, value) {
+    if (value === undefined) {
+      return []
+    }
+    return value
+  }
+
+  checkRichValueIsCompatible(value) {
+    return (
+      value === null ||
+      (Array.isArray(value) &&
+        value.every((v) => Object.prototype.hasOwnProperty.call(v, 'id')))
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (this.checkRichValueIsCompatible(richClipboardData)) {
+      if (richClipboardData === null) {
+        return []
+      }
+      return richClipboardData
+    } else {
+      // Fallback to text version
+      try {
+        const data = this.app.$papa.stringToArray(clipboardData)
+        const uniqueValuesOnly = Array.from(new Set(data))
+        return uniqueValuesOnly
+          .map((emailOrName) => {
+            const groupUser =
+              this.app.store.getters['group/getUserByEmail'](emailOrName)
+            if (groupUser !== undefined) {
+              return groupUser
+            }
+            return this.app.store.getters['group/getUserByName'](emailOrName)
+          })
+          .filter((obj) => obj !== null)
+          .map((obj) => {
+            return {
+              id: obj.user_id,
+            }
+          })
+      } catch (e) {
+        return []
+      }
+    }
+  }
+
+  getDocsDataType() {
+    return 'array'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.multipleCollaborators')
+  }
+
+  getDocsRequestExample() {
+    return [{ id: 1 }]
+  }
+
+  getDocsResponseExample() {
+    return [
+      {
+        id: 1,
+        name: 'John',
+      },
+    ]
   }
 }

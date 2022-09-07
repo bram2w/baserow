@@ -1,18 +1,14 @@
+from drf_spectacular.openapi import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.openapi import OpenApiTypes
-
 from baserow.contrib.database.api.webhooks.validators import (
-    url_validation,
     http_header_validation,
+    url_validation,
 )
-from baserow.contrib.database.webhooks.models import (
-    TableWebhook,
-    TableWebhookCall,
-)
-from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
 from baserow.contrib.database.webhooks.handler import WebhookHandler
+from baserow.contrib.database.webhooks.models import TableWebhook, TableWebhookCall
+from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
 
 
 class TableWebhookEventsSerializer(serializers.ListField):

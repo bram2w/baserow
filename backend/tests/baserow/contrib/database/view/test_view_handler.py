@@ -1,46 +1,47 @@
-import pytest
-from unittest.mock import patch
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 
+import pytest
+
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.views.view_types import GridViewType
-from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.views.handler import ViewHandler, PublicViewRows
+from baserow.contrib.database.views.exceptions import (
+    CannotShareViewTypeError,
+    FormViewFieldTypeIsNotSupported,
+    GridViewAggregationDoesNotSupportField,
+    UnrelatedFieldError,
+    ViewDoesNotExist,
+    ViewDoesNotSupportFieldOptions,
+    ViewFilterDoesNotExist,
+    ViewFilterNotSupported,
+    ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
+    ViewNotInTable,
+    ViewSortDoesNotExist,
+    ViewSortFieldAlreadyExist,
+    ViewSortFieldNotSupported,
+    ViewSortNotSupported,
+    ViewTypeDoesNotExist,
+)
+from baserow.contrib.database.views.handler import PublicViewRows, ViewHandler
 from baserow.contrib.database.views.models import (
-    View,
-    GridView,
     FormView,
+    GridView,
+    View,
     ViewFilter,
     ViewSort,
 )
 from baserow.contrib.database.views.registries import (
-    view_type_registry,
-    view_filter_type_registry,
     view_aggregation_type_registry,
+    view_filter_type_registry,
+    view_type_registry,
 )
-from baserow.contrib.database.views.exceptions import (
-    ViewTypeDoesNotExist,
-    ViewDoesNotExist,
-    ViewNotInTable,
-    UnrelatedFieldError,
-    ViewFilterDoesNotExist,
-    ViewFilterNotSupported,
-    ViewFilterTypeNotAllowedForField,
-    ViewFilterTypeDoesNotExist,
-    ViewSortDoesNotExist,
-    ViewSortNotSupported,
-    ViewSortFieldAlreadyExist,
-    ViewSortFieldNotSupported,
-    ViewDoesNotSupportFieldOptions,
-    FormViewFieldTypeIsNotSupported,
-    GridViewAggregationDoesNotSupportField,
-    CannotShareViewTypeError,
-)
-from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -655,14 +656,14 @@ def test_enable_form_view_file_field(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     form_view = data_fixture.create_form_view(table=table)
-    file_field = data_fixture.create_file_field(table=table)
+    created_on_field = data_fixture.create_created_on_field(table=table)
 
     with pytest.raises(FormViewFieldTypeIsNotSupported):
         ViewHandler().update_field_options(
             user=user,
             view=form_view,
             field_options={
-                file_field.id: {"enabled": True},
+                created_on_field.id: {"enabled": True},
             },
         )
 
@@ -670,7 +671,7 @@ def test_enable_form_view_file_field(data_fixture):
         user=user,
         view=form_view,
         field_options={
-            file_field.id: {"enabled": False},
+            created_on_field.id: {"enabled": False},
         },
     )
 

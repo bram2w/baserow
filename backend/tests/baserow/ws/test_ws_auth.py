@@ -2,7 +2,7 @@ import pytest
 from channels.testing import WebsocketCommunicator
 
 from baserow.config.asgi import application
-from baserow.ws.auth import get_user, ANONYMOUS_USER_TOKEN
+from baserow.ws.auth import ANONYMOUS_USER_TOKEN, get_user
 
 
 @pytest.mark.run(order=1)

@@ -1,15 +1,16 @@
-from typing import Optional, List, Tuple, Iterable
+from typing import Iterable, List, Optional, Tuple
 
 from django.db.models import Q
 
-from baserow.contrib.database.fields.dependencies.depedency_rebuilder import (
+from baserow.contrib.database.fields.dependencies.dependency_rebuilder import (
+    break_dependencies_for_field,
     rebuild_field_dependencies,
     update_fields_with_broken_references,
-    break_dependencies_for_field,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
-from baserow.contrib.database.fields.registries import field_type_registry, FieldType
+from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+
 from .models import FieldDependency
 
 FieldDependants = List[Tuple[Field, FieldType, List[LinkRowField]]]

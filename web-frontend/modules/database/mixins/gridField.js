@@ -1,6 +1,6 @@
 import { isElement } from '@baserow/modules/core/utils/dom'
-import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import baseField from '@baserow/modules/database/mixins/baseField'
+import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 
 /**
  * A mixin that can be used by a field grid component. It introduces the props that
@@ -8,7 +8,7 @@ import baseField from '@baserow/modules/database/mixins/baseField'
  * going to be called.
  */
 export default {
-  mixins: [baseField],
+  mixins: [baseField, copyPasteHelper],
   props: {
     /**
      * Indicates if the grid field is in a selected state.
@@ -137,12 +137,10 @@ export default {
 
         // Copy the value to the clipboard if ctrl/cmd + c is pressed.
         if ((ctrlKey || metaKey) && key === 'c' && this.canCopy(event)) {
-          const rawValue = this.value
-          const value = this.$registry
-            .get('field', this.field.type)
-            .prepareValueForCopy(this.field, rawValue)
-          const tsv = this.$papa.unparse([[value]], { delimiter: '\t' })
-          copyToClipboard(tsv)
+          this.copySelectionToClipboard(
+            [this.field],
+            [{ [`field_${this.field.id}`]: this.value }]
+          )
         }
 
         // Removes the value if the backspace/delete key is pressed.
@@ -169,21 +167,29 @@ export default {
           return
         }
 
+        // Try to call the field handler if one exists
+        if (this.onPaste) {
+          // If the return value of onPaste is true then we must stop event handling
+          // here. It means the event has already been handled.
+          if (this.onPaste(event)) {
+            return
+          }
+        }
+
         try {
-          // Multiple values in TSV format can be provided, so we need to properly
-          // parse it using Papa.
-          const parsed = await this.$papa.parsePromise(
-            event.clipboardData.getData('text'),
-            { delimiter: '\t' }
-          )
-          const data = parsed.data
+          const [data, jsonData] = await this.extractClipboardData(event)
+
           // A grid field cell can only handle one single value. We try to extract
           // that from the clipboard and update the cell, otherwise we emit the
           // paste event up.
           if (data.length === 1 && data[0].length === 1) {
             const value = this.$registry
               .get('field', this.field.type)
-              .prepareValueForPaste(this.field, data[0][0])
+              .prepareValueForPaste(
+                this.field,
+                data[0][0],
+                jsonData !== null ? jsonData[0][0] : null
+              )
             const oldValue = this.value
 
             if (
@@ -195,8 +201,9 @@ export default {
               this.$emit('update', value, oldValue)
             }
           } else {
+            // This is a multi cell paste
             event.stopPropagation()
-            this.$emit('paste', data)
+            this.$emit('paste', { textData: data, jsonData })
           }
         } catch (e) {}
       }

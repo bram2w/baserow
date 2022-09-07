@@ -977,7 +977,11 @@ export class BaserowLeft extends BaserowFunctionDefinition {
   }
 
   getExamples() {
-    return ['left("abcd", 2) = "ab"']
+    return [
+      'left("abcde", 2) = "ab"',
+      'left("abcde", -2) = "abc"',
+      'when_empty(left("abcd", 1/0), "error") = "error"',
+    ]
   }
 
   getFormulaType() {
@@ -1000,7 +1004,11 @@ export class BaserowRight extends BaserowFunctionDefinition {
   }
 
   getExamples() {
-    return ['right("abcd", 2) = "cd"']
+    return [
+      'right("abcde", 2) = "de"',
+      'right("abcde", -2) = "cde"',
+      'when_empty(right("abcd", 1/0), "error") = "error"',
+    ]
   }
 
   getFormulaType() {
@@ -1091,7 +1099,13 @@ export class BaserowRound extends BaserowFunctionDefinition {
   }
 
   getExamples() {
-    return ['round(1.12345,2) = 1.12']
+    return [
+      'round(1.12345,2) = 1.12',
+      'round(1234.5678, -2) = 1200',
+      'round(1234.11111, 2.999) = 1234.11',
+      'round(1234.11111, 1/0) = NaN',
+      'round(1234.11111, tonumber("invalid number")) = NaN',
+    ]
   }
 
   getFormulaType() {
@@ -1099,22 +1113,29 @@ export class BaserowRound extends BaserowFunctionDefinition {
   }
 }
 
-export class BaserowInt extends BaserowFunctionDefinition {
+export class BaserowTrunc extends BaserowFunctionDefinition {
   static getType() {
-    return 'int'
+    return 'trunc'
   }
 
   getDescription() {
     const { i18n } = this.app
-    return i18n.t('formulaFunctions.intDescription')
+    return i18n.t('formulaFunctions.truncDescription')
   }
 
   getSyntaxUsage() {
-    return ['round(int)']
+    return ['trunc(number)']
   }
 
   getExamples() {
-    return ['int(1.49) = 1']
+    return [
+      'trunc(1.49) = 1',
+      'trunc(1.51) = 1',
+      'trunc(-1.51) = -1',
+      'trunc(-1.49) = -1',
+      'trunc(1/0) = NaN',
+      'trunc(tonumber("invalid")) = NaN',
+    ]
   }
 
   getFormulaType() {

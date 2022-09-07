@@ -268,6 +268,17 @@
         "rowComments": "Commentaires de ligne",
         "exports": "Export JSON et XML",
         "admin": "Administration avancée",
-        "rowColoring": "Coloration des lignes"
+        "rowColoring": "Coloration des lignes",
+        "surveyForm": "Sondage"
+    },
+    "formViewModePreviewSurvey": {
+        "deactivated": "Les sondage sont disponibles dans la version premium.",
+        "orderFields": "Ordonner les champs",
+        "more": "Plus d'informations"
+    },
+    "formViewModeType": {
+        "onlyForPremium": "Disponible en version premium",
+        "survey": "Sondage",
+        "surveyDescription": "Un seul champ est visible à la fois."
     }
 }

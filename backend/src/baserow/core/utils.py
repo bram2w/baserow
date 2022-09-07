@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import math
 import os
 import random
 import re
 import string
-import io
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
-from typing import List, Optional, Iterable, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
@@ -388,7 +388,7 @@ def find_unused_name(
 
     :param variants_to_try: An iterable of name variant we want to try.
     :param existing_names: An iterable of all pre existing values.
-    :parm max_length: Set this value if you have a length limit to the new name.
+    :param max_length: Set this value if you have a length limit to the new name.
     :param suffix: The suffix you want to append to the name to avoid
       duplicate. The string is going to be formated with a number.
     :return: The first available unused name.

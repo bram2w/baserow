@@ -36,7 +36,7 @@ export default {
     /**
      * Toggles the open state of the context menu.
      *
-     * @param target      The original element element that changed the state of the
+     * @param target      The original element that changed the state of the
      *                    context, this will be used to calculate the correct position.
      * @param vertical    Bottom positions the context under the target.
      *                    Top positions the context above the target.

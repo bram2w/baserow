@@ -31,7 +31,7 @@
     <FieldSelectOptionsDropdown
       ref="dropdown"
       :options="availableSelectOptions"
-      :allow-create-options="allowCreateOptions"
+      :allow-create-option="allowCreateOptions"
       :disabled="readOnly"
       :show-input="false"
       :show-empty-value="false"
@@ -48,12 +48,13 @@
 
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
-import selectOptions from '@baserow/modules/database/mixins/selectOptions'
 import multipleSelectField from '@baserow/modules/database/mixins/multipleSelectField'
+import FieldSelectOptionsDropdown from '@baserow/modules/database/components/field/FieldSelectOptionsDropdown'
 
 export default {
   name: 'RowEditFieldMultipleSelect',
-  mixins: [rowEditField, selectOptions, multipleSelectField],
+  components: { FieldSelectOptionsDropdown },
+  mixins: [rowEditField, multipleSelectField],
   props: {
     allowCreateOptions: {
       type: Boolean,

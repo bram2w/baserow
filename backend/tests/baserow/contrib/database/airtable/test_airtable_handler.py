@@ -1,30 +1,28 @@
-import os
-import pytest
-import responses
 import json
-
-from unittest.mock import patch
+import os
 from copy import deepcopy
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
-from pytz import UTC, timezone as pytz_timezone, UnknownTimeZoneError
+from unittest.mock import patch
+from zipfile import ZIP_DEFLATED, ZipFile
 
-from django.core.files.storage import FileSystemStorage
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 
-from baserow.core.jobs.handler import JobHandler
+import pytest
+import responses
+from pytz import UTC, UnknownTimeZoneError
+from pytz import timezone as pytz_timezone
+
+from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
+from baserow.contrib.database.airtable.handler import AirtableHandler
+from baserow.contrib.database.airtable.models import AirtableImportJob
+from baserow.contrib.database.fields.models import TextField
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.jobs.constants import JOB_PENDING
-from baserow.core.jobs.exceptions import MaxJobCountExceeded, JobDoesNotExist
-
+from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
 from baserow.core.user_files.models import UserFile
 from baserow.core.utils import Progress
-from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.fields.models import TextField
-from baserow.contrib.database.airtable.exceptions import (
-    AirtableShareIsNotABase,
-)
-from baserow.contrib.database.airtable.models import AirtableImportJob
-from baserow.contrib.database.airtable.handler import AirtableHandler
 
 
 @pytest.mark.django_db

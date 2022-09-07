@@ -1,5 +1,6 @@
-import pytest
 from django.test.utils import override_settings
+
+import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.table.cache import get_cached_model_field_attrs

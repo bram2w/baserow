@@ -67,6 +67,8 @@
     <UserFilesModal
       v-if="!readOnly"
       ref="uploadModal"
+      :upload-file="uploadFile"
+      :user-file-upload-types="userFileUploadTypes"
       @uploaded="addFiles(value, $event)"
     ></UserFilesModal>
     <FileFieldModal
@@ -91,6 +93,18 @@ import fileField from '@baserow/modules/database/mixins/fileField'
 export default {
   components: { UserFilesModal, FileFieldModal },
   mixins: [rowEditField, fileField],
+  props: {
+    uploadFile: {
+      type: Function,
+      required: false,
+      default: null,
+    },
+    userFileUploadTypes: {
+      type: Array,
+      required: false,
+      default: null,
+    },
+  },
   methods: {
     showModal() {
       this.$refs.uploadModal.show(UploadFileUserFileUploadType.getType())

@@ -1,22 +1,22 @@
 from django.db import transaction
 from django.db.models import Count
 
+from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
+from baserow_premium.admin.groups.handler import GroupsAdminHandler
+from baserow_premium.api.admin.views import AdminListingView
+from baserow_premium.license.handler import check_active_premium_license
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions
-from baserow.api.schemas import get_error_schema
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST
-from baserow.core.models import Group
-from baserow.core.handler import CoreHandler
+from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import GroupDoesNotExist
-from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
-from baserow_premium.api.admin.views import AdminListingView
-from baserow_premium.admin.groups.handler import GroupsAdminHandler
-from baserow_premium.license.handler import check_active_premium_license
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Group
 
 from .errors import ERROR_CANNOT_DELETE_A_TEMPLATE_GROUP
 from .serializers import GroupsAdminResponseSerializer

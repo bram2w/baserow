@@ -1,14 +1,16 @@
-import pytest
-from pytz import timezone
 from datetime import datetime
-from freezegun import freeze_time
 from io import BytesIO
+
 from django.core.exceptions import ValidationError
 
-from baserow.core.handler import CoreHandler
-from baserow.contrib.database.fields.models import CreatedOnField
+import pytest
+from freezegun import freeze_time
+from pytz import timezone
+
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import CreatedOnField
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.handler import CoreHandler
 
 
 @pytest.mark.django_db
@@ -66,7 +68,7 @@ def test_created_on_field_type(data_fixture):
     row_created_on = row.created_on
     assert row_create_datetime == row_created_on
 
-    # Trying to update the the created_on field will raise error
+    # Trying to update the created_on field will raise error
     with pytest.raises(ValidationError):
         row_handler.update_row_by_id(
             user=user,

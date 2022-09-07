@@ -1,11 +1,12 @@
 from baserow.contrib.database.api.rows.serializers import (
+    RowSerializer,
     get_row_serializer_class,
     remap_serialized_rows_to_user_field_names,
-    RowSerializer,
 )
 from baserow.contrib.database.webhooks.registries import WebhookEventType
 from baserow.contrib.database.ws.rows.signals import before_rows_update
-from .signals import rows_created, rows_updated, rows_deleted
+
+from .signals import rows_created, rows_deleted, rows_updated
 
 
 class RowsEventType(WebhookEventType):

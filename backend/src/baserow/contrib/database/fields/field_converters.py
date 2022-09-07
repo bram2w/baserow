@@ -1,22 +1,24 @@
 from dataclasses import dataclass
-from psycopg2 import sql
 
 from django.db import models, transaction
+
+from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import (
     lenient_schema_editor,
     safe_django_schema_editor,
 )
 
-from .registries import FieldConverter, field_type_registry
 from .models import (
-    LinkRowField,
     FileField,
-    MultipleSelectField,
-    SingleSelectField,
-    SelectOption,
     FormulaField,
+    LinkRowField,
+    MultipleCollaboratorsField,
+    MultipleSelectField,
+    SelectOption,
+    SingleSelectField,
 )
+from .registries import FieldConverter, field_type_registry
 
 
 class RecreateFieldConverter(FieldConverter):
@@ -69,6 +71,15 @@ class LinkRowFieldConverter(RecreateFieldConverter):
                 and isinstance(to_field, LinkRowField)
                 and from_field.link_row_table_id != to_field.link_row_table_id
             )
+        )
+
+
+class MultipleCollaboratorsFieldConverter(RecreateFieldConverter):
+    type = "multiple_collaborators"
+
+    def is_applicable(self, from_model, from_field, to_field):
+        return isinstance(to_field, MultipleCollaboratorsField) or isinstance(
+            from_field, MultipleCollaboratorsField
         )
 
 

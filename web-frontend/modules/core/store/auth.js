@@ -160,9 +160,21 @@ export const actions = {
   /**
    * Updates the account information is the authenticated user.
    */
-  async update({ commit }, values) {
+  async update({ getters, commit, dispatch }, values) {
     const { data } = await AuthService(this.$client).update(values)
     commit('UPDATE_USER_DATA', { user: data })
+    dispatch(
+      'group/forceUpdateGroupUserAttributes',
+      {
+        userId: getters.getUserId,
+        values: {
+          name: data.first_name,
+        },
+      },
+      {
+        root: true,
+      }
+    )
     return data
   },
   forceUpdateUserData({ commit }, data) {

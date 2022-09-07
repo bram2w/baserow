@@ -1,9 +1,7 @@
 from django.db import transaction
 from django.dispatch import receiver
 
-from baserow.contrib.database.api.views.serializers import (
-    PublicViewInfoSerializer,
-)
+from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.views import signals as view_signals
 from baserow.contrib.database.views.registries import view_type_registry

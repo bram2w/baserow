@@ -31,7 +31,7 @@
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
-        @edit-row="$refs.rowEditModal.show($event.id)"
+        @edit-row="openRowEditModal($event.id)"
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <KanbanViewStack
@@ -46,7 +46,7 @@
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
-        @edit-row="$refs.rowEditModal.show($event.id)"
+        @edit-row="openRowEditModal($event.id)"
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <a
@@ -89,6 +89,7 @@
       :rows="allRows"
       :read-only="false"
       :show-hidden-fields="showHiddenFieldsInRowModal"
+      @hidden="$emit('selected-row', undefined)"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
       "
@@ -108,6 +109,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { clone } from '@baserow/modules/core/utils/object'
+import { populateRow } from '@baserow/modules/database/store/view/grid'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import {
@@ -153,10 +155,13 @@ export default {
       type: Boolean,
       required: true,
     },
+    row: {
+      validator: (prop) => typeof prop === 'object' || prop === null,
+      required: true,
+    },
   },
   data() {
     return {
-      row: {},
       showHiddenFieldsInRowModal: false,
     }
   },
@@ -210,7 +215,22 @@ export default {
       }),
     }
   },
+  mounted() {
+    if (this.row !== null) {
+      const rowClone = populateRow(clone(this.row))
+      this.$refs.rowEditModal.show(this.row.id, rowClone)
+    }
+  },
   methods: {
+    /**
+     * When the row edit modal is opened we notifiy
+     * the Table component that a new row has been selected,
+     * such that we can update the path to include the row id.
+     */
+    openRowEditModal(rowId) {
+      this.$refs.rowEditModal.show(rowId)
+      this.$emit('selected-row', rowId)
+    },
     openCreateRowModal(event) {
       const defaults = {}
       if (event.option !== null) {

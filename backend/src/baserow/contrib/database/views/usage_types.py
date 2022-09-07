@@ -1,4 +1,4 @@
-from django.db.models import Sum, Q
+from django.db.models import Q, Sum
 
 from baserow.core.usage.registries import GroupStorageUsageItemType, UsageInBytes
 from baserow.core.user_files.models import UserFile

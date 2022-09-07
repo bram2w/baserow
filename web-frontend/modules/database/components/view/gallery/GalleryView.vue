@@ -79,6 +79,7 @@
       :rows="allRows"
       :read-only="false"
       :show-hidden-fields="showHiddenFieldsInRowModal"
+      @hidden="$emit('selected-row', undefined)"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
       "
@@ -115,6 +116,8 @@ import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import bufferedRowsDragAndDrop from '@baserow/modules/database/mixins/bufferedRowsDragAndDrop'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
+import { populateRow } from '@baserow/modules/database/store/view/grid'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'GalleryView',
@@ -143,6 +146,10 @@ export default {
     },
     storePrefix: {
       type: String,
+      required: true,
+    },
+    row: {
+      validator: (prop) => typeof prop === 'object' || prop === null,
       required: true,
     },
   },
@@ -264,6 +271,11 @@ export default {
       }
     }
     this.$refs.scroll.addEventListener('scroll', this.$el.scrollEvent)
+
+    if (this.row !== null) {
+      const rowClone = populateRow(clone(this.row))
+      this.$refs.rowEditModal.show(this.row.id, rowClone)
+    }
   },
   beforeDestroy() {
     this.$el.resizeObserver.unobserve(this.$el)
@@ -393,6 +405,7 @@ export default {
      */
     rowClick(row) {
       this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row.id)
     },
     /**
      * Calls the fieldCreated callback and shows the hidden fields section

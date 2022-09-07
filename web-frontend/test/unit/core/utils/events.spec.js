@@ -251,7 +251,7 @@ describe('test key press event helper', () => {
     expect(isPrintableUnicodeCharacterKeyPress(charWithoutEvent)).toBeFalsy()
   })
 
-  test('passing null or undefinded should return false', () => {
+  test('passing null or undefined should return false', () => {
     expect(isPrintableUnicodeCharacterKeyPress(null)).toBeFalsy()
     expect(isPrintableUnicodeCharacterKeyPress(undefined)).toBeFalsy()
   })

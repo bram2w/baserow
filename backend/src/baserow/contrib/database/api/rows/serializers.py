@@ -3,8 +3,9 @@ from copy import deepcopy
 from typing import Dict, List
 
 from django.conf import settings
-from rest_framework import serializers
 from django.db.models.base import ModelBase
+
+from rest_framework import serializers
 
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class

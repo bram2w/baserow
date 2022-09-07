@@ -1,6 +1,6 @@
-import pytest
-
 from django.template.exceptions import TemplateDoesNotExist
+
+import pytest
 
 from baserow.core.emails import BaseEmailMessage
 

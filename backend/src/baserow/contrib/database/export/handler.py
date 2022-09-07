@@ -2,7 +2,7 @@ import logging
 import uuid
 from io import BytesIO
 from os.path import join
-from typing import Optional, Dict, Any, BinaryIO
+from typing import Any, BinaryIO, Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,26 +11,27 @@ from django.db import transaction
 from django.utils import timezone
 
 from baserow.contrib.database.export.models import (
-    ExportJob,
     EXPORT_JOB_CANCELLED_STATUS,
-    EXPORT_JOB_PENDING_STATUS,
-    EXPORT_JOB_FAILED_STATUS,
-    EXPORT_JOB_EXPIRED_STATUS,
     EXPORT_JOB_COMPLETED_STATUS,
+    EXPORT_JOB_EXPIRED_STATUS,
     EXPORT_JOB_EXPORTING_STATUS,
+    EXPORT_JOB_FAILED_STATUS,
+    EXPORT_JOB_PENDING_STATUS,
+    ExportJob,
 )
 from baserow.contrib.database.export.tasks import run_export_job
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.exceptions import ViewNotInTable
+from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
+
 from .exceptions import (
+    ExportJobCanceledException,
     TableOnlyExportUnsupported,
     ViewUnsupportedForExporterType,
-    ExportJobCanceledException,
 )
 from .file_writer import PaginatedExportJobFileWriter
-from .registries import table_exporter_registry, TableExporter
+from .registries import TableExporter, table_exporter_registry
 
 logger = logging.getLogger(__name__)
 

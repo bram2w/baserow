@@ -1,45 +1,51 @@
-from typing import Optional
 from datetime import timedelta
-from urllib.parse import urlparse, urljoin
+from typing import Optional
+from urllib.parse import urljoin, urlparse
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser, update_last_login
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Count, Q
+from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeTimedSerializer
 
-from django.conf import settings
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-from django.db.models import Q, Count
-from django.db import transaction
-from django.utils import translation
-from django.utils.translation import gettext as _
-from django.contrib.auth.models import update_last_login, AbstractUser
-
-from baserow.core.signals import before_user_deleted
+from baserow.core.exceptions import (
+    BaseURLHostnameNotAllowed,
+    GroupInvitationEmailMismatch,
+)
 from baserow.core.handler import CoreHandler
-from baserow.core.trash.handler import TrashHandler
+from baserow.core.models import Group, GroupUser, Template, UserLogEntry, UserProfile
 from baserow.core.registries import plugin_registry
-from baserow.core.exceptions import BaseURLHostnameNotAllowed
-from baserow.core.exceptions import GroupInvitationEmailMismatch
-from baserow.core.models import Template, UserProfile, Group, UserLogEntry
+from baserow.core.signals import (
+    before_user_deleted,
+    user_deleted,
+    user_permanently_deleted,
+    user_restored,
+    user_updated,
+)
+from baserow.core.trash.handler import TrashHandler
 
+from .emails import (
+    AccountDeleted,
+    AccountDeletionCanceled,
+    AccountDeletionScheduled,
+    ResetPasswordEmail,
+)
 from .exceptions import (
+    DisabledSignupError,
+    InvalidPassword,
+    PasswordDoesNotMatchValidation,
+    ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
     UserNotFound,
-    PasswordDoesNotMatchValidation,
-    InvalidPassword,
-    DisabledSignupError,
-    ResetPasswordDisabledError,
-)
-from .emails import (
-    ResetPasswordEmail,
-    AccountDeletionScheduled,
-    AccountDeletionCanceled,
-    AccountDeleted,
 )
 from .utils import normalize_email_address
-
 
 User = get_user_model()
 
@@ -95,7 +101,7 @@ class UserHandler:
         :param password: The password of the user.
         :param language: The language selected by the user.
         :param group_invitation_token: If provided and valid, the invitation will be
-            accepted and and initial group will not be created.
+            accepted and initial group will not be created.
         :param template: If provided, that template will be installed into the newly
             created group.
         :raises: UserAlreadyExist: When a user with the provided username (email)
@@ -189,7 +195,8 @@ class UserHandler:
         language: Optional[str] = None,
     ) -> AbstractUser:
         """
-        Updates the user's account editable properties
+        Updates the user's account editable properties. Handles the scenario
+        when a user edits his own account.
 
         :param user: The user instance to update.
         :param first_name: The new user first name.
@@ -204,6 +211,8 @@ class UserHandler:
         if language is not None:
             user.profile.language = language
             user.profile.save()
+
+        user_updated.send(self, performed_by=user, user=user)
 
         return user
 
@@ -338,7 +347,7 @@ class UserHandler:
         will be deleted after a predefined grace delay unless the user
         cancel his account deletion by log in again.
         To be valid, the current user password must be provided.
-        This action sends an email to the user to explain the proccess.
+        This action sends an email to the user to explain the process.
 
         :param user: The user to flag as `to_be_deleted`.
         :param password: The current user password.
@@ -374,6 +383,8 @@ class UserHandler:
             email = AccountDeletionScheduled(user, days_left, to=[user.email])
             email.send()
 
+        user_deleted.send(self, performed_by=user, user=user)
+
     def cancel_user_deletion(self, user: AbstractUser):
         """
         Cancels a previously scheduled user account deletion. This action send an email
@@ -388,6 +399,8 @@ class UserHandler:
         with translation.override(user.profile.language):
             email = AccountDeletionCanceled(user, to=[user.email])
             email.send()
+
+        user_restored.send(self, performed_by=user, user=user)
 
     def delete_expired_users(self, grace_delay: Optional[timedelta] = None):
         """
@@ -416,9 +429,14 @@ class UserHandler:
             profile__to_be_deleted=True, last_login__lt=limit_date
         )
 
-        deleted_user_info = [
-            (u.username, u.email, u.profile.language) for u in users_to_delete.all()
-        ]
+        group_users = GroupUser.objects.filter(user__in=users_to_delete)
+
+        deleted_user_info = []
+        for u in users_to_delete.all():
+            group_ids = [gu.group_id for gu in group_users if gu.user_id == u.id]
+            deleted_user_info.append(
+                (u.id, u.username, u.email, u.profile.language, group_ids)
+            )
 
         # A group need to be deleted if there was an admin before and there is no
         # *active* admin after the users deletion.
@@ -443,11 +461,12 @@ class UserHandler:
         with transaction.atomic():
             for group in groups_to_be_deleted:
                 # Here we use the trash handler to be sure that we delete every thing
-                # related the the groups like
+                # related the groups like
                 TrashHandler.permanently_delete(group)
             users_to_delete.delete()
 
-        for (username, email, language) in deleted_user_info:
+        for (id, username, email, language, group_ids) in deleted_user_info:
             with translation.override(language):
                 email = AccountDeleted(username, to=[email])
                 email.send()
+            user_permanently_deleted.send(self, user_id=id, group_ids=group_ids)

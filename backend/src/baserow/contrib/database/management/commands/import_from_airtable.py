@@ -1,17 +1,18 @@
 import sys
-from tqdm import tqdm
-from pytz import timezone as pytz_timezone
-from pytz.exceptions import UnknownTimeZoneError
 from tempfile import NamedTemporaryFile
 
-from django.db import transaction
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
+from pytz import timezone as pytz_timezone
+from pytz.exceptions import UnknownTimeZoneError
+from tqdm import tqdm
+
+from baserow.contrib.database.airtable.exceptions import AirtableBaseNotPublic
+from baserow.contrib.database.airtable.handler import AirtableHandler
+from baserow.contrib.database.airtable.utils import extract_share_id_from_url
 from baserow.core.models import Group
 from baserow.core.utils import Progress
-from baserow.contrib.database.airtable.handler import AirtableHandler
-from baserow.contrib.database.airtable.exceptions import AirtableBaseNotPublic
-from baserow.contrib.database.airtable.utils import extract_share_id_from_url
 
 
 class Command(BaseCommand):

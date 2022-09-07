@@ -1,8 +1,8 @@
-import pytest
-
 from unittest.mock import patch
 
 from django.db import transaction
+
+import pytest
 
 from baserow.contrib.database.views.handler import ViewHandler
 

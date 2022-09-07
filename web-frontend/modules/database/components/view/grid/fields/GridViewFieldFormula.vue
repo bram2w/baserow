@@ -11,11 +11,11 @@
 </template>
 
 <script>
-import baseField from '@baserow/modules/database/mixins/baseField'
+import gridField from '@baserow/modules/database/mixins/gridField'
 
 export default {
   name: 'GridViewFieldFormula',
-  mixins: [baseField],
+  mixins: [gridField],
   props: {
     selected: {
       type: Boolean,

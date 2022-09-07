@@ -1,22 +1,23 @@
-import pytest
 from unittest.mock import Mock, patch
-from celery.exceptions import SoftTimeLimitExceeded
-from requests.exceptions import ConnectionError
-from freezegun import freeze_time
 
 from django.core.cache import cache
 from django.utils import timezone
 
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.registries import JobType
+import pytest
+from celery.exceptions import SoftTimeLimitExceeded
+from freezegun import freeze_time
+from requests.exceptions import ConnectionError
+
 from baserow.core.jobs.cache import job_progress_key
-from baserow.core.jobs.tasks import run_async_job, clean_up_jobs
 from baserow.core.jobs.constants import (
     JOB_FAILED,
     JOB_FINISHED,
     JOB_PENDING,
     JOB_STARTED,
 )
+from baserow.core.jobs.models import Job
+from baserow.core.jobs.registries import JobType
+from baserow.core.jobs.tasks import clean_up_jobs, run_async_job
 
 
 class TmpCustomJobType(JobType):

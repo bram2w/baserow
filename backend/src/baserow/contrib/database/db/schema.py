@@ -5,7 +5,7 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.ddl_references import Statement
 from django.db.backends.utils import strip_quotes
 
-from .sql_queries import sql_drop_try_cast, sql_create_try_cast
+from .sql_queries import sql_create_try_cast, sql_drop_try_cast
 
 
 class PostgresqlLenientDatabaseSchemaEditor:

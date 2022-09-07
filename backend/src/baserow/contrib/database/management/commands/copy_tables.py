@@ -2,7 +2,7 @@ import math
 
 # See comment below about nosec here.
 from subprocess import Popen  # nosec
-from typing import Callable, Dict, Any
+from typing import Any, Callable, Dict
 
 from django.core.management.base import BaseCommand
 from django.db import connections

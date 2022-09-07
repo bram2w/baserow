@@ -22,9 +22,11 @@ import ViewService from '@baserow/modules/database/services/view'
 import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/constants'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import { mapGetters } from 'vuex'
+import languageDetection from '@baserow/modules/core/mixins/languageDetection'
 
 export default {
   components: { Table, Notifications },
+  mixins: [languageDetection],
   async asyncData({ store, params, error, app, redirect, route }) {
     const slug = params.slug
 

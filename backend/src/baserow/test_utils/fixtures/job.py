@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from rest_framework.status import HTTP_404_NOT_FOUND
 
-from baserow.core.jobs.models import Job
 from baserow.core.jobs.exceptions import JobTypeAlreadyRegistered
+from baserow.core.jobs.models import Job
 from baserow.core.jobs.registries import JobType, job_type_registry
 
 TEST_EXCEPTION = (

@@ -45,4 +45,4 @@ export PLUGIN_BUILD_GID=$(id -g)
 2. Example tests for web-frontend and backend.
 3. An equivalent dev.sh
 4. Setup instructions for IDEs (vs-code/intellij)
-5. Example Gitlab/Github CI integration + instructions to publish plugin to Dockerhub.
+5. Example GitLab/GitHub CI integration + instructions to publish plugin to Dockerhub.

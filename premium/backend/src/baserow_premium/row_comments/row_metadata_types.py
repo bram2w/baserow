@@ -1,11 +1,12 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from django.db.models import Count
+
+from baserow_premium.row_comments.models import RowComment
 from rest_framework import serializers
 from rest_framework.fields import Field
 
 from baserow.contrib.database.rows.registries import RowMetadataType
-from baserow_premium.row_comments.models import RowComment
 
 
 class RowCommentCountMetadataType(RowMetadataType):

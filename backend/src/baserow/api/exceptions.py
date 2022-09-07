@@ -1,6 +1,7 @@
 from django.conf import settings
+
 from rest_framework import status
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 
 
 class RequestBodyValidationException(APIException):
@@ -11,7 +12,7 @@ class RequestBodyValidationException(APIException):
         self.status_code = 400
 
 
-class UnknownFieldProvided(Exception):
+class UnknownFieldProvided(ValidationError):
     """
     Raised when an unknown field is provided to an API endpoint.
     """

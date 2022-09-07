@@ -1,5 +1,5 @@
 <template>
-  <Modal class="select-row-modal" @hidden="$emit('hidden')">
+  <Modal ref="modal" class="select-row-modal" @hidden="$emit('hidden')">
     <!--
     Because of how the moveToBody mixin works it takes a small moment before the $refs
     become available. In order for the Scrollbars components to work the refs need to
@@ -10,6 +10,7 @@
       :table-id="tableId"
       :value="value"
       @selected="selected"
+      @hide="hide"
     ></SelectRowContent>
   </Modal>
 </template>

@@ -1,46 +1,44 @@
-import pytest
-import responses
 import base64
-from freezegun import freeze_time
 from unittest.mock import patch
-
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
 
 from django.db import transaction
 from django.test.utils import override_settings
 
-from baserow.core.exceptions import IsNotAdminError
-
+import pytest
+import responses
+from baserow_premium.license.exceptions import (
+    InvalidPremiumLicenseError,
+    LicenseAuthorityUnavailable,
+    NoPremiumLicenseError,
+    NoSeatsLeftInPremiumLicenseError,
+    PremiumLicenseAlreadyExists,
+    PremiumLicenseHasExpired,
+    PremiumLicenseInstanceIdMismatchError,
+    UnsupportedPremiumLicenseError,
+    UserAlreadyOnPremiumLicenseError,
+)
 from baserow_premium.license.handler import (
-    has_active_premium_license,
+    add_user_to_license,
     check_active_premium_license,
     check_active_premium_license_for_group,
-    get_public_key,
+    check_licenses,
     decode_license,
     fetch_license_status_with_authority,
-    check_licenses,
-    register_license,
-    remove_license,
-    add_user_to_license,
-    remove_user_from_license,
     fill_remaining_seats_of_license,
+    get_public_key,
+    has_active_premium_license,
+    register_license,
     remove_all_users_from_license,
+    remove_license,
+    remove_user_from_license,
 )
 from baserow_premium.license.models import License, LicenseUser
-from baserow_premium.license.exceptions import (
-    NoPremiumLicenseError,
-    InvalidPremiumLicenseError,
-    UnsupportedPremiumLicenseError,
-    PremiumLicenseInstanceIdMismatchError,
-    PremiumLicenseHasExpired,
-    PremiumLicenseAlreadyExists,
-    NoSeatsLeftInPremiumLicenseError,
-    UserAlreadyOnPremiumLicenseError,
-    LicenseAuthorityUnavailable,
-)
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from freezegun import freeze_time
 
+from baserow.core.exceptions import IsNotAdminError
 
 VALID_ONE_SEAT_LICENSE = (
     # id: "1", instance_id: "1"

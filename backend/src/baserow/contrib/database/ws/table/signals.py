@@ -1,9 +1,8 @@
-from django.dispatch import receiver
 from django.db import transaction
+from django.dispatch import receiver
 
-from baserow.contrib.database.table import signals as table_signals
 from baserow.contrib.database.api.tables.serializers import TableSerializer
-
+from baserow.contrib.database.table import signals as table_signals
 from baserow.ws.tasks import broadcast_to_group
 
 

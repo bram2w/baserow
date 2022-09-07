@@ -1,5 +1,6 @@
-import graphviz
 from django.core.management.base import BaseCommand
+
+import graphviz
 from tqdm import tqdm
 
 from baserow.contrib.database.fields.dependencies.models import FieldDependency

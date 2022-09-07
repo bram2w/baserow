@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Any, Callable
+from typing import Any, Callable, List
 
 from django.contrib.auth import get_user_model
 

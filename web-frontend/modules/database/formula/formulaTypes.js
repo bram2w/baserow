@@ -2,7 +2,7 @@ import { Registerable } from '@baserow/modules/core/registry'
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
-import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
+import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
@@ -221,7 +221,7 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
   }
 
   getRowEditFieldComponent() {
-    return RowEditFieldDate
+    return RowEditFieldDateReadOnly
   }
 
   getFunctionalGridViewFieldComponent() {

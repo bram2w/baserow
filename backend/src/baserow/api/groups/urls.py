@@ -1,10 +1,8 @@
-from django.urls import re_path
-from django.urls import path, include
+from django.urls import include, path, re_path
 
-from .views import GroupsView, GroupView, GroupLeaveView, GroupOrderView
-from .users import urls as user_urls
 from .invitations import urls as invitation_urls
-
+from .users import urls as user_urls
+from .views import GroupLeaveView, GroupOrderView, GroupsView, GroupView
 
 app_name = "baserow.api.groups"
 

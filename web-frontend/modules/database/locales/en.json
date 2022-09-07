@@ -1,4 +1,7 @@
 {
+    "table": {
+        "chooseView": "Choose view"
+    },
     "webhookModal": {
         "title": "{name} webhooks",
         "createWebhook": "Create webhook",
@@ -150,7 +153,7 @@
         "intro": "The {name} database provides an easy way to integrate the data with any external system. The API follows REST semantics, uses JSON to encode objects and relies on standard HTTP codes, machine and human readable errors to signal operation outcomes.",
         "autoDocDescription": "This documentation is generated automatically based on the tables and fields that are in your database. If you make changes to your database, table or fields it could be that the API interface has also changed. Therefore, make sure that you update your API implementation accordingly.",
         "databaseId": "The ID of this database is:",
-        "jsClient": "Javascript example API client:",
+        "jsClient": "JavaScript example API client:",
         "pythonClient": "Python example API client:"
     },
     "apiDocsTableListFields": {
@@ -176,6 +179,14 @@
         "description": "Moves an existing {name} row before another row. If no `before_id` is provided, then the row will be moved to the end of the table.",
         "rowId": "Moves the row related to the value.",
         "before": "Moves the row related to the given `row_id` before the row related to the provided value. If not provided, then the row will be moved to the end."
+    },
+    "apiDocsUploadFile": {
+        "description": "Uploads a file to Baserow by uploading the file contents directly. A `file` multipart is expected containing the file contents. The response can then be used to [upload a file to a row]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "file": "The `file` multipart containing the file contents."
+    },
+    "apiDocsUploadFileViaURL": {
+        "description": "Uploads a file to Baserow by downloading it from the provided URL. The response can then be used to [upload a file to a row]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "url": "The URL you would like Baserow to download and upload on your behalf."
     },
     "apiDocsTableUpdateRow": {
         "description": "Updates an existing {name} row.",
@@ -213,6 +224,9 @@
     "fieldSingleSelectDropdown": {
         "notFound": "Option not found"
     },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Collaborator not found"
+    },
     "fieldDateSubForm": {
         "dateFormatLabel": "Date format",
         "dateFormatEuropean": "European",
@@ -225,7 +239,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "You need at least one other table in the same database to link to.",
-        "selectTableLabel": "Select a table to link to"
+        "selectTableLabel": "Select a table to link to",
+        "hasRelatedFieldLabel": "Create related field"
     },
     "fieldSelectOptions": {
         "add": "Add an option"
@@ -279,6 +294,9 @@
     },
     "rowEditFieldMultipleSelect": {
         "addOption": "Add another option"
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Add a collaborator"
     },
     "rowEditFieldFile": {
         "addFile": "Add a file",
@@ -524,7 +542,13 @@
         "duplicateRow": "Duplicate row",
         "enlargeRow": "Enlarge row",
         "deleteRow": "Delete row",
+        "deleteRows": "Delete rows",
+        "copyCells": "Copy cells",
         "rowCount": "No rows | 1 row | {count} rows"
+    },
+    "gridViewFieldFile": {
+        "dropHere": "Drop here",
+        "dropFileHere": "Drop files here"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
@@ -644,7 +668,7 @@
     "duplicateFieldContext": {
         "duplicate": "Duplicate field",
         "cloneData": "Copy data",
-        "soon": "Available soon"
+        "readOnlyField": "Cell values will be filled automatically."
     },
     "snapshotsModal": {
         "title": "snapshots",
@@ -670,5 +694,19 @@
         "restore": "restore",
         "delete": "delete",
         "created": "created"
+    },
+    "formViewModeType": {
+        "form": "Form",
+        "formDescription": "All fields are visible and vertically stacked."
+    },
+    "formViewHeader": {
+        "mode": "Mode",
+        "preview": "Preview",
+        "fields": "Fields"
+    },
+    "formViewModePreviewForm": {
+        "addCoverImage": "Add a cover image",
+        "addLogo": "Add a logo",
+        "noFields": "This form doesn't have any fields. Click on a field in the left sidebar to add one."
     }
 }

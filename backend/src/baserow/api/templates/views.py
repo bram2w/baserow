@@ -1,27 +1,26 @@
 from django.db import transaction
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.templates.serializers import TemplateCategoriesSerializer
-from baserow.api.decorators import map_exceptions
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
-from baserow.api.schemas import get_error_schema
-from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.api.applications.serializers import get_application_serializer
 from baserow.api.applications.views import application_type_serializers
-from baserow.core.models import TemplateCategory
-from baserow.core.handler import CoreHandler
+from baserow.api.decorators import map_exceptions
+from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
+from baserow.api.schemas import get_error_schema
+from baserow.api.templates.serializers import TemplateCategoriesSerializer
+from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.core.exceptions import (
-    UserNotInGroup,
     GroupDoesNotExist,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
+    UserNotInGroup,
 )
+from baserow.core.handler import CoreHandler
+from baserow.core.models import TemplateCategory
 
 from .errors import ERROR_TEMPLATE_DOES_NOT_EXIST, ERROR_TEMPLATE_FILE_DOES_NOT_EXIST
 

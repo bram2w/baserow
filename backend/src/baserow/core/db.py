@@ -1,11 +1,12 @@
 import contextlib
 from collections import defaultdict
-from typing import Iterable, Optional, Tuple, List, Any
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import DEFAULT_DB_ALIAS, transaction
-from django.db.models import QuerySet, Model
+from django.db.models import Model, QuerySet
 from django.db.transaction import Atomic, get_connection
+
 from psycopg2 import sql
 
 
@@ -43,7 +44,10 @@ class LockedAtomicTransaction(Atomic):
         return super().__exit__(*args, **kwargs)
 
 
-def specific_iterator(queryset: QuerySet) -> Iterable[Model]:
+def specific_iterator(
+    queryset: QuerySet,
+    per_content_type_prefetches: Optional[Dict[str, List[str]]] = None,
+) -> Iterable[Model]:
     """
     Iterates over the given queryset and finds the specific objects with the least
     amount of queries. It respects the annotations, select related and prefetch
@@ -89,6 +93,14 @@ def specific_iterator(queryset: QuerySet) -> Iterable[Model]:
         # the same as the `.specific` property and so that trashed objects will still
         # be fetched.
         objects = model._base_manager.filter(pk__in=pks)
+
+        if (
+            per_content_type_prefetches is not None
+            and content_type.model in per_content_type_prefetches
+        ):
+            objects = objects.prefetch_related(
+                *per_content_type_prefetches[content_type.model]
+            )
 
         for object in objects:
             specific_objects[object.id] = object

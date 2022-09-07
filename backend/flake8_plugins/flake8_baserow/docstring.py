@@ -5,10 +5,10 @@ try:
 except ImportError:
     from backports.cached_property import cached_property
 
-from tokenize import TokenInfo, generate_tokens, COMMENT
-from typing import Dict, Generator, Iterable, Optional, Tuple, Type, Any, List, Union
-
 import ast
+from tokenize import COMMENT, TokenInfo, generate_tokens
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple, Type, Union
+
 import pycodestyle
 
 try:

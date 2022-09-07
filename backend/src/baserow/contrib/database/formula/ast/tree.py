@@ -1,16 +1,16 @@
 import abc
 import typing
 from decimal import Decimal
-from typing import List, TypeVar, Generic, Tuple, Optional, Type
+from typing import Generic, List, Optional, Tuple, Type, TypeVar
 
 from django.conf import settings
 from django.db.models import Model
 
 from baserow.contrib.database.formula.ast import visitors
 from baserow.contrib.database.formula.ast.exceptions import (
+    InvalidIntLiteralProvided,
     InvalidStringLiteralProvided,
     TooLargeStringLiteralProvided,
-    InvalidIntLiteralProvided,
 )
 from baserow.contrib.database.formula.parser.parser import (
     convert_string_to_string_literal_token,
@@ -122,7 +122,7 @@ class BaserowExpression(abc.ABC, Generic[A]):
         A wrapper expression is a function call that needs to be removed in nested
         field references.
         Returns True if the expression is a wrapper expression (e.g 'error_to_nan()').
-        Look at `FomulaTypingVisitor.visit_field_reference` for more information.
+        Look at `FormulaTypingVisitor.visit_field_reference` for more information.
         """
 
         return False
@@ -492,7 +492,7 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
         definition this function will check the type of each argument against the
         arg_types property. If they all pass the type check then the user implemented
         type_function_given_valid_args will be called. If they don't a
-        BaserowInvalidType will be returned containing a relavent error message.
+        BaserowInvalidType will be returned containing a relevant error message.
 
         :param typed_args: The typed but not checked argument BaserowExpressions.
         :param expression: The func_call expression which contains the typed_args but

@@ -13,9 +13,9 @@
         :decorator-type="decoratorType"
       />
       <component
-        v-if="decoratorType.getDeactivatedClickModal() !== null"
         :is="decoratorType.getDeactivatedClickModal()"
-        ref="deactivatedClickModal"
+        v-if="decoratorType.getDeactivatedClickModal() !== null"
+        :ref="'deactivatedClickModal' + index.toString()"
         :name="decoratorType.getName()"
       ></component>
     </div>
@@ -67,7 +67,7 @@ export default {
         return
       } else if (this.isDeactivated(decoratorType)) {
         if (decoratorType.getDeactivatedClickModal() !== null) {
-          this.$refs.deactivatedClickModal[index].show()
+          this.$refs['deactivatedClickModal' + index.toString()][0].show()
         }
         return
       }

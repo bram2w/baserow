@@ -1,6 +1,6 @@
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
+    InstanceTypeDoesNotExist,
 )
 
 
@@ -169,4 +169,7 @@ class FormViewFieldTypeIsNotSupported(Exception):
 
 
 class NoAuthorizationToPubliclySharedView(Exception):
-    """Raised when someone tries to acess a view without a valid authorization token."""
+    """
+    Raised when someone tries to access a view without a valid authorization
+    token.
+    """

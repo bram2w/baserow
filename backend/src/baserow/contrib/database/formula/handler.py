@@ -1,22 +1,20 @@
 import typing
-from typing import Type, Dict, Set, Optional
+from typing import Dict, Optional, Set, Type
 
-from django.db.models import Model, Expression
+from django.db.models import Expression, Model
 
 from baserow.contrib.database.fields.dependencies.types import FieldDependencies
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.formula import (
-    BaserowFormulaException,
-)
+from baserow.contrib.database.formula import BaserowFormulaException
 from baserow.contrib.database.formula.ast.tree import (
     BaserowExpression,
     BaserowFieldReference,
     BaserowFunctionDefinition,
 )
 from baserow.contrib.database.formula.expression_generator.generator import (
-    baserow_expression_to_update_django_expression,
-    baserow_expression_to_single_row_update_django_expression,
     baserow_expression_to_insert_django_expression,
+    baserow_expression_to_single_row_update_django_expression,
+    baserow_expression_to_update_django_expression,
 )
 from baserow.contrib.database.formula.migrations.migrations import (
     BASEROW_FORMULA_VERSION,
@@ -28,9 +26,7 @@ from baserow.contrib.database.formula.parser.parser import get_parse_tree_for_fo
 from baserow.contrib.database.formula.parser.update_field_names import (
     update_field_names,
 )
-from baserow.contrib.database.formula.types.formula_type import (
-    BaserowFormulaType,
-)
+from baserow.contrib.database.formula.types.formula_type import BaserowFormulaType
 from baserow.contrib.database.formula.types.formula_types import (
     _lookup_formula_type_from_string,
     literal,
@@ -40,8 +36,8 @@ from baserow.contrib.database.formula.types.typer import (
     recreate_formula_field_if_needed,
 )
 from baserow.contrib.database.formula.types.visitors import (
-    FunctionsUsedVisitor,
     FieldDependencyExtractingVisitor,
+    FunctionsUsedVisitor,
 )
 
 if typing.TYPE_CHECKING:
@@ -88,7 +84,7 @@ class FormulaHandler:
         Converts the provided baserow expression to a django expression that can be
         used in an update statement. Compared to the django expression from the
         alternate insert method below this expression will contain column references
-        to other tables/non formula columns instead of directly subsituted values.
+        to other tables/non formula columns instead of directly substituted values.
 
         :param expression: A fully typed internal Baserow expression.
         :param model: The model class (database table) that the expression will be run

@@ -1,13 +1,15 @@
+from django.db import transaction
+
 import pytest
 
-from django.db import transaction
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.scopes import ApplicationActionScopeType
-from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.core.jobs.constants import JOB_FINISHED
 from baserow.core.jobs.handler import JobHandler
+from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
 @pytest.mark.django_db(transaction=True)
@@ -45,7 +47,7 @@ def test_can_submit_duplicate_table_job(data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.undo_redo
-def test_cannot_undo_duplicate_table_job(data_fixture):
+def test_can_undo_duplicate_table_job(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
@@ -66,4 +68,4 @@ def test_cannot_undo_duplicate_table_job(data_fixture):
             [ApplicationActionScopeType.value(application_id=database.id)],
             session_id,
         )
-        assert actions_undone == []
+        assert_undo_redo_actions_are_valid(actions_undone, [DuplicateTableJobType])

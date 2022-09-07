@@ -22,8 +22,9 @@
 # this query so it works with our own database models and structure.
 #
 
-from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from django.conf import settings
+
+from baserow.contrib.database.fields.dependencies.models import FieldDependency
 
 
 def will_cause_circular_dep(from_field, to_field):

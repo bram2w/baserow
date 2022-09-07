@@ -3,13 +3,14 @@ import axios from 'axios'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { clone } from '@baserow/modules/core/utils/object'
 import {
-  getRowSortFunction,
-  matchSearchFilters,
   calculateSingleRowSearchMatches,
   getFilters,
   getOrderBy,
+  getRowSortFunction,
+  matchSearchFilters,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
 /**
  * This view store mixin can be used to efficiently keep and maintain the rows of a
@@ -573,30 +574,11 @@ export default ({ service, customPopulateRow }) => {
       { dispatch, commit, getters },
       { view, table, fields, values }
     ) {
-      // First prepare an object that we can send to the backend.
-      const preparedValues = {}
-      fields.forEach((field) => {
-        const name = `field_${field.id}`
-        const fieldType = this.$registry.get('field', field._.type.type)
-
-        if (fieldType.isReadOnly) {
-          return
-        }
-
-        preparedValues[name] = Object.prototype.hasOwnProperty.call(
-          values,
-          name
-        )
-          ? (preparedValues[name] = fieldType.prepareValueForUpdate(
-              field,
-              values[name]
-            ))
-          : fieldType.getEmptyValue(field)
-      })
+      const preparedRow = prepareRowForRequest(values, fields, this.$registry)
 
       const { data } = await RowService(this.$client).create(
         table.id,
-        preparedValues
+        preparedRow
       )
       return await dispatch('afterNewRowCreated', {
         view,
@@ -950,13 +932,15 @@ export default ({ service, customPopulateRow }) => {
     ) {
       commit('SET_SEARCH', { activeSearchTerm })
       if (refreshMatchesOnClient) {
-        getters.getRows.forEach((row) =>
-          dispatch('updateSearchMatchesForRow', {
-            row,
-            fields,
-            forced: true,
-          })
-        )
+        getters.getRows.forEach((row) => {
+          if (row !== null) {
+            dispatch('updateSearchMatchesForRow', {
+              row,
+              fields,
+              forced: true,
+            })
+          }
+        })
       }
     },
     /**

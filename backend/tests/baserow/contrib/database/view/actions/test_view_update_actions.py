@@ -1,18 +1,19 @@
 import uuid
+
 import pytest
 from pytest_unordered import unordered
-from baserow.contrib.database.fields.actions import CreateFieldActionType
-from baserow.core.action.handler import ActionHandler
-from baserow.core.action.registries import action_type_registry
-from baserow.core.action.scopes import ViewActionScopeType
 
+from baserow.contrib.database.action.scopes import ViewActionScopeType
+from baserow.contrib.database.fields.actions import CreateFieldActionType
 from baserow.contrib.database.views.actions import (
-    UpdateViewFieldOptionsActionType,
-    UpdateViewActionType,
     RotateViewSlugActionType,
+    UpdateViewActionType,
+    UpdateViewFieldOptionsActionType,
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 

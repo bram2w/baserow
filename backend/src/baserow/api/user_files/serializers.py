@@ -1,10 +1,9 @@
-from rest_framework import serializers
-
-from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.types import OpenApiTypes
-
 from django.conf import settings
 from django.core.files.storage import default_storage
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 
 from baserow.core.models import UserFile
 from baserow.core.user_files.handler import UserFileHandler

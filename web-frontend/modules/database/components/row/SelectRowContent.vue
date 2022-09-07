@@ -16,7 +16,8 @@
           type="text"
           :placeholder="$t('selectRowContent.search')"
           class="input select-row-modal__search-input"
-          @keypress.enter="doSearch(visibleSearch)"
+          @input="doSearch(visibleSearch, false)"
+          @keypress.enter="doSearch(visibleSearch, true)"
         />
       </div>
       <div v-scroll="scroll" class="select-row-modal__rows">
@@ -52,6 +53,22 @@
               <div class="select-row-modal__cell">
                 <SelectRowField :field="primary" :row="row"></SelectRowField>
               </div>
+            </div>
+            <div
+              class="select-row-modal__row"
+              :class="{ 'select-row-modal__row--hover': addRowHover }"
+              @mouseover="addRowHover = true"
+              @mouseleave="addRowHover = false"
+              @click="$refs.rowCreateModal.show()"
+            >
+              <a
+                class="
+                  select-row-modal__cell
+                  select-row-modal__cell--single
+                  select-row-modal__add-row
+                "
+                ><i class="fas fa-plus"></i
+              ></a>
             </div>
           </div>
           <div class="select-row-modal__foot">
@@ -97,32 +114,64 @@
                 <SelectRowField :field="field" :row="row"></SelectRowField>
               </div>
             </div>
+            <div
+              class="select-row-modal__row"
+              :style="{ width: addRowWidth }"
+              :class="{ 'select-row-modal__row--hover': addRowHover }"
+              @mouseover="addRowHover = true"
+              @mouseleave="addRowHover = false"
+              @click="$refs.rowCreateModal.show()"
+            >
+              <div
+                class="select-row-modal__cell select-row-modal__cell--single"
+              ></div>
+            </div>
           </div>
           <div
             class="select-row-modal__foot"
             :style="{
-              width: 3 * 200 + 'px',
+              width: fields.length * 200 + 'px',
             }"
           ></div>
         </div>
       </div>
     </div>
+    <RowCreateModal
+      v-if="table"
+      ref="rowCreateModal"
+      :table="table"
+      :sortable="false"
+      :visible-fields="allFields"
+      :can-modify-fields="false"
+      @created="createRow"
+    ></RowCreateModal>
   </div>
 </template>
 
 <script>
+import debounce from 'lodash/debounce'
+
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldService from '@baserow/modules/database/services/field'
 import { populateField } from '@baserow/modules/database/store/field'
 import RowService from '@baserow/modules/database/services/row'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
+import ViewService from '@baserow/modules/database/services/view'
 
 import Paginator from '@baserow/modules/core/components/Paginator'
-import SelectRowField from './SelectRowField'
+import SelectRowField from '@baserow/modules/database/components/row/SelectRowField'
+import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import {
+  filterVisibleFieldsFunction,
+  sortFieldsByOrderAndIdFunction,
+} from '@baserow/modules/database/utils/view'
+import { GridViewType } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'SelectRowContent',
-  components: { Paginator, SelectRowField },
+  components: { Paginator, SelectRowField, RowCreateModal },
   props: {
     tableId: {
       type: Number,
@@ -146,17 +195,51 @@ export default {
       page: 1,
       totalPages: null,
       lastHoveredRow: null,
+      addRowHover: false,
+      searchDebounce: null,
     }
+  },
+  computed: {
+    addRowWidth() {
+      return this.fields.length * 200 + 'px'
+    },
+    allFields() {
+      return [].concat(this.primary || [], this.fields || [])
+    },
+    table() {
+      const databaseType = DatabaseApplicationType.getType()
+      for (const application of this.$store.getters['application/getAll']) {
+        if (application.type !== databaseType) {
+          continue
+        }
+
+        const foundTable = application.tables.find(
+          ({ id }) => id === this.tableId
+        )
+
+        if (foundTable) {
+          return foundTable
+        }
+      }
+
+      return null
+    },
   },
   async mounted() {
     // The first time we have to fetch the fields because they are unknown for this
     // table.
-    await this.fetchFields(this.tableId)
+    if (!(await this.fetchFields(this.tableId))) {
+      return false
+    }
 
     // We want to start with some initial data when the modal opens for the first time.
-    await this.fetch(1)
+    if (!(await this.fetch(1))) {
+      return false
+    }
 
-    // Becuase most of the template depends on having some initial data we mark the
+    await this.orderFieldsByFirstGridViewFieldOptions(this.tableId)
+
+    // Because most of the template depends on having some initial data we mark the
     // state as loaded after that. Only a loading animation is shown if there isn't any
     // data.
     this.loaded = true
@@ -197,7 +280,7 @@ export default {
       return false
     },
     /**
-     * Because the rows are split in a left and right section we need Javascript to
+     * Because the rows are split in a left and right section we need JavaScript to
      * show a hover effect of the whole row. This method makes sure the correct row has
      * the correct hover state.
      */
@@ -223,19 +306,69 @@ export default {
         this.primary =
           primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
         this.fields = data
+        return true
       } catch (error) {
-        this.loading = false
         notifyIf(error, 'row')
+        this.$emit('hide')
+        this.loading = false
+        return false
+      }
+    },
+    /**
+     * This method fetches the first grid and the related field options. The ordering
+     * of that grid view will be applied to the already fetched fields. If anything
+     * goes wrong or if there isn't a grid view, the original order will be used.
+     */
+    async orderFieldsByFirstGridViewFieldOptions(tableId) {
+      try {
+        const { data: views } = await ViewService(this.$client).fetchAll(
+          tableId,
+          false,
+          false,
+          false,
+          // We can safely limit to `1` because the backend provides the views ordered.
+          1,
+          // We want to fetch the first grid view because for that type we're sure it's
+          // compatible with `filterVisibleFieldsFunction` and
+          // `sortFieldsByOrderAndIdFunction`. Others might also work, but this
+          // component is styled like a grid view and it makes to most sense to reflect
+          // that here.
+          GridViewType.getType()
+        )
+
+        if (views.length === 0) {
+          return
+        }
+
+        const {
+          data: { field_options: fieldOptions },
+        } = await ViewService(this.$client).fetchFieldOptions(views[0].id)
+        this.fields = this.fields
+          .filter(filterVisibleFieldsFunction(fieldOptions))
+          .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+      } catch (error) {
+        notifyIf(error, 'view')
       }
     },
     /**
      * Does a row search in the table related to the state. It will also reset the
      * pagination.
      */
-    async doSearch(query) {
-      this.search = query
-      this.totalPages = null
-      await this.fetch(1)
+    doSearch(query, immediate) {
+      const search = () => {
+        this.search = query
+        this.totalPages = null
+        return this.fetch(1)
+      }
+      if (this.searchDebounce) {
+        this.searchDebounce.cancel()
+      }
+      if (immediate) {
+        search()
+      } else {
+        this.searchDebounce = debounce(search, 400)
+        this.searchDebounce()
+      }
     },
     /**
      * Fetches the rows of a given page and adds them to the state. If a search query
@@ -256,11 +389,14 @@ export default {
         this.page = page
         this.totalPages = Math.ceil(data.count / 10)
         this.rows = data.results
+        this.loading = false
+        return true
       } catch (error) {
         notifyIf(error, 'row')
+        this.$emit('hide')
+        this.loading = false
+        return false
       }
-
-      this.loading = false
     },
     /**
      * Called when the user selects a row.
@@ -277,6 +413,42 @@ export default {
      */
     focusSearch() {
       this.$refs.search?.focus()
+    },
+    async createRow({ row, callback }) {
+      try {
+        const preparedRow = prepareRowForRequest(
+          row,
+          this.allFields,
+          this.$registry
+        )
+
+        const { data: rowCreated } = await RowService(this.$client).create(
+          this.table.id,
+          preparedRow
+        )
+
+        // When you create a new row from a linked row that links to its own table,the
+        // realtime update will be sent from you, and you won't receive it.Since you
+        // don't receive the realtime update we have to manually add the new row to the
+        // state. We can do that by using the same function that is used by the
+        // realtime update. (`viewType.rowCreated`)
+        const view = this.$store.getters['view/getSelected']
+        const viewType = this.$registry.get('view', view.type)
+        viewType.rowCreated(
+          { store: this.$store },
+          this.table.id,
+          this.allFields,
+          rowCreated,
+          {},
+          'page/'
+        )
+
+        this.select(populateRow(rowCreated), this.primary, this.fields)
+
+        callback()
+      } catch (error) {
+        callback(error)
+      }
     },
   },
 }

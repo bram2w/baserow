@@ -70,7 +70,7 @@
 
 .select-row-modal__rows {
   position: relative;
-  height: 33px + (33px * 10) + 44px;
+  height: 33px + (33px * 11) + 44px;
   background-color: $color-neutral-100;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
@@ -154,6 +154,18 @@
   }
 }
 
+.select-row-modal__cell--single {
+  flex-basis: 100%;
+}
+
+.select-row-modal__add-row {
+  display: block;
+  line-height: 33px;
+  color: $color-neutral-900;
+  background-color: $white;
+  padding-left: 8px;
+}
+
 .select-row-modal__row--hover {
   cursor: pointer;
 
@@ -180,4 +192,5 @@
   height: 44px;
   background-color: $color-neutral-50;
   border-top: solid 1px $color-neutral-200;
+  min-width: 100%;
 }

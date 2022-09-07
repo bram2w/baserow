@@ -1,11 +1,11 @@
-import pytest
-import responses
-from freezegun import freeze_time
-
 from django.shortcuts import reverse
 from django.test.utils import override_settings
-from django.utils.timezone import make_aware, datetime, utc
+from django.utils.timezone import datetime, make_aware, utc
 
+import pytest
+import responses
+from baserow_premium.license.models import License, LicenseUser
+from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -13,9 +13,6 @@ from rest_framework.status import (
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
 )
-
-from baserow_premium.license.models import License, LicenseUser
-
 
 VALID_ONE_SEAT_LICENSE = (
     # id: "1", instance_id: "1"
@@ -528,7 +525,6 @@ def test_admin_fill_users_in_license(api_client, data_fixture):
     )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
-    print(response_json)
     assert len(response_json) == 2
     assert response_json[0]["id"] == normal_user.id
     assert response_json[0]["email"] == normal_user.email

@@ -1,18 +1,17 @@
-import pytest
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
+
+import pytest
 from faker import Faker
 
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.field_types import (
-    PhoneNumberFieldType,
-)
+from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    LongTextField,
-    URLField,
     EmailField,
+    LongTextField,
     PhoneNumberField,
+    URLField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
@@ -63,9 +62,7 @@ def test_import_export_formula_field(data_fixture, api_client):
         table=second_table, name="Text name", text_default="Text default"
     )
     formula_field_imported = formula_field_type.import_serialized(
-        text_field_in_diff_table.table,
-        formula_serialized,
-        id_mapping,
+        text_field_in_diff_table.table, formula_serialized, id_mapping
     )
     assert formula_field.id != formula_field_imported.id
     assert formula_field.name == formula_field_imported.name
@@ -504,7 +501,7 @@ def test_phone_number_field_type(data_fixture):
 
 @pytest.mark.django_db
 def test_human_readable_values(data_fixture):
-    table, user, row, blank_row = setup_interesting_test_table(data_fixture)
+    table, user, row, blank_row, context = setup_interesting_test_table(data_fixture)
     model = table.get_model()
     results = {}
     blank_results = {}
@@ -537,6 +534,7 @@ def test_human_readable_values(data_fixture):
         "file": "",
         "file_link_row": "",
         "link_row": "",
+        "link_row_without_related": "",
         "long_text": "",
         "negative_decimal": "",
         "negative_int": "",
@@ -547,6 +545,7 @@ def test_human_readable_values(data_fixture):
         "self_link_row": "",
         "single_select": "",
         "multiple_select": "",
+        "multiple_collaborators": "",
         "text": "",
         "url": "",
         "formula_bool": "True",
@@ -585,9 +584,11 @@ def test_human_readable_values(data_fixture):
         "positive_decimal": "1.2",
         "positive_int": "1",
         "rating": "3",
-        "self_link_row": "",
+        "self_link_row": "unnamed row 1",
+        "link_row_without_related": "linked_row_1, linked_row_2",
         "single_select": "A",
         "multiple_select": "D, C, E",
+        "multiple_collaborators": "user2@example.com, user3@example.com",
         "text": "text",
         "url": "https://www.google.com",
         "formula_bool": "True",
@@ -638,9 +639,7 @@ def test_import_export_lookup_field(data_fixture, api_client):
     lookup.save()
 
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a,
-        lookup_serialized,
-        id_mapping,
+        table_a, lookup_serialized, id_mapping
     )
     assert lookup.id != lookup_field_imported.id
     assert lookup_field_imported.name == "lookup"

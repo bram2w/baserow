@@ -1,25 +1,25 @@
 from django.test import override_settings
-import pytest
 
-from rest_framework import status, serializers
+import pytest
+from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.serializers import CharField
-from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
-from baserow.api.registries import api_exception_registry, RegisteredException
-from baserow.api.exceptions import QueryParameterValidationException
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from baserow.core.models import Group
-from baserow.core.registry import (
-    Instance,
-    Registry,
-    CustomFieldsInstanceMixin,
-    ModelInstanceMixin,
-)
+from baserow.api.exceptions import QueryParameterValidationException
+from baserow.api.registries import RegisteredException, api_exception_registry
 from baserow.api.utils import (
+    get_serializer_class,
     map_exceptions,
     validate_data,
     validate_data_custom_fields,
-    get_serializer_class,
+)
+from baserow.core.models import Group
+from baserow.core.registry import (
+    CustomFieldsInstanceMixin,
+    Instance,
+    ModelInstanceMixin,
+    Registry,
 )
 
 

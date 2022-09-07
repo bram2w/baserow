@@ -4,7 +4,7 @@ import unicodedata
 def normalize_email_address(email):
     """
     Normalizes an email address by stripping the whitespace, converting to lowercase
-    and by normlizing the unicode.
+    and by normalizing the unicode.
 
     :param email: The email address that needs to be normalized.
     :type email: str

@@ -1,0 +1,26 @@
+.card-multiple-collaborators__list-wrapper {
+  overflow: hidden;
+  margin: 0 -16px;
+  height: 30px;
+}
+
+.card-multiple-collaborators__list {
+  overflow: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  height: 30px + 15px;
+  padding: 0 16px 15px 16px;
+  overflow-x: scroll;
+}
+
+.card-multiple-collaborators__item {
+  height: 24px;
+  margin: 5px 4px 5px 0;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}

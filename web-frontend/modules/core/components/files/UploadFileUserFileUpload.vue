@@ -97,9 +97,15 @@ import { uuid } from '@baserow/modules/core/utils/string'
 import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
 import { generateThumbnail } from '@baserow/modules/core/utils/image'
 import UserFileService from '@baserow/modules/core/services/userFile'
-
 export default {
   name: 'UploadFileUserFileUpload',
+  props: {
+    uploadFile: {
+      type: Function,
+      required: false,
+      default: null,
+    },
+  },
   data() {
     return {
       uploading: false,
@@ -116,6 +122,12 @@ export default {
         }
       }
       return false
+    },
+    /**
+     * If no uploadFile is given, we use the default uploadFile function.
+     */
+    uploadFileFunction() {
+      return this.uploadFile || UserFileService(this.$client).uploadFile
     },
   },
   methods: {
@@ -230,10 +242,7 @@ export default {
       file.state = 'uploading'
 
       try {
-        const { data } = await UserFileService(this.$client).uploadFile(
-          file.file,
-          progress
-        )
+        const { data } = await this.uploadFileFunction(file.file, progress)
         this.responses.push(data)
         file.state = 'finished'
       } catch (error) {

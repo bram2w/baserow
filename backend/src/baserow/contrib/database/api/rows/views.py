@@ -1,8 +1,9 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
@@ -17,23 +18,22 @@ from baserow.api.decorators import (
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.exceptions import (
-    RequestBodyValidationException,
     QueryParameterValidationException,
+    RequestBodyValidationException,
 )
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import (
-    get_error_schema,
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+    get_error_schema,
 )
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import validate_data
-from baserow.contrib.database.api.utils import get_include_exclude_fields
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
-    ERROR_ORDER_BY_FIELD_NOT_FOUND,
-    ERROR_FILTER_FIELD_NOT_FOUND,
     ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FILTER_FIELD_NOT_FOUND,
+    ERROR_ORDER_BY_FIELD_NOT_FOUND,
+    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
 )
 from baserow.contrib.database.api.rows.errors import (
     ERROR_ROW_DOES_NOT_EXIST,
@@ -45,16 +45,21 @@ from baserow.contrib.database.api.rows.serializers import (
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
+from baserow.contrib.database.api.utils import get_include_exclude_fields
 from baserow.contrib.database.api.views.errors import (
+    ERROR_VIEW_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
-    ERROR_VIEW_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.fields.exceptions import (
+    FieldDoesNotExist,
+    FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
-    FilterFieldNotFound,
-    FieldDoesNotExist,
+)
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
 )
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
@@ -65,7 +70,6 @@ from baserow.contrib.database.rows.actions import (
     UpdateRowActionType,
     UpdateRowsActionType,
 )
-from baserow.core.action.registries import action_type_registry
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
@@ -74,31 +78,29 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.views.exceptions import (
-    ViewFilterTypeNotAllowedForField,
-    ViewFilterTypeDoesNotExist,
     ViewDoesNotExist,
-)
-from baserow.contrib.database.views.registries import view_filter_type_registry
-from baserow.core.exceptions import UserNotInGroup
-from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
-from .serializers import (
-    ListRowsQueryParamsSerializer,
-    MoveRowQueryParamsSerializer,
-    CreateRowQueryParamsSerializer,
-    RowSerializer,
-    BatchCreateRowsQueryParamsSerializer,
-    BatchDeleteRowsSerializer,
-    get_batch_row_serializer_class,
-    get_example_row_serializer_class,
-    get_row_serializer_class,
-    get_example_batch_rows_serializer_class,
-)
-from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
-    FILTER_TYPE_OR,
+    ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
 )
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.core.action.registries import action_type_registry
+from baserow.core.exceptions import UserNotInGroup
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
+
 from .schemas import row_names_response_schema
+from .serializers import (
+    BatchCreateRowsQueryParamsSerializer,
+    BatchDeleteRowsSerializer,
+    CreateRowQueryParamsSerializer,
+    ListRowsQueryParamsSerializer,
+    MoveRowQueryParamsSerializer,
+    RowSerializer,
+    get_batch_row_serializer_class,
+    get_example_batch_rows_serializer_class,
+    get_example_row_serializer_class,
+    get_row_serializer_class,
+)
 
 
 class RowsView(APIView):

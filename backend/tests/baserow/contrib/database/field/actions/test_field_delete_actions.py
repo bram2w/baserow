@@ -1,9 +1,7 @@
 import pytest
 
 from baserow.contrib.database.action.scopes import TableActionScopeType
-from baserow.contrib.database.fields.actions import (
-    DeleteFieldActionType,
-)
+from baserow.contrib.database.fields.actions import DeleteFieldActionType
 from baserow.contrib.database.fields.models import Field
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry

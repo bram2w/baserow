@@ -1,66 +1,67 @@
 import hashlib
 import json
 import os
-
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, NewType, Optional, cast, List
-from urllib.parse import urlparse, urljoin
-from zipfile import ZipFile, ZIP_DEFLATED
+from typing import Any, Dict, List, NewType, Optional, cast
+from urllib.parse import urljoin, urlparse
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Q, Count, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
+
 from itsdangerous import URLSafeSerializer
 from tqdm import tqdm
 
 from baserow.core.user.utils import normalize_email_address
+
 from .emails import GroupInvitationEmail
 from .exceptions import (
-    UserNotInGroup,
-    GroupDoesNotExist,
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
     BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch,
+    GroupDoesNotExist,
     GroupInvitationDoesNotExist,
-    GroupUserDoesNotExist,
+    GroupInvitationEmailMismatch,
     GroupUserAlreadyExists,
+    GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
     IsNotAdminError,
-    TemplateFileDoesNotExist,
     TemplateDoesNotExist,
+    TemplateFileDoesNotExist,
+    UserNotInGroup,
 )
 from .models import (
-    Settings,
-    Group,
-    GroupUser,
-    GroupInvitation,
+    GROUP_USER_PERMISSION_ADMIN,
+    GROUP_USER_PERMISSION_CHOICES,
     Application,
+    Group,
+    GroupInvitation,
+    GroupUser,
+    Settings,
     Template,
     TemplateCategory,
-    GROUP_USER_PERMISSION_CHOICES,
-    GROUP_USER_PERMISSION_ADMIN,
 )
 from .registries import application_type_registry
 from .signals import (
     application_created,
-    application_updated,
     application_deleted,
+    application_updated,
     applications_reordered,
-    before_group_user_updated,
-    before_group_user_deleted,
     before_group_deleted,
+    before_group_user_deleted,
+    before_group_user_updated,
     group_created,
-    group_updated,
     group_deleted,
+    group_updated,
     group_user_added,
-    group_user_updated,
     group_user_deleted,
+    group_user_updated,
     groups_reordered,
 )
 from .trash.handler import TrashHandler
@@ -152,6 +153,22 @@ class CoreHandler:
 
         return group
 
+    def get_groupuser_group_queryset(self) -> QuerySet[GroupUser]:
+        """
+        Returns GroupUser queryset that will prefetch groups and their users.
+        """
+
+        groupusers_with_user_and_profile = GroupUser.objects.select_related(
+            "user"
+        ).select_related("user__profile")
+        groupuser_groups = GroupUser.objects.select_related("group").prefetch_related(
+            Prefetch(
+                "group__groupuser_set",
+                queryset=groupusers_with_user_and_profile,
+            )
+        )
+        return groupuser_groups
+
     def create_group(self, user: User, name: str) -> GroupUser:
         """
         Creates a new group for an existing user.
@@ -242,7 +259,10 @@ class CoreHandler:
         group_user_id = group_user.id
         group_user.delete()
         group_user_deleted.send(
-            self, group_user_id=group_user_id, group_user=group_user, user=user
+            self,
+            group_user_id=group_user_id,
+            group_user=group_user,
+            user=user,
         )
 
     def delete_group_by_id(self, user: AbstractUser, group_id: int):
@@ -393,7 +413,10 @@ class CoreHandler:
         group_user.delete()
 
         group_user_deleted.send(
-            self, group_user_id=group_user_id, group_user=group_user, user=user
+            self,
+            group_user_id=group_user_id,
+            group_user=group_user,
+            user=user,
         )
 
     def get_group_invitation_signer(self):
@@ -859,7 +882,7 @@ class CoreHandler:
     ) -> List[int]:
         """
         Updates the order of the applications in the given group. The order of the
-        applications that are not in the `order` parameter set set to `0`.
+        applications that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
         :param group: The group of which the applications must be updated.

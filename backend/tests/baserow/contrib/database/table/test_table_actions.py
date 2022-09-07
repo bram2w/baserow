@@ -1,14 +1,5 @@
 import pytest
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.table.handler import TableHandler
 
-from baserow.core.action.scopes import (
-    ApplicationActionScopeType,
-)
-from baserow.core.action.handler import ActionHandler
-from baserow.core.action.registries import (
-    action_type_registry,
-)
 from baserow.contrib.database.table.actions import (
     CreateTableActionType,
     DeleteTableActionType,
@@ -16,7 +7,12 @@ from baserow.contrib.database.table.actions import (
     OrderTableActionType,
     UpdateTableActionType,
 )
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
+from baserow.core.action.scopes import ApplicationActionScopeType
 from baserow.test_utils.helpers import (
     assert_undo_redo_actions_are_valid,
     setup_interesting_test_table,
@@ -293,7 +289,7 @@ def test_can_undo_duplicate_interesting_table(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     original_table_name = "original-table-name"
-    table, _, _, _ = setup_interesting_test_table(
+    table, _, _, _, context = setup_interesting_test_table(
         data_fixture, user, database, original_table_name
     )
 
@@ -322,7 +318,7 @@ def test_can_undo_redo_duplicate_interesting_table(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     original_table_name = "original-table-name"
-    table, _, _, _ = setup_interesting_test_table(
+    table, _, _, _, context = setup_interesting_test_table(
         data_fixture, user, database, original_table_name
     )
 

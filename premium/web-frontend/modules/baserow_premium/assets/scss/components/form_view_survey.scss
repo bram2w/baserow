@@ -1,0 +1,126 @@
+.form-view-survey {
+  overflow: hidden;
+
+  @include absolute(0, 0, 0, 0);
+}
+
+.form-view-survey__deactivated {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+
+  @include absolute(0, 0, 0, 0);
+}
+
+.form-view-survey__deactivated-content {
+  text-align: center;
+  max-width: 400px;
+  font-size: 16px;
+}
+
+.form-view-survey__center {
+  opacity: 1;
+  transform: translateY(0%);
+  transition: transform 600ms ease 0s, opacity 300ms ease 0s;
+  overflow-y: auto;
+
+  @include absolute(0, 0, 0, 0);
+
+  &.form-view-survey__center--before {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  &.form-view-survey__center--after {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+.form-view-survey__center-inner-1 {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-view-survey__center-inner-2 {
+  width: 100%;
+  max-width: 640px;
+  padding: 0 0 40px 0;
+}
+
+.form-view__field-actions {
+  padding: 0 20px 20px 20px;
+  text-align: right;
+}
+
+.form-view-survey__footer {
+  flex: 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.4);
+
+  &.form-view-survey__footer--absolute {
+    position: absolute;
+  }
+}
+
+.form-view-survey__pagination {
+  display: flex;
+  align-items: center;
+}
+
+.form-view-survey__order-fields {
+  margin-right: 10px;
+}
+
+.form-view-survey__pagination-buttons {
+  display: flex;
+}
+
+.form-view-survey__pagination-button {
+  color: $color-primary-900;
+  border: solid 1px $color-neutral-400;
+  margin-left: -1px;
+  background-color: $white;
+
+  @include center-text(32px, 15px);
+
+  &:first-child {
+    margin-left: 0;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+  }
+
+  &:last-child {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+
+  &.form-view-survey__pagination-button--disabled {
+    color: $color-neutral-400;
+
+    &:hover {
+      cursor: inherit;
+    }
+  }
+
+  &:not(.form-view-survey__pagination-button--disabled):hover {
+    background-color: $color-neutral-50;
+  }
+
+  &:not(.form-view-survey__pagination-button--disabled):active {
+    background-color: $color-neutral-100;
+  }
+}

@@ -1,12 +1,11 @@
 import json
-from pytest_unordered import unordered
 from unittest.mock import patch
 
-import pytest
 from django.db import connection
 from django.shortcuts import reverse
-from django.test.utils import CaptureQueriesContext
-from django.test.utils import override_settings
+from django.test.utils import CaptureQueriesContext, override_settings
+
+import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_202_ACCEPTED,
@@ -18,6 +17,7 @@ from rest_framework.status import (
 from baserow.contrib.database.file_import.models import FileImportJob
 from baserow.contrib.database.table.models import Table
 from baserow.test_utils.helpers import (
+    assert_serialized_rows_contain_same_values,
     independent_test_db_connection,
     setup_interesting_test_table,
 )
@@ -497,7 +497,7 @@ def test_delete_table_still_if_locked_for_key_share(api_client, data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_async_duplicate_table(api_client, data_fixture):
+def test_async_duplicate_interesting_table(api_client, data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token(
         email="test_1@test.nl", password="password", first_name="Test1"
     )
@@ -513,7 +513,7 @@ def test_async_duplicate_table(api_client, data_fixture):
     )
 
     database = data_fixture.create_database_application(group=group_1)
-    table_1, _, _, _ = setup_interesting_test_table(
+    table_1, _, _, _, context = setup_interesting_test_table(
         data_fixture, database=database, user=user_1
     )
 
@@ -591,46 +591,5 @@ def test_async_duplicate_table(api_client, data_fixture):
     assert len(response_json["results"]) > 0
     duplicated_rows = response_json["results"]
 
-    def assert_row_field_value(
-        field_name, duplicated_value, original_value, ordered=True
-    ):
-        if ordered:
-            assert (
-                duplicated_value == original_value
-            ), f"{field_name}: {duplicated_value} != {original_value}"
-        else:
-            assert unordered(duplicated_value, original_value)
-
     for original_row, duplicated_row in zip(original_rows, duplicated_rows):
-        for field_name, original_value in original_row.items():
-
-            if not original_value:
-                assert_row_field_value(
-                    field_name, duplicated_row[field_name], original_value
-                )
-            elif field_name in ["single_select", "formula_singleselect"]:
-                assert_row_field_value(
-                    field_name,
-                    duplicated_row[field_name]["value"],
-                    original_value["value"],
-                )
-            elif field_name in ["multiple_select", "lookup"] or field_name.endswith(
-                "_link_row"
-            ):
-                assert_row_field_value(
-                    field_name,
-                    [v["value"] for v in duplicated_row[field_name]],
-                    [v["value"] for v in original_value],
-                    ordered=False,
-                )
-            elif field_name == "file":
-                assert_row_field_value(
-                    field_name,
-                    [f["name"] for f in duplicated_row[field_name]],
-                    [f["name"] for f in original_value],
-                    ordered=False,
-                )
-            else:
-                assert_row_field_value(
-                    field_name, duplicated_row[field_name], original_value
-                )
+        assert_serialized_rows_contain_same_values(original_row, duplicated_row)

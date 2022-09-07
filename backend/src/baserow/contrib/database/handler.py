@@ -1,7 +1,8 @@
-from typing import cast, Optional
-from django.db.models import QuerySet
-from baserow.contrib.database.models import Database
+from typing import Optional, cast
 
+from django.db.models import QuerySet
+
+from baserow.contrib.database.models import Database
 from baserow.core.handler import CoreHandler
 
 
@@ -12,7 +13,7 @@ class DatabaseHandler:
         """
         Selects a database application with a given id from the database.
 
-        :param database_id: The identifier of the databae application
+        :param database_id: The identifier of the database application
             that must be returned.
         :param base_queryset: The base queryset from where to select the application
             object. This can for example be used to do a `select_related`.

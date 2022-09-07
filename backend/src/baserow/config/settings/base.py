@@ -3,7 +3,7 @@ import importlib
 import os
 from decimal import Decimal
 from pathlib import Path
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin, urlparse
 
 import dj_database_url
 from celery.schedules import crontab
@@ -299,7 +299,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.11.0",
+    "VERSION": "1.12.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},

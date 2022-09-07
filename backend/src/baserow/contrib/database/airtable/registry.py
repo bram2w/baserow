@@ -1,9 +1,9 @@
-from typing import Dict, Any, Union, Tuple
+from typing import Any, Dict, Tuple, Union
 
 from pytz import BaseTzInfo
 
-from baserow.core.registry import Instance, Registry
 from baserow.contrib.database.fields.models import Field
+from baserow.core.registry import Instance, Registry
 
 
 class AirtableColumnType(Instance):
@@ -19,7 +19,7 @@ class AirtableColumnType(Instance):
         :param raw_airtable_column: The raw Airtable column values that must be
             converted.
         :param timezone: The main timezone used for date conversions if needed.
-        :return: The Baserow field type relatd to the Airtable column. If None is
+        :return: The Baserow field type related to the Airtable column. If None is
             provided, then the column is ignored in the conversion.
         """
 

@@ -1,14 +1,16 @@
-import contextlib
 from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Type
 
-import psycopg2
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
-from django.utils.dateparse import parse_datetime, parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import make_aware, utc
+
+import psycopg2
 from freezegun import freeze_time
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -20,6 +22,8 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType
 from baserow.core.models import Group
+
+User = get_user_model()
 
 
 def _parse_datetime(datetime):
@@ -56,7 +60,7 @@ def setup_interesting_test_table(
 ):
     """
     Constructs a testing table with every field type, their sub types and any other
-    interesting baserow edge cases worth testing when writing a comphensive "does this
+    interesting baserow edge cases worth testing when writing a comprehensive "does this
     feature work with all the baserow fields" test.
 
     :param data_fixture: The baserow testing data_fixture object
@@ -68,6 +72,16 @@ def setup_interesting_test_table(
 
     user = user or data_fixture.create_user(**user_kwargs)
     database = database or data_fixture.create_database_application(user=user)
+    user2 = User.objects.filter(
+        email="user2@example.com"
+    ).first() or data_fixture.create_user(
+        group=database.group, email="user2@example.com"
+    )
+    user3 = User.objects.filter(
+        email="user3@example.com"
+    ).first() or data_fixture.create_user(
+        group=database.group, email="user3@example.com"
+    )
     table = data_fixture.create_database_table(
         database=database, user=user, name=name or "interesting_test_table"
     )
@@ -144,6 +158,7 @@ def setup_interesting_test_table(
         # We will setup link rows manually later
         "link_row": None,
         "self_link_row": None,
+        "link_row_without_related": None,
         "decimal_link_row": None,
         "file_link_row": None,
         "file": [
@@ -172,6 +187,7 @@ def setup_interesting_test_table(
             value="A", field_id=name_to_field_id["single_select"]
         ),
         "multiple_select": None,
+        "multiple_collaborators": None,
         "phone_number": "+4412345678",
         "formula_text": "test FORMULA",
         "formula_int": "1",
@@ -279,6 +295,8 @@ def setup_interesting_test_table(
     )
 
     link_row_field_id = name_to_field_id["link_row"]
+    link_row_field_without_related_id = name_to_field_id["link_row_without_related"]
+    self_link_row_field_id = name_to_field_id["self_link_row"]
     decimal_row_field_id = name_to_field_id["decimal_link_row"]
     file_link_row_id = name_to_field_id["file_link_row"]
     with freeze_time("2021-01-02 12:00"):
@@ -292,6 +310,11 @@ def setup_interesting_test_table(
                     linked_row_1.id,
                     linked_row_2.id,
                     linked_row_3.id,
+                ],
+                f"field_{self_link_row_field_id}": [blank_row.id],
+                f"field_{link_row_field_without_related_id}": [
+                    linked_row_1.id,
+                    linked_row_2.id,
                 ],
                 f"field_{decimal_row_field_id}": [
                     linked_row_4.id,
@@ -318,7 +341,14 @@ def setup_interesting_test_table(
             value="E", field_id=name_to_field_id["multiple_select"]
         ).id
     )
-    return table, user, row, blank_row
+
+    # multiple collaborators
+    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").add(user2.id)
+    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").add(user3.id)
+
+    context = {"user2": user2, "user3": user3}
+
+    return table, user, row, blank_row, context
 
 
 def setup_interesting_test_database(
@@ -391,7 +421,7 @@ def assert_undo_redo_actions_fails_with_error(
         assert action.error is not None, "Action has no error, but should have one"
 
 
-@contextlib.contextmanager
+@contextmanager
 def independent_test_db_connection():
     d = connection.settings_dict
     conn = psycopg2.connect(
@@ -404,3 +434,38 @@ def independent_test_db_connection():
     conn.autocommit = False
     yield conn
     conn.close()
+
+
+def assert_serialized_field_values_are_the_same(
+    value_1, value_2, ordered=False, field_name=None
+):
+    if isinstance(value_1, list) and not ordered:
+        assert unordered(value_1, value_2)
+    else:
+        assert value_1 == value_2, f"{field_name or 'error'}: {value_1} != {value_2}"
+
+
+def extract_serialized_field_value(field_value):
+    if not field_value:
+        return field_value
+
+    def extract_value(value):
+        if isinstance(value, dict):
+            if "name" in value:
+                return value["name"]
+            return value["value"]
+        return value
+
+    if isinstance(field_value, list):
+        return [extract_value(value) for value in field_value]
+
+    return extract_value(field_value)
+
+
+def assert_serialized_rows_contain_same_values(row_1, row_2):
+    for field_name, row_field_value in row_1.items():
+        row_1_value = extract_serialized_field_value(row_field_value)
+        row_2_value = extract_serialized_field_value(row_2[field_name])
+        assert_serialized_field_values_are_the_same(
+            row_1_value, row_2_value, field_name=field_name
+        )

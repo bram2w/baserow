@@ -1,21 +1,19 @@
 from collections import defaultdict
-from typing import Any, Dict, Optional, List, Set
+from typing import Any, Dict, List, Optional, Set
 from zipfile import ZipFile
 
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
-from django.contrib.auth.models import AbstractUser
 from django.db.models import Q
-from django.urls import path, include
+from django.urls import include, path
 
 from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.api.user_files.serializers import UserFileField
+from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
-)
-from baserow.contrib.database.api.views.grid.errors import (
-    ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
 )
 from baserow.contrib.database.api.views.form.serializers import (
     FormViewFieldOptionsSerializer,
@@ -23,35 +21,36 @@ from baserow.contrib.database.api.views.form.serializers import (
 from baserow.contrib.database.api.views.gallery.serializers import (
     GalleryViewFieldOptionsSerializer,
 )
+from baserow.contrib.database.api.views.grid.errors import (
+    ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
+)
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.registries import (
-    view_aggregation_type_registry,
-)
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_files.models import UserFile
+
 from .exceptions import (
     FormViewFieldTypeIsNotSupported,
     GridViewAggregationDoesNotSupportField,
 )
 from .handler import ViewHandler
 from .models import (
-    View,
-    GridView,
-    GridViewFieldOptions,
-    GalleryView,
-    GalleryViewFieldOptions,
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    GalleryView,
+    GalleryViewFieldOptions,
+    GridView,
+    GridViewFieldOptions,
+    View,
 )
-from .registries import ViewType, view_filter_type_registry
+from .registries import ViewType, form_view_mode_registry, view_filter_type_registry
 
 
 class GridViewType(ViewType):
@@ -296,13 +295,15 @@ class GridViewType(ViewType):
 
     def get_hidden_fields(
         self,
-        view: View,
+        view: GridView,
         field_ids_to_check: Optional[List[int]] = None,
     ) -> Set[int]:
-        queryset = view.get_field_options(create_if_missing=False).filter(hidden=True)
+        field_options = [o for o in view.gridviewfieldoptions_set.all() if o.hidden]
         if field_ids_to_check is not None:
-            queryset = queryset.filter(field_id__in=field_ids_to_check)
-        return set(queryset.values_list("field_id", flat=True))
+            field_options = [
+                o for o in field_options if o.field_id in field_ids_to_check
+            ]
+        return {o.field_id for o in field_options}
 
 
 class GalleryViewType(ViewType):
@@ -469,18 +470,30 @@ class GalleryViewType(ViewType):
 
     def get_hidden_fields(
         self,
-        view: View,
+        view: GalleryView,
         field_ids_to_check: Optional[List[int]] = None,
     ) -> Set[int]:
-        field_queryset = view.table.field_set
+        hidden_field_ids = set()
+        fields = view.table.field_set.all()
+        field_options = view.galleryviewfieldoptions_set.all()
+
         if field_ids_to_check is not None:
-            field_queryset = field_queryset.filter(id__in=field_ids_to_check)
-        return set(
-            field_queryset.exclude(
-                galleryviewfieldoptions__hidden=False,
-                galleryviewfieldoptions__gallery_view_id=view.id,
-            ).values_list("id", flat=True)
-        )
+            fields = [f for f in fields if f.id in field_ids_to_check]
+
+        for field in fields:
+
+            # Find corresponding field option
+            field_option_matching = None
+            for field_option in field_options:
+                if field_option.field_id == field.id:
+                    field_option_matching = field_option
+
+            # A field is considered hidden, if it is explicitly hidden
+            # or if the field options don't exist
+            if field_option_matching is None or field_option_matching.hidden:
+                hidden_field_ids.add(field.id)
+
+        return hidden_field_ids
 
 
 class FormViewType(ViewType):
@@ -496,6 +509,7 @@ class FormViewType(ViewType):
     allowed_fields = [
         "title",
         "description",
+        "mode",
         "cover_image",
         "logo_image",
         "submit_text",
@@ -515,6 +529,7 @@ class FormViewType(ViewType):
     serializer_field_names = [
         "title",
         "description",
+        "mode",
         "cover_image",
         "logo_image",
         "submit_text",
@@ -789,6 +804,19 @@ class FormViewType(ViewType):
             .filter(enabled=True)
             .order_by("-field__primary", "order", "field__id")
         )
+
+    def before_view_create(self, values: dict, table: "Table", user: AbstractUser):
+        if "mode" in values:
+            mode_type = form_view_mode_registry.get(values["mode"])
+        else:
+            # This is the default mode that's set when nothing is provided.
+            mode_type = form_view_mode_registry.get_default_type()
+
+        mode_type.before_form_create(values, table, user)
+
+    def before_view_update(self, values: dict, view: "View", user: AbstractUser):
+        mode_type = form_view_mode_registry.get(values.get("mode", view.mode))
+        mode_type.before_form_update(values, view, user)
 
     def prepare_values(
         self, values: Dict[str, Any], table: Table, user: AbstractUser

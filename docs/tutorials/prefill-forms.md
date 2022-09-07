@@ -1,7 +1,7 @@
 # Prefill Forms
 Forms can be prefilled in order to help the user fill in the form faster.
 
-All fields which are availbale in the form can be prefilled.
+All fields which are available in the form can be prefilled.
 
 ## How to prefill a form
 If you want to prefill a form with data you can do so via query parameters

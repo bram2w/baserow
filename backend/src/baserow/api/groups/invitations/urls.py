@@ -1,13 +1,12 @@
 from django.urls import re_path
 
 from .views import (
+    AcceptGroupInvitationView,
+    GroupInvitationByTokenView,
     GroupInvitationsView,
     GroupInvitationView,
-    AcceptGroupInvitationView,
     RejectGroupInvitationView,
-    GroupInvitationByTokenView,
 )
-
 
 app_name = "baserow.api.groups.invitations"
 

@@ -1,5 +1,5 @@
-from django.db.models import Aggregate, FloatField
 from django.contrib.postgres.fields import ArrayField
+from django.db.models import Aggregate, FloatField
 
 # Adapted from https://github.com/rtidatascience/django-postgres-stats
 

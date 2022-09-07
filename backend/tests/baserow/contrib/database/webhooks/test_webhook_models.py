@@ -1,6 +1,6 @@
-import pytest
-
 from django.core.exceptions import ValidationError
+
+import pytest
 
 from baserow.contrib.database.webhooks.models import TableWebhookHeader
 

@@ -1,39 +1,38 @@
 import os
 import random
-
-import pytest
-from unittest.mock import patch
 from decimal import Decimal
+from unittest.mock import patch
 
+from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import connection
-from django.conf import settings
 from django.test.utils import override_settings
 
+import pytest
 from pyinstrument import Profiler
 
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
-from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
 )
-from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    BooleanField,
+    LinkRowField,
+    LongTextField,
+    TextField,
+)
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.table.exceptions import (
+    InitialTableDataLimitExceeded,
+    InvalidInitialTableData,
     TableDoesNotExist,
     TableNotInDatabase,
-    InvalidInitialTableData,
-    InitialTableDataLimitExceeded,
 )
-from baserow.contrib.database.fields.models import (
-    LinkRowField,
-    TextField,
-    LongTextField,
-    BooleanField,
-)
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
@@ -641,7 +640,7 @@ def test_duplicate_interesting_table(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     original_table_name = "original-table-name"
-    table, _, _, _ = setup_interesting_test_table(
+    table, _, _, _, context = setup_interesting_test_table(
         data_fixture, user, database, original_table_name
     )
 
@@ -661,7 +660,16 @@ def test_duplicate_interesting_table(data_fixture):
         if field_instance.name == "self_link_row":
             assert field_instance.link_row_table_id == duplicated_table.id
         else:
-            linkrow_fields = field_instance.link_row_table.linkrowfield_set.all()
+            linkrow_fields = field_instance.link_row_table.linkrowfield_set.filter(
+                name=field_instance.name
+            )
             original_link, duplicated_link = linkrow_fields
             assert original_link.name == duplicated_link.name
             assert original_link.link_row_table_id == duplicated_link.link_row_table_id
+            assert bool(original_link.link_row_related_field_id) == bool(
+                duplicated_link.link_row_related_field_id
+            )
+            assert (
+                original_link.link_row_table_has_related_field
+                == duplicated_link.link_row_table_has_related_field
+            )

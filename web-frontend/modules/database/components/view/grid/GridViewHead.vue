@@ -7,7 +7,7 @@
     >
       <GridViewRowIdentifierDropdown
         v-if="!readOnly"
-        :row-indetifier-type-selected="view.row_identifier_type"
+        :row-identifier-type-selected="view.row_identifier_type"
         @change="onChangeIdentifierDropdown"
       ></GridViewRowIdentifierDropdown>
     </div>

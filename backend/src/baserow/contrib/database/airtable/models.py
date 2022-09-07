@@ -1,7 +1,7 @@
 from django.db import models
 
-from baserow.core.models import Application, Group
 from baserow.core.jobs.models import Job
+from baserow.core.models import Application, Group
 
 
 class AirtableImportJob(Job):

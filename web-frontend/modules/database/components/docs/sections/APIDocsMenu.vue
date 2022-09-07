@@ -128,6 +128,42 @@
       <li>
         <a
           class="api-docs__nav-link"
+          @click.prevent="navigate('section-upload-file')"
+          >{{ $t('apiDocs.fileUploads') }}</a
+        >
+        <ul
+          class="api-docs__nav-sub"
+          :class="{
+            open:
+              navActive === 'section-upload-file' ||
+              navActive === 'section-upload-file-via-url',
+          }"
+        >
+          <li>
+            <a
+              class="api-docs__nav-link"
+              :class="{
+                active: navActive === 'section-upload-file',
+              }"
+              @click.prevent="navigate('section-upload-file')"
+              >{{ $t('apiDocs.uploadFile') }}</a
+            >
+          </li>
+          <li>
+            <a
+              class="api-docs__nav-link"
+              :class="{
+                active: navActive === 'section-upload-file-via-url',
+              }"
+              @click.prevent="navigate('section-upload-file-via-url')"
+              >{{ $t('apiDocs.uploadFileViaUrl') }}</a
+            >
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a
+          class="api-docs__nav-link"
           :class="{ active: navActive === 'section-filters' }"
           @click.prevent="navigate('section-filters')"
           >{{ $t('apiDocs.filters') }}</a

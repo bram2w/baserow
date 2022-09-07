@@ -53,15 +53,23 @@ export default {
   },
   methods: {
     fetchPage(page, search) {
+      const publicAuthToken =
+        this.$store.getters['page/view/public/getAuthToken']
       return ViewService(this.$client).linkRowFieldLookup(
         this.slug,
         this.field.id,
         page,
-        search
+        search,
+        100,
+        publicAuthToken
       )
     },
     updateValue({ id, value }) {
-      this.$emit('update', value === null ? [] : [{ id, value }], this.value)
+      this.$emit(
+        'update',
+        value === null || value === '' ? [] : [{ id, value }],
+        this.value
+      )
     },
   },
 }

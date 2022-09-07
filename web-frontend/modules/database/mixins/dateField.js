@@ -104,7 +104,7 @@ export default {
         return
       }
 
-      const existing = moment.utc(this.copy || undefined)
+      const existing = moment.utc(this.copy || undefined).seconds(0)
       existing.set(values)
       let newValue = existing.format()
       if (!field.date_include_time) {
@@ -122,7 +122,7 @@ export default {
         return
       }
 
-      const existing = moment.utc(value || undefined)
+      const existing = moment.utc(value || undefined).seconds(0)
 
       const dateFormat = getDateMomentFormat(this.field.date_format)
       const timeFormat = getTimeMomentFormat(this.field.date_time_format)

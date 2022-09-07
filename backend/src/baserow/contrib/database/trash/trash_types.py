@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict
+from typing import Any, Dict, List, Optional
 
 from django.contrib.auth import get_user_model
 from django.db import connection
@@ -7,11 +7,12 @@ from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
+from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.signals import rows_created
-from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
@@ -21,8 +22,8 @@ from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
+
 from .models import TrashedRows
-from baserow.contrib.database.fields.field_cache import FieldCache
 
 User = get_user_model()
 
@@ -37,12 +38,7 @@ class TableTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Table) -> str:
         return trashed_item.name
 
-    def restore(self, trashed_item: Table, trash_entry: TrashEntry):
-        super().restore(trashed_item, trash_entry)
-
-        field_cache = FieldCache()
-        update_collector = FieldUpdateCollector(trashed_item)
-        field_handler = FieldHandler()
+    def fields_to_restore(self, trashed_item: Table, trash_entry: TrashEntry):
         for field in trashed_item.field_set(manager="objects_and_trash").all():
             field = field.specific
             field_type = field_type_registry.get_by_model(field)
@@ -62,19 +58,33 @@ class TableTrashableItemType(TrashableItemType):
                 # separately deleted individually before the table was deleted.
                 continue
 
+            yield field
+
+        related_items = trash_entry.related_items or {}
+        for field_id in related_items.get(FieldTrashableItemType.type, []):
+            try:
+                field = Field.objects_and_trash.get(id=field_id).specific
+            except Field.DoesNotExist:
+                continue
+
+            yield field
+
+    def restore(self, trashed_item: Table, trash_entry: TrashEntry):
+        super().restore(trashed_item, trash_entry)
+
+        field_cache = FieldCache()
+        field_handler = FieldHandler()
+        for field in self.fields_to_restore(trashed_item, trash_entry):
             try:
                 field_handler.restore_field(
                     field,
-                    apply_and_send_updates=False,
-                    update_collector=update_collector,
+                    send_field_restored_signal=field.table_id != trashed_item.id,
                     field_cache=field_cache,
                 )
             except RelatedTableTrashedException:
                 continue
 
             field_cache.cache_field(field)
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
-        update_collector.send_additional_field_updated_signals()
 
         table_created.send(
             self,
@@ -112,10 +122,16 @@ class TableTrashableItemType(TrashableItemType):
         trashed_item.delete()
 
     # noinspection PyMethodMayBeStatic
-    def trash(self, item_to_trash: Table, requesting_user: User):
-        model = item_to_trash.get_model()
+    def trash(
+        self,
+        item_to_trash: Table,
+        requesting_user: User,
+        trash_entry: TrashEntry,
+    ):
+        table_to_trash = item_to_trash
+        model = table_to_trash.get_model()
 
-        update_collector = FieldUpdateCollector(item_to_trash)
+        update_collector = FieldUpdateCollector(table_to_trash)
         field_cache = FieldCache()
         handler = FieldHandler()
 
@@ -128,7 +144,7 @@ class TableTrashableItemType(TrashableItemType):
             handler.delete_field(
                 requesting_user,
                 field,
-                create_separate_trash_entry=False,
+                existing_trash_entry=trash_entry,
                 apply_and_send_updates=False,
                 update_collector=update_collector,
                 field_cache=field_cache,
@@ -138,7 +154,33 @@ class TableTrashableItemType(TrashableItemType):
         update_collector.apply_updates_and_get_updated_fields(field_cache)
         update_collector.send_additional_field_updated_signals()
 
-        super().trash(item_to_trash, requesting_user)
+        super().trash(table_to_trash, requesting_user, trash_entry)
+
+        # Since link_row can link this table without creating the reverse relation,
+        # we need to be sure to trash that fields manually.
+        related_fields_to_trash: List[int] = []
+        for field in table_to_trash.linkrowfield_set.filter(trashed=False):
+            if (
+                not field.trashed
+                and field.table_id is not table_to_trash.id
+                and not field.link_row_table_has_related_field
+            ):
+                handler.delete_field(
+                    requesting_user,
+                    field,
+                    existing_trash_entry=trash_entry,
+                    apply_and_send_updates=False,
+                    update_collector=update_collector,
+                    field_cache=field_cache,
+                )
+                related_fields_to_trash.append(field.id)
+
+        if related_fields_to_trash:
+            related_type = FieldTrashableItemType.type
+            if trash_entry.related_items.get(related_type, None) is None:
+                trash_entry.related_items[related_type] = []
+            trash_entry.related_items[related_type].extend(related_fields_to_trash)
+            trash_entry.save()
 
 
 class FieldTrashableItemType(TrashableItemType):
@@ -191,26 +233,6 @@ class FieldTrashableItemType(TrashableItemType):
         # After the field is deleted we are going to to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
         field_type.after_delete(field, from_model, connection)
-
-    # noinspection PyMethodMayBeStatic
-    def trash(self, item_to_trash: Field, requesting_user: User):
-        """
-        When trashing a link row field we also want to trash the related link row field.
-        """
-
-        item_to_trash = item_to_trash.specific
-        super().trash(item_to_trash, requesting_user)
-
-        field_type = field_type_registry.get_by_model(item_to_trash)
-        for (
-            related_field
-        ) in field_type.get_other_fields_to_trash_restore_always_together(
-            item_to_trash
-        ):
-            if not related_field.trashed:
-                FieldHandler().delete_field(
-                    requesting_user, related_field, create_separate_trash_entry=False
-                )
 
 
 class RowTrashableItemType(TrashableItemType):
@@ -407,14 +429,13 @@ class RowsTrashableItemType(TrashableItemType):
             # to send too many ids in the signal
             table_updated.send(self, table=table, user=None, force_table_refresh=True)
 
-    def trash(self, item_to_trash, requesting_user):
+    def trash(self, item_to_trash, requesting_user, trash_entry: TrashEntry):
         """
         Sets trashed=True for all the rows
         """
 
         table_model = self._get_table_model(item_to_trash.table_id)
         table_model.objects.filter(id__in=item_to_trash.row_ids).update(trashed=True)
-        item_to_trash.save()
 
     def permanently_delete_item(self, trashed_item, trash_item_lookup_cache=None):
         table_model = self._get_table_model(trashed_item.table_id)

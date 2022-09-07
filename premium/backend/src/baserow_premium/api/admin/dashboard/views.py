@@ -2,20 +2,17 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 
+from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
+from baserow_premium.license.handler import check_active_premium_license
 from drf_spectacular.utils import extend_schema
-
-from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import accept_timezone
-from baserow.core.models import Group, Application
-
-from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
-from baserow_premium.license.handler import check_active_premium_license
+from baserow.core.models import Application, Group
 
 from .serializers import AdminDashboardSerializer
-
 
 User = get_user_model()
 

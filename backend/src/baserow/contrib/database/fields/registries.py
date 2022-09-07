@@ -1,49 +1,43 @@
-from typing import Any, Dict, List, TYPE_CHECKING, NoReturn, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Union
 from zipfile import ZipFile
 
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
 from django.db import models as django_models
-from django.db.models import (
-    BooleanField,
-    DurationField,
-    Q,
-    QuerySet,
-)
-from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.db.models import BooleanField, DurationField, Q, QuerySet
+from django.db.models.fields.related import ForeignKey, ManyToManyField
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.core.registry import (
-    Instance,
-    Registry,
-    ModelInstanceMixin,
-    ModelRegistryMixin,
+    APIUrlsInstanceMixin,
+    APIUrlsRegistryMixin,
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
-    MapAPIExceptionsInstanceMixin,
-    APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin,
     ImportExportMixin,
+    Instance,
+    MapAPIExceptionsInstanceMixin,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    Registry,
 )
+
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .fields import DurationFieldUsingPostgresFormatting
-from .models import SelectOption, Field, LinkRowField
+from .models import Field, LinkRowField, SelectOption
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.table.models import (
-        GeneratedTableModel,
-        Table,
-        FieldObject,
-    )
-    from baserow.contrib.database.fields.dependencies.types import (
-        FieldDependencies,
-    )
+    from baserow.contrib.database.fields.dependencies.handler import FieldDependants
+    from baserow.contrib.database.fields.dependencies.types import FieldDependencies
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
-    from baserow.contrib.database.fields.dependencies.handler import FieldDependants
     from baserow.contrib.database.fields.field_cache import FieldCache
+    from baserow.contrib.database.table.models import (
+        FieldObject,
+        GeneratedTableModel,
+        Table,
+    )
 
 StartingRowType = Union["GeneratedTableModel", List["GeneratedTableModel"]]
 
@@ -466,25 +460,31 @@ class FieldType(
 
         return values
 
-    def before_create(self, table, primary, values, order, user):
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
         """
-        This cook is called just before the fields instance is created. Here some
-        additional checks can be done based on the provided values.
+        This cook is called just before the fields instance is created. Here
+        some additional checks can be done based on the provided values.
 
         :param table: The table where the field is going to be added to.
         :type table: Table
-        :param primary: Indicates whether the field is going to be a primary field.
+        :param primary: Indicates whether the field is going to be a primary
+            field.
         :type primary: bool
-        :param values: The new values that are going to be passed when creating the
-            field instance.
-        :type values: dict
+        :param allowed_field_values: The new values that are going to be passed
+            when creating the field instance.
+        :type field_values: dict
         :param order: The order that the field is going to get in the database.
         :type order: int
         :param user: The user on whose behalf the change is made.
         :type user: User
+        :param field_kwargs: The kwargs that are going to be passed when
+            creating the field instance.
+        :type field_kwargs: dict
         """
 
-    def after_create(self, field, model, user, connection, before):
+    def after_create(self, field, model, user, connection, before, field_kwargs):
         """
         This hook is called right after the has been created. The schema change has
         also been done so the provided model could optionally be used.
@@ -499,9 +499,12 @@ class FieldType(
         :type connection: DatabaseWrapper
         :param before: The value returned by the before_created method.
         :type before: any
+        :param field_kwargs: The kwargs that were passed when creating the field
+            instance.
+        :type field_kwargs: dict
         """
 
-    def before_update(self, from_field, to_field_values, user):
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
         """
         This hook is called just before updating the field instance. It is called on
         the to (new) field type if it changes. Here some additional checks can be
@@ -513,6 +516,9 @@ class FieldType(
         :type to_field_values: dict
         :param user: The user on whose behalf the change is made.
         :type user: User
+        :field_kwargs: The kwargs that are going to be passed when updating the
+            field instance.
+        :type field_kwargs: dict
         """
 
     def before_schema_change(
@@ -524,6 +530,7 @@ class FieldType(
         from_model_field,
         to_model_field,
         user,
+        to_field_kwargs,
     ):
         """
         This hook is called just before the database's schema change. In some cases
@@ -546,6 +553,9 @@ class FieldType(
         :type to_model_field: models.Field
         :param user: The user on whose behalf the change is made.
         :type user: User
+        :param to_field_kwargs: The kwargs that are going to be passed when updating
+            the field instance.
+        :type to_field_kwargs: dict
         """
 
     def after_update(
@@ -558,6 +568,7 @@ class FieldType(
         connection,
         altered_column,
         before,
+        to_field_kwargs,
     ):
         """
         This hook is called right after a field has been updated. In some cases data
@@ -584,6 +595,9 @@ class FieldType(
         :type altered_column: bool
         :param before: The value returned by the before_update method.
         :type before: any
+        :param to_field_kwargs: The kwargs that were passed when updating the field
+            instance.
+        :type to_field_kwargs: dict
         """
 
     def after_delete(self, field, model, connection):
@@ -627,7 +641,7 @@ class FieldType(
         Defines whether the sql provided by the get_alter_column_prepare_{old,new}_value
         hooks should be forced to run when converting between two fields of this field
         type which have the same database column type.
-        You only need to implement this when when you have validation and/or data
+        You only need to implement this when you have validation and/or data
         manipulation running as part of your alter_column_prepare SQL which must be
         run even when from_field and to_field are the same Baserow field type and sql
         column type. If your field has the same baserow type but will convert into
@@ -829,6 +843,7 @@ class FieldType(
         field_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -842,6 +857,9 @@ class FieldType(
             be extracted from.
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
+        :param cache: An in memory dictionary that is shared between all fields while
+            importing the table. This is for example used by the collaborator field type
+            to prefetch all relations.
         :param files_zip: A zip file buffer where the files related to the template
             must be copied into.
         :param storage: The storage where the files can be copied to.
@@ -849,14 +867,18 @@ class FieldType(
 
         setattr(row, field_name, value)
 
-    def get_export_value(self, value: Any, field_object: "FieldObject") -> Any:
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
         """
         Should convert this field type's internal baserow value to a form suitable
         for exporting to a standalone file.
 
         :param value: The internal value to convert to a suitable export format
         :param field_object: The field object for the field to extract
-        :type field_object: FieldObject
+        :param rich_value: whether a rich value can be exported. A rich value is a
+           structured data like a dict or a list that can be JSON serializable.
+           Otherwise if this value is false, it should return a simple value.
         :return: A value suitable to be serialized and stored in a file format for
             users.
         """
@@ -874,7 +896,9 @@ class FieldType(
         :return A human readable string.
         """
 
-        human_readable_value = self.get_export_value(value, field_object)
+        human_readable_value = self.get_export_value(
+            value, field_object, rich_value=False
+        )
         if human_readable_value is None:
             return ""
         else:
@@ -1373,6 +1397,7 @@ class ReadOnlyFieldType(FieldType):
         field_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -1426,7 +1451,7 @@ class FieldConverter(Instance):
             def alter_field(self, from_field, to_field, from_model, to_model,
                             from_model_field, to_model_field, user, connection):
                 # This is just for example purposes, but it will delete the old text
-                # field field and create a new date field. You can be very creative
+                # field and create a new date field. You can be very creative
                 # here in how you want to convert field and the data. It is for example
                 # possible to load all the old data in memory, convert it and then
                 # update the new data. Performance should always be kept in mind
@@ -1448,10 +1473,10 @@ class FieldConverter(Instance):
         :param from_model: The old model containing only the old field.
         :type from_model: Model
         :param from_field: The old field instance. It should only be used for type and
-            property comparison with the the to_field because else things might break.
+            property comparison with the to_field because else things might break.
         :type from_field: Field
         :param to_field: The new field instance. It should only be used for type and
-            property comparison with the the from_field because else things might
+            property comparison with the from_field because else things might
             break.
         :type to_field: Field
         :return: If True then the alter_field method of this converter will be used

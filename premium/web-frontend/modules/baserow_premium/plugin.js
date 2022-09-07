@@ -25,6 +25,7 @@ import {
   SingleSelectColorValueProviderType,
   ConditionalColorValueProviderType,
 } from '@baserow_premium/decoratorValueProviders'
+import { FormViewSurveyModeType } from '@baserow_premium/formViewModeTypes'
 
 import en from '@baserow_premium/locales/en.json'
 import fr from '@baserow_premium/locales/fr.json'
@@ -84,6 +85,8 @@ export default (context) => {
     'decoratorValueProvider',
     new ConditionalColorValueProviderType(context)
   )
+
+  app.$registry.register('formViewMode', new FormViewSurveyModeType(context))
 
   registerRealtimeEvents(app.$realtime)
 

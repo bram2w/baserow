@@ -4,76 +4,76 @@ from typing import List, Optional, Type
 
 from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
-    Expression,
-    Value,
+    Avg,
     Case,
-    When,
-    fields,
-    Func,
-    F,
-    ExpressionWrapper,
-    Model,
     Count,
-    Sum,
+    Expression,
+    ExpressionWrapper,
+    F,
+    Func,
     JSONField,
-    Variance,
     Max,
     Min,
-    Avg,
+    Model,
     StdDev,
+    Sum,
+    Value,
+    Variance,
+    When,
+    fields,
 )
 from django.db.models.functions import (
-    Upper,
-    Lower,
-    Concat,
-    Coalesce,
     Cast,
-    Greatest,
+    Coalesce,
+    Concat,
     Extract,
-    Replace,
-    StrIndex,
-    Length,
-    Reverse,
+    Greatest,
     JSONObject,
     Least,
     Left,
+    Length,
+    Lower,
+    Replace,
+    Reverse,
     Right,
+    StrIndex,
+    Upper,
 )
 
-from baserow.contrib.database.fields.models import (
-    NUMBER_MAX_DECIMAL_PLACES,
-)
+from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
 from baserow.contrib.database.formula.ast.function import (
     BaserowFunctionDefinition,
     NumOfArgsGreaterThan,
     OneArgumentBaserowFunction,
-    TwoArgumentBaserowFunction,
     ThreeArgumentBaserowFunction,
+    TwoArgumentBaserowFunction,
     ZeroArgumentBaserowFunction,
     aggregate_wrapper,
 )
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFunctionCall,
+    BaserowDecimalLiteral,
     BaserowExpression,
+    BaserowFunctionCall,
+    BaserowIntegerLiteral,
 )
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    AndExpr,
+    BaserowStringAgg,
     EqualsExpr,
-    NotExpr,
-    NotEqualsExpr,
     GreaterThanExpr,
     GreaterThanOrEqualExpr,
-    LessThanExpr,
     LessThanEqualOrExpr,
-    AndExpr,
+    LessThanExpr,
+    NotEqualsExpr,
+    NotExpr,
     OrExpr,
-    BaserowStringAgg,
 )
 from baserow.contrib.database.formula.expression_generator.exceptions import (
     BaserowToDjangoExpressionGenerationError,
 )
 from baserow.contrib.database.formula.expression_generator.generator import (
-    WrappedExpressionWithMetadata,
     JoinIdsType,
+    WrappedExpressionWithMetadata,
 )
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
@@ -81,20 +81,20 @@ from baserow.contrib.database.formula.types.formula_type import (
     UnTyped,
 )
 from baserow.contrib.database.formula.types.formula_types import (
-    BaserowFormulaTextType,
+    BaserowFormulaArrayType,
+    BaserowFormulaBooleanType,
+    BaserowFormulaCharType,
+    BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
     BaserowFormulaNumberType,
-    BaserowFormulaBooleanType,
-    calculate_number_type,
-    BaserowFormulaDateIntervalType,
-    BaserowFormulaArrayType,
     BaserowFormulaSingleSelectType,
-    BaserowFormulaCharType,
+    BaserowFormulaTextType,
+    calculate_number_type,
     literal,
 )
 from baserow.contrib.database.formula.types.type_checker import (
-    MustBeManyExprChecker,
     BaserowArgumentTypeChecker,
+    MustBeManyExprChecker,
 )
 
 
@@ -123,6 +123,7 @@ def register_formula_functions(registry):
     registry.register(BaserowLeast())
     registry.register(BaserowRound())
     registry.register(BaserowInt())
+    registry.register(BaserowTrunc())
     # Boolean functions
     registry.register(BaserowIf())
     registry.register(BaserowEqual())
@@ -430,18 +431,39 @@ class BaserowRound(TwoArgumentBaserowFunction):
         arg1: BaserowExpression[BaserowFormulaNumberType],
         arg2: BaserowExpression[BaserowFormulaNumberType],
     ) -> BaserowExpression[BaserowFormulaType]:
+        if isinstance(arg2, BaserowIntegerLiteral):
+            guessed_number_decimal_places = arg2.literal
+        elif isinstance(arg2, BaserowDecimalLiteral):
+            guessed_number_decimal_places = int(arg2.literal)
+        else:
+            guessed_number_decimal_places = NUMBER_MAX_DECIMAL_PLACES
+
         return func_call.with_valid_type(
             BaserowFormulaNumberType(
-                number_decimal_places=BaserowFormulaNumberType.MAX_DIGITS
+                number_decimal_places=min(
+                    max(guessed_number_decimal_places, 0), NUMBER_MAX_DECIMAL_PLACES
+                )
             )
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Func(arg1, arg2, function="round", output_field=arg1.output_field)
+        return handle_arg_being_nan(
+            arg_to_check_if_nan=arg2,
+            when_nan=Value(Decimal("NaN")),
+            when_not_nan=(
+                Func(
+                    arg1,
+                    # The round function requires an integer input.
+                    trunc_numeric_to_int(arg2),
+                    function="round",
+                    output_field=arg1.output_field,
+                )
+            ),
+        )
 
 
-class BaserowInt(OneArgumentBaserowFunction):
-    type = "int"
+class BaserowTrunc(OneArgumentBaserowFunction):
+    type = "trunc"
     arg_type = [BaserowFormulaNumberType]
 
     def type_function(
@@ -454,7 +476,60 @@ class BaserowInt(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Cast(arg, output_field=fields.IntegerField())
+        # If we get given a NaN trunc will crash, instead just return NaN if given NaN.
+        return handle_arg_being_nan(
+            arg_to_check_if_nan=arg,
+            when_nan=Cast(
+                Value("NaN"),
+                output_field=int_like_numeric_output_field(),
+            ),
+            when_not_nan=Func(
+                arg, function="trunc", output_field=int_like_numeric_output_field()
+            ),
+        )
+
+
+def int_like_numeric_output_field() -> fields.DecimalField:
+    return fields.DecimalField(
+        max_digits=BaserowFormulaNumberType.MAX_DIGITS, decimal_places=0
+    )
+
+
+class BaserowInt(BaserowTrunc):
+    """
+    Kept for backwards compatability as was introduced in v3 of formula language but
+    renamed to trunc in v4.
+    """
+
+    type = "int"
+
+
+def trunc_numeric_to_int(expr: Expression) -> Expression:
+    return Cast(
+        Func(expr, function="trunc", output_field=expr.output_field),
+        output_field=fields.IntegerField(),
+    )
+
+
+def handle_arg_being_nan(
+    arg_to_check_if_nan: Expression,
+    when_nan: Expression,
+    when_not_nan: Expression,
+) -> Expression:
+    return Case(
+        When(
+            condition=(
+                EqualsExpr(
+                    arg_to_check_if_nan,
+                    Value(Decimal("Nan")),
+                    output_field=fields.BooleanField(),
+                )
+            ),
+            then=when_nan,
+        ),
+        default=when_not_nan,
+        output_field=when_not_nan.output_field,
+    )
 
 
 class BaserowDivide(TwoArgumentBaserowFunction):
@@ -480,6 +555,10 @@ class BaserowDivide(TwoArgumentBaserowFunction):
         # Prevent divide by zero's by swapping 0 for NaN causing the entire expression
         # to evaluate to NaN. The front-end then treats NaN values as a per cell error
         # to display to the user.
+        max_dp_output = fields.DecimalField(
+            max_digits=BaserowFormulaNumberType.MAX_DIGITS,
+            decimal_places=NUMBER_MAX_DECIMAL_PLACES,
+        )
         return ExpressionWrapper(
             arg1
             / Case(
@@ -488,8 +567,9 @@ class BaserowDivide(TwoArgumentBaserowFunction):
                     then=Value(Decimal("NaN")),
                 ),
                 default=arg2,
+                output_field=max_dp_output,
             ),
-            output_field=fields.DecimalField(decimal_places=NUMBER_MAX_DECIMAL_PLACES),
+            output_field=max_dp_output,
         )
 
 
@@ -582,7 +662,7 @@ class BaserowIf(ThreeArgumentBaserowFunction):
         return Case(
             When(condition=arg1, then=arg2),
             default=arg3,
-            output_field=arg1.output_field,
+            output_field=arg2.output_field,
         )
 
 
@@ -596,14 +676,14 @@ class BaserowToNumber(OneArgumentBaserowFunction):
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
         return func_call.with_valid_type(
-            BaserowFormulaNumberType(number_decimal_places=5)
+            BaserowFormulaNumberType(number_decimal_places=NUMBER_MAX_DECIMAL_PLACES)
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return Func(
             arg,
             function="try_cast_to_numeric",
-            output_field=fields.DecimalField(decimal_places=0),
+            output_field=int_like_numeric_output_field(),
         )
 
 
@@ -807,7 +887,7 @@ class BaserowDay(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "day", output_field=fields.DecimalField(decimal_places=0))
+        return Extract(arg, "day", output_field=int_like_numeric_output_field())
 
 
 class BaserowMonth(OneArgumentBaserowFunction):
@@ -824,7 +904,7 @@ class BaserowMonth(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "month", output_field=fields.DecimalField(decimal_places=0))
+        return Extract(arg, "month", output_field=int_like_numeric_output_field())
 
 
 class BaserowDateDiff(ThreeArgumentBaserowFunction):
@@ -853,7 +933,7 @@ class BaserowDateDiff(ThreeArgumentBaserowFunction):
             arg2,
             arg3,
             function="date_diff",
-            output_field=fields.DecimalField(decimal_places=0),
+            output_field=int_like_numeric_output_field(),
         )
 
 
@@ -945,7 +1025,7 @@ class BaserowSearch(TwoArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return StrIndex(arg1, arg2, output_field=fields.DecimalField(decimal_places=0))
+        return StrIndex(arg1, arg2, output_field=int_like_numeric_output_field())
 
 
 class BaserowContains(TwoArgumentBaserowFunction):
@@ -990,9 +1070,7 @@ class BaserowRowId(ZeroArgumentBaserowFunction):
     ) -> WrappedExpressionWithMetadata:
         if model_instance is None:
             return WrappedExpressionWithMetadata(
-                ExpressionWrapper(
-                    F("id"), output_field=fields.DecimalField(decimal_places=0)
-                )
+                ExpressionWrapper(F("id"), output_field=int_like_numeric_output_field())
             )
         else:
             # noinspection PyUnresolvedReferences
@@ -1019,7 +1097,7 @@ class BaserowLength(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Length(arg, output_field=fields.DecimalField(decimal_places=0))
+        return Length(arg, output_field=int_like_numeric_output_field())
 
 
 class BaserowReverse(OneArgumentBaserowFunction):
@@ -1173,7 +1251,7 @@ class BaserowCount(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Count(arg, output_field=fields.DecimalField(decimal_places=0))
+        return Count(arg, output_field=int_like_numeric_output_field())
 
 
 class BaserowFilter(TwoArgumentBaserowFunction):
@@ -1468,12 +1546,20 @@ class BaserowLeft(TwoArgumentBaserowFunction):
         arg1: BaserowExpression[BaserowFormulaValidType],
         arg2: BaserowExpression[BaserowFormulaNumberType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_args([arg1, BaserowInt()(arg2)]).with_valid_type(
-            arg1.expression_type
-        )
+        return func_call.with_valid_type(arg1.expression_type)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Left(arg1, arg2, output_field=fields.TextField())
+        return handle_arg_being_nan(
+            arg_to_check_if_nan=arg2,
+            when_nan=Value(None),
+            when_not_nan=(
+                Left(
+                    arg1,
+                    trunc_numeric_to_int(arg2),
+                    output_field=fields.TextField(),
+                )
+            ),
+        )
 
 
 class BaserowRight(TwoArgumentBaserowFunction):
@@ -1487,12 +1573,20 @@ class BaserowRight(TwoArgumentBaserowFunction):
         arg1: BaserowExpression[BaserowFormulaValidType],
         arg2: BaserowExpression[BaserowFormulaNumberType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_args([arg1, BaserowInt()(arg2)]).with_valid_type(
-            arg1.expression_type
-        )
+        return func_call.with_valid_type(arg1.expression_type)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Right(arg1, arg2, output_field=fields.TextField())
+        return handle_arg_being_nan(
+            arg_to_check_if_nan=arg2,
+            when_nan=Value(None),
+            when_not_nan=(
+                Right(
+                    arg1,
+                    trunc_numeric_to_int(arg2),
+                    output_field=fields.TextField(),
+                )
+            ),
+        )
 
 
 class BaserowRegexReplace(ThreeArgumentBaserowFunction):
@@ -1556,7 +1650,7 @@ class BaserowYear(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "year", output_field=fields.DecimalField(decimal_places=0))
+        return Extract(arg, "year", output_field=int_like_numeric_output_field())
 
 
 class BaserowSecond(OneArgumentBaserowFunction):
@@ -1573,9 +1667,7 @@ class BaserowSecond(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(
-            arg, "second", output_field=fields.DecimalField(decimal_places=0)
-        )
+        return Extract(arg, "second", output_field=int_like_numeric_output_field())
 
 
 class BaserowBcToNull(OneArgumentBaserowFunction):
@@ -1592,7 +1684,7 @@ class BaserowBcToNull(OneArgumentBaserowFunction):
 
     def to_django_expression(self, arg: Expression) -> Expression:
         expr_to_get_year = Extract(
-            arg, "year", output_field=fields.DecimalField(decimal_places=0)
+            arg, "year", output_field=int_like_numeric_output_field()
         )
         return Case(
             When(

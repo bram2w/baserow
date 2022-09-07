@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from baserow.core.registry import Registry, Instance
+from baserow.core.registry import Instance, Registry
 
 UsageInBytes = int
 
@@ -25,7 +25,7 @@ class GroupStorageUsageItemType(Instance, ABC):
 
 class GroupStorageUsageItemTypeRegistry(Registry):
     """
-    A trash_item_type_registry contains all the different usage calcualtions
+    A trash_item_type_registry contains all the different usage calculations
     that should be called when the total usage of a group is
     calculated
     """

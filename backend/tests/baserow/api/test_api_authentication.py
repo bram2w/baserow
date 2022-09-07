@@ -1,9 +1,8 @@
+from django.shortcuts import reverse
+
 import pytest
 from freezegun import freeze_time
-
 from rest_framework.status import HTTP_401_UNAUTHORIZED
-
-from django.shortcuts import reverse
 
 
 @pytest.mark.django_db

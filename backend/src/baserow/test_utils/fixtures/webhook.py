@@ -2,9 +2,9 @@ from django.utils import timezone
 
 from baserow.contrib.database.webhooks.models import (
     TableWebhook,
+    TableWebhookCall,
     TableWebhookEvent,
     TableWebhookHeader,
-    TableWebhookCall,
 )
 
 

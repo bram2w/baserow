@@ -479,7 +479,9 @@
         "deleteRow": "Rij verwijderen",
         "rowCount": "Geen rijen | 1 rij | {count} rijen",
         "duplicateRow": "Rij dupliceren",
-        "selectRow": "Rij selecteren"
+        "selectRow": "Rij selecteren",
+        "deleteRows": "Rijen verwijderen",
+        "copyCells": "Kopieer cellen"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
@@ -641,7 +643,8 @@
     "duplicateFieldContext": {
         "duplicate": "Dupliceer veld",
         "cloneData": "Gegevens kopiëren",
-        "soon": "Binnenkort beschikbaar"
+        "soon": "Binnenkort beschikbaar",
+        "readOnlyField": "De celwaarden worden automatisch ingevuld."
     },
     "formViewMeta": {
         "includeRowId": "Gebruik {row_id} om de nieuw aangemaakte rij id in de URL op te nemen."
@@ -670,5 +673,32 @@
         "delete": "verwijderen",
         "created": "gemaakt",
         "restore": "herstellen"
+    },
+    "table": {
+        "chooseView": "Kies weergave"
+    },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Medewerker niet gevonden"
+    },
+    "formViewModeType": {
+        "form": "Formulier",
+        "formDescription": "Alle velden zijn zichtbaar en verticaal gestapeld."
+    },
+    "formViewHeader": {
+        "mode": "Modus",
+        "preview": "Voorbeeld",
+        "fields": "Velden"
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Een medewerker toevoegen"
+    },
+    "formViewModePreviewForm": {
+        "addCoverImage": "Een omslagafbeelding toevoegen",
+        "addLogo": "Logo toevoegen",
+        "noFields": "Dit formulier heeft nog geen velden. Klik op een veld in de linker zijbalk om er een toe te voegen."
+    },
+    "gridViewFieldFile": {
+        "dropHere": "Laat hier los",
+        "dropFileHere": "Laat bestanden hier los"
     }
 }

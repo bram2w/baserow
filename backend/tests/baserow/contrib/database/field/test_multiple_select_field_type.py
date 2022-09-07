@@ -1,31 +1,31 @@
 from datetime import date
-import pytest
 from io import BytesIO
+
+from django.apps.registry import apps
+
+import pytest
 from faker import Faker
 
-from baserow.contrib.database.views.handler import ViewHandler
-from baserow.core.handler import CoreHandler
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import (
-    EmailField,
-    NumberField,
-    SelectOption,
-    MultipleSelectField,
-    SingleSelectField,
+from baserow.contrib.database.fields.exceptions import (
+    AllProvidedMultipleSelectValuesMustBeIntegers,
+    AllProvidedMultipleSelectValuesMustBeSelectOption,
 )
-from baserow.contrib.database.fields.field_types import (
-    MultipleSelectFieldType,
-)
-from django.apps.registry import apps
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.field_converters import (
     MultipleSelectConversionConfig,
 )
-from baserow.contrib.database.fields.exceptions import (
-    AllProvidedMultipleSelectValuesMustBeSelectOption,
-    AllProvidedMultipleSelectValuesMustBeIntegers,
+from baserow.contrib.database.fields.field_types import MultipleSelectFieldType
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    EmailField,
+    MultipleSelectField,
+    NumberField,
+    SelectOption,
+    SingleSelectField,
 )
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.handler import CoreHandler
 
 
 @pytest.mark.django_db

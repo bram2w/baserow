@@ -1,144 +1,143 @@
 from typing import Any, Dict
+
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import ObjectDoesNotExist
-from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
 
+from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.views.actions import (
-    CreateViewActionType,
-    DeleteViewActionType,
-    OrderViewsActionType,
-    DuplicateViewActionType,
-    UpdateViewActionType,
-    CreateViewFilterActionType,
-    DeleteViewFilterActionType,
-    UpdateViewFilterActionType,
-    CreateViewSortActionType,
-    DeleteViewSortActionType,
-    UpdateViewSortActionType,
-    UpdateViewFieldOptionsActionType,
-    RotateViewSlugActionType,
-    CreateDecorationActionType,
-    UpdateDecorationActionType,
-    DeleteDecorationActionType,
-)
-
-from drf_spectacular.utils import extend_schema
-from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from rest_framework.views import APIView
 
 from baserow.api.decorators import (
+    allowed_includes,
+    map_exceptions,
     validate_body,
     validate_body_custom_fields,
-    map_exceptions,
-    allowed_includes,
-)
-from baserow.api.utils import (
-    validate_data_custom_fields,
-    validate_data,
-    MappingSerializer,
+    validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.utils import (
-    DiscriminatorCustomFieldsMappingSerializer,
-    CustomFieldRegistryMappingSerializer,
-)
+from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import (
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
     get_error_schema,
 )
 from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.api.pagination import PageNumberPagination
-from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup
-from baserow.core.db import specific_iterator
-from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
+from baserow.api.utils import (
+    CustomFieldRegistryMappingSerializer,
+    DiscriminatorCustomFieldsMappingSerializer,
+    MappingSerializer,
+    validate_data,
+    validate_data_custom_fields,
+)
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_FIELD_NOT_IN_TABLE,
     ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FIELD_NOT_IN_TABLE,
 )
+from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
-from baserow.contrib.database.fields.models import Field, LinkRowField
+from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer
 from baserow.contrib.database.fields.exceptions import (
-    FieldNotInTable,
     FieldDoesNotExist,
+    FieldNotInTable,
 )
-from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-    decorator_value_provider_type_registry,
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.views.actions import (
+    CreateDecorationActionType,
+    CreateViewActionType,
+    CreateViewFilterActionType,
+    CreateViewSortActionType,
+    DeleteDecorationActionType,
+    DeleteViewActionType,
+    DeleteViewFilterActionType,
+    DeleteViewSortActionType,
+    DuplicateViewActionType,
+    OrderViewsActionType,
+    RotateViewSlugActionType,
+    UpdateDecorationActionType,
+    UpdateViewActionType,
+    UpdateViewFieldOptionsActionType,
+    UpdateViewFilterActionType,
+    UpdateViewSortActionType,
 )
-from baserow.contrib.database.views.models import (
-    View,
-    ViewFilter,
-    ViewSort,
-    ViewDecoration,
-)
-from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.exceptions import (
+    CannotShareViewTypeError,
     DecoratorValueProviderTypeNotCompatible,
+    NoAuthorizationToPubliclySharedView,
+    UnrelatedFieldError,
+    ViewDecorationDoesNotExist,
+    ViewDecorationNotSupported,
     ViewDoesNotExist,
-    ViewNotInTable,
+    ViewDoesNotSupportFieldOptions,
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
+    ViewNotInTable,
     ViewSortDoesNotExist,
-    ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
-    UnrelatedFieldError,
-    ViewDoesNotSupportFieldOptions,
-    CannotShareViewTypeError,
-    ViewDecorationDoesNotExist,
-    ViewDecorationNotSupported,
-    NoAuthorizationToPubliclySharedView,
+    ViewSortNotSupported,
 )
-from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import (
+    View,
+    ViewDecoration,
+    ViewFilter,
+    ViewSort,
+)
+from baserow.contrib.database.views.registries import (
+    decorator_value_provider_type_registry,
+    view_type_registry,
+)
+from baserow.core.action.registries import action_type_registry
+from baserow.core.db import specific_iterator
+from baserow.core.exceptions import UserNotInGroup
 
-from .serializers import (
-    ViewSerializer,
-    CreateViewSerializer,
-    UpdateViewSerializer,
-    OrderViewsSerializer,
-    ViewFilterSerializer,
-    CreateViewFilterSerializer,
-    UpdateViewFilterSerializer,
-    ViewSortSerializer,
-    CreateViewSortSerializer,
-    UpdateViewSortSerializer,
-    ViewDecorationSerializer,
-    CreateViewDecorationSerializer,
-    UpdateViewDecorationSerializer,
-    PublicViewAuthRequestSerializer,
-    PublicViewAuthResponseSerializer,
-)
 from .errors import (
+    ERROR_CANNOT_SHARE_VIEW_TYPE,
     ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
+    ERROR_UNRELATED_FIELD,
+    ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
+    ERROR_VIEW_DECORATION_NOT_SUPPORTED,
+    ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
     ERROR_VIEW_DOES_NOT_EXIST,
-    ERROR_VIEW_NOT_IN_TABLE,
+    ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
     ERROR_VIEW_FILTER_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_NOT_SUPPORTED,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+    ERROR_VIEW_NOT_IN_TABLE,
     ERROR_VIEW_SORT_DOES_NOT_EXIST,
-    ERROR_VIEW_SORT_NOT_SUPPORTED,
     ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
     ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
-    ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
-    ERROR_VIEW_DECORATION_NOT_SUPPORTED,
-    ERROR_UNRELATED_FIELD,
-    ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
-    ERROR_CANNOT_SHARE_VIEW_TYPE,
-    ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
+    ERROR_VIEW_SORT_NOT_SUPPORTED,
+)
+from .serializers import (
+    CreateViewDecorationSerializer,
+    CreateViewFilterSerializer,
+    CreateViewSerializer,
+    CreateViewSortSerializer,
+    ListQueryParamatersSerializer,
+    OrderViewsSerializer,
+    PublicViewAuthRequestSerializer,
+    PublicViewAuthResponseSerializer,
+    UpdateViewDecorationSerializer,
+    UpdateViewFilterSerializer,
+    UpdateViewSerializer,
+    UpdateViewSortSerializer,
+    ViewDecorationSerializer,
+    ViewFilterSerializer,
+    ViewSerializer,
+    ViewSortSerializer,
 )
 from .utils import get_public_view_authorization_token
-
 
 view_field_options_mapping_serializer = MappingSerializer(
     "ViewFieldOptions",
@@ -173,6 +172,26 @@ class ViewsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Returns only views of the table related to the provided "
                 "value.",
+            ),
+            OpenApiParameter(
+                name="type",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "Optionally filter on the view type. If provided, only views of "
+                    "that type will be returned."
+                ),
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description=(
+                    "The maximum amount of views that must be returned. This endpoint "
+                    "doesn't support pagination, but if you for example just need to "
+                    "fetch the first view, you can do that by setting a limit. There "
+                    "isn't a limit by default."
+                ),
             ),
             OpenApiParameter(
                 name="include",
@@ -214,8 +233,9 @@ class ViewsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
+    @validate_query_parameters(ListQueryParamatersSerializer)
     @allowed_includes("filters", "sortings", "decorations")
-    def get(self, request, table_id, filters, sortings, decorations):
+    def get(self, request, table_id, query_params, filters, sortings, decorations):
         """
         Responds with a list of serialized views that belong to the table if the user
         has access to that group.
@@ -227,6 +247,11 @@ class ViewsView(APIView):
         )
         views = View.objects.filter(table=table).select_related("content_type", "table")
 
+        if query_params["type"]:
+            view_type = view_type_registry.get(query_params["type"])
+            content_type = ContentType.objects.get_for_model(view_type.model_class)
+            views = views.filter(content_type=content_type)
+
         if filters:
             views = views.prefetch_related("viewfilter_set")
 
@@ -235,6 +260,9 @@ class ViewsView(APIView):
 
         if decorations:
             views = views.prefetch_related("viewdecoration_set")
+
+        if query_params["limit"]:
+            views = views[: query_params["limit"]]
 
         views = specific_iterator(views)
 
@@ -546,7 +574,7 @@ class DuplicateViewView(APIView):
         operation_id="duplicate_database_table_view",
         description=(
             "Duplicates an existing view if the user has access to it. "
-            "When a view is duplicated everthing is copied except:"
+            "When a view is duplicated everything is copied except:"
             "\n- The name is appended with the copy number. "
             "Ex: `View Name` -> `View Name (2)` and `View (2)` -> `View (3)`"
             "\n- If the original view is publicly shared, the new view will not be"
@@ -1450,6 +1478,14 @@ class ViewSortView(APIView):
 
 class ViewFieldOptionsView(APIView):
     permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            # Should be `AllowAny` because the field options can be requested in a
+            # template that contains a form view for example.
+            return [AllowAny()]
+
+        return super().get_permissions()
 
     @extend_schema(
         parameters=[

@@ -115,6 +115,8 @@ importlib-resources==5.4.0
     #   jsonschema
 iniconfig==1.1.1
     # via pytest
+isort==5.10.1
+    # via -r dev.in
 itypes==1.2.0
     # via coreapi
 jinja2==3.0.3

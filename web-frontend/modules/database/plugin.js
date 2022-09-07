@@ -22,6 +22,7 @@ import {
   CreatedOnFieldType,
   FormulaFieldType,
   LookupFieldType,
+  MultipleCollaboratorsFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -41,6 +42,8 @@ import {
   EmptyViewFilterType,
   NotEmptyViewFilterType,
   DateEqualsTodayViewFilterType,
+  DateBeforeTodayViewFilterType,
+  DateAfterTodayViewFilterType,
   DateEqualsDaysAgoViewFilterType,
   DateEqualsMonthsAgoViewFilterType,
   DateEqualsYearsAgoViewFilterType,
@@ -146,6 +149,8 @@ import {
   BaserowLeft,
   BaserowContains,
   BaserowFilter,
+  BaserowTrunc,
+  BaserowRound,
 } from '@baserow/modules/database/formula/functions'
 import {
   BaserowFormulaArrayType,
@@ -179,6 +184,7 @@ import {
   VarianceViewAggregationType,
   MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
+import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -229,6 +235,14 @@ export default (context) => {
   app.$registry.register(
     'viewFilter',
     new DateEqualsTodayViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateBeforeTodayViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateAfterTodayViewFilterType(context)
   )
   app.$registry.register(
     'viewFilter',
@@ -313,6 +327,8 @@ export default (context) => {
   app.$registry.register('field', new PhoneNumberFieldType(context))
   app.$registry.register('field', new FormulaFieldType(context))
   app.$registry.register('field', new LookupFieldType(context))
+  app.$registry.register('field', new MultipleCollaboratorsFieldType(context))
+
   app.$registry.register('importer', new CSVImporterType(context))
   app.$registry.register('importer', new PasteImporterType(context))
   app.$registry.register('importer', new XMLImporterType(context))
@@ -401,6 +417,8 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowAvg(context))
   app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
+  app.$registry.register('formula_function', new BaserowTrunc(context))
+  app.$registry.register('formula_function', new BaserowRound(context))
 
   // Formula Types
   app.$registry.register('formula_type', new BaserowFormulaTextType(context))
@@ -490,6 +508,8 @@ export default (context) => {
     'viewAggregation',
     new UniqueCountViewAggregationType(context)
   )
+
+  app.$registry.register('formViewMode', new FormViewFormModeType(context))
 
   registerRealtimeEvents(app.$realtime)
 }

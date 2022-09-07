@@ -1,28 +1,27 @@
 import secrets
 
-from django.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
-from django.db.models import UniqueConstraint, Q
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+from django.db.models import Q, UniqueConstraint
 
 from rest_framework.exceptions import NotAuthenticated
-from baserow.core.jobs.models import Job
-from baserow.core.jobs.mixins import JobWithUserDataMixin
 
+from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
-from .mixins import (
-    OrderableMixin,
-    PolymorphicContentTypeMixin,
-    CreatedAndUpdatedOnMixin,
-    TrashableModelMixin,
-    ParentGroupTrashableModelMixin,
-)
-from .exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
 from .action.models import Action
-
+from .exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
+from .mixins import (
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    ParentGroupTrashableModelMixin,
+    PolymorphicContentTypeMixin,
+    TrashableModelMixin,
+)
 
 __all__ = [
     "Settings",
@@ -402,6 +401,9 @@ class TrashEntry(models.Model):
     parent_name = models.TextField(null=True, blank=True)
     extra_description = models.TextField(null=True, blank=True)
 
+    # this permits to trash items together with a single entry
+    related_items = models.JSONField(default=dict, null=True)
+
     class Meta:
         constraints = [
             UniqueConstraint(
@@ -421,9 +423,7 @@ class TrashEntry(models.Model):
         ]
 
 
-class DuplicateApplicationJob(JobWithUserDataMixin, Job):
-
-    user_data_to_save = ["user_websocket_id"]
+class DuplicateApplicationJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     original_application = models.ForeignKey(
         Application,

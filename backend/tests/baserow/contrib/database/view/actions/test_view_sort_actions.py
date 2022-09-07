@@ -1,4 +1,6 @@
 import pytest
+
+from baserow.contrib.database.action.scopes import ViewActionScopeType
 from baserow.contrib.database.views.actions import (
     CreateViewSortActionType,
     DeleteViewSortActionType,
@@ -7,7 +9,6 @@ from baserow.contrib.database.views.actions import (
 from baserow.contrib.database.views.models import ViewSort
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
-from baserow.core.action.scopes import ViewActionScopeType
 
 
 @pytest.mark.django_db

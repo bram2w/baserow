@@ -2,96 +2,81 @@ import re
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import (
-    Dict,
-    Any,
-    List,
-    Optional,
-    Iterable,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
-import jwt
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.core.cache import cache
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import models as django_models
-from django.db.models import F, Count
+from django.db.models import Count, F
 from django.db.models.query import QuerySet
+
+import jwt
 from redis.exceptions import LockNotOwnedError
 
+from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.field_filters import FilterBuilder, FILTER_TYPE_AND
+from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
-from baserow.contrib.database.table.models import Table, GeneratedTableModel
-from baserow.contrib.database.api.utils import get_include_exclude_field_ids
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
-    extract_allowed,
-    set_allowed_attrs,
-    get_model_reference_field_name,
-    find_unused_name,
     MirrorDict,
+    extract_allowed,
+    find_unused_name,
+    get_model_reference_field_name,
+    set_allowed_attrs,
 )
+
 from .exceptions import (
-    ViewDoesNotExist,
-    ViewNotInTable,
+    CannotShareViewTypeError,
+    DecoratorValueProviderTypeNotCompatible,
+    FieldAggregationNotSupported,
+    NoAuthorizationToPubliclySharedView,
     UnrelatedFieldError,
+    ViewDecorationDoesNotExist,
+    ViewDecorationNotSupported,
+    ViewDoesNotExist,
+    ViewDoesNotSupportFieldOptions,
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
+    ViewNotInTable,
     ViewSortDoesNotExist,
-    ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
-    ViewDoesNotSupportFieldOptions,
-    FieldAggregationNotSupported,
-    CannotShareViewTypeError,
-    ViewDecorationNotSupported,
-    ViewDecorationDoesNotExist,
-    DecoratorValueProviderTypeNotCompatible,
-    NoAuthorizationToPubliclySharedView,
+    ViewSortNotSupported,
 )
-from .models import (
-    View,
-    ViewDecoration,
-    ViewFilter,
-    ViewSort,
-)
+from .models import View, ViewDecoration, ViewFilter, ViewSort
 from .registries import (
-    view_type_registry,
-    view_filter_type_registry,
-    view_aggregation_type_registry,
     decorator_type_registry,
     decorator_value_provider_type_registry,
+    view_aggregation_type_registry,
+    view_filter_type_registry,
+    view_type_registry,
 )
 from .signals import (
     view_created,
-    view_updated,
-    view_deleted,
-    views_reordered,
-    view_filter_created,
-    view_filter_updated,
-    view_filter_deleted,
-    view_sort_created,
-    view_sort_updated,
-    view_sort_deleted,
     view_decoration_created,
-    view_decoration_updated,
     view_decoration_deleted,
+    view_decoration_updated,
+    view_deleted,
     view_field_options_updated,
+    view_filter_created,
+    view_filter_deleted,
+    view_filter_updated,
+    view_sort_created,
+    view_sort_deleted,
+    view_sort_updated,
+    view_updated,
+    views_reordered,
 )
-from .validators import (
-    value_is_empty_for_required_form_field,
-)
+from .validators import value_is_empty_for_required_form_field
 
 FieldOptionsDict = Dict[int, Dict[str, Any]]
 
@@ -195,6 +180,8 @@ class ViewHandler:
 
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
+        view_type.before_view_create(kwargs, table, user)
+
         model_class = view_type.model_class
         view_values = view_type.prepare_values(kwargs, table, user)
         allowed_fields = [
@@ -310,6 +297,8 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(view)
+        view_type.before_view_update(data, view, user)
+
         view_values = view_type.prepare_values(data, view.table, user)
         allowed_fields = [
             "name",
@@ -330,7 +319,7 @@ class ViewHandler:
     def order_views(self, user: AbstractUser, table: Table, order: List[int]):
         """
         Updates the order of the views in the given table. The order of the views
-        that are not in the `order` parameter set set to `0`.
+        that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the views are ordered.
         :param table: The table of which the views must be updated.
@@ -1842,7 +1831,7 @@ class ViewHandler:
         """
 
         view_type = view_type_registry.get_by_model(view.specific_class)
-        hidden_field_ids = view_type.get_hidden_fields(view)
+        hidden_field_ids = view_type.get_hidden_fields(view.specific)
         restricted_rows = []
         for serialized_row in serialized_rows:
             if allowed_row_ids is None or serialized_row["id"] in allowed_row_ids:
@@ -1859,7 +1848,7 @@ class ViewHandler:
         By changing the `slug` or the `public_view_password`, previous tokens cannot
         be decoded anymore so the user will be forced to the password input page.
         Server's SECRET_KEY is used to be sure that the JWT cannot be guessed.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :return: A string to use as secret to encode/decode JWT for the view.
         """
 
@@ -1868,7 +1857,7 @@ class ViewHandler:
     def encode_public_view_token(self, view: View) -> str:
         """
         Create a non-expiring JWT token that authorize public requests for this view.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :return: A string to use as JWT token to authorize the access for the view.
         """
 
@@ -1882,7 +1871,7 @@ class ViewHandler:
     def decode_public_view_token(self, view: View, token: str) -> Dict[str, Any]:
         """
         Decode the token using the view's secret.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :param token: The JWT token to decode.
         :return: The payload decoded or, if invalid, a jwt.InvalidTokenError is raised.
         """
@@ -1895,7 +1884,7 @@ class ViewHandler:
     def is_public_view_token_valid(self, view: View, token: str) -> bool:
         """
         Verify if the token provided is valid for the public view or not.
-        :param view: The public view to restric access to.
+        :param view: The public view to restrict access to.
         :param token: The JWT token to decode.
         :return: True if the token is valid for the view, False otherwise.
         """

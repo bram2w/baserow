@@ -18,6 +18,12 @@ export const routes = [
       p.viewId = p.viewId ? parseInt(p.viewId) : null
       return p
     },
+    children: [
+      {
+        path: 'row/:rowId',
+        name: 'database-table-row',
+      },
+    ],
   },
   // These redirect exist because the original api docs path was `/api/docs`, but
   // they have been renamed.

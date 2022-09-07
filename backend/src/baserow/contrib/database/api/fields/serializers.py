@@ -1,12 +1,11 @@
-from django.utils.functional import lazy
 from django.core.exceptions import ValidationError
+from django.utils.functional import lazy
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from baserow.api.user_files.serializers import (
-    UserFileURLAndThumbnailsSerializerMixin,
-)
+from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
 from baserow.api.user_files.validators import user_file_name_validator
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -25,30 +24,7 @@ class FieldSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the field related to the instance is already in the context
-        # else we can call the specific_class property to find it.
-        field = self.context.get("instance_type")
-
-        if not field:
-            field = field_type_registry.get_by_model(instance.specific_class)
-
-        return field.type
-
-
-class FieldWithFiltersAndSortsSerializer(FieldSerializer):
-    from baserow.contrib.database.api.views.serializers import (
-        ViewSortSerializer,
-        ViewFilterSerializer,
-    )
-
-    filters = ViewFilterSerializer(many=True, source="viewfilter_set")
-    sortings = ViewSortSerializer(many=True, source="viewsort_set")
-
-    class Meta(FieldSerializer.Meta):
-        fields = FieldSerializer.Meta.fields + (
-            "filters",
-            "sortings",
-        )
+        return field_type_registry.get_by_model(instance.specific_class).type
 
 
 class RelatedFieldsSerializer(serializers.Serializer):
@@ -201,3 +177,14 @@ class UniqueRowValueParamsSerializer(serializers.Serializer):
 
 class UniqueRowValuesSerializer(serializers.Serializer):
     values = serializers.ListSerializer(child=serializers.CharField())
+
+
+class CollaboratorSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField(source="first_name", read_only=True)
+
+
+class DuplicateFieldParamsSerializer(serializers.Serializer):
+    duplicate_data = serializers.BooleanField(
+        default=False, help_text="Indicates whether the data should be duplicated."
+    )

@@ -1,19 +1,20 @@
-import pytest
 import secrets
 from io import BytesIO
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 
-from baserow.core.user_files.handler import UserFileHandler
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-    view_aggregation_type_registry,
-)
+import pytest
+
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryViewFieldOptions
-from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.views.registries import (
+    view_aggregation_type_registry,
+    view_type_registry,
+)
+from baserow.core.user_files.handler import UserFileHandler
 
 
 @pytest.mark.django_db
@@ -269,7 +270,7 @@ def test_convert_to_incompatible_field_in_form_view(data_fixture):
         user=user,
         table=table,
         field=field,
-        new_type_name="file",
+        new_type_name="created_on",
     )
     options.refresh_from_db()
     options_2.refresh_from_db()

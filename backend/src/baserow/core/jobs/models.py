@@ -1,8 +1,9 @@
 from typing import Any
-from django.db import models
+
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
+from django.db import models
 
 from baserow.core.mixins import CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin
 

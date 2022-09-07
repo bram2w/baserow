@@ -1,10 +1,9 @@
 from drf_spectacular.openapi import OpenApiSerializerFieldExtension
-
 from rest_framework import serializers
 
-from baserow.contrib.database.tokens.models import Token
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tokens.models import Token
 
 from .schemas import token_permissions_field_schema
 

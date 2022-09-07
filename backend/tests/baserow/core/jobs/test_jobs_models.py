@@ -1,15 +1,15 @@
-import pytest
-
 from django.core.cache import cache
 
-from baserow.core.jobs.models import Job
+import pytest
+
+from baserow.core.jobs.cache import job_progress_key
 from baserow.core.jobs.constants import (
     JOB_FAILED,
     JOB_FINISHED,
     JOB_PENDING,
     JOB_STARTED,
 )
-from baserow.core.jobs.cache import job_progress_key
+from baserow.core.jobs.models import Job
 
 
 @pytest.mark.django_db

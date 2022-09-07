@@ -1,11 +1,12 @@
-import pytest
 from django.urls import reverse
+
+import pytest
 from pyinstrument import Profiler
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import TextField, Field
+from baserow.contrib.database.fields.models import Field, TextField
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.test_utils.helpers import setup_interesting_test_table
 
@@ -55,7 +56,7 @@ def test_speed_of_table_copy_via_export(data_fixture):
 # to additional args.
 def test_updating_many_fields_doesnt_slow_down_get_rows(data_fixture, api_client):
 
-    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
     token = data_fixture.generate_token(user)
     count = 10000
     fill_table_rows(count, table)

@@ -1,4 +1,4 @@
-from typing import List, Tuple, Set, Optional, Dict, Any, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from django.db import transaction
 from django.dispatch import receiver
@@ -10,6 +10,7 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.ws.fields.signals import RealtimeFieldMessages
+from baserow.core.db import specific_iterator
 from baserow.ws.registries import page_registry
 
 
@@ -63,7 +64,13 @@ def _get_views_where_field_visible_and_hidden_fields_in_view(
     """
 
     views_where_field_was_visible = []
-    for view in field.table.view_set.filter(public=True):
+    for view in specific_iterator(
+        field.table.view_set.filter(public=True),
+        per_content_type_prefetches={
+            "gridview": ["gridviewfieldoptions_set"],
+            "galleryview": ["galleryviewfieldoptions_set", "table__field_set"],
+        },
+    ):
         view = view.specific
         view_type = view_type_registry.get_by_model(view)
         if not view_type.when_shared_publicly_requires_realtime_events:

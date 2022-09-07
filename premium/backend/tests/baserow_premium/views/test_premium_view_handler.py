@@ -1,7 +1,7 @@
 import pytest
+from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
 
 from baserow.contrib.database.views.models import View
-from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
 
 
 @pytest.mark.django_db

@@ -1,5 +1,6 @@
-import pytest
 from django.conf import settings
+
+import pytest
 from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.dependencies.circular_reference_checker import (
@@ -9,9 +10,7 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
-from baserow.contrib.database.fields.dependencies.models import (
-    FieldDependency,
-)
+from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -199,7 +198,7 @@ def test_dependencies_for_link_row_link_row_self_reference(data_fixture):
         table=table_a,
         type_name="link_row",
         name="self",
-        link_row_table=table_a.id,
+        link_row_table=table_a,
     )
     assert when_field_updated(table_a_primary) == causes(
         a_field_update_for(field=table_a_self_link, via=[table_a_self_link])

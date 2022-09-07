@@ -111,10 +111,11 @@
 }
 
 .context__form-actions {
-  border-top: 1px solid $color-neutral-200;
-  padding-top: 20px;
-  margin-top: 20px;
   display: flex;
   align-items: center;
   justify-content: right;
+
+  &--multiple-actions {
+    justify-content: space-between;
+  }
 }

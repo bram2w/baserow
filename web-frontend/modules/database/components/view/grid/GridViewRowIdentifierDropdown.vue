@@ -14,7 +14,7 @@
           v-for="option in options"
           :key="option"
           class="select__item select__item-no-options"
-          :class="{ active: option === rowIndetifierTypeSelected }"
+          :class="{ active: option === rowIdentifierTypeSelected }"
         >
           <a class="select__item-link" @click="setRowIdentifierTypes(option)">
             <span class="select__item-name">
@@ -31,7 +31,7 @@
 export default {
   name: 'GridViewRowIdentifierDropdown',
   props: {
-    rowIndetifierTypeSelected: {
+    rowIdentifierTypeSelected: {
       type: String,
       required: true,
     },
