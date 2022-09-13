@@ -5,15 +5,8 @@
 }
 
 .row-modal__field-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   margin-bottom: 2px;
   padding: 0;
-
-  & .control {
-    flex: 1;
-  }
 }
 
 .row-modal__field-item-handle {

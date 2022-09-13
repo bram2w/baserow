@@ -2,7 +2,7 @@
   <div class="control__elements">
     <FieldSelectOptionsDropdown
       :value="valueId"
-      :options="field.select_options"
+      :options="singleSelectOptions"
       :allow-create-option="allowCreateOptions"
       :disabled="readOnly"
       :class="{ 'dropdown--error': touched && !valid }"
@@ -30,6 +30,17 @@ export default {
       type: Boolean,
       default: true,
       required: false,
+    },
+  },
+  computed: {
+    singleSelectOptions() {
+      if (this.field.select_options) {
+        return this.field.select_options
+      } else if (this.value) {
+        return [this.value]
+      } else {
+        return []
+      }
     },
   },
 }
