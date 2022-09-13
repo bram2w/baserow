@@ -78,8 +78,12 @@ class MultipleCollaboratorsFieldConverter(RecreateFieldConverter):
     type = "multiple_collaborators"
 
     def is_applicable(self, from_model, from_field, to_field):
-        return isinstance(to_field, MultipleCollaboratorsField) or isinstance(
-            from_field, MultipleCollaboratorsField
+        return (
+            isinstance(to_field, MultipleCollaboratorsField)
+            and not isinstance(from_field, MultipleCollaboratorsField)
+        ) or (
+            isinstance(from_field, MultipleCollaboratorsField)
+            and not isinstance(to_field, MultipleCollaboratorsField)
         )
 
 
