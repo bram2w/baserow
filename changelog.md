@@ -13,6 +13,8 @@ For example:
 
 ### Bug Fixes
 
+* Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.
+
 ### Refactors
 
 ## Released (2022-09-07 1.12.0)
