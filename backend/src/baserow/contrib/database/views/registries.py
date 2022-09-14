@@ -609,9 +609,10 @@ class ViewType(
         field_ids_to_check: Optional[List[int]] = None,
     ) -> Set[int]:
         """
-        Should be implemented to return the set of fields ids which hidden in the
-        provided view of this type. A hidden field as defined by this function will be
-        completely excluded from any publicly shared version of this view.
+        Should be implemented to return the set of fields ids which are not hidden
+        in the provided view of this type. A hidden field as defined
+        by this function will be completely excluded from any publicly
+        shared version of this view.
 
         :param view: The view to find hidden field ids for.
         :param field_ids_to_check: An optional list of field ids to restrict the check
