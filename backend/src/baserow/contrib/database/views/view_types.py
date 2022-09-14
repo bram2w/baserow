@@ -305,6 +305,9 @@ class GridViewType(ViewType):
             ]
         return {o.field_id for o in field_options}
 
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("gridviewfieldoptions_set")
+
 
 class GalleryViewType(ViewType):
     type = "gallery"
@@ -500,6 +503,9 @@ class GalleryViewType(ViewType):
                 hidden_field_ids.add(field.id)
 
         return hidden_field_ids
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("galleryviewfieldoptions_set")
 
 
 class FormViewType(ViewType):
@@ -877,6 +883,9 @@ class FormViewType(ViewType):
             values[field] = user_file and user_file.serialize()
 
         return values
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("formviewfieldoptions_set")
 
     def enhance_field_options_queryset(self, queryset):
         return queryset.prefetch_related("conditions")

@@ -4,15 +4,18 @@ from django.shortcuts import reverse
 from django.test.utils import override_settings
 
 import pytest
-from baserow_premium.views.models import KanbanView
+from baserow_premium.views.models import KanbanView, KanbanViewFieldOptions
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
     HTTP_402_PAYMENT_REQUIRED,
     HTTP_404_NOT_FOUND,
 )
 
 from baserow.contrib.database.action.scopes import ViewActionScopeType
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.actions import UpdateViewActionType
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
@@ -1042,3 +1045,668 @@ def test_can_duplicate_kanban_view_with_cover_image(
     assert response_json["card_cover_image_field"] == cover_image_file_field.id
 
     assert View.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_get_public_kanban_without_with_single_select_and_cover(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, public=True, single_select_field=None
+    )
+
+    # Only information related the public field should be returned
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True
+    )
+
+    # Can access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": kanban_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "fields": [
+            {
+                "id": public_field.id,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "name": "public",
+                "order": 0,
+                "primary": False,
+                "text_default": "",
+                "type": "text",
+            },
+        ],
+        "view": {
+            "id": kanban_view.slug,
+            "name": kanban_view.name,
+            "order": 0,
+            "public": True,
+            "slug": kanban_view.slug,
+            "sortings": [],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "kanban",
+            "card_cover_image_field": None,
+            "single_select_field": None,
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_get_public_kanban_view_with_single_select_and_cover(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    single_select_field = kanban_view.single_select_field
+
+    # Only information related the public field should be returned
+    cover_field = premium_data_fixture.create_file_field(table=table, name="cover")
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+
+    kanban_view.card_cover_image_field = cover_field
+    kanban_view.save()
+
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, cover_field, hidden=True
+    )
+
+    # Can access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": kanban_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "fields": [
+            {
+                "id": single_select_field.id,
+                "name": single_select_field.name,
+                "order": single_select_field.order,
+                "primary": single_select_field.primary,
+                "select_options": [],
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "type": "single_select",
+            },
+            {
+                "id": cover_field.id,
+                "name": cover_field.name,
+                "order": cover_field.order,
+                "primary": cover_field.primary,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "type": "file",
+            },
+            {
+                "id": public_field.id,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "name": "public",
+                "order": 0,
+                "primary": False,
+                "text_default": "",
+                "type": "text",
+            },
+        ],
+        "view": {
+            "id": kanban_view.slug,
+            "name": kanban_view.name,
+            "order": 0,
+            "public": True,
+            "slug": kanban_view.slug,
+            "sortings": [],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "kanban",
+            "card_cover_image_field": cover_field.id,
+            "single_select_field": single_select_field.id,
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_without_single_select_field(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, public=True, single_select_field=None
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_public_rows_without_password(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    kanban_view.set_password("test")
+    kanban_view.save()
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        ),
+        format="json",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_list_public_rows_with_valid_password(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    kanban_view.set_password("test")
+    kanban_view.save()
+
+    token = ViewHandler().encode_public_view_token(kanban_view)
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        ),
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {token}",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_list_public_rows_password_protected_with_jwt_auth(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    kanban_view.set_password("test")
+    kanban_view.save()
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_list_public_rows_doesnt_show_hidden_columns(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    # Only information related the public field should be returned
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+
+    single_select_field_options = KanbanViewFieldOptions.objects.get(
+        field_id=kanban_view.single_select_field_id
+    )
+    public_field_option = premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True
+    )
+
+    RowHandler().create_row(user, table, values={})
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+        + "?include=field_options"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            "null": {
+                "count": 1,
+                "results": [
+                    {
+                        "id": 1,
+                        "order": "1.00000000000000000000",
+                        f"field_{public_field.id}": None,
+                        f"field_{kanban_view.single_select_field_id}": None,
+                    }
+                ],
+            }
+        },
+        "field_options": {
+            f"{public_field.id}": {
+                "hidden": False,
+                "order": public_field_option.order,
+            },
+            f"{kanban_view.single_select_field_id}": {
+                "hidden": True,
+                "order": single_select_field_options.order,
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_with_view_filters(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    # Only information related the public field should be returned
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+
+    KanbanViewFieldOptions.objects.get(field_id=kanban_view.single_select_field_id)
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+
+    row_1 = RowHandler().create_row(
+        user, table, values={f"field_{public_field.id}": "test1"}
+    )
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "test2"})
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "test3"})
+
+    premium_data_fixture.create_view_filter(
+        view=kanban_view, field=public_field, value="test1"
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            "null": {
+                "count": 1,
+                "results": [
+                    {
+                        "id": row_1.id,
+                        "order": "1.00000000000000000000",
+                        f"field_{public_field.id}": "test1",
+                        f"field_{kanban_view.single_select_field_id}": None,
+                    },
+                ],
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_with_query_param_filters(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    # Only information related the public field should be returned
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+
+    KanbanViewFieldOptions.objects.get(field_id=kanban_view.single_select_field_id)
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+
+    row_1 = RowHandler().create_row(
+        user, table, values={f"field_{public_field.id}": "test1"}
+    )
+    row_2 = RowHandler().create_row(
+        user, table, values={f"field_{public_field.id}": "test2"}
+    )
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "test3"})
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+        + f"?filter__field_{public_field.id}__equal=test1"
+        f"&filter__field_{public_field.id}__equal=test2"
+        f"&filter_type=OR"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            "null": {
+                "count": 2,
+                "results": [
+                    {
+                        "id": row_1.id,
+                        "order": "1.00000000000000000000",
+                        f"field_{public_field.id}": "test1",
+                        f"field_{kanban_view.single_select_field_id}": None,
+                    },
+                    {
+                        "id": row_2.id,
+                        "order": "2.00000000000000000000",
+                        f"field_{public_field.id}": "test2",
+                        f"field_{kanban_view.single_select_field_id}": None,
+                    },
+                ],
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_with_query_param_filters_with_zero_results(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    # Only information related the public field should be returned
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+
+    KanbanViewFieldOptions.objects.get(field_id=kanban_view.single_select_field_id)
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "test1"})
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "test2"})
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "test3"})
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+        + f"?filter__field_{public_field.id}__equal=NOT_EXISTING"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            "null": {
+                "count": 0,
+                "results": [],
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_invalid_select_option_parameter(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    url = reverse(
+        "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?select_option=null,a",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_SELECT_OPTION_PARAMETER"
+
+    response = api_client.get(
+        f"{url}?select_option=null,1,1&select_option=1,1,a",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_SELECT_OPTION_PARAMETER"
+
+
+@pytest.mark.django_db
+def test_list_public_rows_valid_select_option_parameter(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    single_select = kanban_view.single_select_field
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select, value="B", color="red"
+    )
+
+    row_1 = RowHandler().create_row(
+        user, table, values={f"field_{single_select.id}": option_a.id}
+    )
+    row_2 = RowHandler().create_row(
+        user, table, values={f"field_{single_select.id}": option_b.id}
+    )
+    row_3 = RowHandler().create_row(user, table)
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            "null": {
+                "count": 1,
+                "results": [
+                    {
+                        "id": row_3.id,
+                        "order": "3.00000000000000000000",
+                        f"field_{single_select.id}": None,
+                    },
+                ],
+            },
+            str(option_a.id): {
+                "count": 1,
+                "results": [
+                    {
+                        "id": row_1.id,
+                        "order": "1.00000000000000000000",
+                        f"field_{single_select.id}": {
+                            "color": "blue",
+                            "id": option_a.id,
+                            "value": option_a.value,
+                        },
+                    },
+                ],
+            },
+            str(option_b.id): {
+                "count": 1,
+                "results": [
+                    {
+                        "id": row_2.id,
+                        "order": "2.00000000000000000000",
+                        f"field_{single_select.id}": {
+                            "color": "red",
+                            "id": option_b.id,
+                            "value": option_b.value,
+                        },
+                    },
+                ],
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_valid_select_option_query_parameter(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    single_select = kanban_view.single_select_field
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select, value="B", color="red"
+    )
+
+    row_1 = RowHandler().create_row(
+        user, table, values={f"field_{single_select.id}": option_a.id}
+    )
+    RowHandler().create_row(
+        user, table, values={f"field_{single_select.id}": option_b.id}
+    )
+    RowHandler().create_row(user, table)
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+        + f"?select_option={option_a.id}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            str(option_a.id): {
+                "count": 1,
+                "results": [
+                    {
+                        "id": row_1.id,
+                        "order": "1.00000000000000000000",
+                        f"field_{single_select.id}": {
+                            "color": "blue",
+                            "id": option_a.id,
+                            "value": option_a.value,
+                        },
+                    },
+                ],
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_limit_offset(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+
+    KanbanViewFieldOptions.objects.get(field_id=kanban_view.single_select_field_id)
+
+    RowHandler().create_row(user, table)
+    row_2 = RowHandler().create_row(user, table)
+    RowHandler().create_row(user, table)
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+        )
+        + f"?limit=1&offset=1"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "rows": {
+            "null": {
+                "count": 3,
+                "results": [
+                    {
+                        "id": row_2.id,
+                        "order": "2.00000000000000000000",
+                        f"field_{kanban_view.single_select_field_id}": None,
+                    },
+                ],
+            }
+        },
+    }

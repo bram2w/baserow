@@ -1,10 +1,11 @@
 import contextlib
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Iterable, List, Optional, Tuple
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import DEFAULT_DB_ALIAS, transaction
 from django.db.models import Model, QuerySet
+from django.db.models.sql.query import LOOKUP_SEP
 from django.db.transaction import Atomic, get_connection
 
 from psycopg2 import sql
@@ -46,7 +47,7 @@ class LockedAtomicTransaction(Atomic):
 
 def specific_iterator(
     queryset: QuerySet,
-    per_content_type_prefetches: Optional[Dict[str, List[str]]] = None,
+    per_content_type_queryset_hook: Callable = None,
 ) -> Iterable[Model]:
     """
     Iterates over the given queryset and finds the specific objects with the least
@@ -61,6 +62,8 @@ def specific_iterator(
 
     :param queryset: The queryset to the base model of which we want to select the
         specific types from.
+    :param per_content_type_queryset_hook: If provided, it will be called for every
+        specific queryset to allow extending it.
     """
 
     # Figure out beforehand what the annotation keys and select related keys are.
@@ -72,6 +75,14 @@ def specific_iterator(
         select_related_keys = []
     else:
         select_related_keys = select_related.keys()
+
+    # Nested prefetch result in cached objects to avoid additional queries. If
+    # they're present, they must be added to the `select_related_keys` to make sure
+    # they're correctly set on the specific objects.
+    for lookup in queryset._prefetch_related_lookups:
+        split_lookup = lookup.split(LOOKUP_SEP)[:-1]
+        if split_lookup and split_lookup[0] not in select_related_keys:
+            select_related_keys.append(split_lookup[0])
 
     # The original queryset must resolved because we need the pk, content type,
     # annotated data and selected related data. By forcing it to resolve early on,
@@ -94,13 +105,8 @@ def specific_iterator(
         # be fetched.
         objects = model._base_manager.filter(pk__in=pks)
 
-        if (
-            per_content_type_prefetches is not None
-            and content_type.model in per_content_type_prefetches
-        ):
-            objects = objects.prefetch_related(
-                *per_content_type_prefetches[content_type.model]
-            )
+        if per_content_type_queryset_hook is not None:
+            objects = per_content_type_queryset_hook(model, objects)
 
         for object in objects:
             specific_objects[object.id] = object
@@ -136,11 +142,18 @@ def specific_iterator(
                         getattr(item, select_related_key),
                     )
 
-        # If the original item has the `_prefetched_objects_cache`, it means that the
-        # `prefetch_related`. By setting it on the specific object, we move that
-        # prefetched data over so that we don't have to execute the same query again.
+        # If the original item has the `_prefetched_objects_cache` object, it means that
+        # the `prefetch_related` was used and fetched on the base queryset. By
+        # setting it on the specific object, we move that prefetched data over so
+        # that we don't have to execute the same query again.
         if hasattr(item, "_prefetched_objects_cache"):
-            specific_object._prefetched_objects_cache = item._prefetched_objects_cache
+            specific_prefetched_objects_cache = getattr(
+                specific_object, "_prefetched_objects_cache", {}
+            )
+            specific_object._prefetched_objects_cache = {
+                **item._prefetched_objects_cache,
+                **specific_prefetched_objects_cache,
+            }
 
         ordered_specific_objects.append(specific_object)
 

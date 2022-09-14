@@ -1,7 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Set
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
+from django.db.models import Q
 from django.urls import include, path
 
 from baserow_premium.api.views.kanban.errors import (
@@ -54,8 +55,8 @@ class KanbanViewType(ViewType):
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
     can_decorate = True
-    # TODO: When we make kanban views publicly sharable flip this to True
-    when_shared_publicly_requires_realtime_events = False
+    can_share = True
+    has_public_info = True
 
     def get_api_urls(self):
         from baserow_premium.api.views.kanban import urls as api_urls
@@ -193,10 +194,58 @@ class KanbanViewType(ViewType):
             )
 
     def export_prepared_values(self, view: KanbanView) -> Dict[str, Any]:
-
         values = super().export_prepared_values(view)
-
         values["single_select_field"] = view.single_select_field_id
         values["card_cover_image_field"] = view.card_cover_image_field_id
-
         return values
+
+    def get_visible_field_options_in_order(self, kanban_view: KanbanView):
+        return (
+            kanban_view.get_field_options(create_if_missing=True)
+            .filter(
+                Q(hidden=False)
+                # If the `single_select_field_id` or `card_cover_image_field_id` is set,
+                # we must always expose those fields because the values are needed to
+                # work correctly.
+                | Q(field_id=kanban_view.single_select_field_id)
+                | Q(field_id=kanban_view.card_cover_image_field_id)
+            )
+            .order_by("order", "field__id")
+        )
+
+    def get_hidden_fields(
+        self,
+        view: KanbanView,
+        field_ids_to_check: Optional[List[int]] = None,
+    ) -> Set[int]:
+        hidden_field_ids = set()
+        fields = view.table.field_set.all()
+        field_options = view.kanbanviewfieldoptions_set.all()
+
+        if field_ids_to_check is not None:
+            fields = [f for f in fields if f.id in field_ids_to_check]
+
+        for field in fields:
+            # If the `single_select_field_id` or `card_cover_image_field_id` is set,
+            # we must always expose those fields because the values are needed to
+            # work correctly.
+            if field.id in [
+                view.single_select_field_id,
+                view.card_cover_image_field_id,
+            ]:
+                continue
+
+            field_option_matching = None
+            for field_option in field_options:
+                if field_option.field_id == field.id:
+                    field_option_matching = field_option
+
+            # A field is considered hidden, if it is explicitly hidden
+            # or if the field options don't exist
+            if field_option_matching is None or field_option_matching.hidden:
+                hidden_field_ids.add(field.id)
+
+        return hidden_field_ids
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("kanbanviewfieldoptions_set")

@@ -9,7 +9,7 @@ import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, LongTextField, TextField
-from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.models import GalleryView, GridView, View
 from baserow.core.db import LockedAtomicTransaction, specific_iterator
 from baserow.core.models import Settings
 
@@ -200,3 +200,73 @@ def test_specific_iterator_with_prefetch_related(
         all_2 = specific_objects[1].viewfilter_set.all()
         assert all_2[0].id == filter_2.id
         assert all_2[1].id == filter_3.id
+
+
+@pytest.mark.django_db
+def test_specific_iterator_per_content_type(data_fixture, django_assert_num_queries):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field()
+    data_fixture.create_text_field()
+    grid_view_1 = data_fixture.create_grid_view(table=table)
+    grid_view_2 = data_fixture.create_grid_view(table=table)
+    gallery_view_1 = data_fixture.create_gallery_view(table=table)
+    gallery_view_2 = data_fixture.create_gallery_view(table=table)
+
+    base_queryset = View.objects.filter(
+        id__in=[
+            grid_view_1.id,
+            grid_view_2.id,
+            gallery_view_1.id,
+            gallery_view_2.id,
+        ]
+    ).prefetch_related("viewfilter_set")
+
+    with django_assert_num_queries(6):
+
+        def hook(model, queryset):
+            if model == GridView:
+                queryset = queryset.prefetch_related("gridviewfieldoptions_set")
+            if model == GalleryView:
+                queryset = queryset.prefetch_related("galleryviewfieldoptions_set")
+            return queryset
+
+        specific_objects = list(
+            specific_iterator(base_queryset, per_content_type_queryset_hook=hook)
+        )
+        list(specific_objects[0].gridviewfieldoptions_set.all())
+        list(specific_objects[0].viewfilter_set.all())
+        list(specific_objects[1].gridviewfieldoptions_set.all())
+        list(specific_objects[1].viewfilter_set.all())
+        list(specific_objects[2].galleryviewfieldoptions_set.all())
+        list(specific_objects[2].viewfilter_set.all())
+        list(specific_objects[3].galleryviewfieldoptions_set.all())
+        list(specific_objects[3].viewfilter_set.all())
+
+
+@pytest.mark.django_db
+def test_specific_iterator_per_content_type_with_nested_prefetch(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field()
+    data_fixture.create_text_field()
+    grid_view_1 = data_fixture.create_grid_view(table=table)
+    grid_view_2 = data_fixture.create_grid_view(table=table)
+    gallery_view_1 = data_fixture.create_gallery_view(table=table)
+    gallery_view_2 = data_fixture.create_gallery_view(table=table)
+
+    base_queryset = View.objects.filter(
+        id__in=[
+            grid_view_1.id,
+            grid_view_2.id,
+            gallery_view_1.id,
+            gallery_view_2.id,
+        ]
+    ).prefetch_related("table__field_set")
+
+    with django_assert_num_queries(5):
+        specific_objects = list(specific_iterator(base_queryset))
+        list(specific_objects[0].table.field_set.all())
+        list(specific_objects[1].table.field_set.all())
+        list(specific_objects[2].table.field_set.all())
+        list(specific_objects[3].table.field_set.all())
