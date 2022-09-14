@@ -589,6 +589,23 @@ class ViewType(
 
         return values
 
+    def enhance_queryset(
+        self, queryset: django_models.QuerySet
+    ) -> django_models.QuerySet:
+        """
+        This hook can be used to enhance a queryset when fetching multiple views of a
+        table. It will only be applied on the specific model queryset of the view.
+        This is for example used by the signal when needs to fetch all the public
+        views and figure out which fields are hidden. Meaning if you apply the
+        `prefetch_related` and `select_related` here, they will be available in the
+        `get_hidden_fields` method.
+
+        :param queryset: The specific queryset that must be enhanced.
+        :return: The enhanced queryset.
+        """
+
+        return queryset
+
     def enhance_field_options_queryset(
         self, queryset: django_models.QuerySet
     ) -> django_models.QuerySet:

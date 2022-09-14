@@ -12,6 +12,8 @@ For example:
 
 ### New Features
 
+* Made it possible to share the Kanban view publicly. [#1146](https://gitlab.com/bramw/baserow/-/issues/1146)
+
 ### Bug Fixes
 
 * Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.

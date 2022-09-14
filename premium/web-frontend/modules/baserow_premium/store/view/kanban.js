@@ -6,6 +6,7 @@ import KanbanService from '@baserow_premium/services/views/kanban'
 import {
   getRowSortFunction,
   matchSearchFilters,
+  getFilters,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 import FieldService from '@baserow/modules/database/services/field'
@@ -166,7 +167,7 @@ export const actions = {
    * Fetches an initial set of rows and adds that data to the store.
    */
   async fetchInitial(
-    { dispatch, commit, getters },
+    { dispatch, commit, getters, rootGetters },
     { kanbanId, singleSelectFieldId, includeFieldOptions = true }
   ) {
     const { data } = await KanbanService(this.$client).fetchRows({
@@ -175,6 +176,9 @@ export const actions = {
       offset: 0,
       includeFieldOptions,
       selectOptions: [],
+      publicUrl: rootGetters['page/view/public/getIsPublic'],
+      publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      filters: getFilters(rootGetters, kanbanId),
     })
     Object.keys(data.rows).forEach((key) => {
       populateStack(data.rows[key])
@@ -191,7 +195,10 @@ export const actions = {
    * we don't fetch all the rows, the next set will be fetched when the user reaches
    * the end.
    */
-  async fetchMore({ dispatch, commit, getters }, { selectOptionId }) {
+  async fetchMore(
+    { dispatch, commit, getters, rootGetters },
+    { selectOptionId }
+  ) {
     const stack = getters.getStack(selectOptionId)
     const { data } = await KanbanService(this.$client).fetchRows({
       kanbanId: getters.getLastKanbanId,
@@ -205,6 +212,9 @@ export const actions = {
           offset: stack.results.length,
         },
       ],
+      publicUrl: rootGetters['page/view/public/getIsPublic'],
+      publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      filters: getFilters(rootGetters, getters.getLastKanbanId),
     })
     const count = data.rows[selectOptionId].count
     const rows = data.rows[selectOptionId].results

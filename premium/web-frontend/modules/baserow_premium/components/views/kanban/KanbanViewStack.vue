@@ -102,8 +102,9 @@
       </InfiniteScroll>
       <div class="kanban-view__stack-foot">
         <a
+          v-if="!readOnly"
           class="button button--ghost kanban-view__stack-new-button"
-          :disabled="draggingRow !== null || readOnly"
+          :disabled="draggingRow !== null"
           @click="!readOnly && $emit('create-row', { option })"
         >
           <i class="fas fa-plus"></i>

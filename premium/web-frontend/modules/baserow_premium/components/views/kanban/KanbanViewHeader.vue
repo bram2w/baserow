@@ -175,6 +175,7 @@ export default {
         await this.$store.dispatch('view/update', {
           view: this.view,
           values: { card_cover_image_field: value },
+          readOnly: this.readOnly,
         })
       } catch (error) {
         notifyIf(error, 'view')

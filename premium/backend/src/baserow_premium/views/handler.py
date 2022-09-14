@@ -1,7 +1,7 @@
 from collections import defaultdict
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 
 from baserow.contrib.database.fields.models import SingleSelectField
 from baserow.contrib.database.table.models import GeneratedTableModel
@@ -15,7 +15,8 @@ def get_rows_grouped_by_single_select_field(
     option_settings: Dict[str, Dict[str, int]] = None,
     default_limit: int = 40,
     default_offset: int = 0,
-    model: GeneratedTableModel = None,
+    model: Optional[GeneratedTableModel] = None,
+    base_queryset: Optional[QuerySet] = None,
 ) -> Dict[str, Dict[str, Union[int, list]]]:
     """
     This method fetches the rows grouped by a single select field in a query
@@ -45,6 +46,9 @@ def get_rows_grouped_by_single_select_field(
         specific settings for that field have been provided.
     :param model: Additionally, an existing model can be provided so that it doesn't
         have to be generated again.
+    :param base_queryset: Optionally an alternative base queryset can be provided
+        that will be used to fetch the rows. This should be provided if additional
+        filters and/or sorts must be added.
     :return: The fetched rows including the total count.
     """
 
@@ -56,7 +60,9 @@ def get_rows_grouped_by_single_select_field(
     if model is None:
         model = table.get_model()
 
-    base_queryset = model.objects.all().enhance_by_fields().order_by("order", "id")
+    if base_queryset is None:
+        base_queryset = model.objects.all().enhance_by_fields().order_by("order", "id")
+
     base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
     all_filters = Q()
     count_aggregates = {}

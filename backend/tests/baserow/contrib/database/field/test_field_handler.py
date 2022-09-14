@@ -1223,16 +1223,19 @@ def test_when_public_field_updated_number_of_queries_does_not_increase_with_amou
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table, order=0, name="b")
 
-    view_one = data_fixture.create_grid_view(
+    data_fixture.create_grid_view(
         user=user,
         table=table,
         public=True,
     )
 
+    # Warm up the caches
+    FieldHandler().update_field(user, visible_field, name="c")
+
     with CaptureQueriesContext(connection) as captured:
         FieldHandler().update_field(user, visible_field, name="a")
 
-    view_two = data_fixture.create_grid_view(
+    data_fixture.create_grid_view(
         user=user,
         table=table,
         public=True,
@@ -1250,16 +1253,19 @@ def test_when_public_field_updated_number_of_queries_does_not_increase_with_amou
     table = data_fixture.create_database_table(user=user)
     visible_field = data_fixture.create_text_field(table=table, order=0, name="b")
 
-    view_one = data_fixture.create_gallery_view(
+    data_fixture.create_gallery_view(
         user=user,
         table=table,
         public=True,
     )
 
+    # Warm up the caches
+    FieldHandler().update_field(user, visible_field, name="c")
+
     with CaptureQueriesContext(connection) as captured:
         FieldHandler().update_field(user, visible_field, name="a")
 
-    view_two = data_fixture.create_gallery_view(
+    data_fixture.create_gallery_view(
         user=user,
         table=table,
         public=True,
