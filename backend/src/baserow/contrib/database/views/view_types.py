@@ -464,7 +464,9 @@ class GalleryViewType(ViewType):
     def get_visible_field_options_in_order(self, gallery_view: GalleryView):
         return (
             gallery_view.get_field_options(create_if_missing=True)
-            .filter(Q(hidden=False))
+            .filter(
+                Q(hidden=False) | Q(field__id=gallery_view.card_cover_image_field_id)
+            )
             .order_by("order", "field__id")
         )
 
@@ -481,6 +483,10 @@ class GalleryViewType(ViewType):
             fields = [f for f in fields if f.id in field_ids_to_check]
 
         for field in fields:
+
+            # The card cover image field is always visible.
+            if field.id == view.card_cover_image_field_id:
+                continue
 
             # Find corresponding field option
             field_option_matching = None
