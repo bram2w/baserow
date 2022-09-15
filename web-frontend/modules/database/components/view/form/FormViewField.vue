@@ -44,6 +44,7 @@
           <Editable
             ref="description"
             :value="fieldOptions.description"
+            :placeholder="$t('formViewField.descriptionPlaceholder')"
             @change="
               $emit('updated-field-options', { description: $event.value })
             "

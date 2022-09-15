@@ -61,6 +61,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 <span
                   class=""
                   contenteditable="false"
+                  placeholder=""
                 >
                   my public grid view name
                 </span>

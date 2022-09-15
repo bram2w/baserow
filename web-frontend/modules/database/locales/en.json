@@ -660,6 +660,7 @@
     },
     "formViewField": {
         "required": "required",
+        "descriptionPlaceholder": "Description",
         "showWhenMatchingConditions": "show when conditions are met",
         "addCondition": "Add condition"
     },
@@ -705,6 +706,8 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Add a cover image",
         "addLogo": "Add a logo",
+        "titlePlaceholder": "Title",
+        "descriptionPlaceholder": "Description",
         "noFields": "This form doesn't have any fields. Click on a field in the left sidebar to add one."
     }
 }
