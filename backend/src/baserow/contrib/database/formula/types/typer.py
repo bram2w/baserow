@@ -1,7 +1,12 @@
+import typing
+
 from django.db import connection
 
 from baserow.contrib.database.formula.parser.exceptions import MaximumFormulaSizeError
 from baserow.contrib.database.formula.types.visitors import FormulaTypingVisitor
+
+if typing.TYPE_CHECKING:
+    from baserow.contrib.database.fields.models import FormulaField
 
 
 def calculate_typed_expression(formula_field, field_cache):
@@ -56,10 +61,11 @@ def _check_if_formula_type_change_requires_drop_recreate(old_formula_field, new_
 
 
 def recreate_formula_field_if_needed(
-    field,
-    old_field,
+    field: "FormulaField",
+    old_field: "FormulaField",
+    force_recreate_column: bool = False,
 ):
-    if _check_if_formula_type_change_requires_drop_recreate(
+    if force_recreate_column or _check_if_formula_type_change_requires_drop_recreate(
         old_field, field.cached_formula_type
     ):
         model = field.table.get_model(fields=[field], add_dependencies=False)

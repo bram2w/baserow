@@ -35,6 +35,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     UnTyped,
 )
 from baserow.contrib.database.formula.types.type_checker import MustBeManyExprChecker
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.trash.handler import TrashHandler
 
@@ -621,6 +622,91 @@ def construct_some_literal_args(formula_func):
             )
         fake_args.append(literal(r))
     return fake_args
+
+
+@pytest.mark.django_db
+def test_aggregate_functions_can_be_referenced_by_other_formulas(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    grid = data_fixture.create_grid_view(user, table=table)
+
+    text_field = data_fixture.create_text_field(user, table=table_b, name="text_field")
+    number_field = data_fixture.create_number_field(
+        user, table=table_b, name="number_field"
+    )
+    bool_field = data_fixture.create_boolean_field(
+        user, table=table_b, name="bool_field"
+    )
+
+    fill_table_rows(10, table_b)
+
+    for formula_func in formula_function_registry.get_all():
+        if not formula_func.aggregate or formula_func.type == "array_agg_unnesting":
+            continue
+
+        field_refs = [
+            get_field_name_from_arg_types(
+                formula_func,
+                link_field,
+                text_field=text_field,
+                number_field=number_field,
+                bool_field=bool_field,
+            )
+        ]
+
+        for arg_set in field_refs:
+            formula = str(BaserowFunctionCall[UnTyped](formula_func, arg_set, None))
+            f = FieldHandler().create_field(
+                user,
+                table,
+                "formula",
+                name=f"{formula_func.type}",
+                formula=formula,
+            )
+            FieldHandler().create_field(
+                user,
+                table,
+                "formula",
+                name=f"{formula_func.type} ref",
+                formula=f"field('{f.name}')",
+            )
+            RowHandler().create_row(user, table, {})
+            url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+            response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+            response_json = response.json()
+            assert response.status_code == HTTP_200_OK
+            assert response_json["count"] > 0
+
+
+def get_field_name_from_arg_types(
+    formula_func, through_field, text_field, number_field, bool_field
+):
+    args = formula_func.arg_types
+    field_refs = []
+    for a in args:
+        r = None
+        arg_checker = a[0]
+        if isinstance(arg_checker, MustBeManyExprChecker):
+            arg_checker = arg_checker.formula_types[0]
+        if arg_checker == BaserowFormulaValidType:
+            r = text_field.name
+        elif arg_checker == BaserowFormulaBooleanType:
+            r = bool_field.name
+        elif arg_checker == BaserowFormulaTextType:
+            r = text_field.name
+        elif arg_checker == BaserowFormulaNumberType:
+            r = number_field.name
+        elif arg_checker == BaserowFormulaArrayType:
+            r = through_field.link_row_related_field.name
+        else:
+            assert False, (
+                f"Please add a branch for {arg_checker} to "
+                f"the test function get_field_name_from_arg_types"
+            )
+        field_refs.append(BaserowFieldReference[UnTyped](through_field.name, r, None))
+    return field_refs
 
 
 @pytest.mark.django_db

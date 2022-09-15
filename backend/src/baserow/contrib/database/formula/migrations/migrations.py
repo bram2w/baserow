@@ -1,9 +1,15 @@
 import dataclasses
+from typing import Callable, Union
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
+
+from baserow.contrib.database.formula import BaserowFormulaException
 
 NO_FORMULAS = Q(pk__in=[])
 ALL_FORMULAS = ~NO_FORMULAS
+
+
+FormulaMigrationSelector = Union[Q, Callable[[QuerySet], Q]]
 
 
 @dataclasses.dataclass
@@ -27,7 +33,7 @@ class FormulaMigration:
     called on them (which recalculates their attributes given the current formula
     version)
     """
-    recalculate_formula_attributes_for: Q
+    recalculate_formula_attributes_for: FormulaMigrationSelector
 
     """
     If this version requires formulas from older versions to have their field
@@ -39,19 +45,37 @@ class FormulaMigration:
     This will be done prior to any attribute or cell value recalculation in the
     migration.
     """
-    recalculate_field_dependencies_for: Q
+    recalculate_field_dependencies_for: FormulaMigrationSelector
 
     """
     If this version requires formulas from older versions to have their actual cell
     values to be recalculated then provide a filter here matching the formula fields
     that should have this done.
     """
-    recalculate_cell_values_for: Q
+    recalculate_cell_values_for: FormulaMigrationSelector
+
+    """
+    If this version requires formulas from older versions to have their entire columns
+    recreated from scratch and repopulated with cell values then provide a filter here
+    matching the formula fields that should have this done.
+    """
+    force_recreate_formula_columns_for: FormulaMigrationSelector
 
 
 class FormulaMigrations(list):
     def get_latest_version(self) -> int:
         return super().__getitem__(-1).version
+
+
+def all_aggregate_formulas(formulas: QuerySet) -> Q:
+    aggregate_formula_ids = []
+    for f in formulas:
+        try:
+            if f.cached_untyped_expression.aggregate:
+                aggregate_formula_ids.append(f.id)
+        except BaserowFormulaException:
+            continue
+    return Q(id__in=aggregate_formula_ids)
 
 
 # A list containing all Baserow formula versions and how to migrate to them. The last
@@ -69,12 +93,14 @@ FORMULA_MIGRATIONS = FormulaMigrations(
             recalculate_formula_attributes_for=ALL_FORMULAS,
             recalculate_field_dependencies_for=NO_FORMULAS,
             recalculate_cell_values_for=NO_FORMULAS,
+            force_recreate_formula_columns_for=NO_FORMULAS,
         ),
         FormulaMigration(
             version=2,
             recalculate_formula_attributes_for=ALL_FORMULAS,
             recalculate_field_dependencies_for=NO_FORMULAS,
             recalculate_cell_values_for=NO_FORMULAS,
+            force_recreate_formula_columns_for=NO_FORMULAS,
         ),
         FormulaMigration(
             version=3,
@@ -86,6 +112,7 @@ FORMULA_MIGRATIONS = FormulaMigrations(
             recalculate_cell_values_for=(
                 Q(formula_type="date") | Q(array_formula_type="date")
             ),
+            force_recreate_formula_columns_for=NO_FORMULAS,
         ),
         FormulaMigration(
             version=4,
@@ -94,6 +121,15 @@ FORMULA_MIGRATIONS = FormulaMigrations(
             recalculate_formula_attributes_for=ALL_FORMULAS,
             recalculate_field_dependencies_for=NO_FORMULAS,
             recalculate_cell_values_for=NO_FORMULAS,
+            force_recreate_formula_columns_for=NO_FORMULAS,
+        ),
+        FormulaMigration(
+            version=5,
+            # v5 Fixes formulas that reference other aggregate formulas.
+            recalculate_formula_attributes_for=NO_FORMULAS,
+            recalculate_field_dependencies_for=NO_FORMULAS,
+            recalculate_cell_values_for=NO_FORMULAS,
+            force_recreate_formula_columns_for=all_aggregate_formulas,
         ),
     ]
 )
