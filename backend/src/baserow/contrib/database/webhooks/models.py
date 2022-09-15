@@ -1,6 +1,6 @@
 import uuid
 
-from django.core.validators import MaxLengthValidator, URLValidator
+from django.core.validators import MaxLengthValidator
 from django.db import models
 
 from baserow.contrib.database.table.models import Table
@@ -34,7 +34,7 @@ class TableWebhook(CreatedAndUpdatedOnMixin, models.Model):
     # limited `CharField`
     url = models.TextField(
         help_text="The URL that must be called when the webhook is triggered.",
-        validators=[MaxLengthValidator(2000), URLValidator(), url_validator],
+        validators=[MaxLengthValidator(2000), url_validator],
     )
     request_method = models.CharField(
         max_length=10,
@@ -89,9 +89,7 @@ class TableWebhookCall(models.Model):
     )
     event_type = models.CharField(max_length=50)
     called_time = models.DateTimeField(null=True)
-    called_url = models.TextField(
-        validators=[MaxLengthValidator(2000), URLValidator(), url_validator]
-    )
+    called_url = models.TextField(validators=[MaxLengthValidator(2000), url_validator])
     request = models.TextField(
         null=True, help_text="A text copy of the request headers and body."
     )

@@ -155,12 +155,15 @@ export class ErrorHandler {
     this.detail = detail
   }
 
-  /**
-   * Returns true if there is a readable error.
-   * @return {boolean}
-   */
-  hasError() {
-    return this.response !== undefined && this.response.code !== null
+  hasBaserowAPIError() {
+    return this.response !== undefined && this.code != null
+  }
+
+  hasRequestBodyValidationError() {
+    return (
+      this.response !== undefined &&
+      this.response?.data?.error === 'ERROR_REQUEST_BODY_VALIDATION'
+    )
   }
 
   /**
@@ -203,10 +206,85 @@ export class ErrorHandler {
       return this.errorMap[this.code]
     }
 
-    return new ResponseErrorMessage(
-      this.app.i18n.t('clientHandler.notCompletedTitle'),
-      this.app.i18n.t('clientHandler.notCompletedDescription')
-    )
+    return this.genericDefaultError()
+  }
+
+  searchForMatchingFieldException(
+    listOfDetailErrors,
+    mapOfDetailCodeToResponseError
+  ) {
+    for (const detailError of listOfDetailErrors) {
+      if (
+        detailError &&
+        typeof detailError === 'object' &&
+        typeof detailError.code === 'string'
+      ) {
+        const handledError = mapOfDetailCodeToResponseError[detailError.code]
+        if (handledError) {
+          return handledError
+        }
+      }
+    }
+    return null
+  }
+
+  /**
+   * Given a "ERROR_REQUEST_BODY_VALIDATION" error has occurred this function matches
+   * a provided error map against the machine readable error codes in the "detail"
+   * key in the response.
+   *
+   * For example if the response contains an error looking like:
+   *
+   * {
+   *   "error": "ERROR_REQUEST_BODY_VALIDATION",
+   *   "detail": {
+   *     "url": [
+   *       {
+   *         "error": "Enter a valid URL.",
+   *         "code": "invalid"
+   *       }
+   *     ]
+   *   }
+   * }
+   *
+   * Then you would call this function like so to match the above error and get your
+   * ResponseErrorMessage returned:
+   *
+   * getRequestBodyErrorMessage({"url":{"invalid": new ResponseErrorMessage('a','b')}})
+   *
+   * @param requestBodyErrorMap An object where it's keys are the names of the
+   * request body attribute that can fail with a value being another sub object. This
+   * sub object should be keyed by the "code" returned in the error detail with the
+   * value being a ResponseErrorMessage that should be returned if the API returned an
+   * error for that attribute and code.
+   * @return Any The first ResponseErrorMessage which is found in the error map that
+   * matches an error in the response body, or null if no match is found.
+   */
+  getRequestBodyErrorMessage(requestBodyErrorMap) {
+    const detail = this.response?.data?.detail
+
+    if (requestBodyErrorMap && detail && typeof detail === 'object') {
+      for (const fieldName of Object.keys(detail)) {
+        const errorsForField = detail[fieldName]
+        const supportedExceptionsForField = requestBodyErrorMap[fieldName]
+
+        if (
+          errorsForField != null &&
+          Array.isArray(errorsForField) &&
+          supportedExceptionsForField
+        ) {
+          const matchingException = this.searchForMatchingFieldException(
+            errorsForField,
+            supportedExceptionsForField
+          )
+          if (matchingException) {
+            return matchingException
+          }
+        }
+      }
+    }
+
+    return null
   }
 
   /**
@@ -218,7 +296,7 @@ export class ErrorHandler {
         this.app.i18n.t('clientHandler.notFoundTitle', {
           name: upperCaseFirst(name),
         }),
-        this.app.i18n.t('clientHandler.notFoundTitle', {
+        this.app.i18n.t('clientHandler.notFoundDescription', {
           name: name.toLowerCase(),
         })
       )
@@ -252,20 +330,34 @@ export class ErrorHandler {
    * If there is an error or the requested detail is not found an error
    * message related to the problem is returned.
    */
-  getMessage(name = null, specificErrorMap = null) {
+  getMessage(name = null, specificErrorMap = null, requestBodyErrorMap = null) {
     if (this.isTooManyRequests()) {
       return this.getTooManyRequestsError()
     }
     if (this.hasNetworkError()) {
       return this.getNetworkErrorMessage()
     }
-    if (this.hasError()) {
+    if (this.hasBaserowAPIError()) {
+      if (this.hasRequestBodyValidationError()) {
+        const matchingRequestBodyError =
+          this.getRequestBodyErrorMessage(requestBodyErrorMap)
+        if (matchingRequestBodyError) {
+          return matchingRequestBodyError
+        }
+      }
       return this.getErrorMessage(specificErrorMap)
     }
     if (this.isNotFound()) {
       return this.getNotFoundMessage(name)
     }
-    return null
+    return this.genericDefaultError()
+  }
+
+  genericDefaultError() {
+    return new ResponseErrorMessage(
+      this.app.i18n.t('clientHandler.notCompletedTitle'),
+      this.app.i18n.t('clientHandler.notCompletedDescription')
+    )
   }
 
   /**
@@ -275,7 +367,11 @@ export class ErrorHandler {
    */
   notifyIf(name = null, message = null) {
     if (
-      !(this.hasError() || this.hasNetworkError() || this.isNotFound()) ||
+      !(
+        this.hasBaserowAPIError() ||
+        this.hasNetworkError() ||
+        this.isNotFound()
+      ) ||
       this.isHandled
     ) {
       return
@@ -303,6 +399,29 @@ export class ErrorHandler {
    */
   handled() {
     this.isHandled = true
+  }
+}
+
+export function makeErrorResponseInterceptor(store, app, clientErrorMap) {
+  return (error) => {
+    error.handler = new ErrorHandler(store, app, clientErrorMap, error.response)
+
+    // Add the error message in the response to the error object.
+    const rspCode = error.response?.status
+    const rspData = error.response?.data
+
+    if (rspCode === 401) {
+      store.dispatch('notification/setAuthorizationError', true)
+      error.handler.handled()
+    } else if (
+      typeof rspData === 'object' &&
+      'error' in rspData &&
+      'detail' in rspData
+    ) {
+      error.handler.setError(rspData.error, rspData.detail)
+    }
+
+    return Promise.reject(error)
   }
 }
 
@@ -341,38 +460,11 @@ export default function ({ store, app }, inject) {
     return config
   })
 
-  // Create a response interceptor to add more detail tot the error message
+  // Create a response interceptor to add more detail to the error message
   // and to create a notification when there is a network error.
-  client.interceptors.response.use(
-    (response) => {
-      return response
-    },
-    (error) => {
-      error.handler = new ErrorHandler(
-        store,
-        app,
-        clientErrorMap,
-        error.response
-      )
-
-      // Add the error message in the response to the error object.
-      const rspCode = error.response?.status
-      const rspData = error.response?.data
-
-      if (rspCode === 401) {
-        store.dispatch('notification/setAuthorizationError', true)
-        error.handler.handled()
-      } else if (
-        typeof rspData === 'object' &&
-        'error' in rspData &&
-        'detail' in rspData
-      ) {
-        error.handler.setError(rspData.error, rspData.detail)
-      }
-
-      return Promise.reject(error)
-    }
-  )
+  client.interceptors.response.use((response) => {
+    return response
+  }, makeErrorResponseInterceptor(store, app, clientErrorMap))
 
   inject('client', client)
 }

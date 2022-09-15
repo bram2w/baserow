@@ -44,6 +44,10 @@ import WebhookForm from '@baserow/modules/database/components/webhook/WebhookFor
 import DeleteWebhookModal from '@baserow/modules/database/components/webhook/DeleteWebhookModal'
 import WebhookService from '@baserow/modules/database/services/webhook'
 
+const {
+  ResponseErrorMessage,
+} = require('@baserow/modules/core/plugins/clientHandler')
+
 export default {
   name: 'UpdateWebhook',
   components: { WebhookForm, DeleteWebhookModal },
@@ -84,7 +88,14 @@ export default {
           this.saved = false
         }, 5000)
       } catch (error) {
-        this.handleError(error)
+        this.handleError(error, 'webhook', null, {
+          url: {
+            invalid_url: new ResponseErrorMessage(
+              this.$t('webhook.form.invalidURLTitle'),
+              this.$t('webhook.form.invalidURLDescription')
+            ),
+          },
+        })
       }
 
       this.loading = false
