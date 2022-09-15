@@ -336,10 +336,6 @@
     "tableForm": {
         "name": "Name"
     },
-    "tableImporterPreview": {
-        "label": "Quick preview",
-        "remaining": "{remaining} other rows"
-    },
     "tableXMLImporter": {
         "fileLabel": "Choose XML file",
         "fileDescription": "You can import an existing XML by uploading the .XML file with tabular data, i.e.:",
@@ -387,7 +383,9 @@
         "stateCreateTable": "Creating table...",
         "fieldMappingTitle": "Field mapping",
         "fieldMappingDescription": "We have automatically mapped the columns of the Baserow fields in your table. You can change them below. Any incompatible cell will remain empty after the import.",
-        "selectImportMessage": "Please select data to import."
+        "selectImportMessage": "Please select data to import.",
+        "filePreview": "File content preview",
+        "importPreview": "Import preview"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Click to edit the formula",

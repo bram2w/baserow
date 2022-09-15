@@ -6,6 +6,7 @@ import {
   isSimplePhoneNumber,
   isValidEmail,
   isValidURL,
+  getFilenameFromUrl,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -1770,6 +1771,7 @@ export class EmailFieldType extends FieldType {
 
 export class FileFieldType extends FieldType {
   fileRegex = /^(.+\.[^\s]+) \(http[^)]+\/([^\s]+.[^\s]+)\)$/
+  fileURLRegex = /^http[^)]+\/([^\s]+.[^\s]+)$/
 
   static getType() {
     return 'file'
@@ -1839,7 +1841,9 @@ export class FileFieldType extends FieldType {
     return (
       Array.isArray(values) &&
       values.every(
-        (value) => !Object.prototype.hasOwnProperty.call(value, 'name')
+        (value) =>
+          Object.prototype.hasOwnProperty.call(value, 'name') ||
+          Object.prototype.hasOwnProperty.call(value, 'url')
       )
     )
   }
@@ -1847,6 +1851,17 @@ export class FileFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData, richClipboardData) {
     if (this.checkRichValueIsCompatible(richClipboardData)) {
       return richClipboardData
+        .map((file) => {
+          if (Object.prototype.hasOwnProperty.call(file, 'name')) {
+            return file
+          } else if (isValidURL(file.url)) {
+            const name = getFilenameFromUrl(file.url)
+            return { ...file, name }
+          } else {
+            return null
+          }
+        })
+        .filter((f) => f)
     } else {
       try {
         const files = this.app.$papa.stringToArray(clipboardData)
@@ -2039,7 +2054,6 @@ export class SingleSelectFieldType extends FieldType {
       if (!clipboardData) {
         return null
       }
-
       return (
         this._findOptionWithMatchingId(field, clipboardData) ||
         this._findOptionWithMatchingValue(field, clipboardData)
@@ -2211,6 +2225,7 @@ export class MultipleSelectFieldType extends FieldType {
       if (richClipboardData === null) {
         return []
       }
+
       return richClipboardData
     } else {
       // Fallback to text version
@@ -2723,6 +2738,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       try {
         const data = this.app.$papa.stringToArray(clipboardData)
         const uniqueValuesOnly = Array.from(new Set(data))
+
         return uniqueValuesOnly
           .map((emailOrName) => {
             const groupUser =
@@ -2736,6 +2752,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
           .map((obj) => {
             return {
               id: obj.user_id,
+              name: obj.name,
             }
           })
       } catch (e) {

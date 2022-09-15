@@ -71,6 +71,12 @@ export const isValidEmail = (str) => {
   return !!pattern.test(str)
 }
 
+export const getFilenameFromUrl = (url) => {
+  const pathname = new URL(url).pathname
+  const index = pathname.lastIndexOf('/')
+  return pathname.substring(index + 1) // if index === -1 then index+1 will be 0
+}
+
 // Regex duplicated from
 // src/baserow/contrib/database/fields/field_types.py#PhoneNumberFieldType
 // Docs reference what characters are valid in PhoneNumberFieldType.getDocsDescription

@@ -60,6 +60,20 @@
           :disabled="importInProgress"
           @changed="reset()"
           @header="onHeader($event)"
+          @data="onData($event)"
+          @getData="onGetData($event)"
+        />
+        <TableImporterPreview
+          v-if="previewData.length > 0"
+          :fields="fileFields"
+          :rows="previewFileData"
+          :title="$t('importFileModal.filePreview')"
+        />
+        <TableImporterPreview
+          v-if="previewImportData.length > 0 && !isTableCreation"
+          :fields="availableFields"
+          :rows="previewImportData"
+          :title="$t('importFileModal.importPreview')"
         />
         <Error :error="error"></Error>
         <Alert
@@ -165,6 +179,8 @@ import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import TableService from '@baserow/modules/database/services/table'
+import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
+import { uuid } from '@baserow/modules/core/utils/string'
 import _ from 'lodash'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
@@ -173,7 +189,7 @@ import TableForm from './TableForm'
 
 export default {
   name: 'ImportFileModal',
-  components: { TableForm },
+  components: { TableForm, TableImporterPreview },
   mixins: [modal, error, jobProgress],
   props: {
     database: {
@@ -199,6 +215,8 @@ export default {
       showProgressBar: false,
       header: [],
       mapping: {},
+      getData: null,
+      previewData: [],
     }
   },
   computed: {
@@ -223,13 +241,13 @@ export default {
     fieldTypes() {
       return this.$registry.getAll('field')
     },
-    /**
-     * Map beetween the field id and his index in the array.
-     */
-    fieldIndexMap() {
-      return Object.fromEntries(
-        this.writableFields.map((field, index) => [field.id, index])
-      )
+    fileFields() {
+      return this.header.map((header, index) => ({
+        type: 'text',
+        name: header,
+        id: uuid(),
+        order: index,
+      }))
     },
     /**
      * All writable fields.
@@ -240,6 +258,14 @@ export default {
       )
     },
     /**
+     * Map beetween the field id and its index in the array.
+     */
+    fieldIndexMap() {
+      return Object.fromEntries(
+        this.writableFields.map((field, index) => [field.id, index])
+      )
+    },
+    /**
      * All writable fields that can be imported into
      */
     availableFields() {
@@ -247,6 +273,56 @@ export default {
         this.fieldTypes[type].getCanImport()
       )
     },
+    fieldMapping() {
+      return Object.entries(this.mapping)
+        .filter(
+          ([, targetFieldId]) =>
+            !!targetFieldId ||
+            // Check if we have an id from a removed field
+            this.fieldIndexMap[targetFieldId] !== undefined
+        )
+        .map(([importIndex, targetFieldId]) => {
+          return [importIndex, this.fieldIndexMap[targetFieldId]]
+        })
+    },
+    // Template row with default values
+    defaultRow() {
+      return this.writableFields.map((field) =>
+        this.fieldTypes[field.type].getEmptyValue(field)
+      )
+    },
+    previewFileData() {
+      return this.previewData.map((row) => {
+        const newRow = Object.fromEntries(
+          this.fileFields.map((field, index) => [
+            `field_${field.id}`,
+            `${row[index]}`,
+          ])
+        )
+        newRow.id = uuid()
+        return newRow
+      })
+    },
+    previewImportData() {
+      return this.previewData.map((row) => {
+        const newRow = Object.fromEntries(
+          this.fieldMapping.map(([importIndex, fieldIndex]) => {
+            const field = this.writableFields[fieldIndex]
+            return [
+              `field_${field.id}`,
+              this.fieldTypes[field.type].prepareValueForPaste(
+                field,
+                `${row[importIndex]}`,
+                row[importIndex]
+              ),
+            ]
+          })
+        )
+        newRow.id = uuid()
+        return newRow
+      })
+    },
+
     /**
      * Fields that are mapped to a column
      */
@@ -322,8 +398,25 @@ export default {
         this.header = []
         this.importState = null
         this.mapping = {}
+        this.getData = null
+        this.previewData = []
       }
       this.hideError()
+    },
+    onData({ header, previewData }) {
+      this.header = header
+      this.previewData = previewData
+      this.mapping = Object.fromEntries(
+        header.map((name, index) => {
+          const foundField = this.availableFields.find(
+            ({ name: fieldName }) => fieldName === name
+          )
+          return [index, foundField ? foundField.id : 0]
+        })
+      )
+    },
+    onGetData(getData) {
+      this.getData = getData
     },
     onHeader(header) {
       this.header = header
@@ -347,16 +440,13 @@ export default {
       let data = null
       const values = { ...formValues }
 
-      if (
-        Object.prototype.hasOwnProperty.call(values, 'getData') &&
-        typeof values.getData === 'function'
-      ) {
+      if (typeof this.getData === 'function') {
         try {
           this.showProgressBar = true
           this.importState = 'preparingData'
           await this.$ensureRender()
 
-          data = await values.getData()
+          data = await this.getData()
 
           if (!this.isTableCreation) {
             const fieldMapping = Object.entries(this.mapping)
@@ -380,7 +470,11 @@ export default {
               (field) => (value) =>
                 this.fieldTypes[field.type].prepareValueForUpdate(
                   field,
-                  this.fieldTypes[field.type].prepareValueForPaste(field, value)
+                  this.fieldTypes[field.type].prepareValueForPaste(
+                    field,
+                    `${value}`,
+                    value
+                  )
                 )
             )
 
@@ -406,8 +500,6 @@ export default {
             // Add the header in case of table creation
             data = [this.header, ...data]
           }
-
-          delete values.header
         } catch (error) {
           this.reset()
           this.handleError(error, 'application')
