@@ -9,13 +9,13 @@ For example:
 
 ## Unreleased
 * Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
+* Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly [#1194](https://gitlab.com/bramw/baserow/-/issues/1194).
 
 ### New Features
 
 ### Bug Fixes
 
 * Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.
-* Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly.
 
 ### Refactors
 
