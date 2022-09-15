@@ -15,6 +15,7 @@ For example:
 ### Bug Fixes
 
 * Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.
+* Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly.
 
 ### Refactors
 
