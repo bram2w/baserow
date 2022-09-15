@@ -302,8 +302,13 @@ class BaserowFunctionCall(BaserowExpression[A]):
         expression_type: A,
         requires_aggregate_wrapper=False,
     ):
-        many = any(a.many for a in args)
-        aggregate = any(a.aggregate for a in args)
+        if function_def.aggregate:
+            many = False
+            aggregate = True
+        else:
+            many = any(a.many for a in args)
+            aggregate = any(a.aggregate for a in args)
+
         super().__init__(
             expression_type,
             many=many,

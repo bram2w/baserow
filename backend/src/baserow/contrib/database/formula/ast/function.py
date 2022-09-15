@@ -214,10 +214,7 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
     ) -> BaserowExpression[BaserowFormulaType]:
         arg = args[0]
 
-        expr = self.type_function(func_call, arg)
-        if self.aggregate:
-            expr.many = False
-        return expr
+        return self.type_function(func_call, arg)
 
     def to_django_expression_given_args(
         self,
@@ -370,10 +367,7 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
         args: List[BaserowExpression[BaserowFormulaValidType]],
         func_call: BaserowFunctionCall[UnTyped],
     ) -> BaserowExpression[BaserowFormulaType]:
-        expr = self.type_function(func_call, args[0], args[1])
-        if self.aggregate:
-            expr.many = False
-        return expr
+        return self.type_function(func_call, args[0], args[1])
 
     def to_django_expression_given_args(
         self,

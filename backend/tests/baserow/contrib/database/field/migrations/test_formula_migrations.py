@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.db import connection
 from django.db.models import Q
 
 import pytest
@@ -87,12 +88,14 @@ def test_migration_including_field_which_should_recalculate_its_attributes(
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -126,12 +129,14 @@ def test_migration_excluding_field_which_shouldnt_recalculate_its_attributes(
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -165,12 +170,14 @@ def test_migration_excluding_field_which_shouldnt_recalculate_its_attributes_fro
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -218,6 +225,7 @@ def test_migration_including_field_for_dep_recalc_recalcs_its_deps(
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
@@ -226,6 +234,7 @@ def test_migration_including_field_for_dep_recalc_recalcs_its_deps(
                         id=formula_with_dependency_to_be_recalced.id
                     ),
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -268,6 +277,7 @@ def test_downgrade_recalculates_attributes_and_graph_but_not_cell_values(
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -296,18 +306,21 @@ def test_recalculate_formulas_according_to_version_needing_full_refresh(
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=ALL_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=3,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         ),
@@ -324,18 +337,21 @@ def test_recalculate_formulas_according_to_version_needing_full_refresh(
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=3,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=ALL_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         ),
@@ -353,12 +369,14 @@ def test_recalculate_formulas_according_to_version_needing_full_refresh(
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         ),
@@ -399,12 +417,14 @@ def test_recalculate_formula_that_is_broken_marks_it_as_invalid(
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=ALL_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -451,12 +471,14 @@ def test_formula_migration_failing_when_refreshing_cell_values_marks_as_invalid(
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=ALL_FORMULAS,
                     recalculate_cell_values_for=ALL_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -534,12 +556,14 @@ def test_recalculate_formulas_according_to_version(
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
             ]
         )
@@ -578,7 +602,8 @@ def test_recalculate_formulas_according_to_version(
 def test_complex_set_of_migrations_with_different_filters(
     data_fixture,
 ):
-    table = data_fixture.create_database_table()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user)
     previous_internal_formula_value = "'some old formula'"
 
     data_fixture.create_rows_in_table(table, [[], []])
@@ -600,6 +625,7 @@ def test_complex_set_of_migrations_with_different_filters(
 
     previous_text_formula = "'old'"
     previous_bool_formula = "false"
+    previous_num_formula = "2"
     formula_of_type_text_to_be_refreshed = data_fixture.create_formula_field(
         table=table,
         formula=f"'a'",
@@ -612,8 +638,21 @@ def test_complex_set_of_migrations_with_different_filters(
         internal_formula=previous_bool_formula,
         calculate_cell_values=False,
     )
+    formula_of_type_number_to_recreate_col = data_fixture.create_formula_field(
+        table=table,
+        formula=f"1",
+        internal_formula=previous_num_formula,
+        calculate_cell_values=False,
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"ALTER TABLE {table.get_database_table_name()} ALTER COLUMN "
+            f"{formula_of_type_number_to_recreate_col.db_column} TYPE text USING "
+            f"{formula_of_type_number_to_recreate_col.db_column}::text;"
+        )
     assert_all_rows_are_none(data_fixture, formula_of_type_text_to_be_refreshed)
     assert_all_rows_are_none(data_fixture, formula_of_type_bool_to_only_recalc_attrs)
+    assert_all_rows_are_none(data_fixture, formula_of_type_number_to_recreate_col)
 
     FieldDependency.objects.all().delete()
 
@@ -626,6 +665,7 @@ def test_complex_set_of_migrations_with_different_filters(
                     recalculate_formula_attributes_for=ALL_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=2,
@@ -634,18 +674,21 @@ def test_complex_set_of_migrations_with_different_filters(
                         id=formula_with_dependency_to_be_recalced.id
                     ),
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=3,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=NO_FORMULAS,
                     recalculate_cell_values_for=Q(formula_type="text"),
+                    force_recreate_formula_columns_for=NO_FORMULAS,
                 ),
                 FormulaMigration(
                     version=4,
                     recalculate_formula_attributes_for=NO_FORMULAS,
                     recalculate_field_dependencies_for=Q(formula_type="bool"),
                     recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=Q(formula_type="number"),
                 ),
             ]
         )
@@ -669,3 +712,86 @@ def test_complex_set_of_migrations_with_different_filters(
         formula_of_type_bool_to_only_recalc_attrs.internal_formula
         != previous_bool_formula
     )
+
+    formula_of_type_number_to_recreate_col.refresh_from_db()
+    assert_all_rows_are_not_none(data_fixture, formula_of_type_number_to_recreate_col)
+    assert (
+        formula_of_type_number_to_recreate_col.internal_formula != previous_num_formula
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"select data_type from "
+            f"information_schema.columns where table_name = '"
+            f"{table.get_database_table_name()}' and column_name = '"
+            f"{formula_of_type_number_to_recreate_col.db_column}'"
+        )
+        assert [r[0] for r in cursor.fetchall()] == ["numeric"]
+
+
+@pytest.mark.django_db
+def test_can_force_recalculate_for_formulas_with_invalid_syntax_or_of_error_type(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user)
+
+    data_fixture.create_rows_in_table(table, [[], []])
+
+    data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('invalid')",
+        formula_type="error",
+        error="Missing field",
+        calculate_cell_values=False,
+    )
+    data_fixture.create_formula_field(
+        table=table,
+        formula=f"invalid syntax",
+        formula_type="error",
+        error="Missing field",
+        calculate_cell_values=False,
+        setup_dependencies=False,
+    )
+    previous_num_formula = "2"
+    formula_of_type_number_to_recreate_col = data_fixture.create_formula_field(
+        table=table,
+        formula=f"1",
+        internal_formula=previous_num_formula,
+        calculate_cell_values=False,
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"ALTER TABLE {table.get_database_table_name()} ALTER COLUMN "
+            f"{formula_of_type_number_to_recreate_col.db_column} TYPE text USING "
+            f"{formula_of_type_number_to_recreate_col.db_column}::text;"
+        )
+    assert_all_rows_are_none(data_fixture, formula_of_type_number_to_recreate_col)
+
+    FormulaField.objects.update(version=0)
+    FormulaMigrationHandler.migrate_formulas(
+        FormulaMigrations(
+            [
+                FormulaMigration(
+                    version=1,
+                    recalculate_formula_attributes_for=NO_FORMULAS,
+                    recalculate_field_dependencies_for=Q(formula_type="bool"),
+                    recalculate_cell_values_for=NO_FORMULAS,
+                    force_recreate_formula_columns_for=Q(formula_type="number"),
+                ),
+            ]
+        )
+    )
+
+    formula_of_type_number_to_recreate_col.refresh_from_db()
+    assert_all_rows_are_not_none(data_fixture, formula_of_type_number_to_recreate_col)
+    assert (
+        formula_of_type_number_to_recreate_col.internal_formula != previous_num_formula
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"select data_type from "
+            f"information_schema.columns where table_name = '"
+            f"{table.get_database_table_name()}' and column_name = '"
+            f"{formula_of_type_number_to_recreate_col.db_column}'"
+        )
+        assert [r[0] for r in cursor.fetchall()] == ["numeric"]

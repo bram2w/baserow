@@ -64,6 +64,7 @@ For example:
 * Users can copy/paste images into a file field. [#367](https://gitlab.com/bramw/baserow/-/issues/367)
 * Fixed error when sharing a view publicly with sorts more than one multi-select field. [#1082](https://gitlab.com/bramw/baserow/-/issues/1082)
 * Fixed crash in gallery view with searching. [#1130](https://gitlab.com/bramw/baserow/-/issues/1130)
+* Formulas which referenced other aggregate formulas now will work correctly. [#1081](https://gitlab.com/bramw/baserow/-/issues/1081)
 
 ### Breaking Changes
 
