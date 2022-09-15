@@ -54,6 +54,9 @@ def test_user_file_deconstruct_name():
         UserFile.deconstruct_name("_something.jpg")
 
     with pytest.raises(InvalidUserFileNameError):
+        UserFile.deconstruct_name("something_.jpg")
+
+    with pytest.raises(InvalidUserFileNameError):
         UserFile.deconstruct_name("something.jpg")
 
     with pytest.raises(InvalidUserFileNameError):
