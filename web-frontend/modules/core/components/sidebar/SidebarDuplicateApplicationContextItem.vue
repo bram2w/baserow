@@ -4,27 +4,27 @@
       'context__menu-item--loading': duplicating,
       disabled: disabled || duplicating,
     }"
-    @click="duplicateTable()"
+    @click="duplicateApplication()"
   >
     <i class="context__menu-icon fas fa-fw fa-copy"></i>
-    {{ $t('action.duplicate') }}
+    {{
+      $t('sidebarApplication.duplicate', {
+        type: application._.type.name.toLowerCase(),
+      })
+    }}
   </a>
 </template>
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import TableService from '@baserow/modules/database/services/table'
+import ApplicationService from '@baserow/modules/core/services/application'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 
 export default {
-  name: 'SidebarDuplicateTableContextItem',
+  name: 'SidebarDuplicateApplicationContextItem',
   mixins: [jobProgress],
   props: {
-    database: {
-      type: Object,
-      required: true,
-    },
-    table: {
+    application: {
       type: Object,
       required: true,
     },
@@ -47,17 +47,19 @@ export default {
         { root: true }
       )
     },
+    // eslint-disable-next-line require-await
     async onJobFailed() {
       await this.$store.dispatch('job/forceUpdate', {
         job: this.job,
         data: this.job,
       })
+
       this.duplicating = false
     },
     async onJobPollingError(error) {
       await this.$store.dispatch('job/forceDelete', this.job)
       this.duplicating = false
-      notifyIf(error, 'table')
+      notifyIf(error, 'application')
     },
     async onJobUpdated() {
       await this.$store.dispatch('job/forceUpdate', {
@@ -65,6 +67,7 @@ export default {
         data: this.job,
       })
     },
+    // eslint-disable-next-line require-await
     async onJobDone() {
       await this.$store.dispatch('job/forceUpdate', {
         job: this.job,
@@ -72,21 +75,21 @@ export default {
       })
       this.duplicating = false
     },
-    async duplicateTable() {
+    async duplicateApplication() {
       if (this.duplicating || this.disabled) {
         return
       }
 
       this.duplicating = true
       try {
-        const { data: job } = await TableService(this.$client).asyncDuplicate(
-          this.table.id
-        )
+        const { data: job } = await ApplicationService(
+          this.$client
+        ).asyncDuplicate(this.application.id)
         this.startJobPoller(job)
         this.$store.dispatch('job/forceCreate', job)
       } catch (error) {
         this.duplicating = false
-        notifyIf(error, 'table')
+        notifyIf(error, 'application')
       }
       this.$emit('click')
     },

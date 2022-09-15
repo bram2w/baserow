@@ -847,25 +847,32 @@ class CoreHandler:
         group = application.group
         group.has_user(user, raise_error=True)
 
-        progress = ChildProgressBuilder.build(progress_builder, child_total=2)
+        start_progress, export_progress, import_progress = 10, 30, 60
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+        progress.increment(by=start_progress)
 
         # export the application
         specific_application = application.specific
         application_type = application_type_registry.get_by_model(specific_application)
         serialized = application_type.export_serialized(specific_application)
-        progress.increment()
+        progress.increment(by=export_progress)
 
         # Set a new unique name for the new application
         serialized["name"] = self.find_unused_application_name(
             group.id, serialized["name"]
         )
+        serialized["order"] = application_type.model_class.get_last_order(group)
 
         # import it back as a new application
         id_mapping: Dict[str, Any] = {}
         new_application_clone = application_type.import_serialized(
-            group, serialized, id_mapping
+            group,
+            serialized,
+            id_mapping,
+            progress_builder=progress.create_child_builder(
+                represents_progress=import_progress
+            ),
         )
-        progress.increment()
 
         # broadcast the application_created signal
         application_created.send(

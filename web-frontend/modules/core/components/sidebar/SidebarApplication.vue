@@ -38,27 +38,18 @@
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
               {{
-                $t('sidebarApplication.renameApplication', {
+                $t('sidebarApplication.rename', {
                   type: application._.type.name.toLowerCase(),
                 })
               }}
             </a>
           </li>
           <li>
-            <a
-              :class="{
-                'context__menu-item--loading': duplicateLoading,
-                disabled: duplicateLoading || deleteLoading,
-              }"
-              @click="duplicateApplication()"
-            >
-              <i class="context__menu-icon fas fa-fw fa-copy"></i>
-              {{
-                $t('sidebarApplication.duplicateApplication', {
-                  type: application._.type.name.toLowerCase(),
-                })
-              }}
-            </a>
+            <SidebarDuplicateApplicationContextItem
+              :application="application"
+              :disabled="deleting"
+              @click="$refs.context.hide()"
+            ></SidebarDuplicateApplicationContextItem>
           </li>
           <li>
             <a @click="openSnapshots">
@@ -78,12 +69,12 @@
           </li>
           <li>
             <a
-              :class="{ 'context__menu-item--loading': deleteLoading }"
+              :class="{ 'context__menu-item--loading': deleting }"
               @click="deleteApplication()"
             >
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
               {{
-                $t('sidebarApplication.deleteApplication', {
+                $t('sidebarApplication.delete', {
                   type: application._.type.name.toLowerCase(),
                 })
               }}
@@ -103,17 +94,18 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import ApplicationService from '@baserow/modules/core/services/application'
-import jobProgress from '@baserow/modules/core/mixins/jobProgress'
+import SidebarDuplicateApplicationContextItem from '@baserow/modules/core/components/sidebar/SidebarDuplicateApplicationContextItem.vue'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import SnapshotsModal from '@baserow/modules/core/components/snapshots/SnapshotsModal'
 
 export default {
   name: 'SidebarApplication',
-  components: { TrashModal, SnapshotsModal },
-  mixins: [jobProgress],
+  components: {
+    TrashModal,
+    SidebarDuplicateApplicationContextItem,
+    SnapshotsModal,
+  },
   props: {
     application: {
       type: Object,
@@ -126,17 +118,8 @@ export default {
   },
   data() {
     return {
-      deleteLoading: false,
-      duplicateLoading: false,
+      deleting: false,
     }
-  },
-  computed: {
-    ...mapGetters({
-      selectedTable: 'table/getSelected',
-    }),
-  },
-  beforeDestroy() {
-    this.stopPollIfRunning()
   },
   methods: {
     setLoading(application, value) {
@@ -166,92 +149,12 @@ export default {
 
       this.setLoading(application, false)
     },
-    showError(title, message) {
-      this.$store.dispatch(
-        'notification/error',
-        { title, message },
-        { root: true }
-      )
-    },
-    // eslint-disable-next-line require-await
-    async onJobFailed() {
-      this.duplicateLoading = false
-      this.$refs.context.hide()
-      this.showError(
-        this.$t('clientHandler.notCompletedTitle'),
-        this.$t('clientHandler.notCompletedDescription')
-      )
-    },
-    // eslint-disable-next-line require-await
-    async onJobPollingError(error) {
-      this.duplicateLoading = false
-      this.$refs.context.hide()
-      notifyIf(error, 'application')
-    },
-    async onJobDone() {
-      const newApplicationId = this.job.duplicated_application.id
-      let newApplication
-      try {
-        newApplication = await this.$store.dispatch('application/fetch', {
-          applicationId: newApplicationId,
-        })
-      } catch (error) {
-        notifyIf(error, 'application')
-      } finally {
-        this.duplicateLoading = false
-        this.$refs.context.hide()
-      }
-
-      // find the matching table in the duplicated application if any
-      // otherwise just select the first table and show it
-      if (newApplication) {
-        if (newApplication.tables.length) {
-          let selectTable = newApplication.tables[0]
-          const originalSelectedTable = this.selectedTable
-          if (originalSelectedTable) {
-            for (const table of newApplication.tables) {
-              if (table.name === originalSelectedTable.name) {
-                selectTable = table
-                break
-              }
-            }
-          }
-          this.$nuxt.$router.push({
-            name: 'database-table',
-            params: {
-              databaseId: newApplication.id,
-              tableId: selectTable.id,
-            },
-          })
-        } else {
-          this.$emit('selected', newApplication)
-        }
-      }
-    },
-    async duplicateApplication() {
-      if (this.duplicateLoading || this.deleteLoading) {
-        return
-      }
-
-      const application = this.application
-      this.duplicateLoading = true
-
-      try {
-        const { data: job } = await ApplicationService(
-          this.$client
-        ).asyncDuplicate(application.id)
-        this.startJobPoller(job)
-      } catch (error) {
-        this.duplicateLoading = false
-        notifyIf(error, 'application')
-      }
-    },
     async deleteApplication() {
-      if (this.deleteLoading) {
+      if (this.deleting) {
         return
       }
 
-      this.deleteLoading = true
+      this.deleting = true
 
       try {
         await this.$store.dispatch('application/delete', this.application)
@@ -263,7 +166,7 @@ export default {
         notifyIf(error, 'application')
       }
 
-      this.deleteLoading = false
+      this.deleting = false
     },
     showApplicationTrashModal() {
       this.$refs.context.hide()

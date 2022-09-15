@@ -10,6 +10,10 @@
   }
 }
 
+.tree:not(:last-child) {
+  margin-bottom: 3px;
+}
+
 .tree__item {
   @extend %first-last-no-margin;
 
@@ -39,6 +43,11 @@
 
   padding: 0 6px;
   border-radius: 3px;
+
+  &.tree__action--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   &:not(.tree__action--disabled):hover {
     background-color: $color-neutral-100;
@@ -77,6 +86,13 @@
   .tree__action--disabled &:hover {
     cursor: inherit;
   }
+}
+
+.tree__progress_percentage {
+  display: inline-block;
+  position: absolute;
+  right: 35px;
+  color: $color-primary-500;
 }
 
 .tree__icon {
@@ -135,6 +151,14 @@
   }
 }
 
+.tree__subs:not(:last-of-type) {
+  padding: 0;
+
+  & .tree__sub:last-child::before {
+    height: 28px;
+  }
+}
+
 .tree__sub-link {
   @extend %tree_sub-size;
   @extend %ellipsis;
@@ -151,6 +175,23 @@
   .active > & {
     font-weight: 600;
     color: $color-primary-600;
+  }
+}
+
+.tree__sub-link--loading {
+  @include loading(14px);
+  @include absolute(9px, 9px, auto, auto);
+}
+
+.tree__sub-link--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+
+  &:hover {
+    color: $color-primary-900;
+    opacity: 0.6;
+    text-decoration: none;
+    cursor: not-allowed;
   }
 }
 

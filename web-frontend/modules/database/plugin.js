@@ -1,4 +1,5 @@
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { DuplicateTableJobType } from '@baserow/modules/database/jobTypes'
 import {
   GridViewType,
   GalleryViewType,
@@ -225,6 +226,7 @@ export default (context) => {
 
   app.$registry.register('plugin', new DatabasePlugin(context))
   app.$registry.register('application', new DatabaseApplicationType(context))
+  app.$registry.register('job', new DuplicateTableJobType(context))
   app.$registry.register('view', new GridViewType(context))
   app.$registry.register('view', new GalleryViewType(context))
   app.$registry.register('view', new FormViewType(context))

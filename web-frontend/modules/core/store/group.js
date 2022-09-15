@@ -226,6 +226,7 @@ export const actions = {
    * example a Table is open that has been deleted because the group has been deleted.
    */
   forceDelete({ commit, dispatch, rootGetters }, group) {
+    dispatch('job/deleteForGroup', group, { root: true })
     const applications = rootGetters['application/getAllOfGroup'](group)
     applications.forEach((application) => {
       return dispatch('application/forceDelete', application, { root: true })

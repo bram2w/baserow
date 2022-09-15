@@ -71,6 +71,10 @@
     "sidebarItem": {
         "exportTable": "Export table"
     },
+    "duplicateTableJobType": {
+        "duplicating": "Duplicating",
+        "duplicatedTitle": "Table duplicated"
+    },
     "apiToken": {
         "create": "create",
         "read": "read",

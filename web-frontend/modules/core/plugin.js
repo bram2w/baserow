@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
 import { Registry } from '@baserow/modules/core/registry'
+import { DuplicateApplicationJobType } from '@baserow/modules/core/jobTypes'
 
 import {
   AccountSettingsType,
@@ -17,6 +18,7 @@ import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
 import authStore from '@baserow/modules/core/store/auth'
 import groupStore from '@baserow/modules/core/store/group'
+import jobStore from '@baserow/modules/core/store/job'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
@@ -46,6 +48,7 @@ export default (context, inject) => {
   const registry = new Registry()
   registry.registerNamespace('plugin')
   registry.registerNamespace('application')
+  registry.registerNamespace('job')
   registry.registerNamespace('view')
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
@@ -64,8 +67,11 @@ export default (context, inject) => {
   store.registerModule('settings', settingsStore)
   store.registerModule('application', applicationStore)
   store.registerModule('auth', authStore)
+  store.registerModule('job', jobStore)
   store.registerModule('group', groupStore)
   store.registerModule('notification', notificationStore)
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
+
+  registry.register('job', new DuplicateApplicationJobType(context))
 }

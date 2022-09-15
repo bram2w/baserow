@@ -47,10 +47,7 @@
             :database="database"
             :table="table"
             :disabled="deleteLoading"
-            @table-duplicated="
-              $refs.context.hide()
-              selectTable(database, $event.table)
-            "
+            @click="$refs.context.hide()"
           ></SidebarDuplicateTableContextItem>
         </li>
         <li>
