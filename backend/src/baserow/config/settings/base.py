@@ -1,7 +1,9 @@
 import datetime
 import importlib
 import os
+import re
 from decimal import Decimal
+from ipaddress import ip_network
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -559,11 +561,40 @@ DONT_UPDATE_FORMULAS_AFTER_MIGRATION = bool(
     os.getenv("DONT_UPDATE_FORMULAS_AFTER_MIGRATION", "")
 )
 
-WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = 8
-WEBHOOKS_MAX_RETRIES_PER_CALL = 8
-WEBHOOKS_MAX_PER_TABLE = 20
-WEBHOOKS_MAX_CALL_LOG_ENTRIES = 10
-WEBHOOKS_REQUEST_TIMEOUT_SECONDS = 5
+BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = int(
+    os.getenv("BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES", 8)
+)
+BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL = int(
+    os.getenv("BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL", 8)
+)
+BASEROW_WEBHOOKS_MAX_PER_TABLE = int(os.getenv("BASEROW_WEBHOOKS_MAX_PER_TABLE", 20))
+BASEROW_WEBHOOKS_MAX_CALL_LOG_ENTRIES = int(
+    os.getenv("BASEROW_WEBHOOKS_MAX_CALL_LOG_ENTRIES", 10)
+)
+BASEROW_WEBHOOKS_REQUEST_TIMEOUT_SECONDS = int(
+    os.getenv("BASEROW_WEBHOOKS_REQUEST_TIMEOUT_SECONDS", 5)
+)
+BASEROW_WEBHOOKS_ALLOW_PRIVATE_ADDRESS = bool(
+    os.getenv("BASEROW_WEBHOOKS_ALLOW_PRIVATE_ADDRESS", False)
+)
+BASEROW_WEBHOOKS_IP_BLACKLIST = [
+    ip_network(ip.strip())
+    for ip in os.getenv("BASEROW_WEBHOOKS_IP_BLACKLIST", "").split(",")
+    if ip.strip() != ""
+]
+BASEROW_WEBHOOKS_IP_WHITELIST = [
+    ip_network(ip.strip())
+    for ip in os.getenv("BASEROW_WEBHOOKS_IP_WHITELIST", "").split(",")
+    if ip.strip() != ""
+]
+BASEROW_WEBHOOKS_URL_REGEX_BLACKLIST = [
+    re.compile(url_regex.strip())
+    for url_regex in os.getenv("BASEROW_WEBHOOKS_URL_REGEX_BLACKLIST", "").split(",")
+    if url_regex.strip() != ""
+]
+BASEROW_WEBHOOKS_URL_CHECK_TIMEOUT_SECS = int(
+    os.getenv("BASEROW_WEBHOOKS_URL_CHECK_TIMEOUT_SECS", "10")
+)
 
 # ======== WARNING ========
 # Please read and understand everything at:

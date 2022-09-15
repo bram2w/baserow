@@ -1,18 +1,23 @@
+from unittest.mock import patch
+
 from django.db import transaction
 from django.test import override_settings
 
+import httpretty
 import pytest
 import responses
 from celery.exceptions import Retry
 
 from baserow.contrib.database.webhooks.models import TableWebhookCall
 from baserow.contrib.database.webhooks.tasks import call_webhook
+from baserow.test_utils.helpers import stub_getaddrinfo
 
 
 @pytest.mark.django_db(transaction=True)
 @responses.activate
 @override_settings(
-    WEBHOOKS_MAX_RETRIES_PER_CALL=1, WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES=1
+    BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL=1,
+    BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES=1,
 )
 def test_call_webhook(data_fixture):
     webhook = data_fixture.create_table_webhook()
@@ -137,3 +142,68 @@ def test_call_webhook(data_fixture):
     assert "{}" in created_call.response
     assert created_call.response_status == 400
     assert created_call.error == ""
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(
+    BASEROW_WEBHOOKS_ALLOW_PRIVATE_ADDRESS=False,
+    BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL=0,
+    BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES=0,
+)
+@httpretty.activate(verbose=True, allow_net_connect=False)
+@patch("socket.getaddrinfo", wraps=stub_getaddrinfo)
+def test_cant_call_webhook_to_localhost_when_private_addresses_not_allowed(
+    patched_getaddrinfo,
+    data_fixture,
+):
+    httpretty.register_uri(httpretty.POST, "http://127.0.0.1", status=200)
+    webhook = data_fixture.create_table_webhook()
+
+    assert webhook.active
+    call_webhook.run(
+        webhook_id=webhook.id,
+        event_id="00000000-0000-0000-0000-000000000000",
+        event_type="rows.created",
+        method="POST",
+        url="http://127.0.0.1",
+        headers={"Baserow-header-1": "Value 1"},
+        payload={"type": "rows.created"},
+    )
+    call = TableWebhookCall.objects.get(webhook=webhook)
+    webhook.refresh_from_db()
+    assert call.error == "UnacceptableAddressException: ('127.0.0.1', 80)"
+    assert not webhook.active
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+@override_settings(
+    BASEROW_WEBHOOKS_ALLOW_PRIVATE_ADDRESS=True,
+    BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL=0,
+    BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES=0,
+)
+def test_can_call_webhook_to_localhost_when_private_addresses_allowed(
+    data_fixture,
+):
+    responses.add(
+        responses.POST,
+        "http://127.0.0.1",
+        status=201,
+    )
+    webhook = data_fixture.create_table_webhook()
+
+    assert webhook.active
+    call_webhook.run(
+        webhook_id=webhook.id,
+        event_id="00000000-0000-0000-0000-000000000000",
+        event_type="rows.created",
+        method="POST",
+        url="http://127.0.0.1",
+        headers={"Baserow-header-1": "Value 1"},
+        payload={"type": "rows.created"},
+    )
+    call = TableWebhookCall.objects.get(webhook=webhook)
+    webhook.refresh_from_db()
+    assert not call.error
+    assert call.response_status == 201
+    assert webhook.active

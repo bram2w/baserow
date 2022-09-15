@@ -5,8 +5,8 @@ from .base import *  # noqa: F403, F401
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_hardcoded_secret_key")  # noqa: F405
 
 DEBUG = True
-WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = 4
-WEBHOOKS_MAX_RETRIES_PER_CALL = 4
+BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = 4
+BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL = 4
 
 INSTALLED_APPS += ["django_extensions", "silk"]  # noqa: F405
 

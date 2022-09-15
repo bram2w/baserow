@@ -171,6 +171,10 @@
         "request": "Request",
         "response": "Response",
         "successfullyUpdated": "Webhook successfully updated.",
+        "form": {
+            "invalidURLTitle": "Invalid URL.",
+            "invalidURLDescription": "The webhook URL is invalid, inaccessible or prohibited."
+        },
         "status": {
             "noStatus": "NO STATUS",
             "statusOK": "OK",

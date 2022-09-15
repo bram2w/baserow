@@ -16,9 +16,18 @@ export default {
      * Can be called after catching an error. If an handler is available the error
      * data is populated with the correct error message.
      */
-    handleError(error, name, specificErrorMap = null) {
+    handleError(
+      error,
+      name,
+      specificErrorMap = null,
+      requestBodyErrorMap = null
+    ) {
       if (error.handler) {
-        const message = error.handler.getMessage(name, specificErrorMap)
+        const message = error.handler.getMessage(
+          name,
+          specificErrorMap,
+          requestBodyErrorMap
+        )
         this.showError(message)
         error.handler.handled()
       } else {
