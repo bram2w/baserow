@@ -112,10 +112,6 @@
     >
       {{ error }}
     </Alert>
-    <TableImporterPreview
-      v-if="error === '' && Object.keys(preview).length !== 0"
-      :preview="preview"
-    ></TableImporterPreview>
   </div>
 </template>
 
@@ -125,11 +121,12 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import CharsetDropdown from '@baserow/modules/core/components/helpers/CharsetDropdown'
 import importer from '@baserow/modules/database/mixins/importer'
-import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 
 export default {
   name: 'TableCSVImporter',
-  components: { TableImporterPreview, CharsetDropdown },
+  components: {
+    CharsetDropdown,
+  },
   mixins: [form, importer],
   data() {
     return {
@@ -142,9 +139,6 @@ export default {
     }
   },
   validations: {
-    values: {
-      getData: { required },
-    },
     filename: { required },
   },
   computed: {
@@ -248,42 +242,42 @@ export default {
       }
 
       await this.$ensureRender()
-      // Parse only the first 4 rows to show a preview. (header + 3 rows)
-      this.$papa.parse(decodedData, {
-        preview: 6,
-        skipEmptyLines: true,
-        delimiter: this.columnSeparator === 'auto' ? '' : this.columnSeparator,
-        complete: (parsedResult) => {
-          if (parsedResult.data.length === 0) {
-            // We need at least a single entry otherwise the user has probably chosen
-            // a wrong file.
-            this.handleImporterError(this.$t('tableCSVImporter.emptyCSV'))
-          } else {
-            // Store the data to reload the preview without reparsing.
-            this.parsedData = [...parsedResult.data]
-            this.reloadPreview()
-            this.state = null
-            this.values.getData = getData
-          }
-        },
-        error(error) {
-          // Papa parse has resulted in an error which we need to display to the user.
-          this.handleImporterError(error.errors[0].message)
-        },
-      })
+
+      try {
+        // Parse only the first 4 rows to show a preview. (header + 3 rows)
+        const parsedResult = await this.$papa.parsePromise(decodedData, {
+          preview: 6,
+          skipEmptyLines: true,
+          delimiter:
+            this.columnSeparator === 'auto' ? '' : this.columnSeparator,
+        })
+        if (parsedResult.data.length === 0) {
+          // We need at least a single entry otherwise the user has probably chosen
+          // a wrong file.
+          this.handleImporterError(this.$t('tableCSVImporter.emptyCSV'))
+        } else {
+          // Store the data to reload the preview without reparsing.
+          this.parsedData = [...parsedResult.data]
+          this.reloadPreview()
+          this.state = null
+          this.$emit('getData', getData)
+        }
+      } catch (error) {
+        // Papa parse has resulted in an error which we need to display to the user.
+        this.handleImporterError(error.errors[0].message)
+      }
     },
     /**
      * Reload the preview without re-parsing the raw data.
      */
     reloadPreview() {
-      if (this.firstRowHeader) {
-        const [header, ...data] = this.parsedData
-        this.values.header = this.prepareHeader(header, data)
-        this.preview = this.getPreview(this.values.header, data)
-      } else {
-        this.values.header = this.prepareHeader([], this.parsedData)
-        this.preview = this.getPreview(this.values.header, this.parsedData)
-      }
+      const [rawHeader, ...rawData] = this.firstRowHeader
+        ? this.parsedData
+        : [[], ...this.parsedData]
+
+      const header = this.prepareHeader(rawHeader, rawData)
+      const previewData = this.getPreview(header, rawData)
+      this.$emit('data', { header, previewData })
     },
   },
 }

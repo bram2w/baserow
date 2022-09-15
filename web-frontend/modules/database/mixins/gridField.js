@@ -188,7 +188,7 @@ export default {
               .prepareValueForPaste(
                 this.field,
                 data[0][0],
-                jsonData !== null ? jsonData[0][0] : null
+                jsonData !== null ? jsonData[0][0] : undefined
               )
             const oldValue = this.value
 

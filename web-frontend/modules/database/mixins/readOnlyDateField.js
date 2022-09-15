@@ -10,16 +10,15 @@ export default {
       return field.timezone || 'UTC'
     },
     getDate(field, value) {
-      if (value === null) {
+      if (value === null || value === undefined) {
         return ''
       }
-
       const existing = moment.tz(value || undefined, this.getTimezone(field))
       const dateFormat = getDateMomentFormat(field.date_format)
       return existing.format(dateFormat)
     },
     getTime(field, value) {
-      if (value === null) {
+      if (value === null || value === undefined) {
         return ''
       }
 

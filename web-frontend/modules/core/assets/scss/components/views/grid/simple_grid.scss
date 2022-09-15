@@ -1,0 +1,79 @@
+.simple-grid__head {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.simple-grid__field {
+  @extend %ellipsis;
+
+  flex: 0 0 150px;
+  background-color: $color-neutral-100;
+  border-bottom: 1px solid $color-neutral-200;
+  border-right: 1px solid $color-neutral-200;
+  padding: 0 10px;
+
+  @include fixed-height(33px, 13px);
+
+  &.simple-grid__field--first {
+    flex-basis: 40px;
+    border-right: none;
+  }
+}
+
+.simple-grid__field-icon {
+  margin-right: 6px;
+}
+
+.simple-grid__body {
+  // Nothing
+}
+
+.simple-grid__row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.simple-grid__cell {
+  position: relative;
+  flex: 0 0 150px;
+  background-color: $white;
+  height: 33px;
+  border-bottom: 1px solid $color-neutral-200;
+  border-right: 1px solid $color-neutral-200;
+
+  &.simple-grid__cell--first {
+    @extend %ellipsis;
+
+    flex-basis: 40px;
+    line-height: 32px;
+    padding-left: 8px;
+  }
+}
+
+.simple-grid__row--hover {
+  cursor: pointer;
+
+  .simple-grid__cell,
+  .grid-view__cell {
+    background-color: $color-primary-100;
+  }
+}
+
+.simple-grid__row--selected {
+  cursor: initial;
+
+  .simple-grid__cell,
+  .grid-view__cell {
+    background-color: $color-neutral-50;
+  }
+}
+
+.simple-grid__foot {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding: 0 10px;
+  height: 44px;
+  background-color: $color-neutral-50;
+  border-top: solid 1px $color-neutral-200;
+}
