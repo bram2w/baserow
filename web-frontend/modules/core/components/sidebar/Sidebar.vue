@@ -179,6 +179,15 @@
                 :group="selectedGroup"
               ></component>
             </ul>
+            <ul v-if="pendingJobs.length" class="tree">
+              <component
+                :is="getPendingJobComponent(job)"
+                v-for="job in pendingJobs"
+                :key="job.id"
+                :job="job"
+              >
+              </component>
+            </ul>
             <li class="sidebar__new-wrapper">
               <a
                 ref="createApplicationContextLink"
@@ -329,6 +338,13 @@ export default {
         .map((plugin) => plugin.getSidebarMainMenuComponent())
         .filter((component) => component !== null)
     },
+    pendingJobs() {
+      return this.$store.getters['job/getAll'].filter((job) =>
+        this.$registry
+          .get('job', job.type)
+          .isJobPartOfGroup(job, this.selectedGroup)
+      )
+    },
     /**
      * Indicates whether the current user is visiting an admin page.
      */
@@ -357,6 +373,9 @@ export default {
       return this.$registry
         .get('application', application.type)
         .getSidebarComponent()
+    },
+    getPendingJobComponent(job) {
+      return this.$registry.get('job', job.type).getSidebarComponent()
     },
     logoff() {
       this.$store.dispatch('auth/logoff')

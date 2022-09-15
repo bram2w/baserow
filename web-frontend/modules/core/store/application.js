@@ -42,19 +42,23 @@ export const mutations = {
   },
   UPDATE_ITEM(state, { id, values }) {
     const index = state.items.findIndex((item) => item.id === id)
-    Object.assign(state.items[index], state.items[index], values)
+    if (index !== -1) {
+      Object.assign(state.items[index], state.items[index], values)
+    }
   },
   ORDER_ITEMS(state, { group, order }) {
     state.items
       .filter((item) => item.group.id === group.id)
       .forEach((item) => {
         const index = order.findIndex((value) => value === item.id)
-        item.order = index === -1 ? 0 : index + 1
+        item.order = index === -1 ? undefined : index + 1
       })
   },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
-    state.items.splice(index, 1)
+    if (index !== -1) {
+      state.items.splice(index, 1)
+    }
   },
   DELETE_ITEMS_FOR_GROUP(state, groupId) {
     state.items = state.items.filter((app) => app.group.id !== groupId)
@@ -111,9 +115,8 @@ export const actions = {
   /**
    * Fetches one application for the authenticated user.
    */
-  async fetch({ commit, dispatch }, { applicationId }) {
+  async fetch({ commit, dispatch }, applicationId) {
     commit('SET_LOADING', true)
-
     try {
       const { data } = await ApplicationService(this.$client).get(applicationId)
       dispatch('forceCreate', data)
@@ -246,8 +249,9 @@ export const actions = {
   /**
    * Forcefully delete an item in the store without making a call to the server.
    */
-  forceDelete({ commit }, application) {
+  forceDelete({ commit, dispatch }, application) {
     const type = this.$registry.get('application', application.type)
+    dispatch('job/deleteForApplication', application, { root: true })
     type.delete(application, this)
     commit('DELETE_ITEM', application.id)
   },
