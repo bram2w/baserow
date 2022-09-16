@@ -7,9 +7,7 @@ from .exceptions import InvalidUserFileNameError
 from .managers import UserFileQuerySet
 
 User = get_user_model()
-deconstruct_user_file_regex = re.compile(
-    r"^([a-zA-Z0-9]*)_([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)$"
-)
+deconstruct_user_file_regex = re.compile(r"^([a-zA-Z0-9]+)_([a-zA-Z0-9]+)\.(.*)$")
 
 
 class UserFile(models.Model):
@@ -65,6 +63,10 @@ class UserFile(models.Model):
         :rtype: dict
         """
 
+        # Note: we match `name` against `deconstruct_user_file_regex` so that
+        # we can extract the `unique`, `sha256_hash` and `original_extension`.
+        # The `original_extension` may contain unexpected extra characters if it
+        # was present in the user's filename. E.g. "jpg-resized" / "jpeg?w=50&h=50".
         matches = deconstruct_user_file_regex.match(name)
 
         if not matches:

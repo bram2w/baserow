@@ -51,6 +51,12 @@ def test_user_file_name():
 @pytest.mark.django_db
 def test_user_file_deconstruct_name():
     with pytest.raises(InvalidUserFileNameError):
+        UserFile.deconstruct_name("_something.jpg")
+
+    with pytest.raises(InvalidUserFileNameError):
+        UserFile.deconstruct_name("something_.jpg")
+
+    with pytest.raises(InvalidUserFileNameError):
         UserFile.deconstruct_name("something.jpg")
 
     with pytest.raises(InvalidUserFileNameError):
@@ -58,9 +64,6 @@ def test_user_file_deconstruct_name():
 
     with pytest.raises(InvalidUserFileNameError):
         UserFile.deconstruct_name("something_testjpg")
-
-    with pytest.raises(InvalidUserFileNameError):
-        UserFile.deconstruct_name("nothing_test.-")
 
     assert UserFile.deconstruct_name("random_hash.jpg") == {
         "unique": "random",
@@ -76,4 +79,20 @@ def test_user_file_deconstruct_name():
             "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e"
         ),
         "original_extension": "txt",
+    }
+
+
+@pytest.mark.django_db
+def test_user_file_deconstruct_name_with_extension_suffix():
+
+    assert UserFile.deconstruct_name("foo_bar.jpg?a=A&b=B&c=C") == {
+        "unique": "foo",
+        "sha256_hash": "bar",
+        "original_extension": "jpg?a=A&b=B&c=C",
+    }
+
+    assert UserFile.deconstruct_name("foo_bar.jpg-resized") == {
+        "unique": "foo",
+        "sha256_hash": "bar",
+        "original_extension": "jpg-resized",
     }

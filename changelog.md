@@ -10,6 +10,7 @@ For example:
 ## Unreleased
 * Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
 * Added support for placeholders in form headings and fields. [#1168](https://gitlab.com/bramw/baserow/-/issues/1168)
+* Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly [#1194](https://gitlab.com/bramw/baserow/-/issues/1194).
 
 ### New Features
 
