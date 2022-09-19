@@ -87,6 +87,7 @@
         v-for="(component, index) in registerComponents"
         :ref="`register-component-${index}`"
         :key="index"
+        @updated-account="updatedAccount"
       ></component>
       <div class="actions">
         <slot></slot>
@@ -215,6 +216,9 @@ export default {
           ),
         })
       }
+    },
+    updatedAccount({ key, value }) {
+      this.$set(this.account, key, value)
     },
   },
   validations: {
