@@ -53,7 +53,8 @@
                             "order": 2,
                             "primary": false,
                             "link_row_table_id": 41013,
-                            "link_row_related_field_id": 221617
+                            "link_row_related_field_id": 221617,
+                            "has_related_field": true
                         },
                         {
                             "id": 221621,
@@ -62,7 +63,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 41015,
-                            "link_row_related_field_id": 221622
+                            "link_row_related_field_id": 221622,
+                            "has_related_field": true
                         },
                         {
                             "id": 221643,
@@ -97,14 +99,14 @@
                             "name": "Estimated cost",
                             "order": 11,
                             "primary": false,
-                            "error": "references the deleted or unknown field Avg price per unit in table Supplies, references the deleted or unknown field Cost per hr in table Venues, references the deleted or unknown field Cost per hr in table Venues, argument number 2 given to operator + was of type number but there are no possible types usable here, argument number 2 given to operator + was of type number but there are no possible types usable here",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
-                            "array_formula_type": null,
-                            "formula": "field('Supplies cost') + lookup('Venue','Cost per hr') * field('Est. duration in hrs') + lookup('Venue','Cost per hr') * field('Est. duration in hrs') + lookup('Entertainment','Price') * field('Est. duration in hrs') + lookup('Catering company','Price') * field('# of attendees')",
-                            "formula_type": "invalid"
+                            "number_decimal_places": 2,
+                            "array_formula_type": "number",
+                            "formula": "field(\"Supplies cost\") + \nlookup(\"Venue\",\"Cost per hour\") * field(\"Est. duration in hrs\") + \nlookup(\"Entertainment\",\"Price\") * field(\"Est. duration in hrs\") + \nlookup(\"Catering company\",\"Price\") * field(\"# of attendees\")",
+                            "formula_type": "array"
                         },
                         {
                             "id": 231550,
@@ -113,7 +115,8 @@
                             "order": 12,
                             "primary": false,
                             "link_row_table_id": 41015,
-                            "link_row_related_field_id": 231551
+                            "link_row_related_field_id": 231551,
+                            "has_related_field": true
                         },
                         {
                             "id": 231560,
@@ -122,7 +125,8 @@
                             "order": 13,
                             "primary": false,
                             "link_row_table_id": 41014,
-                            "link_row_related_field_id": 231559
+                            "link_row_related_field_id": 231559,
+                            "has_related_field": true
                         },
                         {
                             "id": 231582,
@@ -130,14 +134,14 @@
                             "name": "Supplies cost",
                             "order": 14,
                             "primary": false,
-                            "error": "references the deleted or unknown field Avg price per unit in table Supplies",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
+                            "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "sum(lookup('Supplies','Avg price per unit'))",
-                            "formula_type": "invalid"
+                            "formula": "sum(lookup(\"Supplies\", \"Average price per unit\"))",
+                            "formula_type": "number"
                         },
                         {
                             "id": 232073,
@@ -146,7 +150,8 @@
                             "order": 15,
                             "primary": false,
                             "link_row_table_id": 41015,
-                            "link_row_related_field_id": 232074
+                            "link_row_related_field_id": 232074,
+                            "has_related_field": true
                         },
                         {
                             "id": 232111,
@@ -155,7 +160,8 @@
                             "order": 16,
                             "primary": false,
                             "link_row_table_id": 42683,
-                            "link_row_related_field_id": 232112
+                            "link_row_related_field_id": 232112,
+                            "has_related_field": true
                         },
                         {
                             "id": 232642,
@@ -163,14 +169,14 @@
                             "name": "Over/under",
                             "order": 17,
                             "primary": false,
-                            "error": "references the deleted or unknown field Avg price per unit in table Supplies, references the deleted or unknown field Cost per hr in table Venues, references the deleted or unknown field Cost per hr in table Venues, argument number 2 given to operator + was of type number but there are no possible types usable here, argument number 2 given to operator + was of type number but there are no possible types usable here",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
-                            "array_formula_type": null,
-                            "formula": "field('Budget')-field('Estimated cost')",
-                            "formula_type": "invalid"
+                            "number_decimal_places": 2,
+                            "array_formula_type": "number",
+                            "formula": "field(\"Budget\")-field(\"Estimated cost\")",
+                            "formula_type": "array"
                         },
                         {
                             "id": 233283,
@@ -179,7 +185,8 @@
                             "order": 18,
                             "primary": false,
                             "link_row_table_id": 41015,
-                            "link_row_related_field_id": 233284
+                            "link_row_related_field_id": 233284,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -200,6 +207,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 253968,
@@ -295,7 +303,7 @@
                                     "id": 267045,
                                     "field_id": 231582,
                                     "width": 147,
-                                    "hidden": true,
+                                    "hidden": false,
                                     "order": 14,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
@@ -362,6 +370,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 267871,
@@ -524,6 +533,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 267981,
@@ -1057,7 +1067,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 232111
+                            "link_row_related_field_id": 232111,
+                            "has_related_field": true
                         },
                         {
                             "id": 232541,
@@ -1093,6 +1104,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 267266,
@@ -1420,7 +1432,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 221556
+                            "link_row_related_field_id": 221556,
+                            "has_related_field": true
                         },
                         {
                             "id": 228401,
@@ -1454,7 +1467,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 41028,
-                            "link_row_related_field_id": 228430
+                            "link_row_related_field_id": 228430,
+                            "has_related_field": true
                         },
                         {
                             "id": 232908,
@@ -1482,6 +1496,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 253971,
@@ -1522,7 +1537,7 @@
                                 {
                                     "id": 262556,
                                     "field_id": 228402,
-                                    "width": 132,
+                                    "width": 147,
                                     "hidden": false,
                                     "order": 4,
                                     "aggregation_type": "",
@@ -1581,6 +1596,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268476,
@@ -1680,6 +1696,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268484,
@@ -1770,6 +1787,9 @@
                                     "order": "DESC"
                                 }
                             ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 232908,
                             "field_options": [
                                 {
                                     "id": 7621,
@@ -2025,7 +2045,8 @@
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 41015,
-                            "link_row_related_field_id": 228411
+                            "link_row_related_field_id": 228411,
+                            "has_related_field": true
                         },
                         {
                             "id": 231439,
@@ -2043,7 +2064,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 231560
+                            "link_row_related_field_id": 231560,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -2064,6 +2086,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 253974,
@@ -2104,7 +2127,7 @@
                                 {
                                     "id": 266438,
                                     "field_id": 231439,
-                                    "width": 168,
+                                    "width": 198,
                                     "hidden": false,
                                     "order": 32767,
                                     "aggregation_type": "",
@@ -2145,6 +2168,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 269092,
@@ -2226,6 +2250,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 269098,
@@ -2307,6 +2332,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 269104,
@@ -2388,6 +2414,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 269110,
@@ -2469,6 +2496,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 269578,
@@ -2535,7 +2563,9 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 227281,
+                            "card_cover_image_field_id": 221561,
                             "field_options": [
                                 {
                                     "id": 971,
@@ -3067,7 +3097,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 221621
+                            "link_row_related_field_id": 221621,
+                            "has_related_field": true
                         },
                         {
                             "id": 227284,
@@ -3092,7 +3123,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 41014,
-                            "link_row_related_field_id": 228412
+                            "link_row_related_field_id": 228412,
+                            "has_related_field": true
                         },
                         {
                             "id": 231539,
@@ -3109,7 +3141,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 231550
+                            "link_row_related_field_id": 231550,
+                            "has_related_field": true
                         },
                         {
                             "id": 232074,
@@ -3118,7 +3151,8 @@
                             "order": 11,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 232073
+                            "link_row_related_field_id": 232073,
+                            "has_related_field": true
                         },
                         {
                             "id": 233284,
@@ -3127,7 +3161,8 @@
                             "order": 12,
                             "primary": false,
                             "link_row_table_id": 41012,
-                            "link_row_related_field_id": 233283
+                            "link_row_related_field_id": 233283,
+                            "has_related_field": true
                         },
                         {
                             "id": 233285,
@@ -3136,7 +3171,8 @@
                             "order": 13,
                             "primary": false,
                             "link_row_table_id": 41028,
-                            "link_row_related_field_id": 233286
+                            "link_row_related_field_id": 233286,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -3157,6 +3193,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 253977,
@@ -3286,6 +3323,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268560,
@@ -3415,6 +3453,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268577,
@@ -3535,6 +3574,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268873,
@@ -3655,6 +3695,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268883,
@@ -3766,6 +3807,7 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 221564,
                             "field_options": [
                                 {
@@ -4276,7 +4318,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 41013,
-                            "link_row_related_field_id": 228429
+                            "link_row_related_field_id": 228429,
+                            "has_related_field": true
                         },
                         {
                             "id": 233286,
@@ -4285,7 +4328,8 @@
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 41015,
-                            "link_row_related_field_id": 233285
+                            "link_row_related_field_id": 233285,
+                            "has_related_field": true
                         },
                         {
                             "id": 233287,
@@ -4321,6 +4365,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 254109,
@@ -4402,6 +4447,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268928,
@@ -4483,6 +4529,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 268934,
