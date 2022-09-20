@@ -15,6 +15,18 @@ For example:
 ### New Features
 
 * Made it possible to share the Kanban view publicly. [#1146](https://gitlab.com/bramw/baserow/-/issues/1146)
+* New templates:
+    * Copy Management
+    * Hiking Guide
+    * New Hire Onboarding
+    * Property Showings
+    * QA Test Scripts
+    * Risk Assessment and Management
+    * Web App UAT
+* Updated templates:
+    * Benefit Show Manager
+    * Car Hunt
+    * Wedding Client Planner
 
 ### Bug Fixes
 
