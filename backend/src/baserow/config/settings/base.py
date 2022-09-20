@@ -245,6 +245,7 @@ LANGUAGES = [
     ("de", "German"),
     ("es", "Spanish"),
     ("it", "Italian"),
+    ("pl", "Polish"),
 ]
 
 TIME_ZONE = "UTC"

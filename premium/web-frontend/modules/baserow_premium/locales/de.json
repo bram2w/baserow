@@ -263,11 +263,22 @@
         "kanbanView": "Kanban-Ansicht",
         "exports": "JSON- und XML-Export",
         "admin": "Admin-Funktionalität",
-        "rowColoring": "Zeilenfärbung"
+        "rowColoring": "Zeilenfärbung",
+        "surveyForm": "Umfrageformular"
     },
     "premiumModal": {
         "description": "Ihr Konto hat keinen Zugang zu den Premium-Funktionen. Führen Sie ein Upgrade auf die Premium-Version durch, um {name} nutzen zu können. Sie können Ihr Konto erweitern, indem Sie eine Lizenz erwerben. Klicken Sie auf den Knopf unten, um die Preise zu sehen.",
         "title": "Führen Sie ein Upgrade durch, um {name} zu verwenden",
         "viewPricing": "Preise anzeigen"
+    },
+    "formViewModeType": {
+        "survey": "Umfrage",
+        "onlyForPremium": "Verfügbar in der Premium-Version",
+        "surveyDescription": "Ein Feld ist gleichzeitig sichtbar."
+    },
+    "formViewModePreviewSurvey": {
+        "orderFields": "Felder Sortieren",
+        "deactivated": "Das Umfrageformular ist in der Premium-Version verfügbar.",
+        "more": "Weitere Informationen"
     }
 }
