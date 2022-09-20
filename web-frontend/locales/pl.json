@@ -27,7 +27,8 @@
         "copy": "Kopia",
         "paste": "Wklej",
         "activate": "Aktywuj",
-        "deactivate": "Dezaktywuj"
+        "deactivate": "Dezaktywuj",
+        "remove": "Usuń"
     },
     "adminType": {
         "settings": "Ustawienia"
@@ -81,7 +82,8 @@
         "multipleSelect": "Wielokrotny wybór",
         "phoneNumber": "Numer telefonu",
         "formula": "Formuła",
-        "lookup": "Wyszukiwania"
+        "lookup": "Wyszukiwania",
+        "multipleCollaborators": "Współpracownicy"
     },
     "fieldErrors": {
         "invalidNumber": "Nieprawidłowy numer",
@@ -110,12 +112,13 @@
         "createdOnReadOnly": "Pole created on jest polem tylko do odczytu.",
         "url": "Przyjmuje ciąg znaków, który musi być adresem URL.",
         "email": "Przyjmuje ciąg znaków, który musi być adresem e-mail.",
-        "file": "Przyjmuje tablicę obiektów zawierających co najmniej nazwę pliku użytkownika.",
+        "file": "Akceptuje tablicę obiektów zawierających co najmniej nazwę pliku użytkownika. Możesz użyć punktów końcowych \"Przesyłanie plików\", aby przesłać plik. Odpowiedź tych wywołań może być przekazana bezpośrednio jako obiekt tutaj. Punkty końcowe można znaleźć na lewym pasku bocznym.",
         "singleSelect": "Przyjmuje liczbę całkowitą reprezentującą wybrane id opcji select lub null, jeśli żadna nie została wybrana.",
         "multipleSelect": "Przyjmuje tablicę liczb całkowitych, z których każda reprezentuje wybrane id opcji select.",
         "phoneNumber": "Akceptuje numer telefonu o maksymalnej długości 100 znaków składający się wyłącznie z cyfr, spacji i następujących znaków: Nx,._+*()#=;/- .",
         "formula": "Pole tylko do odczytu zdefiniowane przez formułę napisaną w języku formuł Baserow.",
-        "lookup": "Pole tylko do odczytu połączone z polem wiersza powiązanego, które zwraca tablicę wartości i identyfikatorów wierszy z wybranego pola lookup w tabeli powiązanej."
+        "lookup": "Pole tylko do odczytu połączone z polem wiersza powiązanego, które zwraca tablicę wartości i identyfikatorów wierszy z wybranego pola lookup w tabeli powiązanej.",
+        "multipleCollaborators": "Przyjmuje tablicę obiektów, gdzie każdy obiekt zawiera id użytkownika."
     },
     "viewFilter": {
         "contains": "zawiera",
@@ -142,7 +145,9 @@
         "inThisYear": "w tym roku",
         "lowerThan": "niżej niż",
         "lengthIsLowerThan": "długość jest mniejsza niż",
-        "hasFileType": "ma typ pliku"
+        "hasFileType": "ma typ pliku",
+        "beforeToday": "jest przed dniem dzisiejszym",
+        "afterToday": "jest po dzisiejszym dniu"
     },
     "viewType": {
         "grid": "Siatka",
@@ -266,7 +271,12 @@
         "requestBodySchema": "Schemat treści żądania",
         "userFieldNamesDescription": "Jeśli podano jakąkolwiek wartość dla parametru `user_field_names` GET, wówczas nazwy pól zwracane przez ten punkt końcowy będą rzeczywistymi nazwami pól.\n\n Jeśli `user_field_names` GET param nie jest podany, wtedy wszystkie zwrócone nazwy pól będą miały postać `field_` a następnie id pola. Na przykład `field_1` odnosi się do pola o id `1`.",
         "singleRow": "Pojedynczy",
-        "batchRows": "Partia"
+        "batchRows": "Partia",
+        "uploadFile": "Prześlij plik",
+        "uploadFileDescription": "\"Plik\" wieloczęściowy zawierający zawartość pliku.",
+        "uploadFileViaUrl": "Prześlij plik za pomocą adresu URL",
+        "uploadFileViaUrlDescription": "Przesyła plik do Baserow, pobierając go z podanego adresu URL.",
+        "fileUploads": "Przesyłanie plików"
     },
     "exporterType": {
         "csv": "Eksport do CSV"
@@ -342,7 +352,8 @@
         "sumDescription": "Sumuje wszystkie wartości i zwraca wynik.",
         "filterDescription": "Filtruje wyrażenie zawierające odwołanie do pola wyszukiwania/łącza lub wywołanie funkcji wyszukiwania.",
         "roundDescription": "Zwraca pierwszy argument zaokrąglony do liczby cyfr określonej przez drugi argument.",
-        "intDescription": "Zwraca tylko pierwszy argument przekonwertowany na liczbę całkowitą przez obcięcie miejsc dziesiętnych."
+        "intDescription": "Zwraca tylko pierwszy argument przekonwertowany na liczbę całkowitą przez obcięcie miejsc dziesiętnych.",
+        "truncDescription": "Zwraca tylko pierwszy argument przekonwertowany na liczbę całkowitą przez obcięcie wszystkich miejsc dziesiętnych."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "nienazwany wiersz {value}"

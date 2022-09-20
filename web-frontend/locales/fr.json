@@ -112,7 +112,7 @@
         "createdOnReadOnly": "La date de modification de la ligne, en lecture seule.",
         "url": "Accepte une URL valide.",
         "email": "Accepte une adresse électronique valide.",
-        "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur.",
+        "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur. Vous pouvez utiliser l'API « Envoi de fichier » pour envoyer des fichiers. La réponse à ces appels peut-être fournie directement en tant qu'objet ici. Les différentes API sont listées dans la barre latérale gauche.",
         "singleSelect": "Accepte un entier correspondant à l'identifiant de l'option sélectionnée ou nul si vide.",
         "multipleSelect": "Accepte un tableau d'entier correspondant chacun à l'identifiant d'une valeur sélectionnée.",
         "phoneNumber": "Accepte un numéro de téléphone d'une longueur maximum de 100 caractères qui doivent être des chiffres, des espaces ou les caractères suivants : Nx,._+*()#=;/- .",
@@ -186,6 +186,10 @@
             "rowsCreated": "Des lignes sont créées",
             "rowsUpdated": "Des lignes sont mises à jour",
             "rowsDeleted": "Des lignes sont supprimées"
+        },
+        "form": {
+            "invalidURLTitle": "URL invalide.",
+            "invalidURLDescription": "L'URL du webhook est invalide, inaccessible ou interdite."
         }
     },
     "clientHandler": {
@@ -274,7 +278,12 @@
         "updateRows": "Mettre à jour les rangées",
         "deleteRows": "Supprimer des rangées",
         "singleRow": "Simple",
-        "batchRows": "Lot"
+        "batchRows": "Lot",
+        "fileUploads": "Envoi de fichiers",
+        "uploadFile": "Téléverser un fichier",
+        "uploadFileViaUrl": "Téléverser un fichier via une URL",
+        "uploadFileDescription": "La section multipart `file` contenant le contenu du fichier.",
+        "uploadFileViaUrlDescription": "Téléverse un fichier sur Baserow en le récupérant depuis l'URL fournie."
     },
     "exporterType": {
         "csv": "Exporter vers CSV"
