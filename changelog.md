@@ -8,6 +8,7 @@ For example:
 -->
 
 ## Unreleased
+
 * Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
 * Added support for placeholders in form headings and fields. [#1168](https://gitlab.com/bramw/baserow/-/issues/1168)
 * Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly [#1194](https://gitlab.com/bramw/baserow/-/issues/1194).
@@ -15,12 +16,18 @@ For example:
 ### New Features
 
 * Made it possible to share the Kanban view publicly. [#1146](https://gitlab.com/bramw/baserow/-/issues/1146)
+* Show database and table duplication progress in the left sidebar. [#1059](https://gitlab.com/bramw/baserow/-/issues/1059)
+* Add env vars for controlling which URLs and IPs webhooks are allowed to use. [#931](https://gitlab.com/bramw/baserow/-/issues/931)
+* Add a rich preview while importing data to an existing table. [#1120](https://gitlab.com/bramw/baserow/-/issues/1120)
 
 ### Bug Fixes
 
 * Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.
+* Fixed a bug that breaks the link row modal when a formula is referencing a single select field. [#1111](https://gitlab.com/bramw/baserow/-/issues/1111)
 
 ### Refactors
+
+* Formulas which referenced other aggregate formulas now will work correctly. [#1081](https://gitlab.com/bramw/baserow/-/issues/1081)
 
 ## Released (2022-09-07 1.12.0)
 
@@ -44,9 +51,6 @@ For example:
 * Add a tooltip to applications and tables in the left sidebar to show the full name. [#986](https://gitlab.com/bramw/baserow/-/issues/986)
 * Allow not creating a reversed relationship with the link row field. [#1063](https://gitlab.com/bramw/baserow/-/issues/1063)
 * Add API token authentication support to multipart and via-URL file uploads. [#255](https://gitlab.com/bramw/baserow/-/issues/255)
-* Add a rich preview while importing data to an existing table. [#1120](https://gitlab.com/bramw/baserow/-/issues/1120)
-* Add env vars for controlling which URLs and IPs webhooks are allowed to use. [#931](https://gitlab.com/bramw/baserow/-/issues/931)
-* Show database and table duplication progress in the left sidebar. [#1059](https://gitlab.com/bramw/baserow/-/issues/1059)
 
 ### Bug Fixes
 * Resolve circular dependency in `FieldWithFiltersAndSortsSerializer` [#1113](https://gitlab.com/bramw/baserow/-/issues/1113)
@@ -67,7 +71,6 @@ For example:
 * Resolve an invalid URL in the "Backend URL mis-configuration detected" error message. [#967](https://gitlab.com/bramw/baserow/-/merge_requests/967)
 * Fixed broken call grouping when getting linked row names from server.
 * Add new filter types 'is after today' and 'is before today'. [#1093](https://gitlab.com/bramw/baserow/-/issues/1093)
-* Fixed a bug that breaks the link row modal when a formula is referencing a single select field. [#1111](https://gitlab.com/bramw/baserow/-/issues/1111)
 
 ### Refactors
 * Fix view and fields getting out of date on realtime updates. [#1112](https://gitlab.com/bramw/baserow/-/issues/1112)
@@ -75,7 +78,6 @@ For example:
 * Users can copy/paste images into a file field. [#367](https://gitlab.com/bramw/baserow/-/issues/367)
 * Fixed error when sharing a view publicly with sorts more than one multi-select field. [#1082](https://gitlab.com/bramw/baserow/-/issues/1082)
 * Fixed crash in gallery view with searching. [#1130](https://gitlab.com/bramw/baserow/-/issues/1130)
-* Formulas which referenced other aggregate formulas now will work correctly. [#1081](https://gitlab.com/bramw/baserow/-/issues/1081)
 
 ### Breaking Changes
 
