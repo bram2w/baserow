@@ -1,7 +1,7 @@
 import pytest
 
 # noinspection PyUnresolvedReferences
-from tests.conftest import *  # noqa: F403, F401
+from baserow.test_utils.pytest_conftest import *  # noqa: F403, F401
 
 
 @pytest.fixture

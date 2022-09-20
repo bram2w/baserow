@@ -6,29 +6,29 @@ install-dev-dependencies:
 	pip install -r requirements/dev.txt
 
 lint:
-	flake8 src tests ../premium/backend && \
-	black . ../premium/backend --extend-exclude='/generated/' --check && \
-	isort --check --skip generated src tests ../premium/backend && \
+	flake8 src tests ../premium/backend ../enterprise/backend && \
+	black . ../premium/backend ../enterprise/backend --extend-exclude='/generated/' --check && \
+	isort --check --skip generated src tests ../premium/backend ../enterprise/backend && \
 	./baserow makemigrations --dry-run --check && \
-	bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ \
+	bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ ../enterprise/backend/src/ \
 	|| exit;
 
 lint-python: lint
 
 format:
-	black . ../premium/backend --extend-exclude='/generated/' || exit;
+	black . ../premium/backend ../enterprise/backend --extend-exclude='/generated/' || exit;
 
 sort:
-	isort --skip generated  src tests ../premium/backend || exit;
+	isort --skip generated  src tests ../premium/backend ../enterprise/backend || exit;
 
 test:
-	pytest tests ../premium/backend/tests || exit;
+	pytest tests ../premium/backend/tests ../enterprise/backend/tests || exit;
 
 test-regenerate-ci-durations:
-	pytest tests ../premium/backend/tests --store-durations || exit;
+	pytest tests ../premium/backend/tests ../enterprise/backend/tests --store-durations || exit;
 
 test-parallel:
-	pytest tests ../premium/backend/tests -n 10 || exit;
+	pytest tests ../premium/backend/tests ../enterprise/backend/tests -n 10 || exit;
 
 PYTEST_SPLITS:=1
 PYTEST_SPLIT_GROUP:=1
@@ -46,7 +46,8 @@ ci-test-python:
 	    --junitxml=backend/reports/report.xml \
 	    $(PYTEST_EXTRA_ARGS) \
 	    backend/tests \
-	    premium/backend/tests;
+	    premium/backend/tests\
+		enterprise/backend/tests;
 
 generate-html-coverage-report:
 	mkdir html_coverage/ -p; \
@@ -54,6 +55,7 @@ generate-html-coverage-report:
 	coverage run --rcfile=backend/.coveragerc -m pytest \
 	    backend/tests \
 	    premium/backend/tests; \
+	    enterprise/backend/tests; \
 	coverage html -d html_coverage/;
 
 ci-check-startup-python:

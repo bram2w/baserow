@@ -47,11 +47,12 @@
                 "--cov-config=${workspaceFolder}/backend/.coveragerc",
                 "--cov=baserow",
                 "backend/tests/",
-                "premium/backend/tests/"
+                "premium/backend/tests/",
+                "enterprise/backend/tests/"
             ],
             "env": {
                 "DATABASE_HOST": "localhost",
-                "PYTHONPATH": "$PYTHONPATH:backend/src:premium/backend/src",
+                "PYTHONPATH": "$PYTHONPATH:backend/src:premium/backend/src:enterprise/backend/src",
                 "DJANGO_SETTINGS_MODULE": "baserow.config.settings.dev",
                 "BASEROW_PUBLIC_URL": "http://localhost:3000",
             },

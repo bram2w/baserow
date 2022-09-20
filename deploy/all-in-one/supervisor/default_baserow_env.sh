@@ -15,7 +15,7 @@ export BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-
 export BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER=${BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:-}
 
 export PYTHONUNBUFFERED=1
-export PYTHONPATH="${PYTHONPATH:-}:/baserow/backend/src:/baserow/premium/backend/src"
+export PYTHONPATH="${PYTHONPATH:-}:/baserow/backend/src:/baserow/premium/backend/src:/baserow/enterprise/backend/src"
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 export TMPDIR=${TMPDIR:-/dev/shm}

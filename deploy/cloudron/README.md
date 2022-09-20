@@ -11,7 +11,7 @@ guide for more details.
 * Easily self-hosted with no storage restrictions or sign-up on https://baserow.io to
   get started immediately.
 * Alternative to Airtable.
-* Open-core with all non-premium features under
+* Open-core with all non-premium and non-enterprise features under
   the [MIT License](https://choosealicense.com/licenses/mit/) allowing commercial and
   private use.
 * Headless and API first.
@@ -24,7 +24,8 @@ guide for more details.
 * **Get Support At**: [The Baserow Community Forums](https://community.baserow.io)
 * **Source Code Available At**: [gitlab.com/bramw/baserow](https://gitlab.com/bramw/baserow)
 * **Docs At**: [baserow.io/docs](https://baserow.io/docs)
-* **License**: Open-Core with all non-premium code under the MIT license.
+* **License**: Open-Core with all non-premium and non-enterprise code under the MIT 
+  license.
 
 ## Supported tags and Dockerfile Links
 

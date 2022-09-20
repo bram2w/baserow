@@ -106,8 +106,9 @@ def patch_filefield_storage(tmpdir):
     return patch
 
 
-# We reuse this file in the premium backend folder, if you run a pytest session over
-# plugins and the core at the same time pytest will crash if this called multiple times.
+# We reuse this file in the premium/enterprise backend folder, if you run a pytest
+# session over plugins and the core at the same time pytest will crash if this
+# called multiple times.
 def pytest_addoption(parser):
     # Unfortunately a simple decorator doesn't work here as pytest is doing some
     # exciting reflection of sorts over this function and crashes if it is wrapped.

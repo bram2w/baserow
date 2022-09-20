@@ -303,7 +303,7 @@ backend-lint:
     - .docker-image-test-stage
     - .skippable-job
   variables:
-    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/ enterprise/backend/"
   script:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
   needs:
@@ -313,7 +313,7 @@ backend-lint:
 # - Runs the backend startup check if changes to the backend, otherwise skips.
 backend-check-startup:
   variables:
-    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/ enterprise/backend/"
     POSTGRES_USER: "baserow"
     POSTGRES_PASSWORD: "baserow"
     POSTGRES_DB: "baserow"
@@ -356,7 +356,7 @@ backend-test-group-1:
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
     PYTEST_SPLIT_GROUP: 1
-    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/ enterprise/backend/"
     DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP: 'true'
   script:
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
@@ -487,7 +487,7 @@ web-frontend-lint:
   needs:
     - job: build-web-frontend-image
   variables:
-    RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/"
+    RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/ enterprise/web-frontend/"
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE lint
 
@@ -499,7 +499,7 @@ web-frontend-test:
     - .docker-image-test-stage
     - .skippable-job
   variables:
-    RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/"
+    RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/ enterprise/web-frontend/"
     DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP: 'true'
   needs:
     - job: build-web-frontend-image

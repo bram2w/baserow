@@ -44,6 +44,7 @@ RUN yarn install && yarn cache clean
 
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
 COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
+COPY --chown=$UID:$GID ./enterprise/web-frontend /baserow/enterprise/web-frontend/
 COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \

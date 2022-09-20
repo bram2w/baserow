@@ -10,3 +10,4 @@ omit =
 include =
     backend/src/**/*
     premium/backend/src/**/*
+    enterprise/backend/src/**/*

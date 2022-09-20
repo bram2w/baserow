@@ -26,6 +26,10 @@
       <sourceFolder url="file://$MODULE_DIR$/../premium/backend/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../premium/backend/tests" isTestSource="true" />
     </content>
+    <content url="file://$MODULE_DIR$/../enterprise/backend">
+      <sourceFolder url="file://$MODULE_DIR$/../enterprise/backend/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../enterprise/backend/tests" isTestSource="true" />
+    </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (baserow)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

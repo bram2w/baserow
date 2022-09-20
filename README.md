@@ -7,7 +7,7 @@ tool gives you the powers of a developer without leaving your browser.
 * Easily self-hosted with no storage restrictions or sign-up on https://baserow.io to
   get started immediately.
 * Alternative to Airtable.
-* Open-core with all non-premium features under
+* Open-core with all non-premium and non-enterprise features under
   the [MIT License](https://choosealicense.com/licenses/mit/) allowing commercial and
   private use.
 * Headless and API first.
