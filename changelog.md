@@ -27,6 +27,7 @@ For example:
     * Benefit Show Manager
     * Car Hunt
     * Wedding Client Planner
+* Added link, button, get_link_label and get_link_url formula functions. [#818](https://gitlab.com/bramw/baserow/-/issues/818)
 
 ### Bug Fixes
 

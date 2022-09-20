@@ -44,9 +44,9 @@ import FunctionalGridViewFieldDate from '@baserow/modules/database/components/vi
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
-import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
 import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
+import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -1611,7 +1611,7 @@ export class URLFieldType extends FieldType {
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return FunctionalGridViewFieldURL
   }
 
   getRowEditFieldComponent() {
@@ -1696,7 +1696,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return FunctionalGridViewFieldURL
   }
 
   getRowEditFieldComponent() {
@@ -2349,7 +2349,7 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldPhoneNumber
+    return FunctionalGridViewFieldURL
   }
 
   getRowEditFieldComponent() {
@@ -2524,11 +2524,9 @@ export class FormulaFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value) {
-    const underlyingFieldType = this.app.$registry.get(
-      'field',
-      this._mapFormulaTypeToFieldType(field.formula_type)
-    )
-    return underlyingFieldType.toHumanReadableString(field, value)
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .toHumanReadableString(field, value)
   }
 
   getSortIndicator(field) {
@@ -2585,13 +2583,6 @@ export class LookupFieldType extends FormulaFieldType {
 
   getFormComponent() {
     return FieldLookupSubForm
-  }
-
-  toHumanReadableString(field, value) {
-    if (value) {
-      return value.map((link) => link.value).join(', ')
-    }
-    return ''
   }
 
   shouldFetchFieldSelectOptions() {

@@ -335,6 +335,11 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     {"id": 2, "value": "linked_row_2"},
                     {"id": 3, "value": None},
                 ],
+                "formula_link_url_only": {"label": None, "url": "https://google.com"},
+                "formula_link_with_label": {
+                    "label": "label",
+                    "url": "https://google.com",
+                },
             }
         )
     )

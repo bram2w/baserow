@@ -2,6 +2,7 @@
   <FunctionalGridViewFieldArray
     :field="field"
     :value="value"
+    :selected="selected"
   ></FunctionalGridViewFieldArray>
 </template>
 
@@ -13,5 +14,19 @@ export default {
   name: 'GridViewFieldArray',
   components: { FunctionalGridViewFieldArray },
   mixins: [baseField],
+  props: {
+    selected: {
+      type: Boolean,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
+  },
 }
 </script>

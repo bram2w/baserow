@@ -8,7 +8,9 @@
     @contextmenu="stopContextIfEditing($event)"
   >
     <div v-show="!editing" class="grid-field-text">
-      <a :href="value" target="_blank">{{ value }}</a>
+      <a :href="value" target="_blank" rel="nofollow noopener noreferrer">{{
+        value
+      }}</a>
     </div>
     <template v-if="editing">
       <input

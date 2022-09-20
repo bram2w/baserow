@@ -130,6 +130,10 @@
   text-overflow: initial !important;
 }
 
+.forced-pointer-events-auto {
+  pointer-events: auto !important;
+}
+
 .prevent-scroll {
   overflow: hidden !important;
 }

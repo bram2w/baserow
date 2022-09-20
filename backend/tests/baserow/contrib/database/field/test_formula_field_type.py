@@ -833,7 +833,6 @@ def test_all_functions_are_registered():
     funcs = formula_function_registry.get_all()
     names = [f.type for f in funcs]
     assert len(names) == len(get_all_subclasses(BaserowFunctionDefinition))
-    # print(json.dumps(names, indent=4))
 
 
 @pytest.mark.django_db
