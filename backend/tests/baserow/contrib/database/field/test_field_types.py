@@ -556,6 +556,8 @@ def test_human_readable_values(data_fixture):
         "formula_int": "1",
         "formula_singleselect": "",
         "formula_text": "test FORMULA",
+        "formula_link_url_only": "https://google.com",
+        "formula_link_with_label": "label (https://google.com)",
         "lookup": "",
     }
     assert results == {
@@ -599,6 +601,8 @@ def test_human_readable_values(data_fixture):
         "formula_int": "1",
         "formula_singleselect": "A",
         "formula_text": "test FORMULA",
+        "formula_link_url_only": "https://google.com",
+        "formula_link_with_label": "label (https://google.com)",
         "lookup": "linked_row_1, linked_row_2, ",
     }
 

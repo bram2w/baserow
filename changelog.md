@@ -15,6 +15,7 @@ For example:
 ### New Features
 
 * Made it possible to share the Kanban view publicly. [#1146](https://gitlab.com/bramw/baserow/-/issues/1146)
+* Added link, button, get_link_label and get_link_url formula functions. [#818](https://gitlab.com/bramw/baserow/-/issues/818)
 
 ### Bug Fixes
 

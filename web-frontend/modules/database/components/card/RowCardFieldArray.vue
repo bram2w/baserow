@@ -6,6 +6,7 @@
       :class="data.staticClass || ''"
       :field="props.field"
       :value="props.value"
+      :selected="true"
     ></component>
   </div>
 </template>

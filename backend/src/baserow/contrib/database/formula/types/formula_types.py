@@ -27,6 +27,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
 )
+from baserow.contrib.database.formula.types.serializers import LinkSerializer
 from baserow.core.utils import list_to_comma_separated_string
 
 
@@ -42,6 +43,7 @@ class BaserowFormulaTextType(BaserowFormulaValidType):
             BaserowFormulaNumberType,
             BaserowFormulaBooleanType,
             BaserowFormulaCharType,
+            BaserowFormulaLinkType,
         ]
 
     @property
@@ -49,11 +51,11 @@ class BaserowFormulaTextType(BaserowFormulaValidType):
         # Force users to explicitly convert to text before doing any limit comparison
         # operators as lexicographical comparison can be surprising and so should be opt
         # in
-        return [BaserowFormulaTextType, BaserowFormulaCharType]
+        return [BaserowFormulaTextType, BaserowFormulaCharType, BaserowFormulaLinkType]
 
     @property
     def addable_types(self) -> List[Type["BaserowFormulaValidType"]]:
-        return [BaserowFormulaTextType, BaserowFormulaCharType]
+        return [BaserowFormulaTextType, BaserowFormulaCharType, BaserowFormulaLinkType]
 
     def add(
         self,
@@ -90,6 +92,94 @@ class BaserowFormulaCharType(BaserowFormulaTextType):
     ) -> "BaserowExpression[BaserowFormulaType]":
         # Force char fields to be casted to text so Django does not complain
         return to_text_func_call.with_valid_type(BaserowFormulaTextType())
+
+
+class BaserowFormulaLinkType(BaserowFormulaTextType):
+    type = "link"
+    baserow_field_type = None
+    can_order_by = False
+
+    @property
+    def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [
+            type(self),
+        ]
+
+    @property
+    def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    @property
+    def addable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    @property
+    def subtractable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    def cast_to_text(
+        self,
+        to_text_func_call: "BaserowFunctionCall[UnTyped]",
+        arg: "BaserowExpression[BaserowFormulaValidType]",
+    ) -> "BaserowExpression[BaserowFormulaType]":
+        return formula_function_registry.get("get_link_label")(arg)
+
+    def get_baserow_field_instance_and_type(self):
+        return self, self
+
+    def get_model_field(self, instance, **kwargs) -> models.Field:
+        kwargs["null"] = True
+        kwargs["blank"] = True
+
+        return JSONField(default=dict, **kwargs)
+
+    def get_response_serializer_field(self, instance, **kwargs) -> Optional[Field]:
+        return self.get_serializer_field(instance, **kwargs)
+
+    def get_serializer_field(self, instance, **kwargs) -> Optional[Field]:
+        required = kwargs.get("required", False)
+
+        return LinkSerializer(
+            **{"required": required, "allow_null": not required, **kwargs}
+        )
+
+    def get_export_value(self, value, field_object, rich_value=False) -> Any:
+        if rich_value:
+            return value
+        elif value is not None:
+            if "label" in value:
+                return f"{value['label']} ({value['url']})"
+            else:
+                return f"{value['url']}"
+        else:
+            return ""
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        return Q(**{f"{field_name}__url__icontains": value}) | Q(
+            **{f"{field_name}__label__icontains": value}
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        sql = f"""
+            p_in = p_in->'label' + ' (' + p_in->'url' + ')';
+        """
+        return sql, {}
+
+    def get_human_readable_value(self, value: Any, field_object) -> str:
+        human_readable_value = self.get_export_value(
+            value, field_object, rich_value=False
+        )
+        if human_readable_value is None:
+            return ""
+        else:
+            return str(human_readable_value)
+
+    def placeholder_empty_value(self):
+        return Value({}, output_field=JSONField())
 
 
 class BaserowFormulaNumberType(BaserowFormulaValidType):
@@ -649,6 +739,7 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaInvalidType,
     BaserowFormulaTextType,
     BaserowFormulaCharType,
+    BaserowFormulaLinkType,
     BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
     BaserowFormulaBooleanType,
