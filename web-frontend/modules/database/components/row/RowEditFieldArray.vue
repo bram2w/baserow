@@ -4,6 +4,7 @@
       class="row-edit-array-field"
       :field="field"
       :value="value"
+      :selected="true"
     >
     </FunctionalFormulaArrayItems>
   </div>

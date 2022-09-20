@@ -1,8 +1,8 @@
 <template>
   <a
     :class="{
-      'context__menu-item--loading': loading,
-      disabled: disabled || loading,
+      'context__menu-item--loading': duplicating,
+      disabled: disabled || duplicating,
     }"
     @click="duplicateTable()"
   >
@@ -36,7 +36,7 @@ export default {
   },
   data() {
     return {
-      loading: false,
+      duplicating: false,
     }
   },
   methods: {
@@ -47,44 +47,48 @@ export default {
         { root: true }
       )
     },
-    // eslint-disable-next-line require-await
     async onJobFailed() {
-      this.loading = false
-      this.showError(
-        this.$t('clientHandler.notCompletedTitle'),
-        this.$t('clientHandler.notCompletedDescription')
-      )
+      await this.$store.dispatch('job/forceUpdate', {
+        job: this.job,
+        data: this.job,
+      })
+      this.duplicating = false
     },
-    // eslint-disable-next-line require-await
     async onJobPollingError(error) {
-      this.loading = false
+      await this.$store.dispatch('job/forceDelete', this.job)
+      this.duplicating = false
       notifyIf(error, 'table')
     },
-    async onJobDone() {
-      const database = this.database
-      const table = this.job.duplicated_table
-      await this.$store.dispatch('table/forceCreate', {
-        database,
-        data: table,
+    async onJobUpdated() {
+      await this.$store.dispatch('job/forceUpdate', {
+        job: this.job,
+        data: this.job,
       })
-      this.loading = false
-      this.$emit('table-duplicated', { table })
+    },
+    async onJobDone() {
+      await this.$store.dispatch('job/forceUpdate', {
+        job: this.job,
+        data: this.job,
+      })
+      this.duplicating = false
     },
     async duplicateTable() {
-      if (this.loading || this.disabled) {
+      if (this.duplicating || this.disabled) {
         return
       }
 
-      this.loading = true
+      this.duplicating = true
       try {
         const { data: job } = await TableService(this.$client).asyncDuplicate(
           this.table.id
         )
         this.startJobPoller(job)
+        this.$store.dispatch('job/forceCreate', job)
       } catch (error) {
-        this.loading = false
+        this.duplicating = false
         notifyIf(error, 'table')
       }
+      this.$emit('click')
     },
   },
 }

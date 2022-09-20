@@ -26,12 +26,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import (
-    ChildProgressBuilder,
-    Progress,
-    find_unused_name,
-    split_ending_number,
-)
+from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
 
 from .constants import TABLE_CREATION
 from .exceptions import (
@@ -410,8 +405,7 @@ class TableHandler:
         """
 
         existing_tables_names = list(database.table_set.values_list("name", flat=True))
-        name, _ = split_ending_number(proposed_name)
-        return find_unused_name([name], existing_tables_names, max_length=255)
+        return find_unused_name([proposed_name], existing_tables_names, max_length=255)
 
     def _create_related_link_fields_in_existing_tables_to_import(
         self, serialized_table: Dict[str, Any], id_mapping: Dict[str, Any]
@@ -476,18 +470,20 @@ class TableHandler:
         if not isinstance(table, Table):
             raise ValueError("The table is not an instance of Table")
 
-        progress = ChildProgressBuilder.build(progress_builder, child_total=2)
+        start_progress, export_progress, import_progress = 10, 30, 60
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+        progress.increment(by=start_progress)
 
         database = table.database
         database.group.has_user(user, raise_error=True)
         database_type = application_type_registry.get_by_model(database)
 
         serialized_tables = database_type.export_tables_serialized([table])
-        progress.increment()
 
         # Set a unique name for the table to import back as a new one.
         exported_table = serialized_tables[0]
         exported_table["name"] = self.find_unused_table_name(database, table.name)
+        exported_table["order"] = Table.get_last_order(database)
 
         id_mapping: Dict[str, Any] = {"database_tables": {}}
 
@@ -496,13 +492,17 @@ class TableHandler:
                 exported_table, id_mapping
             )
         )
+        progress.increment(by=export_progress)
+
         imported_tables = database_type.import_tables_serialized(
             database,
             [exported_table],
             id_mapping,
             external_table_fields_to_import=link_fields_to_import_to_existing_tables,
+            progress_builder=progress.create_child_builder(
+                represents_progress=import_progress
+            ),
         )
-        progress.increment()
 
         new_table_clone = imported_tables[0]
 

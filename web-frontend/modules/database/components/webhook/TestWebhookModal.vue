@@ -55,6 +55,7 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
+import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import WebhookService from '@baserow/modules/database/services/webhook'
 
 export default {
@@ -111,7 +112,14 @@ export default {
         this.response = data.response
         this.statusCode = data.status_code
       } catch (e) {
-        this.handleError(e)
+        this.handleError(e, 'webhook', null, {
+          url: {
+            invalid_url: new ResponseErrorMessage(
+              this.$t('webhook.form.invalidURLTitle'),
+              this.$t('webhook.form.invalidURLDescription')
+            ),
+          },
+        })
       }
 
       this.isLoading = false

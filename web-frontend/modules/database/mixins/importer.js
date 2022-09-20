@@ -12,11 +12,7 @@ export default {
       fileLoadingProgress: 0,
       state: null,
       error: '',
-      values: {
-        getData: null,
-        header: [],
-      },
-      preview: {},
+      values: {},
     }
   },
   computed: {
@@ -24,18 +20,14 @@ export default {
       return this.$t(`importer.${this.state}`)
     },
   },
-  watch: {
-    'values.header'(value) {
-      this.$emit('header', value)
-    },
-  },
   methods: {
     resetImporterState() {
-      this.values.getData = null
-      this.values.header = []
-      this.preview = {}
       this.state = null
       this.error = ''
+      this.values = {}
+
+      this.$emit('getData', null)
+      this.$emit('data', { header: [], previewData: [] })
     },
     handleImporterError(error) {
       this.resetImporterState()
@@ -93,7 +85,6 @@ export default {
      */
     getPreview(head, data) {
       const rows = data.slice(0, 6)
-      const remaining = data.length - rows.length - 1
       const columns = Math.max.apply(
         null,
         data.map((entry) => entry.length)
@@ -101,7 +92,7 @@ export default {
 
       rows.map((row) => this.fill(row, columns))
 
-      return { columns, head, rows, remaining }
+      return rows
     },
     /**
      * Find the next un-unused column not present or used yet in the nextFreeIndexMap.

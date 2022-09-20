@@ -65,11 +65,12 @@ def _get_views_where_field_visible_and_hidden_fields_in_view(
 
     views_where_field_was_visible = []
     for view in specific_iterator(
-        field.table.view_set.filter(public=True),
-        per_content_type_prefetches={
-            "gridview": ["gridviewfieldoptions_set"],
-            "galleryview": ["galleryviewfieldoptions_set", "table__field_set"],
-        },
+        field.table.view_set.filter(public=True).prefetch_related("table__field_set"),
+        per_content_type_queryset_hook=(
+            lambda model, queryset: view_type_registry.get_by_model(
+                model
+            ).enhance_queryset(queryset)
+        ),
     ):
         view = view.specific
         view_type = view_type_registry.get_by_model(view)

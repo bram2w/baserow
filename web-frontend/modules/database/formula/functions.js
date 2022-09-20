@@ -1062,6 +1062,100 @@ export class BaserowRegexReplace extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowLink extends BaserowFunctionDefinition {
+  static getType() {
+    return 'link'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.linkDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['link(text)']
+  }
+
+  getExamples() {
+    return ["link('http://your-text-here.com')"]
+  }
+
+  getFormulaType() {
+    return 'link'
+  }
+}
+
+export class BaserowButton extends BaserowFunctionDefinition {
+  static getType() {
+    return 'button'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.buttonDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['button(text, text)']
+  }
+
+  getExamples() {
+    return ["button('http://your-text-here.com', 'your-label')"]
+  }
+
+  getFormulaType() {
+    return 'link'
+  }
+}
+
+export class BaserowGetLinkUrl extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_link_url'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getLinkUrlDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_link_url(link)']
+  }
+
+  getExamples() {
+    return [
+      "get_link_url(field('formula link field')) = 'http://your-text-here.com'",
+    ]
+  }
+
+  getFormulaType() {
+    return 'link'
+  }
+}
+
+export class BaserowGetLinkLabel extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_link_label'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getLinkLabelDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_link_label(link)']
+  }
+
+  getExamples() {
+    return ["get_link_url(field('formula link field')) = 'your-label'"]
+  }
+
+  getFormulaType() {
+    return 'link'
+  }
+}
+
 export class BaserowGreatest extends BaserowFunctionDefinition {
   static getType() {
     return 'greatest'

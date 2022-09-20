@@ -78,10 +78,6 @@
     >
       {{ error }}
     </Alert>
-    <TableImporterPreview
-      v-if="error === '' && Object.keys(preview).length !== 0"
-      :preview="preview"
-    ></TableImporterPreview>
   </div>
 </template>
 
@@ -91,11 +87,10 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import CharsetDropdown from '@baserow/modules/core/components/helpers/CharsetDropdown'
 import importer from '@baserow/modules/database/mixins/importer'
-import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 
 export default {
   name: 'TableCSVImporter',
-  components: { TableImporterPreview, CharsetDropdown },
+  components: { CharsetDropdown },
   mixins: [form, importer],
   data() {
     return {
@@ -105,9 +100,6 @@ export default {
     }
   },
   validations: {
-    values: {
-      getData: { required },
-    },
     filename: { required },
   },
   computed: {
@@ -201,6 +193,7 @@ export default {
       const data = []
 
       await this.$ensureRender()
+
       json.forEach((entry) => {
         const keys = Object.keys(entry)
         const row = []
@@ -213,20 +206,22 @@ export default {
 
         header.forEach((key) => {
           const exists = Object.prototype.hasOwnProperty.call(entry, key)
-          const value =
-            exists && entry[key] !== null ? entry[key].toString() : ''
+          const value = exists ? entry[key] : ''
           row.push(value)
         })
 
         data.push(row)
       })
 
-      this.values.header = this.prepareHeader(header, data)
-      this.values.getData = () => {
+      const preparedHeader = this.prepareHeader(header, data)
+      const getData = () => {
         return data
       }
       this.state = null
-      this.preview = this.getPreview(this.values.header, data)
+      const previewData = this.getPreview(header, data)
+
+      this.$emit('getData', getData)
+      this.$emit('data', { header: preparedHeader, previewData })
     },
   },
 }

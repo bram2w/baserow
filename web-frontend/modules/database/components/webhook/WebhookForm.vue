@@ -80,7 +80,8 @@
               <div
                 v-if="
                   fieldHasErrors('url') &&
-                  (!$v.values.url.required || !$v.values.url.url)
+                  (!$v.values.url.required ||
+                    !$v.values.url.isValidURLWithHttpScheme)
                 "
                 class="error"
               >
@@ -245,13 +246,14 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { required, maxLength, url } from 'vuelidate/lib/validators'
+import { required, maxLength } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import Radio from '@baserow/modules/core/components/Radio'
 import TestWebhookModal from '@baserow/modules/database/components/webhook/TestWebhookModal'
+import { isValidURLWithHttpScheme } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'WebhookForm',
@@ -352,7 +354,7 @@ export default {
   validations: {
     values: {
       name: { required },
-      url: { required, maxLength: maxLength(2000), url },
+      url: { required, maxLength: maxLength(2000), isValidURLWithHttpScheme },
     },
     headers: {
       $each: {

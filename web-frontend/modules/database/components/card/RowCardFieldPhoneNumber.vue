@@ -1,6 +1,13 @@
 <template functional>
   <div class="card-text">
-    <a :href="'tel:' + props.value" target="_blank">{{ props.value }}</a>
+    <a
+      :href="'tel:' + props.value"
+      target="_blank"
+      rel="nofollow noopener noreferrer"
+      class="forced-pointer-events-auto"
+      @mousedown.stop
+      >{{ props.value }}</a
+    >
   </div>
 </template>
 

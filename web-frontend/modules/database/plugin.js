@@ -1,4 +1,5 @@
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { DuplicateTableJobType } from '@baserow/modules/database/jobTypes'
 import {
   GridViewType,
   GalleryViewType,
@@ -144,6 +145,7 @@ import {
   BaserowLeast,
   BaserowGreatest,
   BaserowRegexReplace,
+  BaserowLink,
   BaserowTrim,
   BaserowRight,
   BaserowLeft,
@@ -151,11 +153,15 @@ import {
   BaserowFilter,
   BaserowTrunc,
   BaserowRound,
+  BaserowButton,
+  BaserowGetLinkUrl,
+  BaserowGetLinkLabel,
 } from '@baserow/modules/database/formula/functions'
 import {
   BaserowFormulaArrayType,
   BaserowFormulaBooleanType,
   BaserowFormulaCharType,
+  BaserowFormulaLinkType,
   BaserowFormulaDateIntervalType,
   BaserowFormulaDateType,
   BaserowFormulaInvalidType,
@@ -193,6 +199,7 @@ import nl from '@baserow/modules/database/locales/nl.json'
 import de from '@baserow/modules/database/locales/de.json'
 import es from '@baserow/modules/database/locales/es.json'
 import it from '@baserow/modules/database/locales/it.json'
+import pl from '@baserow/modules/database/locales/pl.json'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -206,6 +213,7 @@ export default (context) => {
     i18n.mergeLocaleMessage('de', de)
     i18n.mergeLocaleMessage('es', es)
     i18n.mergeLocaleMessage('it', it)
+    i18n.mergeLocaleMessage('pl', pl)
   }
 
   store.registerModule('table', tableStore)
@@ -225,6 +233,7 @@ export default (context) => {
 
   app.$registry.register('plugin', new DatabasePlugin(context))
   app.$registry.register('application', new DatabaseApplicationType(context))
+  app.$registry.register('job', new DuplicateTableJobType(context))
   app.$registry.register('view', new GridViewType(context))
   app.$registry.register('view', new GalleryViewType(context))
   app.$registry.register('view', new FormViewType(context))
@@ -419,6 +428,11 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowFilter(context))
   app.$registry.register('formula_function', new BaserowTrunc(context))
   app.$registry.register('formula_function', new BaserowRound(context))
+  // Link functions
+  app.$registry.register('formula_function', new BaserowLink(context))
+  app.$registry.register('formula_function', new BaserowButton(context))
+  app.$registry.register('formula_function', new BaserowGetLinkUrl(context))
+  app.$registry.register('formula_function', new BaserowGetLinkLabel(context))
 
   // Formula Types
   app.$registry.register('formula_type', new BaserowFormulaTextType(context))
@@ -437,6 +451,7 @@ export default (context) => {
     'formula_type',
     new BaserowFormulaSingleSelectType(context)
   )
+  app.$registry.register('formula_type', new BaserowFormulaLinkType(context))
 
   // File preview types
   app.$registry.register('preview', new ImageFilePreview(context))

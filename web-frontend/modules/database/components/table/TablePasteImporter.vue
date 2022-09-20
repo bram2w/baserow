@@ -36,10 +36,6 @@
     >
       {{ error }}
     </Alert>
-    <TableImporterPreview
-      v-if="error === '' && content !== '' && Object.keys(preview).length !== 0"
-      :preview="preview"
-    ></TableImporterPreview>
   </div>
 </template>
 
@@ -48,11 +44,9 @@ import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import importer from '@baserow/modules/database/mixins/importer'
-import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 
 export default {
   name: 'TablePasteImporter',
-  components: { TableImporterPreview },
   mixins: [form, importer],
   data() {
     return {
@@ -61,9 +55,6 @@ export default {
     }
   },
   validations: {
-    values: {
-      getData: { required },
-    },
     content: { required },
   },
   methods: {
@@ -99,24 +90,27 @@ export default {
           // prepared for creating the table. We store the data stringified because it
           // doesn't need to be reactive.
           let data
+          let header
 
           if (this.firstRowHeader) {
-            const [header, ...rest] = parsedResult.data
+            const [rawHeader, ...rest] = parsedResult.data
             data = rest
-            this.values.header = this.prepareHeader(header, data)
+            header = this.prepareHeader(rawHeader, data)
           } else {
             data = parsedResult.data
-            this.values.header = this.prepareHeader([], data)
+            header = this.prepareHeader([], data)
           }
 
-          this.values.getData = () => {
+          const getData = () => {
             return new Promise((resolve) => {
               resolve(data)
             })
           }
           this.error = ''
           this.state = null
-          this.preview = this.getPreview(this.values.header, data)
+          const previewData = this.getPreview(header, data)
+          this.$emit('getData', getData)
+          this.$emit('data', { header, previewData })
         },
         error(error) {
           // Papa parse has resulted in an error which we need to display to the user.

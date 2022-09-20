@@ -919,3 +919,24 @@ def test_user_in_wrong_group_need_the_password_to_access_password_protected_view
         HTTP_AUTHORIZATION=f"JWT {other_user_token}",
     )
     assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_public_gallery_view_fields_include_cover_image(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(user=user, table=table)
+    gallery_view = data_fixture.create_gallery_view(
+        user=user, table=table, public=True, card_cover_image_field=file_field
+    )
+    data_fixture.create_gallery_view_field_option(gallery_view, file_field, hidden=True)
+
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": gallery_view.slug}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["fields"]) == 1

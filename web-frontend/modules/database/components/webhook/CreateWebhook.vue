@@ -49,14 +49,26 @@ export default {
         )
         this.$emit('created', data)
       } catch (error) {
-        this.handleError(error, 'webhook', {
-          ERROR_TABLE_WEBHOOK_MAX_LIMIT_EXCEEDED: new ResponseErrorMessage(
-            this.$t('createWebhook.errorTableWebhookMaxLimitExceededTitle'),
-            this.$t(
-              'createWebhook.errorTableWebhookMaxLimitExceededDescription'
-            )
-          ),
-        })
+        this.handleError(
+          error,
+          'webhook',
+          {
+            ERROR_TABLE_WEBHOOK_MAX_LIMIT_EXCEEDED: new ResponseErrorMessage(
+              this.$t('createWebhook.errorTableWebhookMaxLimitExceededTitle'),
+              this.$t(
+                'createWebhook.errorTableWebhookMaxLimitExceededDescription'
+              )
+            ),
+          },
+          {
+            url: {
+              invalid_url: new ResponseErrorMessage(
+                this.$t('webhook.form.invalidURLTitle'),
+                this.$t('webhook.form.invalidURLDescription')
+              ),
+            },
+          }
+        )
       }
 
       this.loading = false

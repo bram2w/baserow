@@ -15,6 +15,41 @@ For example:
 
 ### Refactors
 
+
+## Released (2022-09-20 1.12.1)
+
+### New Features
+
+* Made it possible to share the Kanban view publicly. [#1146](https://gitlab.com/bramw/baserow/-/issues/1146)
+* New templates:
+    * Copy Management
+    * Hiking Guide
+    * New Hire Onboarding
+    * Property Showings
+    * QA Test Scripts
+    * Risk Assessment and Management
+    * Web App UAT
+* Updated templates:
+    * Benefit Show Manager
+    * Car Hunt
+    * Wedding Client Planner
+* Added link, button, get_link_label and get_link_url formula functions. [#818](https://gitlab.com/bramw/baserow/-/issues/818)
+* Show database and table duplication progress in the left sidebar. [#1059](https://gitlab.com/bramw/baserow/-/issues/1059)
+* Add env vars for controlling which URLs and IPs webhooks are allowed to use. [#931](https://gitlab.com/bramw/baserow/-/issues/931)
+* Add a rich preview while importing data to an existing table. [#1120](https://gitlab.com/bramw/baserow/-/issues/1120)
+* Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
+* Added support for placeholders in form headings and fields. [#1168](https://gitlab.com/bramw/baserow/-/issues/1168)
+
+### Bug Fixes
+
+* Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.
+* Fixed a bug that breaks the link row modal when a formula is referencing a single select field. [#1111](https://gitlab.com/bramw/baserow/-/issues/1111)
+* Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly [#1194](https://gitlab.com/bramw/baserow/-/issues/1194).
+
+### Refactors
+
+* Formulas which referenced other aggregate formulas now will work correctly. [#1081](https://gitlab.com/bramw/baserow/-/issues/1081)
+
 ## Released (2022-09-07 1.12.0)
 
 ### New Features

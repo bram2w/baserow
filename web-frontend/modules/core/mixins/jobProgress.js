@@ -4,35 +4,34 @@ import JobService from '@baserow/modules/core/services/job'
  * To use this mixin you need to create the following methods on your component:
  * - `getCustomHumanReadableJobState(state)` returns the human readable message your
  *   custom state values.
- * - onJobDone() (optional) is called when the job is finished
- * - onJobFailed() (optional) is called if the job failed
- * - onJobPollingError(error) (optional) is there is an exception during the job polling
+ * - onJobUpdated() (optional) is called during the polling for not finished jobs.
+ * - onJobDone() (optional) is called if the job successfully finishes.
+ * - onJobFailed() (optional) is called if the job fails.
+ * - onJobPollingError(error) (optional) is called if the polling fails.
  *
  */
 export default {
   data() {
     return {
       job: null,
-      pollInterval: null,
+      nextPollTimeout: null,
+      pollTimeoutId: null,
     }
   },
   computed: {
-    jobIsRunning() {
-      return (
-        this.job !== null && !['failed', 'finished'].includes(this.job.state)
-      )
-    },
-    jobIsFinished() {
-      return (
-        this.job !== null && ['failed', 'finished'].includes(this.job.state)
-      )
-    },
     jobHasSucceeded() {
       return this.job?.state === 'finished'
     },
     jobHasFailed() {
       return this.job?.state === 'failed'
     },
+    jobIsFinished() {
+      return this.jobHasSucceeded || this.jobHasFailed
+    },
+    jobIsRunning() {
+      return this.job !== null && !this.jobIsFinished
+    },
+
     jobHumanReadableState() {
       if (this.job === null) {
         return ''
@@ -57,35 +56,46 @@ export default {
      */
     startJobPoller(job) {
       this.job = job
-      this.pollInterval = setTimeout(this.getLatestJobInfo, 1000)
+      this.nextPollTimeout = 200
+      this.pollTimeoutId = setTimeout(
+        this.getLatestJobInfo,
+        this.nextPollTimeout
+      )
     },
     async getLatestJobInfo() {
       try {
-        const { data } = await JobService(this.$client).get(this.job.id)
-        this.job = data
-        if (this.jobHasFailed) {
-          if (this.onJobFailed) {
+        const { data: job } = await JobService(this.$client).get(this.job.id)
+        this.job = job
+        if (job.state === 'failed') {
+          if (typeof this.onJobFailed === 'function') {
             await this.onJobFailed()
           }
-        } else if (!this.jobIsRunning) {
-          if (this.onJobDone) {
+        } else if (job.state === 'finished') {
+          if (typeof this.onJobDone === 'function') {
             await this.onJobDone()
           }
         } else {
-          // job unfinished, set the next polling timeout
-          this.pollInterval = setTimeout(this.getLatestJobInfo, 1000)
+          // job unfinished, keep polling
+          if (typeof this.onJobUpdated === 'function') {
+            await this.onJobUpdated()
+          }
+          this.nextPollTimeout = Math.min(this.nextPollTimeout * 1.5, 2500)
+          this.pollTimeoutId = setTimeout(
+            this.getLatestJobInfo,
+            this.nextPollTimeout
+          )
         }
       } catch (error) {
-        if (this.onJobPollingError) {
+        if (typeof this.onJobPollingError === 'function') {
           this.onJobPollingError(error)
         }
         this.job = null
       }
     },
     stopPollIfRunning() {
-      if (this.pollInterval) {
-        clearTimeout(this.pollInterval)
-        this.pollInterval = null
+      if (this.pollTimeoutId) {
+        clearTimeout(this.pollTimeoutId)
+        this.pollTimeoutId = null
       }
     },
   },

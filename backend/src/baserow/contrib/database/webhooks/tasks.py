@@ -4,7 +4,11 @@ from django.db import transaction
 from baserow.config.celery import app
 
 
-@app.task(bind=True, max_retries=settings.WEBHOOKS_MAX_RETRIES_PER_CALL, queue="export")
+@app.task(
+    bind=True,
+    max_retries=settings.BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL,
+    queue="export",
+)
 def call_webhook(
     self,
     webhook_id: int,
@@ -14,7 +18,7 @@ def call_webhook(
     url: str,
     headers: dict,
     payload: dict,
-    **kwargs: dict
+    **kwargs: dict,
 ):
     """
     This task should be called asynchronously when the webhook call must be trigged.
@@ -65,7 +69,7 @@ def call_webhook(
             response = exception.response
             error = str(exception)
         except UnacceptableAddressException as exception:
-            error = str(exception)
+            error = f"UnacceptableAddressException: {exception}"
 
         TableWebhookCall.objects.update_or_create(
             id=event_id,
@@ -95,7 +99,8 @@ def call_webhook(
             webhook.failed_triggers = 0
             webhook.save()
         elif not success and (
-            webhook.failed_triggers < settings.WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES
+            webhook.failed_triggers
+            < settings.BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES
         ):
             # If the task has reached the maximum amount of failed calls, we're going to
             # give up and increase the total failed triggers of the webhook if we're
@@ -113,7 +118,10 @@ def call_webhook(
     # This part must be outside of the transaction block, otherwise it could cause
     # the transaction to rollback when the retry exception is raised, and we don't want
     # that to happen.
-    if not success and self.request.retries < settings.WEBHOOKS_MAX_RETRIES_PER_CALL:
+    if (
+        not success
+        and self.request.retries < settings.BASEROW_WEBHOOKS_MAX_RETRIES_PER_CALL
+    ):
         # If the task is still operating within the max retries per call limit,
         # then we want to retry the task with an exponential backoff.
         self.retry(countdown=2 ** self.request.retries)

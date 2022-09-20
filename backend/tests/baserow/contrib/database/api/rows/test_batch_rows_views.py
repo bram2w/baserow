@@ -612,7 +612,9 @@ def test_batch_create_rows_dependent_fields(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_create_rows_num_of_queries(api_client, data_fixture):
-    user, jwt_token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group()
+    user, jwt_token = data_fixture.create_user_and_token(group=group)
+    user2 = data_fixture.create_user(group=group)
     table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 
     # number field updating another table through link & formula
@@ -680,6 +682,11 @@ def test_batch_create_rows_num_of_queries(api_client, data_fixture):
         is_image=True,
     )
 
+    # multiple collaborators
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        table=table_b
+    )
+
     # setup the tables
     model_b = table_b.get_model()
     row_b_1 = model_b.objects.create()
@@ -708,6 +715,10 @@ def test_batch_create_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file1.name, "visible_name": "new name"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [
+                        {"id": user.id},
+                        {"id": user2.id},
+                    ],
                 },
             ]
         }
@@ -730,6 +741,10 @@ def test_batch_create_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file2.name, "visible_name": "new name 2"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [
+                        {"id": user.id},
+                        {"id": user2.id},
+                    ],
                 },
                 {
                     f"field_{number_field.id}": 240,
@@ -740,6 +755,7 @@ def test_batch_create_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file2.name, "visible_name": "new name 3"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [{"id": user.id}],
                 },
                 {
                     f"field_{number_field.id}": 500,
@@ -750,6 +766,7 @@ def test_batch_create_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file2.name, "visible_name": "new name 4"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [{"id": user2.id}],
                 },
             ]
         }
@@ -1646,7 +1663,9 @@ def test_batch_create_rows_dependent_fields_lookup(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_update_rows_num_of_queries(api_client, data_fixture):
-    user, jwt_token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group()
+    user, jwt_token = data_fixture.create_user_and_token(group=group)
+    user2 = data_fixture.create_user(group=group)
     table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 
     # number field updating another table through link & formula
@@ -1714,6 +1733,11 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
         is_image=True,
     )
 
+    # multiple collaborators
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        table=table_b
+    )
+
     # last modified is readonly but the auto update shouldn't produce n+1 queries
     last_modified_field = data_fixture.create_last_modified_field(
         table=table_b, date_include_time=True, timezone="Europe/Berlin"
@@ -1750,6 +1774,10 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file1.name, "visible_name": "new name"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [
+                        {"id": user.id},
+                        {"id": user2.id},
+                    ],
                 },
             ]
         }
@@ -1774,6 +1802,10 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file2.name, "visible_name": "new name 2"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [
+                        {"id": user.id},
+                        {"id": user2.id},
+                    ],
                 },
                 {
                     f"id": row_b_3.id,
@@ -1786,6 +1818,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file2.name, "visible_name": "new name 3"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [{"id": user.id}],
                 },
                 {
                     f"id": row_b_4.id,
@@ -1798,6 +1831,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
                     f"field_{file_field.id}": [
                         {"name": file2.name, "visible_name": "new name 4"}
                     ],
+                    f"field_{multiple_collaborators_field.id}": [{"id": user2.id}],
                 },
             ]
         }

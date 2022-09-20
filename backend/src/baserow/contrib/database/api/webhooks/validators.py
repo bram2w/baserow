@@ -21,8 +21,8 @@ def url_validation(value: str) -> str:
     try:
         url_validator(value)
         return value
-    except DjangoValidationError:
-        raise serializers.ValidationError(detail="Not a valid url", code="invalid_url")
+    except DjangoValidationError as e:
+        raise serializers.ValidationError(detail=e.message, code=e.code)
 
 
 def http_header_validation(headers: dict) -> dict:

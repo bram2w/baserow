@@ -59,6 +59,7 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
     literal,
 )
+from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import GroupUser, UserFile
@@ -129,7 +130,7 @@ if TYPE_CHECKING:
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
-    from baserow.contrib.database.table.models import GeneratedTableModel, Table
+    from baserow.contrib.database.table.models import GeneratedTableModel
 
 logger = logging.getLogger(__name__)
 
@@ -3565,6 +3566,31 @@ class MultipleCollaboratorsFieldType(FieldType):
                 user_ids.append(user_id)
 
         getattr(row, field_name).set(user_ids)
+
+    def random_value(self, instance, fake, cache):
+        """
+        Selects a random sublist out of the possible collaborators.
+        """
+
+        cache_entry_name = f"field_{instance.id}_collaborators"
+
+        if cache_entry_name not in cache:
+            table = Table.objects.get(id=instance.table_id)
+            groupusers_from_group = GroupUser.objects.filter(
+                group=table.database.group
+            ).select_related("user")
+            cache[cache_entry_name] = [
+                groupuser.user for groupuser in groupusers_from_group
+            ]
+
+        collaborators = cache[cache_entry_name]
+
+        if not collaborators:
+            return None
+
+        random_choice = randint(1, len(collaborators))  # nosec
+
+        return sample(set([x.id for x in collaborators]), random_choice)
 
     def get_order(self, field, field_name, order_direction):
         """

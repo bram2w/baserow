@@ -248,3 +248,43 @@ def test_when_field_updated_public_views_are_sent_event_with_restricted_related(
             ),
         ]
     )
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_cover_image_is_always_included_in_field_update_signal(
+    mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table, order=0, name="file")
+    public_gallery_view = data_fixture.create_gallery_view(
+        table=table, user=user, public=True, card_cover_image_field=file_field
+    )
+    data_fixture.create_gallery_view_field_option(
+        public_gallery_view, file_field, hidden=True
+    )
+
+    updated_field = FieldHandler().update_field(user, file_field, name="a")
+
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
+        [
+            call(f"table-{table.id}", ANY, ANY),
+            call(
+                f"view-{public_gallery_view.slug}",
+                {
+                    "type": "field_updated",
+                    "field_id": updated_field.id,
+                    "field": MatchDictSubSet(
+                        {
+                            "id": updated_field.id,
+                            "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                            "name": updated_field.name,
+                        }
+                    ),
+                    "related_fields": [],
+                },
+                None,
+            ),
+        ]
+    )

@@ -4,7 +4,7 @@ from typing import Any, Dict, Type, Union
 from django.apps import apps
 from django.conf import settings
 from django.db import models
-from django.db.models import F, Q, QuerySet
+from django.db.models import F, JSONField, Q, QuerySet
 
 from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
@@ -332,6 +332,11 @@ class GeneratedTableModel(models.Model):
             f.attname
             for f in cls._meta.fields
             if getattr(f, "requires_refresh_after_insert", False)
+            # There is a bug in Django where db_returning fields do not have their
+            # from_db_value function applied after performing and INSERT .. RETURNING
+            # Instead for now we force a refresh to ensure these fields are converted
+            # from their db representations correctly.
+            or isinstance(f, JSONField) and f.db_returning
         ]
 
     @classmethod

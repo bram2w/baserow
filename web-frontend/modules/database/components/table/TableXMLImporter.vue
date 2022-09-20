@@ -67,10 +67,6 @@
     >
       {{ error }}
     </Alert>
-    <TableImporterPreview
-      v-if="error === '' && Object.keys(preview).length !== 0"
-      :preview="preview"
-    ></TableImporterPreview>
   </div>
 </template>
 
@@ -79,12 +75,10 @@ import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import importer from '@baserow/modules/database/mixins/importer'
-import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
 import { XMLParser } from '@baserow/modules/database/utils/xml'
 
 export default {
   name: 'TableXMLImporter',
-  components: { TableImporterPreview },
   mixins: [form, importer],
   data() {
     return {
@@ -93,9 +87,6 @@ export default {
     }
   },
   validations: {
-    values: {
-      getData: { required },
-    },
     filename: { required },
   },
   methods: {
@@ -153,7 +144,7 @@ export default {
       xmlParser.loadXML(6)
 
       await this.$ensureRender()
-      const [header, xmlData, errors] = xmlParser.transform()
+      const [rawHeader, xmlData, errors] = xmlParser.transform()
 
       if (errors.length > 0) {
         this.handleImporterError(
@@ -177,8 +168,8 @@ export default {
         return
       }
 
-      this.values.header = this.prepareHeader(header, xmlData)
-      this.values.getData = async () => {
+      const header = this.prepareHeader(rawHeader, xmlData)
+      const getData = async () => {
         await this.$ensureRender()
         xmlParser.loadXML()
 
@@ -192,7 +183,10 @@ export default {
         return xmlData
       }
       this.state = null
-      this.preview = this.getPreview(this.values.header, xmlData)
+      const previewData = this.getPreview(header, xmlData)
+
+      this.$emit('getData', getData)
+      this.$emit('data', { header, previewData })
     },
   },
 }

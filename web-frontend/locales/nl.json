@@ -186,6 +186,10 @@
             "rowsCreated": "Rijen zijn gemaakt",
             "rowsDeleted": "Rijen zijn verwijderd",
             "rowsUpdated": "Rijen zijn bijgewerkt"
+        },
+        "form": {
+            "invalidURLTitle": "Ongeldige URL.",
+            "invalidURLDescription": "De webhook URL is ongeldig, ontoegankelijk of verboden."
         }
     },
     "clientHandler": {
@@ -274,7 +278,12 @@
         "singleRow": "Enkel",
         "createRows": "Rijen maken",
         "deleteRows": "Rijen verwijderen",
-        "batchRows": "Batch"
+        "batchRows": "Batch",
+        "uploadFile": "Upload bestand",
+        "uploadFileDescription": "De `file` multipart met de inhoud van het bestand.",
+        "uploadFileViaUrl": "Bestand uploaden via URL",
+        "uploadFileViaUrlDescription": "Uploadt een bestand naar Baserow door het te downloaden van de opgegeven URL.",
+        "fileUploads": "Bestandsuploads"
     },
     "exporterType": {
         "csv": "Exporteren naar CSV"

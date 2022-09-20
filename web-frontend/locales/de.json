@@ -27,7 +27,8 @@
         "paste": "Einfügen",
         "activate": "Aktivieren",
         "deactivate": "Deaktivieren",
-        "duplicate": "Duplizieren"
+        "duplicate": "Duplizieren",
+        "remove": "Entfernen"
     },
     "adminType": {
         "settings": "Einstellungen"
@@ -81,7 +82,8 @@
         "multipleSelect": "Mehrfachauswahl",
         "phoneNumber": "Telefonnummer",
         "formula": "Formel",
-        "lookup": "Nachschlagen"
+        "lookup": "Nachschlagen",
+        "multipleCollaborators": "Mitarbeiter"
     },
     "fieldErrors": {
         "invalidNumber": "Ungültige Zahl",
@@ -110,12 +112,13 @@
         "createdOnReadOnly": "Das Feld Erstellt am ist ein schreibgeschütztes Feld.",
         "url": "Akzeptiert eine Zeichenfolge, die eine URL sein muss.",
         "email": "Akzeptiert eine Zeichenkette, die eine E-Mail-Adresse sein muss.",
-        "file": "Akzeptiert ein Feld von Objekten, das mindestens den Namen der Benutzerdatei enthält.",
+        "file": "Akzeptiert ein Array von Objekten, das mindestens den Namen der Benutzerdatei enthält. Sie können die \"File uploads\"-Endpunkte verwenden, um die Datei hochzuladen. Die Antwort auf diese Aufrufe kann hier direkt als Objekt bereitgestellt werden. Die Endpunkte sind in der linken Seitenleiste zu finden.",
         "singleSelect": "Akzeptiert eine ganze Zahl, die für die gewählte Auswahloption id steht, oder null, wenn keine ausgewählt ist.",
         "multipleSelect": "Akzeptiert ein Feld von Integerwerten, die jeweils die gewählte Auswahloption id darstellen.",
         "phoneNumber": "Akzeptiert eine Telefonnummer mit einer maximalen Länge von 100 Zeichen, die nur aus Ziffern, Leerzeichen und den folgenden Zeichen besteht: Nx,._+*()#=;/- .",
         "formula": "Ein schreibgeschütztes Feld, das durch eine in der Formelsprache Baserow geschriebene Formel definiert ist.",
-        "lookup": "Ein schreibgeschütztes Feld, das mit einem verknüpften Zeilenfeld verbunden ist und ein Feld von Werten und Zeilennummern aus dem gewählten Nachschlagefeld in der verknüpften Tabelle zurückgibt."
+        "lookup": "Ein schreibgeschütztes Feld, das mit einem verknüpften Zeilenfeld verbunden ist und ein Feld von Werten und Zeilennummern aus dem gewählten Nachschlagefeld in der verknüpften Tabelle zurückgibt.",
+        "multipleCollaborators": "Akzeptiert ein Array von Objekten, wobei jedes Objekt die ID eines Benutzers enthält."
     },
     "viewFilter": {
         "contains": "enthält",
@@ -142,7 +145,9 @@
         "isDaysAgo": "ist Tage alt",
         "inThisWeek": "in dieser Woche",
         "isMonthsAgo": "ist Monate her",
-        "isYearsAgo": "ist Jahre her"
+        "isYearsAgo": "ist Jahre her",
+        "beforeToday": "ist vor heute",
+        "afterToday": "ist nach heute"
     },
     "viewType": {
         "grid": "Gitternetz",
@@ -181,6 +186,10 @@
             "rowsCreated": "Zeilen werden erstellt",
             "rowsUpdated": "Zeilen werden aktualisiert",
             "rowsDeleted": "Zeilen werden gelöscht"
+        },
+        "form": {
+            "invalidURLTitle": "Ungültige URL.",
+            "invalidURLDescription": "Die Webhook-URL ist ungültig, unzugänglich oder verboten."
         }
     },
     "clientHandler": {
@@ -269,7 +278,12 @@
         "deleteRows": "Zeilen löschen",
         "updateRows": "Zeilen aktualisieren",
         "createRows": "Zeilen erstellen",
-        "batchRows": "Charge"
+        "batchRows": "Charge",
+        "uploadFile": "Datei hochladen",
+        "uploadFileDescription": "Der `file` Multipart, der den Dateiinhalt enthält.",
+        "uploadFileViaUrl": "Datei per URL hochladen",
+        "uploadFileViaUrlDescription": "Lädt eine Datei auf Baserow hoch, indem es sie von der angegebenen URL herunterlädt.",
+        "fileUploads": "Datei-Uploads"
     },
     "exporterType": {
         "csv": "Exportieren in CSV"
@@ -345,7 +359,8 @@
         "sumDescription": "Summiert alle Werte und gibt das Ergebnis zurück.",
         "filterDescription": "Filtert einen Ausdruck, der einen Verweis auf ein Nachschlage-/Verknüpfungsfeld oder einen Aufruf einer Nachschlagefunktion enthält, nach unten.",
         "roundDescription": "Gibt das erste Argument gerundet auf die im zweiten Argument angegebene Anzahl von Ziffern zurück.",
-        "intDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden."
+        "intDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden.",
+        "truncDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"

@@ -1,3 +1,5 @@
+import addPublicAuthTokenHeader from '@baserow/modules/database/utils/publicView'
+
 export default (client) => {
   return {
     fetchRows({
@@ -7,6 +9,9 @@ export default (client) => {
       signal = null,
       includeFieldOptions = false,
       selectOptions = [],
+      publicUrl = false,
+      publicAuthToken = null,
+      filters = {},
     }) {
       const include = []
       const params = new URLSearchParams()
@@ -24,6 +29,12 @@ export default (client) => {
         params.append('include', include.join(','))
       }
 
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
+
       selectOptions.forEach((selectOption) => {
         let value = selectOption.id.toString()
         if (Object.prototype.hasOwnProperty.call(selectOption, 'limit')) {
@@ -37,11 +48,16 @@ export default (client) => {
 
       const config = { params }
 
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+
       if (signal !== null) {
         config.signal = signal
       }
 
-      return client.get(`/database/views/kanban/${kanbanId}/`, config)
+      const url = publicUrl ? 'public/rows/' : ''
+      return client.get(`/database/views/kanban/${kanbanId}/${url}`, config)
     },
   }
 }

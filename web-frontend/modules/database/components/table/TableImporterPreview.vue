@@ -1,37 +1,11 @@
 <template>
   <div class="control mt-3">
-    <label class="control__label">{{ $t('tableImporterPreview.label') }}</label>
+    <label class="control__label">{{ title }}</label>
     <div class="control__elements">
       <div class="table-preview__container">
         <div class="table-preview">
-          <div class="table-preview__row table-preview__head">
-            <div
-              v-for="(item, index) in preview.head"
-              :key="index"
-              class="table-preview__column"
-            >
-              {{ item }}
-            </div>
-          </div>
-          <div
-            v-for="(row, index) in preview.rows"
-            :key="index"
-            class="table-preview__row"
-          >
-            <div
-              v-for="(column, rowIndex) in row"
-              :key="rowIndex"
-              class="table-preview__column"
-            >
-              {{ column }}
-            </div>
-          </div>
-          <div v-if="preview.remaining > 0" class="table-preview__more">
-            {{
-              $t('tableImporterPreview.remaining', {
-                remaining: preview.remaining,
-              })
-            }}
+          <div class="select-row-modal__head">
+            <SimpleGrid :rows="rows" :fields="fields" />
           </div>
         </div>
       </div>
@@ -40,10 +14,21 @@
 </template>
 
 <script>
+import SimpleGrid from '@baserow/modules/database/components/view/grid/SimpleGrid'
+
 export default {
+  components: { SimpleGrid },
   props: {
-    preview: {
-      type: Object,
+    rows: {
+      type: Array,
+      required: true,
+    },
+    fields: {
+      type: Array,
+      required: true,
+    },
+    title: {
+      type: String,
       required: true,
     },
   },

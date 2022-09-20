@@ -6,6 +6,7 @@ import {
   isSimplePhoneNumber,
   isValidEmail,
   isValidURL,
+  getFilenameFromUrl,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -43,9 +44,9 @@ import FunctionalGridViewFieldDate from '@baserow/modules/database/components/vi
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
-import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
 import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
+import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -1610,7 +1611,7 @@ export class URLFieldType extends FieldType {
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return FunctionalGridViewFieldURL
   }
 
   getRowEditFieldComponent() {
@@ -1695,7 +1696,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return FunctionalGridViewFieldURL
   }
 
   getRowEditFieldComponent() {
@@ -1770,6 +1771,7 @@ export class EmailFieldType extends FieldType {
 
 export class FileFieldType extends FieldType {
   fileRegex = /^(.+\.[^\s]+) \(http[^)]+\/([^\s]+.[^\s]+)\)$/
+  fileURLRegex = /^http[^)]+\/([^\s]+.[^\s]+)$/
 
   static getType() {
     return 'file'
@@ -1839,7 +1841,9 @@ export class FileFieldType extends FieldType {
     return (
       Array.isArray(values) &&
       values.every(
-        (value) => !Object.prototype.hasOwnProperty.call(value, 'name')
+        (value) =>
+          Object.prototype.hasOwnProperty.call(value, 'name') ||
+          Object.prototype.hasOwnProperty.call(value, 'url')
       )
     )
   }
@@ -1847,6 +1851,17 @@ export class FileFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData, richClipboardData) {
     if (this.checkRichValueIsCompatible(richClipboardData)) {
       return richClipboardData
+        .map((file) => {
+          if (Object.prototype.hasOwnProperty.call(file, 'name')) {
+            return file
+          } else if (isValidURL(file.url)) {
+            const name = getFilenameFromUrl(file.url)
+            return { ...file, name }
+          } else {
+            return null
+          }
+        })
+        .filter((f) => f)
     } else {
       try {
         const files = this.app.$papa.stringToArray(clipboardData)
@@ -2039,7 +2054,6 @@ export class SingleSelectFieldType extends FieldType {
       if (!clipboardData) {
         return null
       }
-
       return (
         this._findOptionWithMatchingId(field, clipboardData) ||
         this._findOptionWithMatchingValue(field, clipboardData)
@@ -2211,6 +2225,7 @@ export class MultipleSelectFieldType extends FieldType {
       if (richClipboardData === null) {
         return []
       }
+
       return richClipboardData
     } else {
       // Fallback to text version
@@ -2334,7 +2349,7 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldPhoneNumber
+    return FunctionalGridViewFieldURL
   }
 
   getRowEditFieldComponent() {
@@ -2509,11 +2524,9 @@ export class FormulaFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value) {
-    const underlyingFieldType = this.app.$registry.get(
-      'field',
-      this._mapFormulaTypeToFieldType(field.formula_type)
-    )
-    return underlyingFieldType.toHumanReadableString(field, value)
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .toHumanReadableString(field, value)
   }
 
   getSortIndicator(field) {
@@ -2570,13 +2583,6 @@ export class LookupFieldType extends FormulaFieldType {
 
   getFormComponent() {
     return FieldLookupSubForm
-  }
-
-  toHumanReadableString(field, value) {
-    if (value) {
-      return value.map((link) => link.value).join(', ')
-    }
-    return ''
   }
 
   shouldFetchFieldSelectOptions() {
@@ -2723,6 +2729,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       try {
         const data = this.app.$papa.stringToArray(clipboardData)
         const uniqueValuesOnly = Array.from(new Set(data))
+
         return uniqueValuesOnly
           .map((emailOrName) => {
             const groupUser =
@@ -2736,6 +2743,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
           .map((obj) => {
             return {
               id: obj.user_id,
+              name: obj.name,
             }
           })
       } catch (e) {

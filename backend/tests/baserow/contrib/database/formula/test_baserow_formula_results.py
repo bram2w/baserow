@@ -35,6 +35,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     UnTyped,
 )
 from baserow.contrib.database.formula.types.type_checker import MustBeManyExprChecker
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.trash.handler import TrashHandler
 
@@ -197,6 +198,50 @@ VALID_FORMULA_TESTS = [
     ("int(tonumber('invalid'))", "NaN"),
     ("1/2/4", "0.1250000000"),
     ("divide(1, if(true,1,1))", "1.0000000000"),
+    ("link('1')", {"url": "1", "label": None}),
+    ("link('a' + 'b')", {"url": "ab", "label": None}),
+    (
+        "link('https://www.google.com')",
+        {"url": "https://www.google.com", "label": None},
+    ),
+    ("button('1', 'l')", {"url": "1", "label": "l"}),
+    ("button('a' + 'b', 'l' + 'a')", {"url": "ab", "label": "la"}),
+    (
+        "button('https://www.google.com', 'Google')",
+        {"url": "https://www.google.com", "label": "Google"},
+    ),
+    (
+        "button('https://www.google.com', 'Google') = link('https://www.google.com')",
+        False,
+    ),
+    (
+        "button('https://www.google.com', 'Google') "
+        "= button('https://www.google.com', 'Google')",
+        True,
+    ),
+    (
+        "button('https://www.google2.com', 'Google') "
+        "= button('https://www.google.com', 'Google')",
+        False,
+    ),
+    (
+        "button('https://www.google.com', 'Google') "
+        "= button('https://www.google.com', 'Google2')",
+        False,
+    ),
+    (
+        "link('https://www.google.com') = link('https://www.google.com')",
+        True,
+    ),
+    (
+        "link('https://www.google2.com') = link('https://www.google.com')",
+        False,
+    ),
+    ("get_link_label(link('1'))", None),
+    ("get_link_url(link('a' + 'b'))", "ab"),
+    ("get_link_url(link('https://www.google.com'))", "https://www.google.com"),
+    ("get_link_label(button('1', 'l'))", "l"),
+    ("get_link_url(button('a' + 'b', 'l' + 'a'))", "ab"),
 ]
 
 
@@ -462,7 +507,7 @@ INVALID_FORMULA_TESTS = [
         "'a' + 2",
         "ERROR_WITH_FORMULA",
         "Error with formula: argument number 2 given to operator + was of type number "
-        "but the only usable types for this argument are text,char.",
+        "but the only usable types for this argument are text,char,link.",
     ),
     (
         "true + true",
@@ -547,6 +592,92 @@ INVALID_FORMULA_TESTS = [
             "values obtained from a lookup or link row field reference."
         ),
     ),
+    (
+        "link('https://www.google.com') + 'a'",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator + was of type "
+            "text but there are no possible types usable here."
+        ),
+    ),
+    (
+        "link('https://www.google.com') + 1",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator + was of type "
+            "number but there are no possible types usable here."
+        ),
+    ),
+    (
+        "sum(link('https://www.google.com'))",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function sum was of type "
+            "link "
+            "but the only usable type for this argument is a list of number values "
+            "obtained from a lookup or link row field reference."
+        ),
+    ),
+    (
+        "link('a') + link('b')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator + was of type "
+            "link but there are no possible types usable here."
+        ),
+    ),
+    (
+        "link('a') > link('b')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator > was of type "
+            "link but there are no possible types usable here."
+        ),
+    ),
+    (
+        "link('a') > 1",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator > was of type "
+            "number but there are no possible types usable here."
+        ),
+    ),
+    (
+        "get_link_label(1)",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_label "
+            "was "
+            "of type number but the only usable type for this argument is link."
+        ),
+    ),
+    (
+        "get_link_label('a')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_label "
+            "was "
+            "of type text but the only usable type for this argument is link."
+        ),
+    ),
+    (
+        "get_link_url(1)",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_url "
+            "was "
+            "of type number but the only usable type for this argument is link."
+        ),
+    ),
+    (
+        "get_link_url('a')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_url "
+            "was "
+            "of type text but the only usable type for this argument is link."
+        ),
+    ),
 ]
 
 
@@ -621,6 +752,91 @@ def construct_some_literal_args(formula_func):
             )
         fake_args.append(literal(r))
     return fake_args
+
+
+@pytest.mark.django_db
+def test_aggregate_functions_can_be_referenced_by_other_formulas(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    grid = data_fixture.create_grid_view(user, table=table)
+
+    text_field = data_fixture.create_text_field(user, table=table_b, name="text_field")
+    number_field = data_fixture.create_number_field(
+        user, table=table_b, name="number_field"
+    )
+    bool_field = data_fixture.create_boolean_field(
+        user, table=table_b, name="bool_field"
+    )
+
+    fill_table_rows(10, table_b)
+
+    for formula_func in formula_function_registry.get_all():
+        if not formula_func.aggregate or formula_func.type == "array_agg_unnesting":
+            continue
+
+        field_refs = [
+            get_field_name_from_arg_types(
+                formula_func,
+                link_field,
+                text_field=text_field,
+                number_field=number_field,
+                bool_field=bool_field,
+            )
+        ]
+
+        for arg_set in field_refs:
+            formula = str(BaserowFunctionCall[UnTyped](formula_func, arg_set, None))
+            f = FieldHandler().create_field(
+                user,
+                table,
+                "formula",
+                name=f"{formula_func.type}",
+                formula=formula,
+            )
+            FieldHandler().create_field(
+                user,
+                table,
+                "formula",
+                name=f"{formula_func.type} ref",
+                formula=f"field('{f.name}')",
+            )
+            RowHandler().create_row(user, table, {})
+            url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+            response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+            response_json = response.json()
+            assert response.status_code == HTTP_200_OK
+            assert response_json["count"] > 0
+
+
+def get_field_name_from_arg_types(
+    formula_func, through_field, text_field, number_field, bool_field
+):
+    args = formula_func.arg_types
+    field_refs = []
+    for a in args:
+        r = None
+        arg_checker = a[0]
+        if isinstance(arg_checker, MustBeManyExprChecker):
+            arg_checker = arg_checker.formula_types[0]
+        if arg_checker == BaserowFormulaValidType:
+            r = text_field.name
+        elif arg_checker == BaserowFormulaBooleanType:
+            r = bool_field.name
+        elif arg_checker == BaserowFormulaTextType:
+            r = text_field.name
+        elif arg_checker == BaserowFormulaNumberType:
+            r = number_field.name
+        elif arg_checker == BaserowFormulaArrayType:
+            r = through_field.link_row_related_field.name
+        else:
+            assert False, (
+                f"Please add a branch for {arg_checker} to "
+                f"the test function get_field_name_from_arg_types"
+            )
+        field_refs.append(BaserowFieldReference[UnTyped](through_field.name, r, None))
+    return field_refs
 
 
 @pytest.mark.django_db

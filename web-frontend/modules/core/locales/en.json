@@ -7,11 +7,15 @@
         "label": "Copied!"
     },
     "sidebarApplication": {
-        "renameApplication": "Rename {type}",
-        "duplicateApplication": "Duplicate {type}",
+        "rename": "Rename",
+        "duplicate": "Duplicate",
         "viewTrash": "View trash",
-        "deleteApplication": "Delete {type}",
+        "delete": "Delete",
         "snapshots": "Snapshots"
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "Duplicating",
+        "duplicatedTitle": "Application duplicated"
     },
     "sidebar": {
         "createGroup": "Create group",

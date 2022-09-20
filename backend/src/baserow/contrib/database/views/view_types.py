@@ -305,6 +305,9 @@ class GridViewType(ViewType):
             ]
         return {o.field_id for o in field_options}
 
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("gridviewfieldoptions_set")
+
 
 class GalleryViewType(ViewType):
     type = "gallery"
@@ -464,7 +467,9 @@ class GalleryViewType(ViewType):
     def get_visible_field_options_in_order(self, gallery_view: GalleryView):
         return (
             gallery_view.get_field_options(create_if_missing=True)
-            .filter(Q(hidden=False))
+            .filter(
+                Q(hidden=False) | Q(field__id=gallery_view.card_cover_image_field_id)
+            )
             .order_by("order", "field__id")
         )
 
@@ -482,6 +487,10 @@ class GalleryViewType(ViewType):
 
         for field in fields:
 
+            # The card cover image field is always visible.
+            if field.id == view.card_cover_image_field_id:
+                continue
+
             # Find corresponding field option
             field_option_matching = None
             for field_option in field_options:
@@ -494,6 +503,9 @@ class GalleryViewType(ViewType):
                 hidden_field_ids.add(field.id)
 
         return hidden_field_ids
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("galleryviewfieldoptions_set")
 
 
 class FormViewType(ViewType):
@@ -871,6 +883,9 @@ class FormViewType(ViewType):
             values[field] = user_file and user_file.serialize()
 
         return values
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("formviewfieldoptions_set")
 
     def enhance_field_options_queryset(self, queryset):
         return queryset.prefetch_related("conditions")

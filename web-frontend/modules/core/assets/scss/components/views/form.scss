@@ -294,6 +294,10 @@
 
 .form-view__heading {
   padding: 20px 20px 10px 20px;
+
+  // If we're in the form heading, the span.contenteditable
+  // is false, and there's no text value, show the placeholder.
+  @include contenteditable-placeholder();
 }
 
 .form_view__logo {
@@ -346,6 +350,10 @@
     &.form-view__field--selected {
       z-index: 2;
       border-color: $color-neutral-200;
+
+      // If we've selected a form field, the span.contenteditable
+      // is false, and there's no text value, show the placeholder.
+      @include contenteditable-placeholder();
     }
 
     &:not(.form-view__field--selected) {

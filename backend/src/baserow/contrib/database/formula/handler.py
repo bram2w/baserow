@@ -354,7 +354,11 @@ class FormulaHandler:
 
     @classmethod
     def recalculate_formula_and_get_update_expression(
-        cls, field: "FormulaField", old_field: "FormulaField", field_cache: "FieldCache"
+        cls,
+        field: "FormulaField",
+        old_field: "FormulaField",
+        field_cache: "FieldCache",
+        force_recreate_column: bool = False,
     ) -> Expression:
         """
         Recalculates the internal formula attributes and given its old field instance
@@ -365,6 +369,8 @@ class FormulaHandler:
         :param old_field: The old version of the formula field instance before any
             changes.
         :param field_cache: A field cache which will be used to lookup fields from.
+        :param force_recreate_column: Whether to force drop and recreate the formula
+            column even if it is not required.
         :return: An expression which can be used to update the formulas database column
             to be correct.
         """
@@ -372,7 +378,7 @@ class FormulaHandler:
         from baserow.contrib.database.views.handler import ViewHandler
 
         field.save(field_cache=field_cache)
-        recreate_formula_field_if_needed(field, old_field)
+        recreate_formula_field_if_needed(field, old_field, force_recreate_column)
         ViewHandler().field_type_changed(field)
         return FormulaHandler.baserow_expression_to_update_django_expression(
             field.cached_typed_internal_expression,

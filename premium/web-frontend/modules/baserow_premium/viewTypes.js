@@ -51,6 +51,14 @@ export class KanbanViewType extends PremiumViewType {
     return false
   }
 
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-public-kanban-view'
+  }
+
   getHeaderComponent() {
     return KanbanViewHeader
   }

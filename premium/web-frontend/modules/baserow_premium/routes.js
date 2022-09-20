@@ -26,4 +26,9 @@ export const routes = [
     path: '/admin/license/:id',
     component: path.resolve(__dirname, 'pages/admin/license.vue'),
   },
+  {
+    name: 'database-public-kanban-view',
+    path: '/public/kanban/:slug',
+    component: '@baserow/modules/database/pages/publicView.vue',
+  },
 ]

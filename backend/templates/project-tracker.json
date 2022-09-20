@@ -82,30 +82,33 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 25413,
-                            "link_row_related_field_id": 133743
+                            "link_row_related_field_id": 133743,
+                            "has_related_field": true
                         },
                         {
                             "id": 133730,
                             "type": "link_row",
-                            "name": "Project Lead",
+                            "name": "Project lead",
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 25414,
-                            "link_row_related_field_id": 133747
+                            "link_row_related_field_id": 133747,
+                            "has_related_field": true
                         },
                         {
                             "id": 133731,
                             "type": "link_row",
-                            "name": "Project Team",
+                            "name": "Project team",
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 25414,
-                            "link_row_related_field_id": 133748
+                            "link_row_related_field_id": 133748,
+                            "has_related_field": true
                         },
                         {
                             "id": 133732,
                             "type": "date",
-                            "name": "Kickoff Date",
+                            "name": "Kickoff date",
                             "order": 6,
                             "primary": false,
                             "date_format": "ISO",
@@ -115,7 +118,7 @@
                         {
                             "id": 133733,
                             "type": "date",
-                            "name": "Due Date",
+                            "name": "Due date",
                             "order": 7,
                             "primary": false,
                             "date_format": "ISO",
@@ -136,7 +139,8 @@
                             "order": 9,
                             "primary": false,
                             "link_row_table_id": 25412,
-                            "link_row_related_field_id": 133737
+                            "link_row_related_field_id": 133737,
+                            "has_related_field": true
                         },
                         {
                             "id": 306854,
@@ -152,7 +156,7 @@
                         {
                             "id": 27817,
                             "type": "grid",
-                            "name": "All Projects",
+                            "name": "All projects",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -166,6 +170,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134366,
@@ -191,8 +196,8 @@
                                     "width": 128,
                                     "hidden": false,
                                     "order": 7,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "checked_percentage",
+                                    "aggregation_raw_type": "empty_count"
                                 },
                                 {
                                     "id": 134369,
@@ -227,8 +232,8 @@
                                     "width": 136,
                                     "hidden": false,
                                     "order": 4,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "min_date",
+                                    "aggregation_raw_type": "min"
                                 },
                                 {
                                     "id": 134373,
@@ -236,8 +241,8 @@
                                     "width": 118,
                                     "hidden": false,
                                     "order": 5,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "max_date",
+                                    "aggregation_raw_type": "max"
                                 },
                                 {
                                     "id": 134374,
@@ -263,15 +268,15 @@
                                     "width": 113,
                                     "hidden": false,
                                     "order": 6,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "sum",
+                                    "aggregation_raw_type": "sum"
                                 }
                             ]
                         },
                         {
                             "id": 27818,
                             "type": "grid",
-                            "name": "Completed Projects",
+                            "name": "Completed projects",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -292,6 +297,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134376,
@@ -397,7 +403,7 @@
                         {
                             "id": 27819,
                             "type": "grid",
-                            "name": "Incomplete Projects",
+                            "name": "Incomplete projects",
                             "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -418,6 +424,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134386,
@@ -544,6 +551,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 373636,
@@ -649,12 +657,13 @@
                         {
                             "id": 67216,
                             "type": "kanban",
-                            "name": "By Category",
+                            "name": "By category",
                             "order": 5,
                             "filter_type": "AND",
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
                             "single_select_field_id": 133727,
                             "field_options": [
                                 {
@@ -946,7 +955,8 @@
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 25411,
-                            "link_row_related_field_id": 133735
+                            "link_row_related_field_id": 133735,
+                            "has_related_field": true
                         },
                         {
                             "id": 133738,
@@ -962,12 +972,13 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 25414,
-                            "link_row_related_field_id": 133749
+                            "link_row_related_field_id": 133749,
+                            "has_related_field": true
                         },
                         {
                             "id": 133740,
                             "type": "number",
-                            "name": "Est. Days",
+                            "name": "Estimated days",
                             "order": 4,
                             "primary": false,
                             "number_decimal_places": 1,
@@ -985,7 +996,7 @@
                         {
                             "id": 27820,
                             "type": "grid",
-                            "name": "All Tasks",
+                            "name": "All tasks",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -993,6 +1004,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134396,
@@ -1018,8 +1030,8 @@
                                     "width": 131,
                                     "hidden": false,
                                     "order": 1,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "checked_percentage",
+                                    "aggregation_raw_type": "empty_count"
                                 },
                                 {
                                     "id": 134399,
@@ -1033,11 +1045,11 @@
                                 {
                                     "id": 134400,
                                     "field_id": 133740,
-                                    "width": 120,
+                                    "width": 155,
                                     "hidden": false,
                                     "order": 3,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "average",
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 134401,
@@ -1053,7 +1065,7 @@
                         {
                             "id": 27860,
                             "type": "grid",
-                            "name": "Completed Tasks",
+                            "name": "Completed tasks",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1068,6 +1080,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134572,
@@ -1128,7 +1141,7 @@
                         {
                             "id": 27859,
                             "type": "grid",
-                            "name": "Incomplete Tasks",
+                            "name": "Incomplete tasks",
                             "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1143,6 +1156,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134578,
@@ -1388,7 +1402,7 @@
                         {
                             "id": 133742,
                             "type": "text",
-                            "name": "Company Name",
+                            "name": "Company name",
                             "order": 0,
                             "primary": true,
                             "text_default": ""
@@ -1400,7 +1414,8 @@
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 25411,
-                            "link_row_related_field_id": 133729
+                            "link_row_related_field_id": 133729,
+                            "has_related_field": true
                         },
                         {
                             "id": 133744,
@@ -1412,7 +1427,7 @@
                         {
                             "id": 133745,
                             "type": "text",
-                            "name": "Contact Person",
+                            "name": "Contact person",
                             "order": 3,
                             "primary": false,
                             "text_default": ""
@@ -1420,14 +1435,14 @@
                         {
                             "id": 133870,
                             "type": "email",
-                            "name": "Contact Email",
+                            "name": "Contact email",
                             "order": 4,
                             "primary": false
                         },
                         {
                             "id": 133871,
                             "type": "url",
-                            "name": "Company Website",
+                            "name": "Company website",
                             "order": 5,
                             "primary": false
                         }
@@ -1436,7 +1451,7 @@
                         {
                             "id": 27821,
                             "type": "grid",
-                            "name": "All Clients",
+                            "name": "All clients",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1450,6 +1465,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134402,
@@ -1639,20 +1655,22 @@
                         {
                             "id": 133747,
                             "type": "link_row",
-                            "name": "Lead on Projects",
+                            "name": "Lead on projects",
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 25411,
-                            "link_row_related_field_id": 133730
+                            "link_row_related_field_id": 133730,
+                            "has_related_field": true
                         },
                         {
                             "id": 133748,
                             "type": "link_row",
-                            "name": "Projects Served as Team Member",
+                            "name": "Projects served as team member",
                             "order": 2,
                             "primary": false,
                             "link_row_table_id": 25411,
-                            "link_row_related_field_id": 133731
+                            "link_row_related_field_id": 133731,
+                            "has_related_field": true
                         },
                         {
                             "id": 133749,
@@ -1661,7 +1679,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 25412,
-                            "link_row_related_field_id": 133739
+                            "link_row_related_field_id": 133739,
+                            "has_related_field": true
                         },
                         {
                             "id": 133750,
@@ -1741,7 +1760,7 @@
                         {
                             "id": 306867,
                             "type": "formula",
-                            "name": "Number of Projects",
+                            "name": "Number of projects",
                             "order": 9,
                             "primary": false,
                             "error": null,
@@ -1750,7 +1769,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 0,
                             "array_formula_type": null,
-                            "formula": "count(field('Projects Served as Team Member'))",
+                            "formula": "count(field('Projects served as team member'))",
                             "formula_type": "number"
                         }
                     ],
@@ -1758,7 +1777,7 @@
                         {
                             "id": 27822,
                             "type": "grid",
-                            "name": "All Members",
+                            "name": "All members",
                             "order": 1,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -1772,6 +1791,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 134406,
@@ -1851,8 +1871,8 @@
                                     "width": 166,
                                     "hidden": false,
                                     "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "min",
+                                    "aggregation_raw_type": "min"
                                 },
                                 {
                                     "id": 373655,
@@ -1860,8 +1880,8 @@
                                     "width": 184,
                                     "hidden": false,
                                     "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "max",
+                                    "aggregation_raw_type": "max"
                                 }
                             ]
                         },
@@ -1889,6 +1909,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 373656,
@@ -2007,7 +2028,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15597,
@@ -2016,7 +2040,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15598,
@@ -2025,7 +2052,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15599,
@@ -2034,7 +2064,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15600,
@@ -2043,7 +2076,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15601,
@@ -2052,7 +2088,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15602,
@@ -2061,7 +2100,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15603,
@@ -2070,7 +2112,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15604,
@@ -2079,7 +2124,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 15605,
@@ -2088,7 +2136,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -2098,7 +2149,7 @@
                             "id": 1,
                             "order": "1.00000000000000000000",
                             "created_on": "2021-07-26T16:54:03.404791+00:00",
-                            "updated_on": "2022-03-31T21:56:56.818912+00:00",
+                            "updated_on": "2022-05-22T23:36:52.345346+00:00",
                             "field_133746": "Gordon Brickhouse",
                             "field_133747": [
                                 8
@@ -2123,7 +2174,7 @@
                                     "original_name": "man2.jpeg"
                                 }
                             ],
-                            "field_306856": "495.302.1105",
+                            "field_306856": "(803) 996-6704",
                             "field_306857": "gordonb@company.com",
                             "field_306865": null,
                             "field_306867": null
@@ -2132,7 +2183,7 @@
                             "id": 2,
                             "order": "2.00000000000000000000",
                             "created_on": "2021-07-26T16:54:03.405008+00:00",
-                            "updated_on": "2022-03-17T02:07:05.652572+00:00",
+                            "updated_on": "2022-05-22T23:37:02.941157+00:00",
                             "field_133746": "Susan R. Glaze",
                             "field_133747": [],
                             "field_133748": [
@@ -2150,7 +2201,7 @@
                                     "original_name": "man5.jpeg"
                                 }
                             ],
-                            "field_306856": "495.294.1003",
+                            "field_306856": "(317) 996-2721",
                             "field_306857": "susanglaze@company.com",
                             "field_306865": null,
                             "field_306867": null
@@ -2159,7 +2210,7 @@
                             "id": 3,
                             "order": "3.00000000000000000000",
                             "created_on": "2021-07-26T16:54:03.405114+00:00",
-                            "updated_on": "2022-03-17T02:06:51.175820+00:00",
+                            "updated_on": "2022-05-22T23:36:56.177992+00:00",
                             "field_133746": "Kimberly Wagner",
                             "field_133747": [
                                 3,
@@ -2180,7 +2231,7 @@
                                     "original_name": "woman2.jpeg"
                                 }
                             ],
-                            "field_306856": "495.125.1774",
+                            "field_306856": "(406) 892-0740",
                             "field_306857": "kimberly@company.com",
                             "field_306865": null,
                             "field_306867": null
@@ -2189,7 +2240,7 @@
                             "id": 4,
                             "order": "4.00000000000000000000",
                             "created_on": "2021-07-26T16:54:03.405181+00:00",
-                            "updated_on": "2022-03-17T02:06:27.628641+00:00",
+                            "updated_on": "2022-05-22T23:36:49.092342+00:00",
                             "field_133746": "Donn Moore",
                             "field_133747": [],
                             "field_133748": [
@@ -2207,7 +2258,7 @@
                                     "original_name": "man1.jpeg"
                                 }
                             ],
-                            "field_306856": "495.204.2944",
+                            "field_306856": "(508) 398-0845",
                             "field_306857": "donnmoore@company.com",
                             "field_306865": null,
                             "field_306867": null
@@ -2216,7 +2267,7 @@
                             "id": 5,
                             "order": "5.00000000000000000000",
                             "created_on": "2021-07-26T16:54:03.405252+00:00",
-                            "updated_on": "2022-03-17T02:06:59.492840+00:00",
+                            "updated_on": "2022-05-22T23:37:01.037969+00:00",
                             "field_133746": "Steve Gray",
                             "field_133747": [],
                             "field_133748": [
@@ -2236,7 +2287,7 @@
                                     "original_name": "man4.jpeg"
                                 }
                             ],
-                            "field_306856": "495.503.2044",
+                            "field_306856": "(541) 884-3680",
                             "field_306857": "stevegray@company.com",
                             "field_306865": null,
                             "field_306867": null
@@ -2245,7 +2296,7 @@
                             "id": 6,
                             "order": "6.00000000000000000000",
                             "created_on": "2021-07-26T16:54:03.405320+00:00",
-                            "updated_on": "2022-03-31T21:53:33.835236+00:00",
+                            "updated_on": "2022-05-22T23:36:58.738344+00:00",
                             "field_133746": "Janet Cook",
                             "field_133747": [
                                 5,
@@ -2265,7 +2316,7 @@
                                     "original_name": "woman1.jpeg"
                                 }
                             ],
-                            "field_306856": "495.406.2099",
+                            "field_306856": "(269) 445-2068",
                             "field_306857": "janetcook@company.com",
                             "field_306865": null,
                             "field_306867": null

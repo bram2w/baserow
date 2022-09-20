@@ -53,7 +53,9 @@ class DuplicateTableJobType(JobType):
         new_table_clone = action_type_registry.get_by_type(DuplicateTableActionType).do(
             job.user,
             job.original_table,
-            progress.create_child_builder(represents_progress=progress.total),
+            progress_builder=progress.create_child_builder(
+                represents_progress=progress.total
+            ),
         )
 
         # update the job with the new duplicated table

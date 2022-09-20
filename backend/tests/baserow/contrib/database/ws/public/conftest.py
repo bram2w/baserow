@@ -100,7 +100,8 @@ class GalleryViewPublicWebsocketTester(PublicWebsocketTester[GalleryView]):
     params=[
         t.type
         for t in view_type_registry.get_all()
-        if t.when_shared_publicly_requires_realtime_events
+        # `kanban` is premium view type and must not be tested here.
+        if t.when_shared_publicly_requires_realtime_events and t.type != "kanban"
     ]
 )
 def public_realtime_view_tester(request, data_fixture):

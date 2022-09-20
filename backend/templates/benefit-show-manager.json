@@ -41,7 +41,8 @@
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 60061,
-                            "link_row_related_field_id": 350782
+                            "link_row_related_field_id": 350782,
+                            "has_related_field": true
                         },
                         {
                             "id": 350752,
@@ -60,7 +61,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60059,
-                            "link_row_related_field_id": 350781
+                            "link_row_related_field_id": 350781,
+                            "has_related_field": true
                         },
                         {
                             "id": 350783,
@@ -79,7 +81,8 @@
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 60062,
-                            "link_row_related_field_id": 350785
+                            "link_row_related_field_id": 350785,
+                            "has_related_field": true
                         },
                         {
                             "id": 350786,
@@ -158,7 +161,8 @@
                             "order": 8,
                             "primary": false,
                             "link_row_table_id": 60066,
-                            "link_row_related_field_id": 350790
+                            "link_row_related_field_id": 350790,
+                            "has_related_field": true
                         },
                         {
                             "id": 350791,
@@ -167,7 +171,8 @@
                             "order": 9,
                             "primary": false,
                             "link_row_table_id": 60067,
-                            "link_row_related_field_id": 350792
+                            "link_row_related_field_id": 350792,
+                            "has_related_field": true
                         },
                         {
                             "id": 350793,
@@ -176,7 +181,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 60060,
-                            "link_row_related_field_id": 350794
+                            "link_row_related_field_id": 350794,
+                            "has_related_field": true
                         },
                         {
                             "id": 350795,
@@ -252,7 +258,8 @@
                             "order": 13,
                             "primary": false,
                             "link_row_table_id": 60064,
-                            "link_row_related_field_id": 350769
+                            "link_row_related_field_id": 350769,
+                            "has_related_field": true
                         },
                         {
                             "id": 350910,
@@ -261,7 +268,8 @@
                             "order": 14,
                             "primary": false,
                             "link_row_table_id": 60065,
-                            "link_row_related_field_id": 350772
+                            "link_row_related_field_id": 350772,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -437,6 +445,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "field_options": [
                                 {
                                     "id": 8290,
@@ -555,7 +564,10 @@
                                     "description": "What do you want to call your new show?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 0
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20133,
@@ -564,7 +576,10 @@
                                     "description": "Who is performing in this show?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 1
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20135,
@@ -573,7 +588,10 @@
                                     "description": "Please select the beneficiaries of this nonprofit benefit show.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 2
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20137,
@@ -582,7 +600,10 @@
                                     "description": "Where is this show going to be held?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20138,
@@ -591,7 +612,10 @@
                                     "description": "Please describe this show in detail.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20134,
@@ -600,7 +624,10 @@
                                     "description": "When will this show start running?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20136,
@@ -609,7 +636,10 @@
                                     "description": "When will be the last day of this show?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20139,
@@ -618,7 +648,10 @@
                                     "description": "Please select this show's target audience.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 7
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20140,
@@ -627,7 +660,10 @@
                                     "description": "Please select the appropriate marketing strategies for this show.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20141,
@@ -636,7 +672,10 @@
                                     "description": "Please select the appropriate fundraising approaches for this show.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20142,
@@ -645,7 +684,10 @@
                                     "description": "Select the team members and volunteers to assign in this show.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 10
+                                    "order": 10,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20143,
@@ -654,7 +696,10 @@
                                     "description": "What is the current status of this show?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 11
+                                    "order": 11,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20144,
@@ -663,7 +708,10 @@
                                     "description": "When is the target donation date for this show's proceeds?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 12
+                                    "order": 12,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20145,
@@ -672,7 +720,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 13
+                                    "order": 13,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20146,
@@ -681,7 +732,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 14
+                                    "order": 14,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -827,7 +881,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350780
+                            "link_row_related_field_id": 350780,
+                            "has_related_field": true
                         },
                         {
                             "id": 350808,
@@ -836,7 +891,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 60061,
-                            "link_row_related_field_id": 350809
+                            "link_row_related_field_id": 350809,
+                            "has_related_field": true
                         },
                         {
                             "id": 350810,
@@ -943,6 +999,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "field_options": [
                                 {
                                     "id": 8305,
@@ -1007,7 +1064,10 @@
                                     "description": "Name of the beneficiary or charitable foundation.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20148,
@@ -1016,7 +1076,10 @@
                                     "description": "Please describe this beneficiary.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20149,
@@ -1025,7 +1088,10 @@
                                     "description": "Does this beneficiary has donation preferences, or are there donations to be avoided?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20150,
@@ -1034,7 +1100,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20151,
@@ -1043,7 +1112,10 @@
                                     "description": "Please select the primary contact for this beneficiary.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20152,
@@ -1052,7 +1124,10 @@
                                     "description": "Please indicate if this beneficiary is accredited by the local tax bureau for donors' tax incentives.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -1164,7 +1239,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350793
+                            "link_row_related_field_id": 350793,
+                            "has_related_field": true
                         },
                         {
                             "id": 350812,
@@ -1195,7 +1271,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 60067,
-                            "link_row_related_field_id": 350816
+                            "link_row_related_field_id": 350816,
+                            "has_related_field": true
                         },
                         {
                             "id": 350817,
@@ -1204,7 +1281,8 @@
                             "order": 8,
                             "primary": false,
                             "link_row_table_id": 60066,
-                            "link_row_related_field_id": 350818
+                            "link_row_related_field_id": 350818,
+                            "has_related_field": true
                         },
                         {
                             "id": 350819,
@@ -1213,7 +1291,8 @@
                             "order": 9,
                             "primary": false,
                             "link_row_table_id": 60063,
-                            "link_row_related_field_id": 350820
+                            "link_row_related_field_id": 350820,
+                            "has_related_field": true
                         },
                         {
                             "id": 350908,
@@ -1222,7 +1301,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 60064,
-                            "link_row_related_field_id": 350907
+                            "link_row_related_field_id": 350907,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -1367,6 +1447,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 350757,
                             "field_options": [
                                 {
@@ -1462,7 +1543,10 @@
                                     "description": "Please type the team member or volunteer's full name.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20154,
@@ -1471,7 +1555,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20155,
@@ -1480,7 +1567,10 @@
                                     "description": "Please select this team member's role in this project.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20156,
@@ -1489,7 +1579,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20157,
@@ -1498,7 +1591,10 @@
                                     "description": "What is the current phone number of this team member?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20158,
@@ -1507,7 +1603,10 @@
                                     "description": "What is the current email address of this team member?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20159,
@@ -1516,7 +1615,10 @@
                                     "description": "What is the current home address of this team member?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20160,
@@ -1525,7 +1627,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20161,
@@ -1534,7 +1639,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20162,
@@ -1543,7 +1651,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20163,
@@ -1552,7 +1663,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -2004,7 +2118,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350751
+                            "link_row_related_field_id": 350751,
+                            "has_related_field": true
                         },
                         {
                             "id": 350809,
@@ -2013,7 +2128,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 60059,
-                            "link_row_related_field_id": 350808
+                            "link_row_related_field_id": 350808,
+                            "has_related_field": true
                         },
                         {
                             "id": 350831,
@@ -2061,7 +2177,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 60062,
-                            "link_row_related_field_id": 350842
+                            "link_row_related_field_id": 350842,
+                            "has_related_field": true
                         },
                         {
                             "id": 350879,
@@ -2070,7 +2187,8 @@
                             "order": 11,
                             "primary": false,
                             "link_row_table_id": 60063,
-                            "link_row_related_field_id": 350878
+                            "link_row_related_field_id": 350878,
+                            "has_related_field": true
                         },
                         {
                             "id": 350902,
@@ -2079,7 +2197,8 @@
                             "order": 12,
                             "primary": false,
                             "link_row_table_id": 60064,
-                            "link_row_related_field_id": 350901
+                            "link_row_related_field_id": 350901,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -2838,7 +2957,10 @@
                                     "description": "Please type the contact's full name.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20165,
@@ -2847,7 +2969,10 @@
                                     "description": "What is this contact's role to the project?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20166,
@@ -2856,7 +2981,10 @@
                                     "description": "Please type in this contact's business affiliations, organizations, and other remarks in the box below.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20167,
@@ -2865,7 +2993,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20168,
@@ -2874,7 +3005,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20169,
@@ -2883,7 +3017,10 @@
                                     "description": "What is the current phone number of this contact?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20170,
@@ -2892,7 +3029,10 @@
                                     "description": "What is the current email address of this contact?",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20171,
@@ -2901,7 +3041,10 @@
                                     "description": "What is the current mailing address of this contact?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20172,
@@ -2910,7 +3053,10 @@
                                     "description": "What is the website's URL of this contact?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20173,
@@ -2919,7 +3065,10 @@
                                     "description": "When did you last hear from this contact?",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20174,
@@ -2928,7 +3077,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20175,
@@ -2937,7 +3089,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20176,
@@ -2946,7 +3101,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -3355,7 +3513,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350784
+                            "link_row_related_field_id": 350784,
+                            "has_related_field": true
                         },
                         {
                             "id": 350839,
@@ -3398,7 +3557,8 @@
                             "order": 6,
                             "primary": false,
                             "link_row_table_id": 60061,
-                            "link_row_related_field_id": 350843
+                            "link_row_related_field_id": 350843,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -3517,6 +3677,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 350839,
                             "field_options": [
                                 {
@@ -3591,6 +3752,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 350839,
                             "field_options": [
                                 {
@@ -3665,6 +3827,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 350839,
                             "field_options": [
                                 {
@@ -3739,6 +3902,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 350839,
                             "field_options": [
                                 {
@@ -3810,7 +3974,10 @@
                                     "description": "Please enter the location's name.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20178,
@@ -3819,7 +3986,10 @@
                                     "description": "Please type in the maximum number of seats or people this location can accommodate.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20179,
@@ -3828,7 +3998,10 @@
                                     "description": "Please enter the location's address.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20180,
@@ -3837,7 +4010,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20181,
@@ -3846,7 +4022,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20182,
@@ -3855,7 +4034,10 @@
                                     "description": "Please specify this location's coverage.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20183,
@@ -3864,7 +4046,10 @@
                                     "description": "Please select the primary contact of this location.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -4090,7 +4275,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60060,
-                            "link_row_related_field_id": 350819
+                            "link_row_related_field_id": 350819,
+                            "has_related_field": true
                         },
                         {
                             "id": 350856,
@@ -4153,7 +4339,8 @@
                             "order": 8,
                             "primary": false,
                             "link_row_table_id": 60061,
-                            "link_row_related_field_id": 350879
+                            "link_row_related_field_id": 350879,
+                            "has_related_field": true
                         },
                         {
                             "id": 350886,
@@ -4169,7 +4356,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 60065,
-                            "link_row_related_field_id": 350915
+                            "link_row_related_field_id": 350915,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -4432,7 +4620,8 @@
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350899
+                            "link_row_related_field_id": 350899,
+                            "has_related_field": true
                         },
                         {
                             "id": 350770,
@@ -4492,7 +4681,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60061,
-                            "link_row_related_field_id": 350902
+                            "link_row_related_field_id": 350902,
+                            "has_related_field": true
                         },
                         {
                             "id": 350903,
@@ -4571,7 +4761,8 @@
                             "order": 8,
                             "primary": false,
                             "link_row_table_id": 60060,
-                            "link_row_related_field_id": 350908
+                            "link_row_related_field_id": 350908,
+                            "has_related_field": true
                         },
                         {
                             "id": 350909,
@@ -4587,7 +4778,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 60065,
-                            "link_row_related_field_id": 350917
+                            "link_row_related_field_id": 350917,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -4746,7 +4938,10 @@
                                     "description": "Please describe briefly this expense.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20196,
@@ -4755,7 +4950,10 @@
                                     "description": "Please select the show this expense was made for.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20197,
@@ -4764,7 +4962,10 @@
                                     "description": "Please specify the type of expense made.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20198,
@@ -4773,7 +4974,10 @@
                                     "description": "Please select the supplier, service provider, or talent paid in this expense.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20199,
@@ -4782,7 +4986,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20200,
@@ -4791,7 +4998,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20201,
@@ -4800,7 +5010,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20202,
@@ -4809,7 +5022,10 @@
                                     "description": "Please describe in detail this expense.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20203,
@@ -4818,7 +5034,10 @@
                                     "description": "Select the team member who did this transaction.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20204,
@@ -4827,7 +5046,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 20205,
@@ -4836,7 +5058,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -5039,7 +5264,8 @@
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350910
+                            "link_row_related_field_id": 350910,
+                            "has_related_field": true
                         },
                         {
                             "id": 350773,
@@ -5101,7 +5327,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "(tonumber(join(totext(field('Funds raised')), '')) + tonumber(join(totext(field('Ticket sales')), ''))) - tonumber(join(totext(field('Cost')), ''))",
+                            "formula": "minus( \n  add( \n    tonumber(join(totext(field(\"Funds raised\")), \"\")), \n    field(\"Ticket sales\") \n  ), \n  tonumber(join(totext(field(\"Cost\")), \"\")) \n)",
                             "formula_type": "number"
                         },
                         {
@@ -5111,7 +5337,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 60063,
-                            "link_row_related_field_id": 350916
+                            "link_row_related_field_id": 350916,
+                            "has_related_field": true
                         },
                         {
                             "id": 350917,
@@ -5120,7 +5347,8 @@
                             "order": 8,
                             "primary": false,
                             "link_row_table_id": 60064,
-                            "link_row_related_field_id": 350918
+                            "link_row_related_field_id": 350918,
+                            "has_related_field": true
                         },
                         {
                             "id": 350919,
@@ -5412,7 +5640,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350789
+                            "link_row_related_field_id": 350789,
+                            "has_related_field": true
                         },
                         {
                             "id": 350818,
@@ -5421,7 +5650,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 60060,
-                            "link_row_related_field_id": 350817
+                            "link_row_related_field_id": 350817,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -5610,7 +5840,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 60058,
-                            "link_row_related_field_id": 350791
+                            "link_row_related_field_id": 350791,
+                            "has_related_field": true
                         },
                         {
                             "id": 350816,
@@ -5619,7 +5850,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 60060,
-                            "link_row_related_field_id": 350815
+                            "link_row_related_field_id": 350815,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
