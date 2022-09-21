@@ -213,7 +213,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Je hebt minstens één andere tabel in dezelfde database nodig om naar te linken.",
-        "selectTableLabel": "Selecteer een tabel om naar te linken"
+        "selectTableLabel": "Selecteer een tabel om naar te linken",
+        "hasRelatedFieldLabel": "Maak gerelateerd veld"
     },
     "fieldSelectOptions": {
         "add": "Een optie toevoegen"
@@ -298,10 +299,6 @@
     "tableForm": {
         "name": "Naam"
     },
-    "tableImporterPreview": {
-        "label": "Snelle voorbeeldweergave",
-        "remaining": "{remaining} andere rijen"
-    },
     "tableXMLImporter": {
         "fileLabel": "Kies XML-bestand",
         "fileDescription": "Je kunt een bestaande XML importeren door het .XML-bestand met gegevens in tabelvorm te uploaden, d.w.z:",
@@ -349,7 +346,9 @@
         "importButton": "Importeren",
         "fieldMappingTitle": "Veld vertaling",
         "fieldMappingDescription": "Wij hebben de kolommen van de Baserow-velden in uw tabel automatisch toegewezen. U kunt ze hieronder wijzigen. Elke niet-compatibele cel zal leeg blijven na de import.",
-        "selectImportMessage": "Selecteer gegevens om te importeren."
+        "selectImportMessage": "Selecteer gegevens om te importeren.",
+        "filePreview": "Voorbeeld van bestandsinhoud",
+        "importPreview": "Importvoorbeeld"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klik om de formule te bewerken",
@@ -638,7 +637,8 @@
     "formViewField": {
         "required": "verplicht",
         "showWhenMatchingConditions": "tonen wanneer aan de voorwaarden is voldaan",
-        "addCondition": "Voorwaarde toevoegen"
+        "addCondition": "Voorwaarde toevoegen",
+        "descriptionPlaceholder": "Beschrijving"
     },
     "duplicateFieldContext": {
         "duplicate": "Dupliceer veld",
@@ -695,10 +695,24 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Een omslagafbeelding toevoegen",
         "addLogo": "Logo toevoegen",
-        "noFields": "Dit formulier heeft nog geen velden. Klik op een veld in de linker zijbalk om er een toe te voegen."
+        "noFields": "Dit formulier heeft nog geen velden. Klik op een veld in de linker zijbalk om er een toe te voegen.",
+        "descriptionPlaceholder": "Beschrijving",
+        "titlePlaceholder": "Titel"
     },
     "gridViewFieldFile": {
         "dropHere": "Laat hier los",
         "dropFileHere": "Laat bestanden hier los"
+    },
+    "apiDocsUploadFile": {
+        "file": "De `file` multipart met de inhoud van het bestand.",
+        "description": "Upload een bestand naar Baserow door de inhoud van het bestand direct te uploaden. Er wordt een `file` multipart verwacht met de inhoud van het bestand. Het antwoord kan vervolgens worden gebruikt om [een bestand naar een rij te uploaden]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row)."
+    },
+    "apiDocsUploadFileViaURL": {
+        "url": "De URL die Baserow namens u moet downloaden en uploaden.",
+        "description": "Upload een bestand naar Baserow door het te downloaden van de opgegeven URL. Het antwoord kan vervolgens worden gebruikt om [een bestand naar een rij te uploaden]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row)."
+    },
+    "duplicateTableJobType": {
+        "duplicatedTitle": "Tabel dupliceerd",
+        "duplicating": "Dupliceren"
     }
 }

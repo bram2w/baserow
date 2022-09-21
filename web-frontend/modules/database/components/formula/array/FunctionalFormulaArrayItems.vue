@@ -6,6 +6,7 @@
       :key="index"
       :field="props.field"
       :value="item && item.value"
+      :selected="props.selected"
     ></component>
   </div>
 </template>

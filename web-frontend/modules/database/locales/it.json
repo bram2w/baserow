@@ -28,7 +28,7 @@
             "example": "Esempio di carico utile"
         },
         "errors": {
-            "urlField": "Questo campo è obbligatorio e deve contenere un url valido.",
+            "urlField": "Deve essere un URL valido che inizia con 'http://' o 'https://'.",
             "invalidHeaders": "Uno degli header non è valido."
         },
         "checkbox": {
@@ -213,7 +213,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Serve almeno un'altra tabella nello stesso database a cui collegarsi.",
-        "selectTableLabel": "Seleziona una tabella a cui collegarsi"
+        "selectTableLabel": "Seleziona una tabella a cui collegarsi",
+        "hasRelatedFieldLabel": "Crea campo relativo nell'altra tabella"
     },
     "fieldSelectOptions": {
         "add": "Aggiungi un'opzione"
@@ -298,10 +299,6 @@
     "tableForm": {
         "name": "Nome"
     },
-    "tableImporterPreview": {
-        "label": "Anteprima rapida",
-        "remaining": "{remaining} altre righe"
-    },
     "tableXMLImporter": {
         "fileLabel": "Scegli file XML",
         "fileDescription": "È possibile importare un XML esistente caricando il file .XML con i dati tabulari, cioè:",
@@ -349,7 +346,9 @@
         "fieldMappingDescription": "Abbiamo provato a mappare automaticamente le tue colonne nei nostri formati. Puoi modificarli qui sotto. Ogni formato incompatibile rimarrà vuoto al termine dell'importazione.",
         "fieldMappingTitle": "Rimappa i campi",
         "importButton": "Importa",
-        "selectImportMessage": "Per favore scegli i dati da importare."
+        "selectImportMessage": "Per favore scegli i dati da importare.",
+        "filePreview": "Anteprima contenuto file",
+        "importPreview": "Anteprima dei dati che verranno importati"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Clicca per modificare la formula",
@@ -644,7 +643,8 @@
     "formViewField": {
         "required": "richiesto",
         "showWhenMatchingConditions": "mostra quando le condizioni sono soddisfatte",
-        "addCondition": "Aggiungi condizione"
+        "addCondition": "Aggiungi condizione",
+        "descriptionPlaceholder": "Descrizione"
     },
     "formViewMeta": {
         "includeRowId": "Usa {row_id} per includere l'id di riga nel tuo URL."
@@ -685,7 +685,9 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Aggiungi un'immagine di copertina",
         "addLogo": "Aggiungi un logo",
-        "noFields": "Questo form non contiene campi. Clicca su un campo nella barra laterale di sinistra per aggiungerne uno."
+        "noFields": "Questo form non contiene campi. Clicca su un campo nella barra laterale di sinistra per aggiungerne uno.",
+        "titlePlaceholder": "Titolo",
+        "descriptionPlaceholder": "Descrizione"
     },
     "rowEditFieldMultipleCollaborators": {
         "addCollaborator": "Aggiungi un collaboratore"
@@ -700,5 +702,17 @@
     "gridViewFieldFile": {
         "dropHere": "Trascina qui",
         "dropFileHere": "Tracina file qui"
+    },
+    "duplicateTableJobType": {
+        "duplicatedTitle": "Tabella duplicata",
+        "duplicating": "Duplicando"
+    },
+    "apiDocsUploadFile": {
+        "description": "Carica un file su Baserow. Deve essere carico come `file multipart`. La risposta può essere per [caricare un file in una riga] ({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "file": "Il `file` multipart contenente il contenuto del file."
+    },
+    "apiDocsUploadFileViaURL": {
+        "description": "Carica un file su Baserow fornendo un URL da cui scaricarlo. La risposta può essere usata per [caricare un file in una riga]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "url": "L'URL ad cui Baserow scaricherà il file per salvarlo tra i tuoi file."
     }
 }

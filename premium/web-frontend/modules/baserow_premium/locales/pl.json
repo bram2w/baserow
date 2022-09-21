@@ -13,7 +13,7 @@
             "licenses": "Licencje"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Tablica Kanban"
         },
         "exporterType": {
             "json": "Eksport do JSON",
@@ -189,7 +189,8 @@
         "kanbanView": "Widok kanban",
         "exports": "Eksport JSON i XML",
         "admin": "Funkcjonalność administratora",
-        "rowColoring": "Kolorowanie wierszy"
+        "rowColoring": "Kolorowanie wierszy",
+        "surveyForm": "Formularz ankiety"
     },
     "licenses": {
         "titleNoLicenses": "Nie znaleziono licencji",
@@ -201,7 +202,7 @@
         "licenceId": "Identyfikator ID licencji",
         "premium": "Premium",
         "expired": "Wygasła",
-        "validity": "Obowiązuje od {start} do {end}.",
+        "validity": "Obowiązuje od {start} do {end}",
         "seats": "miejsca",
         "premiumFeatures": "Funkcje premium"
     },
@@ -264,5 +265,15 @@
         "impersonateStop": "Stop",
         "premium": "Premium",
         "premiumDescription": "Twoje konto ma dostęp do funkcji premium globalnie"
+    },
+    "formViewModePreviewSurvey": {
+        "orderFields": "Pola zamówień",
+        "deactivated": "Formularz ankiety dostępny jest w wersji premium.",
+        "more": "Więcej informacji"
+    },
+    "formViewModeType": {
+        "survey": "Ankieta",
+        "surveyDescription": "Jedno pole jest widoczne w tym samym czasie.",
+        "onlyForPremium": "Dostępne w wersji premium"
     }
 }

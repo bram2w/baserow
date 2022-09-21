@@ -13,16 +13,20 @@ import FunctionalGridViewFieldLongText from '@baserow/modules/database/component
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldBlank from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBlank'
 import FunctionalGridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray'
+import FunctionalGridViewFieldLink from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLink'
 import GridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/GridViewFieldArray'
 import RowEditFieldSingleSelectReadOnly from '@baserow/modules/database/components/row/RowEditFieldSingleSelectReadOnly'
 import RowEditFieldArray from '@baserow/modules/database/components/row/RowEditFieldArray'
+import RowEditFieldFormulaLink from '@baserow/modules/database/components/row/RowEditFieldFormulaLink'
 import FunctionalFormulaArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem'
 import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem'
 import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
 import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
+import FunctionalFormulaLinkArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaLinkArrayItem'
 import RowCardFieldArray from '@baserow/modules/database/components/card/RowCardFieldArray'
 import RowEditFieldBlank from '@baserow/modules/database/components/row/RowEditFieldBlank'
 import RowCardFieldBlank from '@baserow/modules/database/components/card/RowCardFieldBlank'
+import RowCardFieldLink from '@baserow/modules/database/components/card/RowCardFieldLink'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -92,6 +96,14 @@ export class BaserowFormulaTypeDefinition extends Registerable {
 
   getCanSortInView() {
     return true
+  }
+
+  toHumanReadableString(field, value) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this.getFieldType()
+    )
+    return underlyingFieldType.toHumanReadableString(field, value)
   }
 }
 
@@ -388,6 +400,18 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
   getCanSortInView() {
     return false
   }
+
+  toHumanReadableString(field, value) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return value
+      .map((v) => {
+        return subType.toHumanReadableString(field, v.value)
+      })
+      .join(', ')
+  }
 }
 
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
@@ -417,6 +441,56 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
 
   getSortOrder() {
     return 8
+  }
+
+  getCanSortInView() {
+    return false
+  }
+}
+
+export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
+  getType() {
+    return 'link'
+  }
+
+  getFieldType() {
+    return 'text'
+  }
+
+  getIconClass() {
+    return 'link'
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldFormulaLink
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLink
+  }
+
+  getSortOrder() {
+    return 10
+  }
+
+  getFunctionalGridViewFieldArrayComponent() {
+    return FunctionalFormulaLinkArrayItem
+  }
+
+  toHumanReadableString(field, value) {
+    if (value?.label) {
+      return `${value.label} (${value.url})`
+    } else {
+      return value.url
+    }
+  }
+
+  getCardComponent() {
+    return RowCardFieldLink
+  }
+
+  prepareValueForCopy(field, value) {
+    return this.toHumanReadableString(field, value)
   }
 
   getCanSortInView() {

@@ -1,12 +1,14 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">{{
-        $t('tableCSVImporter.chooseFileLabel')
-      }}</label>
-      <div class="control__description">
-        {{ $t('tableCSVImporter.chooseFileDescription') }}
-      </div>
+      <template v-if="filename === ''">
+        <label class="control__label">{{
+          $t('tableCSVImporter.chooseFileLabel')
+        }}</label>
+        <div class="control__description">
+          {{ $t('tableCSVImporter.chooseFileDescription') }}
+        </div>
+      </template>
       <div class="control__elements">
         <div class="file-upload">
           <input
@@ -72,7 +74,7 @@
           </div>
         </div>
       </div>
-      <div class="col col-8">
+      <div class="col col-4">
         <div class="control">
           <label class="control__label">{{
             $t('tableCSVImporter.encoding')
@@ -86,9 +88,7 @@
           </div>
         </div>
       </div>
-    </div>
-    <div v-if="filename !== ''" class="row">
-      <div class="col col-6">
+      <div class="col col-4">
         <div class="control">
           <label class="control__label">{{
             $t('tableCSVImporter.firstRowHeader')

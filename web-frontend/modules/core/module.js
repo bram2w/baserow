@@ -10,6 +10,7 @@ import nl from './locales/nl.json'
 import de from './locales/de.json'
 import es from './locales/es.json'
 import it from './locales/it.json'
+import pl from './locales/pl.json'
 
 export default function CoreModule(options) {
   /**
@@ -110,8 +111,9 @@ export default function CoreModule(options) {
     { code: 'fr', name: 'Français', file: 'fr.json' },
     { code: 'nl', name: 'Nederlands', file: 'nl.json' },
     { code: 'de', name: 'Deutsch', file: 'de.json' },
-    { code: 'es', name: 'Español (Beta)', file: 'es.json' },
-    { code: 'it', name: 'Italiano (Beta)', file: 'it.json' },
+    { code: 'es', name: 'Español', file: 'es.json' },
+    { code: 'it', name: 'Italiano', file: 'it.json' },
+    { code: 'pl', name: 'Polski (Beta)', file: 'pl.json' },
   ]
 
   this.requireModule([
@@ -133,7 +135,7 @@ export default function CoreModule(options) {
   ])
 
   this.nuxt.hook('i18n:extend-messages', function (additionalMessages) {
-    additionalMessages.push({ en, fr, nl, de, es, it })
+    additionalMessages.push({ en, fr, nl, de, es, it, pl })
   })
 
   // Serve the static directory

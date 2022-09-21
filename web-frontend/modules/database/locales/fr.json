@@ -28,7 +28,7 @@
             "example": "Example de requête"
         },
         "errors": {
-            "urlField": "Ce champ est requis est doit être une URL valide.",
+            "urlField": "Doit être une URL commençant par « https:// » ou « http:// ».",
             "invalidHeaders": "Un des entête est invalide."
         },
         "checkbox": {
@@ -213,7 +213,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
-        "selectTableLabel": "Sélectionnez une table"
+        "selectTableLabel": "Sélectionnez une table",
+        "hasRelatedFieldLabel": "Créer un champ rapporté"
     },
     "fieldSelectOptions": {
         "add": "Ajouter une option"
@@ -298,10 +299,6 @@
     "tableForm": {
         "name": "Nom"
     },
-    "tableImporterPreview": {
-        "label": "Aperçu",
-        "remaining": "{remaining} autres lignes"
-    },
     "tableXMLImporter": {
         "fileLabel": "Choisissez un fichier XML",
         "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",
@@ -349,7 +346,9 @@
         "additionalImportTitle": "Importer dans {table}",
         "importButton": "Importer",
         "fieldMappingDescription": "Nous avons automatiquement fait la correspondance entre les colonnes du fichier et les champs Baserow dans votre table. Vous pouvez les modifier ci-dessous. Toute cellule incompatible avec le type du champ sélectionné restera vide après l'importation.",
-        "selectImportMessage": "Veuillez sélectionner les données à importer."
+        "selectImportMessage": "Veuillez sélectionner les données à importer.",
+        "filePreview": "Aperçu du contenu du fichier",
+        "importPreview": "Aperçu de l'import"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
@@ -641,7 +640,8 @@
     "formViewField": {
         "required": "Obligatoire",
         "showWhenMatchingConditions": "afficher lorsque les conditions sont remplies",
-        "addCondition": "Ajouter une condition"
+        "addCondition": "Ajouter une condition",
+        "descriptionPlaceholder": "Description"
     },
     "duplicateFieldContext": {
         "duplicate": "Dupliquer le champ",
@@ -689,7 +689,9 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Ajouter une image d'entête",
         "noFields": "Ce formulaire ne comporte aucun champ. Cliquez sur un champ dans la barre latérale gauche pour en ajouter un.",
-        "addLogo": "Ajouter un logo"
+        "addLogo": "Ajouter un logo",
+        "titlePlaceholder": "Titre",
+        "descriptionPlaceholder": "Description"
     },
     "table": {
         "chooseView": "Choisir la vue"
@@ -700,5 +702,17 @@
     "formViewModeType": {
         "formDescription": "Tous les champs sont visibles et empilés verticalement.",
         "form": "Formulaire"
+    },
+    "duplicateTableJobType": {
+        "duplicating": "Duplication",
+        "duplicatedTitle": "Table dupliquée"
+    },
+    "apiDocsUploadFile": {
+        "description": "Envoi un fichier sur Baserow en envoyant directement le contenu du fichier. Un section multipart `file` contenant le contenu du fichier est attendu dans la requête. La réponse peut ensuite être utilisée pour [associer un fichier à une ligne]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "file": "La section multipart `file` contenant le contenu du fichier."
+    },
+    "apiDocsUploadFileViaURL": {
+        "description": "Envoi un fichier sur Baserow en le téléchargeant depuis l'URL fournie. La réponse peut ensuite être utilisée pour [associer un fichier à une ligne]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "url": "L'URL que vous souhaitez que Baserow télécharge et enregistre en votre nom."
     }
 }

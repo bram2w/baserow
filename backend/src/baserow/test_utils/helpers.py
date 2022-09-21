@@ -199,6 +199,8 @@ def setup_interesting_test_table(
         "formula_date": "2020-01-01",
         "formula_singleselect": "",
         "formula_email": "test@example.com",
+        "formula_link_url_only": "",
+        "formula_link_with_label": "",
     }
 
     with freeze_time("2020-02-01 01:23"):
@@ -455,6 +457,8 @@ def extract_serialized_field_value(field_value):
         if isinstance(value, dict):
             if "name" in value:
                 return value["name"]
+            if "url" in value:
+                return (value.get("label") or "") + " (" + value["url"] + ")"
             return value["value"]
         return value
 

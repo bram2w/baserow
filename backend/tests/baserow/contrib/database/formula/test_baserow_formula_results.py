@@ -198,6 +198,50 @@ VALID_FORMULA_TESTS = [
     ("int(tonumber('invalid'))", "NaN"),
     ("1/2/4", "0.1250000000"),
     ("divide(1, if(true,1,1))", "1.0000000000"),
+    ("link('1')", {"url": "1", "label": None}),
+    ("link('a' + 'b')", {"url": "ab", "label": None}),
+    (
+        "link('https://www.google.com')",
+        {"url": "https://www.google.com", "label": None},
+    ),
+    ("button('1', 'l')", {"url": "1", "label": "l"}),
+    ("button('a' + 'b', 'l' + 'a')", {"url": "ab", "label": "la"}),
+    (
+        "button('https://www.google.com', 'Google')",
+        {"url": "https://www.google.com", "label": "Google"},
+    ),
+    (
+        "button('https://www.google.com', 'Google') = link('https://www.google.com')",
+        False,
+    ),
+    (
+        "button('https://www.google.com', 'Google') "
+        "= button('https://www.google.com', 'Google')",
+        True,
+    ),
+    (
+        "button('https://www.google2.com', 'Google') "
+        "= button('https://www.google.com', 'Google')",
+        False,
+    ),
+    (
+        "button('https://www.google.com', 'Google') "
+        "= button('https://www.google.com', 'Google2')",
+        False,
+    ),
+    (
+        "link('https://www.google.com') = link('https://www.google.com')",
+        True,
+    ),
+    (
+        "link('https://www.google2.com') = link('https://www.google.com')",
+        False,
+    ),
+    ("get_link_label(link('1'))", None),
+    ("get_link_url(link('a' + 'b'))", "ab"),
+    ("get_link_url(link('https://www.google.com'))", "https://www.google.com"),
+    ("get_link_label(button('1', 'l'))", "l"),
+    ("get_link_url(button('a' + 'b', 'l' + 'a'))", "ab"),
 ]
 
 
@@ -463,7 +507,7 @@ INVALID_FORMULA_TESTS = [
         "'a' + 2",
         "ERROR_WITH_FORMULA",
         "Error with formula: argument number 2 given to operator + was of type number "
-        "but the only usable types for this argument are text,char.",
+        "but the only usable types for this argument are text,char,link.",
     ),
     (
         "true + true",
@@ -546,6 +590,92 @@ INVALID_FORMULA_TESTS = [
             "Error with formula: argument number 1 given to function sum was of type "
             "number but the only usable type for this argument is a list of number "
             "values obtained from a lookup or link row field reference."
+        ),
+    ),
+    (
+        "link('https://www.google.com') + 'a'",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator + was of type "
+            "text but there are no possible types usable here."
+        ),
+    ),
+    (
+        "link('https://www.google.com') + 1",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator + was of type "
+            "number but there are no possible types usable here."
+        ),
+    ),
+    (
+        "sum(link('https://www.google.com'))",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function sum was of type "
+            "link "
+            "but the only usable type for this argument is a list of number values "
+            "obtained from a lookup or link row field reference."
+        ),
+    ),
+    (
+        "link('a') + link('b')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator + was of type "
+            "link but there are no possible types usable here."
+        ),
+    ),
+    (
+        "link('a') > link('b')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator > was of type "
+            "link but there are no possible types usable here."
+        ),
+    ),
+    (
+        "link('a') > 1",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 2 given to operator > was of type "
+            "number but there are no possible types usable here."
+        ),
+    ),
+    (
+        "get_link_label(1)",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_label "
+            "was "
+            "of type number but the only usable type for this argument is link."
+        ),
+    ),
+    (
+        "get_link_label('a')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_label "
+            "was "
+            "of type text but the only usable type for this argument is link."
+        ),
+    ),
+    (
+        "get_link_url(1)",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_url "
+            "was "
+            "of type number but the only usable type for this argument is link."
+        ),
+    ),
+    (
+        "get_link_url('a')",
+        "ERROR_WITH_FORMULA",
+        (
+            "Error with formula: argument number 1 given to function get_link_url "
+            "was "
+            "of type text but the only usable type for this argument is link."
         ),
     ),
 ]

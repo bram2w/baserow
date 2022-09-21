@@ -29,6 +29,7 @@ import nl from '@baserow/modules/core/locales/nl.json'
 import de from '@baserow/modules/core/locales/de.json'
 import es from '@baserow/modules/core/locales/es.json'
 import it from '@baserow/modules/core/locales/it.json'
+import pl from '@baserow/modules/core/locales/pl.json'
 
 export default (context, inject) => {
   const { store, isDev, app } = context
@@ -43,6 +44,7 @@ export default (context, inject) => {
     i18n.mergeLocaleMessage('de', de)
     i18n.mergeLocaleMessage('es', es)
     i18n.mergeLocaleMessage('it', it)
+    i18n.mergeLocaleMessage('pl', pl)
   }
 
   const registry = new Registry()

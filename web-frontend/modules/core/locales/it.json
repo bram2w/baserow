@@ -11,7 +11,10 @@
         "viewTrash": "Visualizza cestino",
         "deleteApplication": "Elimina {type}",
         "duplicateApplication": "Duplica {type}",
-        "snapshots": "Snapshot"
+        "snapshots": "Snapshot",
+        "rename": "Rinomina",
+        "duplicate": "Duplica",
+        "delete": "Elimina"
     },
     "sidebar": {
         "createGroup": "Crea gruppo",
@@ -396,5 +399,9 @@
         "daysAgo": "0 giorni fa | 1 giorno fa | {n} giorni fa",
         "yearsAgo": "0 anni fa | 1 anno fa | {n} anni fa",
         "monthsAgo": "0 mesi fa | 1 mese fa | {n} mesi fa"
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "Duplicando",
+        "duplicatedTitle": "Applicazione duplicata"
     }
 }

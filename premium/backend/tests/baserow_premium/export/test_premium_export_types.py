@@ -78,6 +78,13 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_date": "2020-01-01",
     "formula_singleselect": "",
     "formula_email": "",
+    "formula_link_with_label": {
+        "url": "https://google.com",
+        "label": "label"
+    },
+    "formula_link_url_only": {
+        "url": "https://google.com"
+    },
     "lookup": []
 },
 {
@@ -159,6 +166,13 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_date": "2020-01-01",
     "formula_singleselect": "A",
     "formula_email": "test@example.com",
+    "formula_link_with_label": {
+        "url": "https://google.com",
+        "label": "label"
+    },
+    "formula_link_url_only": {
+        "url": "https://google.com"
+    },
     "lookup": [
         "linked_row_1",
         "linked_row_2",
@@ -290,6 +304,13 @@ def test_can_export_every_interesting_different_field_to_xml(
     <formula-date>2020-01-01</formula-date>
     <formula-singleselect/>
     <formula-email/>
+    <formula-link-with-label>
+        <url>https://google.com</url>
+        <label>label</label>
+    </formula-link-with-label>
+    <formula-link-url-only>
+        <url>https://google.com</url>
+    </formula-link-url-only>
     <lookup/>
 </row>
 <row>
@@ -373,6 +394,13 @@ def test_can_export_every_interesting_different_field_to_xml(
     <formula-date>2020-01-01</formula-date>
     <formula-singleselect>A</formula-singleselect>
     <formula-email>test@example.com</formula-email>
+    <formula-link-with-label>
+        <url>https://google.com</url>
+        <label>label</label>
+    </formula-link-with-label>
+    <formula-link-url-only>
+        <url>https://google.com</url>
+    </formula-link-url-only>
     <lookup><item>linked_row_1</item><item>linked_row_2</item><item/></lookup>
 </row>
 </rows>

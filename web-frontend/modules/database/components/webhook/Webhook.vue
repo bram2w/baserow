@@ -46,7 +46,7 @@
     </div>
     <div class="webhook__body">
       <Tabs>
-        <Tab :title="$t('action.edit')">
+        <Tab class="margin-top-2" :title="$t('action.edit')">
           <UpdateWebhook
             :webhook="webhook"
             :table="table"
@@ -54,7 +54,7 @@
             @deleted="$emit('deleted', $event)"
           />
         </Tab>
-        <Tab :title="$t('webhook.callLog')">
+        <Tab class="margin-top-2" :title="$t('webhook.callLog')">
           <p v-if="webhook.calls.length <= 0">{{ $t('webhook.noCalls') }}</p>
           <WebhookCall
             v-for="call in webhook.calls"
@@ -69,14 +69,12 @@
 
 <script>
 import moment from '@baserow/modules/core/moment'
-import Tabs from '@baserow/modules/core/components/Tabs'
-import Tab from '@baserow/modules/core/components/Tab'
 import UpdateWebhook from '@baserow/modules/database/components/webhook/UpdateWebhook'
 import WebhookCall from '@baserow/modules/database/components/webhook/WebhookCall'
 
 export default {
   name: 'Webhook',
-  components: { Tabs, Tab, UpdateWebhook, WebhookCall },
+  components: { UpdateWebhook, WebhookCall },
   props: {
     webhook: {
       type: Object,

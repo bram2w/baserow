@@ -153,6 +153,11 @@ def construct_all_possible_field_kwargs(
             {"name": "formula_date", "formula": "todate('20200101', 'YYYYMMDD')"},
             {"name": "formula_singleselect", "formula": "field('single_select')"},
             {"name": "formula_email", "formula": "field('email')"},
+            {
+                "name": "formula_link_with_label",
+                "formula": "button('https://google.com', 'label')",
+            },
+            {"name": "formula_link_url_only", "formula": "link('https://google.com')"},
         ],
         "lookup": [
             {

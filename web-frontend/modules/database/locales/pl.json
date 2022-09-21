@@ -225,7 +225,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Potrzebujesz co najmniej jednej innej tabeli w tej samej bazie danych, aby połączyć się z nią.",
-        "selectTableLabel": "Wybierz tabelę, do której chcesz utworzyć link"
+        "selectTableLabel": "Wybierz tabelę, do której chcesz utworzyć link",
+        "hasRelatedFieldLabel": "Utwórz powiązane pole"
     },
     "fieldSelectOptions": {
         "add": "Dodaj opcję"
@@ -318,10 +319,6 @@
     "tableForm": {
         "name": "Nazwa"
     },
-    "tableImporterPreview": {
-        "label": "Szybki podgląd",
-        "remaining": "{remaining} inne wiersze"
-    },
     "tableXMLImporter": {
         "fileLabel": "Wybierz plik XML",
         "fileDescription": "Istniejący kod XML można zaimportować, przesyłając plik .XML z danymi tabelarycznymi, tj.:",
@@ -375,7 +372,7 @@
         "textAreaFormulaInputPlaceholder": "Kliknij, aby edytować formułę",
         "fields": "Pola",
         "functions": "Funkcje",
-        "operators": "Operatorów",
+        "operators": "Operatory",
         "fieldType": "Pole {type}"
     },
     "fieldFormulaInitialSubForm": {
@@ -457,7 +454,7 @@
     },
     "shareViewDisablePasswordModal": {
         "title": "Wyłącz ochronę hasłem",
-        "description": "Czy na pewno chcesz wyłączyć ochronę hasłem dla tego publicznego linku? Poprzez wyłączenie, hasło zostanie usunięte i nie będzie możliwe jego odzyskanie.",
+        "description": "Czy na pewno chcesz wyłączyć ochronę hasłem dla tego publicznego linku? Poprzez wyłączenie, hasło zostanie usunięte i nie będzie możliwe jego odzyskanie",
         "disable": "Wyłączyć"
     },
     "publicViewAuthLogin": {
@@ -650,7 +647,8 @@
     "duplicateFieldContext": {
         "duplicate": "Duplikuj pola",
         "cloneData": "Skopiuj dane",
-        "soon": "Dostępne wkrótce"
+        "soon": "Dostępne wkrótce",
+        "readOnlyField": "Wartości komórek zostaną wypełnione automatycznie."
     },
     "snapshotsModal": {
         "title": "migawki",
@@ -676,5 +674,36 @@
         "restore": "przywrócić",
         "delete": "usuń",
         "created": "utworzono"
+    },
+    "formViewHeader": {
+        "mode": "Tryb",
+        "preview": "Podgląd",
+        "fields": "Pola"
+    },
+    "table": {
+        "chooseView": "Wybierz widok"
+    },
+    "formViewModeType": {
+        "formDescription": "Wszystkie pola są widoczne i ułożone pionowo.",
+        "form": "Formularz"
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Dodaj współpracownika"
+    },
+    "apiDocsUploadFile": {
+        "file": "\"Plik\" wieloczęściowy zawierający zawartość pliku.",
+        "description": "Przesyła plik do Baserow poprzez bezpośrednie przesłanie zawartości pliku. Oczekiwany jest multipart `file` zawierający zawartość pliku. Odpowiedź może być następnie użyta do [załadowania pliku do wiersza]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row)."
+    },
+    "apiDocsUploadFileViaURL": {
+        "description": "Przesyła plik do Baserow, pobierając go z podanego adresu URL. Odpowiedź może być następnie użyta do [przesłania pliku do wiersza]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "url": "Adres URL, który chcesz, aby Baserow pobrał i przesłał w Twoim imieniu."
+    },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Nie znaleziono współpracownika"
+    },
+    "formViewModePreviewForm": {
+        "addCoverImage": "Dodaj zdjęcie na okładkę",
+        "addLogo": "Dodaj logo",
+        "noFields": "Ten formularz nie ma żadnych pól. Kliknij na pole w lewym pasku bocznym, aby je dodać."
     }
 }

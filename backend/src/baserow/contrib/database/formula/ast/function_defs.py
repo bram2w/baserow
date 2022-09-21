@@ -86,6 +86,7 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaCharType,
     BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
+    BaserowFormulaLinkType,
     BaserowFormulaNumberType,
     BaserowFormulaSingleSelectType,
     BaserowFormulaTextType,
@@ -171,6 +172,11 @@ def register_formula_functions(registry):
     registry.register(BaserowSum())
     # Single Select functions
     registry.register(BaserowGetSingleSelectValue())
+    # Link functions
+    registry.register(BaserowLink())
+    registry.register(BaserowButton())
+    registry.register(BaserowGetLinkUrl())
+    registry.register(BaserowGetLinkLabel())
 
 
 class BaserowUpper(OneArgumentBaserowFunction):
@@ -1535,6 +1541,46 @@ class BaserowGetSingleSelectValue(OneArgumentBaserowFunction):
         )
 
 
+class BaserowGetLinkUrl(OneArgumentBaserowFunction):
+    type = "get_link_url"
+    arg_type = [BaserowFormulaLinkType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            arg,
+            Value("url"),
+            function="jsonb_extract_path_text",
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowGetLinkLabel(OneArgumentBaserowFunction):
+    type = "get_link_label"
+    arg_type = [BaserowFormulaLinkType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            arg,
+            Value("label"),
+            function="jsonb_extract_path_text",
+            output_field=fields.TextField(),
+        )
+
+
 class BaserowLeft(TwoArgumentBaserowFunction):
     type = "left"
     arg1_type = [BaserowFormulaTextType]
@@ -1616,6 +1662,38 @@ class BaserowRegexReplace(ThreeArgumentBaserowFunction):
             function="regexp_replace",
             output_field=fields.TextField(),
         )
+
+
+class BaserowLink(OneArgumentBaserowFunction):
+    type = "link"
+    arg_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaLinkType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return JSONObject(url=arg)
+
+
+class BaserowButton(TwoArgumentBaserowFunction):
+    type = "button"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaLinkType())
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return JSONObject(url=arg1, label=arg2)
 
 
 class BaserowTrim(OneArgumentBaserowFunction):

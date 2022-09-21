@@ -28,7 +28,7 @@
             "example": "Beispiel Nutzlast"
         },
         "errors": {
-            "urlField": "Dieses Feld ist obligatorisch und muss eine gültige Url sein.",
+            "urlField": "Muss eine gültige URL sein, die mit \"https://\" oder \"http://\" beginnt.",
             "invalidHeaders": "Eine der Kopfzeilen ist ungültig."
         },
         "checkbox": {
@@ -150,7 +150,7 @@
         "intro": "Die Datenbank {name} bietet eine einfache Möglichkeit, die Daten in ein beliebiges externes System zu integrieren. Die API folgt der REST-Semantik, verwendet JSON zur Kodierung von Objekten und stützt sich auf Standard-HTTP-Codes sowie maschinen- und menschenlesbare Fehler zur Signalisierung von Operationsergebnissen.",
         "autoDocDescription": "Diese Dokumentation wird automatisch auf der Grundlage der in Ihrer Datenbank vorhandenen Tabellen und Felder erstellt. Wenn Sie Änderungen an Ihrer Datenbank, Ihren Tabellen oder Feldern vornehmen, kann es sein, dass sich auch die API-Schnittstelle geändert hat. Stellen Sie daher sicher, dass Sie Ihre API-Implementierung entsprechend aktualisieren.",
         "databaseId": "Die ID dieser Datenbank lautet:",
-        "jsClient": "Javascript-Beispiel API-Client:",
+        "jsClient": "JavaScript-Beispiel API-Client:",
         "pythonClient": "Python-Beispiel API-Client:"
     },
     "apiDocsTableListFields": {
@@ -213,7 +213,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Sie benötigen mindestens eine weitere Tabelle in derselben Datenbank, auf die Sie verweisen können.",
-        "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung"
+        "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung",
+        "hasRelatedFieldLabel": "Zugehöriges Feld erstellen"
     },
     "fieldSelectOptions": {
         "add": "Eine Option hinzufügen"
@@ -298,10 +299,6 @@
     "tableForm": {
         "name": "Name"
     },
-    "tableImporterPreview": {
-        "label": "Schnelle Vorschau",
-        "remaining": "{remaining} andere Zeilen"
-    },
     "tableXMLImporter": {
         "fileLabel": "XML-Datei auswählen",
         "fileDescription": "Sie können eine bestehende XML-Datei importieren, indem Sie die XML-Datei mit tabellarischen Daten hochladen, d.h.:",
@@ -349,7 +346,9 @@
         "fieldMappingDescription": "Wir haben die Spalten der Baserow-Felder in Ihrer Tabelle automatisch zugewiesen. Sie können sie unten ändern. Jede nicht kompatible Zelle bleibt nach dem Import leer.",
         "selectImportMessage": "Bitte wählen Sie die zu importierenden Daten aus.",
         "reportTitleSuccess": "Import erfolgreich, aber...",
-        "reportTitleFailure": "Fehlerhafte Zeilen"
+        "reportTitleFailure": "Fehlerhafte Zeilen",
+        "filePreview": "Vorschau des Dateiinhalts",
+        "importPreview": "Importvorschau"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klicken Sie zum Bearbeiten der Formel",
@@ -479,7 +478,9 @@
         "deleteRow": "Zeile löschen",
         "rowCount": "Keine Zeilen | 1 Zeile | {count} Zeilen",
         "selectRow": "Zeile auswählen",
-        "duplicateRow": "Zeile duplizieren"
+        "duplicateRow": "Zeile duplizieren",
+        "deleteRows": "Zeilen löschen",
+        "copyCells": "Zellen kopieren"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
@@ -639,12 +640,14 @@
     "formViewField": {
         "required": "erforderlich",
         "showWhenMatchingConditions": "anzeigen, wenn die Bedingungen erfüllt sind",
-        "addCondition": "Bedingung hinzufügen"
+        "addCondition": "Bedingung hinzufügen",
+        "descriptionPlaceholder": "Beschreibung"
     },
     "duplicateFieldContext": {
         "duplicate": "Feld duplizieren",
         "cloneData": "Daten kopieren",
-        "soon": "In Kürze verfügbar"
+        "soon": "In Kürze verfügbar",
+        "readOnlyField": "Die Zellenwerte werden automatisch ausgefüllt."
     },
     "snapshotsModal": {
         "descriptionLimits": "Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben.",
@@ -670,5 +673,46 @@
         "title": "Snapshot löschen",
         "content": "Sind Sie sicher, dass Sie den Snapshot {name} dauerhaft löschen möchten?",
         "confirm": "Löschen"
+    },
+    "duplicateTableJobType": {
+        "duplicating": "Duplizieren",
+        "duplicatedTitle": "Tabelle dupliziert"
+    },
+    "formViewModePreviewForm": {
+        "titlePlaceholder": "Titel",
+        "descriptionPlaceholder": "Beschreibung",
+        "addCoverImage": "Ein Titelbild hinzufügen",
+        "addLogo": "Ein Logo hinzufügen",
+        "noFields": "Dieses Formular hat noch keine Felder. Klicken Sie auf ein Feld in der linken Seitenleiste, um eines hinzuzufügen."
+    },
+    "apiDocsUploadFile": {
+        "description": "Lädt eine Datei auf Baserow hoch, indem der Dateiinhalt direkt hochgeladen wird. Es wird ein Multipart `file` erwartet, der den Inhalt der Datei enthält. Die Antwort kann dann zum [Hochladen einer Datei in eine Zeile]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row) verwendet werden.",
+        "file": "Der `file` Multipart, der den Dateiinhalt enthält."
+    },
+    "table": {
+        "chooseView": "Ansicht wählen"
+    },
+    "fieldmultipleCollaboratorsDropdown": {
+        "notFound": "Mitarbeiter nicht gefunden"
+    },
+    "formViewHeader": {
+        "preview": "Vorschau",
+        "mode": "Modus",
+        "fields": "Felder"
+    },
+    "apiDocsUploadFileViaURL": {
+        "description": "Lädt eine Datei in Baserow hoch, indem es sie von der angegebenen URL herunterlädt. Die Antwort kann dann zum [Hochladen einer Datei in eine Zeile]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row) verwendet werden.",
+        "url": "Die URL, die Baserow in Ihrem Namen herunterladen und hochladen soll."
+    },
+    "rowEditFieldMultipleCollaborators": {
+        "addCollaborator": "Einen Mitarbeiter hinzufügen"
+    },
+    "gridViewFieldFile": {
+        "dropFileHere": "Dateien hier ablegen",
+        "dropHere": "Hier ablegen"
+    },
+    "formViewModeType": {
+        "form": "Formular",
+        "formDescription": "Alle Felder sind sichtbar und vertikal gestapelt."
     }
 }

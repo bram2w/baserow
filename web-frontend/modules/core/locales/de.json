@@ -11,7 +11,10 @@
         "viewTrash": "Ansicht Papierkorb",
         "deleteApplication": "Löschen {type}",
         "duplicateApplication": "duplizieren {type}",
-        "snapshots": "Snapshots"
+        "snapshots": "Snapshots",
+        "rename": "Umbenennen",
+        "delete": "Löschen",
+        "duplicate": "Duplizieren"
     },
     "sidebar": {
         "createGroup": "Gruppe erstellen",
@@ -212,7 +215,7 @@
         "noGroupText": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen.",
         "createGroup": "Gruppe erstellen",
         "becomeGithubSponsor": "Werden Sie ein GitHub-Sponsor",
-        "starOnGitlab": "Begleiten Sie uns auf Gitlab",
+        "starOnGitlab": "Geben sie uns einen Stern auf GitLab",
         "shareOnTwitter": "Tweet über Baserow",
         "shareOnReddit": "Teilen auf Reddit",
         "shareOnFacebook": "Teilen auf Facebook",
@@ -396,5 +399,9 @@
         "daysAgo": "vor 0 Tagen | vor 1 Tag | vor {n} Tagen",
         "monthsAgo": "vor 0 Monaten | vor 1 Monat | vor {n} Monaten",
         "yearsAgo": "vor 0 Jahren | vor 1 Jahr | vor {n} Jahren"
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "Duplizieren",
+        "duplicatedTitle": "Anwendung dupliziert"
     }
 }

@@ -65,7 +65,8 @@
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 50609,
-                            "link_row_related_field_id": 286260
+                            "link_row_related_field_id": 286260,
+                            "has_related_field": true
                         },
                         {
                             "id": 286261,
@@ -116,7 +117,8 @@
                             "order": 11,
                             "primary": false,
                             "link_row_table_id": 50606,
-                            "link_row_related_field_id": 286268
+                            "link_row_related_field_id": 286268,
+                            "has_related_field": true
                         },
                         {
                             "id": 286297,
@@ -141,7 +143,8 @@
                             "order": 14,
                             "primary": false,
                             "link_row_table_id": 50618,
-                            "link_row_related_field_id": 286303
+                            "link_row_related_field_id": 286303,
+                            "has_related_field": true
                         },
                         {
                             "id": 287186,
@@ -149,14 +152,14 @@
                             "name": "Fuel efficiency view",
                             "order": 17,
                             "primary": false,
-                            "error": "references the deleted or unknown field Average fuel in mpg in table Make and models, argument number 2 given to operator > was of type number but there are no possible types usable here",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
-                            "array_formula_type": null,
-                            "formula": "if(lookup('Make and model','Average fuel in mpg') > 25,1,0)",
-                            "formula_type": "invalid"
+                            "number_decimal_places": 0,
+                            "array_formula_type": "number",
+                            "formula": "if( \n  lookup(\"Make and model\", \"Average fuel (MPG)\") > 25, \n  1, \n  0 \n)",
+                            "formula_type": "array"
                         },
                         {
                             "id": 287467,
@@ -231,6 +234,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 344790,
@@ -343,8 +347,8 @@
                                 {
                                     "id": 347517,
                                     "field_id": 287186,
-                                    "width": 171,
-                                    "hidden": true,
+                                    "width": 177,
+                                    "hidden": false,
                                     "order": 13,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
@@ -399,6 +403,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 351583,
@@ -561,6 +566,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 351600,
@@ -717,6 +723,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 351616,
@@ -879,6 +886,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353398,
@@ -1041,6 +1049,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353585,
@@ -1204,7 +1213,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 0
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14363,
@@ -1213,7 +1225,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 1
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14364,
@@ -1222,7 +1237,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 2
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14372,
@@ -1231,7 +1249,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14373,
@@ -1240,7 +1261,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14377,
@@ -1249,7 +1273,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 5
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14366,
@@ -1258,7 +1285,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14374,
@@ -1267,7 +1297,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 7
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14369,
@@ -1276,7 +1309,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 8
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14365,
@@ -1285,7 +1321,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 9
+                                    "order": 9,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14367,
@@ -1294,7 +1333,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 10
+                                    "order": 10,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14368,
@@ -1303,7 +1345,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 11
+                                    "order": 11,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14370,
@@ -1312,7 +1357,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 12
+                                    "order": 12,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14375,
@@ -1321,7 +1369,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 13
+                                    "order": 13,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 14376,
@@ -1330,7 +1381,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 14
+                                    "order": 14,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -2043,7 +2097,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 50610,
-                            "link_row_related_field_id": 286267
+                            "link_row_related_field_id": 286267,
+                            "has_related_field": true
                         },
                         {
                             "id": 287171,
@@ -2085,7 +2140,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 50611,
-                            "link_row_related_field_id": 287192
+                            "link_row_related_field_id": 287192,
+                            "has_related_field": true
                         },
                         {
                             "id": 287420,
@@ -2139,6 +2195,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 344778,
@@ -2247,6 +2304,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353780,
@@ -2346,6 +2404,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353788,
@@ -2452,6 +2511,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353797,
@@ -2835,7 +2895,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 50610,
-                            "link_row_related_field_id": 286302
+                            "link_row_related_field_id": 286302,
+                            "has_related_field": true
                         },
                         {
                             "id": 287468,
@@ -2880,6 +2941,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 344844,
@@ -2958,6 +3020,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353813,
@@ -3030,6 +3093,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353818,
@@ -3516,7 +3580,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 50609,
-                            "link_row_related_field_id": 286244
+                            "link_row_related_field_id": 286244,
+                            "has_related_field": true
                         },
                         {
                             "id": 286287,
@@ -3562,6 +3627,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 344781,
@@ -3652,6 +3718,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353823,
@@ -3870,7 +3937,8 @@
                             "order": 1,
                             "primary": false,
                             "link_row_table_id": 50607,
-                            "link_row_related_field_id": 286246
+                            "link_row_related_field_id": 286246,
+                            "has_related_field": true
                         },
                         {
                             "id": 286245,
@@ -3888,7 +3956,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 50610,
-                            "link_row_related_field_id": 286259
+                            "link_row_related_field_id": 286259,
+                            "has_related_field": true
                         },
                         {
                             "id": 286285,
@@ -3954,6 +4023,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 344787,
@@ -4021,7 +4091,7 @@
                                 {
                                     "id": 353830,
                                     "field_id": 290526,
-                                    "width": 200,
+                                    "width": 153,
                                     "hidden": true,
                                     "order": 32767,
                                     "aggregation_type": "",
@@ -4053,6 +4123,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353832,
@@ -4462,7 +4533,8 @@
                             "order": 6,
                             "primary": false,
                             "link_row_table_id": 50606,
-                            "link_row_related_field_id": 287191
+                            "link_row_related_field_id": 287191,
+                            "has_related_field": true
                         },
                         {
                             "id": 287479,
@@ -4510,6 +4582,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 344793,
@@ -4585,6 +4658,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 353841,

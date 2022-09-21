@@ -358,6 +358,10 @@
         "avgDescription": "Averages all of the values and returns the result.",
         "sumDescription": "Sums all of the values and returns the result.",
         "filterDescription": "Filters down an expression involving a lookup/link field reference or a lookup function call.",
+        "linkDescription": "Creates a hyperlink using the URI provided in the first argument.",
+        "buttonDescription": "Creates a button using the URI (first argument) and label (second argument).",
+        "getLinkLabelDescription": "Gets the label from a formula using the link or button functions.",
+        "getLinkUrlDescription": "Gets the url from a formula using the link or button functions.",
         "roundDescription": "Returns first argument rounded to the number of digits specified by the second argument.",
         "truncDescription": "Returns only the first argument converted into an integer by truncating any decimal places."
     },

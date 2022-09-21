@@ -112,7 +112,7 @@
         "createdOnReadOnly": "Il campo creato il è un campo di sola lettura.",
         "url": "Accetta una stringa che deve essere un URL.",
         "email": "Accetta una stringa che deve essere un indirizzo e-mail.",
-        "file": "Accetta una matrice di oggetti contenente almeno il nome del file utente.",
+        "file": "Accetta una matrice di oggetti contenente almeno il nome del file utente. Puoi anche inviare file, utilizzando la chiamata appropriata. La risposta alle tue chiamate verrà mostrata direttamente qui come oggetto. Le diverse possibili chiamate sono mostrate nella barra di navigazione di sinistra.",
         "singleSelect": "Accetta un intero che rappresenta l'id dell'opzione di selezione scelta o nullo se nessuna è selezionata.",
         "multipleSelect": "Accetta una matrice di interi, ognuno dei quali rappresenta l'id dell'opzione di selezione scelta.",
         "phoneNumber": "Accetta un numero di telefono che ha una lunghezza massima di 100 caratteri composto unicamente da cifre, spazi e dai seguenti caratteri: Nx,._+*()#=;/- .",
@@ -186,6 +186,10 @@
             "rowsDeleted": "Righe eliminate",
             "rowsUpdated": "Righe aggiornate",
             "rowsCreated": "Righe create"
+        },
+        "form": {
+            "invalidURLTitle": "URL invalido.",
+            "invalidURLDescription": "L'URL per il webhook non è valido o non è accessibile."
         }
     },
     "clientHandler": {
@@ -274,7 +278,12 @@
         "deleteRows": "Cancella righe",
         "singleRow": "Singola",
         "batchRows": "Mulipla",
-        "updateRows": "Aggiorna righe"
+        "updateRows": "Aggiorna righe",
+        "uploadFile": "Carica un file",
+        "uploadFileDescription": "Il `file` multipart con il contenuto del file.",
+        "uploadFileViaUrl": "Carica un file tramite URL",
+        "uploadFileViaUrlDescription": "Carica un file su Baserow fornendo un URL.",
+        "fileUploads": "Carica file"
     },
     "exporterType": {
         "csv": "Esporta in CSV"
@@ -358,6 +367,6 @@
     },
     "urlCheck": {
         "invalidUrlEnvVarTitle": "{name} invalido",
-        "invalidUrlEnvVarDescription": "La variabile d'ambiente {name}  è stata impostata ad un valore non valido. L'admin dovrebbe cambiare {name} con un indirizzo valido, nel formato http:// o https:// e poi riavviare Baserow per sistemare l'errore."
+        "invalidUrlEnvVarDescription": "La variabile d'ambiente {name} è stata impostata ad un valore non valido. L'admin dovrebbe cambiare {name} con un indirizzo valido, nel formato http:// o https:// e poi riavviare Baserow per sistemare l'errore."
     }
 }
