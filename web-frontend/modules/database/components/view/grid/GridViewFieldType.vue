@@ -182,7 +182,7 @@ export default {
     FieldContext,
     GridViewFieldWidthHandle,
     InsertFieldContext,
-    DuplicateFieldModal
+    DuplicateFieldModal,
   },
   mixins: [gridViewHelpers],
   props: {
@@ -242,7 +242,12 @@ export default {
     },
     async handleQuickEdit() {
       if (this.readOnly) return false
-      await this.$refs.context.toggle(this.$refs.quickEditLink, 'bottom', 'left', 0)
+      await this.$refs.context.toggle(
+        this.$refs.quickEditLink,
+        'bottom',
+        'left',
+        0
+      )
       this.$refs.context.$refs.updateFieldContext.toggle(
         this.$refs.context.$refs.updateFieldContextLink,
         'bottom',
