@@ -6,6 +6,8 @@ import {
   MAX_FIELD_NAME_LENGTH,
 } from '@baserow/modules/database/utils/constants'
 
+const IMPORT_PREVIEW_MAX_ROW_COUNT = 6
+
 export default {
   data() {
     return {
@@ -81,10 +83,10 @@ export default {
     },
     /**
      * Generates an object that can used to render a quick preview of the provided
-     * data. Can be used in combination with the TableImporterPreview component.
+     * data.
      */
     getPreview(head, data) {
-      const rows = data.slice(0, 6)
+      const rows = data.slice(0, IMPORT_PREVIEW_MAX_ROW_COUNT)
       const columns = Math.max.apply(
         null,
         data.map((entry) => entry.length)

@@ -1,12 +1,13 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">{{
-        $t('tableJSONImporter.fileLabel')
-      }}</label>
-      <div class="control__description">
-        {{ $t('tableJSONImporter.fileDescription') }}
-        <pre>
+      <template v-if="filename === ''">
+        <label class="control__label">{{
+          $t('tableJSONImporter.fileLabel')
+        }}</label>
+        <div class="control__description">
+          {{ $t('tableJSONImporter.fileDescription') }}
+          <pre>
 [
   {
     "to": "Tove",
@@ -21,8 +22,10 @@
     "body": "Don't forget about the export feature this week"
   }
 ]
-        </pre>
-      </div>
+        </pre
+          >
+        </div>
+      </template>
       <div class="control__elements">
         <div class="file-upload">
           <input

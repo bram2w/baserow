@@ -7,6 +7,16 @@
     z-index: 2;
     top: 10px;
   }
+
+  .simple-grid__left {
+    .simple-grid__cell:not(.simple-grid__cell--first):not(.simple-grid__cell--single) {
+      width: 200px;
+    }
+
+    .simple-grid__field:not(.simple-grid__field--first) {
+      width: 200px;
+    }
+  }
 }
 
 .select-row-modal__initial-loading {
@@ -75,122 +85,4 @@
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   overflow: hidden;
-}
-
-.select-row-modal__left {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 240px + 1px;
-  border-right: solid 1px $color-neutral-300;
-
-  @include absolute(0, auto, 0, 0);
-}
-
-.select-row-modal__right {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-
-  @include absolute(0, 0, 0, 240px + 1px);
-}
-
-.select-row-modal__head {
-  display: flex;
-  flex-wrap: nowrap;
-}
-
-.select-row-modal__field {
-  @extend %ellipsis;
-
-  flex: 0 0 200px;
-  background-color: $color-neutral-100;
-  border-bottom: 1px solid $color-neutral-200;
-  padding: 0 10px;
-
-  @include fixed-height(33px, 13px);
-
-  .select-row-modal__right & {
-    border-right: 1px solid $color-neutral-200;
-  }
-
-  &.select-row-modal__field--first {
-    flex-basis: 40px;
-    border-right: none;
-  }
-}
-
-.select-row-modal__field-icon {
-  margin-right: 6px;
-}
-
-.select-row-modal__body {
-  // Nothing
-}
-
-.select-row-modal__row {
-  display: flex;
-  flex-wrap: nowrap;
-}
-
-.select-row-modal__cell {
-  position: relative;
-  flex: 0 0 200px;
-  background-color: $white;
-  height: 33px;
-  border-bottom: 1px solid $color-neutral-200;
-
-  .select-row-modal__right & {
-    border-right: 1px solid $color-neutral-200;
-  }
-
-  &.select-row-modal__cell--first {
-    @extend %ellipsis;
-
-    flex-basis: 40px;
-    line-height: 32px;
-    padding-left: 8px;
-  }
-}
-
-.select-row-modal__cell--single {
-  flex-basis: 100%;
-}
-
-.select-row-modal__add-row {
-  display: block;
-  line-height: 33px;
-  color: $color-neutral-900;
-  background-color: $white;
-  padding-left: 8px;
-}
-
-.select-row-modal__row--hover {
-  cursor: pointer;
-
-  .select-row-modal__cell,
-  .grid-view__cell {
-    background-color: $color-primary-100;
-  }
-}
-
-.select-row-modal__row--selected {
-  cursor: initial;
-
-  .select-row-modal__cell,
-  .grid-view__cell {
-    background-color: $color-neutral-50;
-  }
-}
-
-.select-row-modal__foot {
-  display: flex;
-  align-items: center;
-  margin-top: auto;
-  padding: 0 10px;
-  height: 44px;
-  background-color: $color-neutral-50;
-  border-top: solid 1px $color-neutral-200;
-  min-width: 100%;
 }

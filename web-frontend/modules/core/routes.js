@@ -57,3 +57,11 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/_health.vue'),
   },
 ]
+
+if (process.env.NODE_ENV !== 'production') {
+  routes.push({
+    name: 'storybook',
+    path: '/storybook',
+    component: path.resolve(__dirname, 'pages/storybook.vue'),
+  })
+}

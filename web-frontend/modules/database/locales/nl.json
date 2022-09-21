@@ -299,10 +299,6 @@
     "tableForm": {
         "name": "Naam"
     },
-    "tableImporterPreview": {
-        "label": "Snelle voorbeeldweergave",
-        "remaining": "{remaining} andere rijen"
-    },
     "tableXMLImporter": {
         "fileLabel": "Kies XML-bestand",
         "fileDescription": "Je kunt een bestaande XML importeren door het .XML-bestand met gegevens in tabelvorm te uploaden, d.w.z:",
