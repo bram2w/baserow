@@ -204,7 +204,6 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
-                   
                   <div
                     class="grid-view__description"
                   >
@@ -374,7 +373,6 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
-                   
                   <div
                     class="grid-view__description"
                   >
@@ -414,7 +412,6 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
-                   
                   <div
                     class="grid-view__description"
                   >
@@ -454,7 +451,6 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
-                   
                   <div
                     class="grid-view__description"
                   >

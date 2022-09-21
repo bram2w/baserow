@@ -45,7 +45,6 @@ exports[`GridView component with decoration Default component with first_cell de
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -253,7 +252,6 @@ exports[`GridView component with decoration Default component with first_cell de
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -298,7 +296,6 @@ exports[`GridView component with decoration Default component with first_cell de
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -538,7 +535,6 @@ exports[`GridView component with decoration Default component with row wrapper d
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -692,7 +688,6 @@ exports[`GridView component with decoration Default component with row wrapper d
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -737,7 +732,6 @@ exports[`GridView component with decoration Default component with row wrapper d
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -946,7 +940,6 @@ exports[`GridView component with decoration Default component with unavailable d
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -1148,7 +1141,6 @@ exports[`GridView component with decoration Default component with unavailable d
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
@@ -1193,7 +1185,6 @@ exports[`GridView component with decoration Default component with unavailable d
           filters=""
           style="width: 200px;"
         >
-           
           <div
             class="grid-view__description"
           >
