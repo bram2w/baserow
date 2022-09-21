@@ -24,8 +24,6 @@ export default {
     const DOM_DELTA_PIXEL = 0
     const DOM_DELTA_LINE = 1
     el.scrollDirectiveEvent = (event) => {
-      event.preventDefault()
-
       const deltaMode = event.deltaMode
       let { deltaY, deltaX } = event
 
@@ -55,7 +53,11 @@ export default {
         return
       }
 
-      binding.value(pixelY, pixelX)
+      const shouldNotPreventDefault = binding.value(pixelY, pixelX)
+
+      if (shouldNotPreventDefault !== true) {
+        event.preventDefault()
+      }
     }
     el.addEventListener('wheel', el.scrollDirectiveEvent)
 

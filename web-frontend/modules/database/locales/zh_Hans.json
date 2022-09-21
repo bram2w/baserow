@@ -288,10 +288,6 @@
     "tableForm": {
         "name": ""
     },
-    "tableImporterPreview": {
-        "label": "",
-        "remaining": ""
-    },
     "tableXMLImporter": {
         "fileLabel": "",
         "fileDescription": "",

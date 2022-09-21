@@ -1,33 +1,43 @@
 .tabs {
   list-style: none;
   display: flex;
-  margin: 0 0 20px 0;
+  margin: 0;
   padding: 0;
+  width: 100%;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.tabs__item-selector {
+  margin: 0;
+  padding: 0;
+  border-bottom: solid 4px transparent;
+
+  &:not(.tabs__item-selector--active):hover {
+    background-color: darken($color-neutral-100, 2%);
+  }
+
+  &.tabs__item-selector--active {
+    border-bottom-color: $color-primary-500;
+    background-color: none;
+    font-weight: 600;
+  }
 }
 
 .tabs__item {
   margin: 0;
   padding: 0;
-
-  &:not(:last-child) {
-    margin-right: 16px;
-  }
 }
 
 .tabs__link {
   display: block;
   font-size: 13px;
-  line-height: 32px;
-  padding: 0 16px;
-  border-radius: 3px;
   color: $color-primary-900;
+  margin-bottom: 2px solid black;
+  height: 42px;
+  line-height: 42px;
+  padding: 0 30px;
 
   &:hover {
     text-decoration: none;
-    background-color: $color-neutral-100;
-  }
-
-  .tabs__item--active & {
-    background-color: $color-primary-100;
   }
 }

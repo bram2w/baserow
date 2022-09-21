@@ -1,12 +1,13 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">{{
-        $t('tableXMLImporter.fileLabel')
-      }}</label>
-      <div class="control__description">
-        {{ $t('tableXMLImporter.fileDescription') }}
-        <pre>
+      <template v-if="filename === ''">
+        <label class="control__label">{{
+          $t('tableXMLImporter.fileLabel')
+        }}</label>
+        <div class="control__description">
+          {{ $t('tableXMLImporter.fileDescription') }}
+          <pre>
 &lt;notes&gt;
   &lt;note&gt;
     &lt;to&gt;Tove&lt;/to&gt;
@@ -22,8 +23,9 @@
     &lt;body&gt;Don't forget me this weekend!&lt;/body&gt;
   &lt;/note&gt;
 &lt;/notes&gt;</pre
-        >
-      </div>
+          >
+        </div>
+      </template>
       <div class="control__elements">
         <div class="file-upload">
           <input

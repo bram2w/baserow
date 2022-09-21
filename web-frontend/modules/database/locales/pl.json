@@ -319,10 +319,6 @@
     "tableForm": {
         "name": "Nazwa"
     },
-    "tableImporterPreview": {
-        "label": "Szybki podgląd",
-        "remaining": "{remaining} inne wiersze"
-    },
     "tableXMLImporter": {
         "fileLabel": "Wybierz plik XML",
         "fileDescription": "Istniejący kod XML można zaimportować, przesyłając plik .XML z danymi tabelarycznymi, tj.:",

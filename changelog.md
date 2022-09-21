@@ -49,6 +49,11 @@ For example:
 ### Refactors
 
 * Formulas which referenced other aggregate formulas now will work correctly. [#1081](https://gitlab.com/bramw/baserow/-/issues/1081)
+* Improved file import UX for existing table. [#1120](https://gitlab.com/bramw/baserow/-/issues/1120)
+
+### Refactors
+
+* Used SimpleGrid component for SelectRowModal. [#1120](https://gitlab.com/bramw/baserow/-/issues/1120)
 
 ## Released (2022-09-07 1.12.0)
 

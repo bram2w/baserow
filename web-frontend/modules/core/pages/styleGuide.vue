@@ -499,6 +499,38 @@
           <a class="button button--ghost button--loading">Loading</a>
         </div>
         <div class="margin-bottom-3">
+          <Tabs>
+            <Tab :selected="true" :title="'Tab 1'">
+              <p>
+                Tab 1 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+            <Tab :title="'Tab 2'">
+              <p>
+                Tab 2 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+            <Tab :title="'Tab 3'">
+              <p>
+                Tab 3 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+          </Tabs>
+        </div>
+
+        <div class="margin-bottom-3">
           <div class="tooltip margin-bottom-2">
             <div class="tooltip__content">Example tooltip</div>
           </div>

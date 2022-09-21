@@ -9,8 +9,8 @@
     "node": ">=16.14.0 <17"
   },
   "scripts": {
-    "build": "nuxt build",
-    "build-local": "nuxt build --config-file ./config/nuxt.config.local.js",
+    "build": "NODE_ENV=production nuxt build",
+    "build-local": "NODE_ENV=production nuxt build --config-file ./config/nuxt.config.local.js",
     "dev": "nuxt --hostname 0.0.0.0",
     "start": "nuxt start --hostname 0.0.0.0",
     "eslint": "eslint -c .eslintrc.js --ext .js,.vue . ../premium/web-frontend",

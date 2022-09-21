@@ -299,10 +299,6 @@
     "tableForm": {
         "name": "Nom"
     },
-    "tableImporterPreview": {
-        "label": "Aperçu",
-        "remaining": "{remaining} autres lignes"
-    },
     "tableXMLImporter": {
         "fileLabel": "Choisissez un fichier XML",
         "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",

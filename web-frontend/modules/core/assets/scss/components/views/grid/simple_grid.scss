@@ -1,3 +1,35 @@
+.simple-grid {
+  display: flex;
+
+  &.simple-grid--full-height {
+    height: 100%;
+  }
+}
+
+.simple-grid__left {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: solid 1px $color-neutral-300;
+}
+
+.simple-grid__right-scrollbar-wrapper {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.simple-grid__right-wrapper {
+  overflow: hidden;
+  height: 100%;
+}
+
+.simple-grid__right {
+  display: inline-flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .simple-grid__head {
   display: flex;
   flex-wrap: nowrap;
@@ -6,7 +38,7 @@
 .simple-grid__field {
   @extend %ellipsis;
 
-  flex: 0 0 150px;
+  width: 150px;
   background-color: $color-neutral-100;
   border-bottom: 1px solid $color-neutral-200;
   border-right: 1px solid $color-neutral-200;
@@ -15,7 +47,11 @@
   @include fixed-height(33px, 13px);
 
   &.simple-grid__field--first {
-    flex-basis: 40px;
+    width: 40px;
+    border-right: none;
+  }
+
+  &:last-child {
     border-right: none;
   }
 }
@@ -25,7 +61,14 @@
 }
 
 .simple-grid__body {
-  // Nothing
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 12px;
+
+  .simple-grid--with-footer & {
+    padding-bottom: 0;
+  }
 }
 
 .simple-grid__row {
@@ -35,7 +78,7 @@
 
 .simple-grid__cell {
   position: relative;
-  flex: 0 0 150px;
+  width: 150px;
   background-color: $white;
   height: 33px;
   border-bottom: 1px solid $color-neutral-200;
@@ -44,9 +87,17 @@
   &.simple-grid__cell--first {
     @extend %ellipsis;
 
-    flex-basis: 40px;
+    width: 40px;
     line-height: 32px;
     padding-left: 8px;
+  }
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &.simple-grid__cell--single {
+    width: 100%;
   }
 }
 
@@ -66,6 +117,14 @@
   .grid-view__cell {
     background-color: $color-neutral-50;
   }
+}
+
+.simple-grid__add-row {
+  display: block;
+  line-height: 33px;
+  color: $color-neutral-900;
+  background-color: $white;
+  padding-left: 8px;
 }
 
 .simple-grid__foot {
