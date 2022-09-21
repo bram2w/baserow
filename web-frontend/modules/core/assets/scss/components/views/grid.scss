@@ -528,6 +528,14 @@
 
   .grid-view__description-name {
     @extend %ellipsis;
+
+    .grid-view__quick-edit.editable {
+      user-select: none;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
   }
 
   &.grid-view__description--loading {

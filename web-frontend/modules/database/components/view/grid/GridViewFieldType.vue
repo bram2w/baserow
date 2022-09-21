@@ -11,6 +11,13 @@
     :style="{ width: width + 'px' }"
     @mousedown="startDragging($event, field)"
   >
+    <UpdateFieldContext
+      ref="updateFieldContext"
+      :table="table"
+      :field="field"
+      @update="$emit('refresh', $event)"
+      @updated="quickEditField($event)"
+    ></UpdateFieldContext>
     <div
       class="grid-view__description"
       :class="{ 'grid-view__description--loading': field._.loading }"
@@ -19,7 +26,22 @@
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
       <div class="grid-view__description-name">
-        {{ field.name }}
+        <span
+          ref="quickEditLink"
+          class="grid-view__quick-edit"
+          :class="[!readOnly ? 'editable ' : '']"
+          @dblclick="
+            !readOnly &&
+              $refs.updateFieldContext.toggle(
+                $refs.quickEditLink,
+                'bottom',
+                'left'
+              )
+          "
+          @mousedown.stop
+        >
+          {{ field.name }}
+        </span>
       </div>
       <div v-if="field.error" class="grid-view__description-icon-error">
         <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
@@ -166,6 +188,7 @@ import FieldContext from '@baserow/modules/database/components/field/FieldContex
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
@@ -175,6 +198,7 @@ export default {
     GridViewFieldWidthHandle,
     InsertFieldContext,
     DuplicateFieldModal,
+    UpdateFieldContext,
   },
   mixins: [gridViewHelpers],
   props: {
@@ -230,6 +254,10 @@ export default {
   methods: {
     moveField($event) {
       this.$emit('move-field', $event)
+      this.$refs.context.hide()
+    },
+    quickEditField($event) {
+      this.$emit('updated', $event)
       this.$refs.context.hide()
     },
     async createFilter(event, view, field) {

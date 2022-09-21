@@ -204,6 +204,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
+                   
                   <div
                     class="grid-view__description"
                   >
@@ -218,9 +219,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      
-      Name
-    
+                      <span
+                        class="grid-view__quick-edit"
+                      >
+                        
+        Name
+      
+                      </span>
                     </div>
                      
                     <!---->
@@ -369,6 +374,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
+                   
                   <div
                     class="grid-view__description"
                   >
@@ -383,9 +389,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      
-      Last name
-    
+                      <span
+                        class="grid-view__quick-edit"
+                      >
+                        
+        Last name
+      
+                      </span>
                     </div>
                      
                     <!---->
@@ -404,6 +414,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
+                   
                   <div
                     class="grid-view__description"
                   >
@@ -418,9 +429,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      
-      Notes
-    
+                      <span
+                        class="grid-view__quick-edit"
+                      >
+                        
+        Notes
+      
+                      </span>
                     </div>
                      
                     <!---->
@@ -439,6 +454,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   filters=""
                   style="width: 200px;"
                 >
+                   
                   <div
                     class="grid-view__description"
                   >
@@ -453,9 +469,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      
-      Active
-    
+                      <span
+                        class="grid-view__quick-edit"
+                      >
+                        
+        Active
+      
+                      </span>
                     </div>
                      
                     <!---->
