@@ -30,14 +30,7 @@
           ref="quickEditLink"
           class="grid-view__quick-edit"
           :class="[!readOnly ? 'editable ' : '']"
-          @dblclick="
-            !readOnly &&
-              $refs.updateFieldContext.toggle(
-                $refs.quickEditLink,
-                'bottom',
-                'left'
-              )
-          "
+          @dblclick="handleQuickEdit()"
           @mousedown.stop
         >
           {{ field.name }}
@@ -255,6 +248,14 @@ export default {
     moveField($event) {
       this.$emit('move-field', $event)
       this.$refs.context.hide()
+    },
+    handleQuickEdit() {
+      if (this.readOnly) return false
+      this.$refs.updateFieldContext.toggle(
+        this.$refs.quickEditLink,
+        'bottom',
+        'left'
+      )
     },
     quickEditField($event) {
       this.$emit('updated', $event)
