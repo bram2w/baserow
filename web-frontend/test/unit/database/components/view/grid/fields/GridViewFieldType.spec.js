@@ -52,7 +52,7 @@ describe('GridViewFieldType component', () => {
       storePrefix: 'page/',
     })
 
-  const quickEdit = wrapper.find('.grid-view__quick-edit')
+    const quickEdit = wrapper.find('.grid-view__quick-edit')
     expect(quickEdit.classes('editable')).toBe(false)
     await quickEdit.trigger('dblclick')
     await wrapper.vm.$nextTick()
