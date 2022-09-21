@@ -11,13 +11,6 @@
     :style="{ width: width + 'px' }"
     @mousedown="startDragging($event, field)"
   >
-    <UpdateFieldContext
-      ref="updateFieldContext"
-      :table="table"
-      :field="field"
-      @update="$emit('refresh', $event)"
-      @updated="quickEditField($event)"
-    ></UpdateFieldContext>
     <div
       class="grid-view__description"
       :class="{ 'grid-view__description--loading': field._.loading }"
@@ -181,7 +174,6 @@ import FieldContext from '@baserow/modules/database/components/field/FieldContex
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
-import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
@@ -190,8 +182,7 @@ export default {
     FieldContext,
     GridViewFieldWidthHandle,
     InsertFieldContext,
-    DuplicateFieldModal,
-    UpdateFieldContext,
+    DuplicateFieldModal
   },
   mixins: [gridViewHelpers],
   props: {
@@ -249,10 +240,11 @@ export default {
       this.$emit('move-field', $event)
       this.$refs.context.hide()
     },
-    handleQuickEdit() {
+    async handleQuickEdit() {
       if (this.readOnly) return false
-      this.$refs.updateFieldContext.toggle(
-        this.$refs.quickEditLink,
+      await this.$refs.context.toggle(this.$refs.quickEditLink, 'bottom', 'left', 0)
+      this.$refs.context.$refs.updateFieldContext.toggle(
+        this.$refs.context.$refs.updateFieldContextLink,
         'bottom',
         'left'
       )
