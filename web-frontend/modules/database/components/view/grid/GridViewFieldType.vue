@@ -19,7 +19,18 @@
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
       <div class="grid-view__description-name">
-        {{ field.name }}
+        <span
+          ref="quickEditLink"
+          :class="
+            readOnly
+              ? 'grid-view__quick-edit'
+              : 'grid-view__quick-edit--editable'
+          "
+          @dblclick="handleQuickEdit()"
+          @mousedown.stop
+        >
+          {{ field.name }}
+        </span>
       </div>
       <div v-if="field.error" class="grid-view__description-icon-error">
         <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
@@ -230,6 +241,20 @@ export default {
   methods: {
     moveField($event) {
       this.$emit('move-field', $event)
+      this.$refs.context.hide()
+    },
+    async handleQuickEdit() {
+      if (this.readOnly) return false
+      await this.$refs.context.toggle(
+        this.$refs.quickEditLink,
+        'bottom',
+        'left',
+        0
+      )
+      this.$refs.context.showUpdateFieldContext()
+    },
+    quickEditField($event) {
+      this.$emit('updated', $event)
       this.$refs.context.hide()
     },
     async createFilter(event, view, field) {

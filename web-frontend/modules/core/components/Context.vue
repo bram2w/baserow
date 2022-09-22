@@ -66,7 +66,7 @@ export default {
       }
 
       if (value) {
-        this.show(
+        return this.show(
           target,
           vertical,
           horizontal,
