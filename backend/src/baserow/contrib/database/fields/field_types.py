@@ -15,7 +15,7 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import Case, CharField, DateTimeField, F, Func, Q, Value, When
+from django.db.models import CharField, DateTimeField, F, Func, Q, Value
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -2167,6 +2167,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             models.Prefetch(name, queryset=SelectOption.objects.using("default").all())
         )
 
+    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> int:
+        return getattr(row, field_name).value
+
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
     ) -> int:
@@ -2329,7 +2332,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             connection, from_field, to_field
         )
 
-    def get_order(self, field, field_name, order_direction):
+    def get_order(self, field, field_name, order_direction) -> AnnotatedOrder:
         """
         If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
@@ -2337,20 +2340,12 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         to the correct position.
         """
 
-        select_options = field.select_options.all().order_by("value")
-        options = [select_option.pk for select_option in select_options]
-        options.insert(0, None)
-
-        if order_direction == "DESC":
-            options.reverse()
-
-        order = Case(
-            *[
-                When(**{field_name: option, "then": index})
-                for index, option in enumerate(options)
-            ]
-        )
-        return order
+        order = F(f"{field_name}__value")
+        if order_direction == "ASC":
+            order = order.asc(nulls_first=True)
+        else:
+            order = order.desc(nulls_last=True)
+        return AnnotatedOrder(order=order)
 
     def random_value(self, instance, fake, cache):
         """
@@ -2415,6 +2410,11 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
             }
         )
         return serializers.ListSerializer(child=field_serializer, required=required)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> str:
+        related_objects = getattr(row, field_name)
+        values = [related_object.value for related_object in related_objects.all()]
+        return list_to_comma_separated_string(values)
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -2640,7 +2640,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         """
 
         sort_column_name = f"{field_name}_agg_sort"
-        query = Coalesce(StringAgg(f"{field_name}__value", ""), Value(""))
+        query = Coalesce(StringAgg(f"{field_name}__value", ","), Value(""))
         annotation = {sort_column_name: query}
 
         order = F(sort_column_name)
@@ -3611,3 +3611,8 @@ class MultipleCollaboratorsFieldType(FieldType):
             order = order.asc(nulls_first=True)
 
         return AnnotatedOrder(annotation=annotation, order=order)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> any:
+        related_objects = getattr(row, field_name)
+        values = [related_object.first_name for related_object in related_objects.all()]
+        return list_to_comma_separated_string(values)

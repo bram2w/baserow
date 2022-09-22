@@ -3,6 +3,7 @@ from django.urls import re_path
 from .views import (
     BatchDeleteRowsView,
     BatchRowsView,
+    RowAdjacentView,
     RowMoveView,
     RowNamesView,
     RowsView,
@@ -17,6 +18,11 @@ urlpatterns = [
         r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/$",
         RowView.as_view(),
         name="item",
+    ),
+    re_path(
+        r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/adjacent/$",
+        RowAdjacentView.as_view(),
+        name="adjacent",
     ),
     re_path(
         r"table/(?P<table_id>[0-9]+)/batch/$",

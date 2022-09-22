@@ -95,5 +95,21 @@ export default (client) => {
         items,
       })
     },
+    getAdjacent({
+      tableId,
+      rowId,
+      viewId = null,
+      previous = false,
+      search = null,
+    }) {
+      const searchSanitized = search === '' ? null : search
+      return client.get(`/database/rows/table/${tableId}/${rowId}/adjacent/`, {
+        params: {
+          previous,
+          search: searchSanitized,
+          view_id: viewId,
+        },
+      })
+    },
   }
 }

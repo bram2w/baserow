@@ -714,5 +714,25 @@
         "titlePlaceholder": "Title",
         "descriptionPlaceholder": "Description",
         "noFields": "This form doesn't have any fields. Click on a field in the left sidebar to add one."
+    },
+    "table": {
+        "adjacentRow": {
+            "notification": {
+                "notFound": {
+                    "next": {
+                        "title": "No more rows",
+                        "message": "There is no next row"
+                    },
+                    "previous": {
+                        "title": "No more rows",
+                        "message": "There is no previous row"
+                    }
+                },
+                "error": {
+                    "title": "Error occurred",
+                    "message": "An error occurred while retrieving the adjacent row"
+                }
+            }
+        }
     }
 }

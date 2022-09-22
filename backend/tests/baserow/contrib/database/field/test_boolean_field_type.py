@@ -2,6 +2,7 @@ import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
@@ -109,3 +110,41 @@ def test_get_set_export_serialized_value_boolean_field(data_fixture):
     assert old_row_1_value == getattr(row_1, boolean_field_name)
     assert old_row_2_value == getattr(row_2, boolean_field_name)
     assert old_row_3_value == getattr(row_3, boolean_field_name)
+
+
+@pytest.mark.django_db
+def test_boolean_field_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    boolean_field = data_fixture.create_boolean_field(table=table)
+
+    data_fixture.create_view_sort(view=grid_view, field=boolean_field, order="DESC")
+
+    handler = RowHandler()
+    [row_a, row_b, row_c] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{boolean_field.id}": False,
+            },
+            {
+                f"field_{boolean_field.id}": True,
+            },
+            {
+                f"field_{boolean_field.id}": True,
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    row_c = base_queryset.get(pk=row_c.id)
+    previous_row = handler.get_adjacent_row(
+        row_c, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_c, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_b.id
+    assert next_row.id == row_a.id

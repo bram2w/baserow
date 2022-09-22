@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -12,5 +12,5 @@ class AnnotatedOrder:
     an order expression, as well as an annotation on which the order expression depends.
     """
 
-    annotation: Dict[str, Any]
     order: Any
+    annotation: Optional[Dict[str, Any]] = None

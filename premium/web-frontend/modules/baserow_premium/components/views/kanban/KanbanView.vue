@@ -81,6 +81,7 @@
     ></RowCreateModal>
     <RowEditModal
       ref="rowEditModal"
+      enable-navigation
       :database="database"
       :table="table"
       :primary-is-sortable="true"
@@ -102,6 +103,8 @@
         fieldCreated($event)
         showHiddenFieldsInRowModal = true
       "
+      @navigate-previous="$emit('navigate-previous', $event)"
+      @navigate-next="$emit('navigate-next', $event)"
     ></RowEditModal>
   </div>
 </template>
@@ -166,6 +169,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
     /**
      * Returns the visible field objects in the right order.
      */
@@ -202,6 +208,16 @@ export default {
       })
     },
   },
+  watch: {
+    row: {
+      deep: true,
+      handler(row) {
+        if (row !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(row)
+        }
+      },
+    },
+  },
   beforeCreate() {
     this.$options.computed = {
       ...(this.$options.computed || {}),
@@ -217,8 +233,7 @@ export default {
   },
   mounted() {
     if (this.row !== null) {
-      const rowClone = populateRow(clone(this.row))
-      this.$refs.rowEditModal.show(this.row.id, rowClone)
+      this.populateAndEditRow(this.row)
     }
   },
   methods: {
@@ -272,6 +287,14 @@ export default {
       } catch (error) {
         notifyIf(error, 'field')
       }
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
   },
 }
