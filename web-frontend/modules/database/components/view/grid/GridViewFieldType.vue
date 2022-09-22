@@ -248,11 +248,7 @@ export default {
         'left',
         0
       )
-      this.$refs.context.$refs.updateFieldContext.toggle(
-        this.$refs.context.$refs.updateFieldContextLink,
-        'bottom',
-        'left'
-      )
+      this.$refs.context.showUpdateFieldContext()
     },
     quickEditField($event) {
       this.$emit('updated', $event)

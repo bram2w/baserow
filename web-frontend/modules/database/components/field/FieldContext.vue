@@ -66,6 +66,16 @@ export default {
     }
   },
   methods: {
+    // Allows other components to toggle the `FieldContext`
+    // and then, once visible, immediately show the
+    // `UpdateFieldContext` at the same time.
+    showUpdateFieldContext() {
+      this.$refs.updateFieldContext.toggle(
+        this.$refs.updateFieldContextLink,
+        'bottom',
+        'left'
+      )
+    },
     async deleteField() {
       this.deleteLoading = true
       const { field } = this
