@@ -1,4 +1,4 @@
-// Please keep in sync with the premium eslintrc.js
+// Please keep in sync with the premium/enterprise eslintrc.js
 module.exports = {
   root: true,
   env: {

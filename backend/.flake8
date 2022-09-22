@@ -4,6 +4,7 @@ max-doc-length = 88
 per-file-ignores =
     tests/*: F841
     ../premium/backend/tests/*: F841
+    ../enterprise/backend/tests/*: F841
     src/baserow/contrib/database/migrations/*: X1
     src/baserow/core/migrations/*: X1
 exclude =

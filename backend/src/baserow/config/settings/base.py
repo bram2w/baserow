@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "baserow.ws",
     "baserow.contrib.database",
     "baserow_premium",
+    "baserow_enterprise",
 ]
 
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)

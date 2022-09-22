@@ -6,6 +6,10 @@
       <sourceFolder url="file://$MODULE_DIR$/../premium/web-frontend/modules" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../premium/web-frontend/test" isTestSource="true" />
     </content>
+    <content url="file://$MODULE_DIR$/../enterprise/web-frontend">
+      <sourceFolder url="file://$MODULE_DIR$/../enterprise/web-frontend/modules" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../enterprise/web-frontend/test" isTestSource="true" />
+    </content>
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/modules" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />

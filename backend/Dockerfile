@@ -67,13 +67,14 @@ COPY --chown=$UID:$GID ./docs /baserow/docs
 #        and not cached even though we already have separate layers above.
 COPY --chown=$UID:$GID ./backend /baserow/backend
 COPY --chown=$UID:$GID ./premium/backend /baserow/premium/backend
+COPY --chown=$UID:$GID ./enterprise/backend /baserow/enterprise/backend
 
 WORKDIR /baserow/backend
 
 # Ensure that Python outputs everything that's printed inside
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src
+ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src:/baserow/enterprise/backend/src
 
 COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \

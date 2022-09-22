@@ -18,6 +18,10 @@ module.exports = {
         __dirname,
         '../premium/web-frontend/modules/baserow_premium'
       ),
+      '@baserow_enterprise': path.resolve(
+        __dirname,
+        '../enterprise/web-frontend/modules/baserow_enterprise'
+      ),
     },
   },
 }
