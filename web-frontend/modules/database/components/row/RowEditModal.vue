@@ -8,6 +8,23 @@
     @hidden="$emit('hidden', { row })"
   >
     <template #content>
+      <div v-if="enableNavigation" class="row-edit-modal__navigation">
+        <div v-if="navigationLoading" class="loading"></div>
+        <template v-else>
+          <a
+            class="row-edit-modal__navigation__item"
+            @click="$emit('navigate-previous', previousRow)"
+          >
+            <i class="fa fa-lg fa-chevron-up"></i>
+          </a>
+          <a
+            class="row-edit-modal__navigation__item"
+            @click="$emit('navigate-next', nextRow)"
+          >
+            <i class="fa fa-lg fa-chevron-down"></i>
+          </a>
+        </template>
+      </div>
       <h2 class="box__title">
         {{ heading }}
       </h2>
@@ -75,8 +92,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import modal from '@baserow/modules/core/mixins/modal'
-
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import RowEditModalFieldsList from './RowEditModalFieldsList.vue'
 import RowEditModalHiddenFieldsSection from './RowEditModalHiddenFieldsSection.vue'
@@ -127,6 +144,11 @@ export default {
       type: Boolean,
       required: true,
     },
+    enableNavigation: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -136,6 +158,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      navigationLoading: 'rowModalNavigation/getLoading',
+    }),
     modalRow() {
       return this.$store.getters['rowModal/get'](this._uid)
     },
@@ -147,6 +172,17 @@ export default {
     },
     row() {
       return this.modalRow.row
+    },
+    rowIndex() {
+      return this.rows.findIndex((r) => r !== null && r.id === this.rowId)
+    },
+    nextRow() {
+      return this.rowIndex !== -1 && this.rows.length > this.rowIndex + 1
+        ? this.rows[this.rowIndex + 1]
+        : null
+    },
+    previousRow() {
+      return this.rowIndex > 0 ? this.rows[this.rowIndex - 1] : null
     },
     heading() {
       const field = getPrimaryOrFirstField(this.visibleFields)

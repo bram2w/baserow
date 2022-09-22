@@ -71,6 +71,7 @@
     ></RowCreateModal>
     <RowEditModal
       ref="rowEditModal"
+      enable-navigation
       :database="database"
       :table="table"
       :primary-is-sortable="true"
@@ -89,6 +90,8 @@
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
       @field-created="showFieldCreated"
+      @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
+      @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
     >
     </RowEditModal>
   </div>
@@ -148,10 +151,6 @@ export default {
       type: String,
       required: true,
     },
-    row: {
-      validator: (prop) => typeof prop === 'object' || prop === null,
-      required: true,
-    },
   },
   data() {
     return {
@@ -165,6 +164,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
     firstRows() {
       return this.allRows.slice(0, 200)
     },
@@ -198,6 +200,11 @@ export default {
       const fieldId = this.view.card_cover_image_field
       return this.fields.find((field) => field.id === fieldId) || null
     },
+    activeSearchTerm() {
+      return this.$store.getters[
+        `${this.storePrefix}view/gallery/getActiveSearchTerm`
+      ]
+    },
   },
   watch: {
     cardHeight() {
@@ -209,6 +216,14 @@ export default {
       this.$nextTick(() => {
         this.updateBuffer(true, false)
       })
+    },
+    row: {
+      deep: true,
+      handler(row) {
+        if (row !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(row)
+        }
+      },
     },
   },
   mounted() {
@@ -273,8 +288,7 @@ export default {
     this.$refs.scroll.addEventListener('scroll', this.$el.scrollEvent)
 
     if (this.row !== null) {
-      const rowClone = populateRow(clone(this.row))
-      this.$refs.rowEditModal.show(this.row.id, rowClone)
+      this.populateAndEditRow(this.row)
     }
   },
   beforeDestroy() {
@@ -414,6 +428,14 @@ export default {
     showFieldCreated({ fetchNeeded, ...context }) {
       this.fieldCreated({ fetchNeeded, ...context })
       this.showHiddenFieldsInRowModal = true
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
   },
 }

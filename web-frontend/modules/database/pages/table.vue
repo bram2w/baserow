@@ -6,11 +6,16 @@
       :fields="fields"
       :views="views"
       :view="view"
-      :row="row"
       :table-loading="tableLoading"
       store-prefix="page/"
       @selected-view="selectedView"
       @selected-row="selectRow"
+      @navigate-previous="
+        (row, activeSearchTerm) => setAdjacentRow(true, row, activeSearchTerm)
+      "
+      @navigate-next="
+        (row, activeSearchTerm) => setAdjacentRow(false, row, activeSearchTerm)
+      "
     ></Table>
   </div>
 </template>
@@ -19,7 +24,6 @@
 import { mapState } from 'vuex'
 
 import Table from '@baserow/modules/database/components/table/Table'
-import RowService from '@baserow/modules/database/services/row'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 
 /**
@@ -54,7 +58,7 @@ export default {
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
     let viewId = params.viewId ? parseInt(params.viewId) : null
-    const data = { row: null }
+    const data = {}
 
     // Try to find the table in the already fetched applications by the
     // groupsAndApplications middleware and select that one. By selecting the table, the
@@ -124,11 +128,10 @@ export default {
 
     if (params.rowId) {
       try {
-        const { data: rowData } = await RowService(app.$client).get(
+        await store.dispatch('rowModalNavigation/fetchRow', {
           tableId,
-          params.rowId
-        )
-        data.row = rowData
+          rowId: params.rowId,
+        })
       } catch (e) {
         return error({ statusCode: 404, message: 'Row not found.' })
       }
@@ -180,7 +183,32 @@ export default {
         },
       })
     },
-    selectRow(rowId) {
+    async setAdjacentRow(previous, row = null, activeSearchTerm = null) {
+      if (row) {
+        await this.$store.dispatch('rowModalNavigation/setRow', row)
+        this.updatePath(row.id)
+      } else {
+        // If the row isn't provided then the row is
+        // probably not visible to the user at the moment
+        // and needs to be fetched
+        await this.fetchAdjacentRow(previous, activeSearchTerm)
+      }
+    },
+    async selectRow(rowId) {
+      if (rowId) {
+        const row = await this.$store.dispatch('rowModalNavigation/fetchRow', {
+          tableId: this.table.id,
+          rowId,
+        })
+        if (row) {
+          this.updatePath(rowId)
+        }
+      } else {
+        await this.$store.dispatch('rowModalNavigation/clearRow')
+        this.updatePath(rowId)
+      }
+    },
+    updatePath(rowId) {
       if (
         this.$route.params.rowId !== undefined &&
         this.$route.params.rowId === rowId
@@ -198,6 +226,36 @@ export default {
         },
       }).href
       history.replaceState({}, null, newPath)
+    },
+    async fetchAdjacentRow(previous, activeSearchTerm = null) {
+      const { row, status } = await this.$store.dispatch(
+        'rowModalNavigation/fetchAdjacentRow',
+        {
+          tableId: this.table.id,
+          viewId: this.view?.id,
+          activeSearchTerm,
+          previous,
+        }
+      )
+
+      if (status === 204 || status === 404) {
+        const translationPath = `table.adjacentRow.notification.notFound.${
+          previous ? 'previous' : 'next'
+        }`
+        await this.$store.dispatch('notification/info', {
+          title: this.$t(`${translationPath}.title`),
+          message: this.$t(`${translationPath}.message`),
+        })
+      } else if (status !== 200) {
+        await this.$store.dispatch('notification/error', {
+          title: this.$t(`table.adjacentRow.notification.error.title`),
+          message: this.$t(`table.adjacentRow.notification.error.message`),
+        })
+      }
+
+      if (row) {
+        this.updatePath(row.id)
+      }
     },
   },
 }

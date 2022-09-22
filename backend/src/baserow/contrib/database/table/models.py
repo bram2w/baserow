@@ -205,7 +205,8 @@ class TableModelQuerySet(models.QuerySet):
             field_order = field_type.get_order(field, field_name, order_direction)
 
             if isinstance(field_order, AnnotatedOrder):
-                annotations = {**annotations, **field_order.annotation}
+                if field_order.annotation is not None:
+                    annotations = {**annotations, **field_order.annotation}
                 field_order = field_order.order
 
             if field_order:

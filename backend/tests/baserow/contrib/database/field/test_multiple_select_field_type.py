@@ -156,7 +156,7 @@ def test_multiple_select_field_type_rows(data_fixture, django_assert_num_queries
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    other_select_option_single_select_field = data_fixture.create_select_option()
+    other_select_option_multiple_select_field = data_fixture.create_select_option()
 
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -192,7 +192,9 @@ def test_multiple_select_field_type_rows(data_fixture, django_assert_num_queries
         row_handler.create_row(
             user=user,
             table=table,
-            values={f"field_{field.id}": [other_select_option_single_select_field.id]},
+            values={
+                f"field_{field.id}": [other_select_option_multiple_select_field.id]
+            },
         )
 
     with pytest.raises(AllProvidedMultipleSelectValuesMustBeSelectOption):
@@ -794,7 +796,7 @@ def test_conversion_single_select_to_multiple_select_field(
 
 
 @pytest.mark.django_db
-def test_conversion_multiple_select_to_single_select_field(data_fixture):
+def test_conversion_multiple_select_to_multiple_select_field(data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group)
@@ -876,34 +878,34 @@ def test_conversion_multiple_select_to_single_select_field(data_fixture):
     # Check first row
     rows = list(model.objects.all().enhance_by_fields())
     row_0, row_1, row_2, row_3, row_4, row_5 = rows
-    row_single_select_field_list_0 = getattr(row_0, f"field_{field.id}")
-    assert row_single_select_field_list_0.id == select_options[0].id
-    assert row_single_select_field_list_0.value == select_options[0].value
+    row_multiple_select_field_list_0 = getattr(row_0, f"field_{field.id}")
+    assert row_multiple_select_field_list_0.id == select_options[0].id
+    assert row_multiple_select_field_list_0.value == select_options[0].value
 
     # Check second row
-    row_single_select_field_list_1 = getattr(row_1, f"field_{field.id}")
-    assert row_single_select_field_list_1.id == select_options[1].id
-    assert row_single_select_field_list_1.value == select_options[1].value
+    row_multiple_select_field_list_1 = getattr(row_1, f"field_{field.id}")
+    assert row_multiple_select_field_list_1.id == select_options[1].id
+    assert row_multiple_select_field_list_1.value == select_options[1].value
 
     # Check third row
-    row_single_select_field_list_2 = getattr(row_2, f"field_{field.id}")
-    assert row_single_select_field_list_2.id == select_options[2].id
-    assert row_single_select_field_list_2.value == select_options[2].value
+    row_multiple_select_field_list_2 = getattr(row_2, f"field_{field.id}")
+    assert row_multiple_select_field_list_2.id == select_options[2].id
+    assert row_multiple_select_field_list_2.value == select_options[2].value
 
     # Check fourth row
-    row_single_select_field_list_3 = getattr(row_3, f"field_{field.id}")
-    assert row_single_select_field_list_3.id == select_options[1].id
-    assert row_single_select_field_list_3.value == select_options[1].value
+    row_multiple_select_field_list_3 = getattr(row_3, f"field_{field.id}")
+    assert row_multiple_select_field_list_3.id == select_options[1].id
+    assert row_multiple_select_field_list_3.value == select_options[1].value
 
     # Check fifth row
-    row_single_select_field_list_4 = getattr(row_4, f"field_{field.id}")
-    assert row_single_select_field_list_4.id == select_options[2].id
-    assert row_single_select_field_list_4.value == select_options[2].value
+    row_multiple_select_field_list_4 = getattr(row_4, f"field_{field.id}")
+    assert row_multiple_select_field_list_4.id == select_options[2].id
+    assert row_multiple_select_field_list_4.value == select_options[2].value
 
     # Check sixth row
-    row_single_select_field_list_5 = getattr(row_5, f"field_{field.id}")
-    assert row_single_select_field_list_5.id == select_options[0].id
-    assert row_single_select_field_list_5.value == select_options[0].value
+    row_multiple_select_field_list_5 = getattr(row_5, f"field_{field.id}")
+    assert row_multiple_select_field_list_5.id == select_options[0].id
+    assert row_multiple_select_field_list_5.value == select_options[0].value
 
 
 @pytest.mark.django_db
@@ -1477,7 +1479,7 @@ def test_multiple_select_with_single_select_present(data_fixture):
     field_handler = FieldHandler()
     row_handler = RowHandler()
 
-    single_select_field = field_handler.create_field(
+    multiple_select_field = field_handler.create_field(
         user=user,
         table=table,
         type_name="single_select",
@@ -1492,7 +1494,7 @@ def test_multiple_select_with_single_select_present(data_fixture):
         user=user, table=table, type_name="multiple_select", name="Multi"
     )
 
-    single_options = single_select_field.select_options.all()
+    single_options = multiple_select_field.select_options.all()
     first_select_option = single_options[0]
 
     assert type(first_select_option) == SelectOption
@@ -1500,10 +1502,10 @@ def test_multiple_select_with_single_select_present(data_fixture):
     row = row_handler.create_row(
         user=user,
         table=table,
-        values={f"field_{single_select_field.id}": single_options[0]},
+        values={f"field_{multiple_select_field.id}": single_options[0]},
     )
 
-    field_cell = getattr(row, f"field_{single_select_field.id}")
+    field_cell = getattr(row, f"field_{multiple_select_field.id}")
     assert field_cell.id == first_select_option.id
     assert field_cell.value == first_select_option.value
     assert field_cell.color == first_select_option.color
@@ -2033,3 +2035,59 @@ def test_conversion_to_multiple_select_with_same_option_value_on_same_row(
 
     assert len(cell_2) == 1
     assert cell_2[0].id == id_of_only_select_option
+
+
+@pytest.mark.django_db
+def test_multiple_select_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=multiple_select_field, value="B", color="red", order=1
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="C", color="green", order=2
+    )
+    data_fixture.create_view_sort(
+        view=grid_view, field=multiple_select_field, order="ASC"
+    )
+
+    handler = RowHandler()
+    [row_b, row_c, row_a] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{multiple_select_field.id}": [option_b.id],
+            },
+            {
+                f"field_{multiple_select_field.id}": [option_c.id],
+            },
+            {
+                f"field_{multiple_select_field.id}": [option_a.id],
+            },
+        ],
+    )
+
+    base_queryset = ViewHandler().apply_sorting(
+        grid_view, table.get_model().objects.all()
+    )
+
+    assert base_queryset[0].id == row_a.id
+    assert base_queryset[1].id == row_b.id
+    assert base_queryset[2].id == row_c.id
+
+    row_b = base_queryset.get(pk=row_b.id)
+    previous_row = handler.get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_a.id
+    assert next_row.id == row_c.id

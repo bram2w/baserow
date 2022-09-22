@@ -240,3 +240,35 @@ def test_import_export_last_modified_field(data_fixture):
     assert getattr(imported_row, f"field_{import_created_on_field_2.id}") == datetime(
         2021, 1, 1, 12, 00, tzinfo=timezone("UTC")
     )
+
+
+@pytest.mark.django_db
+def test_created_on_field_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    created_on_field = data_fixture.create_created_on_field(table=table)
+
+    data_fixture.create_view_sort(view=grid_view, field=created_on_field, order="DESC")
+
+    handler = RowHandler()
+    [row_a, row_b, row_c] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {},
+            {},
+            {},
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    row_b = base_queryset.get(pk=row_b.id)
+    previous_row = handler.get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_c.id
+    assert next_row.id == row_a.id

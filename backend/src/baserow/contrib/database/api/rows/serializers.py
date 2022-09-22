@@ -383,3 +383,10 @@ def get_example_batch_rows_serializer_class(example_type="get", user_field_names
     }
     class_object = type(class_name, (serializers.Serializer,), fields)
     return class_object
+
+
+class GetRowAdjacentSerializer(serializers.Serializer):
+    user_field_names = serializers.BooleanField(required=False, default=False)
+    previous = serializers.BooleanField(required=False, default=False)
+    view_id = serializers.IntegerField(required=False)
+    search = serializers.CharField(required=False, allow_null=True, default=None)

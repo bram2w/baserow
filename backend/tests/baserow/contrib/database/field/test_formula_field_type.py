@@ -1372,3 +1372,46 @@ def test_can_have_nested_date_formulas(
         name="failured",
         formula="date_diff('day', field('jaar_van'), field('datum')) + 1",
     )
+
+
+@pytest.mark.django_db
+def test_formula_field_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    text_field = data_fixture.create_text_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{text_field.name}')",
+        formula_type="text",
+    )
+
+    data_fixture.create_view_sort(view=grid_view, field=formula_field, order="DESC")
+
+    handler = RowHandler()
+    [row_a, row_b, row_c] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "A",
+            },
+            {
+                f"field_{text_field.id}": "B",
+            },
+            {
+                f"field_{text_field.id}": "C",
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    row_b = base_queryset.get(pk=row_b.id)
+    previous_row = handler.get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_c.id
+    assert next_row.id == row_a.id

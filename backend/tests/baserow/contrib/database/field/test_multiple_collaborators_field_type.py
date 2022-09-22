@@ -425,3 +425,56 @@ def test_multiple_collaborators_field_type_random_value(data_fixture):
         set([x.id for x in possible_collaborators]).issuperset(set(random_choice))
         is True
     )
+
+
+@pytest.mark.django_db
+def test_multiple_collaborators_field_adjacent_row(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group, first_name="User 1")
+    user_2 = data_fixture.create_user(group=group, first_name="User 2")
+    user_3 = data_fixture.create_user(group=group, first_name="User 3")
+    database = data_fixture.create_database_application(
+        user=user, group=group, name="database"
+    )
+    table = data_fixture.create_database_table(name="table", database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field_handler = FieldHandler()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multiple collaborators",
+    )
+
+    data_fixture.create_view_sort(view=grid_view, field=field, order="DESC")
+
+    row_a = data_fixture.create_row_for_many_to_many_field(
+        table=table,
+        field=field,
+        values=[{"id": user.id}],
+        user=user,
+    )
+    row_b = data_fixture.create_row_for_many_to_many_field(
+        table=table,
+        field=field,
+        values=[{"id": user_2.id}],
+        user=user,
+    )
+    row_c = data_fixture.create_row_for_many_to_many_field(
+        table=table,
+        field=field,
+        values=[{"id": user_3.id}],
+        user=user,
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    row_b = base_queryset.get(pk=row_b.id)
+    previous_row = RowHandler().get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = RowHandler().get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_c.id
+    assert next_row.id == row_a.id

@@ -192,6 +192,7 @@
       :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="readOnly"
+      :enable-navigation="!readOnly"
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
@@ -203,6 +204,8 @@
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
       @field-created="fieldCreated"
+      @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
+      @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
     ></RowEditModal>
   </div>
 </template>
@@ -254,10 +257,6 @@ export default {
       type: Object,
       required: true,
     },
-    row: {
-      validator: (prop) => typeof prop === 'object' || prop === null,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -272,6 +271,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
     allVisibleFields() {
       return this.leftFields.concat(this.visibleFields)
     },
@@ -308,6 +310,11 @@ export default {
     leftWidth() {
       return this.leftFieldsWidth + this.gridViewRowDetailsWidth
     },
+    activeSearchTerm() {
+      return this.$store.getters[
+        `${this.storePrefix}view/grid/getActiveSearchTerm`
+      ]
+    },
   },
   watch: {
     fieldOptions: {
@@ -321,6 +328,14 @@ export default {
     fields() {
       // When a field is added or removed, we want to update the scrollbars.
       this.fieldsUpdated()
+    },
+    row: {
+      deep: true,
+      handler(row) {
+        if (row !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(row)
+        }
+      },
     },
   },
   beforeCreate() {
@@ -366,8 +381,7 @@ export default {
     )
 
     if (this.row !== null) {
-      const rowClone = populateRow(clone(this.row))
-      this.$refs.rowEditModal.show(this.row.id, rowClone)
+      this.populateAndEditRow(this.row)
     }
   },
   beforeDestroy() {
@@ -651,6 +665,14 @@ export default {
     openRowEditModal(rowId) {
       this.$refs.rowEditModal.show(rowId)
       this.$emit('selected-row', rowId)
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
     /**
      * When a cell is selected we want to make sure it is visible in the viewport, so

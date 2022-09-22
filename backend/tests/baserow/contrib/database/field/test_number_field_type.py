@@ -7,6 +7,7 @@ import pytest
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import NumberField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
@@ -216,3 +217,41 @@ def test_content_type_still_set_when_save_overridden(data_fixture):
     expected_content_type = ContentType.objects.get_for_model(NumberField)
     assert field.content_type == expected_content_type
     assert field.content_type_id == expected_content_type.id
+
+
+@pytest.mark.django_db
+def test_number_field_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    number_field = data_fixture.create_number_field(table=table)
+
+    data_fixture.create_view_sort(view=grid_view, field=number_field, order="DESC")
+
+    handler = RowHandler()
+    [row_a, row_b, row_c] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{number_field.id}": 1,
+            },
+            {
+                f"field_{number_field.id}": 2,
+            },
+            {
+                f"field_{number_field.id}": 3,
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    row_b = base_queryset.get(pk=row_b.id)
+    previous_row = handler.get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_c.id
+    assert next_row.id == row_a.id

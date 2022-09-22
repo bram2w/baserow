@@ -5,6 +5,7 @@ from django.shortcuts import reverse
 import pytest
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
@@ -1818,3 +1819,232 @@ def test_list_row_names(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_get_row_adjacent(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+
+    table = data_fixture.create_database_table(name="table", user=user)
+    field = data_fixture.create_text_field(name="some name", table=table)
+
+    [row_1, row_2, row_3] = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": "some value"},
+            {f"field_{field.id}": "some value"},
+            {f"field_{field.id}": "some value"},
+        ],
+    )
+
+    # Get the next row
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row_2.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        data={"user_field_names": True},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == row_3.id
+    assert field.name in response_json
+
+    # Get the previous row
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row_2.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        data={"previous": True},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == row_1.id
+
+
+@pytest.mark.django_db
+def test_get_row_adjacent_view_id_provided(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+
+    table = data_fixture.create_database_table(name="table", user=user)
+    view = data_fixture.create_grid_view(name="view", user=user, table=table)
+    field = data_fixture.create_text_field(name="field", table=table)
+
+    data_fixture.create_view_sort(user, field=field, view=view)
+    data_fixture.create_view_filter(
+        user, field=field, view=view, type="contains", value="a"
+    )
+
+    [row_1, row_2, row_3] = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": "ab"},
+            {f"field_{field.id}": "b"},
+            {f"field_{field.id}": "a"},
+        ],
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row_3.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        data={"view_id": view.id},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == row_1.id
+
+
+@pytest.mark.django_db
+def test_get_row_adjacent_view_id_no_adjacent_row(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+
+    table = data_fixture.create_database_table(name="table", user=user)
+    field = data_fixture.create_text_field(name="field", table=table)
+
+    [row_1, row_2, row_3] = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": "a"},
+            {f"field_{field.id}": "b"},
+            {f"field_{field.id}": "c"},
+        ],
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row_3.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db
+def test_get_row_adjacent_view_invalid_requests(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+
+    user_2, jwt_token_2 = data_fixture.create_user_and_token(
+        email="test2@test.nl", password="password", first_name="Test2"
+    )
+    table = data_fixture.create_database_table(name="table", user=user)
+    table_unrelated = data_fixture.create_database_table(
+        name="table unrelated", user=user
+    )
+    view_unrelated = data_fixture.create_grid_view(table=table_unrelated)
+
+    row = RowHandler().create_row(user, table, {})
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token_2}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.data["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": 999999, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.data["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        data={"view_id": 999999},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.data["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": 99999},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.data["error"] == "ERROR_ROW_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        format="json",
+        data={"view_id": view_unrelated.id},
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.data["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_get_row_adjacent_search(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+
+    table = data_fixture.create_database_table(name="table", user=user)
+    field = data_fixture.create_text_field(name="field", table=table)
+
+    [row_1, row_2, row_3] = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": "a"},
+            {f"field_{field.id}": "ab"},
+            {f"field_{field.id}": "c"},
+        ],
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:adjacent",
+            kwargs={"table_id": table.id, "row_id": row_2.id},
+        ),
+        data={"search": "a"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
