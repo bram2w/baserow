@@ -21,7 +21,11 @@
       <div class="grid-view__description-name">
         <span
           ref="quickEditLink"
-          :class="readOnly ? 'grid-view__quick-edit' : 'grid-view__quick-edit--editable'"
+          :class="
+            readOnly
+              ? 'grid-view__quick-edit'
+              : 'grid-view__quick-edit--editable'
+          "
           @dblclick="handleQuickEdit()"
           @mousedown.stop
         >
