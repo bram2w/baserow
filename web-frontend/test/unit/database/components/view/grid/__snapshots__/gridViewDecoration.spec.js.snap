@@ -60,7 +60,7 @@ exports[`GridView component with decoration Default component with first_cell de
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Name
@@ -267,7 +267,7 @@ exports[`GridView component with decoration Default component with first_cell de
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Surname
@@ -311,7 +311,7 @@ exports[`GridView component with decoration Default component with first_cell de
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Address
@@ -550,7 +550,7 @@ exports[`GridView component with decoration Default component with row wrapper d
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Name
@@ -703,7 +703,7 @@ exports[`GridView component with decoration Default component with row wrapper d
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Surname
@@ -747,7 +747,7 @@ exports[`GridView component with decoration Default component with row wrapper d
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Address
@@ -955,7 +955,7 @@ exports[`GridView component with decoration Default component with unavailable d
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Name
@@ -1156,7 +1156,7 @@ exports[`GridView component with decoration Default component with unavailable d
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Surname
@@ -1200,7 +1200,7 @@ exports[`GridView component with decoration Default component with unavailable d
               class="grid-view__description-name"
             >
               <span
-                class="grid-view__quick-edit editable "
+                class="grid-view__quick-edit--editable"
               >
                 
         Address
