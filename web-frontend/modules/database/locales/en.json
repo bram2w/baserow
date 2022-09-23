@@ -169,7 +169,8 @@
         "order": "Field order in table. 0 for the first field.",
         "primary": "Indicates if the field is a primary field. If `true` the field cannot be deleted and the value should represent the whole row.",
         "type": "Type defined for this field.",
-        "extraProps": "Some extra properties are not described here because they are type specific."
+        "extraProps": "Some extra properties are not described here because they are type specific.",
+        "readOnly": "Indicates whether the field is a read only field. If true, it's not possible to update the cell value."
     },
     "apiDocsTableDeleteRow": {
         "description": "Deletes an existing {name} row.",

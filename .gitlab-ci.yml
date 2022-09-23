@@ -521,6 +521,17 @@ web-frontend-test:
         path: coverage.xml
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
 
+zapier-integration-test:
+  extends:
+    - .docker-image-test-stage
+    - .skippable-job
+  variables:
+    RUN_WHEN_CHANGES_MADE_IN: "integrations/zapier"
+  script:
+    - cd integrations/zapier
+    - yarn install
+    - yarn run zapier test
+
 # If pipeline not triggered by tag:
 # - Build and store non-dev images in CI repo under the `ci-tested` tag so we know
 #   those images have passed the tests.

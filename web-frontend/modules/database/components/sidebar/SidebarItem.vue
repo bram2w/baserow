@@ -22,7 +22,7 @@
       <i class="fas fa-ellipsis-v"></i>
     </a>
     <Context ref="context">
-      <div class="context__menu-title">{{ table.name }}</div>
+      <div class="context__menu-title">{{ table.name }} ({{ table.id }})</div>
       <ul class="context__menu">
         <li>
           <a @click="exportTable()">

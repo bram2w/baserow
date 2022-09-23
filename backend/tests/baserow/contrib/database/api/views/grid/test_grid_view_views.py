@@ -1774,6 +1774,7 @@ def test_get_public_grid_view(api_client, data_fixture):
                 "primary": False,
                 "text_default": "",
                 "type": "text",
+                "read_only": False,
             }
         ],
         "view": {

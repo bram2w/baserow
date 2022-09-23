@@ -21,6 +21,7 @@ from baserow.contrib.database.tokens.models import Token
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 
+from .authentications import TokenAuthentication
 from .errors import ERROR_TOKEN_DOES_NOT_EXIST
 from .serializers import TokenCreateSerializer, TokenSerializer, TokenUpdateSerializer
 
@@ -210,3 +211,24 @@ class TokenView(APIView):
         token = TokenHandler().get_token(request.user, token_id)
         TokenHandler().delete_token(request.user, token)
         return Response(status=204)
+
+
+class TokenCheckView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["Database tokens"],
+        operation_id="check_database_token",
+        description=(
+            "This endpoint check be used to check if the provided personal API token "
+            "is valid. If returns a `200` response if so and a `403` is not. This can "
+            "be used by integrations like Zapier or n8n to test if a token is valid."
+        ),
+        responses={
+            200: None,
+            403: get_error_schema(["ERROR_TOKEN_DOES_NOT_EXIST"]),
+        },
+    )
+    def get(self, request):
+        return Response({"token": "OK"})

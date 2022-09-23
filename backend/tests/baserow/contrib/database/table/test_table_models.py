@@ -673,6 +673,68 @@ def test_filter_by_fields_object_queryset(data_fixture):
 
 
 @pytest.mark.django_db
+def test_filter_by_fields_object_with_created_on_queryset(data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+
+    model = table.get_model()
+
+    row_1 = model.objects.create()
+    row_1.created_on = datetime(2021, 1, 1, 12, 0, 0, tzinfo=utc)
+    row_1.save()
+
+    row_2 = model.objects.create()
+    row_2.created_on = datetime(2021, 1, 2, 12, 0, 0, tzinfo=utc)
+    row_2.save()
+
+    row_3 = model.objects.create()
+    row_3.created_on = datetime(2021, 1, 3, 12, 0, 0, tzinfo=utc)
+    row_3.save()
+
+    print(row_1.created_on)
+    print(row_2.created_on)
+    print(row_3.created_on)
+
+    results = model.objects.all().filter_by_fields_object(
+        filter_object={
+            f"filter__field_created_on__date_after": "2021-01-02 13:00",
+        },
+        filter_type="AND",
+    )
+    assert len(results) == 1
+    assert results[0].id == row_3.id
+
+
+@pytest.mark.django_db
+def test_filter_by_fields_object_with_updated_on_queryset(data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+
+    model = table.get_model()
+
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+    row_3 = model.objects.create()
+
+    model.objects.filter(id=row_1.id).update(
+        updated_on=datetime(2021, 1, 1, 12, 0, 0, tzinfo=utc)
+    )
+    model.objects.filter(id=row_2.id).update(
+        updated_on=datetime(2021, 1, 2, 12, 0, 0, tzinfo=utc)
+    )
+    model.objects.filter(id=row_3.id).update(
+        updated_on=datetime(2021, 1, 3, 12, 0, 0, tzinfo=utc)
+    )
+
+    results = model.objects.all().filter_by_fields_object(
+        filter_object={
+            f"filter__field_updated_on__date_before": "2021-01-02 12:00",
+        },
+        filter_type="AND",
+    )
+    assert len(results) == 1
+    assert results[0].id == row_1.id
+
+
+@pytest.mark.django_db
 def test_table_model_fields_requiring_refresh_on_insert(data_fixture):
     table = data_fixture.create_database_table(name="Cars")
     data_fixture.create_text_field(table=table, name="Color", text_default="white")

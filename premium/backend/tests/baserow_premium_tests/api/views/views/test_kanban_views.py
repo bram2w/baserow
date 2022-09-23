@@ -1085,6 +1085,7 @@ def test_get_public_kanban_without_with_single_select_and_cover(
                 "primary": False,
                 "text_default": "",
                 "type": "text",
+                "read_only": False,
             },
         ],
         "view": {
@@ -1153,6 +1154,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "select_options": [],
                 "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "type": "single_select",
+                "read_only": False,
             },
             {
                 "id": cover_field.id,
@@ -1161,6 +1163,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "primary": cover_field.primary,
                 "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "type": "file",
+                "read_only": False,
             },
             {
                 "id": public_field.id,
@@ -1170,6 +1173,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "primary": False,
                 "text_default": "",
                 "type": "text",
+                "read_only": False,
             },
         ],
         "view": {
