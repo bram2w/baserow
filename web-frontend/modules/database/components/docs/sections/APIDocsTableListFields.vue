@@ -30,6 +30,9 @@
         <APIDocsParameter name="type" :optional="false" type="string">
           {{ $t('apiDocsTableListFields.type') }}
         </APIDocsParameter>
+        <APIDocsParameter name="read_only" :optional="false" type="boolean">
+          {{ $t('apiDocsTableListFields.readOnly') }}
+        </APIDocsParameter>
       </ul>
       <p class="api-docs__content">
         {{ $t('apiDocsTableListFields.extraProps') }}

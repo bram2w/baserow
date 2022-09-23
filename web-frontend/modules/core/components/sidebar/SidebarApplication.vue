@@ -31,7 +31,9 @@
         <i class="fas fa-ellipsis-v"></i>
       </a>
       <Context ref="context">
-        <div class="context__menu-title">{{ application.name }}</div>
+        <div class="context__menu-title">
+          {{ application.name }} ({{ application.id }})
+        </div>
         <ul class="context__menu">
           <slot name="context"></slot>
           <li>

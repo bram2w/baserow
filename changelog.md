@@ -15,6 +15,11 @@ For example:
 
 ### New Features
 
+* Added Zapier integration code. [#816](https://gitlab.com/bramw/baserow/-/issues/816)
+* Made it possible to filter on the `created_on` and `updated_on` columns, even though
+  they're not exposed via fields.
+* Expose `read_only` in the list fields endpoint.
+
 ### Bug Fixes
 
 ### Refactors

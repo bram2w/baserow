@@ -360,6 +360,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
                 "primary": False,
                 "text_default": "",
                 "type": "text",
+                "read_only": False,
             }
         ],
         "view": {

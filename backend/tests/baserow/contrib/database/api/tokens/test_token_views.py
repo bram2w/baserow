@@ -7,6 +7,7 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
 )
 
@@ -615,3 +616,25 @@ def test_trashing_table_hides_restores_tokens(api_client, data_fixture):
             ["database", database_1.id],
         ]
     )
+
+
+@pytest.mark.django_db
+def test_check_token(api_client, data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    url = reverse("api:database:tokens:check")
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+    url = reverse("api:database:tokens:check")
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION="Token WRONG")
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+    token = TokenHandler().create_token(user, group, "Good")
+    url = reverse("api:database:tokens:check")
+    response = api_client.get(
+        url, format="json", HTTP_AUTHORIZATION=f"Token {token.key}"
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {"token": "OK"}

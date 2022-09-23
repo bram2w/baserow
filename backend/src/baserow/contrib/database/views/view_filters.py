@@ -1,7 +1,7 @@
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from math import ceil, floor
-from typing import Dict
+from typing import Dict, Union
 
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models import DateTimeField, IntegerField, Q
@@ -310,7 +310,7 @@ class DateEqualViewFilterType(ViewFilterType):
         utc = timezone("UTC")
 
         try:
-            datetime = parser.isoparse(value).astimezone(utc)
+            parsed_datetime = parser.isoparse(value).astimezone(utc)
         except (ParserError, ValueError):
             return Q()
 
@@ -326,9 +326,9 @@ class DateEqualViewFilterType(ViewFilterType):
 
             def query_dict(query_field_name):
                 return {
-                    f"{query_field_name}__year": datetime.year,
-                    f"{query_field_name}__month": datetime.month,
-                    f"{query_field_name}__day": datetime.day,
+                    f"{query_field_name}__year": parsed_datetime.year,
+                    f"{query_field_name}__month": parsed_datetime.month,
+                    f"{query_field_name}__day": parsed_datetime.day,
                 }
 
             if has_timezone:
@@ -343,7 +343,7 @@ class DateEqualViewFilterType(ViewFilterType):
             else:
                 return Q(**query_dict(field_name))
         else:
-            return Q(**{field_name: datetime})
+            return Q(**{field_name: parsed_datetime})
 
 
 class BaseDateFieldLookupFilterType(ViewFilterType):
@@ -375,7 +375,7 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
     ]
 
     @staticmethod
-    def parse_date(value: str) -> datetime.date:
+    def parse_date(value: str) -> Union[datetime.date, datetime]:
         """
         Parses the provided value string and converts it to a date object.
         Raises an error if the provided value is an empty string or cannot be parsed
@@ -387,11 +387,21 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
         if value == "":
             raise ValueError
 
+        utc = timezone("UTC")
+
         try:
-            parsed_date = parser.isoparse(value).date()
-            return parsed_date
+            parsed_datetime = parser.isoparse(value).astimezone(utc)
+            return parsed_datetime
         except ValueError as e:
             raise e
+
+    @staticmethod
+    def is_date(value: str) -> bool:
+        try:
+            datetime.strptime(value, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
 
     def get_filter(self, field_name, value, model_field, field):
         # in order to only compare the date part of a datetime field
@@ -399,7 +409,11 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
         # if so the django query lookup '__date' gets appended to the field_name
         # otherwise (i.e. it is a date field) nothing gets appended
         query_date_lookup = self.query_date_lookup
-        if isinstance(model_field, DateTimeField) and not query_date_lookup:
+        if (
+            isinstance(model_field, DateTimeField)
+            and self.is_date(value)
+            and not query_date_lookup
+        ):
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
@@ -433,14 +447,6 @@ class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
 
     type = "date_before"
     query_field_lookup = "__lt"
-    compatible_field_types = [
-        DateFieldType.type,
-        LastModifiedFieldType.type,
-        CreatedOnFieldType.type,
-        FormulaFieldType.compatible_with_formula_types(
-            BaserowFormulaDateType.type,
-        ),
-    ]
 
 
 class DateAfterViewFilterType(BaseDateFieldLookupFilterType):
