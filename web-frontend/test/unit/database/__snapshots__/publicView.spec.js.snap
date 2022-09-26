@@ -237,9 +237,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      <span
-                        class="grid-view__quick-edit"
-                      >
+                      <span>
                         
         Name
       
@@ -406,9 +404,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      <span
-                        class="grid-view__quick-edit"
-                      >
+                      <span>
                         
         Last name
       
@@ -445,9 +441,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      <span
-                        class="grid-view__quick-edit"
-                      >
+                      <span>
                         
         Notes
       
@@ -484,9 +478,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     <div
                       class="grid-view__description-name"
                     >
-                      <span
-                        class="grid-view__quick-edit"
-                      >
+                      <span>
                         
         Active
       

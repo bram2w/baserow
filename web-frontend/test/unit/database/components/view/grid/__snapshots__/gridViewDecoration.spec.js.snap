@@ -59,9 +59,7 @@ exports[`GridView component with decoration Default component with first_cell de
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Name
       
@@ -266,9 +264,7 @@ exports[`GridView component with decoration Default component with first_cell de
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Surname
       
@@ -310,9 +306,7 @@ exports[`GridView component with decoration Default component with first_cell de
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Address
       
@@ -549,9 +543,7 @@ exports[`GridView component with decoration Default component with row wrapper d
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Name
       
@@ -702,9 +694,7 @@ exports[`GridView component with decoration Default component with row wrapper d
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Surname
       
@@ -746,9 +736,7 @@ exports[`GridView component with decoration Default component with row wrapper d
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Address
       
@@ -954,9 +942,7 @@ exports[`GridView component with decoration Default component with unavailable d
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Name
       
@@ -1155,9 +1141,7 @@ exports[`GridView component with decoration Default component with unavailable d
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Surname
       
@@ -1199,9 +1183,7 @@ exports[`GridView component with decoration Default component with unavailable d
             <div
               class="grid-view__description-name"
             >
-              <span
-                class="grid-view__quick-edit--editable"
-              >
+              <span>
                 
         Address
       

@@ -529,13 +529,7 @@
   .grid-view__description-name {
     @extend %ellipsis;
 
-    .grid-view__quick-edit--editable {
-      user-select: none;
-
-      &:hover {
-        cursor: pointer;
-      }
-    }
+    user-select: none;
   }
 
   &.grid-view__description--loading {

@@ -19,16 +19,7 @@
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
       <div class="grid-view__description-name">
-        <span
-          ref="quickEditLink"
-          :class="
-            readOnly
-              ? 'grid-view__quick-edit'
-              : 'grid-view__quick-edit--editable'
-          "
-          @dblclick="handleQuickEdit()"
-          @mousedown.stop
-        >
+        <span ref="quickEditLink" @dblclick="handleQuickEdit()">
           {{ field.name }}
         </span>
       </div>
@@ -326,7 +317,6 @@ export default {
       }
     },
     startDragging(event, field) {
-      event.preventDefault()
       this.$emit('dragging', { field, event })
     },
     getSortIndicator(field, index) {
