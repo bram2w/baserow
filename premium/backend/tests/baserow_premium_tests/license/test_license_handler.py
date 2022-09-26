@@ -7,15 +7,15 @@ from django.test.utils import override_settings
 import pytest
 import responses
 from baserow_premium.license.exceptions import (
-    InvalidPremiumLicenseError,
+    InvalidLicenseError,
     LicenseAuthorityUnavailable,
+    LicenseHasExpiredError,
+    LicenseInstanceIdMismatchError,
     NoPremiumLicenseError,
-    NoSeatsLeftInPremiumLicenseError,
-    PremiumLicenseAlreadyExists,
-    PremiumLicenseHasExpired,
-    PremiumLicenseInstanceIdMismatchError,
-    UnsupportedPremiumLicenseError,
-    UserAlreadyOnPremiumLicenseError,
+    NoSeatsLeftInLicenseError,
+    PremiumLicenseAlreadyExistsError,
+    UnsupportedLicenseError,
+    UserAlreadyOnLicenseError,
 )
 from baserow_premium.license.handler import (
     add_user_to_license,
@@ -488,31 +488,31 @@ def test_decode_license_with_valid_license():
 
 @override_settings(DEBUG=True)
 def test_invalid_signature_decode_license():
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(INVALID_SIGNATURE_LICENSE)
 
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(INVALID_PAYLOAD_LICENSE)
 
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(b"test")
 
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(b"test.test")
 
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(b"test.test==")
 
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(b"eyJ2ZXJzaW9uIjog.rzAyL6qBkz_Eb==")
 
-    with pytest.raises(InvalidPremiumLicenseError):
+    with pytest.raises(InvalidLicenseError):
         decode_license(NOT_JSON_PAYLOAD_LICENSE)
 
 
 @override_settings(DEBUG=True)
 def test_unsupported_version_decode_license():
-    with pytest.raises(UnsupportedPremiumLicenseError):
+    with pytest.raises(UnsupportedLicenseError):
         decode_license(INVALID_VERSION_LICENSE)
 
 
@@ -581,7 +581,7 @@ def test_register_license_with_authority_check_does_not_exist(data_fixture):
             status=200,
         )
 
-        with pytest.raises(InvalidPremiumLicenseError):
+        with pytest.raises(InvalidLicenseError):
             register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
@@ -605,7 +605,7 @@ def test_register_license_with_authority_check_instance_id_mismatch(data_fixture
             status=200,
         )
 
-        with pytest.raises(PremiumLicenseInstanceIdMismatchError):
+        with pytest.raises(LicenseInstanceIdMismatchError):
             register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
@@ -629,7 +629,7 @@ def test_register_license_with_authority_check_invalid(data_fixture):
             status=200,
         )
 
-        with pytest.raises(InvalidPremiumLicenseError):
+        with pytest.raises(InvalidLicenseError):
             register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
@@ -648,7 +648,7 @@ def test_register_license(data_fixture):
         register_license(normal_user, VALID_ONE_SEAT_LICENSE)
 
     with freeze_time("2021-10-01 12:00"):
-        with pytest.raises(PremiumLicenseHasExpired):
+        with pytest.raises(LicenseHasExpiredError):
             register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
     with freeze_time("2021-07-01 12:00"):
@@ -661,10 +661,10 @@ def test_register_license(data_fixture):
         assert all_licenses[0].id == license_1.id
 
     with freeze_time("2021-09-01 12:00"):
-        with pytest.raises(PremiumLicenseInstanceIdMismatchError):
+        with pytest.raises(LicenseInstanceIdMismatchError):
             register_license(admin_user, VALID_INSTANCE_TWO_LICENSE)
 
-        with pytest.raises(PremiumLicenseAlreadyExists):
+        with pytest.raises(PremiumLicenseAlreadyExistsError):
             register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
         license_2 = register_license(admin_user, VALID_TWO_SEAT_LICENSE.decode())
@@ -705,11 +705,11 @@ def test_register_an_older_license(data_fixture):
         register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
 
         # The same license already exists.
-        with pytest.raises(PremiumLicenseAlreadyExists):
+        with pytest.raises(PremiumLicenseAlreadyExistsError):
             register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
 
         # An older license already exists.
-        with pytest.raises(PremiumLicenseAlreadyExists):
+        with pytest.raises(PremiumLicenseAlreadyExistsError):
             register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
@@ -763,10 +763,10 @@ def test_add_user_to_license(mock_broadcast_to_users, data_fixture):
         assert args[0][1]["type"] == "user_data_updated"
         assert args[0][1]["user_data"] == {"premium": {"valid_license": True}}
 
-        with pytest.raises(UserAlreadyOnPremiumLicenseError):
+        with pytest.raises(UserAlreadyOnLicenseError):
             add_user_to_license(admin_1, license_object, user_1)
 
-        with pytest.raises(NoSeatsLeftInPremiumLicenseError):
+        with pytest.raises(NoSeatsLeftInLicenseError):
             add_user_to_license(admin_1, license_object, user_2)
 
 

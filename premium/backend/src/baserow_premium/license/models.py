@@ -23,10 +23,12 @@ class License(models.Model):
     def payload(self):
         from .handler import decode_license
 
-        premium_license = self.license
-        if isinstance(premium_license, str):
-            premium_license = premium_license.encode()
-        return decode_license(premium_license)
+        possibly_encoded_license = self.license
+        if isinstance(possibly_encoded_license, str):
+            encoded_license = possibly_encoded_license.encode()
+        else:
+            encoded_license = possibly_encoded_license
+        return decode_license(encoded_license)
 
     @property
     def license_id(self):

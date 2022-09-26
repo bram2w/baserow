@@ -64,19 +64,19 @@ export default {
         })
       } catch (error) {
         this.handleError(error, 'license', {
-          ERROR_INVALID_PREMIUM_LICENSE: new ResponseErrorMessage(
+          ERROR_INVALID_LICENSE: new ResponseErrorMessage(
             this.$t('registerLicenseModal.licenseError.invalidTitle'),
             this.$t('registerLicenseModal.licenseError.invalid')
           ),
-          ERROR_UNSUPPORTED_PREMIUM_LICENSE: new ResponseErrorMessage(
+          ERROR_UNSUPPORTED_LICENSE: new ResponseErrorMessage(
             this.$t('registerLicenseModal.licenseError.unsupportedTitle'),
             this.$t('registerLicenseModal.licenseError.unsupported')
           ),
-          ERROR_PREMIUM_LICENSE_HAS_EXPIRED: new ResponseErrorMessage(
+          ERROR_LICENSE_HAS_EXPIRED: new ResponseErrorMessage(
             this.$t('registerLicenseModal.licenseError.expiredTitle'),
             this.$t('registerLicenseModal.licenseError.expired')
           ),
-          ERROR_PREMIUM_LICENSE_ALREADY_EXISTS: new ResponseErrorMessage(
+          ERROR_LICENSE_ALREADY_EXISTS: new ResponseErrorMessage(
             this.$t('registerLicenseModal.licenseError.duplicateTitle'),
             this.$t('registerLicenseModal.licenseError.duplicate')
           ),

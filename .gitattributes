@@ -7,6 +7,3 @@
 *.js text eol=lf
 *.vue text eol=lf
 *.scss text eol=lf
-
-# Prevent merge conflicts for additions to the change log
-changelog.md merge=union
