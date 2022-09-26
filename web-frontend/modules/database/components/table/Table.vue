@@ -7,6 +7,9 @@
     >
       <div v-show="tableLoading" class="header__loading"></div>
       <ul v-if="!tableLoading" class="header__filter">
+        <li v-if="showLogo" class="header__filter-item">
+          <BaserowLogo class="header__filter-logo" />
+        </li>
         <li class="header__filter-item header__filter-item--grids">
           <a
             ref="viewsSelectToggle"
@@ -158,6 +161,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import ResizeObserver from 'resize-observer-polyfill'
 
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
@@ -170,6 +174,7 @@ import ViewDecoratorMenu from '@baserow/modules/database/components/view/ViewDec
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
+import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -177,6 +182,7 @@ import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLi
  */
 export default {
   components: {
+    BaserowLogo,
     ShareViewLink,
     EditableViewName,
     ViewsContext,
@@ -268,6 +274,12 @@ export default {
           .some((deco) => deco.isCompatible(this.view))
       )
     },
+    showLogo() {
+      return this.view.show_logo && this.isPublic
+    },
+    ...mapGetters({
+      isPublic: 'page/view/public/getIsPublic',
+    }),
   },
   watch: {
     tableLoading(value) {
