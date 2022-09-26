@@ -8,7 +8,15 @@
         :store-prefix="storePrefix"
       ></GridViewHide>
     </li>
-    <li class="header__filter-item header__filter-item--right">
+    <li
+      class="
+        header__filter-item header__filter-item--right
+        margin-top-1 margin-right-1
+      "
+    >
+      <BaserowLogo v-if="view.show_logo && isPublic" />
+    </li>
+    <li class="header__filter-item">
       <ViewSearch
         :view="view"
         :fields="fields"
@@ -20,14 +28,15 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 import GridViewHide from '@baserow/modules/database/components/view/grid/GridViewHide'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
+import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 
 export default {
   name: 'GridViewHeader',
-  components: { GridViewHide, ViewSearch },
+  components: { BaserowLogo, GridViewHide, ViewSearch },
   props: {
     view: {
       type: Object,
@@ -49,6 +58,9 @@ export default {
   computed: {
     ...mapState({
       tableLoading: (state) => state.table.loading,
+    }),
+    ...mapGetters({
+      isPublic: 'page/view/public/getIsPublic',
     }),
     fieldsAllowedToBeHidden() {
       return this.fields.filter((field) => !field.primary)

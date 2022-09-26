@@ -264,6 +264,7 @@ class ViewSerializer(serializers.ModelSerializer):
     decorations = ViewDecorationSerializer(
         many=True, source="viewdecoration_set", required=False
     )
+    show_logo = serializers.BooleanField(required=False)
 
     class Meta:
         model = View
@@ -280,6 +281,7 @@ class ViewSerializer(serializers.ModelSerializer):
             "decorations",
             "filters_disabled",
             "public_view_has_password",
+            "show_logo",
         )
         extra_kwargs = {
             "id": {"read_only": True},
@@ -399,6 +401,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
     table = PublicViewTableSerializer()
     type = serializers.SerializerMethodField()
     sortings = serializers.SerializerMethodField()
+    show_logo = serializers.BooleanField(required=False)
 
     @extend_schema_field(PublicViewSortSerializer(many=True))
     def get_sortings(self, instance):
@@ -423,6 +426,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
             "sortings",
             "public",
             "slug",
+            "show_logo",
         )
         extra_kwargs = {
             "id": {"read_only": True},

@@ -67,6 +67,14 @@
         @update-cover-image-field="updateCoverImageField"
       ></ViewFieldsContext>
     </li>
+    <li
+      class="
+        header__filter-item header__filter-item--right
+        margin-top-1 margin-right-1
+      "
+    >
+      <BaserowLogo v-if="view.show_logo && isPublic" />
+    </li>
   </ul>
 </template>
 
@@ -77,10 +85,11 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewFieldsContext from '@baserow/modules/database/components/view/ViewFieldsContext'
 import KanbanViewStackedBy from '@baserow_premium/components/views/kanban/KanbanViewStackedBy'
 import kanbanViewHelper from '@baserow_premium/mixins/kanbanViewHelper'
+import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 
 export default {
   name: 'KanbanViewHeader',
-  components: { KanbanViewStackedBy, ViewFieldsContext },
+  components: { BaserowLogo, KanbanViewStackedBy, ViewFieldsContext },
   mixins: [kanbanViewHelper],
   props: {
     database: {
@@ -115,6 +124,9 @@ export default {
     },
     ...mapState({
       tableLoading: (state) => state.table.loading,
+    }),
+    ...mapGetters({
+      isPublic: 'page/view/public/getIsPublic',
     }),
   },
   beforeCreate() {

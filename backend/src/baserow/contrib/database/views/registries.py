@@ -583,6 +583,7 @@ class ViewType(
             "filter_type": view.filter_type,
             "filters_disabled": view.filters_disabled,
             "public_view_password": view.public_view_password,
+            "show_logo": view.show_logo,
         }
 
         values.update({key: getattr(view, key) for key in self.allowed_fields})

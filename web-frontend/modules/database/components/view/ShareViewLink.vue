@@ -56,7 +56,7 @@
           </a>
         </div>
         <div class="view-sharing__shared-link-options">
-          <div class="view-sharing__option-password">
+          <div class="view-sharing__option">
             <SwitchInput
               :value="view.public_view_has_password"
               :large="true"
@@ -83,6 +83,13 @@
             <EnablePasswordModal ref="enablePasswordModal" :view="view" />
             <DisablePasswordModal ref="disablePasswordModal" :view="view" />
           </div>
+          <component
+            :is="component"
+            v-for="(component, i) in additionalShareLinkOptions"
+            :key="i"
+            :view="view"
+            @update-view="forceUpdateView"
+          />
         </div>
         <div v-if="!readOnly" class="view-sharing__shared-link-foot">
           <a
@@ -148,6 +155,14 @@ export default {
     viewTypeSharingLinkName() {
       return this.viewType.getSharingLinkName()
     },
+    additionalShareLinkOptions() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .reduce((components, plugin) => {
+          components = components.concat(plugin.getAdditionalShareLinkOptions())
+          return components
+        }, [])
+        .filter((component) => component !== null)
+    },
   },
   methods: {
     copyShareUrlToClipboard() {
@@ -168,6 +183,12 @@ export default {
       }
 
       this.$store.dispatch('view/setItemLoading', { view, value: false })
+    },
+    forceUpdateView(values) {
+      this.$store.dispatch('view/forceUpdate', {
+        view: this.view,
+        values,
+      })
     },
     toggleShareViewPassword() {
       if (this.view.public_view_has_password) {

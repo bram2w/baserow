@@ -113,9 +113,14 @@
   margin-bottom: 20px;
 }
 
-.view-sharing__option-password {
+.view-sharing__option {
   display: flex;
   align-items: center;
+
+  &--disabled {
+    cursor: pointer;
+    color: $color-neutral-500;
+  }
 }
 
 p.box__description {

@@ -383,6 +383,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
             },
             "type": "gallery",
             "card_cover_image_field": None,
+            "show_logo": True,
         },
     }
 

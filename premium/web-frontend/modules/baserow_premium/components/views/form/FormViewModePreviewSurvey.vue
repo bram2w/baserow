@@ -96,8 +96,11 @@
           </div>
         </div>
       </form>
-      <div class="form-view-survey__footer form-view-survey__footer--absolute">
-        <FormViewPoweredBy></FormViewPoweredBy>
+      <div
+        class="form-view-survey__footer form-view-survey__footer--absolute"
+        :class="{ 'form-view-survey__footer--single': !view.show_logo }"
+      >
+        <FormViewPoweredBy v-if="view.show_logo"></FormViewPoweredBy>
         <div class="form-view-survey__pagination">
           <a
             v-if="!readOnly"

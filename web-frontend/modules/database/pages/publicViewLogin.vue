@@ -24,7 +24,6 @@
           </div>
         </FormElement>
         <div class="public-view-auth__actions">
-          <FormViewPoweredBy />
           <button
             class="button button--large button--primary"
             :class="{ 'button--loading': loading }"
@@ -42,14 +41,12 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
-import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 import { required } from 'vuelidate/lib/validators'
 import { mapActions } from 'vuex'
 import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 import languageDetection from '@baserow/modules/core/mixins/languageDetection'
 
 export default {
-  components: { FormViewPoweredBy },
   mixins: [form, error, languageDetection],
   layout: 'login',
   data() {

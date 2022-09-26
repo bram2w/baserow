@@ -54,6 +54,10 @@ export default {
       type: Array,
       required: true,
     },
+    showLogo: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
