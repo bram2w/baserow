@@ -1798,6 +1798,7 @@ def test_get_public_grid_view(api_client, data_fixture):
             },
             "type": "grid",
             "row_identifier_type": grid_view.row_identifier_type,
+            "show_logo": True,
         },
     }
 

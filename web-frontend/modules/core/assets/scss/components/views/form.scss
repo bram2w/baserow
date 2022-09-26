@@ -482,6 +482,10 @@
   justify-content: space-between;
   padding: 20px;
   font-size: 13px;
+
+  &--single {
+    justify-content: flex-end;
+  }
 }
 
 .form-view__powered-by {
@@ -556,6 +560,6 @@
 .public-view-auth__actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   font-size: 13px;
 }

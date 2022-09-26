@@ -35,6 +35,7 @@ export function createPublicGridView(
     public: true,
     slug: viewSlug,
     sortings,
+    show_logo: true,
   }
   mock
     .onGet(`/database/views/${viewSlug}/public/info/`)

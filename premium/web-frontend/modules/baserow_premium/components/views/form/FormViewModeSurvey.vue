@@ -41,8 +41,11 @@
           </div>
         </div>
       </form>
-      <div class="form-view-survey__footer">
-        <FormViewPoweredBy></FormViewPoweredBy>
+      <div
+        class="form-view-survey__footer"
+        :class="{ 'form-view-survey__footer--single': !showLogo }"
+      >
+        <FormViewPoweredBy v-if="showLogo"></FormViewPoweredBy>
         <div class="form-view-survey__pagination">
           <div class="form-view-survey__pagination-buttons">
             <a

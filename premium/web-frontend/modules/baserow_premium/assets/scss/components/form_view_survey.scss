@@ -74,6 +74,10 @@
   &.form-view-survey__footer--absolute {
     position: absolute;
   }
+
+  &--single {
+    justify-content: flex-end;
+  }
 }
 
 .form-view-survey__pagination {

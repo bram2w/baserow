@@ -800,6 +800,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_view(
             },
             "type": "grid",
             "row_identifier_type": grid_view.row_identifier_type,
+            "show_logo": grid_view.show_logo,
         },
     }
 
@@ -826,6 +827,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_view(
             },
             "type": "grid",
             "row_identifier_type": grid_view.row_identifier_type,
+            "show_logo": grid_view.show_logo,
         },
     }
 
@@ -940,3 +942,24 @@ def test_public_gallery_view_fields_include_cover_image(api_client, data_fixture
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json["fields"]) == 1
+
+
+@pytest.mark.django_db
+def test_view_cant_update_show_logo(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(user=user, table=table, show_logo=True)
+    data = {"show_logo": False}
+
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": view.id}),
+        data,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    view.refresh_from_db()
+    assert view.show_logo is True
+
+    response_data = response.json()
+    assert response_data["show_logo"] is True

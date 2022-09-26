@@ -190,7 +190,8 @@
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
         "rowColoring": "Row coloring",
-        "surveyForm": "Survey form"
+        "surveyForm": "Survey form",
+        "publicLogoRemoval": "Public logo removal"
     },
     "licenses": {
         "titleNoLicenses": "No licenses found",
@@ -275,5 +276,11 @@
         "orderFields": "Order fields",
         "deactivated": "Survey form is available in the premium version.",
         "more": "More information"
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Hide Baserow logo on shared view",
+            "premiumModalName": "public logo removal"
+        }
     }
 }

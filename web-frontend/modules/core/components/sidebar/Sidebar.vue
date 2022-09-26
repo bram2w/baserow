@@ -237,13 +237,9 @@
         </ul>
       </div>
       <div class="sidebar__foot sidebar__foot--with-undo-redo">
-        <a class="sidebar__logo" href="https://baserow.io" target="_blank">
-          <img
-            height="14"
-            src="@baserow/modules/core/static/img/logo.svg"
-            alt="Baserow logo"
-          />
-        </a>
+        <div class="sidebar__logo">
+          <BaserowLogo />
+        </div>
         <div class="sidebar__foot-links">
           <a
             class="sidebar__foot-link"
@@ -296,9 +292,11 @@ import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembe
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
+import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 export default {
   name: 'Sidebar',
   components: {
+    BaserowLogo,
     SettingsModal,
     CreateApplicationContext,
     SidebarAdminItem,

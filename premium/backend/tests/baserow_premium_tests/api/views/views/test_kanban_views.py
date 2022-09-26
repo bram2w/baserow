@@ -1102,6 +1102,7 @@ def test_get_public_kanban_without_with_single_select_and_cover(
             "type": "kanban",
             "card_cover_image_field": None,
             "single_select_field": None,
+            "show_logo": True,
         },
     }
 
@@ -1190,6 +1191,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
             "type": "kanban",
             "card_cover_image_field": cover_field.id,
             "single_select_field": single_select_field.id,
+            "show_logo": True,
         },
     }
 

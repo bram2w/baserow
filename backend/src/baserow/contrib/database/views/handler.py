@@ -305,6 +305,7 @@ class ViewHandler:
             "filter_type",
             "filters_disabled",
             "public_view_password",
+            "show_logo",
         ] + view_type.allowed_fields
         view = set_allowed_attrs(view_values, allowed_fields, view)
         view.save()
