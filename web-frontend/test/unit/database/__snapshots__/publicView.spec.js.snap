@@ -46,6 +46,23 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
           class="header__filter"
         >
           <li
+            class="header__filter-item"
+          >
+            <a
+              class="header__filter-logo"
+              href="https://baserow.io"
+              target="_blank"
+              title="Baserow - open source no-code database tool and Airtable alternative"
+            >
+              <img
+                alt="Baserow - open source no-code database tool and Airtable alternative"
+                height="14"
+                src="@baserow/modules/core/static/img/logo.svg"
+              />
+            </a>
+          </li>
+           
+          <li
             class="header__filter-item header__filter-item--grids"
           >
             <a
@@ -147,26 +164,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
           </li>
            
           <li
-            class="
-      header__filter-item header__filter-item--right
-      margin-top-1 margin-right-1
-    "
-          >
-            <a
-              href="https://baserow.io"
-              target="_blank"
-              title="Baserow - open source no-code database tool and Airtable alternative"
-            >
-              <img
-                alt="Baserow - open source no-code database tool and Airtable alternative"
-                height="14"
-                src="@baserow/modules/core/static/img/logo.svg"
-              />
-            </a>
-          </li>
-           
-          <li
-            class="header__filter-item"
+            class="header__filter-item header__filter-item--right"
           >
             <div>
               <a

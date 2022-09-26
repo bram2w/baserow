@@ -125,6 +125,18 @@
   }
 }
 
+.header__filter-logo {
+  display: flex;
+  align-items: center;
+
+  @include fixed-height(32px, 13px);
+
+  .header--overflow & {
+    width: 16px;
+    overflow: hidden;
+  }
+}
+
 .header--overflow .header__filter-name {
   &:not(.header__filter-name--forced) {
     display: none;

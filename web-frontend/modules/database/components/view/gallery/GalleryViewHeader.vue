@@ -31,14 +31,6 @@
         @update-cover-image-field="updateCoverImageField"
       ></ViewFieldsContext>
     </li>
-    <li
-      class="
-        header__filter-item header__filter-item--right
-        margin-top-1 margin-right-1
-      "
-    >
-      <BaserowLogo v-if="view.show_logo && isPublic" />
-    </li>
     <li class="header__filter-item">
       <ViewSearch
         :view="view"
@@ -57,11 +49,10 @@ import { mapGetters, mapState } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewFieldsContext from '@baserow/modules/database/components/view/ViewFieldsContext'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
-import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 
 export default {
   name: 'GalleryViewHeader',
-  components: { BaserowLogo, ViewFieldsContext, ViewSearch },
+  components: { ViewFieldsContext, ViewSearch },
   props: {
     database: {
       type: Object,
@@ -91,9 +82,6 @@ export default {
   computed: {
     ...mapState({
       tableLoading: (state) => state.table.loading,
-    }),
-    ...mapGetters({
-      isPublic: 'page/view/public/getIsPublic',
     }),
   },
   beforeCreate() {
