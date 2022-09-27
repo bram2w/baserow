@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.test.utils import override_settings
 
 import pytest
@@ -39,7 +37,9 @@ def test_create_survey_form_with_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_survey_form_with_premium_license_for_group(premium_data_fixture):
+def test_create_survey_form_with_premium_license_for_group(
+    premium_data_fixture, alternative_per_group_premium_license_type
+):
     user = premium_data_fixture.create_user(
         first_name="Test User", has_active_premium_license=True
     )
@@ -47,20 +47,19 @@ def test_create_survey_form_with_premium_license_for_group(premium_data_fixture)
 
     handler = ViewHandler()
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": table.database.group.id}
-        ]
-        handler.create_view(
-            user=user, table=table, type_name="form", name="Form", mode="survey"
-        )
+    alternative_per_group_premium_license_type.restrict_user_premium_to(
+        user, [table.database.group.id]
+    )
+    handler.create_view(
+        user=user, table=table, type_name="form", name="Form", mode="survey"
+    )
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_survey_form_without_premium_license_for_group(premium_data_fixture):
+def test_create_survey_form_without_premium_license_for_group(
+    premium_data_fixture, alternative_per_group_premium_license_type
+):
     user = premium_data_fixture.create_user(
         first_name="Test User", has_active_premium_license=True
     )
@@ -68,14 +67,11 @@ def test_create_survey_form_without_premium_license_for_group(premium_data_fixtu
 
     handler = ViewHandler()
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        with pytest.raises(NoPremiumLicenseError):
-            handler.create_view(
-                user=user, table=table, type_name="form", name="Form", mode="survey"
-            )
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    with pytest.raises(NoPremiumLicenseError):
+        handler.create_view(
+            user=user, table=table, type_name="form", name="Form", mode="survey"
+        )
 
 
 @pytest.mark.django_db
@@ -119,35 +115,33 @@ def test_update_survey_form_with_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_update_survey_form_without_premium_license_for_group(premium_data_fixture):
+def test_update_survey_form_without_premium_license_for_group(
+    premium_data_fixture, alternative_per_group_premium_license_type
+):
     user = premium_data_fixture.create_user()
     form = premium_data_fixture.create_form_view(user=user)
 
     handler = ViewHandler()
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        with pytest.raises(NoPremiumLicenseError):
-            handler.update_view(user=user, view=form, mode="survey")
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    with pytest.raises(NoPremiumLicenseError):
+        handler.update_view(user=user, view=form, mode="survey")
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_update_survey_form_with_premium_license_for_group(premium_data_fixture):
+def test_update_survey_form_with_premium_license_for_group(
+    premium_data_fixture, alternative_per_group_premium_license_type
+):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     form = premium_data_fixture.create_form_view(user=user)
 
     handler = ViewHandler()
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": form.table.database.group.id}
-        ]
-        handler.update_view(user=user, view=form, mode="survey")
+    alternative_per_group_premium_license_type.restrict_user_premium_to(
+        user, [form.table.database.group.id]
+    )
+    handler.update_view(user=user, view=form, mode="survey")
 
     view = FormView.objects.all().first()
     assert view.mode == "survey"

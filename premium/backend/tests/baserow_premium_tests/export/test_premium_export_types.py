@@ -198,21 +198,16 @@ def test_cannot_export_json_without_premium_license(storage_mock, premium_data_f
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cannot_export_json_without_premium_license_for_group(
-    storage_mock, premium_data_fixture
+    storage_mock, premium_data_fixture, alternative_per_group_premium_license_type
 ):
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        # Setting the group id to `0` will make sure that the user doesn't have
-        # premium access to the group.
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        with pytest.raises(NoPremiumLicenseError):
-            run_export_over_interesting_test_table(
-                premium_data_fixture,
-                storage_mock,
-                {"exporter_type": "json"},
-                user_kwargs={"has_active_premium_license": True},
-            )
+    # Setting the group id to `0` will make sure that the user doesn't have
+    # premium access to the group.
+    user = premium_data_fixture.create_user(has_active_premium_license=True)
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    with pytest.raises(NoPremiumLicenseError):
+        run_export_over_interesting_test_table(
+            premium_data_fixture, storage_mock, {"exporter_type": "json"}, user=user
+        )
 
 
 @pytest.mark.django_db
@@ -466,21 +461,16 @@ def test_cannot_export_xml_without_premium_license(storage_mock, premium_data_fi
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cannot_export_xml_without_premium_license_for_group(
-    storage_mock, premium_data_fixture
+    storage_mock, premium_data_fixture, alternative_per_group_premium_license_type
 ):
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        # Setting the group id to `0` will make sure that the user doesn't have
-        # premium access to the group.
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        with pytest.raises(NoPremiumLicenseError):
-            run_export_over_interesting_test_table(
-                premium_data_fixture,
-                storage_mock,
-                {"exporter_type": "xml"},
-                user_kwargs={"has_active_premium_license": True},
-            )
+    # Setting the group id to `0` will make sure that the user doesn't have
+    # premium access to the group.
+    user = premium_data_fixture.create_user(has_active_premium_license=True)
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    with pytest.raises(NoPremiumLicenseError):
+        run_export_over_interesting_test_table(
+            premium_data_fixture, storage_mock, {"exporter_type": "xml"}, user=user
+        )
 
 
 def strip_indents_and_newlines(xml):
@@ -488,10 +478,10 @@ def strip_indents_and_newlines(xml):
 
 
 def run_export_over_interesting_test_table(
-    premium_data_fixture, storage_mock, options, user_kwargs=None
+    premium_data_fixture, storage_mock, options, user_kwargs=None, user=None
 ):
     table, user, _, _, context = setup_interesting_test_table(
-        premium_data_fixture, user_kwargs=user_kwargs
+        premium_data_fixture, user_kwargs=user_kwargs, user=user
     )
     grid_view = premium_data_fixture.create_grid_view(table=table)
     job, contents = run_export_job_with_mock_storage(

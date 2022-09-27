@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User as DjangoUser
+from django.contrib.auth.models import User as AbstractUser
 from django.db import transaction
 from django.db.models import Q
 from django.utils.timezone import make_aware, now, utc
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-def has_active_premium_license(user: DjangoUser) -> bool:
+def has_active_premium_license(user: AbstractUser) -> bool:
     """
     Checks if the provided user has an active license.
 
@@ -73,7 +73,7 @@ def has_active_premium_license(user: DjangoUser) -> bool:
     return False
 
 
-def check_active_premium_license(user: DjangoUser):
+def check_active_premium_license(user: AbstractUser):
     """
     Raises the `NoPremiumLicenseError` if the user does not have an active premium
     license.
@@ -83,36 +83,19 @@ def check_active_premium_license(user: DjangoUser):
         raise NoPremiumLicenseError()
 
 
-def has_active_premium_license_for(
-    user: DjangoUser,
+def has_global_prem_or_specific_groups(
+    user: AbstractUser,
 ) -> Union[bool, List[Dict[str, Any]]]:
-    """
-    Check for which objects the user has an active license. If `True` is returned it
-    means that the user has premium access to everything. If an object is returned,
-    it means that the user only has access to the specific objects. For now,
-    it's only possible to grant access to specific groups.
 
-    Example complex return value:
+    from .license_types import PremiumLicenseType
+    from .registries import license_type_registry
 
-    [
-      {
-        "type": "group",
-        "id": 1,
-      },
-      {
-        "type": "group",
-        "id": 2,
-      }
-    ]
-
-    :param user: The user for whom must be checked if it has an active license.
-    :return: To which groups the user has an active premium license for.
-    """
-
-    return has_active_premium_license(user)
+    return license_type_registry.get_by_type(
+        PremiumLicenseType
+    ).has_global_prem_or_specific_groups(user)
 
 
-def check_active_premium_license_for_group(user: DjangoUser, group: Group):
+def check_active_premium_license_for_group(user: AbstractUser, group: Group):
     """
     Checks if the provided user has premium access to the premium group.
 
@@ -122,19 +105,21 @@ def check_active_premium_license_for_group(user: DjangoUser, group: Group):
         license for the provided group.
     """
 
-    active_license_for = has_active_premium_license_for(user)
+    user_has_global_or_specific_groups_with_prem = has_global_prem_or_specific_groups(
+        user
+    )
 
-    # If the `active_license_for` is True, it means that the user has premium access
-    # for every group.
-    if active_license_for is True:
+    # If the `user_has_global_or_specific_groups_with_prem` is True, it means that
+    # the user has premium access for every group.
+    if user_has_global_or_specific_groups_with_prem is True:
         return
 
     # If a list is returned, it means that the user only has access to specific
     # items. In this case we check if the matching group is is present in that list.
-    if isinstance(active_license_for, list):
+    if isinstance(user_has_global_or_specific_groups_with_prem, list):
         group_ids = [
             license_for["id"]
-            for license_for in active_license_for
+            for license_for in user_has_global_or_specific_groups_with_prem
             if license_for["type"] == "group"
         ]
         if group.id in group_ids:

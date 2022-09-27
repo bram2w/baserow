@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.shortcuts import reverse
 from django.test.utils import override_settings
 
@@ -45,31 +43,27 @@ def test_list_without_valid_premium_license(api_client, premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_list_without_valid_premium_license_for_group(api_client, premium_data_fixture):
+def test_list_without_valid_premium_license_for_group(
+    api_client, premium_data_fixture, alternative_per_group_premium_license_type
+):
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True
     )
     kanban = premium_data_fixture.create_kanban_view(user=user)
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
-        response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
-        assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-        assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": kanban.table.database.group.id}
-        ]
-        premium_data_fixture.create_template(group=kanban.table.database.group)
-        url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
-        response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
-        assert response.status_code == HTTP_200_OK
+    alternative_per_group_premium_license_type.restrict_user_premium_to(
+        user, [kanban.table.database.group.id]
+    )
+    premium_data_fixture.create_template(group=kanban.table.database.group)
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db
