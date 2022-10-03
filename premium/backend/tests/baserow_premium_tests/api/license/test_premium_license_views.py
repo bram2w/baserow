@@ -203,7 +203,7 @@ def test_admin_register_license(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_INVALID_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_INVALID_LICENSE"
 
     with freeze_time("2021-10-01 00:00"):
         admin_token = data_fixture.generate_token(admin_user)
@@ -214,7 +214,7 @@ def test_admin_register_license(api_client, data_fixture):
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_HAS_EXPIRED"
+        assert response.json()["error"] == "ERROR_LICENSE_HAS_EXPIRED"
 
     with freeze_time("2021-09-01 00:00"):
         admin_token = data_fixture.generate_token(admin_user)
@@ -225,7 +225,7 @@ def test_admin_register_license(api_client, data_fixture):
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert response.json()["error"] == "ERROR_UNSUPPORTED_PREMIUM_LICENSE"
+        assert response.json()["error"] == "ERROR_UNSUPPORTED_LICENSE"
 
         response = api_client.post(
             reverse("api:premium:license:list"),
@@ -268,7 +268,7 @@ def test_admin_register_license(api_client, data_fixture):
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_ALREADY_EXISTS"
+        assert response.json()["error"] == "ERROR_LICENSE_ALREADY_EXISTS"
 
 
 @pytest.mark.django_db
@@ -298,7 +298,7 @@ def test_admin_get_license(api_client, data_fixture, django_assert_num_queries):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     with freeze_time("2021-09-01 00:00"):
         with django_assert_num_queries(4):
@@ -355,7 +355,7 @@ def test_admin_delete_license(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     response = api_client.delete(
         reverse("api:premium:license:item", kwargs={"id": license.id}),
@@ -408,7 +408,7 @@ def test_admin_add_user_to_license(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     response = api_client.post(
         reverse(
@@ -468,7 +468,7 @@ def test_admin_delete_user_from_license(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     response = api_client.delete(
         reverse(
@@ -513,7 +513,7 @@ def test_admin_fill_users_in_license(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     response = api_client.post(
         reverse(
@@ -568,7 +568,7 @@ def test_admin_remove_all_users(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     response = api_client.post(
         reverse(
@@ -616,7 +616,7 @@ def test_admin_license_user_lookup(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     response = api_client.get(
         reverse(
@@ -727,7 +727,7 @@ def test_admin_check_license(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PREMIUM_LICENSE_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     with freeze_time("2021-07-01 12:00"):
         responses.add(

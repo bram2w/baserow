@@ -34,15 +34,15 @@ from .constants import (
     AUTHORITY_RESPONSE_UPDATE,
 )
 from .exceptions import (
-    InvalidPremiumLicenseError,
+    InvalidLicenseError,
     LicenseAuthorityUnavailable,
+    LicenseHasExpiredError,
+    LicenseInstanceIdMismatchError,
     NoPremiumLicenseError,
-    NoSeatsLeftInPremiumLicenseError,
-    PremiumLicenseAlreadyExists,
-    PremiumLicenseHasExpired,
-    PremiumLicenseInstanceIdMismatchError,
-    UnsupportedPremiumLicenseError,
-    UserAlreadyOnPremiumLicenseError,
+    NoSeatsLeftInLicenseError,
+    PremiumLicenseAlreadyExistsError,
+    UnsupportedLicenseError,
+    UserAlreadyOnLicenseError,
 )
 from .models import License, LicenseUser
 
@@ -67,7 +67,7 @@ def has_active_premium_license(user: DjangoUser) -> bool:
                 and available_license.is_active
             ):
                 return True
-        except InvalidPremiumLicenseError:
+        except InvalidLicenseError:
             pass
 
     return False
@@ -167,9 +167,9 @@ def decode_license(license_payload: bytes) -> dict:
     Tries to decode the provided license and returns the payload if successful.
 
     :param license_payload: The raw license that must be decoded.
-    :raises InvalidPremiumLicenseError: When the provided license is invalid. This
+    :raises InvalidLicenseError: When the provided license is invalid. This
         could for example be when the signature or payload is invalid.
-    :raises UnsupportedPremiumLicenseError: When the provided license payload is an
+    :raises UnsupportedLicenseError: When the provided license payload is an
         unsupported version. If this happens, you probably need to update your Baserow
         installation.
     :return: If successful, the decoded license payload is returned.
@@ -178,7 +178,7 @@ def decode_license(license_payload: bytes) -> dict:
     try:
         payload_base64, signature_base64 = license_payload.split(b".")
     except ValueError:
-        raise InvalidPremiumLicenseError(
+        raise InvalidLicenseError(
             "The provided payload does not follow the expected format."
         )
 
@@ -187,7 +187,7 @@ def decode_license(license_payload: bytes) -> dict:
     try:
         signature = base64.urlsafe_b64decode(signature_base64)
     except binascii.Error:
-        raise InvalidPremiumLicenseError("Invalid base64 signature provided.")
+        raise InvalidLicenseError("Invalid base64 signature provided.")
 
     public_key = get_public_key()
 
@@ -201,25 +201,23 @@ def decode_license(license_payload: bytes) -> dict:
             hashes.SHA256(),
         )
     except InvalidSignature:
-        raise InvalidPremiumLicenseError(
-            "The signature of the premium license is invalid."
-        )
+        raise InvalidLicenseError("The signature of the premium license is invalid.")
 
     try:
         payload_json = base64.urlsafe_b64decode(payload_base64)
     except binascii.Error:
-        raise InvalidPremiumLicenseError("Invalid base64 payload provided.")
+        raise InvalidLicenseError("Invalid base64 payload provided.")
 
     try:
         payload = json.loads(payload_json)
     except json.decoder.JSONDecodeError:
-        raise InvalidPremiumLicenseError("Invalid JSON payload provided.")
+        raise InvalidLicenseError("Invalid JSON payload provided.")
 
     if "version" not in payload:
-        raise InvalidPremiumLicenseError("The payload does not contain a version.")
+        raise InvalidLicenseError("The payload does not contain a version.")
 
     if payload["version"] != 1:
-        raise UnsupportedPremiumLicenseError(
+        raise UnsupportedLicenseError(
             "Only license version 1 is supported. You probably need to update your "
             "copy of Baserow."
         )
@@ -324,7 +322,7 @@ def check_licenses(license_objects: List[License]) -> List[License]:
         # If the license payload could not be decoded, it must be deleted.
         try:
             license_object.payload
-        except InvalidPremiumLicenseError:
+        except InvalidLicenseError:
             license_object.delete()
             continue
 
@@ -354,8 +352,8 @@ def register_license(
 
     :param requesting_user: The user on whose behalf the license is registered.
     :param license_payload: The license that must be decoded and added.
-    :raises PremiumLicenseAlreadyExists: When the license already exists.
-    :raises PremiumLicenseHasExpired: When the license has expired.
+    :raises PremiumLicenseAlreadyExistsError: When the license already exists.
+    :raises LicenseHasExpiredError: When the license has expired.
     :return: The created license instance.
     """
 
@@ -382,17 +380,17 @@ def register_license(
         elif authority_check["type"] == AUTHORITY_RESPONSE_DOES_NOT_EXIST:
             # If the authority tells us that the license does not exist there,
             # we must stop the registering.
-            raise InvalidPremiumLicenseError(
+            raise InvalidLicenseError(
                 "The license does not exist according to the authority."
             )
         elif authority_check["type"] == AUTHORITY_RESPONSE_INSTANCE_ID_MISMATCH:
             # If the authority tells us the instance id doesn't match,
             # we can immediately raise that error.
-            raise PremiumLicenseInstanceIdMismatchError(
+            raise LicenseInstanceIdMismatchError(
                 "The instance id doesn't match according to the authority."
             )
         elif authority_check["type"] == AUTHORITY_RESPONSE_INVALID:
-            raise InvalidPremiumLicenseError(
+            raise InvalidLicenseError(
                 "The license is invalid according to the authority."
             )
 
@@ -411,7 +409,7 @@ def register_license(
     issued_on = make_aware(parser.parse(decoded_license_payload["issued_on"]), utc)
 
     if valid_through < now():
-        raise PremiumLicenseHasExpired(
+        raise LicenseHasExpiredError(
             "Cannot add the license because it has already expired."
         )
 
@@ -419,7 +417,7 @@ def register_license(
     # hosted copy.
     settings_object = CoreHandler().get_settings()
     if decoded_license_payload["instance_id"] != settings_object.instance_id:
-        raise PremiumLicenseInstanceIdMismatchError(
+        raise LicenseInstanceIdMismatchError(
             "The license instance id does not match the instance id."
         )
 
@@ -439,7 +437,7 @@ def register_license(
             # the new license, we want to raise the exception that the most license
             # already exists.
             else:
-                raise PremiumLicenseAlreadyExists("The license already exists.")
+                raise PremiumLicenseAlreadyExistsError("The license already exists.")
 
     # If the license doesn't exist we want to create a new one.
     return License.objects.create(license=license_payload_as_string)
@@ -471,7 +469,7 @@ def add_user_to_license(
     :param user: The user that must be added to the license.
     :raises UserAlreadyInPremiumLicenseError: When the user already has a seat in the
         license.
-    :raises NoSeatsLeftInPremiumLicenseError: When the license doesn't have any seats
+    :raises NoSeatsLeftInLicenseError: When the license doesn't have any seats
         left.
     :return: The newly created license user object.
     """
@@ -480,15 +478,11 @@ def add_user_to_license(
         raise IsNotAdminError()
 
     if LicenseUser.objects.filter(license=license_object, user=user).exists():
-        raise UserAlreadyOnPremiumLicenseError(
-            "The user already has a seat on this license."
-        )
+        raise UserAlreadyOnLicenseError("The user already has a seat on this license.")
 
     seats_taken = license_object.users.all().count()
     if seats_taken >= license_object.seats:
-        raise NoSeatsLeftInPremiumLicenseError(
-            "There aren't any seats left in the license."
-        )
+        raise NoSeatsLeftInLicenseError("There aren't any seats left in the license.")
 
     if license_object.is_active:
         transaction.on_commit(
