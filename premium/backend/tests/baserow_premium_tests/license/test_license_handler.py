@@ -192,29 +192,31 @@ def test_check_active_premium_license_for_group_with_valid_license(data_fixture)
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_check_active_premium_license_for_group_with_patched_groups(data_fixture):
+def test_check_active_premium_license_for_group_with_patched_groups(
+    data_fixture, alternative_per_group_premium_license_type
+):
     user_in_license = data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user_in_license)
     group_2 = data_fixture.create_group(user=user_in_license)
     group_3 = data_fixture.create_group(user=user_in_license)
     group_4 = data_fixture.create_group(user=user_in_license)
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": group_1.id},
-            {"type": "group", "id": group_2.id},
-            {"type": "something_else", "id": group_3.id},
-        ]
-        check_active_premium_license_for_group(user_in_license, group_1)
-        check_active_premium_license_for_group(user_in_license, group_2)
+    alternative_per_group_premium_license_type.per_user_id_license_object_lists[
+        user_in_license.id
+    ] = [
+        {"type": "group", "id": group_1.id},
+        {"type": "group", "id": group_2.id},
+        {"type": "something_else", "id": group_3.id},
+    ]
 
-        with pytest.raises(NoPremiumLicenseError):
-            check_active_premium_license_for_group(user_in_license, group_3)
+    check_active_premium_license_for_group(user_in_license, group_1)
+    check_active_premium_license_for_group(user_in_license, group_2)
 
-        with pytest.raises(NoPremiumLicenseError):
-            check_active_premium_license_for_group(user_in_license, group_4)
+    with pytest.raises(NoPremiumLicenseError):
+        check_active_premium_license_for_group(user_in_license, group_3)
+
+    with pytest.raises(NoPremiumLicenseError):
+        check_active_premium_license_for_group(user_in_license, group_4)
 
 
 @override_settings(DEBUG=True)

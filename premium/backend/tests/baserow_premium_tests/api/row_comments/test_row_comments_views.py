@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.conf import settings
 from django.test.utils import override_settings
 
@@ -109,7 +107,7 @@ def test_row_comments_api_view_without_premium_license(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_row_comments_api_view_without_premium_license_for_group(
-    premium_data_fixture, api_client
+    premium_data_fixture, api_client, alternative_per_group_premium_license_type
 ):
     user, token = premium_data_fixture.create_user_and_token(
         first_name="Test User", has_active_premium_license=True
@@ -118,36 +116,31 @@ def test_row_comments_api_view_without_premium_license_for_group(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": table.database.group.id}
-        ]
-        response = api_client.get(
-            reverse(
-                "api:premium:row_comments:item",
-                kwargs={"table_id": table.id, "row_id": rows[0].id},
-            ),
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
-        assert response.status_code == HTTP_200_OK
+    alternative_per_group_premium_license_type.restrict_user_premium_to(
+        user, [table.database.group.id]
+    )
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        response = api_client.get(
-            reverse(
-                "api:premium:row_comments:item",
-                kwargs={"table_id": table.id, "row_id": rows[0].id},
-            ),
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
-        assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-        assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
 
 
 @pytest.mark.django_db

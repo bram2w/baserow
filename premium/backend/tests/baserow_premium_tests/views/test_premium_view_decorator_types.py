@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.test.utils import override_settings
 
 import pytest
@@ -56,19 +54,26 @@ def test_create_left_border_color_without_premium_license(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_left_border_color_without_premium_license_for_group(
-    premium_data_fixture,
+    premium_data_fixture, alternative_per_group_premium_license_type
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": grid_view.table.database.group.id}
-        ]
+    alternative_per_group_premium_license_type.restrict_user_premium_to(
+        user, [grid_view.table.database.group.id]
+    )
+    handler.create_decoration(
+        view=grid_view,
+        decorator_type_name="left_border_color",
+        value_provider_type_name="",
+        value_provider_conf={},
+        user=user,
+    )
+
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    with pytest.raises(NoPremiumLicenseError):
         handler.create_decoration(
             view=grid_view,
             decorator_type_name="left_border_color",
@@ -76,19 +81,6 @@ def test_create_left_border_color_without_premium_license_for_group(
             value_provider_conf={},
             user=user,
         )
-
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        with pytest.raises(NoPremiumLicenseError):
-            handler.create_decoration(
-                view=grid_view,
-                decorator_type_name="left_border_color",
-                value_provider_type_name="",
-                value_provider_conf={},
-                user=user,
-            )
 
 
 @pytest.mark.django_db
@@ -138,19 +130,26 @@ def test_create_background_color_without_premium_license(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_background_color_without_premium_license_for_group(
-    premium_data_fixture,
+    premium_data_fixture, alternative_per_group_premium_license_type
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [
-            {"type": "group", "id": grid_view.table.database.group.id}
-        ]
+    alternative_per_group_premium_license_type.restrict_user_premium_to(
+        user, [grid_view.table.database.group.id]
+    )
+    handler.create_decoration(
+        view=grid_view,
+        decorator_type_name="background_color",
+        value_provider_type_name="",
+        value_provider_conf={},
+        user=user,
+    )
+
+    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    with pytest.raises(NoPremiumLicenseError):
         handler.create_decoration(
             view=grid_view,
             decorator_type_name="background_color",
@@ -158,16 +157,3 @@ def test_create_background_color_without_premium_license_for_group(
             value_provider_conf={},
             user=user,
         )
-
-    with patch(
-        "baserow_premium.license.handler.has_active_premium_license_for"
-    ) as mock_has_active_premium_license_for:
-        mock_has_active_premium_license_for.return_value = [{"type": "group", "id": 0}]
-        with pytest.raises(NoPremiumLicenseError):
-            handler.create_decoration(
-                view=grid_view,
-                decorator_type_name="background_color",
-                value_provider_type_name="",
-                value_provider_conf={},
-                user=user,
-            )

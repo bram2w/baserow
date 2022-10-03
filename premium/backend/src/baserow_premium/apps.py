@@ -57,6 +57,11 @@ class BaserowPremiumConfig(AppConfig):
             ConditionalColorValueProviderType()
         )
 
+        from baserow_premium.license.license_types import PremiumLicenseType
+        from baserow_premium.license.registries import license_type_registry
+
+        license_type_registry.register(PremiumLicenseType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow_premium.views.signals  # noqa: F403, F401
