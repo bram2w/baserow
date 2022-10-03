@@ -744,6 +744,6 @@ for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
         # The plugin should have a setup function which accepts a 'settings' object.
         # This settings object is an AttrDict shadowing our local variables so the
         # plugin can access the Django settings and modify them prior to startup.
-        result = mod.setup(AttrDict({k: v for k, v in vars().items() if k.isupper()}))
+        result = mod.setup(AttrDict(vars()))
     except ImportError:
         pass

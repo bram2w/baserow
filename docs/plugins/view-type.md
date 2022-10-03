@@ -71,8 +71,8 @@ Don't forget to create and apply the migrations because we have created a new mo
 # the correct user and permissions.
 export PLUGIN_BUILD_UID=$(id -u)
 export PLUGIN_BUILD_GID=$(id -g)
-docker-compose run my-baserow-plugin /baserow.sh backend-cmd manage makemigrations
-docker-compose run my-baserow-plugin /baserow.sh backend-cmd manage migrate
+docker-compose -f docker-compose.dev.yml run --rm my-baserow-plugin backend-cmd manage makemigrations
+docker-compose -f docker-compose.dev.yml run --rm my-baserow-plugin backend-cmd manage migrate
 ```
 
 ## Web frontend

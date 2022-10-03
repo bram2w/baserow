@@ -51,10 +51,13 @@ For example:
 * Added support for placeholders in form headings and fields. [#1168](https://gitlab.com/bramw/baserow/-/issues/1168)
 
 ### Bug Fixes
-
+* Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
 * Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.
 * Fixed a bug that breaks the link row modal when a formula is referencing a single select field. [#1111](https://gitlab.com/bramw/baserow/-/issues/1111)
 * Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly [#1194](https://gitlab.com/bramw/baserow/-/issues/1194).
+* Plugins can now change any and all Django settings instead of just the ones set previously by Baserow.
+* Static files collected from plugins will now be correctly served. 
+* The /admin url postfix will now be passed through to the backend API for plugins to use.
 
 ### Refactors
 

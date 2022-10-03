@@ -38,7 +38,7 @@ If you haven't already installed docker and docker-compose on your computer you 
 so by following the instructions on https://docs.docker.com/desktop/ and
 https://docs.docker.com/compose/install/.
 
-> Docker-compose version 3.4 and Docker version 19.03 are the minimum versions
+> Docker-compose version 1.19.0 and Docker version 19.03 are the minimum versions
 > required by our provided files.
 
 ## Downloading the Baserow example docker-compose.yml
@@ -60,6 +60,9 @@ or by directly cloning our git repo so you can get updates easier:
 cd ~/baserow
 git clone --depth=1 --branch master https://gitlab.com/bramw/baserow.git
 cd baserow
+cp .env.example .env
+# Edit .env setting secure passwords where required.
+gedit .env
 docker-compose up -d
 # To update to the latest run:
 docker-compose down
