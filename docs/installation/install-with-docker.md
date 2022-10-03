@@ -367,6 +367,8 @@ docker run --rm -v baserow_data:/baserow/data -v $PWD:/backup ubuntu tar cvf /ba
 docker stop baserow
 docker run --rm -v baserow_data:/baserow/data -v $PWD:/backup ubuntu tar cvf /backup/backup.tar /baserow/data
 docker run --rm -v new_baserow_data_volume $PWD:/backup ubuntu bash -c "mkdir -p /baserow/data && cd /baserow/data && tar xvf /backup/backup.tar --strip 1"
+# Now launch Baserow using the new data volume with your normal run command:
+docker run -v new_baserow_data_volume:/baserow/data ..... 
 ```
 
 ### Backup only Baserow's Postgres database
