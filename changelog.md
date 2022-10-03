@@ -21,6 +21,8 @@ For example:
 
 ### Bug Fixes
 
+* Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
+
 ### Refactors
 
 ### Breaking Changes

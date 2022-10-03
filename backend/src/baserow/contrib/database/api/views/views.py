@@ -1645,7 +1645,7 @@ class RotateViewSlugView(APIView):
         """Rotates the slug of a view."""
 
         view = action_type_registry.get_by_type(RotateViewSlugActionType).do(
-            request.user, ViewHandler().get_view_for_update(view_id)
+            request.user, ViewHandler().get_view_for_update(view_id).specific
         )
 
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
