@@ -2,7 +2,7 @@
   <div
     class="context"
     :class="{ 'visibility-hidden': !open || !updatedOnce }"
-    @click="onClick($event)"
+    @mousedown="onMousedown($event)"
   >
     <slot v-if="openedOnce"></slot>
   </div>
@@ -82,7 +82,7 @@ export default {
      * been triggered from an element inside this context, even if the element has
      * been removed after in the meantime.
      */
-    onClick(event) {
+    onMousedown(event) {
       this.insideEvent.add(event)
     },
     /**
@@ -164,7 +164,7 @@ export default {
           }
         }
       }
-      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+      document.body.addEventListener('mousedown', this.$el.clickOutsideEvent)
 
       this.$el.updatePositionEvent = (event) => {
         updatePosition()
@@ -195,7 +195,7 @@ export default {
 
       this.insideEvent = new Set()
 
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      document.body.removeEventListener('mousedown', this.$el.clickOutsideEvent)
       window.removeEventListener('scroll', this.$el.updatePositionEvent, true)
       window.removeEventListener('resize', this.$el.updatePositionEvent)
     },
