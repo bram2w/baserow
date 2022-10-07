@@ -50,7 +50,10 @@ and running:
 
 ```bash
 curl -o docker-compose.yml https://gitlab.com/bramw/baserow/-/raw/master/docker-compose.yml
+curl -o .env https://gitlab.com/bramw/baserow/-/raw/master/.env.example 
 curl -o Caddyfile https://gitlab.com/bramw/baserow/-/raw/master/Caddyfile
+# Edit .env and set your own secure passwords for the 3 required variables at the top. 
+gedit .env
 docker-compose up -d
 ```
 
@@ -61,7 +64,7 @@ cd ~/baserow
 git clone --depth=1 --branch master https://gitlab.com/bramw/baserow.git
 cd baserow
 cp .env.example .env
-# Edit .env setting secure passwords where required.
+# Edit .env and set your own secure passwords for the 3 required variables at the top. 
 gedit .env
 docker-compose up -d
 # To update to the latest run:
