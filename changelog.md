@@ -22,6 +22,7 @@ For example:
 ### Bug Fixes
 
 * Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
+* Selecting text in modals and contexts no longer closes the modal/context when releasing the mouse outside the modal/context. [#1243](https://gitlab.com/bramw/baserow/-/issues/1243)
 
 ### Refactors
 
