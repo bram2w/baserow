@@ -26,6 +26,7 @@ class CoreConfig(AppConfig):
             DeleteApplicationActionType,
             DeleteGroupActionType,
             DuplicateApplicationActionType,
+            InstallTemplateActionType,
             OrderApplicationsActionType,
             OrderGroupsActionType,
             UpdateApplicationActionType,
@@ -41,6 +42,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DeleteApplicationActionType())
         action_type_registry.register(OrderApplicationsActionType())
         action_type_registry.register(DuplicateApplicationActionType())
+        action_type_registry.register(InstallTemplateActionType())
 
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,
@@ -54,10 +56,11 @@ class CoreConfig(AppConfig):
 
         from baserow.core.jobs.registries import job_type_registry
 
-        from .job_types import DuplicateApplicationJobType
+        from .job_types import DuplicateApplicationJobType, InstallTemplateJobType
         from .snapshots.job_type import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
+        job_type_registry.register(InstallTemplateJobType())
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
 

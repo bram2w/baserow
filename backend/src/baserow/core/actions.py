@@ -7,7 +7,7 @@ from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import GroupActionScopeType, RootActionScopeType
 from baserow.core.handler import CoreHandler, GroupForUpdate
-from baserow.core.models import Application, Group, GroupUser
+from baserow.core.models import Application, Group, GroupUser, Template
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 
@@ -484,3 +484,63 @@ class DuplicateApplicationActionType(ActionType):
         TrashHandler.restore_item(
             user, "application", params.application_id, parent_trash_item_id=None
         )
+
+
+class InstallTemplateActionType(ActionType):
+    type = "install_template"
+
+    @dataclasses.dataclass
+    class Params:
+        installed_applications_ids: List[int]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        group: Group,
+        template: Template,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> List[Application]:
+        """
+        Install a template into the provided group. See
+        baserow.core.handler.CoreHandler.install_template for further details.
+        Undoing this action trash the installed applications and redoing
+        restore them all.
+
+        :param user: The user on whose behalf the template is installed.
+        :param group: The group where the applications will be installed.
+        :param template: The template to install.
+        :param progress_builder: A progress builder instance that can be used to
+            track the progress of the installation.
+        :return: The list of installed applications.
+        """
+
+        installed_applications, _ = CoreHandler().install_template(
+            user,
+            group,
+            template,
+            progress_builder=progress_builder,
+        )
+
+        params = cls.Params([app.id for app in installed_applications])
+        cls.register_action(user, params, cls.scope(group.id))
+
+        return installed_applications
+
+    @classmethod
+    def scope(cls, group_id: int) -> ActionScopeStr:
+        return GroupActionScopeType.value(group_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        handler = CoreHandler()
+        for application_id in params.installed_applications_ids:
+            application = CoreHandler().get_application(application_id)
+            handler.delete_application(user, application)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        for application_id in params.installed_applications_ids:
+            TrashHandler.restore_item(
+                user, "application", application_id, parent_trash_item_id=None
+            )

@@ -19,7 +19,7 @@
         </nuxt-link>
       </li>
     </template>
-    <template v-if="application._.selected" #body>
+    <template v-if="isAppSelected(application)" #body>
       <ul class="tree__subs">
         <SidebarItem
           v-for="table in orderedTables"
@@ -53,6 +53,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
 import SidebarItemPendingJob from '@baserow/modules/database/components/sidebar/SidebarItemPendingJob'
@@ -90,6 +91,7 @@ export default {
           .isJobPartOfApplication(job, this.application)
       )
     },
+    ...mapGetters({ isAppSelected: 'application/isSelected' }),
   },
   methods: {
     async selected(application) {

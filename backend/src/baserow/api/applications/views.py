@@ -61,6 +61,10 @@ application_type_serializers = {
     for application_type in application_type_registry.registry.values()
 }
 
+DuplicateApplicationJobTypeSerializer = job_type_registry.get(
+    DuplicateApplicationJobType.type
+).get_serializer_class(base_class=JobSerializer)
+
 
 class AllApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -423,7 +427,7 @@ class AsyncDuplicateApplicationView(APIView):
             CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Applications"],
-        operation_id="async_duplicate_application",
+        operation_id="duplicate_application_async",
         description=(
             "Duplicate an application if the authorized user is in the application's "
             "group. All the related children are also going to be duplicated. For example "
@@ -431,7 +435,7 @@ class AsyncDuplicateApplicationView(APIView):
             "views and rows are going to be duplicated."
         ),
         responses={
-            202: DuplicateApplicationJobType().get_serializer_class(),
+            202: DuplicateApplicationJobTypeSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

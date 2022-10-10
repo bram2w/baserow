@@ -29,7 +29,7 @@ def run_async_job(self, job_id: int):
         job = Job.objects.get(id=job_id).specific
         job_type = job_type_registry.get_by_model(job)
         job.state = JOB_STARTED
-        job.save()
+        job.save(update_fields=("state",))
 
     try:
         with job_type.transaction_atomic_context(job):

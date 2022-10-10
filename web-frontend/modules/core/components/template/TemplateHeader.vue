@@ -42,30 +42,28 @@ export default {
   },
   data() {
     return {
+      job: null,
       installing: false,
     }
+  },
+  watch: {
+    'job.state'(newState) {
+      if (['finished', 'failed'].includes(newState)) {
+        this.installing = false
+      }
+    },
   },
   methods: {
     async install(template) {
       this.installing = true
 
       try {
-        const { data } = await TemplateService(this.$client).install(
+        const { data: job } = await TemplateService(this.$client).asyncInstall(
           this.group.id,
           template.id
         )
-        // Installing a template has just created a couple of applications in the
-        // group. The response contains those applications and we can add them to the
-        // store so that the user can view the installed template right away.
-        data.forEach((application) => {
-          this.$store.dispatch('application/forceCreate', application)
-        })
-        if (data.length > 0) {
-          // If there are applications, we want to select the first one right away.
-          const application = this.$store.getters['application/get'](data[0].id)
-          const type = this.$registry.get('application', application.type)
-          type.select(application, this)
-        }
+        this.job = job
+        this.$store.dispatch('job/create', job)
         this.$emit('installed')
       } catch (error) {
         notifyIf(error, 'template')

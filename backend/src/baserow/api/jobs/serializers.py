@@ -4,8 +4,11 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED, JOB_PENDING
 from baserow.core.jobs.models import Job
 from baserow.core.jobs.registries import job_type_registry
+
+VALID_JOB_STATES = [JOB_PENDING, JOB_FINISHED, JOB_FAILED]
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -48,3 +51,37 @@ class CreateJobSerializer(serializers.Serializer):
     class Meta:
         model = Job
         fields = ("user_id", "type")
+
+
+class ListJobQuerySerializer(serializers.Serializer):
+    states = serializers.CharField(required=False)
+    job_ids = serializers.CharField(required=False)
+
+    def validate_states(self, value):
+        if not value:
+            return None
+
+        states = value.split(",")
+        for state in states:
+            state = state[1:] if state.startswith("!") else state
+            if state not in VALID_JOB_STATES:
+                raise serializers.ValidationError(
+                    f"State {state} is not a valid state."
+                    f" Valid states are: {', '.join(VALID_JOB_STATES)}.",
+                )
+        return states
+
+    def validate_job_ids(self, value):
+        if not value:
+            return None
+
+        req_job_ids = value.split(",")
+        validated_job_ids = []
+        for job_id in req_job_ids:
+            try:
+                validated_job_ids.append(int(job_id))
+            except ValueError:
+                raise serializers.ValidationError(
+                    f"Job id {job_id} is not a valid integer."
+                )
+        return validated_job_ids

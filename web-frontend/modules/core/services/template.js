@@ -6,5 +6,8 @@ export default (client) => {
     install(groupId, templateId) {
       return client.post(`/templates/install/${groupId}/${templateId}/`)
     },
+    asyncInstall(groupId, templateId) {
+      return client.post(`/templates/install/${groupId}/${templateId}/async/`)
+    },
   }
 }

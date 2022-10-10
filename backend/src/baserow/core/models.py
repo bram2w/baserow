@@ -283,6 +283,12 @@ class Application(
         related_name="applications",
         on_delete=models.SET(get_default_application_content_type),
     )
+    installed_from_template = models.ForeignKey(
+        "Template",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="intalled_applications",
+    )
 
     class Meta:
         ordering = ("order",)
@@ -455,3 +461,17 @@ class Snapshot(models.Model):
 
     class Meta:
         unique_together = ("name", "snapshot_from_application")
+
+
+class InstallTemplateJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        help_text="The group where the template is installed.",
+    )
+    template = models.ForeignKey(
+        Template,
+        on_delete=models.CASCADE,
+        help_text="The template that is installed.",
+    )
+    installed_applications = models.JSONField(default=list)
