@@ -964,7 +964,7 @@ def test_export_import_group_application(data_fixture):
     imported_database = imported_applications[0]
     assert imported_database.id != database.id
     assert imported_database.name == database.name
-    assert imported_database.order == database.order
+    assert imported_database.order == database.order + 1
     assert imported_database.table_set.all().count() == 1
     assert database.id in id_mapping["applications"]
     assert id_mapping["applications"][database.id] == imported_database.id

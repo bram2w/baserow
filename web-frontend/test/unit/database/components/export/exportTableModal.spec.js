@@ -17,7 +17,7 @@ describe('Preview exportTableModal', () => {
   async function givenThereIsATableWithView() {
     const table = mockServer.createTable()
     const database = { tables: [], group: { id: 0 } }
-    await testApp.store.dispatch('table/forceCreate', {
+    await testApp.store.dispatch('table/forceUpsert', {
       database,
       data: table,
     })

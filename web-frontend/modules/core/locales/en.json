@@ -17,6 +17,10 @@
         "duplicating": "Duplicating",
         "duplicatedTitle": "Application duplicated"
     },
+    "InstallTemplateJobType": {
+        "installing": "Installing",
+        "installedTitle": "Template installed"
+    },
     "sidebar": {
         "createGroup": "Create group",
         "inviteOthers": "Invite others",

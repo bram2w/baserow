@@ -49,6 +49,10 @@
     cursor: not-allowed;
   }
 
+  &:has(.tree__progress_percentage) {
+    padding-right: 72px;
+  }
+
   &:not(.tree__action--disabled):hover {
     background-color: $color-neutral-100;
   }

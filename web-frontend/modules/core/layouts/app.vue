@@ -31,7 +31,12 @@ export default {
     Sidebar,
   },
   mixins: [undoRedo],
-  middleware: ['settings', 'authenticated', 'groupsAndApplications'],
+  middleware: [
+    'settings',
+    'authenticated',
+    'groupsAndApplications',
+    'pendingJobs',
+  ],
   computed: {
     appLayoutComponents() {
       return Object.values(this.$registry.getAll('plugin'))
@@ -51,6 +56,7 @@ export default {
       'undoRedo/updateCurrentScopeSet',
       CORE_ACTION_SCOPES.root()
     )
+    this.$store.dispatch('job/initializePoller')
   },
   beforeDestroy() {
     this.$realtime.disconnect()

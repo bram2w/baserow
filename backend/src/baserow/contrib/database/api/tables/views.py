@@ -73,9 +73,13 @@ from .serializers import (
     TableUpdateSerializer,
 )
 
-FileImportJobSerializerClass = FileImportJobType().get_serializer_class(
-    base_class=JobSerializer
-)
+FileImportJobSerializerClass = job_type_registry.get(
+    FileImportJobType.type
+).get_serializer_class(base_class=JobSerializer)
+
+DuplicateTableJobTypeSerializer = job_type_registry.get(
+    DuplicateTableJobType.type
+).get_serializer_class(base_class=JobSerializer)
 
 
 class TablesView(APIView):
@@ -521,13 +525,13 @@ class AsyncDuplicateTableView(APIView):
             CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
-        operation_id="duplicate_database_table",
+        operation_id="duplicate_database_table_async",
         description=(
-            "Duplicates the table with the provided `table_id` parameter "
+            "Start a job to duplicate the table with the provided `table_id` parameter "
             "if the authorized user has access to the database's group."
         ),
         responses={
-            202: DuplicateTableJobType().get_serializer_class(),
+            202: DuplicateTableJobTypeSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

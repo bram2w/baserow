@@ -84,7 +84,9 @@ def map_exceptions(exceptions: ExceptionMappingType):
     return map_exceptions_decorator
 
 
-def validate_query_parameters(serializer: serializers.Serializer):
+def validate_query_parameters(
+    serializer: serializers.Serializer, return_validated=False
+):
     """
     This decorator can validate the query parameters using a serializer. If the query
     parameters match the fields on the serializer it will add the query params to the
@@ -137,6 +139,7 @@ def validate_query_parameters(serializer: serializers.Serializer):
                 params_dict,
                 partial=False,
                 exception_to_raise=QueryParameterValidationException,
+                return_validated=return_validated,
             )
 
             return func(*args, **kwargs)

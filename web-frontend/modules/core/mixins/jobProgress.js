@@ -79,7 +79,10 @@ export default {
           if (typeof this.onJobUpdated === 'function') {
             await this.onJobUpdated()
           }
-          this.nextPollTimeout = Math.min(this.nextPollTimeout * 1.5, 2500)
+          this.nextPollTimeout = Math.min(
+            this.nextPollTimeout * 1.5,
+            this.$env.BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS
+          )
           this.pollTimeoutId = setTimeout(
             this.getLatestJobInfo,
             this.nextPollTimeout

@@ -1,13 +1,24 @@
 import os
+from unittest.mock import patch
 
 from django.conf import settings
 from django.shortcuts import reverse
+from django.test import override_settings
 
 import pytest
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_202_ACCEPTED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from baserow.core.handler import CoreHandler
+from baserow.core.job_types import InstallTemplateJobType
+from baserow.core.jobs.handler import JobHandler
 from baserow.core.models import Application, Template
+
+TEST_TEMPLATES_DIR = os.path.join(settings.BASE_DIR, "../../../tests/templates")
 
 
 @pytest.mark.django_db
@@ -56,11 +67,8 @@ def test_list_templates(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
 def test_install_template(api_client, data_fixture):
-    old_templates = settings.APPLICATION_TEMPLATES_DIR
-    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
-        settings.BASE_DIR, "../../../tests/templates"
-    )
 
     user, token = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user)
@@ -126,4 +134,140 @@ def test_install_template(api_client, data_fixture):
     assert response_json[0]["id"] == application.id
     assert response_json[0]["group"]["id"] == application.group_id
 
-    settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_async_install_template_errors(api_client, data_fixture):
+
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group()
+
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    template_2 = data_fixture.create_template(slug="does-not-exist")
+    template = Template.objects.get(slug="example-template")
+
+    response = api_client.post(
+        reverse(
+            "api:templates:install_async",
+            kwargs={"group_id": group.id, "template_id": template_2.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_TEMPLATE_FILE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse(
+            "api:templates:install_async",
+            kwargs={"group_id": group_2.id, "template_id": template.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse(
+            "api:templates:install_async",
+            kwargs={"group_id": 0, "template_id": template.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse(
+            "api:templates:install_async",
+            kwargs={"group_id": group.id, "template_id": 0},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_async_install_template_schedule_job(
+    mock_run_async_job, api_client, data_fixture
+):
+
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    template = Template.objects.get(slug="example-template")
+
+    response = api_client.post(
+        reverse(
+            "api:templates:install_async",
+            kwargs={"group_id": group.id, "template_id": template.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_202_ACCEPTED
+    response_json = response.json()
+    assert response_json["id"] is not None
+    assert response_json["state"] == "pending"
+    assert response_json["type"] == "install_template"
+
+    job = JobHandler().get_job(user, response_json["id"])
+    assert job.user_id == user.id
+    assert job.progress_percentage == 0
+    assert job.state == "pending"
+    assert job.error == ""
+
+    mock_run_async_job.delay.assert_called_once()
+    args = mock_run_async_job.delay.call_args
+    assert args[0][0] == job.id
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_async_install_template_serializer(api_client, data_fixture):
+
+    user, token = data_fixture.create_user_and_token(
+        email="test_1@test.nl", password="password", first_name="Test1"
+    )
+    group = data_fixture.create_group(user=user)
+
+    handler = CoreHandler()
+    handler.sync_templates()
+
+    template = Template.objects.get(slug="example-template")
+
+    job = JobHandler().create_and_start_job(
+        user,
+        InstallTemplateJobType.type,
+        group_id=group.id,
+        template_id=template.id,
+    )
+
+    # check that now the job ended correctly and the application was duplicated
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job_rsp = response.json()
+    assert job_rsp["state"] == "finished"
+    assert job_rsp["type"] == "install_template"
+    assert job_rsp["group"]["id"] == group.id
+    assert job_rsp["template"]["id"] == template.id
+    assert job_rsp["template"]["name"] == template.name
+    assert len(job_rsp["installed_applications"]) == 1
+    installed_app = job_rsp["installed_applications"][0]
+    assert installed_app["name"] == "Event marketing"
+    assert installed_app["order"] == 1
+    assert installed_app["group"]["id"] == group.id
+    assert installed_app["type"] == "database"

@@ -101,6 +101,10 @@ from .serializers import (
     UpdateFieldSerializer,
 )
 
+DuplicateFieldJobTypeSerializer = job_type_registry.get(
+    DuplicateFieldJobType.type
+).get_serializer_class(base_class=JobSerializer)
+
 
 class FieldsView(APIView):
     authentication_classes = APIView.authentication_classes + [TokenAuthentication]
@@ -536,7 +540,7 @@ class AsyncDuplicateFieldView(APIView):
             "if the authorized user has access to the database's group."
         ),
         responses={
-            202: DuplicateFieldJobType().get_serializer_class(),
+            202: DuplicateFieldJobTypeSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

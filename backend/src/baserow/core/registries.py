@@ -5,7 +5,7 @@ from django.core.files.storage import Storage
 from django.db.transaction import Atomic
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
-from baserow.core.utils import ChildProgressBuilder, Progress
+from baserow.core.utils import ChildProgressBuilder
 
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 from .export_serialized import CoreExportSerializedStructure
@@ -234,7 +234,7 @@ class ApplicationType(
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-        progress_builder: Optional[Progress] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> "Application":
         """
         Imports the exported serialized application by the `export_serialized` as a new

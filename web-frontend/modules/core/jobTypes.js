@@ -133,14 +133,77 @@ export class DuplicateApplicationJobType extends JobType {
     const { i18n, store } = this.app
     const application = job.duplicated_application
     try {
-      await store.dispatch('application/fetch', application.id)
+      await store.dispatch('application/forceCreate', application)
       store.dispatch('notification/info', {
         title: i18n.t('duplicateApplicationJobType.duplicatedTitle'),
         message: application.name,
       })
-      await store.dispatch('job/forceDelete', job)
     } catch (error) {
       notifyIf(error, 'application')
+    } finally {
+      await store.dispatch('job/forceDelete', job)
+    }
+  }
+
+  async onJobFailed(job) {
+    const { i18n, store } = this.app
+    await store.dispatch(
+      'notification/error',
+      {
+        title: i18n.t('clientHandler.notCompletedTitle'),
+        message: i18n.t('clientHandler.notCompletedDescription'),
+      },
+      { root: true }
+    )
+    await this.app.store.dispatch('job/forceDelete', job)
+  }
+}
+
+export class InstallTemplateJobType extends JobType {
+  static getType() {
+    return 'install_template'
+  }
+
+  getIconClass() {
+    // TODO: This should be moved to a registry and in the database module.
+    return 'database'
+  }
+
+  getName() {
+    return 'installTemplate'
+  }
+
+  getSidebarText(job) {
+    const { i18n } = this.app
+    return i18n.t('InstallTemplateJobType.installing') + '... '
+  }
+
+  getSidebarComponent() {
+    return SidebarApplicationPendingJob
+  }
+
+  isJobPartOfGroup(job, group) {
+    return job.group.id === group.id
+  }
+
+  async onJobDone(job) {
+    const { i18n, store } = this.app
+    // Installing a template has just created a couple of applications in the
+    // group. The response contains those applications and we can add them to the
+    // store so that the user can view the installed template right away.
+    const installedApplications = job.installed_applications
+    try {
+      for (const application of installedApplications) {
+        await store.dispatch('application/forceCreate', application)
+      }
+      store.dispatch('notification/info', {
+        title: i18n.t('InstallTemplateJobType.installedTitle'),
+        message: installedApplications[0].name,
+      })
+    } catch (error) {
+      notifyIf(error, 'application')
+    } finally {
+      await store.dispatch('job/forceDelete', job)
     }
   }
 

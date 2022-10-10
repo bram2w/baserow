@@ -1,7 +1,10 @@
 import Vue from 'vue'
 
 import { Registry } from '@baserow/modules/core/registry'
-import { DuplicateApplicationJobType } from '@baserow/modules/core/jobTypes'
+import {
+  DuplicateApplicationJobType,
+  InstallTemplateJobType,
+} from '@baserow/modules/core/jobTypes'
 
 import {
   AccountSettingsType,
@@ -76,4 +79,5 @@ export default (context, inject) => {
   store.registerModule('undoRedo', undoRedoStore)
 
   registry.register('job', new DuplicateApplicationJobType(context))
+  registry.register('job', new InstallTemplateJobType(context))
 }

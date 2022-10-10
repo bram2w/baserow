@@ -10,6 +10,7 @@ For example:
 ## Unreleased
 
 ### New Features
+* Background pending tasks like duplication and template_install are restored in a new frontend session if unfinished. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 
 * Added Zapier integration code. [#816](https://gitlab.com/bramw/baserow/-/issues/816)
 * Made it possible to filter on the `created_on` and `updated_on` columns, even though
@@ -24,11 +25,12 @@ For example:
 * Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
 
 ### Refactors
+* Frontend now install templates as an async job in background instead of using a blocking call. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 
 ### Breaking Changes
 
 * Changed error codes returned by the premium license API endpoints to replacing `PREMIUM_LICENSE` with `LICENSE`. [#1230](https://gitlab.com/bramw/baserow/-/issues/1230)
-
+* List jobs endpoint "list_job" returns now an object with jobs instead of a list of jobs. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 
 ## Released (2022-09-20 1.12.1)
 

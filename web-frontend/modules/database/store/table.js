@@ -118,8 +118,13 @@ export const actions = {
   /**
    * Forcefully create an item in the store without making a call to the server.
    */
-  forceCreate({ commit }, { database, data }) {
-    commit('ADD_ITEM', { database, table: data })
+  forceUpsert({ commit }, { database, data }) {
+    const table = database.tables.find((item) => item.id === data.id)
+    if (table === undefined) {
+      commit('ADD_ITEM', { database, table: data })
+    } else {
+      commit('UPDATE_ITEM', { database, table, values: data })
+    }
   },
   /**
    * Update an existing table of the provided database with the provided tables.

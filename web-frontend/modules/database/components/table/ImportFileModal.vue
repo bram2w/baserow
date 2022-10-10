@@ -606,7 +606,7 @@ export default {
           this.job.table_id
         )
 
-        await this.$store.dispatch('table/forceCreate', {
+        await this.$store.dispatch('table/forceUpsert', {
           database: this.database,
           data: table,
         })

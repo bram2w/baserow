@@ -10,7 +10,7 @@ export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent('table_created', ({ store }, data) => {
     const database = store.getters['application/get'](data.table.database_id)
     if (database !== undefined) {
-      store.dispatch('table/forceCreate', { database, data: data.table })
+      store.dispatch('table/forceUpsert', { database, data: data.table })
     }
   })
 
