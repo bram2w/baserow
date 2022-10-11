@@ -42,7 +42,8 @@ def get_all_field_dependencies(field):
     pk_name = "id"
 
     # Only pk_name and a table name get formatted in, no user controllable input, safe.
-    pks = Field.objects.raw(
+    # fmt: off
+    raw_query = (  # nosec b608
         f"""
         WITH RECURSIVE traverse({pk_name}, depth) AS (
             SELECT first.dependency_id, 1
@@ -61,7 +62,8 @@ def get_all_field_dependencies(field):
         WHERE depth <= %(max_depth)s
         GROUP BY {pk_name}
         ORDER BY MAX(depth) DESC, {pk_name} ASC
-        """,  # nosec
-        query_parameters,
+        """
     )
+    # fmt: on
+    pks = Field.objects.raw(raw_query, query_parameters)
     return {item.pk for item in pks}

@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 #Don't ask questions during install
 ENV DEBIAN_FRONTEND noninteractive
 

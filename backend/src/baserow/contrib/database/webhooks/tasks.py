@@ -124,4 +124,4 @@ def call_webhook(
     ):
         # If the task is still operating within the max retries per call limit,
         # then we want to retry the task with an exponential backoff.
-        self.retry(countdown=2 ** self.request.retries)
+        self.retry(countdown=2**self.request.retries)

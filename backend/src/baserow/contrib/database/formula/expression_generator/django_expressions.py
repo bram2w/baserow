@@ -72,13 +72,17 @@ class BaserowStringAgg(OrderableAggMixin, Aggregate):
 
 
 class FileNameContainsExpr(Expression):
-    template = f"""
-    EXISTS(
-        SELECT attached_files ->> 'visible_name'
-        FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as attached_files
-        WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%(value)s)
+    # fmt: off
+    template = (  # nosec b608
+        f"""
+        EXISTS(
+            SELECT attached_files ->> 'visible_name'
+            FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as attached_files
+            WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%(value)s)
+        )
+        """
     )
-    """  # nosec
+    # fmt: on
 
     def __init__(self, field_name: F, value: Value, output_field: Field):
         super().__init__(output_field=output_field)

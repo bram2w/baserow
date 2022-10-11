@@ -2282,12 +2282,16 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 return None
 
             # Has been checked for issues, everything is properly escaped and safe.
-            sql = f"""
+            # fmt: off
+            sql = (  # nosec b608
+                f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = p_in);
-            """  # nosec
+                """
+            )
+            # fmt: on
             return sql, variables
 
         return super().get_alter_column_prepare_old_value(
