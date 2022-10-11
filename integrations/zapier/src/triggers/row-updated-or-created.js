@@ -60,7 +60,7 @@ module.exports = {
   key: 'rowCreatedOrUpdated',
   noun: 'Row',
   display: {
-    label: 'Row created or updated',
+    label: 'Row Created or Updated',
     description: 'Trigger when a new row is created or an existing one is updated.'
   },
   operation: {
