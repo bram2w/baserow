@@ -66,7 +66,7 @@ module.exports = {
   key: 'rowUpdated',
   noun: 'Row',
   display: {
-    label: 'Row updated',
+    label: 'Row Updated',
     description: 'Trigger when an existing row is updated.'
   },
   operation: {
