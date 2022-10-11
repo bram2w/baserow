@@ -101,7 +101,7 @@ class View(
         :return: True if the public view is password protected, False otherwise.
         """
 
-        return self.public_view_password != ""
+        return self.public_view_password != ""  # nosec b105
 
     def rotate_slug(self):
         """

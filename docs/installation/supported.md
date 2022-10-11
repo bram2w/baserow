@@ -22,7 +22,7 @@ Edge            |                    | Latest
 
 Baserow version | Supported versions | Tested versions | Recommended versions
 ----------------|--------------------|-----------------|---------------------
-1.11            | 3.7.16             | 3.7.16          | 3.7.16
+1.11            | 3.9.2             | 3.9.2          | 3.9.2
 
 ## Node.js
 

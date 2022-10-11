@@ -18,6 +18,8 @@ For example:
 * Add an option to remove the Baserow logo from your public view. [#1203](https://gitlab.com/bramw/baserow/-/issues/1203)
 * Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
 * Added the ability to double click a grid field name so that quick edits can be made. [#1147](https://gitlab.com/bramw/baserow/-/issues/1147).
+* Upgraded docker containers base images from `debian:buster-slim` to the latest stable `debian:bullseye-slim`.
+* Upgraded python version from `python-3.7.16` to `python-3.9.2`.
 
 ### Bug Fixes
 
