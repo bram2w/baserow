@@ -1,13 +1,27 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from functools import cached_property
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
+from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
+from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import Storage
+from django.db.models import QuerySet
 from django.db.transaction import Atomic
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.utils import ChildProgressBuilder
 
-from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
+from .exceptions import (
+    ApplicationTypeAlreadyRegistered,
+    ApplicationTypeDoesNotExist,
+    ObjectScopeTypeAlreadyRegistered,
+    ObjectScopeTypeDoesNotExist,
+    OperationTypeAlreadyRegistered,
+    OperationTypeDoesNotExist,
+    PermissionDenied,
+    PermissionManagerTypeAlreadyRegistered,
+    PermissionManagerTypeDoesNotExist,
+)
 from .export_serialized import CoreExportSerializedStructure
 from .registry import (
     APIUrlsInstanceMixin,
@@ -18,8 +32,11 @@ from .registry import (
     ModelRegistryMixin,
     Registry,
 )
+from .types import ContextObject, ScopeObject
 
 if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
+
     from .models import Application, Group
 
 
@@ -284,8 +301,307 @@ class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry
     already_registered_exception_class = ApplicationTypeAlreadyRegistered
 
 
+class PermissionManagerType(Instance):
+    """
+    A permission manager is responsible to permit or disallow a specific operation
+    according to the given context.
+
+    A permission manager is also responsible to generate the data sent to the
+    frontend to make it check the permission.
+
+    And finally, a permission manager can filter the list querysets
+    to remove disallowed objects from this list.
+
+    See each PermissionManager method and `CoreHandler` methods for more details.
+    """
+
+    def check_permissions(
+        self,
+        actor: "AbstractUser",
+        operation_name: str,
+        group: Optional["Group"] = None,
+        context: Optional[Any] = None,
+        include_trash: Boolean = False,
+    ) -> Optional[Boolean]:
+        """
+        This method is called each time a permission on an operation is checked by the
+        `CoreHandler().check_permission()` method if the current permission manager is
+        listed in the `settings.PERMISSION_MANAGERS` list.
+
+        It should:
+            - return `True` if the operation is permitted given the other parameters
+            - raise a `PermissionDenied` exception if the operation is disallowed
+            - return `None` if the condition required by the permission manager are not
+              met.
+
+        By default, this method raises a PermissionDenied exception.
+
+        :param actor: The actor who wants to execute the operation. Generally a `User`,
+            but can be a `Token`.
+        :param operation_name: The operation name the actor wants to execute.
+        :param group: The optional group in which  the operation takes place.
+        :param context: The optional object affected by the operation. For instance
+            if you are updating a `Table` object, the context is this `Table` object.
+        :param include_trash: If true then also checks if the given group has been
+            trashed instead of raising a DoesNotExist exception.
+        :raise PermissionDenied: If the operation is disallowed a PermissionDenied is
+            raised.
+        :return: `True` if the operation is permitted, None if the permission manager
+            can't decide.
+        """
+
+        raise PermissionDenied()
+
+    def get_permissions_object(
+        self, actor: "AbstractUser", group: Optional["Group"] = None
+    ) -> Any:
+        """
+        This method should return the data necessary to easily check a permission from
+        a client. This object can be used for instance from the frontend to hide or
+        show UI element accordingly to the user permissions.
+        The data set returned must contain all the necessary information to prevent and
+        the client shouldn't have to get more data to decide.
+
+        This method is called when the `CoreHandler().get_permissions()` is called,
+        if the permission manager is listed in the `settings.PERMISSION_MANAGERS`.
+        It can return `None` if this permission manager is not relevant for the given
+        actor/group for some reason.
+
+        By default this method returns None.
+
+        :param actor: The actor whom we want to compute the permission object for.
+        :param group: The optional group into which we want to compute the permission
+            object.
+        :return: The permission object or None.
+        """
+
+        return None
+
+    def filter_queryset(
+        self,
+        actor: "AbstractUser",
+        operation_name: str,
+        queryset: QuerySet,
+        group: Optional["Group"] = None,
+        context: Optional[Any] = None,
+    ) -> QuerySet:
+        """
+        This method allows a permission manager to filter a given queryset accordingly
+        to the actor permissions in the specified context. The
+        `CoreHandler().filter_queryset()` method calls each permission manager listed in
+        `settings.PERMISSION_MANAGERS` to successively filter the given queryset.
+
+        :param actor: The actor whom we want to filter the queryset for.
+            Generally a `User` but can be a Token.
+        :param operation: The operation name for which we want to filter the queryset
+            for.
+        :param group: An optional group into which the operation takes place.
+        :param context: An optional context object related to the current operation.
+        :return: The queryset potentially filtered.
+        """
+
+        return queryset
+
+
+class PermissionManagerTypeRegistry(Registry):
+    """
+    This registry contains all the permission manager used to handle permissions in
+    Baserow. A permission manager must then be listed in the
+    `settings.PERMISSION_MANAGERS` variable to be used by the `CoreHandler` methods.
+    """
+
+    name = "permission_manager"
+
+    does_not_exist_exception_class = PermissionManagerTypeDoesNotExist
+    already_registered_exception_class = PermissionManagerTypeAlreadyRegistered
+
+
+class ObjectScopeType(Instance, ModelInstanceMixin):
+    """
+    This type describe an object scope in Baserow. This is useful if you need to know
+    the object hierarchy. This hierarchy is used by the permission system, for example,
+    to determine if a context object is included by a given scope.
+    It can also be used to list all context object of a scope included by another scope.
+
+    An `ObjectScopeType` must be registered for each object that can be a scope or a
+    context.
+    """
+
+    def get_parent_scope(self) -> Optional["ObjectScopeType"]:
+        """
+        Returns the parent scope of the current scope.
+
+        :return: the parent `ObjectScopeType` or `None` if it's a root scope.
+        """
+
+        return None
+
+    def get_parent(self, context: ContextObject) -> Optional[ContextObject]:
+        """
+        Returns the parent object of the given context which belongs to the current
+        scope.
+
+        :param context: The context object which we want the parent for. This object
+            must belong to the current scope.
+        :return: the parent object or `None` if it's a root object.
+        """
+
+        return None
+
+    def get_all_context_objects_in_scope(self, scope: ScopeObject) -> Iterable:
+        """
+        Returns the list of context object belonging to the current scope that are
+        included in the scope object given in parameter.
+
+        :param scope: The scope into which we want the context objects for.
+        :return: An iterable containing the context objects for the given scope.
+        """
+
+        raise NotImplementedError("Must be implemented by the specific type")
+
+
+class ObjectScopeTypeRegistry(Registry, ModelRegistryMixin):
+    """
+    This registry contains all `ObjectScopeType`. It also proposes a set of methods
+    useful to go through the full object/scope hierarchy.
+    """
+
+    name = "object_scope"
+
+    def scope_includes_context(
+        self,
+        scope: ScopeObject,
+        context: ContextObject,
+        scope_type: Optional[ObjectScopeType] = None,
+    ) -> Boolean:
+        """
+        Checks whether a scope object includes the given context.
+
+        :param scope: The scope object.
+        :param context: A context object.
+        :scope_type: An optional `ObjectScopeType` that is used mainly for performance
+            reason.
+        :return: True if the context is included in the given scope object.
+        """
+
+        if context is None:
+            return False
+
+        scope_type = scope_type or self.get_by_model(scope)
+
+        context_scope_type = self.get_by_model(context)
+
+        if scope_type == context_scope_type:
+            return scope.id == context.id
+        else:
+            return self.scope_includes_context(
+                scope, context_scope_type.get_parent(context), scope_type=scope_type
+            )
+
+    def scope_includes_scope(
+        self,
+        parent_scope: Union[ScopeObject, ObjectScopeType],
+        child_scope: Union[ScopeObject, ObjectScopeType],
+    ) -> Boolean:
+        """
+        Checks whether the parent_scope includes the child_scope.
+
+        :param parent_scope: The scope object or type that should includes the other
+            scope.
+        :param child_scope: The scope object or type that should be included by the
+            other scope.
+        :return: True if the parent_scope includes the children scope. False otherwise.
+        """
+
+        if child_scope is None:
+            return False
+
+        parent_scope_type = (
+            object_scope_type_registry.get_by_model(parent_scope)
+            if not isinstance(parent_scope, ObjectScopeType)
+            else parent_scope
+        )
+        child_scope_type = (
+            object_scope_type_registry.get_by_model(child_scope)
+            if not isinstance(child_scope, ObjectScopeType)
+            else child_scope
+        )
+
+        if parent_scope_type == child_scope_type:
+            return True
+        else:
+            return self.scope_includes_scope(
+                parent_scope_type,
+                child_scope_type.get_parent_scope(),
+            )
+
+    # TODO change
+    does_not_exist_exception_class = ObjectScopeTypeDoesNotExist
+    already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
+
+
+class OperationType(Instance):
+    """
+    An `OperationType` represent an `Operation` an actor can do on a `ContextObject`.
+
+    An OperationType must define a context_scope_name which is the name of the
+    `ObjectScopeType` matching the context scope type related to the `ContextObject`
+
+    Optionally an object_scope_name can be define to for list operations to express
+    the scope of listed objects sometimes necessary for queryset filtering by the
+    permission manager.
+    """
+
+    context_scope_name: str
+    object_scope_name: Optional[str] = None
+
+    def __init__(self):
+        if self.context_scope_name is None:
+            raise ImproperlyConfigured(
+                "An OperationType must define a context_scope_name"
+            )
+
+    @cached_property
+    def context_scope(self) -> ObjectScopeType:
+        """
+        Returns the `ObjectScopeType` related to the context_scope_name.
+        """
+
+        return object_scope_type_registry.get(self.context_scope_name)
+
+    @cached_property
+    def object_scope(self):
+        """
+        Returns the `ObjectScopeType` related to the object_scope_name. If the
+        object_scope_name is not defined, then the object_scope is the same as the
+        context_scope.
+        """
+
+        if self.object_scope_name:
+            return object_scope_type_registry.get(self.object_scope_name)
+        else:
+            return self.context_scope
+
+
+class OperationTypeRegistry(Registry):
+    """
+    Contains all the registered operation. For each registered operation, an Operation
+    object is created in the database.
+    """
+
+    name = "operation"
+
+    # TODO change
+    does_not_exist_exception_class = OperationTypeDoesNotExist
+    already_registered_exception_class = OperationTypeAlreadyRegistered
+
+
 # A default plugin and application registry is created here, this is the one that is
 # used throughout the whole Baserow application. To add a new plugin or application use
 # these registries.
 plugin_registry = PluginRegistry()
 application_type_registry = ApplicationTypeRegistry()
+
+permission_manager_type_registry = PermissionManagerTypeRegistry()
+object_scope_type_registry = ObjectScopeTypeRegistry()
+operation_type_registry = OperationTypeRegistry()

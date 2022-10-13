@@ -85,7 +85,11 @@ class GroupInvitationsView(APIView):
         """Lists all the invitations of the provided group id."""
 
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, "ADMIN", raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user, "group.list_invitations", group=group, context=group
+        )
+
         group_invitations = GroupInvitation.objects.filter(group=group)
         serializer = GroupInvitationSerializer(group_invitations, many=True)
         return Response(serializer.data)
@@ -179,7 +183,14 @@ class GroupInvitationView(APIView):
         """Selects a single group invitation and responds with a serialized version."""
 
         group_invitation = CoreHandler().get_group_invitation(group_invitation_id)
-        group_invitation.group.has_user(request.user, "ADMIN", raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            "invitation.read",
+            group=group_invitation.group,
+            context=group_invitation,
+        )
+
         return Response(GroupInvitationSerializer(group_invitation).data)
 
     @extend_schema(

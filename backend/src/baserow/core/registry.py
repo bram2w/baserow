@@ -17,7 +17,7 @@ class Instance(object):
     It must be extended so properties and methods can be added.
     """
 
-    type = None
+    type: str
     """A unique string that identifies the instance."""
 
     def __init__(self):
@@ -31,7 +31,7 @@ class ModelInstanceMixin:
     be used in combination with a registry that extends the ModelRegistryMixin.
     """
 
-    model_class = None
+    model_class: Type
 
     def __init__(self):
         if not self.model_class:
@@ -244,7 +244,7 @@ K = TypeVar("K")
 
 
 class Registry(Generic[T]):
-    name = None
+    name: str
     """The unique name that is used when raising exceptions."""
 
     does_not_exist_exception_class = InstanceTypeDoesNotExist
@@ -254,7 +254,7 @@ class Registry(Generic[T]):
     """The exception that is raised when an instance is already registered."""
 
     def __init__(self):
-        if not self.name:
+        if not getattr(self, "name", None):
             raise ImproperlyConfigured(
                 "The name must be set on an "
                 "InstanceModelRegistry to raise proper errors."
@@ -281,7 +281,7 @@ class Registry(Generic[T]):
 
         return self.registry[type_name]
 
-    def get_by_type(self, instance_type: Type[K]) -> K:
+    def get_by_type(self, instance_type: Type[T]) -> T:
         return self.get(instance_type.type)
 
     def get_all(self) -> ValuesView[T]:

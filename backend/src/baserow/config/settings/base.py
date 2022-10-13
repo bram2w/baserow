@@ -295,6 +295,8 @@ JWT_AUTH = {
     "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt.jwt_response_payload_handler",
 }
 
+PERMISSION_MANAGERS = ["core", "staff", "member", "basic"]
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Baserow API spec",
     "DESCRIPTION": "",

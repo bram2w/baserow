@@ -70,7 +70,11 @@ def get_application_serializer(instance, **kwargs):
     if not serializer_class:
         serializer_class = ApplicationSerializer
 
-    return serializer_class(instance, context={"application": application}, **kwargs)
+    context = kwargs.pop("context", {})
+
+    context["application"] = application
+
+    return serializer_class(instance, context=context, **kwargs)
 
 
 class InstallTemplateJobApplicationsSerializer(serializers.JSONField):

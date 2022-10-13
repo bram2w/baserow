@@ -1,11 +1,17 @@
-class IsNotAdminError(Exception):
+class PermissionException(Exception):
+    """
+    Every permission related exception should inherit from this one.
+    """
+
+
+class IsNotAdminError(PermissionException):
     """
     Raised when the user tries to perform an action that is not allowed because he
     does not have admin permissions.
     """
 
 
-class UserNotInGroup(Exception):
+class UserNotInGroup(PermissionException):
     """Raised when the user doesn't have access to the related group."""
 
     def __init__(self, user=None, group=None, *args, **kwargs):
@@ -17,7 +23,7 @@ class UserNotInGroup(Exception):
             super().__init__("The user doesn't belong to the group", *args, **kwargs)
 
 
-class UserInvalidGroupPermissionsError(Exception):
+class UserInvalidGroupPermissionsError(PermissionException):
     """Raised when a user doesn't have the right permissions to the related group."""
 
     def __init__(self, user, group, permissions, *args, **kwargs):
@@ -30,6 +36,21 @@ class UserInvalidGroupPermissionsError(Exception):
             *args,
             **kwargs,
         )
+
+
+class PermissionDenied(PermissionException):
+    """
+    Generic permission exception when a user doesn't have the right permissions to do
+    the given operations.
+    """
+
+    def __init__(self, actor=None, *args, **kwargs):
+        if actor:
+            super().__init__(
+                f"{actor} doesn't have the required permissions.", *args, **kwargs
+            )
+        else:
+            super().__init__(f"Permission denied.", *args, **kwargs)
 
 
 class GroupDoesNotExist(Exception):
@@ -100,6 +121,30 @@ class ApplicationOperationNotSupported(Exception):
     Raised when the particular operation is not supported by the
     application type.
     """
+
+
+class PermissionManagerTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    pass
+
+
+class PermissionManagerTypeDoesNotExist(InstanceTypeDoesNotExist):
+    pass
+
+
+class ObjectScopeTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    pass
+
+
+class ObjectScopeTypeDoesNotExist(InstanceTypeDoesNotExist):
+    pass
+
+
+class OperationTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    pass
+
+
+class OperationTypeDoesNotExist(InstanceTypeDoesNotExist):
+    pass
 
 
 class BaseURLHostnameNotAllowed(Exception):

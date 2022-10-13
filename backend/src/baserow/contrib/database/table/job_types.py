@@ -10,6 +10,7 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import DuplicateTableJob
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 
 
@@ -43,7 +44,10 @@ class DuplicateTableJobType(JobType):
     def prepare_values(self, values, user):
 
         table = TableHandler().get_table(values.pop("table_id"))
-        table.database.group.has_user(user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            user, "database.table.duplicate", group=table.database.group, context=table
+        )
 
         return {
             "original_table": table,

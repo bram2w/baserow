@@ -62,7 +62,11 @@ class GroupUsersView(APIView):
         """Responds with a list of serialized users that are part of the group."""
 
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, "ADMIN", True)
+
+        CoreHandler().check_permissions(
+            request.user, "group.list_group_users", group=group, context=group
+        )
+
         group_users = GroupUser.objects.filter(group=group).select_related(
             "group", "user", "user__profile"
         )

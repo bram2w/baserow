@@ -24,6 +24,7 @@ from baserow.contrib.database.models import Database
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.handler import CoreHandler
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
@@ -143,7 +144,9 @@ class TableHandler:
         :return: The created table and the error report.
         """
 
-        database.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, "database.create_table", group=database.group, context=database
+        )
 
         if progress:
             progress.increment(0, state=TABLE_CREATION)
@@ -361,7 +364,9 @@ class TableHandler:
         if not isinstance(table, Table):
             raise ValueError("The table is not an instance of Table")
 
-        table.database.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, "database.table.update", group=table.database.group, context=table
+        )
 
         table.name = name
         table.save()
@@ -382,8 +387,9 @@ class TableHandler:
             to the database.
         """
 
-        group = database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, "database.order_tables", group=database.group, context=database
+        )
 
         queryset = Table.objects.filter(database_id=database.id)
         table_ids = [table["id"] for table in queryset.values("id")]
@@ -475,7 +481,11 @@ class TableHandler:
         progress.increment(by=start_progress)
 
         database = table.database
-        database.group.has_user(user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            user, "database.table.duplicate", group=database.group, context=table
+        )
+
         database_type = application_type_registry.get_by_model(database)
 
         serialized_tables = database_type.export_tables_serialized([table])
@@ -538,12 +548,13 @@ class TableHandler:
         if not isinstance(table, Table):
             raise ValueError("The table is not an instance of Table")
 
-        table.database.group.has_user(user, raise_error=True)
-        table_id = table.id
+        CoreHandler().check_permissions(
+            user, "database.table.delete", group=table.database.group, context=table
+        )
 
         TrashHandler.trash(user, table.database.group, table.database, table)
 
-        table_deleted.send(self, table_id=table_id, table=table, user=user)
+        table_deleted.send(self, table_id=table.id, table=table, user=user)
 
     @classmethod
     def count_rows(cls) -> int:

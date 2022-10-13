@@ -20,6 +20,67 @@ class CoreConfig(AppConfig):
         trash_item_type_registry.register(GroupTrashableItemType())
         trash_item_type_registry.register(ApplicationTrashableItemType())
 
+        from baserow.core.permission_manager import (
+            BasicPermissionManagerType,
+            CorePermissionManagerType,
+            GroupMemberOnlyPermissionManagerType,
+            StaffOnlyPermissionManagerType,
+        )
+        from baserow.core.registries import (
+            object_scope_type_registry,
+            operation_type_registry,
+            permission_manager_type_registry,
+        )
+
+        permission_manager_type_registry.register(CorePermissionManagerType())
+        permission_manager_type_registry.register(StaffOnlyPermissionManagerType())
+        permission_manager_type_registry.register(BasicPermissionManagerType())
+        permission_manager_type_registry.register(
+            GroupMemberOnlyPermissionManagerType()
+        )
+
+        from .object_scopes import (
+            ApplicationObjectScopeType,
+            CoreObjectScopeType,
+            GroupInvitationObjectScopeType,
+            GroupObjectScopeType,
+        )
+
+        object_scope_type_registry.register(CoreObjectScopeType())
+        object_scope_type_registry.register(ApplicationObjectScopeType())
+        object_scope_type_registry.register(GroupObjectScopeType())
+        object_scope_type_registry.register(GroupInvitationObjectScopeType())
+
+        from .operations import (
+            CreateApplicationsGroupOperationType,
+            CreateGroupOperationType,
+            CreateInvitationsGroupOperationType,
+            DeleteGroupGroupOperationType,
+            DeleteGroupOperationType,
+            ListApplicationsGroupOperationType,
+            ListGroupsOperationType,
+            ListGroupUsersGroupOperationType,
+            ListInvitationsGroupOperationType,
+            ReadGroupOperationType,
+            ReadInvitationGroupOperationType,
+            UpdateGroupGroupOperationType,
+            UpdateGroupOperationType,
+        )
+
+        operation_type_registry.register(CreateApplicationsGroupOperationType())
+        operation_type_registry.register(CreateGroupOperationType())
+        operation_type_registry.register(CreateInvitationsGroupOperationType())
+        operation_type_registry.register(DeleteGroupGroupOperationType())
+        operation_type_registry.register(DeleteGroupOperationType())
+        operation_type_registry.register(ListApplicationsGroupOperationType())
+        operation_type_registry.register(ListInvitationsGroupOperationType())
+        operation_type_registry.register(ReadInvitationGroupOperationType())
+        operation_type_registry.register(ListGroupsOperationType())
+        operation_type_registry.register(UpdateGroupGroupOperationType())
+        operation_type_registry.register(ReadGroupOperationType())
+        operation_type_registry.register(UpdateGroupOperationType())
+        operation_type_registry.register(ListGroupUsersGroupOperationType())
+
         from baserow.core.actions import (
             CreateApplicationActionType,
             CreateGroupActionType,
@@ -66,6 +127,8 @@ class CoreConfig(AppConfig):
 
         # Clear the key after migration so we will trigger a new template sync.
         post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)
+        # Create all operations from registry
+        post_migrate.connect(sync_operations_after_migrate, sender=self)
 
 
 # noinspection PyPep8Naming
@@ -78,3 +141,19 @@ def start_sync_templates_task_after_migrate(sender, **kwargs):
             "celery after the migration..."
         )
         sync_templates_task.delay()
+
+
+def sync_operations_after_migrate(sender, **kwargs):
+
+    apps = kwargs.get("apps", None)
+
+    if apps is not None:
+        try:
+            Operation = apps.get_model("core", "Operation")
+        except (LookupError):
+            print("Skipping operation creation as Operation model does not exist.")
+        else:
+            from baserow.core.registries import operation_type_registry
+
+            for operation_type in operation_type_registry.get_all():
+                Operation.objects.get_or_create(name=operation_type.type)

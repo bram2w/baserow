@@ -100,7 +100,10 @@ class AllApplicationsView(APIView):
         )
 
         data = [
-            get_application_serializer(application).data for application in applications
+            get_application_serializer(
+                application, context={"request": request, "application": application}
+            ).data
+            for application in applications
         ]
         return Response(data)
 
@@ -155,11 +158,26 @@ class ApplicationsView(APIView):
         """
 
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, raise_error=True, allow_if_template=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            "group.list_applications",
+            group=group,
+            context=group,
+            allow_if_template=True,
+        )
 
         applications = Application.objects.select_related(
             "content_type", "group"
         ).filter(group=group)
+
+        applications = CoreHandler().filter_queryset(
+            request.user,
+            "group.list_applications",
+            applications,
+            group=group,
+            context=group,
+        )
 
         data = [
             get_application_serializer(application).data for application in applications
@@ -209,6 +227,11 @@ class ApplicationsView(APIView):
         """Creates a new application for a user."""
 
         group = CoreHandler().get_group(group_id)
+
+        CoreHandler().check_permissions(
+            request.user, "group.create_application", group=group, context=group
+        )
+
         application = action_type_registry.get_by_type(CreateApplicationActionType).do(
             request.user, group, data["type"], name=data["name"]
         )

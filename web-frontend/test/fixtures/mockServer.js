@@ -25,8 +25,13 @@ export class MockServer {
     this.store = store
   }
 
+  loadPermissions(group, result = {}) {
+    this.mock.onGet(`/groups/${group.id}/permissions/`).reply(200, result)
+  }
+
   async createAppAndGroup(table) {
     const group = createGroup(this.mock, {})
+    this.loadPermissions(group)
     const application = createApplication(this.mock, {
       groupId: group.id,
       tables: [table],

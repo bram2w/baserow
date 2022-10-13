@@ -88,6 +88,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .schemas import row_names_response_schema
@@ -299,7 +300,13 @@ class RowsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            "database.table.list_rows",
+            group=table.database.group,
+            context=table,
+        )
 
         TokenHandler().check_table_permissions(request, "read", table, False)
         search = query_params.get("search")
@@ -437,6 +444,14 @@ class RowsView(APIView):
         table = TableHandler().get_table(table_id)
 
         TokenHandler().check_table_permissions(request, "create", table, False)
+
+        CoreHandler().check_permissions(
+            request.user,
+            "database.table.create_row",
+            group=table.database.group,
+            context=table,
+        )
+
         user_field_names = "user_field_names" in request.GET
         model = table.get_model()
 

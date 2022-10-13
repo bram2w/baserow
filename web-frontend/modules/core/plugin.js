@@ -17,7 +17,15 @@ import {
 } from '@baserow/modules/core/userFileUploadTypes'
 import { SettingsAdminType } from '@baserow/modules/core/adminTypes'
 
+import {
+  BasicPermissionManagerType,
+  CorePermissionManagerType,
+  StaffPermissionManagerType,
+  GroupMemberPermissionManagerType,
+} from '@baserow/modules/core/permissionManagerTypes'
+
 import settingsStore from '@baserow/modules/core/store/settings'
+import permissionsStore from '@baserow/modules/core/store/permissions'
 import applicationStore from '@baserow/modules/core/store/application'
 import authStore from '@baserow/modules/core/store/auth'
 import groupStore from '@baserow/modules/core/store/group'
@@ -52,6 +60,7 @@ export default (context, inject) => {
 
   const registry = new Registry()
   registry.registerNamespace('plugin')
+  registry.registerNamespace('permissionManager')
   registry.registerNamespace('application')
   registry.registerNamespace('job')
   registry.registerNamespace('view')
@@ -61,6 +70,19 @@ export default (context, inject) => {
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
+  registry.register('permissionManager', new CorePermissionManagerType(context))
+  registry.register(
+    'permissionManager',
+    new StaffPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new GroupMemberPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new BasicPermissionManagerType(context)
+  )
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(
     'userFileUpload',
@@ -70,6 +92,7 @@ export default (context, inject) => {
   inject('registry', registry)
 
   store.registerModule('settings', settingsStore)
+  store.registerModule('permissions', permissionsStore)
   store.registerModule('application', applicationStore)
   store.registerModule('auth', authStore)
   store.registerModule('job', jobStore)

@@ -56,6 +56,14 @@ def get_default_application_content_type():
     return ContentType.objects.get_for_model(Application)
 
 
+class Operation(models.Model):
+    """
+    An operation
+    """
+
+    name = models.CharField(max_length=255)
+
+
 class Settings(models.Model):
     """
     The settings model represents the application wide settings that only admins can
@@ -192,6 +200,9 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
             return queryset.exists()
 
     def __str__(self):
+        return f"<Group id={self.id}, name={self.name}>"
+
+    def __repr__(self):
         return f"<Group id={self.id}, name={self.name}>"
 
 
