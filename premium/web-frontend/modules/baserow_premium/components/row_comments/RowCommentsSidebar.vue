@@ -111,10 +111,9 @@ export default {
   },
   computed: {
     validPremiumLicense() {
-      return PremiumPlugin.hasValidPremiumLicense(
-        this.additionalUserData,
-        this.database.group.id
-      )
+      return this.$registry
+        .get('plugin', PremiumPlugin.getType())
+        .activeLicenseHasPremiumFeatures(this.database.group.id)
     },
     ...mapGetters({
       comments: 'row_comments/getSortedRowComments',

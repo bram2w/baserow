@@ -7,9 +7,9 @@ class PremiumAdminType extends AdminType {
   }
 
   isDeactivated() {
-    return !PremiumPlugin.hasValidPremiumLicense(
-      this.app.store.getters['auth/getAdditionalUserData']
-    )
+    return !this.app.$registry
+      .get('plugin', PremiumPlugin.getType())
+      .activeLicenseHasPremiumFeatures()
   }
 }
 

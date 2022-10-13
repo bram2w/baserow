@@ -54,10 +54,9 @@ export default {
         .group
     },
     validPremiumLicense() {
-      return PremiumPlugin.hasValidPremiumLicense(
-        this.additionalUserData,
-        this.group.id
-      )
+      return this.$registry
+        .get('plugin', PremiumPlugin.getType())
+        .activeLicenseHasPremiumFeatures()
     },
     tooltipText() {
       if (this.validPremiumLicense) {

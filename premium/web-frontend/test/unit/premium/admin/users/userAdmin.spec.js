@@ -2,8 +2,8 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import UsersAdminTable from '@baserow_premium/components/admin/users/UsersAdminTable'
 import moment from '@baserow/modules/core/moment'
 import flushPromises from 'flush-promises'
-import UserAdminUserHelpers from '../../../../fixtures/uiHelpers'
-import MockPremiumServer from '@baserow_premium/../../test/fixtures/mockPremiumServer'
+import UserAdminUserHelpers from '@baserow_premium_test/helpers/userAdminHelpers'
+import MockPremiumServer from '@baserow_premium_test/fixtures/mockPremiumServer'
 
 // Mock out debounce so we dont have to wait or simulate waiting for the various
 // debounces in the search functionality.
@@ -357,6 +357,7 @@ describe('User Admin Component Tests', () => {
     })
     await flushPromises()
     const emailField = await ui.getUserEditModalEmailField()
+    await flushPromises()
 
     expect(emailField.element.value).toBe(initialUsername)
   })
