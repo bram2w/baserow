@@ -19,11 +19,13 @@ from baserow.contrib.database.export.models import (
     EXPORT_JOB_PENDING_STATUS,
     ExportJob,
 )
+from baserow.contrib.database.export.operations import ExportTableOperationType
 from baserow.contrib.database.export.tasks import run_export_job
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.exceptions import ViewNotInTable
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
+from baserow.core.handler import CoreHandler
 
 from .exceptions import (
     ExportJobCanceledException,
@@ -89,7 +91,12 @@ class ExportHandler:
         exporter = table_exporter_registry.get(exporter_type)
         exporter.before_job_create(user, table, view, export_options)
 
-        table.database.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            ExportTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         if view and view.table.id != table.id:
             raise ViewNotInTable()
@@ -123,7 +130,13 @@ class ExportHandler:
         """
 
         # Ensure the user still has permissions when the export job runs.
-        job.table.database.group.has_user(job.user, raise_error=True)
+        table = job.table
+        CoreHandler().check_permissions(
+            job.user,
+            ExportTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
         try:
             return _mark_job_as_finished(_open_file_and_run_export(job))
         except ExportJobCanceledException:

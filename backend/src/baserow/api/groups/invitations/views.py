@@ -9,7 +9,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body,
+    validate_query_parameters,
+)
 from baserow.api.errors import (
     BAD_TOKEN_SIGNATURE,
     ERROR_GROUP_DOES_NOT_EXIST,
@@ -23,6 +27,7 @@ from baserow.api.groups.invitations.errors import (
 )
 from baserow.api.groups.serializers import GroupUserGroupSerializer
 from baserow.api.groups.users.errors import ERROR_GROUP_USER_ALREADY_EXISTS
+from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
@@ -35,9 +40,14 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupInvitation
+from baserow.core.operations import (
+    ListInvitationsGroupOperationType,
+    ReadInvitationGroupOperationType,
+)
 
 from .serializers import (
     CreateGroupInvitationSerializer,
+    GetGroupInvitationsViewQuerySerializer,
     GroupInvitationSerializer,
     UpdateGroupInvitationSerializer,
     UserGroupInvitationSerializer,
@@ -46,8 +56,13 @@ from .serializers import (
 User = get_user_model()
 
 
-class GroupInvitationsView(APIView):
+class GroupInvitationsView(APIView, SortableViewMixin, SearchableViewMixin):
     permission_classes = (IsAuthenticated,)
+    search_fields = ["email", "message"]
+    sort_field_mapping = {
+        "email": "email",
+        "message": "message",
+    }
 
     @extend_schema(
         parameters=[
@@ -81,12 +96,27 @@ class GroupInvitationsView(APIView):
             UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS,
         }
     )
-    def get(self, request, group_id):
+    @validate_query_parameters(GetGroupInvitationsViewQuerySerializer)
+    def get(self, request, group_id, query_params):
         """Lists all the invitations of the provided group id."""
 
+        search = query_params.get("search")
+        sorts = query_params.get("sorts")
+
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, "ADMIN", raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ListInvitationsGroupOperationType.type,
+            group=group,
+            context=group,
+        )
+
         group_invitations = GroupInvitation.objects.filter(group=group)
+
+        group_invitations = self.apply_search(search, group_invitations)
+        group_invitations = self.apply_sorts_or_default_sort(sorts, group_invitations)
+
         serializer = GroupInvitationSerializer(group_invitations, many=True)
         return Response(serializer.data)
 
@@ -179,7 +209,14 @@ class GroupInvitationView(APIView):
         """Selects a single group invitation and responds with a serialized version."""
 
         group_invitation = CoreHandler().get_group_invitation(group_invitation_id)
-        group_invitation.group.has_user(request.user, "ADMIN", raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ReadInvitationGroupOperationType.type,
+            group=group_invitation.group,
+            context=group_invitation,
+        )
+
         return Response(GroupInvitationSerializer(group_invitation).data)
 
     @extend_schema(

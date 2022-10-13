@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <div
+    v-if="$hasPermission('database.table.view.create_sort', view) || readOnly"
+  >
     <a
       ref="contextLink"
       class="header__filter-link"

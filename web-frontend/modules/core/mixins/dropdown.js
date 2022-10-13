@@ -94,6 +94,11 @@ export default {
     this.observer.disconnect()
   },
   methods: {
+    getDropdownItemComponents() {
+      return this.$children.filter(
+        (child) => child.$options.name === 'DropdownItem'
+      )
+    },
     focusout(event) {
       // Hide only if we loose focus in profit of another element
       if (event.relatedTarget) {
@@ -134,7 +139,7 @@ export default {
         this.showSearch && this.$refs.search.focus()
 
         // Scroll to the selected child.
-        this.$children.forEach((child) => {
+        this.getDropdownItemComponents().forEach((child) => {
           if (child.value === this.value) {
             this.$refs.items.scrollTop =
               child.$el.offsetTop -
@@ -219,7 +224,7 @@ export default {
      */
     search(query) {
       this.hasItems = query === ''
-      this.$children.forEach((item) => {
+      this.getDropdownItemComponents().forEach((item) => {
         if (item.search(query)) {
           this.hasItems = true
         }
@@ -230,8 +235,8 @@ export default {
      * so the requested property of the child is returned
      */
     getSelectedProperty(value, property) {
-      for (const i in this.$children) {
-        const item = this.$children[i]
+      for (const i in this.getDropdownItemComponents()) {
+        const item = this.getDropdownItemComponents()[i]
         if (item.value === value) {
           return item[property]
         }
@@ -243,8 +248,8 @@ export default {
      * @return {boolean}
      */
     hasValue() {
-      for (const i in this.$children) {
-        const item = this.$children[i]
+      for (const i in this.getDropdownItemComponents()) {
+        const item = this.getDropdownItemComponents()[i]
         if (item.value === this.value) {
           return true
         }
@@ -252,11 +257,11 @@ export default {
       return false
     },
     /**
-     * A nasty hack, but in some cases the $children have not yet been loaded when the
+     * A nasty hack, but in some cases the dropdownItemComponents have not yet been loaded when the
      * `selectName` and `selectIcon` are computed. This would result in an empty
      * initial value of the Dropdown because the correct value can't be extracted from
      * the DropdownItem. With this hack we force the computed properties to recompute
-     * when the component is mounted. At this moment the $children have been added.
+     * when the component is mounted. At this moment the dropdownItemComponents have been added.
      */
     forceRefreshSelectedValue() {
       this._computedWatchers.selectedName.run()
@@ -268,7 +273,7 @@ export default {
      * the index of the current child, the next child enabled child is set as hover.
      */
     handleUpAndDownArrowPress(event) {
-      const children = this.$children.filter(
+      const children = this.getDropdownItemComponents().filter(
         (child) => !child.disabled && child.isVisible(this.query)
       )
 

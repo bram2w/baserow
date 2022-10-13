@@ -125,6 +125,25 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         item_to_trash.trashed = True
         item_to_trash.save()
 
+    @abstractmethod
+    def get_restore_operation_type(
+        self,
+    ) -> str:
+        """
+        Returns the operation type used to check permissions for deleting an object
+        of this type.
+        """
+
+        pass
+
+    def get_restore_operation_context(self, trash_entry, trashed_item) -> str:
+        """
+        Returns the context to use when checking permission for restoring an item
+        of this type.
+        """
+
+        return trashed_item
+
 
 class TrashableItemTypeRegistry(ModelRegistryMixin, Registry):
     """

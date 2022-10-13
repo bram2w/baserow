@@ -15,11 +15,17 @@ export class EnterpriseLicenseType extends LicenseType {
     return 'license-plan--enterprise'
   }
 
+  getFeaturesDescription() {
+    const { i18n } = this.app
+    return i18n.t('enterprise.enterpriseFeatures')
+  }
+
   getFeatures() {
     return [
       PremiumFeatures.PREMIUM,
       EnterpriseFeatures.RBAC,
       EnterpriseFeatures.SSO,
+      EnterpriseFeatures.TEAMS,
     ]
   }
 

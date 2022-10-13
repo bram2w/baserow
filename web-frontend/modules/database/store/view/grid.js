@@ -859,7 +859,7 @@ export const actions = {
    * backend with the changed values. If the request fails the action is reverted.
    */
   async updateFieldOptionsOfField(
-    { commit, getters, dispatch },
+    { commit, getters, dispatch, rootGetters },
     { field, values, oldValues, readOnly = false }
   ) {
     const previousOptions = getters.getAllFieldOptions[field.id]
@@ -886,8 +886,13 @@ export const actions = {
       values,
     })
 
-    if (!readOnly) {
-      const gridId = getters.getLastGridId
+    const gridId = getters.getLastGridId
+    const view = rootGetters['view/get'](gridId)
+
+    if (
+      !readOnly &&
+      this.app.$hasPermission('database.table.view.update_field_options', view)
+    ) {
       const updateValues = { field_options: {} }
       updateValues.field_options[field.id] = values
 
@@ -924,7 +929,7 @@ export const actions = {
    * backend with the changed values. If the request fails the action is reverted.
    */
   async updateAllFieldOptions(
-    { dispatch, getters },
+    { dispatch, getters, rootGetters },
     {
       newFieldOptions,
       oldFieldOptions,
@@ -934,8 +939,13 @@ export const actions = {
   ) {
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
-    if (!readOnly) {
-      const gridId = getters.getLastGridId
+    const gridId = getters.getLastGridId
+    const view = rootGetters['view/get'](gridId)
+
+    if (
+      !readOnly &&
+      this.app.$hasPermission('database.table.view.update_field_options', view)
+    ) {
       const updateValues = { field_options: newFieldOptions }
 
       try {

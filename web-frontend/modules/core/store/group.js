@@ -251,6 +251,11 @@ export const actions = {
         root: true,
       }
     )
+    // Load related permissions and roles
+    dispatch('permissions/fetchPermissions', group, {
+      root: true,
+    })
+    dispatch('roles/fetchRoles', group, { root: true })
   },
   /**
    * Select a group by a given group id.
@@ -371,6 +376,13 @@ export const getters = {
     }
 
     return state.selected.id
+  },
+  selectedGroup(state) {
+    if (!Object.prototype.hasOwnProperty.call(state.selected, 'id')) {
+      throw new Error('There is no selected group.')
+    }
+
+    return state.selected
   },
   getAllUsers(state) {
     const users = {}

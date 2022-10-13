@@ -44,7 +44,7 @@ export default () => {
      * backend with the changed values. If the request fails the action is reverted.
      */
     async updateFieldOptionsOfField(
-      { commit, getters },
+      { commit, getters, rootGetters },
       { field, values, oldValues, readOnly = false }
     ) {
       commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
@@ -52,8 +52,16 @@ export default () => {
         values,
       })
 
-      if (!readOnly) {
-        const viewId = getters.getViewId
+      const viewId = getters.getViewId
+      const view = rootGetters['view/get'](viewId)
+
+      if (
+        !readOnly &&
+        this.app.$hasPermission(
+          'database.table.view.update_field_options',
+          view
+        )
+      ) {
         const updateValues = { field_options: {} }
         updateValues.field_options[field.id] = values
 
@@ -86,13 +94,21 @@ export default () => {
      * backend with the changed values. If the request fails the action is reverted.
      */
     async updateAllFieldOptions(
-      { dispatch, getters },
+      { dispatch, getters, rootGetters },
       { newFieldOptions, oldFieldOptions, readOnly = false }
     ) {
       dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
-      if (!readOnly) {
-        const viewId = getters.getViewId
+      const viewId = getters.getViewId
+      const view = rootGetters['view/get'](viewId)
+
+      if (
+        !readOnly &&
+        this.app.$hasPermission(
+          'database.table.view.update_field_options',
+          view
+        )
+      ) {
         const updateValues = { field_options: newFieldOptions }
 
         try {

@@ -74,7 +74,10 @@
           />
         </div>
       </div>
-      <div class="decorator-context__footer">
+      <div
+        v-if="$hasPermission('database.table.view.create_decoration', view)"
+        class="decorator-context__footer"
+      >
         <a
           ref="addDecoratorLink"
           class="decorator-context__add"

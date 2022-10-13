@@ -118,7 +118,6 @@ class ExportTableView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
 
         option_data = _validate_options(request.data)
 

@@ -25,9 +25,10 @@
           <div v-if="totalCount === 0" class="row-comments__empty">
             <i class="row-comments__empty-icon fas fa-comments"></i>
             <div class="row-comments__empty-text">
-              <template v-if="readOnly">{{
-                $t('rowCommentSidebar.readOnlyNoComment')
-              }}</template>
+              <template
+                v-if="!$hasPermission('database.table.create_comment', table)"
+                >{{ $t('rowCommentSidebar.readOnlyNoComment') }}</template
+              >
               <template v-else>
                 {{ $t('rowCommentSidebar.noComment') }}
               </template>
@@ -54,7 +55,10 @@
               </template>
             </InfiniteScroll>
           </div>
-          <div v-if="!readOnly" class="row-comments__foot">
+          <div
+            v-if="$hasPermission('database.table.create_comment', table)"
+            class="row-comments__foot"
+          >
             <AutoExpandableTextareaInput
               ref="AutoExpandableTextarea"
               v-model="comment"
@@ -99,10 +103,6 @@ export default {
       required: true,
       type: Object,
     },
-    readOnly: {
-      required: true,
-      type: Boolean,
-    },
   },
   data() {
     return {
@@ -141,7 +141,10 @@ export default {
   methods: {
     async postComment() {
       const comment = this.comment.trim()
-      if (!comment || this.readOnly) {
+      if (
+        !comment ||
+        !this.$hasPermission('database.table.create_comment', this.table)
+      ) {
         return
       }
       try {

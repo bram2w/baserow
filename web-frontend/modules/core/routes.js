@@ -56,6 +56,23 @@ export const routes = [
     path: '/_health',
     component: path.resolve(__dirname, 'pages/_health.vue'),
   },
+  {
+    name: 'settings',
+    path: '/settings/:groupId',
+    component: path.resolve(__dirname, 'pages/settings.vue'),
+    children: [
+      {
+        name: 'settings-members',
+        path: 'members',
+        component: path.resolve(__dirname, 'pages/settings/members.vue'),
+      },
+      {
+        name: 'settings-invites',
+        path: 'invites',
+        component: path.resolve(__dirname, 'pages/settings/invites.vue'),
+      },
+    ],
+  },
 ]
 
 if (process.env.NODE_ENV !== 'production') {

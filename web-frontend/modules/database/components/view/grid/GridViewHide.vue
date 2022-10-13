@@ -17,8 +17,8 @@
     </a>
     <ViewFieldsContext
       ref="context"
+      :view="view"
       :fields="fields"
-      :read-only="readOnly"
       :field-options="fieldOptions"
       @update-all-field-options="updateAllFieldOptions"
       @update-field-options-of-field="updateFieldOptionsOfField"

@@ -2,37 +2,41 @@
   <Context ref="context">
     <div class="context__menu-title">{{ view.name }} ({{ view.id }})</div>
     <ul class="context__menu">
-      <li v-if="hasValidExporter">
+      <li
+        v-if="
+          hasValidExporter && $hasPermission('database.table.run_export', table)
+        "
+      >
         <a @click="exportView()">
           <i class="context__menu-icon fas fa-fw fa-file-export"></i>
           {{ $t('viewContext.exportView') }}
         </a>
       </li>
-      <li>
+      <li v-if="$hasPermission('database.table.import_rows', table)">
         <a @click="importFile()">
           <i class="context__menu-icon fas fa-fw fa-file-import"></i>
           {{ $t('viewContext.importFile') }}
         </a>
       </li>
-      <li>
+      <li v-if="$hasPermission('database.table.view.duplicate', table)">
         <a @click="duplicateView()">
           <i class="context__menu-icon fas fa-fw fa-clone"></i>
           {{ $t('viewContext.duplicateView') }}
         </a>
       </li>
-      <li>
+      <li v-if="$hasPermission('database.table.create_webhook', table)">
         <a @click="openWebhookModal()">
           <i class="context__menu-icon fas fa-fw fa-globe"></i>
           {{ $t('viewContext.webhooks') }}
         </a>
       </li>
-      <li>
+      <li v-if="$hasPermission('database.table.view.update', view)">
         <a @click="enableRename()">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('viewContext.renameView') }}
         </a>
       </li>
-      <li>
+      <li v-if="$hasPermission('database.table.view.delete', view)">
         <a @click="deleteView()">
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           {{ $t('viewContext.deleteView') }}

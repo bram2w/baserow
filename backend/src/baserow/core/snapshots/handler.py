@@ -27,6 +27,12 @@ from baserow.core.snapshots.exceptions import (
 from baserow.core.utils import Progress
 
 from .job_type import CreateSnapshotJobType, RestoreSnapshotJobType
+from .operations import (
+    CreateSnapshotApplicationOperationType,
+    DeleteApplicationSnapshotOperationType,
+    ListSnapshotsApplicationOperationType,
+    RestoreApplicationSnapshotOperationType,
+)
 from .tasks import delete_application_snapshot
 
 
@@ -94,8 +100,12 @@ class SnapshotHandler:
             raise ApplicationDoesNotExist(
                 f"The application with id {application_id} does not exist."
             )
-        application.group.has_user(
-            performed_by, raise_error=True, allow_if_template=False
+
+        CoreHandler().check_permissions(
+            performed_by,
+            ListSnapshotsApplicationOperationType.type,
+            group=application.group,
+            context=application,
         )
 
         return (
@@ -143,8 +153,12 @@ class SnapshotHandler:
             raise ApplicationDoesNotExist(
                 f"The application with id {application_id} does not exist."
             )
-        application.group.has_user(
-            performed_by, raise_error=True, allow_if_template=False
+
+        CoreHandler().check_permissions(
+            performed_by,
+            CreateSnapshotApplicationOperationType.type,
+            group=application.group,
+            context=application,
         )
 
         app_type = application_type_registry.get_by_model(application.specific_class)
@@ -225,7 +239,13 @@ class SnapshotHandler:
             raise SnapshotDoesNotExist()
 
         group = snapshot.snapshot_from_application.group
-        group.has_user(performed_by, raise_error=True, allow_if_template=False)
+
+        CoreHandler().check_permissions(
+            performed_by,
+            RestoreApplicationSnapshotOperationType.type,
+            group=group,
+            context=snapshot,
+        )
 
         app_type = application_type_registry.get_by_model(
             snapshot.snapshot_from_application.specific_class
@@ -283,7 +303,13 @@ class SnapshotHandler:
             raise SnapshotDoesNotExist()
 
         group = snapshot.snapshot_from_application.group
-        group.has_user(performed_by, raise_error=True, allow_if_template=False)
+
+        CoreHandler().check_permissions(
+            performed_by,
+            DeleteApplicationSnapshotOperationType.type,
+            group=group,
+            context=snapshot,
+        )
 
         app_type = application_type_registry.get_by_model(
             snapshot.snapshot_from_application.specific_class
@@ -339,9 +365,16 @@ class SnapshotHandler:
             raise SnapshotDoesNotExist()
 
         group = snapshot.snapshot_from_application.group
-        group.has_user(snapshot.created_by, raise_error=True, allow_if_template=False)
 
         application = snapshot.snapshot_from_application.specific
+
+        CoreHandler().check_permissions(
+            snapshot.created_by,
+            CreateSnapshotApplicationOperationType.type,
+            group=group,
+            context=application,
+        )
+
         application_type = application_type_registry.get_by_model(application)
         exported_application = application_type.export_serialized(
             application, None, default_storage
@@ -376,7 +409,12 @@ class SnapshotHandler:
             raise SnapshotDoesNotExist()
 
         group = snapshot.snapshot_from_application.group
-        group.has_user(snapshot.created_by, raise_error=True, allow_if_template=False)
+        CoreHandler().check_permissions(
+            snapshot.created_by,
+            RestoreApplicationSnapshotOperationType.type,
+            group=group,
+            context=snapshot,
+        )
 
         application = snapshot.snapshot_to_application.specific
         application_type = application_type_registry.get_by_model(application)

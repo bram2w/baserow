@@ -1,5 +1,5 @@
 /**
- * This middleware makes sure that the current user is admin else a 403 error
+ * This middleware makes sure that the current user is staff else a 403 error
  * will be shown to the user.
  */
 export default function ({ store, req, error }) {

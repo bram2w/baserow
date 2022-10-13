@@ -10,6 +10,7 @@ from django.db.models.query import QuerySet
 from requests import PreparedRequest, Response
 
 from baserow.contrib.database.table.models import Table
+from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 
 from .exceptions import TableWebhookDoesNotExist, TableWebhookMaxAllowedCountExceeded
@@ -18,6 +19,14 @@ from .models import (
     TableWebhookCall,
     TableWebhookEvent,
     TableWebhookHeader,
+)
+from .operations import (
+    CreateWebhookOperationType,
+    DeleteWebhookOperationType,
+    ListTableWebhooksOperationType,
+    ReadWebhookOperationType,
+    TestTriggerWebhookOperationType,
+    UpdateWebhookOperationType,
 )
 from .registries import webhook_event_type_registry
 from .validators import get_webhook_request_function
@@ -60,7 +69,9 @@ class WebhookHandler:
         webhook = self._get_table_webhook(webhook_id, base_queryset=base_queryset)
 
         group = webhook.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ReadWebhookOperationType.type, group=group, context=webhook.table
+        )
 
         return webhook
 
@@ -101,7 +112,9 @@ class WebhookHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ListTableWebhooksOperationType.type, group=group, context=table
+        )
 
         return TableWebhook.objects.prefetch_related("events", "headers").filter(
             table_id=table.id
@@ -129,7 +142,9 @@ class WebhookHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateWebhookOperationType.type, group=group, context=table
+        )
 
         webhook_count = TableWebhook.objects.filter(table_id=table.id).count()
 
@@ -192,7 +207,9 @@ class WebhookHandler:
         """
 
         group = webhook.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateWebhookOperationType.type, group=group, context=webhook.table
+        )
 
         # if the webhook is not active and a user sets the webhook to active
         # we want to make sure to reset the failed_triggers counter
@@ -279,7 +296,9 @@ class WebhookHandler:
         """
 
         group = webhook.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, DeleteWebhookOperationType.type, group=group, context=webhook.table
+        )
 
         webhook.delete()
 
@@ -353,7 +372,12 @@ class WebhookHandler:
             headers = {}
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            TestTriggerWebhookOperationType.type,
+            group=group,
+            context=table,
+        )
 
         allowed_fields = [
             "use_user_field_names",

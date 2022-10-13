@@ -24,14 +24,11 @@
           <div class="control__elements">
             <Dropdown v-model="values.permissions" :show-search="false">
               <DropdownItem
-                :name="$t('permission.admin')"
-                value="ADMIN"
-                :description="$t('permission.adminDescription')"
-              ></DropdownItem>
-              <DropdownItem
-                :name="$t('permission.member')"
-                value="MEMBER"
-                :description="$t('permission.memberDescription')"
+                v-for="role in roles"
+                :key="role.uid"
+                :name="role.name"
+                :value="role.uid"
+                :description="role.description"
               ></DropdownItem>
             </Dropdown>
           </div>
@@ -59,6 +56,7 @@
 import { required, email } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'GroupInviteForm',
@@ -72,6 +70,9 @@ export default {
         message: '',
       },
     }
+  },
+  computed: {
+    ...mapGetters({ roles: 'roles/getAllRoles' }),
   },
   validations: {
     values: {

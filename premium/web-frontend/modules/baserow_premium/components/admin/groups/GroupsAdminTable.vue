@@ -1,17 +1,13 @@
 <template>
   <CrudTable
-    :left-columns="leftColumns"
-    :right-columns="rightColumns"
+    :columns="columns"
     :service="service"
     row-id-key="id"
-    @edit-group="displayEditGroupContext"
     @show-hidden-groups="displayHiddenUsers"
     @row-context="onRowContext"
   >
-    <template #header>
-      <div class="crudtable__header-title">
-        {{ $t('groupsAdminTable.allGroups') }}
-      </div>
+    <template #title>
+      {{ $t('groupsAdminTable.allGroups') }}
     </template>
     <template #menus="slotProps">
       <EditGroupContext
@@ -30,14 +26,15 @@
 
 <script>
 import GroupsAdminService from '@baserow_premium/services/admin/groups'
-import CrudTable from '@baserow_premium/components/crud_table/CrudTable'
-import SimpleField from '@baserow_premium/components/crud_table/fields/SimpleField'
-import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalDateField'
+import CrudTable from '@baserow/modules/core/components/crudTable/CrudTable'
+import SimpleField from '@baserow/modules/core/components/crudTable/fields/SimpleField'
+import LocalDateField from '@baserow/modules/core/components/crudTable/fields/LocalDateField'
+import MoreField from '@baserow/modules/core/components/crudTable/fields/MoreField'
 import GroupUsersField from '@baserow_premium/components/admin/groups/fields/GroupUsersField'
 import GroupNameField from '@baserow_premium/components/admin/groups/fields/GroupNameField'
 import EditGroupContext from '@baserow_premium/components/admin/groups/contexts/EditGroupContext'
 import HiddenUsersContext from '@baserow_premium/components/admin/groups/contexts/HiddenUsersContext'
-import CrudTableColumn from '@baserow_premium/crud_table/crudTableColumn'
+import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 
 export default {
   name: 'GroupsAdminTable',
@@ -47,48 +44,32 @@ export default {
     EditGroupContext,
   },
   data() {
-    this.leftColumns = [
-      new CrudTableColumn(
-        'id',
-        () => this.$t('groupsAdminTable.id'),
-        SimpleField,
-        'min-content',
-        'max-content',
-        true
-      ),
+    this.columns = [
       new CrudTableColumn(
         'name',
         () => this.$t('groupsAdminTable.name'),
         GroupNameField,
-        '200px',
-        'max-content',
+        true,
         true
       ),
-    ]
-    this.rightColumns = [
       new CrudTableColumn(
         'users',
         () => this.$t('groupsAdminTable.members'),
-        GroupUsersField,
-        '100px',
-        '500px'
+        GroupUsersField
       ),
       new CrudTableColumn(
         'application_count',
         () => this.$t('groupsAdminTable.applications'),
         SimpleField,
-        'min-content',
-        'max-content',
         true
       ),
       new CrudTableColumn(
         'created_on',
         () => this.$t('groupsAdminTable.created'),
         LocalDateField,
-        'min-content',
-        '200px',
         true
       ),
+      new CrudTableColumn('more', '', MoreField, false, false, true),
     ]
     this.service = GroupsAdminService(this.$client)
     return {
@@ -97,19 +78,17 @@ export default {
     }
   },
   methods: {
-    displayEditGroupContext(event) {
-      const action = event.group.id === this.editGroup.id ? 'toggle' : 'show'
-      this.editGroup = event.group
-      this.$refs.editGroupContext[action](event.target, 'bottom', 'left', 4)
-    },
-    onRowContext({ row, event }) {
-      this.displayEditGroupContext({
-        group: row,
-        target: {
+    onRowContext({ row, event, target }) {
+      if (target === undefined) {
+        target = {
           left: event.clientX,
           top: event.clientY,
-        },
-      })
+        }
+      }
+
+      const action = row.id === this.editGroup.id ? 'toggle' : 'show'
+      this.editGroup = row
+      this.$refs.editGroupContext[action](target, 'bottom', 'left', 4)
     },
     displayHiddenUsers(event) {
       const action = this.hiddenUsers === event.hiddenValues ? 'toggle' : 'show'

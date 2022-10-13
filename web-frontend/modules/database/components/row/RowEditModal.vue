@@ -83,7 +83,6 @@
       <component
         :is="optionalRightSideBar"
         :row="row"
-        :read-only="readOnly"
         :table="table"
         :database="database"
       ></component>
@@ -154,7 +153,7 @@ export default {
     return {
       optionalRightSideBar: this.$registry
         .get('application', 'database')
-        .getRowEditModalRightSidebarComponent(this.readOnly),
+        .getRowEditModalRightSidebarComponent(this.table),
     }
   },
   computed: {

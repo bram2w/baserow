@@ -59,6 +59,22 @@ class LicensePlugin:
             for license_type in self.get_active_instance_wide_licenses(user=None)
         )
 
+    def group_has_feature(self, feature: str, group: Group) -> bool:
+        """
+        Checks if the Baserow instance has a particular feature granted by an active
+        instance wide license.
+
+        :param feature: The feature to check to see if active. Look for features.py
+            files for these constant strings to use.
+        :param group: The group to get group wide features for.
+        :return: True if the feature is enabled globally for all users.
+        """
+
+        return self.instance_has_feature(feature) or any(
+            feature in license_type.features
+            for license_type in self.get_active_group_licenses(group)
+        )
+
     def user_has_feature_instance_wide(self, feature: str, user: AbstractUser) -> bool:
         """
         Returns if the provided user has a feature enabled for the entire site,
@@ -154,3 +170,14 @@ class LicensePlugin:
         """
 
         return {}
+
+    def get_active_group_licenses(
+        self,
+        group: Group,
+    ) -> Generator[LicenseType, None, None]:
+        """
+        For the provided group returns which licenses are active.
+        """
+
+        return
+        yield

@@ -1,6 +1,10 @@
 from typing import Any, Optional
 
 from baserow.core.models import Application, Group, TrashEntry
+from baserow.core.operations import (
+    RestoreApplicationOperationType,
+    RestoreGroupOperationType,
+)
 from baserow.core.registries import application_type_registry
 from baserow.core.signals import application_created, group_restored
 from baserow.core.snapshots.handler import SnapshotHandler
@@ -40,6 +44,9 @@ class ApplicationTrashableItemType(TrashableItemType):
         application_type.pre_delete(application)
         application.delete()
         return application
+
+    def get_restore_operation_type(self) -> str:
+        return RestoreApplicationOperationType.type
 
 
 class GroupTrashableItemType(TrashableItemType):
@@ -81,3 +88,6 @@ class GroupTrashableItemType(TrashableItemType):
             application_trashable_type.permanently_delete_item(application)
 
         trashed_group.delete()
+
+    def get_restore_operation_type(self) -> str:
+        return RestoreGroupOperationType.type

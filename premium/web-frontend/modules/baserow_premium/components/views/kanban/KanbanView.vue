@@ -50,7 +50,7 @@
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <a
-        v-if="!readOnly"
+        v-if="!readOnly && $hasPermission('database.table.create_row', table)"
         ref="addOptionContextLink"
         class="kanban-view__add-stack"
         @click="$refs.addOptionContext.toggle($refs.addOptionContextLink)"
@@ -88,7 +88,9 @@
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
-      :read-only="false"
+      :read-only="
+        readOnly || !$hasPermission('database.table.update_row', table)
+      "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"
       @toggle-hidden-fields-visibility="
@@ -156,10 +158,6 @@ export default {
     },
     readOnly: {
       type: Boolean,
-      required: true,
-    },
-    row: {
-      validator: (prop) => typeof prop === 'object' || prop === null,
       required: true,
     },
   },

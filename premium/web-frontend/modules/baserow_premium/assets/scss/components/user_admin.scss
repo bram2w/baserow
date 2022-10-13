@@ -25,20 +25,6 @@
   margin-left: 5px;
 }
 
-.user-admin-username__menu {
-  @include fixed-height(24px, 14px);
-
-  border-radius: 3px;
-  color: $color-primary-900;
-  padding: 0 5px;
-  margin-left: auto;
-
-  &:hover {
-    text-decoration: none;
-    background-color: $color-neutral-100;
-  }
-}
-
 .user-admin-active__icon {
   margin-right: 5px;
 

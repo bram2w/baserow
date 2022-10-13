@@ -24,6 +24,7 @@
     "sidebar": {
         "createGroup": "Create group",
         "inviteOthers": "Invite others",
+        "members": "Members",
         "logoff": "Logoff",
         "errorNoGroup": "You don’t have any groups.",
         "admin": "Admin",
@@ -408,5 +409,47 @@
         "daysAgo": "0 days ago | 1 day ago | {n} days ago",
         "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
         "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
+    },
+    "crudTableSearch": {
+        "search": "Search"
+    },
+    "membersSettings": {
+        "membersTabTitle": "Members",
+        "invitesTabTitle": "Invites",
+        "membersTable": {
+            "title": "{userAmount} Members in {groupName}",
+            "inviteMember": "Invite member",
+            "columns": {
+                "name": "Name",
+                "email": "Email",
+                "role": "Role"
+            },
+            "actions": {
+                "copyEmail": "Copy email",
+                "remove": "Remove from group"
+            }
+        },
+        "invitesTable": {
+            "title": "{invitesAmount} Pending invites in {groupName}",
+            "columns": {
+                "email": "Email",
+                "message": "Message",
+                "role": "Role"
+            },
+            "actions": {
+                "copyEmail": "Copy email",
+                "remove": "Cancel invite"
+            }
+        },
+        "membersInviteModal": {
+            "title": "Invite group members",
+            "submit": "Send invite",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "User is already in the group.",
+                    "text": "It is not possible to send an invitation when the user is already a member of the group."
+                }
+            }
+        }
     }
 }

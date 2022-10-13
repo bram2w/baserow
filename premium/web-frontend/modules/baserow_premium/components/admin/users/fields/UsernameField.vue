@@ -11,19 +11,6 @@
       v-tooltip="parent.$t('premium.user.isStaff')"
       class="user-admin-username__icon fas fa-users"
     ></i>
-    <a
-      class="user-admin-username__menu"
-      @click.prevent="
-        listeners['edit-user'] &&
-          listeners['edit-user']({
-            user: props.row,
-            target: $event.currentTarget,
-            time: Date.now(),
-          })
-      "
-    >
-      <i class="fas fa-ellipsis-h"></i>
-    </a>
   </div>
 </template>
 

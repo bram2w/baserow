@@ -18,7 +18,15 @@ import {
 } from '@baserow/modules/core/userFileUploadTypes'
 import { SettingsAdminType } from '@baserow/modules/core/adminTypes'
 
+import {
+  BasicPermissionManagerType,
+  CorePermissionManagerType,
+  StaffPermissionManagerType,
+  GroupMemberPermissionManagerType,
+} from '@baserow/modules/core/permissionManagerTypes'
+
 import settingsStore from '@baserow/modules/core/store/settings'
+import permissionsStore from '@baserow/modules/core/store/permissions'
 import applicationStore from '@baserow/modules/core/store/application'
 import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
@@ -27,6 +35,7 @@ import jobStore from '@baserow/modules/core/store/job'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
+import rolesStore from '@baserow/modules/core/store/roles'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -54,6 +63,7 @@ export default (context, inject) => {
 
   const registry = new Registry()
   registry.registerNamespace('plugin')
+  registry.registerNamespace('permissionManager')
   registry.registerNamespace('application')
   registry.registerNamespace('authProvider')
   registry.registerNamespace('job')
@@ -61,9 +71,23 @@ export default (context, inject) => {
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
+  registry.registerNamespace('membersPagePlugins')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
+  registry.register('permissionManager', new CorePermissionManagerType(context))
+  registry.register(
+    'permissionManager',
+    new StaffPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new GroupMemberPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new BasicPermissionManagerType(context)
+  )
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(
     'userFileUpload',
@@ -73,6 +97,8 @@ export default (context, inject) => {
   inject('registry', registry)
 
   store.registerModule('settings', settingsStore)
+  store.registerModule('permissions', permissionsStore)
+  store.registerModule('roles', rolesStore)
   store.registerModule('application', applicationStore)
   store.registerModule('authProvider', authProviderStore)
   store.registerModule('auth', authStore)

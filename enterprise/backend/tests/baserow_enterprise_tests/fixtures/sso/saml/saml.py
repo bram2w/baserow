@@ -23,7 +23,7 @@ class SamlFixture:
 
     def create_saml_auth_provider(self, **kwargs):
         if "domain" not in kwargs:
-            kwargs["domain"] = self.faker.domain_name()
+            kwargs["domain"] = self.fake.domain_name()
 
         if "metadata" not in kwargs:
             kwargs["metadata"] = self.get_test_saml_idp_metadata()

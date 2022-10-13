@@ -1631,8 +1631,8 @@ def test_changing_password_of_a_public_password_protected_form_view_invalidate_p
         {"password": password},
         format="json",
     )
-    assert response.status_code == HTTP_200_OK
     response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
     public_view_token = response_json.get("access_token", None)
     assert public_view_token is not None
 
@@ -1642,7 +1642,7 @@ def test_changing_password_of_a_public_password_protected_form_view_invalidate_p
         format="json",
         HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
     )
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_200_OK, response.json()
 
     # Changing password invalidate tokens
     response = api_client.patch(

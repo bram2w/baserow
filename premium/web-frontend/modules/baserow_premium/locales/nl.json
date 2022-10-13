@@ -130,9 +130,6 @@
         "delete": "Gebruiker verwijderen",
         "edit": "Bewerk { gebruikersnaam }"
     },
-    "crudTableSearchContext": {
-        "search": "Zoeken"
-    },
     "tableJSONExporter": {
         "encoding": "Codering"
     },

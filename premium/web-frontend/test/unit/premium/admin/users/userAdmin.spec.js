@@ -46,7 +46,6 @@ describe('User Admin Component Tests', () => {
     const cells = ui.findCells()
     expect(cells.length).toBe(7)
     const {
-      userIdCell,
       usernameCell,
       nameCell,
       groupsCell,
@@ -54,8 +53,6 @@ describe('User Admin Component Tests', () => {
       signedUpCell,
       isActiveCell,
     } = ui.getRow(cells, 0)
-
-    expect(userIdCell.text()).toBe('1')
 
     // Username matches with correct initials and has an admin icon
     expect(usernameCell.text()).toContain(userSetup.username)

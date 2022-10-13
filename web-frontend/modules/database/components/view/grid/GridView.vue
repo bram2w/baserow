@@ -22,7 +22,9 @@
       :include-field-width-handles="false"
       :include-row-details="true"
       :include-grid-view-identifier-dropdown="true"
-      :read-only="readOnly"
+      :read-only="
+        readOnly || !$hasPermission('database.table.update_row', table)
+      "
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
@@ -60,7 +62,7 @@
       :grid="view"
       :field="leftFields[0]"
       :width="leftFieldsWidth"
-      :read-only="readOnly"
+      :read-only="readOnly || !$hasPermission('database.table.move_row', table)"
       :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
     <GridViewSection
@@ -72,7 +74,9 @@
       :view="view"
       :include-add-field="true"
       :can-order-fields="true"
-      :read-only="readOnly"
+      :read-only="
+        readOnly || !$hasPermission('database.table.update_row', table)
+      "
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
@@ -129,19 +133,25 @@
             {{ $t('gridView.selectRow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+        >
           <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+        >
           <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+        >
           <a
             @click="
               ;[addRowAfter(selectedRow, selectedRow), $refs.rowContext.hide()]
@@ -161,7 +171,9 @@
             {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="!readOnly && $hasPermission('database.table.delete_row', table)"
+        >
           <a @click="deleteRow(selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             {{ $t('gridView.deleteRow') }}
@@ -176,8 +188,12 @@
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
-      :read-only="readOnly"
-      :enable-navigation="!readOnly"
+      :read-only="
+        readOnly || !$hasPermission('database.table.update_row', table)
+      "
+      :enable-navigation="
+        !readOnly && $hasPermission('database.table.update_row', table)
+      "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
@@ -961,9 +977,14 @@ export default {
      */
     async pasteData(textData, jsonData, rowIndex, fieldIndex) {
       // If the data is an empty array, we don't have to do anything because there is
-      // nothing to update. If the view is in read only mode, we can't paste so not
-      // doing anything.
-      if (textData.length === 0 || textData[0].length === 0 || this.readOnly) {
+      // nothing to update. If the view is in read only mode or if we don't have the
+      // permission, we can't paste so not doing anything.
+      if (
+        textData.length === 0 ||
+        textData[0].length === 0 ||
+        this.readOnly ||
+        !this.$hasPermission('database.table.update_row', this.table)
+      ) {
         return
       }
 

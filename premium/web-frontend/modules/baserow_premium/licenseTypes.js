@@ -27,6 +27,10 @@ export class LicenseType extends Registerable {
     throw new Error('Must be set by the implementing sub class.')
   }
 
+  getFeaturesDescription() {
+    return this.getName() + ' Features'
+  }
+
   showInTopSidebarWhenActive() {
     throw new Error('Must be set by the implementing sub class.')
   }
@@ -56,6 +60,11 @@ export class PremiumLicenseType extends LicenseType {
 
   getFeatures() {
     return [PremiumFeatures.PREMIUM]
+  }
+
+  getFeaturesDescription() {
+    const { i18n } = this.app
+    return i18n.t('licenses.premiumFeatures')
   }
 
   getTopSidebarTooltip() {
