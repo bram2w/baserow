@@ -577,6 +577,7 @@ build-cloudron-image:
     variables:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+      - $BUILD_ALL_IN_ONE == "true"
   variables:
     IMAGE_NAME: $CLOUDRON_IMAGE_NAME
     DOCKERFILE_PATH: $CLOUDRON_DOCKERFILE_PATH
@@ -596,6 +597,7 @@ build-heroku-image:
     variables:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+      - $BUILD_ALL_IN_ONE == "true"
   variables:
     IMAGE_NAME: $HEROKU_IMAGE_NAME
     DOCKERFILE_PATH: $HEROKU_DOCKERFILE_PATH
