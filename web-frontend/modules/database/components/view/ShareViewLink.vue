@@ -138,7 +138,7 @@ export default {
     shareUrl() {
       return (
         this.$env.PUBLIC_WEB_FRONTEND_URL +
-        this.$nuxt.$router.resolve({
+        this.$router.resolve({
           name: this.viewType.getPublicRoute(),
           params: { slug: this.view.slug },
         }).href

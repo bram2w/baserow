@@ -48,14 +48,9 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
   }
 
   isDeactivated(groupId) {
-    const { store } = this.app
-
-    const additionalUserData = store.getters['auth/getAdditionalUserData']
-
-    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData, groupId)) {
-      return false
-    }
-    return true
+    return !this.app.$registry
+      .get('plugin', PremiumPlugin.getType())
+      .activeLicenseHasPremiumFeatures(groupId)
   }
 
   canAdd({ view }) {
@@ -141,14 +136,9 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
   }
 
   isDeactivated(groupId) {
-    const { store } = this.app
-
-    const additionalUserData = store.getters['auth/getAdditionalUserData']
-
-    if (PremiumPlugin.hasValidPremiumLicense(additionalUserData, groupId)) {
-      return false
-    }
-    return true
+    return !this.app.$registry
+      .get('plugin', PremiumPlugin.getType())
+      .activeLicenseHasPremiumFeatures(groupId)
   }
 
   canAdd({ view }) {

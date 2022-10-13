@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@baserow_enterprise/*": [
-        "./*"
+        "./modules/baserow_enterprise/*"
       ]
     }
   },

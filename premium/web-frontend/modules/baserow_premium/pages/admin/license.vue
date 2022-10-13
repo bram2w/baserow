@@ -90,13 +90,9 @@
             <div class="license-detail__item-value">
               <div
                 class="license-plan license-plan--inline"
-                :class="{
-                  'license-plan--premium': license.product_code === 'premium',
-                }"
+                :class="licenseType.getLicenseBadgeClass()"
               >
-                <template v-if="license.product_code === 'premium'">{{
-                  $t('license.premium')
-                }}</template>
+                {{ licenseType.getName() }}
               </div>
               <div
                 v-if="!license.is_active"
@@ -176,7 +172,7 @@
               <i
                 class="fas fa-check"
                 :class="
-                  license.product_code === 'premium'
+                  licenseType.hasPremiumFeatures()
                     ? 'license-yes'
                     : 'license-no'
                 "
@@ -279,6 +275,9 @@ export default {
   computed: {
     leftSeats() {
       return this.license.seats - this.license.seats_taken
+    },
+    licenseType() {
+      return this.$registry.get('license', this.license.product_code)
     },
   },
   methods: {

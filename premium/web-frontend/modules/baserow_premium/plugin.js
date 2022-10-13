@@ -34,6 +34,7 @@ import de from '@baserow_premium/locales/de.json'
 import es from '@baserow_premium/locales/es.json'
 import it from '@baserow_premium/locales/it.json'
 import pl from '@baserow_premium/locales/pl.json'
+import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -89,6 +90,8 @@ export default (context) => {
   )
 
   app.$registry.register('formViewMode', new FormViewSurveyModeType(context))
+
+  app.$registry.register('license', new PremiumLicenseType(context))
 
   registerRealtimeEvents(app.$realtime)
 

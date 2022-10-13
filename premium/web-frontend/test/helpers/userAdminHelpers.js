@@ -160,7 +160,7 @@ export default class UserAdminUserHelpers {
     const userEditInputs = editUserModal.findAll('input')
 
     userEditInputs.at(inputIndex).element.value = newValue
-    userEditInputs.at(inputIndex).trigger('input')
+    await userEditInputs.at(inputIndex).trigger('input')
 
     await editUserModal.find('.button--primary').trigger('click')
 

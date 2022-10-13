@@ -15,10 +15,9 @@ class PremiumTableExporterType extends TableExporterType {
   }
 
   isDeactivated(groupId) {
-    return !PremiumPlugin.hasValidPremiumLicense(
-      this.app.store.getters['auth/getAdditionalUserData'],
-      groupId
-    )
+    return !this.app.$registry
+      .get('plugin', PremiumPlugin.getType())
+      .activeLicenseHasPremiumFeatures(groupId)
   }
 }
 
