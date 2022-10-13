@@ -16,6 +16,7 @@ For example:
 * Made it possible to filter on the `created_on` and `updated_on` columns, even though
   they're not exposed via fields.
 * Expose `read_only` in the list fields endpoint.
+* Made it possible to add additional signup step via plugins.
 * Add an option to remove the Baserow logo from your public view. [#1203](https://gitlab.com/bramw/baserow/-/issues/1203)
 * Always allow the cover image of a gallery view to be accessible by a public view [#1113](https://gitlab.com/bramw/baserow/-/issues/1113).
 * Added the ability to double click a grid field name so that quick edits can be made. [#1147](https://gitlab.com/bramw/baserow/-/issues/1147).

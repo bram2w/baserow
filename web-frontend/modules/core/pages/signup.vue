@@ -27,16 +27,27 @@
         {{ $t('action.backToLogin') }}
       </nuxt-link>
     </template>
-    <AuthRegister v-else :invitation="invitation" @success="success">
-      <ul v-if="!shouldShowAdminSignupPage" class="action__links">
-        <li>
-          <nuxt-link :to="{ name: 'login' }">
-            <i class="fas fa-arrow-left"></i>
-            {{ $t('action.back') }}
-          </nuxt-link>
-        </li>
-      </ul>
-    </AuthRegister>
+    <template v-else>
+      <AuthRegister
+        v-if="afterSignupStep < 0"
+        :invitation="invitation"
+        @success="next"
+      >
+        <ul v-if="!shouldShowAdminSignupPage" class="action__links">
+          <li>
+            <nuxt-link :to="{ name: 'login' }">
+              <i class="fas fa-arrow-left"></i>
+              {{ $t('action.back') }}
+            </nuxt-link>
+          </li>
+        </ul>
+      </AuthRegister>
+      <component
+        :is="afterSignupStepComponents[afterSignupStep]"
+        v-else
+        @success="next"
+      ></component>
+    </template>
   </div>
 </template>
 
@@ -51,6 +62,11 @@ export default {
   components: { AuthRegister, LangPicker },
   mixins: [groupInvitationToken],
   layout: 'login',
+  data() {
+    return {
+      afterSignupStep: -1,
+    }
+  },
   head() {
     return {
       title: this.$t('signup.headTitle'),
@@ -67,15 +83,27 @@ export default {
     shouldShowAdminSignupPage() {
       return this.settings.show_admin_signup_page
     },
+    afterSignupStepComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .reduce((components, plugin) => {
+          components = components.concat(plugin.getAfterSignupStepComponent())
+          return components
+        }, [])
+        .filter((component) => component !== null)
+    },
     ...mapGetters({
       settings: 'settings/get',
     }),
   },
   methods: {
-    success() {
-      this.$nuxt.$router.push({ name: 'dashboard' }, () => {
-        this.$store.dispatch('settings/hideAdminSignupPage')
-      })
+    next() {
+      if (this.afterSignupStep + 1 < this.afterSignupStepComponents.length) {
+        this.afterSignupStep++
+      } else {
+        this.$nuxt.$router.push({ name: 'dashboard' }, () => {
+          this.$store.dispatch('settings/hideAdminSignupPage')
+        })
+      }
     },
   },
 }
