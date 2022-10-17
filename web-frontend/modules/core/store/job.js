@@ -164,12 +164,15 @@ export const actions = {
       jobIds = getters.getUnfinishedJobs.map((job) => job.id)
     }
     commit('SET_LOADING', true)
-    const { data } = await JobService(this.$client).fetchAll({ jobIds })
 
-    for (const job of data.jobs) {
-      await dispatch('forceUpdate', { job, data: job })
+    try {
+      const { data } = await JobService(this.$client).fetchAll({ jobIds })
+      for (const job of data.jobs) {
+        await dispatch('forceUpdate', { job, data: job })
+      }
+    } finally {
+      commit('SET_LOADING', false)
     }
-    commit('SET_LOADING', false)
   },
   /**
    * Create a new job and add it to the store. It also restart the polling if neeeded.
@@ -221,6 +224,10 @@ export const actions = {
         .isJobPartOfApplication(job, application)
     )
     jobs.forEach((job) => commit('DELETE_ITEM', job.id))
+  },
+  clearAll({ commit, dispatch }) {
+    commit('SET_ITEMS', [])
+    commit('SET_LOADED', false)
   },
 }
 
