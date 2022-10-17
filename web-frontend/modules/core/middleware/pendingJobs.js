@@ -6,8 +6,13 @@ export default async function ({ req, store }) {
   // If nuxt generate, pass this middleware
   if (process.server && !req) return
 
-  // If the user is not authenticated we will redirect him to the login page.
-  if (store.getters['auth/isAuthenticated']) {
+  if (
+    // If the user is not authenticated we can't fetch unfinished jobs.
+    store.getters['auth/isAuthenticated'] &&
+    //  If the unfinished jobs haven't been loaded we will load them all.
+    !store.getters['job/isLoaded'] &&
+    !store.getters['job/isLoading']
+  ) {
     await store.dispatch('job/fetchAllUnfinished')
   }
 }
