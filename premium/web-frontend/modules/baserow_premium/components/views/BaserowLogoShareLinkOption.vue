@@ -56,7 +56,7 @@ export default {
     validPremiumLicense() {
       return this.$registry
         .get('plugin', PremiumPlugin.getType())
-        .activeLicenseHasPremiumFeatures()
+        .activeLicenseHasPremiumFeatures(this.group.id)
     },
     tooltipText() {
       if (this.validPremiumLicense) {
