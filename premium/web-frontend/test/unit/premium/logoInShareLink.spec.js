@@ -28,7 +28,9 @@ describe('Premium Share View Link Tests', () => {
 
   afterEach(() => testApp.afterEach())
 
-  test('User without premium cannot toggle off the Baserow logo', async () => {
+  test('User without global premium cannot toggle off the Baserow logo', async () => {
+    const group = { id: 1, name: 'testGroup' }
+    await testApp.getStore().dispatch('group/forceCreate', group)
     const tableId = 1
     const databaseId = 3
     const viewId = 4
@@ -36,6 +38,7 @@ describe('Premium Share View Link Tests', () => {
       id: databaseId,
       type: 'database',
       tables: [{ id: tableId }],
+      group,
     })
     const view = {
       id: viewId,
@@ -56,6 +59,8 @@ describe('Premium Share View Link Tests', () => {
   })
 
   test('User with global premium can toggle off the Baserow logo', async () => {
+    const group = { id: 1, name: 'testGroup' }
+    await testApp.getStore().dispatch('group/forceCreate', group)
     const tableId = 1
     const databaseId = 3
     const viewId = 4
@@ -63,6 +68,7 @@ describe('Premium Share View Link Tests', () => {
       id: databaseId,
       type: 'database',
       tables: [{ id: tableId }],
+      group,
     })
     const view = {
       id: viewId,
