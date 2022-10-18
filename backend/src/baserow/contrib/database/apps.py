@@ -4,7 +4,18 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import ProgrammingError
 from django.db.models.signals import post_migrate, pre_migrate
 
+from baserow.contrib.database.fields.operations import (
+    CreateFieldOperationType,
+    DeleteFieldOperationType,
+    DuplicateFieldOperationType,
+    ReadFieldOperationType,
+    UpdateFieldOperationType,
+)
 from baserow.contrib.database.table.cache import clear_generated_model_cache
+from baserow.contrib.database.views.operations import (
+    DeleteViewDecorationOperationType,
+    UpdateViewSortOperationType,
+)
 from baserow.core.registries import (
     application_type_registry,
     object_scope_type_registry,
@@ -439,12 +450,15 @@ class DatabaseConfig(AppConfig):
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
+        from .fields.object_scopes import FieldObjectScopeType
         from .object_scopes import DatabaseObjectScopeType
         from .table.object_scopes import DatabaseTableObjectScopeType
 
         object_scope_type_registry.register(DatabaseObjectScopeType())
         object_scope_type_registry.register(DatabaseTableObjectScopeType())
+        object_scope_type_registry.register(FieldObjectScopeType())
 
+        from .fields.operations import UpdateFieldOptionsOperationType
         from .operations import (
             CreateTableDatabaseTableOperationType,
             ListTablesDatabaseTableOperationType,
@@ -463,6 +477,23 @@ class DatabaseConfig(AppConfig):
             ListRowsDatabaseTableOperationType,
             ReadDatabaseTableOperationType,
             UpdateDatabaseTableOperationType,
+        )
+        from .views.operations import (
+            CreateViewFilterOperationType,
+            CreateViewOperationType,
+            CreateViewSortOperationType,
+            DeleteViewFilterOperationType,
+            DeleteViewOperationType,
+            DeleteViewSortOperationType,
+            DuplicateViewOperationType,
+            OrderViewsOperationType,
+            ReadViewFilterOperationType,
+            ReadViewOperationType,
+            ReadViewsOrderOperationType,
+            ReadViewSortOperationType,
+            UpdateViewFilterOperationType,
+            UpdateViewOperationType,
+            UpdateViewSlugOperationType,
         )
         from .webhooks.operations import (
             CreateWebhookOperationType,
@@ -486,6 +517,29 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ReadDatabaseRowOperationType())
         operation_type_registry.register(UpdateDatabaseRowOperationType())
         operation_type_registry.register(DeleteDatabaseRowOperationType())
+        operation_type_registry.register(CreateViewSortOperationType())
+        operation_type_registry.register(ReadViewSortOperationType())
+        operation_type_registry.register(UpdateViewSortOperationType())
+        operation_type_registry.register(CreateFieldOperationType())
+        operation_type_registry.register(ReadFieldOperationType())
+        operation_type_registry.register(UpdateFieldOperationType())
+        operation_type_registry.register(DeleteFieldOperationType())
+        operation_type_registry.register(DuplicateFieldOperationType())
+        operation_type_registry.register(UpdateFieldOptionsOperationType())
+        operation_type_registry.register(DeleteViewSortOperationType())
+        operation_type_registry.register(UpdateViewSlugOperationType())
+        operation_type_registry.register(ReadViewsOrderOperationType())
+        operation_type_registry.register(OrderViewsOperationType())
+        operation_type_registry.register(CreateViewOperationType())
+        operation_type_registry.register(ReadViewOperationType())
+        operation_type_registry.register(UpdateViewOperationType())
+        operation_type_registry.register(DeleteViewOperationType())
+        operation_type_registry.register(DuplicateViewOperationType())
+        operation_type_registry.register(CreateViewFilterOperationType())
+        operation_type_registry.register(ReadViewFilterOperationType())
+        operation_type_registry.register(UpdateViewFilterOperationType())
+        operation_type_registry.register(DeleteViewFilterOperationType())
+        operation_type_registry.register(DeleteViewDecorationOperationType())
         operation_type_registry.register(CreateWebhookOperationType())
         operation_type_registry.register(DeleteWebhookOperationType())
         operation_type_registry.register(ReadWebhookOperationType())
