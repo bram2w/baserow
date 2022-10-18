@@ -156,7 +156,7 @@ class RestoreSnapshotView(APIView):
             "a new application will be created in the same group that the original "
             "application was placed in with the name of the snapshot and data that were"
             " in the original application at the time the snapshot was taken. "
-            "The original application that the snaphot was taken from is unaffected. "
+            "The original application that the snapshot was taken from is unaffected. "
             "Snapshots can be restored multiple times and a number suffix is added to "
             "the new application name in the case of a collision."
         ),
