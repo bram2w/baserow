@@ -45,11 +45,13 @@ class CoreConfig(AppConfig):
             GroupInvitationObjectScopeType,
             GroupObjectScopeType,
         )
+        from .snapshots.object_scopes import SnapshotObjectScopeType
 
         object_scope_type_registry.register(CoreObjectScopeType())
         object_scope_type_registry.register(ApplicationObjectScopeType())
         object_scope_type_registry.register(GroupObjectScopeType())
         object_scope_type_registry.register(GroupInvitationObjectScopeType())
+        object_scope_type_registry.register(SnapshotObjectScopeType())
 
         from .operations import (
             CreateApplicationsGroupOperationType,
@@ -72,6 +74,12 @@ class CoreConfig(AppConfig):
             UpdateGroupOperationType,
             UpdateGroupUserOperationType,
         )
+        from .snapshots.operations import (
+            CreateSnapshotApplicationOperationType,
+            DeleteApplicationSnapshotOperationType,
+            ListSnapshotsApplicationOperationType,
+            RestoreApplicationSnapshotOperationType,
+        )
 
         operation_type_registry.register(CreateApplicationsGroupOperationType())
         operation_type_registry.register(CreateGroupOperationType())
@@ -92,6 +100,10 @@ class CoreConfig(AppConfig):
         operation_type_registry.register(UpdateApplicationOperationType())
         operation_type_registry.register(DuplicateApplicationOperationType())
         operation_type_registry.register(DeleteApplicationOperationType())
+        operation_type_registry.register(CreateSnapshotApplicationOperationType())
+        operation_type_registry.register(DeleteApplicationSnapshotOperationType())
+        operation_type_registry.register(ListSnapshotsApplicationOperationType())
+        operation_type_registry.register(RestoreApplicationSnapshotOperationType())
 
         from baserow.core.actions import (
             CreateApplicationActionType,
