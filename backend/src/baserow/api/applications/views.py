@@ -46,6 +46,7 @@ from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
+from ...core.operations import ListApplicationsGroupOperationType
 from .serializers import (
     ApplicationCreateSerializer,
     ApplicationSerializer,
@@ -161,7 +162,7 @@ class ApplicationsView(APIView):
 
         CoreHandler().check_permissions(
             request.user,
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             group=group,
             context=group,
             allow_if_template=True,
@@ -173,7 +174,7 @@ class ApplicationsView(APIView):
 
         applications = CoreHandler().filter_queryset(
             request.user,
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             applications,
             group=group,
             context=group,

@@ -440,21 +440,15 @@ class DatabaseConfig(AppConfig):
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
         from .object_scopes import DatabaseObjectScopeType
-        from .rows.object_scopes import DatabaseRowObjectScopeType
         from .table.object_scopes import DatabaseTableObjectScopeType
 
         object_scope_type_registry.register(DatabaseObjectScopeType())
         object_scope_type_registry.register(DatabaseTableObjectScopeType())
-        object_scope_type_registry.register(DatabaseRowObjectScopeType())
 
         from .operations import (
             CreateTableDatabaseTableOperationType,
-            DeleteDatabaseOperationType,
-            DuplicateDatabaseOperationType,
             ListTablesDatabaseTableOperationType,
             OrderTablesDatabaseTableOperationType,
-            ReadDatabaseOperationType,
-            UpdateDatabaseOperationType,
         )
         from .rows.operations import (
             DeleteDatabaseRowOperationType,
@@ -465,19 +459,25 @@ class DatabaseConfig(AppConfig):
             CreateRowDatabaseTableOperationType,
             DeleteDatabaseTableOperationType,
             DuplicateDatabaseTableOperationType,
+            ImportRowsDatabaseTableOperationType,
             ListRowsDatabaseTableOperationType,
             ReadDatabaseTableOperationType,
             UpdateDatabaseTableOperationType,
         )
+        from .webhooks.operations import (
+            CreateWebhookOperationType,
+            DeleteWebhookOperationType,
+            ListTableWebhooksOperationType,
+            ReadWebhookOperationType,
+            TestTriggerWebhookOperationType,
+            UpdateWebhookOperationType,
+        )
 
-        operation_type_registry.register(ReadDatabaseOperationType())
-        operation_type_registry.register(UpdateDatabaseOperationType())
-        operation_type_registry.register(DeleteDatabaseOperationType())
-        operation_type_registry.register(DuplicateDatabaseOperationType())
         operation_type_registry.register(CreateTableDatabaseTableOperationType())
         operation_type_registry.register(ListTablesDatabaseTableOperationType())
         operation_type_registry.register(OrderTablesDatabaseTableOperationType())
         operation_type_registry.register(CreateRowDatabaseTableOperationType())
+        operation_type_registry.register(ImportRowsDatabaseTableOperationType())
         operation_type_registry.register(DeleteDatabaseTableOperationType())
         operation_type_registry.register(DuplicateDatabaseTableOperationType())
         operation_type_registry.register(ListRowsDatabaseTableOperationType())
@@ -486,6 +486,12 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ReadDatabaseRowOperationType())
         operation_type_registry.register(UpdateDatabaseRowOperationType())
         operation_type_registry.register(DeleteDatabaseRowOperationType())
+        operation_type_registry.register(CreateWebhookOperationType())
+        operation_type_registry.register(DeleteWebhookOperationType())
+        operation_type_registry.register(ReadWebhookOperationType())
+        operation_type_registry.register(ListTableWebhooksOperationType())
+        operation_type_registry.register(TestTriggerWebhookOperationType())
+        operation_type_registry.register(UpdateWebhookOperationType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

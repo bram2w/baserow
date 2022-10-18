@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+from baserow.core.registries import operation_type_registry
+
 
 class BaserowPremiumConfig(AppConfig):
     name = "baserow_premium"
@@ -61,6 +63,14 @@ class BaserowPremiumConfig(AppConfig):
         from baserow_premium.license.registries import license_type_registry
 
         license_type_registry.register(PremiumLicenseType())
+
+        from .row_comments.operations import (
+            CreateRowCommentsOperationType,
+            ReadRowCommentsOperationType,
+        )
+
+        operation_type_registry.register(ReadRowCommentsOperationType())
+        operation_type_registry.register(CreateRowCommentsOperationType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

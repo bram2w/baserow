@@ -25,13 +25,23 @@ from baserow.contrib.database.fields.field_filters import (
 from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.table.operations import (
+    CreateRowDatabaseTableOperationType,
+    ImportRowsDatabaseTableOperationType,
+)
 from baserow.contrib.database.trash.models import TrashedRows
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
+from .operations import (
+    DeleteDatabaseRowOperationType,
+    ReadDatabaseRowOperationType,
+    UpdateDatabaseRowOperationType,
+)
 from .signals import (
     before_rows_delete,
     before_rows_update,
@@ -316,7 +326,12 @@ class RowHandler:
             base_queryset = model.objects
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            ReadDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         try:
             row = base_queryset.get(id=row_id)
@@ -528,11 +543,15 @@ class RowHandler:
         :rtype: bool
         """
 
+        CoreHandler().check_permissions(
+            user,
+            ReadDatabaseRowOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
+
         if model is None:
             model = table.get_model(field_ids=[])
-
-        group = table.database.group
-        group.has_user(user, raise_error=True)
 
         row_exists = model.objects.filter(id=row_id).exists()
         if not row_exists and raise_error:
@@ -569,8 +588,12 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            CreateRowDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         instance = self.force_create_row(
             table, values, model, before_row, user_field_names
@@ -755,7 +778,9 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateDatabaseRowOperationType.type, group=group, context=table
+        )
 
         if model is None:
             model = table.get_model()
@@ -873,7 +898,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            CreateRowDatabaseTableOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1136,7 +1166,9 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ImportRowsDatabaseTableOperationType.type, group=group, context=table
+        )
 
         error_report = RowErrorReport(data)
 
@@ -1256,7 +1288,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            UpdateDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1636,7 +1673,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1709,7 +1751,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if not model:
             model = table.get_model()

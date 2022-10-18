@@ -21,6 +21,10 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
+from baserow.contrib.database.operations import (
+    CreateTableDatabaseTableOperationType,
+    OrderTablesDatabaseTableOperationType,
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
@@ -39,6 +43,11 @@ from .exceptions import (
     TableNotInDatabase,
 )
 from .models import Table
+from .operations import (
+    DeleteDatabaseTableOperationType,
+    DuplicateDatabaseTableOperationType,
+    UpdateDatabaseTableOperationType,
+)
 from .signals import table_created, table_deleted, table_updated, tables_reordered
 
 BATCH_SIZE = 1024
@@ -145,7 +154,10 @@ class TableHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "database.create_table", group=database.group, context=database
+            user,
+            CreateTableDatabaseTableOperationType.type,
+            group=database.group,
+            context=database,
         )
 
         if progress:
@@ -365,7 +377,10 @@ class TableHandler:
             raise ValueError("The table is not an instance of Table")
 
         CoreHandler().check_permissions(
-            user, "database.table.update", group=table.database.group, context=table
+            user,
+            UpdateDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
         )
 
         table.name = name
@@ -388,7 +403,10 @@ class TableHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "database.order_tables", group=database.group, context=database
+            user,
+            OrderTablesDatabaseTableOperationType.type,
+            group=database.group,
+            context=database,
         )
 
         queryset = Table.objects.filter(database_id=database.id)
@@ -483,7 +501,10 @@ class TableHandler:
         database = table.database
 
         CoreHandler().check_permissions(
-            user, "database.table.duplicate", group=database.group, context=table
+            user,
+            DuplicateDatabaseTableOperationType.type,
+            group=database.group,
+            context=table,
         )
 
         database_type = application_type_registry.get_by_model(database)
@@ -549,7 +570,10 @@ class TableHandler:
             raise ValueError("The table is not an instance of Table")
 
         CoreHandler().check_permissions(
-            user, "database.table.delete", group=table.database.group, context=table
+            user,
+            DeleteDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
         )
 
         TrashHandler.trash(user, table.database.group, table.database, table)

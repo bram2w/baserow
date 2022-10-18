@@ -48,6 +48,22 @@ from .models import (
     Template,
     TemplateCategory,
 )
+from .operations import (
+    CreateApplicationsGroupOperationType,
+    CreateGroupOperationType,
+    CreateInvitationsGroupOperationType,
+    DeleteApplicationOperationType,
+    DeleteGroupInvitationOperationType,
+    DeleteGroupOperationType,
+    DeleteGroupUserOperationType,
+    DuplicateApplicationOperationType,
+    OrderApplicationsOperationType,
+    UpdateApplicationOperationType,
+    UpdateGroupInvitationType,
+    UpdateGroupOperationType,
+    UpdateGroupUserOperationType,
+    UpdateSettingsOperationType,
+)
 from .registries import application_type_registry, permission_manager_type_registry
 from .signals import (
     application_created,
@@ -109,7 +125,7 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "settings.update", context=settings_instance
+            user, UpdateSettingsOperationType.type, context=settings_instance
         )
 
         if not settings_instance:
@@ -354,7 +370,9 @@ class CoreHandler:
 
         group = Group.objects.create(name=name)
 
-        CoreHandler().check_permissions(user, "create_group", group=group)
+        CoreHandler().check_permissions(
+            user, CreateGroupOperationType.type, group=group
+        )
 
         last_order = GroupUser.get_last_order(user)
         group_user = GroupUser.objects.create(
@@ -385,7 +403,7 @@ class CoreHandler:
             raise ValueError("The group is not an instance of Group.")
 
         CoreHandler().check_permissions(
-            user, "group.update", group=group, context=group
+            user, UpdateGroupOperationType.type, group=group, context=group
         )
 
         group.name = name
@@ -475,7 +493,7 @@ class CoreHandler:
             raise ValueError("The group is not an instance of Group.")
 
         CoreHandler().check_permissions(
-            user, "group.delete", group=group, context=group
+            user, DeleteGroupOperationType.type, group=group, context=group
         )
 
         # Load the group users before the group is deleted so that we can pass those
@@ -562,7 +580,10 @@ class CoreHandler:
             raise ValueError("The group user is not an instance of GroupUser.")
 
         CoreHandler().check_permissions(
-            user, "group_user.update", group=group_user.group, context=group_user
+            user,
+            UpdateGroupUserOperationType.type,
+            group=group_user.group,
+            context=group_user,
         )
 
         before_group_user_updated.send(self, group_user=group_user, **kwargs)
@@ -588,7 +609,10 @@ class CoreHandler:
             raise ValueError("The group user is not an instance of GroupUser.")
 
         CoreHandler().check_permissions(
-            user, "group_user.delete", group=group_user.group, context=group_user
+            user,
+            DeleteGroupUserOperationType.type,
+            group=group_user.group,
+            context=group_user,
         )
 
         before_group_user_deleted.send(
@@ -749,7 +773,7 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "group.create_invitation", group=group, context=group
+            user, CreateInvitationsGroupOperationType.type, group=group, context=group
         )
 
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
@@ -796,7 +820,10 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "invitation.update", group=invitation.group, context=invitation
+            user,
+            UpdateGroupInvitationType.type,
+            group=invitation.group,
+            context=invitation,
         )
 
         if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
@@ -821,7 +848,10 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "invitation.delete", group=invitation.group, context=invitation
+            user,
+            DeleteGroupInvitationOperationType.type,
+            group=invitation.group,
+            context=invitation,
         )
 
         invitation.delete()
@@ -978,7 +1008,7 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "group.create_application", group=group, context=group
+            user, CreateApplicationsGroupOperationType.type, group=group, context=group
         )
 
         # Figure out which model is used for the given application type.
@@ -1021,7 +1051,10 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "application.update", group=application.group, context=application
+            user,
+            UpdateApplicationOperationType.type,
+            group=application.group,
+            context=application,
         )
 
         application.name = name
@@ -1048,7 +1081,10 @@ class CoreHandler:
         group = application.group
 
         CoreHandler().check_permissions(
-            user, "application.duplicate", group=application.group, context=application
+            user,
+            DuplicateApplicationOperationType.type,
+            group=application.group,
+            context=application,
         )
 
         start_progress, export_progress, import_progress = 10, 30, 60
@@ -1104,7 +1140,7 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "group.order_applications", group=group, context=group
+            user, OrderApplicationsOperationType.type, group=group, context=group
         )
 
         # TODO add filter_queryset
@@ -1134,7 +1170,10 @@ class CoreHandler:
             raise ValueError("The application is not an instance of Application")
 
         CoreHandler().check_permissions(
-            user, "application.delete", group=application.group, context=application
+            user,
+            DeleteApplicationOperationType.type,
+            group=application.group,
+            context=application,
         )
 
         application_id = application.id
@@ -1435,7 +1474,7 @@ class CoreHandler:
         """
 
         CoreHandler().check_permissions(
-            user, "group.create_application", group=group, context=group
+            user, CreateApplicationsGroupOperationType.type, group=group, context=group
         )
 
         template_path = self.get_valid_template_path_or_raise(template)

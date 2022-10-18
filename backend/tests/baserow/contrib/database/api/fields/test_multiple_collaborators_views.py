@@ -343,8 +343,12 @@ def test_multiple_collaborators_field_type_update_row(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
-    assert response_json[f"field_{collaborator_field.id}"][0]["id"] == user2.id
-    assert response_json[f"field_{collaborator_field.id}"][1]["id"] == user3.id
+    # Django does not guarantee the ordering of model_instance.m2m_field = [
+    # id2, id3]
+    assert {val["id"] for val in response_json[f"field_{collaborator_field.id}"]} == {
+        user2.id,
+        user3.id,
+    }
 
     # empty list
 

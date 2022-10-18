@@ -10,6 +10,10 @@ from baserow.core.exceptions import (
     UserNotInGroup,
 )
 from baserow.core.handler import CoreHandler
+from baserow.core.operations import (
+    ListApplicationsGroupOperationType,
+    UpdateGroupOperationType,
+)
 from baserow.core.registries import permission_manager_type_registry
 
 
@@ -26,20 +30,23 @@ def test_group_check_basic_permissions(data_fixture):
     with pytest.raises(UserNotInGroup):
         CoreHandler().check_permissions(
             user,
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             group=user_group.group,
             context=user_group.group,
         )
 
     with pytest.raises(UserNotInGroup):
         CoreHandler().check_permissions(
-            user, "group.update", group=user_group.group, context=user_group.group
+            user,
+            UpdateGroupOperationType.type,
+            group=user_group.group,
+            context=user_group.group,
         )
 
     assert (
         CoreHandler().check_permissions(
             user,
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             group=user_group.group,
             context=user_group.group,
             raise_error=False,
@@ -49,20 +56,20 @@ def test_group_check_basic_permissions(data_fixture):
 
     assert CoreHandler().check_permissions(
         user_group.user,
-        "group.list_applications",
+        ListApplicationsGroupOperationType.type,
         group=user_group.group,
         context=user_group.group,
     )
     assert CoreHandler().check_permissions(
         user_group.user,
-        "group.update",
+        UpdateGroupOperationType.type,
         group=user_group.group,
         context=user_group.group,
     )
 
     assert CoreHandler().check_permissions(
         user_group_2.user,
-        "group.list_applications",
+        ListApplicationsGroupOperationType.type,
         group=user_group_2.group,
         context=user_group.group,
     )
@@ -70,7 +77,7 @@ def test_group_check_basic_permissions(data_fixture):
     with pytest.raises(UserInvalidGroupPermissionsError):
         assert CoreHandler().check_permissions(
             user_group_2.user,
-            "group.update",
+            UpdateGroupOperationType.type,
             group=user_group_2.group,
             context=user_group_2.group,
         )
@@ -78,7 +85,7 @@ def test_group_check_basic_permissions(data_fixture):
     with pytest.raises(NotAuthenticated):
         assert CoreHandler().check_permissions(
             AnonymousUser(),
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             group=user_group.group,
             context=user_group.group,
         )
@@ -90,7 +97,7 @@ def test_group_check_basic_permissions(data_fixture):
     with pytest.raises(PermissionDenied):
         CoreHandler().check_permissions(
             user_group.user,
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             group=user_group.group,
             context=user_group.group,
         )
@@ -100,7 +107,7 @@ def test_group_check_basic_permissions(data_fixture):
     with pytest.raises(UserInvalidGroupPermissionsError):
         assert CoreHandler().check_permissions(
             user_group_2.user,
-            "group.update",
+            UpdateGroupOperationType.type,
             group=user_group_2.group,
             context=user_group_2.group,
             allow_if_template=True,
@@ -108,7 +115,7 @@ def test_group_check_basic_permissions(data_fixture):
 
     assert CoreHandler().check_permissions(
         user_group_3.user,
-        "group.update",
+        UpdateGroupOperationType.type,
         group=user_group_3.group,
         context=user_group_3.group,
         allow_if_template=True,
@@ -117,7 +124,7 @@ def test_group_check_basic_permissions(data_fixture):
     with pytest.raises(NotAuthenticated):
         assert CoreHandler().check_permissions(
             AnonymousUser(),
-            "group.list_applications",
+            ListApplicationsGroupOperationType.type,
             group=user_group.group,
             allow_if_template=True,
             context=user_group.group,

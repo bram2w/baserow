@@ -35,6 +35,10 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupInvitation
+from baserow.core.operations import (
+    ListInvitationsGroupOperationType,
+    ReadInvitationGroupOperationType,
+)
 
 from .serializers import (
     CreateGroupInvitationSerializer,
@@ -87,7 +91,10 @@ class GroupInvitationsView(APIView):
         group = CoreHandler().get_group(group_id)
 
         CoreHandler().check_permissions(
-            request.user, "group.list_invitations", group=group, context=group
+            request.user,
+            ListInvitationsGroupOperationType.type,
+            group=group,
+            context=group,
         )
 
         group_invitations = GroupInvitation.objects.filter(group=group)
@@ -186,7 +193,7 @@ class GroupInvitationView(APIView):
 
         CoreHandler().check_permissions(
             request.user,
-            "invitation.read",
+            ReadInvitationGroupOperationType.type,
             group=group_invitation.group,
             context=group_invitation,
         )

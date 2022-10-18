@@ -28,3 +28,7 @@ class ListRowsDatabaseTableOperationType(DatabaseTableOperationType):
 
 class CreateRowDatabaseTableOperationType(DatabaseTableOperationType):
     type = "database.table.create_row"
+
+
+class ImportRowsDatabaseTableOperationType(DatabaseTableOperationType):
+    type = "database.table.import_rows"

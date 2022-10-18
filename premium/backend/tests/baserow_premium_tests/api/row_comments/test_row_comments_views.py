@@ -649,7 +649,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     )
     assert response.status_code == HTTP_200_OK
 
-    expected_num_of_fixed_queries = 7
+    expected_num_of_fixed_queries = 8
     with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(
