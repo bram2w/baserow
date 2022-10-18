@@ -38,8 +38,15 @@ from baserow.contrib.database.fields.field_converters import (
     MultipleSelectConversionConfig,
 )
 from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.fields.operations import (
+    CreateFieldOperationType,
+    DeleteFieldOperationType,
+    DuplicateFieldOperationType,
+    UpdateFieldOperationType,
+)
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
@@ -244,7 +251,9 @@ class FieldHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateFieldOperationType.type, group=group, context=table
+        )
 
         # Because only one primary field per table can exist and we have to check if one
         # already exists. If so the field cannot be created and an exception is raised.
@@ -392,7 +401,9 @@ class FieldHandler:
             )
 
         group = field.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateFieldOperationType.type, group=group, context=field
+        )
 
         old_field = deepcopy(field)
         from_field_type = field_type_registry.get_by_model(field)
@@ -607,7 +618,12 @@ class FieldHandler:
         progress = ChildProgressBuilder.build(progress_builder, child_total=3)
 
         database = field.table.database
-        database.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DuplicateFieldOperationType.type,
+            group=database.group,
+            context=field,
+        )
 
         specific_field = field.specific
         field_type = field_type_registry.get_by_model(specific_field)
@@ -683,7 +699,9 @@ class FieldHandler:
             raise ValueError("The field is not an instance of Field")
 
         group = field.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, DeleteFieldOperationType.type, group=group, context=field
+        )
 
         if field.primary and not allow_deleting_primary:
             raise CannotDeletePrimaryField(
@@ -784,7 +802,9 @@ class FieldHandler:
         """
 
         group = field.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateFieldOperationType.type, group=group, context=field
+        )
 
         field_type = field_type_registry.get_by_model(field)
 

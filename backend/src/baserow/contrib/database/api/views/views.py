@@ -93,6 +93,10 @@ from baserow.contrib.database.views.models import (
     ViewFilter,
     ViewSort,
 )
+from baserow.contrib.database.views.operations import (
+    ListViewsOperationType,
+    ReadViewOperationType,
+)
 from baserow.contrib.database.views.registries import (
     decorator_value_provider_type_registry,
     view_type_registry,
@@ -100,6 +104,7 @@ from baserow.contrib.database.views.registries import (
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 
 from .errors import (
     ERROR_CANNOT_SHARE_VIEW_TYPE,
@@ -242,9 +247,14 @@ class ViewsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(
-            request.user, raise_error=True, allow_if_template=True
+        CoreHandler().check_permissions(
+            request.user,
+            ListViewsOperationType.type,
+            group=table.database.group,
+            context=table,
+            allow_if_template=True,
         )
+
         views = View.objects.filter(table=table).select_related("content_type", "table")
 
         if query_params["type"]:
@@ -414,7 +424,13 @@ class ViewView(APIView):
         """Selects a single view and responds with a serialized version."""
 
         view = ViewHandler().get_view(view_id)
-        view.table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadViewOperationType.type,
+            group=view.table.database.group,
+            context=view,
+        )
+
         serializer = view_type_registry.get_serializer(
             view,
             ViewSerializer,
