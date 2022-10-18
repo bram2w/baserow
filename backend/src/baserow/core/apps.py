@@ -55,31 +55,43 @@ class CoreConfig(AppConfig):
             CreateApplicationsGroupOperationType,
             CreateGroupOperationType,
             CreateInvitationsGroupOperationType,
-            DeleteGroupGroupOperationType,
+            DeleteApplicationOperationType,
+            DeleteGroupInvitationOperationType,
             DeleteGroupOperationType,
+            DeleteGroupUserOperationType,
+            DuplicateApplicationOperationType,
             ListApplicationsGroupOperationType,
             ListGroupsOperationType,
             ListGroupUsersGroupOperationType,
             ListInvitationsGroupOperationType,
+            OrderApplicationsOperationType,
             ReadGroupOperationType,
             ReadInvitationGroupOperationType,
-            UpdateGroupGroupOperationType,
+            UpdateApplicationOperationType,
+            UpdateGroupInvitationType,
             UpdateGroupOperationType,
+            UpdateGroupUserOperationType,
         )
 
         operation_type_registry.register(CreateApplicationsGroupOperationType())
         operation_type_registry.register(CreateGroupOperationType())
         operation_type_registry.register(CreateInvitationsGroupOperationType())
-        operation_type_registry.register(DeleteGroupGroupOperationType())
+        operation_type_registry.register(DeleteGroupInvitationOperationType())
         operation_type_registry.register(DeleteGroupOperationType())
         operation_type_registry.register(ListApplicationsGroupOperationType())
         operation_type_registry.register(ListInvitationsGroupOperationType())
         operation_type_registry.register(ReadInvitationGroupOperationType())
         operation_type_registry.register(ListGroupsOperationType())
-        operation_type_registry.register(UpdateGroupGroupOperationType())
+        operation_type_registry.register(UpdateGroupInvitationType())
         operation_type_registry.register(ReadGroupOperationType())
         operation_type_registry.register(UpdateGroupOperationType())
         operation_type_registry.register(ListGroupUsersGroupOperationType())
+        operation_type_registry.register(OrderApplicationsOperationType())
+        operation_type_registry.register(UpdateGroupUserOperationType())
+        operation_type_registry.register(DeleteGroupUserOperationType())
+        operation_type_registry.register(UpdateApplicationOperationType())
+        operation_type_registry.register(DuplicateApplicationOperationType())
+        operation_type_registry.register(DeleteApplicationOperationType())
 
         from baserow.core.actions import (
             CreateApplicationActionType,

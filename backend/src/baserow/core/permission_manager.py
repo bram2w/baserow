@@ -7,13 +7,31 @@ from .exceptions import (
     UserInvalidGroupPermissionsError,
     UserNotInGroup,
 )
+from .operations import (
+    CreateGroupOperationType,
+    CreateInvitationsGroupOperationType,
+    DeleteGroupInvitationOperationType,
+    DeleteGroupOperationType,
+    DeleteGroupUserOperationType,
+    ListGroupsOperationType,
+    ListGroupUsersGroupOperationType,
+    ListInvitationsGroupOperationType,
+    ReadInvitationGroupOperationType,
+    UpdateGroupInvitationType,
+    UpdateGroupOperationType,
+    UpdateGroupUserOperationType,
+    UpdateSettingsOperationType,
+)
 from .registries import PermissionManagerType
 
 
 class CorePermissionManagerType(PermissionManagerType):
     type = "core"
 
-    ALWAYS_ALLOWED_OPERATIONS = ["create_group", "list_groups"]
+    ALWAYS_ALLOWED_OPERATIONS = [
+        CreateGroupOperationType.type,
+        ListGroupsOperationType.type,
+    ]
 
     def check_permissions(
         self, actor, operation, group=None, context=None, include_trash=False
@@ -28,7 +46,7 @@ class CorePermissionManagerType(PermissionManagerType):
 
 class StaffOnlyPermissionManagerType(PermissionManagerType):
     type = "staff"
-    STAFF_ONLY_OPERATIONS = ["settings.update"]
+    STAFF_ONLY_OPERATIONS = [UpdateSettingsOperationType.type]
 
     def check_permissions(
         self, actor, operation, group=None, context=None, include_trash=False
@@ -85,16 +103,16 @@ class BasicPermissionManagerType(PermissionManagerType):
 
     ADMIN_ONLY_OPERATIONS = set(
         [
-            "group.list_invitations",
-            "group.create_invitation",
-            "invitation.read",
-            "invitation.update",
-            "invitation.delete",
-            "group.list_group_users",
-            "group.update",
-            "group.delete",
-            "group_user.update",
-            "group_user.delete",
+            ListInvitationsGroupOperationType.type,
+            CreateInvitationsGroupOperationType.type,
+            ReadInvitationGroupOperationType.type,
+            UpdateGroupInvitationType.type,
+            DeleteGroupInvitationOperationType.type,
+            ListGroupUsersGroupOperationType.type,
+            UpdateGroupOperationType.type,
+            DeleteGroupOperationType.type,
+            UpdateGroupUserOperationType.type,
+            DeleteGroupUserOperationType.type,
         ]
     )
 

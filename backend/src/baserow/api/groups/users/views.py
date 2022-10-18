@@ -22,6 +22,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser
+from baserow.core.operations import ListGroupUsersGroupOperationType
 
 from .serializers import GroupUserSerializer, UpdateGroupUserSerializer
 
@@ -64,7 +65,10 @@ class GroupUsersView(APIView):
         group = CoreHandler().get_group(group_id)
 
         CoreHandler().check_permissions(
-            request.user, "group.list_group_users", group=group, context=group
+            request.user,
+            ListGroupUsersGroupOperationType.type,
+            group=group,
+            context=group,
         )
 
         group_users = GroupUser.objects.filter(group=group).select_related(

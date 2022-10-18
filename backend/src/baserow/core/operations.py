@@ -1,3 +1,4 @@
+from baserow.core.object_scopes import GroupUserObjectScopeType
 from baserow.core.registries import OperationType
 
 
@@ -6,7 +7,7 @@ class CoreOperationType(OperationType):
 
 
 class UpdateSettingsOperationType(CoreOperationType):
-    type = "settings_update"
+    type = "settings.update"
 
 
 class CreateGroupOperationType(CoreOperationType):
@@ -43,6 +44,10 @@ class CreateApplicationsGroupOperationType(GroupCoreOperationType):
     type = "group.create_application"
 
 
+class OrderApplicationsOperationType(GroupCoreOperationType):
+    type = "group.order_applications"
+
+
 class CreateInvitationsGroupOperationType(GroupCoreOperationType):
     type = "group.create_invitation"
 
@@ -65,9 +70,33 @@ class ReadInvitationGroupOperationType(InvitationGroupOperationType):
     type = "invitation.read"
 
 
-class UpdateGroupGroupOperationType(GroupCoreOperationType):
+class UpdateGroupInvitationType(GroupCoreOperationType):
     type = "invitation.update"
 
 
-class DeleteGroupGroupOperationType(GroupCoreOperationType):
+class DeleteGroupInvitationOperationType(GroupCoreOperationType):
     type = "invitation.delete"
+
+
+class UpdateGroupUserOperationType(GroupUserObjectScopeType):
+    type = "group_user.update"
+
+
+class DeleteGroupUserOperationType(GroupUserObjectScopeType):
+    type = "group_user.delete"
+
+
+class ApplicationOperationType(OperationType):
+    context_scope_name = "application"
+
+
+class UpdateApplicationOperationType(ApplicationOperationType):
+    type = "application.update"
+
+
+class DuplicateApplicationOperationType(ApplicationOperationType):
+    type = "application.duplicate"
+
+
+class DeleteApplicationOperationType(ApplicationOperationType):
+    type = "application.delete"

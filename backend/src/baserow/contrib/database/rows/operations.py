@@ -6,12 +6,16 @@ class DatabaseRowOperationType(DatabaseOperationType):
 
 
 class ReadDatabaseRowOperationType(DatabaseRowOperationType):
-    type = "database.table.row.read"
+    type = "database.table.read_row"
 
 
 class UpdateDatabaseRowOperationType(DatabaseRowOperationType):
-    type = "database.table.row.update"
+    type = "database.table.update_row"
+
+
+class CreateDatabaseRowOperationType(DatabaseRowOperationType):
+    type = "database.table.create_row"
 
 
 class DeleteDatabaseRowOperationType(DatabaseRowOperationType):
-    type = "database.table.row.delete"
+    type = "database.table.delete_row"
