@@ -21,7 +21,7 @@
 
 <script>
 import debounce from 'lodash/debounce'
-import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
+import CrudTableSearchContext from '@baserow/modules/core/components/crud_table/CrudTableSearchContext'
 
 /**
  * A search component which shows a search modal when the user clicks on this

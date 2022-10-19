@@ -85,3 +85,21 @@
     right: 0;
   }
 }
+
+.dropdown__action {
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+  margin: 0 8px 4px 8px;
+  padding: 0 32px 0 10px;
+
+  &:hover {
+    background-color: $color-neutral-100;
+  }
+}
+
+.dropdown__action__link {
+  &:hover {
+    text-decoration: none;
+  }
+}

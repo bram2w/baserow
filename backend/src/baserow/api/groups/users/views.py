@@ -6,13 +6,24 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body,
+    validate_query_parameters,
+)
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_INVALID_SORT_ATTRIBUTE,
+    ERROR_INVALID_SORT_DIRECTION,
     ERROR_USER_INVALID_GROUP_PERMISSIONS,
     ERROR_USER_NOT_IN_GROUP,
 )
+from baserow.api.exceptions import (
+    InvalidSortAttributeException,
+    InvalidSortDirectionException,
+)
 from baserow.api.groups.users.errors import ERROR_GROUP_USER_DOES_NOT_EXIST
+from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import (
     GroupDoesNotExist,
@@ -24,10 +35,21 @@ from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser
 from baserow.core.operations import ListGroupUsersGroupOperationType
 
-from .serializers import GroupUserSerializer, UpdateGroupUserSerializer
+from .serializers import (
+    GetGroupUsersViewParamsSerializer,
+    GroupUserSerializer,
+    UpdateGroupUserSerializer,
+)
 
 
-class GroupUsersView(APIView):
+class GroupUsersView(APIView, SearchableViewMixin, SortableViewMixin):
+    search_fields = ["user__username", "user__email", "permissions"]
+    sort_field_mapping = {
+        "name": "user__username",
+        "email": "user__email",
+        "permissions": "permissions",
+    }
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -47,7 +69,12 @@ class GroupUsersView(APIView):
         responses={
             200: GroupUserSerializer(many=True),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_USER_INVALID_GROUP_PERMISSIONS"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_USER_INVALID_GROUP_PERMISSIONS",
+                    "ERROR_INVALID_SORT_DIRECTION",
+                    "ERROR_INVALID_SORT_ATTRIBUTE",
+                ]
             ),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
         },
@@ -57,10 +84,16 @@ class GroupUsersView(APIView):
             GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS,
+            InvalidSortDirectionException: ERROR_INVALID_SORT_DIRECTION,
+            InvalidSortAttributeException: ERROR_INVALID_SORT_ATTRIBUTE,
         }
     )
-    def get(self, request, group_id):
+    @validate_query_parameters(GetGroupUsersViewParamsSerializer)
+    def get(self, request, group_id, query_params):
         """Responds with a list of serialized users that are part of the group."""
+
+        search = query_params.get("search")
+        sorts = query_params.get("sorts")
 
         group = CoreHandler().get_group(group_id)
 
@@ -71,10 +104,14 @@ class GroupUsersView(APIView):
             context=group,
         )
 
-        group_users = GroupUser.objects.filter(group=group).select_related(
+        qs = GroupUser.objects.filter(group=group).select_related(
             "group", "user", "user__profile"
         )
-        serializer = GroupUserSerializer(group_users, many=True)
+
+        qs = self.apply_search(search, qs)
+        qs = self.apply_sorts_or_default_sort(sorts, qs)
+
+        serializer = GroupUserSerializer(qs, many=True)
         return Response(serializer.data)
 
 

@@ -298,7 +298,7 @@ def test_returns_error_response_if_invalid_sort_field_provided(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -320,7 +320,7 @@ def test_returns_error_response_if_sort_direction_not_provided(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "ERROR_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -342,7 +342,7 @@ def test_returns_error_response_if_invalid_sort_direction_provided(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "ERROR_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -364,7 +364,7 @@ def test_returns_error_response_if_invalid_sorts_mixed_with_valid_ones(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION"
+    assert response.json()["error"] == "ERROR_INVALID_SORT_DIRECTION"
 
 
 @pytest.mark.django_db
@@ -386,7 +386,7 @@ def test_returns_error_response_if_blank_sorts_provided(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db
@@ -406,7 +406,7 @@ def test_returns_error_response_if_no_sorts_provided(api_client, premium_data_fi
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE"
+    assert response.json()["error"] == "ERROR_INVALID_SORT_ATTRIBUTE"
 
 
 @pytest.mark.django_db

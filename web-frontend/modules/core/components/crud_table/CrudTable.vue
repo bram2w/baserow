@@ -1,8 +1,13 @@
 <template>
   <div class="crudtable">
     <header class="crudtable__header">
-      <slot name="header"></slot>
-      <CrudTableSearch :loading="loading" @search-changed="doSearch" />
+      <div class="crudtable__header__left-side">
+        <slot name="header-left-side"></slot>
+      </div>
+      <div class="crudtable__header__right-side">
+        <CrudTableSearch :loading="loading" @search-changed="doSearch" />
+        <slot name="header-right-side"></slot>
+      </div>
     </header>
     <div
       :class="{ crudtable__loading: loading }"
@@ -55,11 +60,11 @@
         </template>
       </template>
     </div>
-    <div class="crudtable__footer">
+    <div v-if="service.options.isPaginated" class="crudtable__footer">
       <Paginator
         :page="page"
         :total-pages="totalPages"
-        @change-page="fetchPage"
+        @change-page="fetch"
       ></Paginator>
     </div>
     <slot name="menus" :updateRow="updateRow" :deleteRow="deleteRow"></slot>
@@ -68,9 +73,10 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
+import CrudTableSearch from '@baserow/modules/core/components/crud_table/CrudTableSearch'
 import Paginator from '@baserow/modules/core/components/Paginator'
-import CrudTableColumn from '@baserow_premium/crud_table/crudTableColumn'
+import CrudTableColumn from '@baserow/modules/core/crud_table/crudTableColumn'
+import { isArray } from 'lodash'
 
 /**
  * This component is a generic wrapper for a basic crud service which displays its
@@ -93,7 +99,7 @@ export default {
   components: { Paginator, CrudTableSearch },
   props: {
     /**
-     * A service which provides a fetchPage(pageNumber, searchParam, columnSortsList)
+     * A service which provides a fetch(pageNumber, searchParam, columnSortsList)
      * method which returns an object in the form of:
      * ```
      * {
@@ -108,6 +114,10 @@ export default {
      * ```
      * CrudTable will call this method with the current page and assume the returned
      * results have a max page size of 100 to calculate the total number of pages.
+     *
+     * Each service can also define an `options` attribute in which it can set
+     * `isPaginated` to `false`. If that attribute is set, the CrudTable will just
+     * fetch the provided endpoint without any pagination.
      *
      * If the user has provided a search query this will be passed in the second
      * argument.
@@ -168,7 +178,8 @@ export default {
     }
   },
   async fetch() {
-    await this.fetchPage(1, {})
+    const page = this.service.options.isPaginated ? 1 : null
+    await this.fetch(page)
   },
   computed: {
     allColumns() {
@@ -184,6 +195,11 @@ export default {
       return this.allColumns
         .map((c) => `minmax(${c.minWidth}, ${c.maxWidth})`)
         .join(' ')
+    },
+  },
+  watch: {
+    rows() {
+      this.$emit('rows-update', this.rows)
     },
   },
   methods: {
@@ -209,7 +225,7 @@ export default {
           this.columnSorts.splice(i, 1)
         }
       }
-      this.fetchPage(1)
+      this.fetch(1)
     },
     sortIcon(column) {
       const i = this.sortIndex(column)
@@ -226,31 +242,34 @@ export default {
     async doSearch(searchQuery) {
       this.totalPages = null
       this.searchQuery = searchQuery
-      await this.fetchPage(1)
+      await this.fetch(1)
     },
     /**
      * Fetches the rows of a given page and adds them to the state.
      */
-    async fetchPage(page) {
+    async fetch(page = null) {
       this.loading = true
 
       try {
-        const { data } = await this.service.fetchPage(
+        const { data } = await this.service.fetch(
+          this.service.options.baseUrl,
           page,
           this.searchQuery,
-          this.columnSorts
+          this.columnSorts,
+          this.service.options
         )
-        this.page = page
-        this.totalPages = Math.ceil(data.count / 100)
-        this.rows = data.results
+
+        if (this.service.options.isPaginated) {
+          this.page = page
+          this.totalPages = Math.ceil(data.count / 100)
+        }
+
+        this.rows = isArray(data) ? data : data.results
       } catch (error) {
         notifyIf(error, 'row')
       }
 
       this.loading = false
-    },
-    async refreshPage() {
-      return await this.fetchPage(this.page)
     },
     updateRow(updatedRow) {
       const i = this.rows.findIndex(

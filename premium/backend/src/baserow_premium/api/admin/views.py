@@ -1,24 +1,23 @@
-from django.db.models import Q
-
-from baserow_premium.admin.exceptions import (
-    InvalidSortAttributeException,
-    InvalidSortDirectionException,
-)
-from baserow_premium.api.admin.errors import (
-    ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE,
-    ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION,
-)
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions
+from baserow.api.errors import (
+    ERROR_INVALID_SORT_ATTRIBUTE,
+    ERROR_INVALID_SORT_DIRECTION,
+)
+from baserow.api.exceptions import (
+    InvalidSortAttributeException,
+    InvalidSortDirectionException,
+)
+from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 
 
-class AdminListingView(APIView):
+class AdminListingView(APIView, SearchableViewMixin, SortableViewMixin):
     permission_classes = (IsAdminUser,)
     serializer_class = None
     search_fields = ["id"]
@@ -26,8 +25,8 @@ class AdminListingView(APIView):
 
     @map_exceptions(
         {
-            InvalidSortDirectionException: ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION,
-            InvalidSortAttributeException: ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE,
+            InvalidSortDirectionException: ERROR_INVALID_SORT_DIRECTION,
+            InvalidSortAttributeException: ERROR_INVALID_SORT_ATTRIBUTE,
         }
     )
     def get(self, request):
@@ -40,8 +39,8 @@ class AdminListingView(APIView):
         sorts = request.GET.get("sorts")
 
         queryset = self.get_queryset(request)
-        queryset = self._apply_sorts_or_default_sort(sorts, queryset)
-        queryset = self._apply_search(search, queryset)
+        queryset = self.apply_sorts_or_default_sort(sorts, queryset)
+        queryset = self.apply_search(search, queryset)
 
         paginator = PageNumberPagination(limit_page_size=100)
         page = paginator.paginate_queryset(queryset, request, self)
@@ -60,77 +59,6 @@ class AdminListingView(APIView):
             )
 
         return self.serializer_class(*args, **kwargs)
-
-    def _apply_search(self, search, queryset):
-        """
-        Applies the provided search query to the provided query. If the search query
-        is provided then an `icontains` lookup will be done for each field in the
-        search_fields property. One of the fields has to match the query.
-
-        :param search: The search query.
-        :type search: str or None
-        :param queryset: The queryset where the search query must be applied to.
-        :type queryset: QuerySet
-        :return: The queryset filtering the results by the search query.
-        :rtype: QuerySet
-        """
-
-        if not search:
-            return queryset
-
-        q = Q()
-
-        for search_field in self.search_fields:
-            q.add(Q(**{f"{search_field}__icontains": search}), Q.OR)
-
-        return queryset.filter(q)
-
-    def _apply_sorts_or_default_sort(self, sorts: str, queryset):
-        """
-        Takes a comma separated string in the form of +attribute,-attribute2 and
-        applies them to a django queryset in order.
-        Defaults to sorting by id if no sorts are provided.
-        Raises an InvalidSortDirectionException if an attribute does not begin with `+`
-        or `-`.
-        Raises an InvalidSortAttributeException if an unknown attribute is supplied to
-        sort by or multiple of the same attribute are provided.
-
-        :param sorts: The list of sorts to apply to the queryset.
-        :param queryset: The queryset to sort.
-        :return: The sorted queryset.
-        """
-
-        if sorts is None:
-            return queryset.order_by("id")
-
-        parsed_django_order_bys = []
-        already_seen_sorts = set()
-        for s in sorts.split(","):
-            if len(s) <= 2:
-                raise InvalidSortAttributeException()
-
-            sort_direction_prefix = s[0]
-            sort_field_name = s[1:]
-
-            try:
-                sort_direction_to_django_prefix = {"+": "", "-": "-"}
-                direction = sort_direction_to_django_prefix[sort_direction_prefix]
-            except KeyError:
-                raise InvalidSortDirectionException()
-
-            try:
-                attribute = self.sort_field_mapping[sort_field_name]
-            except KeyError:
-                raise InvalidSortAttributeException()
-
-            if attribute in already_seen_sorts:
-                raise InvalidSortAttributeException()
-            else:
-                already_seen_sorts.add(attribute)
-
-            parsed_django_order_bys.append(f"{direction}{attribute}")
-
-        return queryset.order_by(*parsed_django_order_bys)
 
     @staticmethod
     def get_extend_schema_parameters(
@@ -171,7 +99,7 @@ class AdminListingView(APIView):
                     f"-{field_name_2}` will sort the {name} first by descending "
                     f"{field_name_1} and then ascending {field_name_2}. A sort"
                     f"parameter with multiple instances of the same sort attribute "
-                    f"will respond with the ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE "
+                    f"will respond with the ERROR_INVALID_SORT_ATTRIBUTE "
                     f"error.",
                 ),
                 OpenApiParameter(
@@ -194,8 +122,8 @@ class AdminListingView(APIView):
                     [
                         "ERROR_PAGE_SIZE_LIMIT",
                         "ERROR_INVALID_PAGE",
-                        "ERROR_ADMIN_LISTING_INVALID_SORT_DIRECTION",
-                        "ERROR_ADMIN_LISTING_INVALID_SORT_ATTRIBUTE",
+                        "ERROR_INVALID_SORT_DIRECTION",
+                        "ERROR_INVALID_SORT_ATTRIBUTE",
                     ]
                 ),
                 401: None,

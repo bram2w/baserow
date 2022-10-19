@@ -17,15 +17,25 @@
  * @param {string} maxWidth A valid max parameter to the css minmax(,HERE) function to
  * construct CrudTable's css grid column templates.
  * @param {boolean} sortable Whether this column is sortable.
+ * @param {object} additionalProps Any additional props to pass to the cellComponent.
  */
 export default class CrudTableColumn {
-  constructor(key, header, cellComponent, minWidth, maxWidth, sortable) {
+  constructor(
+    key,
+    header,
+    cellComponent,
+    minWidth,
+    maxWidth,
+    sortable,
+    additionalProps
+  ) {
     this.key = key
     this._header = header
     this.cellComponent = cellComponent
     this.minWidth = minWidth
     this.maxWidth = maxWidth
     this.sortable = sortable
+    this.additionalProps = additionalProps
   }
 
   get header() {
