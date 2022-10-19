@@ -25,6 +25,7 @@ from baserow.api.exceptions import (
 from baserow.api.groups.users.errors import ERROR_GROUP_USER_DOES_NOT_EXIST
 from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
 from baserow.api.schemas import get_error_schema
+from baserow.api.user.registries import member_data_registry
 from baserow.core.exceptions import (
     GroupDoesNotExist,
     GroupUserDoesNotExist,
@@ -112,6 +113,11 @@ class GroupUsersView(APIView, SearchableViewMixin, SortableViewMixin):
         qs = self.apply_sorts_or_default_sort(sorts, qs)
 
         serializer = GroupUserSerializer(qs, many=True)
+        # Iterate over any registered `member_data_registry`
+        # member data types and annotate the response with it.
+        for data_type in member_data_registry.get_all():
+            data_type.annotate_serialized_data(serializer.data)
+
         return Response(serializer.data)
 
 

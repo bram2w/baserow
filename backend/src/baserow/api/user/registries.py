@@ -70,4 +70,28 @@ class UserDataRegistry(Registry):
         }
 
 
+class MemberDataType(Instance):
+    """
+    The member data type can be used to inject an additional payload to the API
+    group user list responses. The returned dict of the `annotate_serialized_data`
+    method is added to the payload under the key containing the type name.
+    """
+
+    def annotate_serialized_data(self, serialized_data: dict) -> dict:
+        """
+        Should be given a `Serializer.data` object, which the `MemberDataType`
+        implementation will annotate with its own data. Should return the same
+        `serialized_dat` dict.
+        """
+
+        raise NotImplementedError(
+            "The annotate_serialized_data must be implemented and should return a dict."
+        )
+
+
+class MemberDataRegistry(Registry):
+    name = "api_member_data"
+
+
 user_data_registry = UserDataRegistry()
+member_data_registry = MemberDataRegistry()
