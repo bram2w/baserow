@@ -376,6 +376,13 @@ export const getters = {
 
     return state.selected.id
   },
+  selectedGroup(state) {
+    if (!Object.prototype.hasOwnProperty.call(state.selected, 'id')) {
+      throw new Error('There is no selected group.')
+    }
+
+    return state.selected
+  },
   getAllUsers(state) {
     const users = {}
     for (const group of state.items) {

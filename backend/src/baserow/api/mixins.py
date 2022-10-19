@@ -1,4 +1,12 @@
-from baserow.api.exceptions import UnknownFieldProvided
+from typing import Dict, List, Union
+
+from django.db.models import Q, QuerySet
+
+from baserow.api.exceptions import (
+    InvalidSortAttributeException,
+    InvalidSortDirectionException,
+    UnknownFieldProvided,
+)
 
 
 class UnknownFieldRaisesExceptionSerializerMixin:
@@ -52,3 +60,94 @@ class UnknownFieldRaisesExceptionSerializerMixin:
                 )
 
         return data
+
+
+class SearchableViewMixin:
+    """
+    This mixin can be used to add search functionality to a view. The view must
+    define `search_fields`.
+    """
+
+    # The fields that can be searched on.
+    # Needs to be overwritten by the class that uses this mixin.
+    search_fields: List[str] = []
+
+    def apply_search(self, search: Union[str, None], queryset: QuerySet) -> QuerySet:
+        """
+        Applies the provided search query to the provided query. If the search query
+        is provided then an `icontains` lookup will be done for each field in the
+        search_fields property. One of the fields has to match the query.
+
+        :param search: The search query.
+        :type search: str or None
+        :param queryset: The queryset where the search query must be applied to.
+        :type queryset: QuerySet
+        :return: The queryset filtering the results by the search query.
+        :rtype: QuerySet
+        """
+
+        if not search:
+            return queryset
+
+        q = Q()
+
+        for search_field in self.search_fields:
+            q.add(Q(**{f"{search_field}__icontains": search}), Q.OR)
+
+        return queryset.filter(q)
+
+
+class SortableViewMixin:
+    # The fields that can be sorted on.
+    # It's a mapping from the field name in the request to teh field name in the
+    # database.
+    sort_field_mapping: Dict[str, str] = {}
+
+    def apply_sorts_or_default_sort(
+        self, sorts: Union[str, None], queryset: QuerySet
+    ) -> QuerySet:
+        """
+        Takes a comma separated string in the form of +attribute,-attribute2 and
+        applies them to a django queryset in order.
+        Defaults to sorting by id if no sorts are provided.
+        Raises an InvalidSortDirectionException if an attribute does not begin with `+`
+        or `-`.
+        Raises an InvalidSortAttributeException if an unknown attribute is supplied to
+        sort by or multiple of the same attribute are provided.
+
+        :param sorts: The list of sorts to apply to the queryset.
+        :param queryset: The queryset to sort.
+        :return: The sorted queryset.
+        """
+
+        if sorts is None:
+            return queryset.order_by("id")
+
+        parsed_django_order_bys = []
+        already_seen_sorts = set()
+        for s in sorts.split(","):
+            if len(s) <= 2:
+                raise InvalidSortAttributeException()
+
+            sort_direction_prefix = s[0]
+            sort_field_name = s[1:]
+
+            try:
+                sort_direction_to_django_prefix = {"+": "", "-": "-"}
+                direction = sort_direction_to_django_prefix[sort_direction_prefix]
+            except KeyError:
+                raise InvalidSortDirectionException()
+
+            try:
+                attribute = self.sort_field_mapping[sort_field_name]
+            except KeyError:
+                raise InvalidSortAttributeException()
+
+            if attribute in already_seen_sorts:
+                raise InvalidSortAttributeException()
+            else:
+                already_seen_sorts.add(attribute)
+
+            parsed_django_order_bys.append(f"{direction}{attribute}")
+
+        return queryset.order_by(*parsed_django_order_bys)

@@ -56,6 +56,19 @@ export const routes = [
     path: '/_health',
     component: path.resolve(__dirname, 'pages/_health.vue'),
   },
+  {
+    name: 'settings',
+    path: '/settings/:groupId',
+    component: path.resolve(__dirname, 'pages/settings/index.vue'),
+    meta: { renderInitialChild: 'settings-members' },
+    children: [
+      {
+        name: 'settings-members',
+        path: 'members',
+        component: path.resolve(__dirname, 'pages/settings/members.vue'),
+      },
+    ],
+  },
 ]
 
 if (process.env.NODE_ENV !== 'production') {

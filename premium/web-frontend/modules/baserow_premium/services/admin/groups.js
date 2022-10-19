@@ -1,4 +1,4 @@
-import baseService from '@baserow_premium/crud_table/baseService'
+import baseService from '@baserow/modules/core/crud_table/baseService'
 
 export default (client) => {
   return Object.assign(baseService(client, '/admin/groups/'), {

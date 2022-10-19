@@ -153,15 +153,21 @@
             </li>
             <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
               <div class="tree__action">
-                <a class="tree__link" @click="$refs.groupMembersModal.show()">
+                <a
+                  class="tree__link"
+                  @click="
+                    $router.push({
+                      name: 'settings-members',
+                      params: {
+                        groupId: selectedGroup.id,
+                      },
+                    })
+                  "
+                >
                   <i class="tree__icon tree__icon--type fas fa-users"></i>
 
                   {{ $t('sidebar.inviteOthers') }}
                 </a>
-                <GroupMembersModal
-                  ref="groupMembersModal"
-                  :group="selectedGroup"
-                ></GroupMembersModal>
               </div>
             </li>
             <ul class="tree">
@@ -288,7 +294,6 @@ import CreateApplicationContext from '@baserow/modules/core/components/applicati
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
 import GroupContext from '@baserow/modules/core/components/group/GroupContext'
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
-import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
@@ -304,7 +309,6 @@ export default {
     GroupsContext,
     GroupContext,
     CreateGroupModal,
-    GroupMembersModal,
     TrashModal,
   },
   mixins: [editGroup, undoRedo],

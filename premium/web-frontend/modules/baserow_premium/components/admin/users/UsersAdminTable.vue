@@ -8,7 +8,7 @@
     @show-hidden-groups="displayHiddenGroups"
     @row-context="onRowContext"
   >
-    <template #header>
+    <template #header-left-side>
       <div class="crudtable__header-title">
         {{ $t('usersAdminTable.allUsers') }}
       </div>
@@ -33,13 +33,13 @@
 import UserAdminService from '@baserow_premium/services/admin/users'
 import UsernameField from '@baserow_premium/components/admin/users/fields/UsernameField'
 import UserGroupsField from '@baserow_premium/components/admin/users/fields/UserGroupsField'
-import CrudTable from '@baserow_premium/components/crud_table/CrudTable'
-import SimpleField from '@baserow_premium/components/crud_table/fields/SimpleField'
-import LocalDateField from '@baserow_premium/components/crud_table/fields/LocalDateField'
+import CrudTable from '@baserow/modules/core/components/crud_table/CrudTable'
+import SimpleField from '@baserow/modules/core/components/crud_table/fields/SimpleField'
+import LocalDateField from '@baserow/modules/core/components/crud_table/fields/LocalDateField'
 import ActiveField from '@baserow_premium/components/admin/users/fields/ActiveField'
 import EditUserContext from '@baserow_premium/components/admin/users/contexts/EditUserContext'
 import HiddenGroupsContext from '@baserow_premium/components/admin/users/contexts/HiddenGroupsContext'
-import CrudTableColumn from '@baserow_premium/crud_table/crudTableColumn'
+import CrudTableColumn from '@baserow/modules/core/crud_table/crudTableColumn'
 
 export default {
   name: 'UsersAdminTable',

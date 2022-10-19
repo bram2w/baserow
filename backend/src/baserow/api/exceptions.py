@@ -43,3 +43,15 @@ class InvalidUndoRedoActionGroupIdAPIException(APIException):
         f"An invalid {settings.CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER} header was provided. "
         f"It must be a valid Version 4 UUID.",
     )
+
+
+class InvalidSortDirectionException(Exception):
+    """
+    Raised when an invalid sort direction is provided.
+    """
+
+
+class InvalidSortAttributeException(Exception):
+    """
+    Raised when a sort is requested for an invalid or non-existent field.
+    """

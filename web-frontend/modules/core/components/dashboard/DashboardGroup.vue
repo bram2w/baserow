@@ -34,7 +34,14 @@
         <a
           v-if="group.permissions === 'ADMIN'"
           class="dashboard__group-link"
-          @click="$refs.context.showGroupMembersModal()"
+          @click="
+            $router.push({
+              name: 'settings-members',
+              params: {
+                groupId: group.id,
+              },
+            })
+          "
           >{{ $t('dashboardGroup.showMembers') }}</a
         >
       </div>

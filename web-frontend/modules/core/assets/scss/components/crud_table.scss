@@ -16,6 +16,15 @@
   border-bottom: 2px solid $color-neutral-200;
 }
 
+.crudtable__header__left-side {
+  display: flex;
+}
+
+.crudtable__header__right-side {
+  display: flex;
+  align-items: center;
+}
+
 .crudtable__header-title {
   font-weight: 600;
 }
@@ -57,6 +66,7 @@
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   overflow-x: auto;
+  overflow: unset;
   align-self: center;
   align-content: start;
 }
@@ -162,4 +172,13 @@
     @include loading(14px);
     @include absolute(50%, auto, auto, 50%);
   }
+}
+
+.crudtable__dropdown-field {
+  overflow: unset;
+  padding-top: 5px;
+}
+
+.crudtable__actions-field__link {
+  color: $color-neutral-500;
 }

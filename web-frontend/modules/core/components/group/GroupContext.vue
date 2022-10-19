@@ -9,7 +9,17 @@
         </a>
       </li>
       <li v-if="group.permissions === 'ADMIN'">
-        <a @click=";[$refs.groupMembersModal.show(), hide()]">
+        <a
+          @click="
+            $router.push({
+              name: 'settings-members',
+              params: {
+                groupId: group.id,
+              },
+            })
+            hide()
+          "
+        >
           <i class="context__menu-icon fas fa-fw fa-users"></i>
           {{ $t('groupContext.members') }}
         </a>
@@ -36,11 +46,6 @@
         </a>
       </li>
     </ul>
-    <GroupMembersModal
-      v-if="group.permissions === 'ADMIN'"
-      ref="groupMembersModal"
-      :group="group"
-    ></GroupMembersModal>
     <TrashModal
       v-if="group.permissions === 'ADMIN'"
       ref="groupTrashModal"
@@ -52,7 +57,6 @@
 </template>
 
 <script>
-import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
@@ -60,7 +64,7 @@ import LeaveGroupModal from '@baserow/modules/core/components/group/LeaveGroupMo
 
 export default {
   name: 'GroupContext',
-  components: { LeaveGroupModal, TrashModal, GroupMembersModal },
+  components: { LeaveGroupModal, TrashModal },
   mixins: [context],
   props: {
     group: {
@@ -74,14 +78,6 @@ export default {
     }
   },
   methods: {
-    showGroupMembersModal() {
-      // We need to make sure that the group members modal is rendered before we can
-      // open it.
-      this.$refs.context.forceRender()
-      this.$nextTick(() => {
-        this.$refs.groupMembersModal.show()
-      })
-    },
     showGroupTrashModal() {
       this.$refs.context.hide()
       this.$refs.groupTrashModal.show()

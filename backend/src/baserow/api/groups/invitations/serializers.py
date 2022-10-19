@@ -68,3 +68,8 @@ class UserGroupInvitationSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_email_exists(self, object):
         return object.email_exists if hasattr(object, "email_exists") else None
+
+
+class GetGroupInvitationsViewQuerySerializer(serializers.Serializer):
+    search = serializers.CharField(required=False, default=None)
+    sorts = serializers.CharField(required=False, default=None)
