@@ -1,5 +1,6 @@
 import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
 
+import { EnterpriseMembersPagePluginType } from '@baserow_enterprise/membersPagePluginTypes'
 import en from '@baserow_enterprise/locales/en.json'
 import fr from '@baserow_enterprise/locales/fr.json'
 import nl from '@baserow_enterprise/locales/nl.json'
@@ -22,4 +23,9 @@ export default (context) => {
   }
 
   registerRealtimeEvents(app.$realtime)
+
+  app.$registry.register(
+    'membersPagePlugins',
+    new EnterpriseMembersPagePluginType(context)
+  )
 }

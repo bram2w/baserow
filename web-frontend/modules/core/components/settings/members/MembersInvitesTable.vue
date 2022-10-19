@@ -76,8 +76,11 @@ export default {
         options,
       }
     },
+    membersPagePlugins() {
+      return Object.values(this.$registry.getAll('membersPagePlugins'))
+    },
     leftColumns() {
-      return [
+      let columns = [
         new CrudTableColumn(
           'email',
           this.$t('membersSettings.invitesTable.columns.email'),
@@ -87,9 +90,15 @@ export default {
           true
         ),
       ]
+      for (const plugin of this.membersPagePlugins) {
+        if (!plugin.isDeactivated()) {
+          columns = plugin.mutateMembersInvitesTableLeftColumns(columns)
+        }
+      }
+      return columns
     },
     rightColumns() {
-      return [
+      let columns = [
         new CrudTableColumn(
           'message',
           this.$t('membersSettings.invitesTable.columns.message'),
@@ -151,6 +160,12 @@ export default {
           }
         ),
       ]
+      for (const plugin of this.membersPagePlugins) {
+        if (!plugin.isDeactivated()) {
+          columns = plugin.mutateMembersInvitesTableRightColumns(columns)
+        }
+      }
+      return columns
     },
   },
   methods: {
