@@ -411,7 +411,7 @@ class SnapshotHandler:
         group = snapshot.snapshot_from_application.group
         CoreHandler().check_permissions(
             snapshot.created_by,
-            RestoreSnapshotJobType.type,
+            RestoreApplicationSnapshotOperationType.type,
             group=group,
             context=snapshot,
         )

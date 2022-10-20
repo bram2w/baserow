@@ -1,49 +1,74 @@
+import abc
+
+from baserow.contrib.database.table.operations import DatabaseTableOperationType
+from baserow.contrib.database.views.object_scopes import (
+    DatabaseViewDecorationObjectScopeType,
+    DatabaseViewFilterObjectScopeType,
+    DatabaseViewObjectScopeType,
+    DatabaseViewSortObjectScopeType,
+)
 from baserow.core.registries import OperationType
 
 
-class ViewOperationType(OperationType):
-    context_scope_name = "view"
+class ViewOperationType(OperationType, abc.ABC):
+    context_scope_name = DatabaseViewObjectScopeType.type
+
+
+class ViewFilterOperationType(OperationType, abc.ABC):
+    context_scope_name = DatabaseViewFilterObjectScopeType.type
+
+
+class ViewSortOperationType(OperationType, abc.ABC):
+    context_scope_name = DatabaseViewSortObjectScopeType.type
 
 
 class CreateViewSortOperationType(ViewOperationType):
     type = "database.table.view.create_sort"
 
 
-class ReadViewSortOperationType(ViewOperationType):
-    type = "database.table.view.read_sort"
+class ListViewSortOperationType(ViewOperationType):
+    type = "database.table.view.list_sort"
 
 
-class UpdateViewSortOperationType(ViewOperationType):
-    type = "database.table.view.update_sort"
+class ReadViewSortOperationType(ViewSortOperationType):
+    type = "database.table.view.sort.read"
 
 
-class DeleteViewSortOperationType(ViewOperationType):
-    type = "database.table.view.delete_sort"
+class UpdateViewSortOperationType(ViewSortOperationType):
+    type = "database.table.view.sort.update"
+
+
+class DeleteViewSortOperationType(ViewSortOperationType):
+    type = "database.table.view.sort.delete"
 
 
 class UpdateViewSlugOperationType(ViewOperationType):
     type = "database.table.view.update_slug"
 
 
-class ReadViewsOrderOperationType(ViewOperationType):
-    type = "database.table.view.read_order"
+class ReadViewsOrderOperationType(DatabaseTableOperationType):
+    type = "database.table.read_view_order"
 
 
-class OrderViewsOperationType(ViewOperationType):
-    type = "database.table.view.order"
+class OrderViewsOperationType(DatabaseTableOperationType):
+    type = "database.table.order_views"
 
 
-class CreateViewOperationType(ViewOperationType):
-    type = "database.table.view.create"
+class CreateViewOperationType(DatabaseTableOperationType):
+    type = "database.table.create_view"
 
 
-class ListViewsOperationType(ViewOperationType):
+class ListViewsOperationType(DatabaseTableOperationType):
     type = "database.table.list_views"
     object_scope_name = "database_views"
 
 
 class ReadViewOperationType(ViewOperationType):
     type = "database.table.view.read"
+
+
+class ReadViewFieldOptionsOperationType(ViewOperationType):
+    type = "database.table.view.read_field_options"
 
 
 class UpdateViewOperationType(ViewOperationType):
@@ -62,17 +87,45 @@ class CreateViewFilterOperationType(ViewOperationType):
     type = "database.table.view.create_filter"
 
 
-class ReadViewFilterOperationType(ViewOperationType):
-    type = "database.table.view.read_filter"
+class ListViewFilterOperationType(ViewOperationType):
+    type = "database.table.view.list_filter"
 
 
-class UpdateViewFilterOperationType(ViewOperationType):
-    type = "database.table.view.update_filter"
+class ReadViewFilterOperationType(ViewFilterOperationType):
+    type = "database.table.view.filter.read"
 
 
-class DeleteViewFilterOperationType(ViewOperationType):
-    type = "database.table.view.delete_filter"
+class UpdateViewFilterOperationType(ViewFilterOperationType):
+    type = "database.table.view.filter.update"
 
 
-class DeleteViewDecorationOperationType(ViewOperationType):
-    type = "database.table.view.delete_decoration"
+class DeleteViewFilterOperationType(ViewFilterOperationType):
+    type = "database.table.view.filter.delete"
+
+
+class CreateViewDecorationOperationType(ViewOperationType):
+    type = "database.table.view.create_decoration"
+
+
+class ListViewDecorationOperationType(ViewOperationType):
+    type = "database.table.view.list_decoration"
+
+
+class ViewDecorationOperationType(ViewOperationType, abc.ABC):
+    context_scope_name = DatabaseViewDecorationObjectScopeType.type
+
+
+class ReadViewDecorationOperationType(ViewDecorationOperationType):
+    type = "database.table.view.decoration.read"
+
+
+class UpdateViewDecorationOperationType(ViewDecorationOperationType):
+    type = "database.table.view.decoration.update"
+
+
+class DeleteViewDecorationOperationType(ViewDecorationOperationType):
+    type = "database.table.view.decoration.delete"
+
+
+class UpdateViewFieldOptionsOperationType(ViewOperationType):
+    type = "database.table.view.update_options"

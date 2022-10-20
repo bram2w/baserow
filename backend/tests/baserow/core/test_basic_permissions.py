@@ -1,3 +1,5 @@
+import inspect
+
 from django.contrib.auth.models import AnonymousUser
 from django.test.utils import override_settings
 
@@ -14,7 +16,13 @@ from baserow.core.operations import (
     ListApplicationsGroupOperationType,
     UpdateGroupOperationType,
 )
-from baserow.core.registries import permission_manager_type_registry
+from baserow.core.registries import (
+    ObjectScopeType,
+    OperationType,
+    object_scope_type_registry,
+    operation_type_registry,
+    permission_manager_type_registry,
+)
 
 
 @pytest.mark.django_db
@@ -129,3 +137,83 @@ def test_group_check_basic_permissions(data_fixture):
             allow_if_template=True,
             context=user_group.group,
         )
+
+
+@pytest.mark.django_db
+def test_all_operations_are_registered():
+    def get_all_subclasses(cls):
+        all_subclasses = []
+
+        for subclass in cls.__subclasses__():
+            if not inspect.isabstract(subclass):
+                all_subclasses.append(subclass)
+            all_subclasses.extend(get_all_subclasses(subclass))
+
+        return all_subclasses
+
+    funcs = operation_type_registry.get_all()
+    registered_operation_types = {f.type for f in funcs}
+    all_operation_types = {
+        t.type
+        for t in get_all_subclasses(OperationType)
+        if hasattr(t, "type") and t.type is not None
+    }
+    assert (
+        all_operation_types == registered_operation_types
+    ), "Please make sure the following operation " "types are added to the registry: " + str(
+        all_operation_types.difference(registered_operation_types)
+    ) + " or somehow the following operations are registered but not subclasses?: " + str(
+        registered_operation_types.difference(all_operation_types)
+    )
+
+
+@pytest.mark.django_db
+def test_all_scope_types_are_registered():
+    def get_all_subclasses(cls):
+        all_subclasses = []
+
+        for subclass in cls.__subclasses__():
+            if not inspect.isabstract(subclass):
+                all_subclasses.append(subclass)
+            all_subclasses.extend(get_all_subclasses(subclass))
+
+        return all_subclasses
+
+    funcs = object_scope_type_registry.get_all()
+    registered_operation_types = {f.type for f in funcs}
+    all_operation_types = {
+        t.type for t in get_all_subclasses(ObjectScopeType) if hasattr(t, "type")
+    }
+    assert (
+        all_operation_types == registered_operation_types
+    ), "Please make sure the following operation " "types are added to the registry: " + str(
+        all_operation_types.difference(registered_operation_types)
+    ) + " or somehow the following operations are registered but not subclasses?: " + str(
+        registered_operation_types.difference(all_operation_types)
+    )
+
+
+@pytest.mark.django_db
+def test_all_scope_types_referenced_by_operations_are_registered():
+    def get_all_subclasses(cls):
+        all_subclasses = []
+
+        for subclass in cls.__subclasses__():
+            if not inspect.isabstract(subclass):
+                all_subclasses.append(subclass)
+            all_subclasses.extend(get_all_subclasses(subclass))
+
+        return all_subclasses
+
+    funcs = object_scope_type_registry.get_all()
+    object_scope_types = {f.type for f in funcs}
+    all_op_context_types = {
+        t.context_scope_name for t in get_all_subclasses(OperationType)
+    }
+    assert (
+        all_op_context_types == object_scope_types
+    ), "Please make sure the following object_scope_types exist and are added to the " "registry: " + str(
+        all_op_context_types.difference(object_scope_types)
+    ) + " or somehow the following context types are registered but not subclasses?: " + str(
+        object_scope_types.difference(all_op_context_types)
+    )

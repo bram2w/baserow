@@ -74,6 +74,9 @@ from baserow.contrib.database.rows.actions import (
 )
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.operations import (
+    ReadAdjacentRowDatabaseRowOperationType,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
@@ -91,6 +94,7 @@ from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
+from ...table.operations import ListRowNamesDatabaseTableOperationType
 from .schemas import row_names_response_schema
 from .serializers import (
     BatchCreateRowsQueryParamsSerializer,
@@ -548,7 +552,8 @@ class RowNamesView(APIView):
         for name, value in request.GET.items():
             if not name.startswith("table__"):
                 raise QueryParameterValidationException(
-                    detail='Only table Id prefixed by "table__" are allowed as parameter.',
+                    detail='Only table Id prefixed by "table__" are allowed as '
+                    "parameter.",
                     code="invalid_parameter",
                 )
 
@@ -579,9 +584,14 @@ class RowNamesView(APIView):
             table = table_handler.get_table(table_id, base_queryset=table_queryset)
 
             if not database:
-                # Check permission once
                 database = table.database
-                database.group.has_user(request.user, raise_error=True)
+
+            CoreHandler().check_permissions(
+                request.user,
+                ListRowNamesDatabaseTableOperationType.type,
+                group=database.group,
+                context=table,
+            )
 
             token_handler.check_table_permissions(request, "read", table, False)
 
@@ -1312,7 +1322,7 @@ class RowAdjacentView(APIView):
             ),
         ],
         tags=["Database table rows"],
-        operation_id="get_database_table_row",
+        operation_id="get_adjacent_database_table_row",
         description=(
             "Fetches the adjacent row to a given row_id in the table with the "
             "given table_id. If the previous flag is set it will return the "
@@ -1356,7 +1366,12 @@ class RowAdjacentView(APIView):
         search = query_params.get("search")
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadAdjacentRowDatabaseRowOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         model = table.get_model()
         queryset = model.objects.all().enhance_by_fields()

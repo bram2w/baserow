@@ -1,8 +1,9 @@
-from baserow.core.object_scopes import GroupUserObjectScopeType
+from abc import ABC
+
 from baserow.core.registries import OperationType
 
 
-class CoreOperationType(OperationType):
+class CoreOperationType(OperationType, ABC):
     context_scope_name = "core"
 
 
@@ -19,7 +20,7 @@ class ListGroupsOperationType(CoreOperationType):
     object_scope_name = "group"
 
 
-class GroupCoreOperationType(CoreOperationType):
+class GroupCoreOperationType(CoreOperationType, ABC):
     context_scope_name = "group"
 
 
@@ -62,7 +63,7 @@ class ListGroupUsersGroupOperationType(GroupCoreOperationType):
     object_scope_name = "group_user"
 
 
-class InvitationGroupOperationType(CoreOperationType):
+class InvitationGroupOperationType(CoreOperationType, ABC):
     context_scope_name = "group_invitation"
 
 
@@ -70,24 +71,32 @@ class ReadInvitationGroupOperationType(InvitationGroupOperationType):
     type = "invitation.read"
 
 
-class UpdateGroupInvitationType(GroupCoreOperationType):
+class UpdateGroupInvitationType(InvitationGroupOperationType):
     type = "invitation.update"
 
 
-class DeleteGroupInvitationOperationType(GroupCoreOperationType):
+class DeleteGroupInvitationOperationType(InvitationGroupOperationType):
     type = "invitation.delete"
 
 
-class UpdateGroupUserOperationType(GroupUserObjectScopeType):
+class GroupUserOperationType(OperationType, ABC):
+    context_scope_name = "group_user"
+
+
+class UpdateGroupUserOperationType(GroupUserOperationType):
     type = "group_user.update"
 
 
-class DeleteGroupUserOperationType(GroupUserObjectScopeType):
+class DeleteGroupUserOperationType(GroupUserOperationType):
     type = "group_user.delete"
 
 
-class ApplicationOperationType(OperationType):
+class ApplicationOperationType(OperationType, ABC):
     context_scope_name = "application"
+
+
+class ReadApplicationOperationType(ApplicationOperationType):
+    type = "application.read"
 
 
 class UpdateApplicationOperationType(ApplicationOperationType):

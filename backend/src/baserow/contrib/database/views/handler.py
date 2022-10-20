@@ -20,10 +20,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.operations import (
-    ReadFieldOperationType,
-    UpdateFieldOptionsOperationType,
-)
+from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
@@ -39,8 +36,10 @@ from baserow.contrib.database.views.operations import (
     DuplicateViewOperationType,
     OrderViewsOperationType,
     ReadViewFilterOperationType,
+    ReadViewOperationType,
     ReadViewsOrderOperationType,
     ReadViewSortOperationType,
+    UpdateViewFieldOptionsOperationType,
     UpdateViewFilterOperationType,
     UpdateViewOperationType,
     UpdateViewSlugOperationType,
@@ -466,7 +465,7 @@ class ViewHandler:
             # some situation, we have automatic processing and we don't have any user.
             CoreHandler().check_permissions(
                 user,
-                UpdateFieldOptionsOperationType.type,
+                UpdateViewFieldOptionsOperationType.type,
                 group=view.table.database.group,
                 context=view,
             )
@@ -715,7 +714,7 @@ class ViewHandler:
             user,
             ReadViewFilterOperationType.type,
             group=group,
-            context=view_filter.view,
+            context=view_filter,
         )
 
         return view_filter
@@ -818,7 +817,7 @@ class ViewHandler:
             user,
             UpdateViewFilterOperationType.type,
             group=group,
-            context=view_filter.view,
+            context=view_filter,
         )
 
         type_name = type_name if type_name is not None else view_filter.type
@@ -867,7 +866,7 @@ class ViewHandler:
             user,
             DeleteViewFilterOperationType.type,
             group=group,
-            context=view_filter.view,
+            context=view_filter,
         )
 
         view_filter_id = view_filter.id
@@ -1002,7 +1001,7 @@ class ViewHandler:
 
         group = view_sort.view.table.database.group
         CoreHandler().check_permissions(
-            user, ReadViewSortOperationType.type, group=group, context=view_sort.view
+            user, ReadViewSortOperationType.type, group=group, context=view_sort
         )
 
         return view_sort
@@ -1104,7 +1103,7 @@ class ViewHandler:
             user, ReadFieldOperationType.type, group=group, context=field
         )
         CoreHandler().check_permissions(
-            user, UpdateViewSortOperationType.type, group=group, context=view_sort.view
+            user, UpdateViewSortOperationType.type, group=group, context=view_sort
         )
 
         # If the field has changed we need to check if the field belongs to the table.
@@ -1155,7 +1154,7 @@ class ViewHandler:
 
         group = view_sort.view.table.database.group
         CoreHandler().check_permissions(
-            user, DeleteViewSortOperationType.type, group=group, context=view_sort.field
+            user, DeleteViewSortOperationType.type, group=group, context=view_sort
         )
 
         view_sort_id = view_sort.id
@@ -1345,7 +1344,7 @@ class ViewHandler:
             user,
             DeleteViewDecorationOperationType.type,
             group=group,
-            context=view_decoration.view,
+            context=view_decoration,
         )
 
         view_decoration_id = view_decoration.id
@@ -1764,16 +1763,13 @@ class ViewHandler:
         if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist("The view does not exist.")
 
-        # TODO: RBAC - confirm that only view read permissions are necessary.
-        # user_in_group = user and CoreHandler().check_permissions(
-        #     user,
-        #     ReadViewOperationType.type,
-        #     group=view.table.database.group,
-        #     context=view,
-        #     raise_error=False,
-        # )
-        # TODO: RBAC - requires attention
-        user_in_group = user and view.table.database.group.has_user(user)
+        user_in_group = user and CoreHandler().check_permissions(
+            user,
+            ReadViewOperationType.type,
+            group=view.table.database.group,
+            context=view,
+            raise_error=False,
+        )
         if not user_in_group:
             if not view.public:
                 raise ViewDoesNotExist("The view does not exist.")

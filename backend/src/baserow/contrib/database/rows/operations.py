@@ -1,12 +1,22 @@
+import abc
+
 from baserow.contrib.database.operations import DatabaseOperationType
 
 
-class DatabaseRowOperationType(DatabaseOperationType):
-    context_scope_name = "database_row"
+class DatabaseRowOperationType(DatabaseOperationType, abc.ABC):
+    context_scope_name = "database_table"
 
 
 class ReadDatabaseRowOperationType(DatabaseRowOperationType):
     type = "database.table.read_row"
+
+
+class ReadAdjacentRowDatabaseRowOperationType(DatabaseRowOperationType):
+    type = "database.table.read_adjacent_row"
+
+
+class MoveRowDatabaseRowOperationType(DatabaseRowOperationType):
+    type = "database.table.move_row"
 
 
 class UpdateDatabaseRowOperationType(DatabaseRowOperationType):

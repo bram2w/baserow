@@ -62,6 +62,7 @@ from baserow.contrib.database.formula import (
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
+from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser, UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
@@ -119,6 +120,7 @@ from .models import (
     TextField,
     URLField,
 )
+from .operations import CreateFieldOperationType
 from .registries import (
     FieldType,
     ReadOnlyFieldType,
@@ -1381,7 +1383,12 @@ class LinkRowFieldType(FieldType):
 
         if isinstance(link_row_table_id, int):
             table = TableHandler().get_table(link_row_table_id)
-            table.database.group.has_user(user, raise_error=True)
+            CoreHandler().check_permissions(
+                user,
+                CreateFieldOperationType.type,
+                group=table.database.group,
+                context=table,
+            )
             values["link_row_table"] = table
 
         return values

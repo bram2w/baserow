@@ -75,6 +75,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.job_types import DuplicateFieldJobType
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import (
+    CreateFieldOperationType,
     ListFieldsOperationType,
     ReadFieldOperationType,
 )
@@ -263,7 +264,12 @@ class FieldsView(APIView):
         table = TableHandler().get_table_for_update(
             table_id, nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
         )
-        table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            CreateFieldOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         # field_create permission doesn't exists, so any call of this endpoint with a
         # token will be rejected.

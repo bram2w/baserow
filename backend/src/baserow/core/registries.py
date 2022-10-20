@@ -1,9 +1,9 @@
+import abc
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
-from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import Storage
 from django.db.models import QuerySet
 from django.db.transaction import Atomic
@@ -403,7 +403,7 @@ class PermissionManagerType(Instance):
         return queryset
 
 
-class PermissionManagerTypeRegistry(Registry):
+class PermissionManagerTypeRegistry(Registry[PermissionManagerType]):
     """
     This registry contains all the permission manager used to handle permissions in
     Baserow. A permission manager must then be listed in the
@@ -460,7 +460,7 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         raise NotImplementedError("Must be implemented by the specific type")
 
 
-class ObjectScopeTypeRegistry(Registry, ModelRegistryMixin):
+class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     """
     This registry contains all `ObjectScopeType`. It also proposes a set of methods
     useful to go through the full object/scope hierarchy.
@@ -540,7 +540,7 @@ class ObjectScopeTypeRegistry(Registry, ModelRegistryMixin):
     already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
 
 
-class OperationType(Instance):
+class OperationType(abc.ABC, Instance):
     """
     An `OperationType` represent an `Operation` an actor can do on a `ContextObject`.
 
@@ -552,14 +552,29 @@ class OperationType(Instance):
     permission manager.
     """
 
-    context_scope_name: str
-    object_scope_name: Optional[str] = None
+    @classmethod
+    @property
+    @abc.abstractmethod
+    def type(cls) -> str:
+        """
+        Should be a unique lowercase string used to identify this type.
+        """
 
-    def __init__(self):
-        if self.context_scope_name is None:
-            raise ImproperlyConfigured(
-                "An OperationType must define a context_scope_name"
-            )
+        pass
+
+    @classmethod
+    @property
+    @abc.abstractmethod
+    def context_scope_name(cls) -> str:
+        """
+        An operation is executed on a context in Baserow. For example the list_fields
+        operation is executed on a table as it's context. Provide the context_scope_name
+        here which matches a ObjectScopeType in the object_scope_type_registry.
+        """
+
+        pass
+
+    object_scope_name: Optional[str] = None
 
     @cached_property
     def context_scope(self) -> ObjectScopeType:
@@ -583,7 +598,7 @@ class OperationType(Instance):
             return self.context_scope
 
 
-class OperationTypeRegistry(Registry):
+class OperationTypeRegistry(Registry[OperationType]):
     """
     Contains all the registered operation. For each registered operation, an Operation
     object is created in the database.
@@ -602,6 +617,8 @@ class OperationTypeRegistry(Registry):
 plugin_registry = PluginRegistry()
 application_type_registry = ApplicationTypeRegistry()
 
-permission_manager_type_registry = PermissionManagerTypeRegistry()
-object_scope_type_registry = ObjectScopeTypeRegistry()
-operation_type_registry = OperationTypeRegistry()
+permission_manager_type_registry: PermissionManagerTypeRegistry = (
+    PermissionManagerTypeRegistry()
+)
+object_scope_type_registry: ObjectScopeTypeRegistry = ObjectScopeTypeRegistry()
+operation_type_registry: OperationTypeRegistry = OperationTypeRegistry()

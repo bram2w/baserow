@@ -11,8 +11,10 @@ from baserow.contrib.database.db.atomic import (
 from baserow.contrib.database.fields.actions import DuplicateFieldActionType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DuplicateFieldJob
+from baserow.contrib.database.fields.operations import DuplicateFieldOperationType
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 
 
@@ -52,7 +54,12 @@ class DuplicateFieldJobType(JobType):
     def prepare_values(self, values, user):
 
         field = FieldHandler().get_field(values["field_id"])
-        field.table.database.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DuplicateFieldOperationType.type,
+            group=field.table.database.group,
+            context=field,
+        )
 
         return {
             "original_field": field,

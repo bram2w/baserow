@@ -29,6 +29,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 from baserow.core.models import Application, DuplicateApplicationJob, InstallTemplateJob
+from baserow.core.operations import CreateApplicationsGroupOperationType
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
 
@@ -133,7 +134,9 @@ class InstallTemplateJobType(JobType):
 
         handler = CoreHandler()
         group = handler.get_group(values["group_id"])
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateApplicationsGroupOperationType.type, group=group, context=group
+        )
 
         # ensure everything is ok for the installation, otherwise
         # raise an exception immediately without submitting the job

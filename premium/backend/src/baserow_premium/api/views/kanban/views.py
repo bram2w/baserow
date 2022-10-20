@@ -23,6 +23,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
@@ -30,6 +31,7 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 
 from .errors import (
     ERROR_INVALID_SELECT_OPTION_PARAMETER,
@@ -135,7 +137,13 @@ class KanbanViewView(APIView):
         if not group.has_template():
             check_active_premium_license_for_group(request.user, group)
 
-        group.has_user(request.user, raise_error=True, allow_if_template=True)
+        CoreHandler().check_permissions(
+            request.user,
+            ListRowsDatabaseTableOperationType.type,
+            group=group,
+            context=view.table,
+            allow_if_template=True,
+        )
         single_select_option_field = view.single_select_field
 
         if not single_select_option_field:

@@ -190,3 +190,9 @@ class LockConflict(Exception):
     Generic base class used for exceptions raised when an operation fails as part of
     Baserow has been locked for some operation.
     """
+
+
+class InvalidPermissionContext(Exception):
+    """
+    Used when an invalid context is passed to a permission checker.
+    """

@@ -44,6 +44,7 @@ class CoreConfig(AppConfig):
             CoreObjectScopeType,
             GroupInvitationObjectScopeType,
             GroupObjectScopeType,
+            GroupUserObjectScopeType,
         )
         from .snapshots.object_scopes import SnapshotObjectScopeType
 
@@ -52,6 +53,7 @@ class CoreConfig(AppConfig):
         object_scope_type_registry.register(GroupObjectScopeType())
         object_scope_type_registry.register(GroupInvitationObjectScopeType())
         object_scope_type_registry.register(SnapshotObjectScopeType())
+        object_scope_type_registry.register(GroupUserObjectScopeType())
 
         from .operations import (
             CreateApplicationsGroupOperationType,
@@ -67,12 +69,14 @@ class CoreConfig(AppConfig):
             ListGroupUsersGroupOperationType,
             ListInvitationsGroupOperationType,
             OrderApplicationsOperationType,
+            ReadApplicationOperationType,
             ReadGroupOperationType,
             ReadInvitationGroupOperationType,
             UpdateApplicationOperationType,
             UpdateGroupInvitationType,
             UpdateGroupOperationType,
             UpdateGroupUserOperationType,
+            UpdateSettingsOperationType,
         )
         from .snapshots.operations import (
             CreateSnapshotApplicationOperationType,
@@ -100,10 +104,12 @@ class CoreConfig(AppConfig):
         operation_type_registry.register(UpdateApplicationOperationType())
         operation_type_registry.register(DuplicateApplicationOperationType())
         operation_type_registry.register(DeleteApplicationOperationType())
+        operation_type_registry.register(UpdateSettingsOperationType())
         operation_type_registry.register(CreateSnapshotApplicationOperationType())
         operation_type_registry.register(DeleteApplicationSnapshotOperationType())
         operation_type_registry.register(ListSnapshotsApplicationOperationType())
         operation_type_registry.register(RestoreApplicationSnapshotOperationType())
+        operation_type_registry.register(ReadApplicationOperationType())
 
         from baserow.core.actions import (
             CreateApplicationActionType,
