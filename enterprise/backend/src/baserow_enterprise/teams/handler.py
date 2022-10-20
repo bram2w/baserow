@@ -116,8 +116,6 @@ class TeamHandler:
         Updates an existing team instance.
         """
 
-        team.group.has_user(user, raise_error=True)
-
         team.name = name
         team.save()
 
@@ -141,8 +139,6 @@ class TeamHandler:
 
         if not isinstance(team, Team):
             raise ValueError("The team is not an instance of Team.")
-
-        team.group.has_user(user, "ADMIN", raise_error=True)
 
         TrashHandler.trash(user, team.group, None, team)
 

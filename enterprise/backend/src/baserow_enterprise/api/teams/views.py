@@ -21,6 +21,17 @@ from baserow_enterprise.teams.actions import (
 )
 from baserow_enterprise.teams.exceptions import UserNotInTeam
 from baserow_enterprise.teams.handler import TeamHandler
+from baserow_enterprise.teams.operations import (
+    CreateTeamOperationType,
+    CreateTeamSubjectOperationType,
+    DeleteTeamOperationType,
+    DeleteTeamSubjectOperationType,
+    ListTeamsOperationType,
+    ListTeamSubjectsOperationType,
+    ReadTeamOperationType,
+    ReadTeamSubjectOperationType,
+    UpdateTeamOperationType,
+)
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
@@ -28,8 +39,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.core.action.registries import action_type_registry
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 
 
@@ -53,6 +66,14 @@ class TeamsView(APIView):
     def get(self, request, group_id: int):
         """Responds with a list of teams in a specific group."""
 
+        group = CoreHandler().get_group(group_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ListTeamsOperationType.type,
+            group=group,
+            context=group,
+        )
+
         teams = TeamHandler().list_teams_in_group(group_id)
         serializer = TeamResponseSerializer(teams, many=True)
         return Response(serializer.data)
@@ -75,7 +96,13 @@ class TeamsView(APIView):
         """Creates a new team for a user."""
 
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            CreateTeamOperationType.type,
+            group=group,
+            context=group,
+        )
+
         team = action_type_registry.get_by_type(CreateTeamActionType).do(
             request.user, data["name"], group
         )
@@ -113,6 +140,13 @@ class TeamView(APIView):
         """Responds with a single team."""
 
         team = TeamHandler().get_team(team_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadTeamOperationType.type,
+            group=team.group,
+            context=team,
+        )
+
         serializer = TeamResponseSerializer(team)
         return Response(serializer.data)
 
@@ -122,7 +156,10 @@ class TeamView(APIView):
         operation_id="update_team",
         description=("Updates an existing team with a new name."),
         request=TeamSerializer,
-        responses={200: TeamResponseSerializer},
+        responses={
+            200: TeamResponseSerializer,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+        },
     )
     @transaction.atomic
     @validate_body(TeamSerializer)
@@ -130,12 +167,19 @@ class TeamView(APIView):
         {
             TeamDoesNotExist: ERROR_TEAM_DOES_NOT_EXIST,
             UserNotInTeam: ERROR_USER_NOT_IN_TEAM,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def patch(self, request, data, team_id: int):
         """Updates the team if the user belongs to the group."""
 
         team = TeamHandler().get_team_for_update(team_id)
+        CoreHandler().check_permissions(
+            request.user,
+            UpdateTeamOperationType.type,
+            group=team.group,
+            context=team,
+        )
 
         team = action_type_registry.get_by_type(UpdateTeamActionType).do(
             request.user, team, name=data["name"]
@@ -162,7 +206,11 @@ class TeamView(APIView):
         responses={
             204: None,
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_TEAM", "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM"]
+                [
+                    "ERROR_USER_NOT_IN_TEAM",
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM",
+                ]
             ),
             404: get_error_schema(["ERROR_TEAM_DOES_NOT_EXIST"]),
         },
@@ -172,12 +220,19 @@ class TeamView(APIView):
         {
             TeamDoesNotExist: ERROR_TEAM_DOES_NOT_EXIST,
             UserNotInTeam: ERROR_USER_NOT_IN_TEAM,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def delete(self, request, team_id: int):
         """Deletes an existing team if the user belongs to the group."""
 
         team = TeamHandler().get_team_for_update(team_id)
+        CoreHandler().check_permissions(
+            request.user,
+            DeleteTeamOperationType.type,
+            group=team.group,
+            context=team,
+        )
 
         action_type_registry.get_by_type(DeleteTeamActionType).do(request.user, team)
 
@@ -196,6 +251,14 @@ class TeamSubjectsView(APIView):
     def get(self, request, team_id: int):
         """Responds with a list of team subjects in a specific team."""
 
+        team = TeamHandler().get_team(team_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ListTeamSubjectsOperationType.type,
+            group=team.group,
+            context=team,
+        )
+
         subjects = TeamHandler().list_subjects_in_team(team_id)
         serializer = TeamSubjectResponseSerializer(subjects, many=True)
         return Response(serializer.data)
@@ -212,11 +275,18 @@ class TeamSubjectsView(APIView):
     @validate_body(TeamSubjectSerializer)
     def post(self, request, team_id: int, data):
 
+        team = TeamHandler().get_team(team_id)
+        CoreHandler().check_permissions(
+            request.user,
+            CreateTeamSubjectOperationType.type,
+            group=team.group,
+            context=team,
+        )
+
         subject_lookup = {"id": data["subject_id"]}
         if data["subject_user_email"]:
             subject_lookup = {"email": data["subject_user_email"]}
 
-        team = TeamHandler().get_team(team_id)
         subject = action_type_registry.get_by_type(CreateTeamSubjectActionType).do(
             request.user, subject_lookup, data["subject_type"], team
         )
@@ -247,7 +317,15 @@ class TeamSubjectView(APIView):
     def get(self, request, team_id: int, subject_id: int):
         """Responds with a single subject."""
 
+        team = TeamHandler().get_team(team_id)
         subject = TeamHandler().get_subject(subject_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadTeamSubjectOperationType.type,
+            group=team.group,
+            context=subject,
+        )
+
         serializer = TeamSubjectResponseSerializer(subject)
         return Response(serializer.data)
 
@@ -284,7 +362,14 @@ class TeamSubjectView(APIView):
     def delete(self, request, team_id: int, subject_id: int):
         """Deletes an existing team subject if the user belongs to the group."""
 
+        team = TeamHandler().get_team(team_id)
         subject = TeamHandler().get_subject_for_update(subject_id)
+        CoreHandler().check_permissions(
+            request.user,
+            DeleteTeamSubjectOperationType.type,
+            group=team.group,
+            context=subject,
+        )
 
         action_type_registry.get_by_type(DeleteTeamSubjectActionType).do(
             request.user, subject
