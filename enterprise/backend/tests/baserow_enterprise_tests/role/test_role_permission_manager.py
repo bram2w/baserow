@@ -1,4 +1,5 @@
 import pytest
+from baserow_enterprise.role.default_roles import default_roles
 from baserow_enterprise.role.permission_manager import RolePermissionManagerType
 
 from baserow.contrib.database.models import Database
@@ -21,11 +22,15 @@ from baserow.contrib.database.table.operations import (
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.operations import (
+    CreateGroupOperationType,
     DeleteGroupOperationType,
+    ListGroupsOperationType,
     ReadApplicationOperationType,
     ReadGroupOperationType,
     UpdateGroupOperationType,
+    UpdateSettingsOperationType,
 )
+from baserow.core.registries import operation_type_registry
 
 
 def _populate_test_data(data_fixture, enterprise_data_fixture):
@@ -687,3 +692,26 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     )
 
     assert list(builder_table_queryset) == [table_2_1]
+
+
+@pytest.mark.django_db
+def test_all_operations_are_in_at_least_one_default_role(data_fixture):
+    exceptions = [
+        CreateGroupOperationType.type,
+        ListGroupsOperationType.type,
+        UpdateSettingsOperationType.type,
+    ]
+
+    all_ops_in_roles = set()
+    for ops in default_roles.values():
+        all_ops_in_roles.update([o.type for o in ops])
+
+    all_ops = set(operation_type_registry.get_all())
+
+    missing_ops = []
+    for op in all_ops:
+        if op.type not in all_ops_in_roles and op.type not in exceptions:
+            missing_ops.append(op)
+    assert missing_ops == [], "Non Assigned " "Ops:\n" + str(
+        "\n".join([o.__class__.__name__ + "," for o in missing_ops])
+    )
