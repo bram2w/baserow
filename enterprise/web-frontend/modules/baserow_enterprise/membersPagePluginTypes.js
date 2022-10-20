@@ -24,22 +24,24 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
     const existingRoleColumnIndex = columns.findIndex(
       (column) => column.key === 'permissions'
     )
-    columns[existingRoleColumnIndex] = new CrudTableColumn(
-      'permissions', // TODO use the key that holds the RBAC role data in the response
-      this.app.i18n.t('membersSettings.membersTable.columns.role'),
-      DropdownField,
-      'min-content',
-      '3fr',
-      true,
-      {
-        options: roles.map(({ name, uid }) => ({
-          value: uid,
-          name,
-        })),
-        // disabled: (row) => row.user_id === this.userId,
-        inputCallback: () => console.log('implement me'), // TODO update role
-      }
-    )
+    if (existingRoleColumnIndex !== -1) {
+      columns[existingRoleColumnIndex] = new CrudTableColumn(
+        'permissions', // TODO use the key that holds the RBAC role data in the response
+        this.app.i18n.t('membersSettings.membersTable.columns.role'),
+        DropdownField,
+        'min-content',
+        '3fr',
+        true,
+        {
+          options: roles.map(({ name, uid }) => ({
+            value: uid,
+            name,
+          })),
+          // disabled: (row) => row.user_id === this.userId,
+          inputCallback: () => console.log('implement me'), // TODO update role
+        }
+      )
+    }
     return columns
   }
 }
