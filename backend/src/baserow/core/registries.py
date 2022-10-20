@@ -325,7 +325,7 @@ class PermissionManagerType(Instance):
     ) -> Optional[Boolean]:
         """
         This method is called each time a permission on an operation is checked by the
-        `CoreHandler().check_permission()` method if the current permission manager is
+        `CoreHandler().check_permissions()` method if the current permission manager is
         listed in the `settings.PERMISSION_MANAGERS` list.
 
         It should:

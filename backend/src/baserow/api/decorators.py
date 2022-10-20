@@ -149,7 +149,7 @@ def validate_query_parameters(
     return validate_decorator
 
 
-def validate_body(serializer_class, partial=False):
+def validate_body(serializer_class, partial=False, return_validated=False):
     """
     This decorator can validate the request body using a serializer. If the body is
     valid it will add the data to the kwargs. If not it will raise an APIException with
@@ -192,7 +192,12 @@ def validate_body(serializer_class, partial=False):
             if "data" in kwargs:
                 raise ValueError("The data attribute is already in the kwargs.")
 
-            kwargs["data"] = validate_data(serializer_class, request.data, partial)
+            kwargs["data"] = validate_data(
+                serializer_class,
+                request.data,
+                partial,
+                return_validated=return_validated,
+            )
             return func(*args, **kwargs)
 
         return func_wrapper
