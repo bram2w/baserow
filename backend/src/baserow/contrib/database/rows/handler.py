@@ -39,6 +39,7 @@ from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .operations import (
     DeleteDatabaseRowOperationType,
+    MoveRowDatabaseRowOperationType,
     ReadDatabaseRowOperationType,
     UpdateDatabaseRowOperationType,
 )
@@ -1574,7 +1575,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            MoveRowDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()

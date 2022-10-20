@@ -1,5 +1,5 @@
-from baserow.contrib.database.operations import DatabaseOperationType
+from baserow.contrib.database.table.operations import DatabaseTableOperationType
 
 
-class ExportTableOperationType(DatabaseOperationType):
-    type = "database.table.export.run"
+class ExportTableOperationType(DatabaseTableOperationType):
+    type = "database.table.run_export"

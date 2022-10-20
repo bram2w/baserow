@@ -402,6 +402,22 @@ class ModelRegistryMixin(Generic[P, T]):
             f"The {self.name} model instance {model_instance} does not exist."
         )
 
+    def get_all_by_model_isinstance(self, model_instance: P) -> List[T]:
+        """
+        Returns all registered types which are an instance of the provided
+        model_instance.
+        """
+
+        all_matching_non_abstract_types = []
+        for value in self.registry.values():
+            value_model_class = value.model_class
+            if value_model_class == model_instance or isinstance(
+                model_instance, value_model_class
+            ):
+                all_matching_non_abstract_types.append(value)
+
+        return all_matching_non_abstract_types
+
 
 class CustomFieldsRegistryMixin:
     def get_serializer(self, model_instance, base_class=None, context=None, **kwargs):

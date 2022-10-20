@@ -42,6 +42,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
@@ -55,6 +56,7 @@ from baserow.contrib.database.views.registries import (
     view_type_registry,
 )
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 
 from .errors import ERROR_GALLERY_DOES_NOT_EXIST
 from .pagination import GalleryLimitOffsetPagination
@@ -150,8 +152,13 @@ class GalleryViewView(APIView):
         view = view_handler.get_view(view_id, GalleryView)
         view_type = view_type_registry.get_by_model(view)
 
-        view.table.database.group.has_user(
-            request.user, raise_error=True, allow_if_template=True
+        group = view.table.database.group
+        CoreHandler().check_permissions(
+            request.user,
+            ListRowsDatabaseTableOperationType.type,
+            group=group,
+            context=view.table,
+            allow_if_template=True,
         )
 
         search = request.GET.get("search")

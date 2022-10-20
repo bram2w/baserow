@@ -4,18 +4,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import ProgrammingError
 from django.db.models.signals import post_migrate, pre_migrate
 
-from baserow.contrib.database.fields.operations import (
-    CreateFieldOperationType,
-    DeleteFieldOperationType,
-    DuplicateFieldOperationType,
-    ReadFieldOperationType,
-    UpdateFieldOperationType,
-)
 from baserow.contrib.database.table.cache import clear_generated_model_cache
-from baserow.contrib.database.views.operations import (
-    DeleteViewDecorationOperationType,
-    UpdateViewSortOperationType,
-)
 from baserow.core.registries import (
     application_type_registry,
     object_scope_type_registry,
@@ -453,12 +442,39 @@ class DatabaseConfig(AppConfig):
         from .fields.object_scopes import FieldObjectScopeType
         from .object_scopes import DatabaseObjectScopeType
         from .table.object_scopes import DatabaseTableObjectScopeType
+        from .tokens.object_scopes import TokenObjectScopeType
+        from .views.object_scopes import (
+            DatabaseViewDecorationObjectScopeType,
+            DatabaseViewFilterObjectScopeType,
+            DatabaseViewObjectScopeType,
+            DatabaseViewSortObjectScopeType,
+        )
 
         object_scope_type_registry.register(DatabaseObjectScopeType())
         object_scope_type_registry.register(DatabaseTableObjectScopeType())
         object_scope_type_registry.register(FieldObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewDecorationObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewSortObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewFilterObjectScopeType())
+        object_scope_type_registry.register(TokenObjectScopeType())
 
-        from .fields.operations import UpdateFieldOptionsOperationType
+        from baserow.contrib.database.views.operations import (
+            UpdateViewFieldOptionsOperationType,
+        )
+
+        from .airtable.operations import RunAirtableImportJobOperationType
+        from .export.operations import ExportTableOperationType
+        from .fields.operations import (
+            CreateFieldOperationType,
+            DeleteFieldOperationType,
+            DuplicateFieldOperationType,
+            ListFieldsOperationType,
+            ReadAggregationDatabaseTableOperationType,
+            ReadFieldOperationType,
+            UpdateFieldOperationType,
+        )
+        from .formula import TypeFormulaOperationType
         from .operations import (
             CreateTableDatabaseTableOperationType,
             ListTablesDatabaseTableOperationType,
@@ -466,6 +482,8 @@ class DatabaseConfig(AppConfig):
         )
         from .rows.operations import (
             DeleteDatabaseRowOperationType,
+            MoveRowDatabaseRowOperationType,
+            ReadAdjacentRowDatabaseRowOperationType,
             ReadDatabaseRowOperationType,
             UpdateDatabaseRowOperationType,
         )
@@ -474,26 +492,44 @@ class DatabaseConfig(AppConfig):
             DeleteDatabaseTableOperationType,
             DuplicateDatabaseTableOperationType,
             ImportRowsDatabaseTableOperationType,
+            ListAggregationDatabaseTableOperationType,
+            ListenToAllDatabaseTableEventsOperationType,
+            ListRowNamesDatabaseTableOperationType,
             ListRowsDatabaseTableOperationType,
             ReadDatabaseTableOperationType,
             UpdateDatabaseTableOperationType,
         )
+        from .tokens.operations import (
+            CreateTokenOperationType,
+            ReadTokenOperationType,
+            UseTokenOperationType,
+        )
         from .views.operations import (
+            CreateViewDecorationOperationType,
             CreateViewFilterOperationType,
             CreateViewOperationType,
             CreateViewSortOperationType,
+            DeleteViewDecorationOperationType,
             DeleteViewFilterOperationType,
             DeleteViewOperationType,
             DeleteViewSortOperationType,
             DuplicateViewOperationType,
+            ListViewDecorationOperationType,
+            ListViewFilterOperationType,
+            ListViewsOperationType,
+            ListViewSortOperationType,
             OrderViewsOperationType,
+            ReadViewDecorationOperationType,
+            ReadViewFieldOptionsOperationType,
             ReadViewFilterOperationType,
             ReadViewOperationType,
             ReadViewsOrderOperationType,
             ReadViewSortOperationType,
+            UpdateViewDecorationOperationType,
             UpdateViewFilterOperationType,
             UpdateViewOperationType,
             UpdateViewSlugOperationType,
+            UpdateViewSortOperationType,
         )
         from .webhooks.operations import (
             CreateWebhookOperationType,
@@ -525,7 +561,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(UpdateFieldOperationType())
         operation_type_registry.register(DeleteFieldOperationType())
         operation_type_registry.register(DuplicateFieldOperationType())
-        operation_type_registry.register(UpdateFieldOptionsOperationType())
+        operation_type_registry.register(UpdateViewFieldOptionsOperationType())
         operation_type_registry.register(DeleteViewSortOperationType())
         operation_type_registry.register(UpdateViewSlugOperationType())
         operation_type_registry.register(ReadViewsOrderOperationType())
@@ -546,6 +582,27 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ListTableWebhooksOperationType())
         operation_type_registry.register(TestTriggerWebhookOperationType())
         operation_type_registry.register(UpdateWebhookOperationType())
+        operation_type_registry.register(RunAirtableImportJobOperationType())
+        operation_type_registry.register(TypeFormulaOperationType())
+        operation_type_registry.register(ListRowNamesDatabaseTableOperationType())
+        operation_type_registry.register(ReadAdjacentRowDatabaseRowOperationType())
+        operation_type_registry.register(ReadAggregationDatabaseTableOperationType())
+        operation_type_registry.register(ListAggregationDatabaseTableOperationType())
+        operation_type_registry.register(ExportTableOperationType())
+        operation_type_registry.register(ListFieldsOperationType())
+        operation_type_registry.register(ListViewsOperationType())
+        operation_type_registry.register(ListViewFilterOperationType())
+        operation_type_registry.register(ListViewDecorationOperationType())
+        operation_type_registry.register(CreateViewDecorationOperationType())
+        operation_type_registry.register(ReadViewDecorationOperationType())
+        operation_type_registry.register(UpdateViewDecorationOperationType())
+        operation_type_registry.register(ListViewSortOperationType())
+        operation_type_registry.register(ReadViewFieldOptionsOperationType())
+        operation_type_registry.register(MoveRowDatabaseRowOperationType())
+        operation_type_registry.register(CreateTokenOperationType())
+        operation_type_registry.register(ReadTokenOperationType())
+        operation_type_registry.register(ListenToAllDatabaseTableEventsOperationType())
+        operation_type_registry.register(UseTokenOperationType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

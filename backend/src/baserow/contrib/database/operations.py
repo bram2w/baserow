@@ -1,7 +1,9 @@
+from abc import ABCMeta
+
 from baserow.core.registries import OperationType
 
 
-class DatabaseOperationType(OperationType):
+class DatabaseOperationType(OperationType, metaclass=ABCMeta):
     context_scope_name = "database"
 
 

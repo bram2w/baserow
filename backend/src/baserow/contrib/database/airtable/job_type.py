@@ -11,6 +11,9 @@ from baserow.contrib.database.airtable.exceptions import (
 )
 from baserow.contrib.database.airtable.handler import AirtableHandler
 from baserow.contrib.database.airtable.models import AirtableImportJob
+from baserow.contrib.database.airtable.operations import (
+    RunAirtableImportJobOperationType,
+)
 from baserow.contrib.database.airtable.utils import extract_share_id_from_url
 from baserow.contrib.database.airtable.validators import is_publicly_shared_airtable_url
 from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
@@ -89,7 +92,9 @@ class AirtableImportJobType(JobType):
     def prepare_values(self, values, user):
 
         group = CoreHandler().get_group(values.pop("group_id"))
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, RunAirtableImportJobOperationType.type, group=group, context=group
+        )
 
         airtable_share_id = extract_share_id_from_url(values["airtable_share_url"])
         timezone = values.get("timezone")
