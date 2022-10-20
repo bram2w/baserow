@@ -11,3 +11,14 @@ class FieldObjectScopeType(ObjectScopeType):
 
     def get_parent(self, context):
         return context.table
+
+    def get_all_context_objects_in_scope(self, scope):
+        if object_scope_type_registry.get_by_model(scope).type == "group":
+            return Field.objects.filter(table__database__group=scope)
+        if object_scope_type_registry.get_by_model(scope).type == "database":
+            return Field.objects.filter(table__database=scope)
+        if object_scope_type_registry.get_by_model(scope).type == "table":
+            return Field.objects.filter(table=scope)
+        if object_scope_type_registry.get_by_model(scope).type == "field":
+            return [scope]
+        return []

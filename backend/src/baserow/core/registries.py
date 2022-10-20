@@ -457,7 +457,9 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         :return: An iterable containing the context objects for the given scope.
         """
 
-        raise NotImplementedError("Must be implemented by the specific type")
+        raise NotImplementedError(
+            f"Must be implemented by the specific type <{self.type}>"
+        )
 
 
 class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
