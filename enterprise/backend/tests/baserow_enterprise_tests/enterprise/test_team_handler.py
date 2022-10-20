@@ -11,8 +11,6 @@ from baserow_enterprise.exceptions import (
 from baserow_enterprise.models import Team
 from baserow_enterprise.teams.handler import TeamHandler
 
-from baserow.core.exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
-
 
 @pytest.mark.django_db
 def test_create_team(data_fixture):
@@ -44,7 +42,7 @@ def test_list_teams_in_group(data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_team_as_group_member(data_fixture, enterprise_data_fixture):
+def test_update_team_name(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     team = enterprise_data_fixture.create_team(name="Engineering", group=group)
@@ -53,31 +51,12 @@ def test_update_team_as_group_member(data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_team_not_as_group_member(data_fixture, enterprise_data_fixture):
-    user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    team = enterprise_data_fixture.create_team(name="Engineering", group=group)
-    with pytest.raises(UserNotInGroup):
-        TeamHandler().update_team(user, team, "Sales")
-
-
-@pytest.mark.django_db
-def test_delete_team_as_group_admin(data_fixture, enterprise_data_fixture):
+def test_delete_team(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group()
     data_fixture.create_user_group(group=group, user=user, permissions="ADMIN")
     team = enterprise_data_fixture.create_team(name="Engineering", group=group)
     TeamHandler().delete_team(user, team)
-
-
-@pytest.mark.django_db
-def test_delete_team_not_as_group_admin(data_fixture, enterprise_data_fixture):
-    user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    data_fixture.create_user_group(group=group, user=user, permissions="MEMBER")
-    team = enterprise_data_fixture.create_team(name="Engineering", group=group)
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        TeamHandler().delete_team(user, team)
 
 
 @patch(

@@ -4,6 +4,7 @@ import pytest
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
     HTTP_405_METHOD_NOT_ALLOWED,
 )
 
@@ -89,6 +90,25 @@ def test_patch_team(api_client, data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
+def test_patch_team_not_as_group_member(
+    api_client, data_fixture, enterprise_data_fixture
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    group = data_fixture.create_group()
+    sales = enterprise_data_fixture.create_team(name="Sales", group=group)
+
+    response = api_client.patch(
+        reverse("api:enterprise:teams:item", kwargs={"team_id": sales.id}),
+        {"name": "Engineering"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
 def test_delete_team(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -101,6 +121,23 @@ def test_delete_team(api_client, data_fixture, enterprise_data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db
+def test_delete_team_not_as_group_member(
+    api_client, data_fixture, enterprise_data_fixture
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    group = data_fixture.create_group()
+    team = enterprise_data_fixture.create_team(group=group)
+
+    response = api_client.delete(
+        reverse("api:enterprise:teams:item", kwargs={"team_id": team.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
