@@ -151,7 +151,10 @@
                 ></GroupContext>
               </div>
             </li>
-            <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
+            <li
+              v-if="$hasPermission('group.create_invitation', selectedGroup)"
+              class="tree__item"
+            >
               <div class="tree__action">
                 <a
                   class="tree__link"
@@ -196,6 +199,7 @@
             </ul>
             <li class="sidebar__new-wrapper">
               <a
+                v-if="$hasPermission('application.create', group)"
                 ref="createApplicationContextLink"
                 class="sidebar__new"
                 @click="

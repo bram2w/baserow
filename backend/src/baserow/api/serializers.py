@@ -47,3 +47,28 @@ def get_example_pagination_serializer_class(
         (serializers.Serializer,),
         fields,
     )
+
+
+class NaturalKeyRelatedField(serializers.ListField):
+    """
+    A related field that use the natural key instead of the Id to reference the object.
+    """
+
+    def __init__(self, model=None, **kwargs):
+        self._model = model
+        super().__init__(**kwargs)
+
+    def to_representation(self, value):
+        representation = super().to_representation(value.natural_key())
+
+        if len(representation) == 1:
+            return representation[0]
+        else:
+            return representation
+
+    def to_internal_value(self, data):
+        if not isinstance(data, list):
+            data = [data]
+
+        natural_key = super().to_internal_value(data)
+        return self._model.objects.get_by_natural_key(*natural_key)

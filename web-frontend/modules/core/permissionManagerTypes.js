@@ -54,7 +54,7 @@ export class BasicPermissionManagerType extends PermissionManagerType {
 
   hasPermission(permissions, operation, context) {
     // Is it an admin only operation?
-    if (permissions.admin_only_operation.includes(operation)) {
+    if (permissions.admin_only_operations.includes(operation)) {
       // yes, so it should be an admin of the group
       if (permissions.is_admin) {
         // It is!

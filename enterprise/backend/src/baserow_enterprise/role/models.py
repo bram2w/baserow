@@ -9,16 +9,35 @@ from baserow.core.models import Group, Operation
 
 
 class RoleManager(models.Manager):
+    """
+    A manager that adds the `.get_by_natural_key()` to `Role` class.
+    """
+
     def get_by_natural_key(self, uid):
         return self.get(uid=uid)
 
 
 class Role(CreatedAndUpdatedOnMixin):
+    """
+    A role represent a set of allowed operation granted to those whom are associated to.
+    """
 
-    uid = models.CharField(max_length=255, unique=True, default=uuid.uuid4)
-    name = models.CharField(max_length=255)
-    operations = models.ManyToManyField(Operation, related_name="roles")
-    default = models.BooleanField(default=False)
+    uid = models.CharField(
+        max_length=255,
+        unique=True,
+        default=uuid.uuid4,
+        help_text="Role unique identifier.",
+    )
+    name = models.CharField(max_length=255, help_text="Role human readable name.")
+    operations = models.ManyToManyField(
+        Operation,
+        related_name="roles",
+        help_text="List of allowed operation for this role.",
+    )
+    default = models.BooleanField(
+        default=False,
+        help_text="True if this role is a default role. The default role are the roles you can use by default.",
+    )
 
     group = models.ForeignKey(
         Group,
@@ -47,8 +66,14 @@ class Role(CreatedAndUpdatedOnMixin):
 
 
 class RoleAssignment(CreatedAndUpdatedOnMixin):
+    """
+    A RoleAssignment represents the association between a `Role` and a `Subject` for a
+    particular `Group` over a given `Scope`. A Subject can be a user or anything else
+    that can operate with the Baserow data.
+    """
+
     subject = GenericForeignKey("subject_type", "subject_id")
-    subject_id = models.IntegerField(help_text="The unique subject ID.")
+    subject_id = models.IntegerField(help_text="The subject ID.")
     subject_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
@@ -56,7 +81,11 @@ class RoleAssignment(CreatedAndUpdatedOnMixin):
         related_name="role_subject_assignments",
     )
 
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    role = models.ForeignKey(
+        Role,
+        on_delete=models.CASCADE,
+        help_text="The role given to the subject for the group.",
+    )
 
     group = models.ForeignKey(
         Group,
