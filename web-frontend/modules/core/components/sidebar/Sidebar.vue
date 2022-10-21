@@ -199,7 +199,7 @@
             </ul>
             <li class="sidebar__new-wrapper">
               <a
-                v-if="$hasPermission('application.create', group)"
+                v-if="$hasPermission('application.create', selectedGroup)"
                 ref="createApplicationContextLink"
                 class="sidebar__new"
                 @click="
