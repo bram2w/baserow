@@ -14,7 +14,9 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   }
 
   mutateMembersInvitesTableRightColumns(rightColumns, context) {
-    return this._replaceRoleColumn(rightColumns, context)
+    // TODO enable again once you can change the role of an invited user before they accept
+    // return this._replaceRoleColumn(rightColumns, context)
+    return rightColumns
   }
 
   isDeactivated() {
