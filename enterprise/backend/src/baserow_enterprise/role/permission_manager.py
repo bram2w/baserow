@@ -2,12 +2,14 @@ from collections import defaultdict
 from functools import cached_property, cmp_to_key
 from typing import Dict, List
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.exceptions import NotAuthenticated
 
-from baserow.core.exceptions import PermissionDenied
+from baserow.core.exceptions import PermissionDenied, UserNotInGroup
+from baserow.core.models import GroupUser
 from baserow.core.registries import (
     PermissionManagerType,
     object_scope_type_registry,
@@ -36,7 +38,7 @@ class RolePermissionManagerType(PermissionManagerType):
     _role_cache: Dict[int, List[str]] = {}
 
     def is_enabled(self, group):
-        return True
+        return "roles" in settings.FEATURE_FLAGS
 
     @cached_property
     def user_subject_type(self):
@@ -74,9 +76,24 @@ class RolePermissionManagerType(PermissionManagerType):
             return
 
         if hasattr(actor, "is_authenticated"):
+
             user = actor
             if not user.is_authenticated:
                 raise NotAuthenticated()
+
+            if include_trash:
+                manager = GroupUser.objects_and_trash
+            else:
+                manager = GroupUser.objects
+
+            try:
+                if (
+                    "ADMIN"
+                    in manager.get(user_id=user.id, group_id=group.id).permissions
+                ):
+                    return True
+            except GroupUser.DoesNotExist:
+                raise UserNotInGroup(user, self)
 
             # Get all role assignments for this group
             role_assignments = self.get_user_role_assignments(group, actor)
@@ -162,10 +179,10 @@ class RolePermissionManagerType(PermissionManagerType):
     ):
 
         if group is None:
-            return None
+            return queryset
 
         if not self.is_enabled(group):
-            return
+            return queryset
 
         # Get all role assignments for this group
         role_assignments = self.get_user_role_assignments(group, actor)

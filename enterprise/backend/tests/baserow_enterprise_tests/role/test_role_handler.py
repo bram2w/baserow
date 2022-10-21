@@ -1,9 +1,15 @@
+from django.test import override_settings
+
 import pytest
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
 
 
 @pytest.mark.django_db
+@override_settings(
+    FEATURE_FLAGS=["roles"],
+    PERMISSION_MANAGERS=["core", "staff", "member", "basic", "role"],
+)
 def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()

@@ -8,7 +8,7 @@ export class MembersPagePluginType extends Registerable {
    * You could always make sure to not make this function fail hard if it can't update
    * or remove something, since other plugins might have also altered the columns.
    */
-  mutateMembersTableLeftColumns(leftColumns) {
+  mutateMembersTableLeftColumns(leftColumns, context) {
     return leftColumns
   }
 
@@ -19,7 +19,7 @@ export class MembersPagePluginType extends Registerable {
    * You could always make sure to not make this function fail hard if it can't update
    * or remove something, since other plugins might have also altered the columns.
    */
-  mutateMembersTableRightColumns(rightColumns) {
+  mutateMembersTableRightColumns(rightColumns, context) {
     return rightColumns
   }
 
@@ -30,7 +30,7 @@ export class MembersPagePluginType extends Registerable {
    * You could always make sure to not make this function fail hard if it can't update
    * or remove something, since other plugins might have also altered the columns.
    */
-  mutateMembersInvitesTableRightColumns(rightColumns) {
+  mutateMembersInvitesTableRightColumns(rightColumns, context) {
     return rightColumns
   }
 
@@ -41,7 +41,7 @@ export class MembersPagePluginType extends Registerable {
    * You could always make sure to not make this function fail hard if it can't update
    * or remove something, since other plugins might have also altered the columns.
    */
-  mutateMembersInvitesTableLeftColumns(leftColumns) {
+  mutateMembersInvitesTableLeftColumns(leftColumns, context) {
     return leftColumns
   }
 
@@ -49,6 +49,6 @@ export class MembersPagePluginType extends Registerable {
    * Set to false in order to enable the plugin
    */
   isDeactivated() {
-    return true
+    return !this.app.$featureFlags.includes('roles') // TODO make this depending on if somebody has RBAc
   }
 }
