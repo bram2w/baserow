@@ -86,7 +86,11 @@
           >
             <i class="fas fa-plus"></i>
           </div>
-          <div class="dashboard__group-item-name">
+
+          <div
+            v-if="$hasPermission('group.create_application', group)"
+            class="dashboard__group-item-name"
+          >
             {{ $t('dashboardGroup.createApplication') }}
           </div>
         </a>

@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow_enterprise.role.handler import RoleAssignmentHandler
+from baserow_enterprise.role.handler import USER_TYPE, RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.role.operations import AssignRoleGroupOperationType
 
@@ -38,7 +38,17 @@ class AssignRoleActionType(ActionType):
         role: Optional[Role] = None,
         scope: Optional[Any] = None,
     ) -> ViewFilter:
-        """ """
+        """
+        Assigns a role to a subject into a group over a given scope.
+
+        :param subject: The subject targeted by the role.
+        :param group: The group in which we want to assign the role.
+        :param role: The role we want to assign. If the role is `None` then we remove
+            the current role of the subject in the group for the given scope.
+        :param scope: An optional scope on which the role applies. If no scope is given
+            the group is used as scope.
+        :return: The created RoleAssignment if role is not `None` else `None`.
+        """
 
         CoreHandler().check_permissions(
             user, AssignRoleGroupOperationType.type, group=group, context=group
@@ -57,14 +67,13 @@ class AssignRoleActionType(ActionType):
             scope=scope,
         )
 
-        subject_type = "user"
         scope_type = object_scope_type_registry.get_by_model(scope).type
 
         cls.register_action(
             user=user,
             params=cls.Params(
                 subject.id,
-                subject_type,
+                USER_TYPE,
                 group.id,
                 role.uid if role else None,
                 previous_role.role.uid if previous_role else None,

@@ -26,6 +26,10 @@ from .registries import PermissionManagerType
 
 
 class CorePermissionManagerType(PermissionManagerType):
+    """
+    Some operation are always allowed. This permission manager handle this case.
+    """
+
     type = "core"
 
     ALWAYS_ALLOWED_OPERATIONS = [
@@ -45,6 +49,10 @@ class CorePermissionManagerType(PermissionManagerType):
 
 
 class StaffOnlyPermissionManagerType(PermissionManagerType):
+    """
+    Checks if a user is_staff if the required operation is for staff only.
+    """
+
     type = "staff"
     STAFF_ONLY_OPERATIONS = [UpdateSettingsOperationType.type]
 
@@ -71,6 +79,10 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
 
 
 class GroupMemberOnlyPermissionManagerType(PermissionManagerType):
+    """
+    To be able to operate on a group, the user must at least belongs to that group.
+    """
+
     type = "member"
 
     def check_permissions(
@@ -95,10 +107,17 @@ class GroupMemberOnlyPermissionManagerType(PermissionManagerType):
 
     def get_permissions_object(self, actor, group=None):
         # Check if the user is a member of this group
-        return GroupUser.objects.filter(user_id=actor.id, group_id=group.id).exists()
+        if GroupUser.objects.filter(user_id=actor.id, group_id=group.id).exists():
+            return None
+        return False
 
 
 class BasicPermissionManagerType(PermissionManagerType):
+    """
+    This permission manager check if the user is an admin when the operation is admin
+    only.
+    """
+
     type = "basic"
 
     ADMIN_ONLY_OPERATIONS = set(

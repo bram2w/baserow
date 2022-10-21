@@ -43,7 +43,7 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
           inputCallback: (roleUid, row) =>
             RoleAssignmentsService(client).assignRole(
               row.user_id,
-              'user',
+              'auth.User',
               groupId,
               groupId,
               'group',

@@ -17,7 +17,7 @@ from .serializers import CreateRoleAssignmentSerializer, RoleAssignmentSerialize
 
 
 class RoleAssignmentsView(APIView):
-    """ """
+    """Views to assign a role."""
 
     @extend_schema(
         parameters=[
@@ -25,12 +25,16 @@ class RoleAssignmentsView(APIView):
                 name="group_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description=".",
+                description="The group in which the role assignment takes place.",
             ),
         ],
-        tags=["Group role assignments"],
-        operation_id="enterprise_group_assign_role",
-        description="",
+        tags=["Role assignments"],
+        operation_id="assign_role",
+        description=(
+            "You can assign a role to a subject into the given group for the given "
+            "scope with this endpoint. If you want to remove the role you can "
+            "omit the role property."
+        ),
         request=CreateRoleAssignmentSerializer,
         responses={
             200: RoleAssignmentSerializer,
@@ -55,7 +59,7 @@ class RoleAssignmentsView(APIView):
         group_id: int,
         data,
     ) -> Response:
-        """ """
+        """Assign or remove a role to the user."""
 
         group = CoreHandler().get_group(group_id)
 

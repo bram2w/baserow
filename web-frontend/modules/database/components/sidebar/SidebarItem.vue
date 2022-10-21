@@ -24,25 +24,25 @@
     <Context ref="context">
       <div class="context__menu-title">{{ table.name }} ({{ table.id }})</div>
       <ul class="context__menu">
-        <li>
+        <li v-if="$hasPermission('database.table.export', table)">
           <a @click="exportTable()">
             <i class="context__menu-icon fas fa-fw fa-file-export"></i>
             {{ $t('sidebarItem.exportTable') }}
           </a>
         </li>
-        <li>
+        <li v-if="$hasPermission('database.table.create_webhook', table)">
           <a @click="openWebhookModal()">
             <i class="context__menu-icon fas fa-fw fa-globe"></i>
             Webhooks
           </a>
         </li>
-        <li>
+        <li v-if="$hasPermission('database.table.update', table)">
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
             {{ $t('action.rename') }}
           </a>
         </li>
-        <li>
+        <li v-if="$hasPermission('database.table.duplicate', table)">
           <SidebarDuplicateTableContextItem
             :database="database"
             :table="table"
@@ -50,7 +50,7 @@
             @click="$refs.context.hide()"
           ></SidebarDuplicateTableContextItem>
         </li>
-        <li>
+        <li v-if="$hasPermission('database.table.delete', table)">
           <a
             :class="{ 'context__menu-item--loading': deleteLoading }"
             @click="deleteTable()"
