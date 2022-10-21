@@ -92,7 +92,10 @@ export default {
       ]
       for (const plugin of this.membersPagePlugins) {
         if (!plugin.isDeactivated()) {
-          columns = plugin.mutateMembersInvitesTableLeftColumns(columns)
+          columns = plugin.mutateMembersInvitesTableLeftColumns(columns, {
+            groupId: this.group.id,
+            client: this.$client,
+          })
         }
       }
       return columns
@@ -162,7 +165,10 @@ export default {
       ]
       for (const plugin of this.membersPagePlugins) {
         if (!plugin.isDeactivated()) {
-          columns = plugin.mutateMembersInvitesTableRightColumns(columns)
+          columns = plugin.mutateMembersInvitesTableRightColumns(columns, {
+            groupId: this.group.id,
+            client: this.$client,
+          })
         }
       }
       return columns

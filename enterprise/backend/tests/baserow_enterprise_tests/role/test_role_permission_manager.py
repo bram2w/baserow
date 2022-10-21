@@ -1,3 +1,5 @@
+from django.test import override_settings
+
 import pytest
 from baserow_enterprise.role.default_roles import default_roles
 from baserow_enterprise.role.permission_manager import RolePermissionManagerType
@@ -41,12 +43,15 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
     viewer_plus = data_fixture.create_user(email="viewer_plus@test.net")
     builder_less = data_fixture.create_user(email="builder_less@test.net")
     no_role = data_fixture.create_user(email="no_role@test.net")
+    another_admin = data_fixture.create_user(email="another_admin@test.net")
 
     group_1 = data_fixture.create_group(
-        user=admin, users=[builder, viewer, viewer_plus, builder_less, no_role]
+        user=admin,
+        members=[builder, viewer, editor, viewer_plus, builder_less, no_role],
     )
     group_2 = data_fixture.create_group(
-        user=admin, users=[builder, viewer, viewer_plus, builder_less]
+        user=another_admin,
+        members=[admin, builder, viewer, editor, viewer_plus, builder_less, no_role],
     )
 
     database_1 = data_fixture.create_database_application(group=group_1, order=1)
@@ -117,6 +122,10 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
+@override_settings(
+    FEATURE_FLAGS=["roles"],
+    PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
+)
 def test_check_permissions(data_fixture, enterprise_data_fixture):
 
     (
@@ -136,11 +145,6 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         table_2_1,
         table_2_2,
     ) = _populate_test_data(data_fixture, enterprise_data_fixture)
-
-    list(table_1_1.get_model().objects.all())
-    list(table_1_2.get_model().objects.all())
-    list(table_2_1.get_model().objects.all())
-    list(table_2_2.get_model().objects.all())
 
     perm_manager = RolePermissionManagerType()
 
@@ -582,6 +586,10 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
+@override_settings(
+    FEATURE_FLAGS=["roles"],
+    PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
+)
 def test_get_permissions_object(data_fixture, enterprise_data_fixture):
     (
         admin,
@@ -629,6 +637,10 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
+@override_settings(
+    FEATURE_FLAGS=["roles"],
+    PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
+)
 def test_filter_queryset(data_fixture, enterprise_data_fixture):
     (
         admin,

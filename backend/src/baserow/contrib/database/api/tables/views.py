@@ -33,6 +33,7 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.file_import.job_type import FileImportJobType
 from baserow.contrib.database.handler import DatabaseHandler
+from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
 from baserow.contrib.database.table.actions import (
     CreateTableActionType,
     DeleteTableActionType,
@@ -131,7 +132,7 @@ class TablesView(APIView):
 
         tables = CoreHandler().filter_queryset(
             request.user,
-            "group.list_tables",
+            ListTablesDatabaseTableOperationType.type,
             tables,
             group=database.group,
             context=database,

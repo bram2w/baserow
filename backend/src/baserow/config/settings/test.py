@@ -47,4 +47,4 @@ class Everything(object):
 # Overriding the FEATURE_FLAGS object in the tests because if we do `feature` in
 # settings.FEATURE_FLAGS, we always want it to be enabled, otherwise the tests might
 # fail.
-FEATURE_FLAGS = Everything()
+# FEATURE_FLAGS = Everything()

@@ -295,7 +295,6 @@ JWT_AUTH = {
     "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt.jwt_response_payload_handler",
 }
 
-PERMISSION_MANAGERS = ["core", "staff", "member", "basic"]
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Baserow API spec",
@@ -644,6 +643,13 @@ BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.
 FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
+
+PERMISSION_MANAGERS = os.getenv(
+    "BASEROW_PERMISSION_MANAGERS",
+    "core,staff,member,role,basic"
+    if "roles" in FEATURE_FLAGS
+    else "core,staff,member,basic",
+).split(",")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5

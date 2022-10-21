@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.test import override_settings
+
 import pytest
 from baserow_enterprise.role.actions import AssignRoleActionType
 from baserow_enterprise.role.models import Role, RoleAssignment
@@ -13,6 +15,10 @@ from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
+@override_settings(
+    FEATURE_FLAGS=["roles"],
+    PERMISSION_MANAGERS=["core", "staff", "member", "basic", "role"],
+)
 @patch("baserow.core.handler.CoreHandler.check_permissions")
 def test_can_undo_create_table(mock_check_permissions, data_fixture):
     session_id = "session-id"
@@ -50,6 +56,7 @@ def test_can_undo_create_table(mock_check_permissions, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
+@override_settings(FEATURE_FLAGS=["roles"])
 @patch("baserow.core.handler.CoreHandler.check_permissions")
 def test_can_undo_redo_create_table(mock_check_permissions, data_fixture):
     session_id = "session-id"

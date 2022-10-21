@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.contrib.database.api.tables.serializers import TableSerializer
+from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
 from baserow.contrib.database.table.models import Table
 from baserow.core.handler import CoreHandler
 
@@ -36,7 +37,7 @@ class DatabaseSerializer(ApplicationSerializer):
         if request and hasattr(request, "user"):
             tables = CoreHandler().filter_queryset(
                 request.user,
-                "group.list_tables",
+                ListTablesDatabaseTableOperationType.type,
                 tables,
                 group=instance.group,
                 context=instance,

@@ -82,7 +82,10 @@ export default {
       ]
       for (const plugin of this.membersPagePlugins) {
         if (!plugin.isDeactivated()) {
-          columns = plugin.mutateMembersTableLeftColumns(columns)
+          columns = plugin.mutateMembersTableLeftColumns(columns, {
+            groupId: this.group.id,
+            client: this.$client,
+          })
         }
       }
       return columns
@@ -153,7 +156,10 @@ export default {
       ]
       for (const plugin of this.membersPagePlugins) {
         if (!plugin.isDeactivated()) {
-          columns = plugin.mutateMembersTableRightColumns(columns)
+          columns = plugin.mutateMembersTableRightColumns(columns, {
+            groupId: this.group.id,
+            client: this.$client,
+          })
         }
       }
       return columns

@@ -2,31 +2,32 @@ import CrudTableColumn from '@baserow/modules/core/crud_table/crudTableColumn'
 import DropdownField from '@baserow/modules/core/components/crud_table/fields/DropdownField'
 import { roles } from '@baserow_enterprise/enums/roles'
 import { MembersPagePluginType } from '@baserow/modules/database/membersPagePluginTypes'
+import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
 
 export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   static getType() {
     return 'enterprise_members_columns'
   }
 
-  mutateMembersTableRightColumns(rightColumns) {
-    return this._replaceRoleColumn(rightColumns)
+  mutateMembersTableRightColumns(rightColumns, context) {
+    return this._replaceRoleColumn(rightColumns, context)
   }
 
-  mutateMembersInvitesTableRightColumns(rightColumns) {
-    return this._replaceRoleColumn(rightColumns)
+  mutateMembersInvitesTableRightColumns(rightColumns, context) {
+    return this._replaceRoleColumn(rightColumns, context)
   }
 
   isDeactivated() {
-    return false // TODO make this depending on if somebody has RBAC
+    return !this.app.$featureFlags.includes('roles') // TODO make this depending on if somebody has RBAC
   }
 
-  _replaceRoleColumn(columns) {
+  _replaceRoleColumn(columns, { groupId, client }) {
     const existingRoleColumnIndex = columns.findIndex(
       (column) => column.key === 'permissions'
     )
     if (existingRoleColumnIndex !== -1) {
       columns[existingRoleColumnIndex] = new CrudTableColumn(
-        'permissions', // TODO use the key that holds the RBAC role data in the response
+        'role_uid',
         this.app.i18n.t('membersSettings.membersTable.columns.role'),
         DropdownField,
         'min-content',
@@ -37,8 +38,15 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
             value: uid,
             name,
           })),
-          // disabled: (row) => row.user_id === this.userId,
-          inputCallback: () => console.log('implement me'), // TODO update role
+          inputCallback: (roleUid, row) =>
+            RoleAssignmentsService(client).assignRole(
+              row.user_id,
+              'user',
+              groupId,
+              groupId,
+              'group',
+              roleUid
+            ),
         }
       )
     }
