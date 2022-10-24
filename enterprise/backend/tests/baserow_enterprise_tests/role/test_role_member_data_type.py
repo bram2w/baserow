@@ -43,7 +43,7 @@ def test_roles_member_data_type(data_fixture, enterprise_data_fixture):
         {"role_uid": "VIEWER", "user_id": viewer.id},
         {"role_uid": "VIEWER", "user_id": viewer_plus.id},
         {
-            "role_uid": "builder",
+            "role_uid": "BUILDER",
             "user_id": builder_less.id,
         },
         {"role_uid": None, "user_id": no_role.id},

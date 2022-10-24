@@ -28,7 +28,7 @@ def test_can_undo_create_table(mock_check_permissions, data_fixture):
 
     table = data_fixture.create_database_table(user=user)
 
-    builder_role = Role.objects.get(uid="builder")
+    builder_role = Role.objects.get(uid="BUILDER")
 
     action_type_registry.get_by_type(AssignRoleActionType).do(
         user, user2, group, builder_role, scope=table
@@ -66,7 +66,7 @@ def test_can_undo_redo_create_table(mock_check_permissions, data_fixture):
 
     table = data_fixture.create_database_table(user=user)
 
-    builder_role = Role.objects.get(uid="builder")
+    builder_role = Role.objects.get(uid="BUILDER")
 
     action_type_registry.get_by_type(AssignRoleActionType).do(
         user, user2, group, builder_role, table
