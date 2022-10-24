@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0035_operation'),
+        ("core", "0035_operation"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='groupinvitation',
-            name='permissions',
-            field=models.CharField(default='MEMBER', help_text='The permissions that the user is going to get within the group after accepting the invitation.', max_length=32),
+            model_name="groupinvitation",
+            name="permissions",
+            field=models.CharField(
+                default="MEMBER",
+                help_text="The permissions that the user is going to get within the group after accepting the invitation.",
+                max_length=32,
+            ),
         ),
         migrations.AlterField(
-            model_name='groupuser',
-            name='permissions',
-            field=models.CharField(default='MEMBER', help_text='The permissions that the user has within the group.', max_length=32),
+            model_name="groupuser",
+            name="permissions",
+            field=models.CharField(
+                default="MEMBER",
+                help_text="The permissions that the user has within the group.",
+                max_length=32,
+            ),
         ),
     ]
