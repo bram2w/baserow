@@ -24,6 +24,7 @@
     "sidebar": {
         "createGroup": "Create group",
         "inviteOthers": "Invite others",
+        "members": "Members",
         "logoff": "Logoff",
         "errorNoGroup": "You don’t have any groups.",
         "admin": "Admin",
@@ -405,7 +406,7 @@
         "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
         "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
     },
-    "crudTableSearchContext": {
+    "crudTableSearch": {
         "search": "Search"
     },
     "membersSettings": {
@@ -422,10 +423,6 @@
             "actions": {
                 "copyEmail": "Copy email",
                 "remove": "Remove from group"
-            },
-            "copiedEmail": {
-                "title": "Copied email",
-                "message": "The email address of the user has been copied to your clipboard."
             }
         },
         "invitesTable": {
@@ -438,14 +435,10 @@
             "actions": {
                 "copyEmail": "Copy email",
                 "remove": "Cancel invite"
-            },
-            "copiedEmail": {
-                "title": "Copied email",
-                "message": "The email address of the user has been copied to your clipboard."
             }
         },
         "membersInviteModal": {
-            "title": "Invite workspace members",
+            "title": "Invite group members",
             "submit": "Send invite",
             "errors": {
                 "userAlreadyInGroup": {

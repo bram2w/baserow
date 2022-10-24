@@ -58,11 +58,10 @@ User = get_user_model()
 
 class GroupInvitationsView(APIView, SortableViewMixin, SearchableViewMixin):
     permission_classes = (IsAuthenticated,)
-    search_fields = ["email", "message", "permissions"]
+    search_fields = ["email", "message"]
     sort_field_mapping = {
         "email": "email",
         "message": "message",
-        "permissions": "permissions",
     }
 
     @extend_schema(

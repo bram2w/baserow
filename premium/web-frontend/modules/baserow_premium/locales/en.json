@@ -86,7 +86,6 @@
     },
     "usersAdminTable": {
         "allUsers": "All users",
-        "id": "ID",
         "username": "Username",
         "name": "Name",
         "groups": "Groups",

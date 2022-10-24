@@ -24,17 +24,17 @@ export default class CrudTableColumn {
     key,
     header,
     cellComponent,
-    minWidth,
-    maxWidth,
-    sortable,
-    additionalProps
+    sortable = false,
+    stickyLeft = false,
+    stickyRight = false,
+    additionalProps = {}
   ) {
     this.key = key
     this._header = header
     this.cellComponent = cellComponent
-    this.minWidth = minWidth
-    this.maxWidth = maxWidth
     this.sortable = sortable
+    this.stickyLeft = stickyLeft
+    this.stickyRight = stickyRight
     this.additionalProps = additionalProps
   }
 
