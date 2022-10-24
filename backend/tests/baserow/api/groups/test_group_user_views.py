@@ -104,17 +104,6 @@ def test_update_group_user(api_client, data_fixture):
 
     response = api_client.patch(
         reverse("api:groups:users:item", kwargs={"group_user_id": group_user.id}),
-        {"permissions": "NOT_EXISTING"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_1}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"]["permissions"][0]["code"] == "invalid_choice"
-
-    response = api_client.patch(
-        reverse("api:groups:users:item", kwargs={"group_user_id": group_user.id}),
         {"permissions": "ADMIN"},
         HTTP_AUTHORIZATION=f"JWT {token_1}",
     )
