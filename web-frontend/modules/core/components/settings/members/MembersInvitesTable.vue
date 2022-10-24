@@ -145,8 +145,7 @@ export default {
       for (const plugin of this.membersPagePlugins) {
         if (!plugin.isDeactivated()) {
           columns = plugin.mutateMembersInvitesTableColumns(columns, {
-            groupId: this.group.id,
-            client: this.$client,
+            group: this.group,
           })
         }
       }
