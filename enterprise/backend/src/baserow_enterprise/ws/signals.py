@@ -1,9 +1,10 @@
 from django.dispatch import receiver
 
-from baserow.core.registries import permission_manager_type_registry
-from baserow.core.signals import group_user_added
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
+
+from baserow.core.registries import permission_manager_type_registry
+from baserow.core.signals import group_user_added
 
 
 @receiver(group_user_added)

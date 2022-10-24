@@ -1,8 +1,9 @@
+from django.test.utils import override_settings
+
 import pytest
+from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 from baserow.core.handler import CoreHandler
-from baserow_enterprise.role.handler import RoleAssignmentHandler
-from django.test.utils import override_settings
 
 
 @pytest.mark.django_db
