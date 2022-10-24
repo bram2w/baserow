@@ -121,9 +121,10 @@
   &.input__with-icon--loading {
     &::after {
       content: " ";
+      margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(10px, 10px, auto, auto);
+      @include absolute(50%, 10px, auto, auto);
     }
 
     i {
@@ -177,6 +178,15 @@
       background-color: $color-neutral-50;
       color: $color-neutral-500;
     }
+  }
+
+  &.checkbox--small::before {
+    @include absolute(6px, auto, 0, 0);
+
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    font-size: 12px;
   }
 }
 

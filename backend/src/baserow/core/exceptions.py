@@ -76,6 +76,13 @@ class GroupUserIsLastAdmin(Exception):
     """
 
 
+class CannotDeleteYourselfFromGroup(Exception):
+    """
+    Raised when the user tries to delete himself from the group. The `leave_group`
+    method must be used in that case.
+    """
+
+
 class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
 

@@ -1,6 +1,7 @@
 <template>
   <Context>
     <template v-if="Object.keys(group).length > 0">
+      <div class="context__menu-title">{{ group.name }} ({{ group.id }})</div>
       <ul class="context__menu">
         <li>
           <a @click.prevent="showDeleteModal">

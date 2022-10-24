@@ -22,11 +22,15 @@ from baserow.api.exceptions import (
     InvalidSortAttributeException,
     InvalidSortDirectionException,
 )
-from baserow.api.groups.users.errors import ERROR_GROUP_USER_DOES_NOT_EXIST
+from baserow.api.groups.users.errors import (
+    ERROR_CANNOT_DELETE_YOURSELF_FROM_GROUP,
+    ERROR_GROUP_USER_DOES_NOT_EXIST,
+)
 from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
 from baserow.api.schemas import get_error_schema
 from baserow.api.user.registries import member_data_registry
 from baserow.core.exceptions import (
+    CannotDeleteYourselfFromGroup,
     GroupDoesNotExist,
     GroupUserDoesNotExist,
     UserInvalidGroupPermissionsError,
@@ -44,12 +48,8 @@ from .serializers import (
 
 
 class GroupUsersView(APIView, SearchableViewMixin, SortableViewMixin):
-    search_fields = ["user__username", "user__email", "permissions"]
-    sort_field_mapping = {
-        "name": "user__username",
-        "email": "user__email",
-        "permissions": "permissions",
-    }
+    search_fields = ["user__username", "user__email"]
+    sort_field_mapping = {"name": "user__username", "email": "user__email"}
 
     @extend_schema(
         parameters=[
@@ -201,6 +201,7 @@ class GroupUserView(APIView):
             GroupUserDoesNotExist: ERROR_GROUP_USER_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS,
+            CannotDeleteYourselfFromGroup: ERROR_CANNOT_DELETE_YOURSELF_FROM_GROUP,
         }
     )
     def delete(self, request, group_user_id):

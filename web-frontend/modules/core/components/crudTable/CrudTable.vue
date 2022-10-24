@@ -1,66 +1,80 @@
 <template>
-  <div class="crudtable">
-    <header class="crudtable__header">
-      <div class="crudtable__header__left-side">
-        <slot name="header-left-side"></slot>
-      </div>
-      <div class="crudtable__header__right-side">
+  <div class="data-table" :class="{ 'data-table--loading': loading }">
+    <header class="data-table__header">
+      <h1 class="data-table__title">
+        <slot name="title"></slot>
+      </h1>
+      <div class="data-table__actions">
         <CrudTableSearch :loading="loading" @search-changed="doSearch" />
         <slot name="header-right-side"></slot>
       </div>
     </header>
-    <div
-      :class="{ crudtable__loading: loading }"
-      class="crudtable__rows"
-      :style="{
-        'grid-template-columns': columnWidths,
-      }"
-    >
-      <template v-for="col in allColumns">
-        <div
-          :key="col.key"
-          class="crudtable__field"
-          :class="{
-            'crudtable__field--sticky': col.isInLeftSection,
-            'crudtable__field--right': col.hasRightBar,
-            'crudtable__field--sortable': col.sortable,
-          }"
-          @click="toggleSort(col)"
-        >
-          <span class="crudtable__field-header-title">
-            {{ col.header }}
-          </span>
-          <template v-if="sorted(col)">
-            <i class="crudtable__field-icon fas" :class="sortIcon(col)"></i>
-            <span class="crudtable__sortindex"> {{ sortIndex(col) }} </span>
-          </template>
-        </div>
-      </template>
-      <template v-for="row in rows">
-        <template v-for="(col, index) in allColumns">
-          <component
-            :is="col.cellComponent"
-            :key="col.key + '-' + row.id"
-            :row="row"
-            :column="col"
-            class="crudtable__cell"
-            :class="{
-              'crudtable__cell--sticky': col.isInLeftSection,
-              'crudtable__cell--right': col.hasRightBar,
-              'crudtable__cell--last':
-                index === Object.keys(allColumns).length - 1,
-            }"
-            @contextmenu.prevent="
-              $emit('row-context', { col, row, event: $event })
-            "
-            v-on="$listeners"
-            @row-update="updateRow"
-            @row-delete="deleteRow"
-          />
-        </template>
-      </template>
+    <div class="data-table__body">
+      <table class="data-table__table">
+        <thead>
+          <tr class="data-table__table-row">
+            <th
+              v-for="col in columns"
+              :key="'head-' + col.key"
+              class="data-table__table-cell data-table__table-cell--header"
+              :class="{
+                'data-table__table-cell--sticky-left': col.stickyLeft,
+                'data-table__table-cell--sticky-right': col.stickyRight,
+              }"
+            >
+              <div class="data-table__table-cell-head">
+                <template v-if="col.sortable">
+                  <a
+                    class="data-table__table-cell-head-link"
+                    @click="toggleSort(col)"
+                    >{{ col.header }}</a
+                  >
+                  <div>
+                    <template v-if="sorted(col)">
+                      <i class="fas" :class="sortIcon(col)"></i>
+                      {{ sortIndex(col) }}
+                    </template>
+                  </div>
+                </template>
+                <template v-else>{{ col.header }}</template>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in rows"
+            :key="'row-' + row.id"
+            class="data-table__table-row"
+          >
+            <td
+              v-for="col in columns"
+              :key="'col-' + col.key"
+              class="data-table__table-cell"
+              :class="{
+                'data-table__table-cell--sticky-left': col.stickyLeft,
+                'data-table__table-cell--sticky-right': col.stickyRight,
+              }"
+              @contextmenu.prevent="
+                $emit('row-context', { col, row, event: $event })
+              "
+            >
+              <div class="data-table__table-cell-content">
+                <component
+                  :is="col.cellComponent"
+                  :row="row"
+                  :column="col"
+                  v-on="$listeners"
+                  @row-update="updateRow"
+                  @row-delete="deleteRow"
+                />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div v-if="service.options.isPaginated" class="crudtable__footer">
+    <div v-if="service.options.isPaginated" class="data-table__footer">
       <Paginator
         :page="page"
         :total-pages="totalPages"
@@ -73,9 +87,9 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import CrudTableSearch from '@baserow/modules/core/components/crud_table/CrudTableSearch'
+import CrudTableSearch from '@baserow/modules/core/components/crudTable/CrudTableSearch'
 import Paginator from '@baserow/modules/core/components/Paginator'
-import CrudTableColumn from '@baserow/modules/core/crud_table/crudTableColumn'
+import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import { isArray } from 'lodash'
 
 /**
@@ -136,22 +150,13 @@ export default {
       type: Object,
     },
     /**
-     * An ordered array of columns to show in the sticky left section of columns,
-     * there will be a visual separator between the left and right column sections.
-     * The column keys must be present in every row returned by the service.
+     * An ordered array of columns to show. The column keys must be present in every
+     * row returned by the service.
      */
-    leftColumns: {
+    columns: {
       required: false,
       type: Array,
       default: () => [],
-      validator: (prop) => prop.every((e) => e instanceof CrudTableColumn),
-    },
-    /**
-     * An ordered array of columns to show in the right section of columns.
-     */
-    rightColumns: {
-      required: true,
-      type: Array,
       validator: (prop) => prop.every((e) => e instanceof CrudTableColumn),
     },
     /**
@@ -180,22 +185,6 @@ export default {
   async fetch() {
     const page = this.service.options.isPaginated ? 1 : null
     await this.fetch(page)
-  },
-  computed: {
-    allColumns() {
-      this.leftColumns.forEach((c, i) => {
-        c.isInLeftSection = true
-        if (i === this.leftColumns.length - 1) {
-          c.hasRightBar = true
-        }
-      })
-      return this.leftColumns.concat(this.rightColumns)
-    },
-    columnWidths() {
-      return this.allColumns
-        .map((c) => `minmax(${c.minWidth}, ${c.maxWidth})`)
-        .join(' ')
-    },
   },
   watch: {
     rows() {
@@ -275,7 +264,7 @@ export default {
       const i = this.rows.findIndex(
         (u) => u[this.rowIdKey] === updatedRow[this.rowIdKey]
       )
-      this.rows.splice(i, 1, updatedRow)
+      Object.assign(this.rows[i], updatedRow)
     },
     deleteRow(rowId) {
       const i = this.rows.findIndex((u) => u[this.rowIdKey] === rowId)

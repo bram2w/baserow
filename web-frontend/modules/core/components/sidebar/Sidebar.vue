@@ -156,23 +156,44 @@
               class="tree__item"
             >
               <div class="tree__action">
-                <a
-                  class="tree__link"
-                  @click="
-                    $router.push({
-                      name: 'settings-members',
-                      params: {
-                        groupId: selectedGroup.id,
-                      },
-                    })
-                  "
-                >
-                  <i class="tree__icon tree__icon--type fas fa-users"></i>
+                <a class="tree__link" @click="$refs.inviteModal.show()">
+                  <i class="tree__icon tree__icon--type fas fa-user-plus"></i>
 
                   {{ $t('sidebar.inviteOthers') }}
                 </a>
               </div>
+              <GroupMemberInviteModal
+                ref="inviteModal"
+                :group="selectedGroup"
+                @invite-submitted="
+                  $router.push({
+                    name: 'settings-invites',
+                    params: {
+                      groupId: selectedGroup.id,
+                    },
+                  })
+                "
+              />
             </li>
+            <nuxt-link
+              v-if="selectedGroup.permissions === 'ADMIN'"
+              v-slot="{ href, navigate, isExactActive }"
+              :to="{
+                name: 'settings-members',
+                params: {
+                  groupId: selectedGroup.id,
+                },
+              }"
+            >
+              <li class="tree__item" :class="{ active: isExactActive }">
+                <div class="tree__action">
+                  <a :href="href" class="tree__link" @click="navigate">
+                    <i class="tree__icon tree__icon--type fas fa-users"></i>
+                    {{ $t('sidebar.members') }}
+                  </a>
+                </div>
+              </li>
+            </nuxt-link>
             <ul class="tree">
               <component
                 :is="getApplicationComponent(application)"
@@ -302,6 +323,8 @@ import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
+import GroupMemberInviteModal from '@baserow/modules/core/components/group/GroupMemberInviteModal'
+
 export default {
   name: 'Sidebar',
   components: {
@@ -314,6 +337,7 @@ export default {
     GroupContext,
     CreateGroupModal,
     TrashModal,
+    GroupMemberInviteModal,
   },
   mixins: [editGroup, undoRedo],
   computed: {

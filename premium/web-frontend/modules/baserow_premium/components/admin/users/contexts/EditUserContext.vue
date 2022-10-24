@@ -1,6 +1,7 @@
 <template>
   <Context>
     <template v-if="Object.keys(user).length > 0">
+      <div class="context__menu-title">{{ user.username }} ({{ user.id }})</div>
       <ul class="context__menu">
         <li>
           <a @click.prevent="showEditModal">

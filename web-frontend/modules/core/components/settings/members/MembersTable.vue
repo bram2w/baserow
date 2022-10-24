@@ -3,55 +3,103 @@
     <CrudTable
       ref="crudTable"
       :service="service"
-      :left-columns="leftColumns"
-      :right-columns="rightColumns"
+      :columns="columns"
       row-id-key="id"
-      @remove="remove"
-      @copy-email="copyEmail"
+      @row-context="onRowContext"
+      @edit-role-context="onEditRoleContext"
     >
-      <template #header-left-side>
-        <div class="crudtable__header-title">
-          {{
-            $t('membersSettings.membersTable.title', {
-              userAmount: group.users.length || 0,
-              groupName: group.name,
-            })
-          }}
-        </div>
+      <template #title>
+        {{
+          $t('membersSettings.membersTable.title', {
+            userAmount: group.users.length || 0,
+            groupName: group.name,
+          })
+        }}
       </template>
       <template #header-right-side>
-        <div class="button margin-left-1" @click="$refs.inviteModal.show()">
+        <div
+          class="button margin-left-2 button--large"
+          @click="$refs.inviteModal.show()"
+        >
           {{ $t('membersSettings.membersTable.inviteMember') }}
         </div>
       </template>
+      <template #menus>
+        <EditMemberContext
+          ref="editMemberContext"
+          :group="group"
+          :member="editMember"
+          @refresh="refresh"
+        ></EditMemberContext>
+        <EditRoleContext
+          ref="editRoleContext"
+          :row="editRoleMember"
+          :roles="roles"
+          @update-role="roleUpdate($event)"
+        ></EditRoleContext>
+      </template>
     </CrudTable>
-    <MembersInviteModal
+    <GroupMemberInviteModal
       ref="inviteModal"
       :group="group"
-      @invite-submitted="$emit('invite-submitted', $event)"
+      @invite-submitted="
+        $router.push({
+          name: 'settings-invites',
+          params: {
+            groupId: group.id,
+          },
+        })
+      "
     />
   </div>
 </template>
 
 <script>
-import CrudTable from '@baserow/modules/core/components/crud_table/CrudTable'
-import GroupService from '@baserow/modules/core/services/group'
 import { mapGetters } from 'vuex'
-import CrudTableColumn from '@baserow/modules/core/crud_table/crudTableColumn'
-import SimpleField from '@baserow/modules/core/components/crud_table/fields/SimpleField'
-import DropdownField from '@baserow/modules/core/components/crud_table/fields/DropdownField'
+import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import MembersInviteModal from '@baserow/modules/core/components/settings/members/MembersInviteModal'
-import ActionsField from '@baserow/modules/core/components/crud_table/fields/ActionsField'
+
+import CrudTable from '@baserow/modules/core/components/crudTable/CrudTable'
+import GroupService from '@baserow/modules/core/services/group'
+import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
+import SimpleField from '@baserow/modules/core/components/crudTable/fields/SimpleField'
+import MoreField from '@baserow/modules/core/components/crudTable/fields/MoreField'
+import MemberRoleField from '@baserow/modules/core/components/settings/members/MemberRoleField'
+import GroupMemberInviteModal from '@baserow/modules/core/components/group/GroupMemberInviteModal'
+import EditMemberContext from '@baserow/modules/core/components/settings/members/EditMemberContext'
+import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 
 export default {
   name: 'MembersTable',
-  components: { CrudTable, MembersInviteModal },
+  components: {
+    EditMemberContext,
+    EditRoleContext,
+    CrudTable,
+    GroupMemberInviteModal,
+  },
   props: {
     group: {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      editMember: {},
+      editRoleMember: {},
+      roles: [
+        {
+          value: 'ADMIN',
+          name: this.$t('permission.admin'),
+          description: this.$t('permission.adminDescription'),
+        },
+        {
+          value: 'MEMBER',
+          name: this.$t('permission.member'),
+          description: this.$t('permission.memberDescription'),
+        },
+      ],
+    }
   },
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
@@ -69,95 +117,39 @@ export default {
     membersPagePlugins() {
       return Object.values(this.$registry.getAll('membersPagePlugins'))
     },
-    leftColumns() {
+    columns() {
       let columns = [
         new CrudTableColumn(
           'name',
           this.$t('membersSettings.membersTable.columns.name'),
           SimpleField,
-          'min-content',
-          '2fr',
+          true,
           true
         ),
-      ]
-      for (const plugin of this.membersPagePlugins) {
-        if (!plugin.isDeactivated()) {
-          columns = plugin.mutateMembersTableLeftColumns(columns, {
-            groupId: this.group.id,
-            client: this.$client,
-          })
-        }
-      }
-      return columns
-    },
-    rightColumns() {
-      let columns = [
         new CrudTableColumn(
           'email',
           this.$t('membersSettings.membersTable.columns.email'),
           SimpleField,
-          'min-content',
-          '3fr',
           true
         ),
         new CrudTableColumn(
           'permissions',
           this.$t('membersSettings.membersTable.columns.role'),
-          DropdownField,
-          'min-content',
-          '3fr',
-          true,
-          {
-            options: [
-              {
-                value: 'ADMIN',
-                name: this.$t('permission.admin'),
-                description: this.$t('permission.adminDescription'),
-              },
-              {
-                value: 'MEMBER',
-                name: this.$t('permission.member'),
-                description: this.$t('permission.memberDescription'),
-              },
-            ],
-            disabled: (row) => row.user_id === this.userId,
-            inputCallback: this.roleUpdate,
-            action: {
-              label: this.$t('membersSettings.membersTable.actions.remove'),
-              colorClass: 'color--deep-dark-red',
-              onClickEventName: 'remove',
-            },
-          }
-        ),
-        new CrudTableColumn(
-          null,
-          null,
-          ActionsField,
-          'min-content',
-          'min-content',
+          MemberRoleField,
+          false,
+          false,
           false,
           {
-            actions: [
-              {
-                label: this.$t(
-                  'membersSettings.membersTable.actions.copyEmail'
-                ),
-                onClickEventName: 'copy-email',
-              },
-              {
-                label: this.$t('membersSettings.membersTable.actions.remove'),
-                onClickEventName: 'remove',
-                disabled: (row) => row.user_id === this.userId,
-                colorClass: 'color--deep-dark-red',
-              },
-            ],
+            roles: this.roles,
+            userId: this.userId,
           }
         ),
+        new CrudTableColumn(null, null, MoreField, false, false, true),
       ]
       for (const plugin of this.membersPagePlugins) {
         if (!plugin.isDeactivated()) {
-          columns = plugin.mutateMembersTableRightColumns(columns, {
-            groupId: this.group.id,
+          columns = plugin.mutateMembersTableColumns(columns, {
+            group: this.group,
             client: this.$client,
           })
         }
@@ -166,42 +158,43 @@ export default {
     },
   },
   methods: {
-    async roleUpdate(permissionsNew, { permissions, id }) {
-      if (permissions === permissionsNew) {
-        return
+    onRowContext({ row, event, target }) {
+      if (target === undefined) {
+        target = {
+          left: event.clientX,
+          top: event.clientY,
+        }
       }
 
+      const action = row.id === this.editMember.id ? 'toggle' : 'show'
+      this.editMember = row
+      this.$refs.editMemberContext[action](target, 'bottom', 'left', 4)
+    },
+    onEditRoleContext({ row, target }) {
+      const action = row.id === this.editRoleMember.id ? 'toggle' : 'show'
+      this.editRoleMember = row
+      this.$refs.editRoleContext[action](target, 'bottom', 'left', 4)
+    },
+    async refresh() {
+      await this.$refs.crudTable.fetch()
+    },
+    async roleUpdate({ value: permissionsNew, row: member }) {
+      const oldMember = clone(member)
+      const newMember = clone(member)
+      newMember.permissions = permissionsNew
+      this.$refs.crudTable.updateRow(newMember)
+
       try {
-        await GroupService(this.$client).updateUser(id, {
-          permissions: permissionsNew,
+        await GroupService(this.$client).updateUser(oldMember.id, {
+          permissions: newMember.permissions,
         })
         await this.$store.dispatch('group/forceUpdateGroupUser', {
           groupId: this.group.id,
-          id,
-          values: { permissions: permissionsNew },
+          id: oldMember.id,
+          values: { permissions: newMember.permissions },
         })
       } catch (error) {
-        notifyIf(error, 'group')
-      }
-    },
-    async copyEmail({ email }) {
-      await navigator.clipboard.writeText(email)
-      await this.$store.dispatch('notification/add', {
-        type: 'success',
-        title: this.$t('membersSettings.membersTable.copiedEmail.title'),
-        message: this.$t('membersSettings.membersTable.copiedEmail.message'),
-      })
-    },
-    async remove(user) {
-      try {
-        await GroupService(this.$client).deleteUser(user.id)
-        await this.$store.dispatch('group/forceDeleteGroupUser', {
-          groupId: this.group.id,
-          id: user.id,
-          values: { user_id: this.userId },
-        })
-        await this.$refs.crudTable.fetch()
-      } catch (error) {
+        this.$refs.crudTable.updateRow(oldMember)
         notifyIf(error, 'group')
       }
     },

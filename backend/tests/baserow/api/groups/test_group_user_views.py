@@ -133,6 +133,7 @@ def test_delete_group_user(api_client, data_fixture):
     group_user = data_fixture.create_user_group(
         group=group_1, user=user_2, permissions="MEMBER"
     )
+    user_1_group_user = GroupUser.objects.get(user_id=user_1.id, group_id=group_1.id)
 
     response = api_client.delete(
         reverse("api:groups:users:item", kwargs={"group_user_id": 99999}),
@@ -157,6 +158,17 @@ def test_delete_group_user(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_USER_INVALID_GROUP_PERMISSIONS"
+
+    # It should not be possible to delete yourself. The leave endpoint must be used
+    # for that.
+    response = api_client.delete(
+        reverse(
+            "api:groups:users:item", kwargs={"group_user_id": user_1_group_user.id}
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DELETE_YOURSELF_FROM_GROUP"
 
     response = api_client.delete(
         reverse("api:groups:users:item", kwargs={"group_user_id": group_user.id}),

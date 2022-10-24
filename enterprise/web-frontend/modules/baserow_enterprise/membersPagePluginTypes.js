@@ -1,29 +1,27 @@
-import CrudTableColumn from '@baserow/modules/core/crud_table/crudTableColumn'
-import DropdownField from '@baserow/modules/core/components/crud_table/fields/DropdownField'
-import { roles } from '@baserow_enterprise/enums/roles'
 import { MembersPagePluginType } from '@baserow/modules/database/membersPagePluginTypes'
-import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
+import MembersRoleField from '@baserow_enterprise/components/MembersRoleField'
+import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 
 export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   static getType() {
     return 'enterprise_members_columns'
   }
 
-  mutateMembersTableRightColumns(rightColumns, context) {
-    return this._replaceRoleColumn(rightColumns, context)
+  mutateMembersTableColumns(columns, context) {
+    return this._replaceRoleColumn(columns, context)
   }
 
-  mutateMembersInvitesTableRightColumns(rightColumns, context) {
+  mutateMembersInvitesTableColumns(columns, context) {
     // TODO enable again once you can change the role of an invited user before they accept
-    // return this._replaceRoleColumn(rightColumns, context)
-    return rightColumns
+    // return this._replaceRoleColumn(columns, context)
+    return columns
   }
 
   isDeactivated() {
     return !this.app.$featureFlags.includes('roles') // TODO make this depending on if somebody has RBAC
   }
 
-  _replaceRoleColumn(columns, { groupId, client }) {
+  _replaceRoleColumn(columns, { group }) {
     const existingRoleColumnIndex = columns.findIndex(
       (column) => column.key === 'permissions'
     )
@@ -31,24 +29,12 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
       columns[existingRoleColumnIndex] = new CrudTableColumn(
         'role_uid',
         this.app.i18n.t('membersSettings.membersTable.columns.role'),
-        DropdownField,
-        'min-content',
-        '3fr',
+        MembersRoleField,
         true,
+        false,
+        false,
         {
-          options: roles.map(({ name, uid }) => ({
-            value: uid,
-            name,
-          })),
-          inputCallback: (roleUid, row) =>
-            RoleAssignmentsService(client).assignRole(
-              row.user_id,
-              'auth.User',
-              groupId,
-              groupId,
-              'group',
-              roleUid
-            ),
+          groupId: group.id,
         }
       )
     }
