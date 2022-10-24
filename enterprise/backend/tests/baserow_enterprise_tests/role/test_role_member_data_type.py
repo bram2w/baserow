@@ -37,11 +37,11 @@ def test_roles_member_data_type(data_fixture, enterprise_data_fixture):
         group_1, [{"user_id": u.id} for u in users]
     )
     assert result == [
-        {"role_uid": "admin", "user_id": admin.id},
-        {"role_uid": "builder", "user_id": builder.id},
-        {"role_uid": "editor", "user_id": editor.id},
-        {"role_uid": "viewer", "user_id": viewer.id},
-        {"role_uid": "viewer", "user_id": viewer_plus.id},
+        {"role_uid": "ADMIN", "user_id": admin.id},
+        {"role_uid": "BUILDER", "user_id": builder.id},
+        {"role_uid": "EDITOR", "user_id": editor.id},
+        {"role_uid": "VIEWER", "user_id": viewer.id},
+        {"role_uid": "VIEWER", "user_id": viewer_plus.id},
         {
             "role_uid": "builder",
             "user_id": builder_less.id,

@@ -42,7 +42,6 @@ from .exceptions import (
 )
 from .models import (
     GROUP_USER_PERMISSION_ADMIN,
-    GROUP_USER_PERMISSION_CHOICES,
     Application,
     Group,
     GroupInvitation,
@@ -809,9 +808,6 @@ class CoreHandler:
             user, CreateInvitationsGroupOperationType.type, group=group, context=group
         )
 
-        if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
-            raise ValueError("Incorrect permissions provided.")
-
         email = normalize_email_address(email)
 
         if GroupUser.objects.filter(group=group, user__email=email).exists():
@@ -858,9 +854,6 @@ class CoreHandler:
             group=invitation.group,
             context=invitation,
         )
-
-        if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
-            raise ValueError("Incorrect permissions provided.")
 
         invitation.permissions = permissions
         invitation.save()
@@ -940,12 +933,18 @@ class CoreHandler:
             group=invitation.group,
             defaults={
                 "order": GroupUser.get_last_order(user),
-                "permissions": invitation.permissions,
+                "permissions": "ADMIN"
+                if invitation.permissions == "ADMIN"
+                else "MEMBER",
             },
         )
 
         group_user_added.send(
-            self, group_user_id=group_user.id, group_user=group_user, user=user
+            self,
+            group_user_id=group_user.id,
+            group_user=group_user,
+            user=user,
+            invitation=invitation,
         )
 
         invitation.delete()

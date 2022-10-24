@@ -232,10 +232,10 @@ ADMIN_OPS = BUILDER_OPS + [
     ReadTeamSubjectOperationType,
 ]
 default_roles = {
-    "admin": ADMIN_OPS,
-    "builder": BUILDER_OPS,
-    "editor": EDITOR_OPS,
-    "commenter": COMMENTER_OPS,
-    "viewer": VIEWER_OPS,
-    "no_role": NO_ROLE_OPS,
+    "ADMIN": ADMIN_OPS,
+    "BUILDER": BUILDER_OPS,
+    "EDITOR": EDITOR_OPS,
+    "COMMENTER": COMMENTER_OPS,
+    "VIEWER": VIEWER_OPS,
+    "NO_ROLE": NO_ROLE_OPS,
 }

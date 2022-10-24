@@ -17,8 +17,8 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
 
     table = data_fixture.create_database_table(user=user)
 
-    admin_role = Role.objects.get(uid="admin")
-    builder_role = Role.objects.get(uid="builder")
+    admin_role = Role.objects.get(uid="ADMIN")
+    builder_role = Role.objects.get(uid="BUILDER")
 
     role_assignment_handler = RoleAssignmentHandler()
 
