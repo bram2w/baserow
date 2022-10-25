@@ -183,6 +183,10 @@
             "rowsUpdated": "Wiersze są aktualizowane",
             "rowDeleted": "Gdy wiersz jest usuwany",
             "rowsDeleted": "Wiersze są usuwane"
+        },
+        "form": {
+            "invalidURLTitle": "Nieprawidłowy URL.",
+            "invalidURLDescription": "Adres URL webhooka jest nieprawidłowy, niedostępny lub zabroniony."
         }
     },
     "clientHandler": {
@@ -353,7 +357,11 @@
         "filterDescription": "Filtruje wyrażenie zawierające odwołanie do pola wyszukiwania/łącza lub wywołanie funkcji wyszukiwania.",
         "roundDescription": "Zwraca pierwszy argument zaokrąglony do liczby cyfr określonej przez drugi argument.",
         "intDescription": "Zwraca tylko pierwszy argument przekonwertowany na liczbę całkowitą przez obcięcie miejsc dziesiętnych.",
-        "truncDescription": "Zwraca tylko pierwszy argument przekonwertowany na liczbę całkowitą przez obcięcie wszystkich miejsc dziesiętnych."
+        "truncDescription": "Zwraca tylko pierwszy argument przekonwertowany na liczbę całkowitą przez obcięcie wszystkich miejsc dziesiętnych.",
+        "linkDescription": "Tworzy hiperłącze używając URI podanego w pierwszym argumencie.",
+        "buttonDescription": "Tworzy przycisk przy użyciu identyfikatora URI (pierwszy argument) i etykiety (drugi argument).",
+        "getLinkLabelDescription": "Pobiera etykietę z formuły przy użyciu funkcji łącza lub przycisku.",
+        "getLinkUrlDescription": "Pobiera adres URL z formuły przy użyciu funkcji łącza lub przycisku."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "nienazwany wiersz {value}"

@@ -403,5 +403,9 @@
     "duplicateApplicationJobType": {
         "duplicatedTitle": "Applicatie gedupliceerd",
         "duplicating": "Dupliceren"
+    },
+    "InstallTemplateJobType": {
+        "installedTitle": "Template geïnstalleerd",
+        "installing": "Installeren"
     }
 }
