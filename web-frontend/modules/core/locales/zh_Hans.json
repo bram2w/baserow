@@ -1,24 +1,32 @@
 {
     "paginator": {
-        "page": "页面",
-        "of": ""
+        "page": "页",
+        "of": "总{pages}页"
     },
     "copied": {
-        "label": ""
+        "label": "已复制！"
     },
     "sidebarApplication": {
         "renameApplication": "重命名{type}",
-        "viewTrash": "",
-        "deleteApplication": "删除{type}"
+        "viewTrash": "查看回收站",
+        "deleteApplication": "删除{type}",
+        "rename": "重命名",
+        "duplicate": "创建副本",
+        "delete": "删除",
+        "snapshots": "快照"
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "正在创建副本",
+        "duplicatedTitle": "应用副本已创建"
     },
     "sidebar": {
-        "createGroup": "",
-        "inviteOthers": "",
-        "logoff": "",
-        "errorNoGroup": "",
-        "admin": "",
-        "dashboard": "",
-        "trash": "",
+        "createGroup": "创建群组",
+        "inviteOthers": "邀请他人",
+        "logoff": "注销",
+        "errorNoGroup": "你没有任何群组。",
+        "admin": "管理员",
+        "dashboard": "仪表板",
+        "trash": "回收站",
         "settings": "设置"
     },
     "accountForm": {
@@ -27,9 +35,9 @@
     },
     "accountSettings": {
         "title": "账号",
-        "changedTitle": "",
-        "changedDescription": "",
-        "submitButton": "升级账号"
+        "changedTitle": "已更新",
+        "changedDescription": "您的账户信息已更新。",
+        "submitButton": "更新账号"
     },
     "settingsModal": {
         "title": "设置"
@@ -37,279 +45,364 @@
     "passwordSettings": {
         "title": "更改密码",
         "changedTitle": "密码已更改",
-        "changedDescription": "",
+        "changedDescription": "您的密码已更改，下次登录时必须使用新密码。",
         "oldPasswordLabel": "旧密码",
-        "oldPasswordRequiredError": "",
+        "oldPasswordRequiredError": "需要旧密码。",
         "newPasswordLabel": "新密码",
-        "repeatNewPasswordLabel": "",
-        "repeatNewPasswordMatchError": "",
+        "repeatNewPasswordLabel": "重复新密码",
+        "repeatNewPasswordMatchError": "此字段必须与您的新密码字段匹配。",
         "submitButton": "更改密码",
-        "errorInvalidOldPasswordTitle": "",
-        "errorInvalidOldPasswordMessage": ""
+        "errorInvalidOldPasswordTitle": "密码无效",
+        "errorInvalidOldPasswordMessage": "无法更改您的密码，因为您的旧密码无效。"
+    },
+    "deleteAccountSettings": {
+        "title": "删除账号",
+        "description": "您可以通过输入当前密码并单击按钮来安排删除您的帐户。您的帐户将在 {days} 天后被永久删除。同时，如果您再次登录，您的帐户将被删除取消。",
+        "groupNotice": "孤立组将被删除",
+        "groupNoticeDescription": "当您的帐户被永久删除时，您是最后一个具有管理员权限的活动用户的所有组和相关数据也将被删除。下面显示的组是因为您是唯一的管理员而将被删除的组. 为防止他们被删除，您必须在删除您的帐户之前先给另一个用户管理员权限。",
+        "orphanGroups": "宽限期过后也会被永久删除",
+        "orphanGroupMemberCount": "与任何人共享|与一个用户共享|与 {count} 个用户共享",
+        "password": "密码",
+        "passwordConfirm": "重复密码",
+        "repeatPasswordMatchError": "该字段必须匹配第一个密码字段。",
+        "submitButton": "删除账户",
+        "errorInvalidPasswordTitle": "密码无效",
+        "errorInvalidPasswordMessage": "无法删除您的帐户，因为您的密码无效。",
+        "errorUserIsLastAdminTitle": "最后一个管理员",
+        "errorUserIsLastAdminMessage": "无法删除您的帐户，因为您是此 Baserow 实例的最后一位管理员。",
+        "accountDeletedSuccessTitle": "计划删除帐户",
+        "accountDeletedSuccessMessage": "您的帐户已被安排删除。",
+        "groupLoadingError": "组检查失败",
+        "groupLoadingErrorDescription": "检查要删除的组失败，请刷新页面。"
     },
     "error": {
-        "alreadyExistsTitle": "",
-        "alreadyExistsMessage": "",
-        "passwordRequired": "",
-        "invalidEmail": "",
-        "disabledAccountTitle": "",
-        "disabledAccountMessage": "",
-        "incorrectCredentialTitle": "",
-        "incorrectCredentialMessage": "",
-        "inputRequired": ""
+        "alreadyExistsTitle": "用户已经存在",
+        "alreadyExistsMessage": "具有所提供电子邮件地址的用户已经存在。",
+        "passwordRequired": "需要密码。",
+        "invalidEmail": "请输入有效的电子邮件地址。",
+        "disabledAccountTitle": "帐号被禁用",
+        "disabledAccountMessage": "此用户帐户已被禁用。",
+        "incorrectCredentialTitle": "不正确的凭据",
+        "incorrectCredentialMessage": "提供的电子邮件地址或密码不正确。",
+        "inputRequired": "需要输入。"
     },
     "field": {
-        "language": "",
-        "emailAddress": "",
-        "name": "",
-        "password": "",
-        "passwordRepeat": ""
+        "language": "语言",
+        "emailAddress": "Email地址",
+        "name": "你的名字",
+        "password": "密码",
+        "passwordRepeat": "重复密码"
     },
-    "invitationTitle": "",
-    "invitationMessage": "",
+    "invitationTitle": "邀请",
+    "invitationMessage": "{invitedBy} 邀请您加入 {group}。",
     "groupForm": {
-        "nameLabel": ""
+        "nameLabel": "名称"
     },
     "leaveGroupModal": {
-        "title": "",
-        "message": "",
-        "leave": ""
+        "title": "离开{group}",
+        "message": "您确定要离开群组 {group} 吗？ 您将无法再访问相关应用程序，如果您想重新获得访问权限，其中一位管理员必须再次邀请您。 如果您离开该组，它不会被删除。 所有其他成员仍然可以访问它。 如果您是最后一个管理员，则无法离开组，因为这将使其无人维护。",
+        "leave": "离开群组"
     },
     "dashboardGroup": {
-        "showMembers": "",
-        "createApplication": ""
+        "showMembers": "成员",
+        "createApplication": "新建"
     },
     "groupInvitation": {
-        "title": "",
-        "message": "",
-        "reject": "",
-        "accept": ""
+        "title": "邀请函",
+        "message": "{by} 邀请您加入 {group}。",
+        "reject": "拒绝",
+        "accept": "接受"
     },
     "groupMemberModal": {
-        "membersModalTitle": "",
-        "userDescription": "",
-        "invitationDescription": "",
-        "sendInvite": "",
-        "userAlreadyInGroupTitle": "",
-        "userAlreadyInGroupText": ""
+        "membersModalTitle": "{group}成员",
+        "userDescription": "{user} - {since} 前加入",
+        "invitationDescription": "{since} 前邀请",
+        "sendInvite": "发送邀请",
+        "userAlreadyInGroupTitle": "用户已经在群组中。",
+        "userDescriptionPendingDeletion": "{user} - 待删除",
+        "userAlreadyInGroupText": "当用户已经是群组成员时，无法发送邀请。"
     },
     "groupInviteForm": {
-        "invitationFormTitle": "",
-        "optionalMessagePlaceholder": "",
-        "errorInvalidEmail": ""
+        "invitationFormTitle": "通过电子邮件邀请",
+        "optionalMessagePlaceholder": "可选消息",
+        "errorInvalidEmail": "请输入有效的电子邮件地址。"
     },
     "groupsContext": {
-        "search": "",
-        "noResults": "",
-        "createGroup": ""
+        "search": "搜索群组",
+        "noResults": "没有找到结果",
+        "createGroup": "创建群组"
     },
     "groupContext": {
-        "renameGroup": "",
-        "members": "",
-        "viewTrash": "",
-        "leaveGroup": "",
-        "deleteGroup": ""
+        "renameGroup": "重命名群组",
+        "members": "成员",
+        "viewTrash": "查看回收站",
+        "leaveGroup": "离开群组",
+        "deleteGroup": "删除群组"
     },
     "createGroupModal": {
-        "createNew": "",
-        "add": ""
+        "createNew": "创建新群组",
+        "add": "添加群组"
     },
     "templateCategories": {
-        "search": "",
-        "title": ""
+        "search": "搜索模板",
+        "title": "模板"
     },
     "templateHeader": {
-        "use": ""
+        "use": "使用这个模板"
     },
     "trashSidebar": {
-        "title": "",
-        "unnamedGroup": ""
+        "title": "回收站",
+        "unnamedGroup": "未命名群组 {id}"
     },
     "trashContents": {
-        "message": "",
-        "empty": "",
-        "emptyButtonTrashed": "",
-        "emptyButtonNotTrashed": "",
-        "unnamed": ""
+        "message": "恢复过去 {duration} 删除的项目",
+        "empty": "过去三天没有删除任何内容。",
+        "emptyButtonTrashed": "永久删除 {type}",
+        "emptyButtonNotTrashed": "清空这个 {type} 的回收站",
+        "unnamed": "未命名 {type} {id}"
     },
     "trashEmptyModal": {
-        "titleIsTrashed": "",
-        "titleIsNotTrashed": "",
-        "messageIsTrashed": "",
-        "messageIsNotTrashed": "",
-        "buttonIsTrashed": "",
-        "buttonIsNotTrashed": ""
+        "titleIsTrashed": "您确定要永久删除 {name}？",
+        "titleIsNotTrashed": "您确定要清空 {name} 的回收站吗？",
+        "messageIsTrashed": "这将永久删除它及其所有内容。之后它们将无法恢复。",
+        "messageIsNotTrashed": "这将永久删除列出的项目。之后它们将无法恢复。",
+        "buttonIsTrashed": "永久删除",
+        "buttonIsNotTrashed": "空"
     },
     "trashEntry": {
-        "deletedUser": "",
-        "fromParent": "",
-        "name": "",
-        "restore": "",
-        "unnamed": ""
+        "deletedUser": "已删除的用户",
+        "fromParent": "来自 {parent}",
+        "name": "{user} 已删除 {type} {title} {parent}",
+        "restore": "恢复",
+        "andMore": "...还有 {count} 条",
+        "unnamed": "未命名 {type} {idid}"
     },
     "trashModal": {
-        "emptyTitle": "",
-        "emptyMessage": ""
+        "emptyTitle": "没有找到组",
+        "emptyMessage": "您不是任何组的成员。数据库等应用程序属于一个组，因此要创建它们，您需要创建一个组。"
     },
     "uploadViaURLUserFileUpload": {
-        "title": "",
-        "urlLabel": "",
-        "urlError": ""
+        "title": "从 URL 上传",
+        "urlLabel": "网址",
+        "urlError": "需要一个有效的 URL。"
     },
     "userFilesModal": {
-        "title": ""
+        "title": "上传自"
     },
     "uploadFileUserFileUpload": {
-        "title": "",
-        "drop": "",
-        "clickOrDrop": "",
-        "retry": ""
+        "title": "从我的设备上传",
+        "drop": "放在这里",
+        "clickOrDrop": "在此处单击或拖放您的文件",
+        "retry": "重试"
     },
     "createApplicationContext": {
-        "fromTemplate": ""
+        "fromTemplate": "来自模板"
     },
     "applicationForm": {
-        "nameLabel": ""
+        "nameLabel": "名称"
     },
     "connectingNotification": {
-        "title": "",
-        "content": ""
+        "title": "重新连接中",
+        "content": "正在重新连接服务器。"
     },
     "failedConnectingNotification": {
-        "title": "",
-        "content": "",
-        "action": ""
+        "title": "失败",
+        "content": "连接服务器失败，请刷新页面。",
+        "action": "刷新页面"
+    },
+    "AuthorizationErrorNotification": {
+        "title": "认证错误",
+        "content": "您似乎没有查看该资源的权限。",
+        "action": "刷新页面"
     },
     "restoreNotification": {
-        "restore": ""
+        "restore": "恢复已删除的 {type}"
+    },
+    "copyingNotification": {
+        "title": "正在复制...",
+        "content": "准备数据中"
+    },
+    "pastingNotification": {
+        "title": "正在粘贴...",
+        "content": "准备数据中"
+    },
+    "clearingNotification": {
+        "title": "正在清除...",
+        "content": "准备数据中"
+    },
+
+    "undoRedoNotification": {
+        "undoingTitle": "正在撤消...",
+        "undoingText": "撤消你的动作中",
+        "undoneTitle": "撤消完成",
+        "undoneText": "动作已经被撤消",
+        "noMoreUndo": "没有可撤消的操作",
+        "skippingUndoDueToError": "由于未知错误撤消失败，跳过。",
+        "redoingTitle": "正在重做...",
+        "redoingText": "重做你的动作中",
+        "redoneTitle": "重做完成",
+        "redoneText": "动作已被重做",
+        "noMoreRedo": "没有更多的动作可以重做",
+        "skippingRedoDueToError": "由于未知错误重做失败，跳过。",
+        "failed": "失败"
     },
     "errorLayout": {
-        "notFound": "",
-        "error": "",
-        "backDashboard": "",
-        "backLogin": "",
-        "wrong": ""
+        "notFound": "没有找到您要查找的页面。这可能是因为 URL 不正确或您没有权限查看该页面。",
+        "error": "加载页面时出现问题。我们的开发人员已收到此问题的通知。请尝试刷新或返回仪表板。",
+        "backDashboard": "返回仪表板",
+        "backLogin": "返回登录",
+        "wrong": "出了点问题"
     },
     "dashboard": {
-        "title": "",
-        "alertTitle": "",
-        "alertText": "",
-        "tweetContent": "",
-        "redditTitle": "",
-        "noGroupTitle": "",
-        "noGroupText": "",
-        "createGroup": "",
-        "becomeGithubSponsor": "",
-        "starOnGitlab": "",
-        "shareOnTwitter": "",
-        "shareOnReddit": "",
-        "shareOnFacebook": "",
-        "shareOnLinkedIn": ""
+        "title": "仪表板",
+        "alertTitle": "我们需要你的帮助！",
+        "alertText": "如果您觉得 Baserow 有用，我们非常感谢您加注星标或分享我们。通过分享 Baserow，您正在帮助我们改进产品并使其对您更有用。",
+        "tweetContent": "看看@baserow 一个开源的无代码数据库工具和 Airtable 替代品！",
+        "redditTitle": "'Baserow - 一个开源的无代码数据库",
+        "noGroupTitle": "没有找到群组",
+        "noGroupText": "你不是任何群组的成员。像数据库这样的应用程序属于一个群组，所以为了创建它们你需要创建一个群组。",
+        "createGroup": "创建群组",
+        "becomeGithubSponsor": "成为 GitHub 赞助商",
+        "starOnGitlab": "在 GitLab 上给我们加注星标",
+        "shareOnTwitter": "关于 Baserow 的推文",
+        "shareOnReddit": "在 Reddit 上分享",
+        "shareOnFacebook": "在 Facebook 上分享",
+        "shareOnLinkedIn": "在 LinkedIn 上分享"
+    },
+    "dashboardSidebar": {
+        "groups": "群组",
+        "links": "链接",
+        "knowledgeBase": "知识库",
+        "tutorials": "教程",
+        "userSettings": "用户设置",
+        "trash": "回收站",
+        "logoff": "注销"
     },
     "login": {
-        "title": "",
-        "forgotPassword": ""
+        "title": "登录",
+        "forgotPassword": "忘记密码"
     },
     "resetPassword": {
-        "title": "",
-        "newPassword": "",
-        "repeatNewPassword": "",
-        "submit": "",
-        "changed": "",
-        "errorInvalidLinkTitle": "",
-        "errorInvalidLinkMessage": "",
-        "errorLinkExpiredTitle": "",
-        "errorLinkExpiredMessage": "",
-        "disabled": "",
-        "disabledMessage": ""
+        "title": "重置密码",
+        "newPassword": "新密码",
+        "repeatNewPassword": "重复新密码",
+        "submit": "修改密码",
+        "changed": "密码已更改",
+        "errorInvalidLinkTitle": "无效链接",
+        "errorInvalidLinkMessage": "无法重置密码，因为链接无效。",
+        "errorLinkExpiredTitle": "链接已过期",
+        "errorLinkExpiredMessage": "密码重置链接已过期，请重新申请。",
+        "disabled": "重置密码被禁用",
+        "disabledMessage": "无法重置密码，因为它已被禁用。"
     },
     "signup": {
-        "headTitle": "",
-        "title": "",
-        "disabled": "",
-        "disabledMessage": ""
+        "headTitle": "创建新帐户",
+        "title": "注册",
+        "disabled": "注册被禁用",
+        "disabledMessage": "无法创建帐户，因为注册已被禁用。",
+        "requireFirstUser": "欢迎来到 Baserow！",
+        "requireFirstUserMessage": "请填写下表创建管理员用户。"
     },
     "forgotPassword": {
-        "title": "",
-        "message": "",
-        "submit": "",
-        "confirmation": "",
-        "disabled": "",
-        "disabledMessage": ""
+        "title": "忘记密码",
+        "message": "请在表格中输入您的电子邮件地址。如果我们找到一个帐户，我们将发送一封电子邮件，其中包含重置密码的链接。",
+        "submit": "发送链接",
+        "confirmation": "如果您的电子邮件地址存在于我们的数据库中，您将在几分钟后在您的电子邮件地址收到一个密码重置链接。",
+        "disabled": "忘记密码被禁用",
+        "disabledMessage": "无法重置密码，因为该功能已被禁用。"
     },
     "settings": {
-        "settingsTitle": "",
-        "baserowInstanceId": "",
-        "instanceIdDescription": "",
-        "settingAllowNewAccountsName": "",
-        "settingAllowNewAccountsDescription": "",
-        "enabled": ""
+        "settingsTitle": "管理员设置",
+        "baserowInstanceId": "实例 ID",
+        "instanceIdDescription": "实例 ID 是您的 Baserow 副本的唯一标识符。",
+        "accountRestrictions": "账户限制",
+        "settingAllowResetPasswordName": "允许重置密码",
+        "settingAllowResetPasswordDescription": "默认情况下，用户可以请求密码重置链接。",
+        "settingAllowResetPasswordWarning": "请注意，如果您忘记密码，您可能会将自己锁定在系统之外，并且无法恢复访问。",
+        "settingAllowNewAccountsName": "允许创建新账户",
+        "settingAllowNewAccountsDescription": "默认情况下，任何访问您的 Baserow 域的用户都可以注册一个新帐户。",
+        "settingAllowSignupsViaGroupInvitationsName": "允许通过群组邀请注册",
+        "settingAllowSignupsViaGroupInvitationDescription": "即使禁用创建新帐户，此选项仍允许直接邀请的用户创建帐户。",
+        "userDeletionGraceDelay": "用户删除",
+        "settingUserDeletionGraceDelay": "宽限延迟",
+        "settingUserDeletionGraceDelayDescription": "这是未登录的天数，在此之后计划删除的帐户将被永久删除。",
+        "invalidAccountDeletionGraceDelay": "此值为必填项，必须是小于 32000 的正整数",
+        "enabled": "启用"
     },
     "formSidebar": {
         "actions": {
-            "addAll": "",
-            "removeAll": "",
-            "addField": ""
+            "addAll": "全部添加",
+            "removeAll": "全部删除",
+            "addField": "添加字段"
         },
-        "fieldsDescription": "",
-        "prefillInfoLink": "",
+        "fieldsDescription": "所有字段都在表单中。",
+        "prefillInfoLink": "动态预填充值",
         "modal": {
-            "title": "",
-            "descriptionPartOne": "",
-            "descriptionPartTwo": "",
+            "title": "动态预填充值",
+            "descriptionPartOne": "可以预先填写表格以帮助用户更快地填写表格。",
+            "descriptionPartTwo": "表格中所有可用的字段都可以预填。",
             "howToPrefill": {
-                "title": "",
-                "description": ""
+                "title": "如何预填表格",
+                "description": "如果你想用数据预填充表单，你可以通过添加到公共表单 url 的查询参数来实现。这些查询参数以 `prefill` 为前缀，以避免与潜在的未来查询参数发生任何冲突。"
             },
             "format": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "格式",
+                "description": "查询参数格式如下：",
+                "codeSnippet": "?prefill_<field_name>=<value>"
             },
             "example": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "示例",
+                "description": "在下面的例子中，我们想用 `Mike` 的值预填充一个名为 `Name` 的字段",
+                "codeSnippet": "?prefill_Name=Mike"
             },
             "spaces": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "空格",
+                "description": "字段名称中的空格被替换为`+`以避免查询参数出现任何问题。",
+                "codeSnippet": "?prefill_my+field=Mike"
             },
             "multipleValues": {
-                "title": "",
-                "description": "",
-                "codeSnippet": ""
+                "title": "多个值",
+                "description": "如果你想预填多个字段，你可以通过在值之间添加一个`,`来实现。",
+                "codeSnippet": "?prefill_multi+select=Mike,John"
             },
             "specialFieldTypes": {
-                "title": "",
-                "description": "",
+                "title": "特殊字段类型",
+                "description": "一般预填充值与字段值相同。但也有一些例外情况，即值被转换为不同的值。",
                 "ratingField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "评分字段",
+                    "description": "评分字段接受一个数字来表示应该填写多少颗星。",
+                    "codeSnippet": "?prefill_rating=3"
                 },
                 "linkRowField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "链接行字段",
+                    "description": "链接行字段可以接受选择下拉菜单中显示的值。",
+                    "codeSnippet": "?prefill_link+row=Mike"
                 },
                 "selectField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "单选/多选字段",
+                    "description": "单个选择字段可以接受选择下拉菜单中显示的值。多选字段也是如此，但它也可以接受多个值。",
+                    "codeSnippet": "?prefill_single+select=Mike"
                 },
                 "dateField": {
-                    "title": "",
-                    "description": "",
-                    "codeSnippet": ""
+                    "title": "日期字段",
+                    "description": "一个日期字段可以接受以下格式的日期，并将使用该字段的日期格式来解析日期。",
+                    "codeSnippet": "\n// 标准\nISO_8601\n\n// 通用格式\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM -DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm' \n\n// 美国\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
             }
         }
     },
-    "deleteAccountSettings": {
-        "title": "删除账号",
-        "password": "密码",
-        "submitButton": "删除账号"
+
+    "job": {
+        "statePending": "等待开始...",
+        "stateStarted": "开始...",
+        "stateFinished": "完成",
+        "stateFailed": "失败",
+        "errorJobAlreadyRunningTitle": "已经在运行",
+        "errorJobAlreadyRunningDescription": "另一个导入作业已经在运行。您需要等待该作业完成后再开始另一个作业。"
+    },
+    "datetime": {
+        "daysAgo": "0 天前 | 1 天前 | {n} 天前",
+        "monthsAgo": "0 个月前 | 1 个月前 | {n} 个月前",
+        "yearsAgo": "0 年前 | 1 年前 | {n} 年前"
     }
 }
