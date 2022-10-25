@@ -1,6 +1,6 @@
 <template>
   <div>
-    <span v-if="column.additionalProps.userId === row.user_id">
+    <span v-if="userId === row.user_id">
       {{ roleName(roles, row) }}
     </span>
     <a
