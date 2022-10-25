@@ -24,14 +24,11 @@
           <div class="control__elements">
             <Dropdown v-model="values.permissions" :show-search="false">
               <DropdownItem
-                :name="$t('permission.admin')"
-                value="ADMIN"
-                :description="$t('permission.adminDescription')"
-              ></DropdownItem>
-              <DropdownItem
-                :name="$t('permission.member')"
-                value="MEMBER"
-                :description="$t('permission.memberDescription')"
+                v-for="role in roles"
+                :key="role.value"
+                :name="role.name"
+                :value="role.value"
+                :description="role.description"
               ></DropdownItem>
             </Dropdown>
           </div>
@@ -72,6 +69,17 @@ export default {
         message: '',
       },
     }
+  },
+  computed: {
+    roles() {
+      return this.$store.getters['roles/getAllRoles'].map(
+        ({ value, name, description }) => ({
+          value,
+          name: this.$t(name),
+          description: this.$t(description),
+        })
+      )
+    },
   },
   validations: {
     values: {
