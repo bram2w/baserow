@@ -11,7 +11,10 @@
         "duplicateApplication": "Duplikat {type}",
         "viewTrash": "Wyświetl kosz",
         "deleteApplication": "Usuń {type}",
-        "snapshots": "Migawek"
+        "snapshots": "Migawek",
+        "rename": "Zmień nazwę",
+        "delete": "Usuń",
+        "duplicate": "Duplikuj"
     },
     "sidebar": {
         "createGroup": "Utwórz grupę",
@@ -396,5 +399,13 @@
         "daysAgo": "0 dni temu | 1 dzień temu | {n} dni temu",
         "monthsAgo": "0 miesięcy temu | 1 miesiąc temu | {n} miesięcy temu",
         "yearsAgo": "0 lat temu | 1 rok temu | {n} lat temu"
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "Powielanie",
+        "duplicatedTitle": "Aplikacja zduplikowana"
+    },
+    "InstallTemplateJobType": {
+        "installedTitle": "Zainstalowano szablon",
+        "installing": "Instalowanie"
     }
 }
