@@ -26,9 +26,9 @@
               <DropdownItem
                 v-for="role in roles"
                 :key="role.value"
-                :name="role.name"
+                :name="$t(role.name)"
                 :value="role.value"
-                :description="role.description"
+                :description="$t(role.description)"
               ></DropdownItem>
             </Dropdown>
           </div>
@@ -56,6 +56,7 @@
 import { required, email } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'GroupInviteForm',
@@ -71,15 +72,7 @@ export default {
     }
   },
   computed: {
-    roles() {
-      return this.$store.getters['roles/getAllRoles'].map(
-        ({ value, name, description }) => ({
-          value,
-          name: this.$t(name),
-          description: this.$t(description),
-        })
-      )
-    },
+    ...mapGetters({ roles: 'roles/getAllRoles' }),
   },
   validations: {
     values: {

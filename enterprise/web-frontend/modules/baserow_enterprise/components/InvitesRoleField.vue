@@ -4,7 +4,7 @@
       ref="editRoleContextLink"
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
-      {{ roleName(roles, row) }}
+      {{ $t(roleName(roles, row)) }}
       <i class="fas fa-chevron-down"></i>
     </a>
     <EditRoleContext
@@ -38,16 +38,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters({ userId: 'auth/getUserId' }),
-    roles() {
-      return this.$store.getters['roles/getAllRoles'].map(
-        ({ value, name, description }) => ({
-          value,
-          name: this.$t(name),
-          description: this.$t(description),
-        })
-      )
-    },
+    ...mapGetters({ userId: 'auth/getUserId', roles: 'roles/getAllRoles' }),
   },
   methods: {
     roleName(roles, row) {
