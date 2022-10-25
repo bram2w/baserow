@@ -77,24 +77,21 @@ export default {
   },
   data() {
     return {
-      roles: [
-        {
-          value: 'ADMIN',
-          name: this.$t('permission.admin'),
-          description: this.$t('permission.adminDescription'),
-        },
-        {
-          value: 'MEMBER',
-          name: this.$t('permission.member'),
-          description: this.$t('permission.memberDescription'),
-        },
-      ],
       editInvitation: {},
       editRoleInvitation: {},
       invitesAmount: 0,
     }
   },
   computed: {
+    roles() {
+      return this.$store.getters['roles/getAllRoles'].map(
+        ({ value, name, description }) => ({
+          value,
+          name: this.$t(name),
+          description: this.$t(description),
+        })
+      )
+    },
     service() {
       const service = GroupService(this.$client)
 

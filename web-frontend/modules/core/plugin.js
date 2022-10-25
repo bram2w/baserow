@@ -33,6 +33,7 @@ import jobStore from '@baserow/modules/core/store/job'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
+import rolesStore from '@baserow/modules/core/store/roles'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -101,6 +102,7 @@ export default (context, inject) => {
   store.registerModule('notification', notificationStore)
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
+  store.registerModule('roles', rolesStore)
 
   registry.register('job', new DuplicateApplicationJobType(context))
   registry.register('job', new InstallTemplateJobType(context))

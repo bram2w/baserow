@@ -87,22 +87,19 @@ export default {
     return {
       editMember: {},
       editRoleMember: {},
-      roles: [
-        {
-          value: 'ADMIN',
-          name: this.$t('permission.admin'),
-          description: this.$t('permission.adminDescription'),
-        },
-        {
-          value: 'MEMBER',
-          name: this.$t('permission.member'),
-          description: this.$t('permission.memberDescription'),
-        },
-      ],
     }
   },
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
+    roles() {
+      return this.$store.getters['roles/getAllRoles'].map(
+        ({ value, name, description }) => ({
+          value,
+          name: this.$t(name),
+          description: this.$t(description),
+        })
+      )
+    },
     service() {
       const service = GroupService(this.$client)
       const options = {

@@ -19,7 +19,6 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { roles } from '@baserow_enterprise/enums/roles'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 import { clone } from '@baserow/modules/core/utils/object'
 import GroupService from '@baserow/modules/core/services/group'
@@ -41,10 +40,13 @@ export default {
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
     roles() {
-      return roles.map(({ name, uid }) => ({
-        value: uid,
-        name,
-      }))
+      return this.$store.getters['roles/getAllRoles'].map(
+        ({ value, name, description }) => ({
+          value,
+          name: this.$t(name),
+          description: this.$t(description),
+        })
+      )
     },
   },
   methods: {

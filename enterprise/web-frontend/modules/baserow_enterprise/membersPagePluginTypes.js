@@ -2,8 +2,19 @@ import { MembersPagePluginType } from '@baserow/modules/database/membersPagePlug
 import MembersRoleField from '@baserow_enterprise/components/MembersRoleField'
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import InvitesRoleField from '@baserow_enterprise/components/InvitesRoleField'
+import { roles } from '@baserow_enterprise/enums/roles'
 
 export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
+  /**
+   * TODO delete constructor once roles are fetched from the API
+   */
+  constructor(props) {
+    super(props)
+    if (!this.isDeactivated()) {
+      this.app.store.commit('roles/SET_ROLES', roles)
+    }
+  }
+
   static getType() {
     return 'enterprise_members_columns'
   }

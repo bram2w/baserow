@@ -23,7 +23,6 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { roles } from '@baserow_enterprise/enums/roles'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
@@ -45,10 +44,13 @@ export default {
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
     roles() {
-      return roles.map(({ name, uid }) => ({
-        value: uid,
-        name,
-      }))
+      return this.$store.getters['roles/getAllRoles'].map(
+        ({ value, name, description }) => ({
+          value,
+          name: this.$t(name),
+          description: this.$t(description),
+        })
+      )
     },
   },
   methods: {
