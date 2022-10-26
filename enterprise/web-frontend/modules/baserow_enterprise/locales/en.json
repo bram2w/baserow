@@ -5,23 +5,23 @@
     "roles": {
         "admin": {
             "name": "Admin",
-            "description": "TODO"
+            "description": "Can fully configure and edit groups and applications."
         },
         "builder": {
             "name": "Builder",
-            "description": "TODO"
+            "description": "Can fully configure and edit applications."
         },
         "editor": {
             "name": "Editor",
-            "description": "TODO"
+            "description": "Can fully edit data but not configure applications or groups."
         },
         "commenter": {
             "name": "Commenter",
-            "description": "TODO"
+            "description": "Can only read and comment on data."
         },
         "viewer": {
             "name": "Viewer",
-            "description": "TODO"
+            "description": "Can only read data."
         }
     }
 }
