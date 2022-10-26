@@ -30,6 +30,7 @@ For example:
 
 ### Refactors
 * Frontend now install templates as an async job in background instead of using a blocking call. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
+* Changed the add label of several buttons.
 
 ### Breaking Changes
 

@@ -298,10 +298,10 @@
         "hideHiddenFields": "Hide hidden fields"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Add another option"
+        "addOption": "Choose an option"
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Add a collaborator"
+        "addCollaborator": "Choose a collaborator"
     },
     "rowEditFieldFile": {
         "addFile": "Add a file",
@@ -315,7 +315,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Add another link"
+        "addLink": "Choose a link"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "Choose CSV file",
