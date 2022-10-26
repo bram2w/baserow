@@ -46,10 +46,10 @@ export default {
   },
   methods: {
     roleName(roles, row) {
-      const role = roles.find((r) => r.value === row.role_uid)
+      const role = roles.find((r) => r.uid === row.role_uid)
       return role?.name || ''
     },
-    async roleUpdate({ value: permissionsNew, row: member }) {
+    async roleUpdate({ uid: permissionsNew, row: member }) {
       const oldMember = clone(member)
       const newMember = clone(member)
       newMember.role_uid = permissionsNew

@@ -93,8 +93,8 @@ export default {
     ...mapGetters({ userId: 'auth/getUserId' }),
     roles() {
       return this.$store.getters['roles/getAllRoles'].map(
-        ({ value, name, description }) => ({
-          value,
+        ({ uid, name, description }) => ({
+          uid,
           name: this.$t(name),
           description: this.$t(description),
         })
@@ -175,7 +175,7 @@ export default {
     async refresh() {
       await this.$refs.crudTable.fetch()
     },
-    async roleUpdate({ value: permissionsNew, row: member }) {
+    async roleUpdate({ uid: permissionsNew, row: member }) {
       const oldMember = clone(member)
       const newMember = clone(member)
       newMember.permissions = permissionsNew

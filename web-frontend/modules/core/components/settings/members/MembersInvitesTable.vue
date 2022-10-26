@@ -85,8 +85,8 @@ export default {
   computed: {
     roles() {
       return this.$store.getters['roles/getAllRoles'].map(
-        ({ value, name, description }) => ({
-          value,
+        ({ uid, name, description }) => ({
+          uid,
           name: this.$t(name),
           description: this.$t(description),
         })
@@ -168,7 +168,7 @@ export default {
       this.editRoleInvitation = row
       this.$refs.editRoleContext[action](target, 'bottom', 'left', 4)
     },
-    async roleUpdate({ value: permissionsNew, row: invitation }) {
+    async roleUpdate({ uid: permissionsNew, row: invitation }) {
       const oldInvitation = clone(invitation)
       const newInvitation = clone(invitation)
       newInvitation.permissions = permissionsNew

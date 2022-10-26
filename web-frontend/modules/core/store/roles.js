@@ -1,12 +1,12 @@
 // TODO remove once endpoint is implemented
 const defaultRoles = [
   {
-    value: 'ADMIN',
+    uid: 'ADMIN',
     name: 'permission.admin',
     description: 'permission.adminDescription',
   },
   {
-    value: 'MEMBER',
+    uid: 'MEMBER',
     name: 'permission.member',
     description: 'permission.memberDescription',
   },

@@ -5,10 +5,10 @@
         {{ $t('membersSettings.membersTable.columns.role') }}
       </div>
       <ul class="context__menu context__menu--can-be-active">
-        <li v-for="role in roles" :key="role.value">
+        <li v-for="role in roles" :key="role.uid">
           <a
-            :class="{ active: row[roleValueColumn] === role.value }"
-            @click="roleUpdate(role.value, row)"
+            :class="{ active: row[roleValueColumn] === role.uid }"
+            @click="roleUpdate(role.uid, row)"
           >
             {{ $t(role.name) }}
             <div v-if="role.description" class="context__menu-item-description">
@@ -54,7 +54,7 @@ export default {
         return
       }
 
-      this.$emit('update-role', { value: permissionsNew, row })
+      this.$emit('update-role', { uid: permissionsNew, row })
       this.hide()
     },
   },

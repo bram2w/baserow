@@ -25,9 +25,9 @@
             <Dropdown v-model="values.permissions" :show-search="false">
               <DropdownItem
                 v-for="role in roles"
-                :key="role.value"
+                :key="role.uid"
                 :name="$t(role.name)"
-                :value="role.value"
+                :value="role.uid"
                 :description="$t(role.description)"
               ></DropdownItem>
             </Dropdown>
