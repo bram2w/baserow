@@ -11,6 +11,14 @@ export class PermissionManagerType extends Registerable {
   getOrder() {
     return 0
   }
+
+  /**
+   * Translation mappings for all the roles that have been added by your
+   * permission manager
+   */
+  getRolesTranslations() {
+    return {}
+  }
 }
 
 export class CorePermissionManagerType extends PermissionManagerType {
@@ -50,6 +58,19 @@ export class GroupMemberPermissionManagerType extends PermissionManagerType {
 export class BasicPermissionManagerType extends PermissionManagerType {
   static getType() {
     return 'basic'
+  }
+
+  getRolesTranslations() {
+    return {
+      ADMIN: {
+        name: 'permission.admin',
+        description: 'permission.adminDescription',
+      },
+      MEMBER: {
+        name: 'permission.member',
+        description: 'permission.memberDescription',
+      },
+    }
   }
 
   hasPermission(permissions, operation, context) {

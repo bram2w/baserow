@@ -4,7 +4,7 @@
       ref="editRoleContextLink"
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
-      {{ $t(roleName(roles, row)) }}
+      {{ roleName(roles, row) }}
       <i class="fas fa-chevron-down"></i>
     </a>
     <EditRoleContext

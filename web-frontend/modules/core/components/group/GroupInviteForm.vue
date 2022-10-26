@@ -26,9 +26,9 @@
               <DropdownItem
                 v-for="role in roles"
                 :key="role.uid"
-                :name="$t(role.name)"
+                :name="role.name"
                 :value="role.uid"
-                :description="$t(role.description)"
+                :description="role.description"
               ></DropdownItem>
             </Dropdown>
           </div>

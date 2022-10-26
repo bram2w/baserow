@@ -1,5 +1,27 @@
 {
     "enterprise": {
         "licence": "Enterprise"
+    },
+    "roles": {
+        "admin": {
+            "name": "Admin",
+            "description": "TODO"
+        },
+        "builder": {
+            "name": "Builder",
+            "description": "TODO"
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "TODO"
+        },
+        "commenter": {
+            "name": "Commenter",
+            "description": "TODO"
+        },
+        "viewer": {
+            "name": "Viewer",
+            "description": "TODO"
+        }
     }
 }

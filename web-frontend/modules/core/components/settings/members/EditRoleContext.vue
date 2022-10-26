@@ -10,9 +10,9 @@
             :class="{ active: row[roleValueColumn] === role.uid }"
             @click="roleUpdate(role.uid, row)"
           >
-            {{ $t(role.name) }}
+            {{ role.name }}
             <div v-if="role.description" class="context__menu-item-description">
-              {{ $t(role.description) }}
+              {{ role.description }}
             </div>
           </a>
         </li>

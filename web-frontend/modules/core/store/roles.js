@@ -12,33 +12,61 @@ const defaultRoles = [
   },
 ]
 
-export const state = () => ({
-  roles: defaultRoles, // TODO set to [] when endpoint is implemented
-})
+function appendRoleTranslations(roles, registry, i18n) {
+  const translationMap = Object.values(
+    registry.getAll('permissionManager')
+  ).reduce(
+    (translations, manager) => ({
+      ...translations,
+      ...manager.getRolesTranslations(),
+    }),
+    {}
+  )
 
-export const mutations = {
-  SET_ROLES(state, roles) {
-    state.roles = roles
-  },
+  return roles.map((role) => {
+    const translations = Object.keys(translationMap[role.uid]).reduce(
+      (translations, key) => ({
+        ...translations,
+        [key]: i18n.t(translationMap[role.uid][key]),
+      }),
+      {}
+    )
+    return {
+      ...role,
+      ...translations,
+    }
+  })
 }
 
-export const actions = {
-  fetchRoles() {
-    // TODO implement once endpoint exists
-    return null
-  },
-}
+export default ({ registry, i18n }) => {
+  const state = () => ({
+    roles: appendRoleTranslations(defaultRoles, registry, i18n), // TODO set to [] when endpoint is implemented
+  })
 
-export const getters = {
-  getAllRoles(state) {
-    return state.roles
-  },
-}
+  const mutations = {
+    SET_ROLES(state, roles) {
+      state.roles = appendRoleTranslations(roles, registry, i18n)
+    },
+  }
 
-export default {
-  namespaced: true,
-  state,
-  getters,
-  actions,
-  mutations,
+  const actions = {
+    fetchRoles() {
+      // TODO implement once endpoint exists
+      return null
+    },
+  }
+
+  const getters = {
+    getAllRoles(state) {
+      return state.roles
+    },
+  }
+
+  return {
+    namespaced: true,
+    state,
+    getters,
+    actions,
+    mutations,
+  }
 }

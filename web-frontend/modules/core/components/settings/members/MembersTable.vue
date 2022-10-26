@@ -90,16 +90,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ userId: 'auth/getUserId' }),
-    roles() {
-      return this.$store.getters['roles/getAllRoles'].map(
-        ({ uid, name, description }) => ({
-          uid,
-          name: this.$t(name),
-          description: this.$t(description),
-        })
-      )
-    },
+    ...mapGetters({ userId: 'auth/getUserId', roles: 'roles/getAllRoles' }),
     service() {
       const service = GroupService(this.$client)
       const options = {

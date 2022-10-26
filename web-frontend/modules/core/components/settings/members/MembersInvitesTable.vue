@@ -60,6 +60,7 @@ import EditInviteContext from '@baserow/modules/core/components/settings/members
 import MemberRoleField from '@baserow/modules/core/components/settings/members/MemberRoleField'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 import { clone } from '@baserow/modules/core/utils/object'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'MembersInvitesTable',
@@ -83,15 +84,7 @@ export default {
     }
   },
   computed: {
-    roles() {
-      return this.$store.getters['roles/getAllRoles'].map(
-        ({ uid, name, description }) => ({
-          uid,
-          name: this.$t(name),
-          description: this.$t(description),
-        })
-      )
-    },
+    ...mapGetters({ roles: 'roles/getAllRoles' }),
     service() {
       const service = GroupService(this.$client)
 

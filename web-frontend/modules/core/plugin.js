@@ -102,7 +102,7 @@ export default (context, inject) => {
   store.registerModule('notification', notificationStore)
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
-  store.registerModule('roles', rolesStore)
+  store.registerModule('roles', rolesStore({ registry, i18n: app.i18n }))
 
   registry.register('job', new DuplicateApplicationJobType(context))
   registry.register('job', new InstallTemplateJobType(context))

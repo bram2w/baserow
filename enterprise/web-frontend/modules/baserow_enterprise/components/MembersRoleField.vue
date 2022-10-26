@@ -1,14 +1,14 @@
 <template>
   <div>
     <span v-if="userId === row.user_id">
-      {{ $t(roleName(roles, row)) }}
+      {{ roleName(roles, row) }}
     </span>
     <a
       v-else
       ref="editRoleContextLink"
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
-      {{ $t(roleName(roles, row)) }}
+      {{ roleName(roles, row) }}
       <i class="fas fa-chevron-down"></i>
     </a>
     <EditRoleContext
