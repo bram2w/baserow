@@ -12,15 +12,7 @@ from baserow_premium.license.exceptions import (
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
 )
-from baserow_premium.license.handler import (
-    add_user_to_license,
-    check_licenses,
-    fill_remaining_seats_of_license,
-    register_license,
-    remove_all_users_from_license,
-    remove_license,
-    remove_user_from_license,
-)
+from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.license.models import License
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -120,7 +112,9 @@ class AdminLicensesView(APIView):
     )
     def post(self, request, data):
         with LockedAtomicTransaction(License):
-            license_object = register_license(request.user, data["license"])
+            license_object = LicenseHandler.register_license(
+                request.user, data["license"]
+            )
         return Response(LicenseSerializer(license_object).data)
 
 
@@ -178,7 +172,7 @@ class AdminLicenseView(APIView):
     @transaction.atomic
     def delete(self, request, id):
         license = License.objects.get(pk=id)
-        remove_license(request.user, license)
+        LicenseHandler.remove_license(request.user, license)
         return Response(status=204)
 
 
@@ -234,7 +228,7 @@ class AdminLicenseUserView(APIView):
     def post(self, request, id, user_id):
         license = License.objects.select_for_update(of=("self",)).get(pk=id)
         user = User.objects.get(pk=user_id)
-        add_user_to_license(request.user, license, user)
+        LicenseHandler.add_user_to_license(request.user, license, user)
         return Response(LicenseUserSerializer(user).data)
 
     @extend_schema(
@@ -278,7 +272,7 @@ class AdminLicenseUserView(APIView):
     def delete(self, request, id, user_id):
         license = License.objects.select_for_update(of=("self",)).get(pk=id)
         user = User.objects.get(pk=user_id)
-        remove_user_from_license(request.user, license, user)
+        LicenseHandler.remove_user_from_license(request.user, license, user)
         return Response(status=204)
 
 
@@ -311,7 +305,9 @@ class AdminLicenseFillSeatsView(APIView):
     @transaction.atomic
     def post(self, request, id):
         license = License.objects.get(pk=id)
-        license_users = fill_remaining_seats_of_license(request.user, license)
+        license_users = LicenseHandler.fill_remaining_seats_of_license(
+            request.user, license
+        )
         users = [license_user.user for license_user in license_users]
         return Response(LicenseUserSerializer(users, many=True).data)
 
@@ -345,7 +341,7 @@ class AdminRemoveAllUsersFromLicenseView(APIView):
     @transaction.atomic
     def post(self, request, id):
         license = License.objects.get(pk=id)
-        remove_all_users_from_license(request.user, license)
+        LicenseHandler.remove_all_users_from_license(request.user, license)
         return Response(status=204)
 
 
@@ -443,7 +439,7 @@ class AdminCheckLicense(APIView):
     @map_exceptions({License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST})
     def get(self, request, id):
         license_object = License.objects.get(pk=id)
-        updated_licenses = check_licenses([license_object])
+        updated_licenses = LicenseHandler.check_licenses([license_object])
         if not updated_licenses[0].pk:
             # If the primary key is None, it means that the license has been deleted
             # which could happen when checking the license. In that case, we want to

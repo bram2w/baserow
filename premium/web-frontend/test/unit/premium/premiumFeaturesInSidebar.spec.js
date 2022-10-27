@@ -38,6 +38,18 @@ describe('Sidebar Premium Features Snapshot tests', () => {
     }
   )
 
+  test('A realtime update to global premium is reflected in the badge', async () => {
+    const sidebarComponent = await testApp.mount(Sidebar, {})
+    expect(PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)).toBe(
+      false
+    )
+    testApp.giveCurrentUserGlobalPremiumFeatures()
+    await sidebarComponent.vm.$nextTick()
+    expect(PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)).toBe(
+      true
+    )
+  })
+
   test('When user is staff without global premium they dont see a premium badge', async () => {
     testApp.updateCurrentUserToBecomeStaffMember()
     const sidebarComponent = await testApp.mount(Sidebar, {})

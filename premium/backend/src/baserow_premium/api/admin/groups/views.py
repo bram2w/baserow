@@ -4,7 +4,7 @@ from django.db.models import Count
 from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
 from baserow_premium.admin.groups.handler import GroupsAdminHandler
 from baserow_premium.api.admin.views import AdminListingView
-from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAdminUser
@@ -51,7 +51,7 @@ class GroupsAdminView(AdminListingView):
         ),
     )
     def get(self, request):
-        check_active_premium_license(request.user)
+        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(request.user)
         return super().get(request)
 
 
@@ -74,7 +74,7 @@ class GroupAdminView(APIView):
         responses={
             204: None,
             400: get_error_schema(
-                ["ERROR_GROUP_DOES_NOT_EXIST", "ERROR_NO_ACTIVE_PREMIUM_LICENSE"]
+                ["ERROR_GROUP_DOES_NOT_EXIST", "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"]
             ),
             401: None,
         },

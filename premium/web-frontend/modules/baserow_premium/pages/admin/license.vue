@@ -171,11 +171,7 @@
             <div class="license-detail__item-value">
               <i
                 class="fas fa-check"
-                :class="
-                  licenseType.hasPremiumFeatures()
-                    ? 'license-yes'
-                    : 'license-no'
-                "
+                :class="hasPremiumFeatures ? 'license-yes' : 'license-no'"
               ></i>
             </div>
           </div>
@@ -247,6 +243,7 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
 import LicenseService from '@baserow_premium/services/license'
 import DisconnectLicenseModal from '@baserow_premium/components/license/DisconnectLicenseModal'
+import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   components: { DisconnectLicenseModal, PaginatedDropdown },
@@ -278,6 +275,9 @@ export default {
     },
     licenseType() {
       return this.$registry.get('license', this.license.product_code)
+    },
+    hasPremiumFeatures() {
+      return this.licenseType.getFeatures().includes(PremiumFeatures.PREMIUM)
     },
   },
   methods: {

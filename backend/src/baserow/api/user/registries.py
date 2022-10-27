@@ -48,7 +48,7 @@ class UserDataType(Instance):
         )
 
 
-class UserDataRegistry(Registry):
+class UserDataRegistry(Registry[UserDataType]):
     name = "api_user_data"
 
     def get_all_user_data(self, user, request) -> dict:
@@ -70,4 +70,4 @@ class UserDataRegistry(Registry):
         }
 
 
-user_data_registry = UserDataRegistry()
+user_data_registry: UserDataRegistry = UserDataRegistry()

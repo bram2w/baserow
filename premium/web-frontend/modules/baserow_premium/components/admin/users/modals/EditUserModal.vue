@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal @hidden="$refs.form && $refs.form.reset()">
     <h2 class="box__title">
       {{ $t('editUserModal.edit', { username: user.username }) }}
     </h2>

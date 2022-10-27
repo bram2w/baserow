@@ -3,7 +3,7 @@ from unittest.mock import call, patch
 from django.test.utils import override_settings
 
 import pytest
-from baserow_premium.license.exceptions import NoPremiumLicenseError
+from baserow_premium.license.exceptions import PremiumFeaturesNotAvailableError
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.handler import RowCommentHandler
 from freezegun import freeze_time
@@ -45,14 +45,14 @@ def test_cant_create_comment_without_premium_license(premium_data_fixture):
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
-    with pytest.raises(NoPremiumLicenseError):
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         RowCommentHandler.create_comment(user, table.id, rows[0].id, "Test")
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_cant_create_comment_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_premium_license_type
+    premium_data_fixture, alternative_per_group_license_service
 ):
     user = premium_data_fixture.create_user(
         first_name="Test User", has_active_premium_license=True
@@ -61,13 +61,13 @@ def test_cant_create_comment_without_premium_license_for_group(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(
+    alternative_per_group_license_service.restrict_user_premium_to(
         user, [table.database.group_id]
     )
     RowCommentHandler.create_comment(user, table.id, rows[0].id, "Test")
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
-    with pytest.raises(NoPremiumLicenseError):
+    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         RowCommentHandler.create_comment(user, table.id, rows[0].id, "Test")
 
 

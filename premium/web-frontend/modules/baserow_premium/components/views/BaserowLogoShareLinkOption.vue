@@ -1,13 +1,13 @@
 <template>
   <div
     class="view-sharing__option"
-    :class="{ 'view-sharing__option--disabled': !validPremiumLicense }"
+    :class="{ 'view-sharing__option--disabled': !hasPremiumFeatures }"
     @click="click"
   >
     <SwitchInput
       large
       :value="!view.show_logo"
-      :disabled="!validPremiumLicense"
+      :disabled="!hasPremiumFeatures"
       @input="update"
     ></SwitchInput>
     <div v-tooltip="tooltipText" class="margin-left-2">
@@ -18,10 +18,10 @@
       <span>
         {{ $t('shareLinkOptions.baserowLogo.label') }}
       </span>
-      <i v-if="!validPremiumLicense" class="deactivated-label fas fa-lock"></i>
+      <i v-if="!hasPremiumFeatures" class="deactivated-label fas fa-lock"></i>
     </div>
     <PremiumModal
-      v-if="!validPremiumLicense"
+      v-if="!hasPremiumFeatures"
       ref="premiumModal"
       :name="$t('shareLinkOptions.baserowLogo.premiumModalName')"
     ></PremiumModal>
@@ -32,8 +32,8 @@
 import { mapGetters } from 'vuex'
 import ViewPremiumService from '@baserow_premium/services/view'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import { PremiumPlugin } from '@baserow_premium/plugins'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
+import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   name: 'BaserowLogoShareLinkOption',
@@ -53,13 +53,11 @@ export default {
       return this.$store.getters['application/get'](this.view.table.database_id)
         .group
     },
-    validPremiumLicense() {
-      return this.$registry
-        .get('plugin', PremiumPlugin.getType())
-        .activeLicenseHasPremiumFeatures(this.group.id)
+    hasPremiumFeatures() {
+      return this.$hasFeature(PremiumFeatures.PREMIUM, this.group.id)
     },
     tooltipText() {
-      if (this.validPremiumLicense) {
+      if (this.hasPremiumFeatures) {
         return null
       } else {
         return this.$t('premium.deactivated')
@@ -82,7 +80,7 @@ export default {
       }
     },
     click() {
-      if (!this.validPremiumLicense) {
+      if (!this.hasPremiumFeatures) {
         this.$refs.premiumModal.show()
       }
     },

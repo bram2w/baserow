@@ -119,7 +119,7 @@
               <i
                 class="fas margin-left-1"
                 :class="
-                  getLicenseType(license).hasPremiumFeatures()
+                  licenseHasPremiumFeatures(license)
                     ? 'fa-check license-yes'
                     : 'fa-times license-no'
                 "
@@ -185,6 +185,11 @@ export default {
     },
     getLicenseType(license) {
       return this.$registry.get('license', license.product_code)
+    },
+    licenseHasPremiumFeatures(license) {
+      return this.getLicenseType(license)
+        .getFeatures()
+        .includes(PremiumFeatures.PREMIUM)
     },
   },
 }

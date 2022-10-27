@@ -1,4 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import PremiumFeatures from '@baserow_premium/features'
 
 /**
  *
@@ -20,22 +21,17 @@ export class LicenseType extends Registerable {
   }
 
   /**
-   * When a license of this type is active if the user should have access to
-   * premium features.
+   * The a list of features that this license provides.
    */
-  hasPremiumFeatures() {
+  getFeatures() {
     throw new Error('Must be set by the implementing sub class.')
   }
 
-  /**
-   * Returns if this license type is currently active and valid globally if no
-   * group is provided, or active specifically for the provided group.
-   * Otherwise returns null if no license is active.
-   *
-   * @param forGroupId An optional group id to check more specifically if licenses can
-   *  be activated per group.
-   */
-  hasValidActiveLicense(forGroupId = undefined) {
+  getTopSidebarTooltip() {
+    throw new Error('Must be set by the implementing sub class.')
+  }
+
+  getOrder() {
     throw new Error('Must be set by the implementing sub class.')
   }
 }
@@ -54,20 +50,12 @@ export class PremiumLicenseType extends LicenseType {
     return 'license-plan--premium'
   }
 
-  hasPremiumFeatures() {
-    return true
+  getFeatures() {
+    return [PremiumFeatures.PREMIUM]
   }
 
-  hasValidActiveLicense(forGroupId = undefined) {
-    const additionalUserData =
-      this.app.store.getters['auth/getAdditionalUserData']
-    const validLicense = additionalUserData?.premium?.valid_license
-    const groups = Array.isArray(validLicense)
-      ? validLicense.filter((o) => o.type === 'group').map((o) => o.id)
-      : []
-    return (
-      validLicense === true ||
-      (Array.isArray(validLicense) && groups.includes(forGroupId))
-    )
+  getTopSidebarTooltip() {
+    const { i18n } = this.app
+    return i18n.t('premiumTopSidebar.premium')
   }
 }

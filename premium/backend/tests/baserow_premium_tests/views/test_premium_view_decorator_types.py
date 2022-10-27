@@ -1,7 +1,7 @@
 from django.test.utils import override_settings
 
 import pytest
-from baserow_premium.license.exceptions import NoPremiumLicenseError
+from baserow_premium.license.exceptions import PremiumFeaturesNotAvailableError
 
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import ViewDecoration
@@ -33,7 +33,7 @@ def test_create_left_border_color_without_premium_license(premium_data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(NoPremiumLicenseError):
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,
             decorator_type_name="left_border_color",
@@ -54,14 +54,14 @@ def test_create_left_border_color_without_premium_license(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_left_border_color_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_premium_license_type
+    premium_data_fixture, alternative_per_group_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(
+    alternative_per_group_license_service.restrict_user_premium_to(
         user, [grid_view.table.database.group.id]
     )
     handler.create_decoration(
@@ -72,8 +72,8 @@ def test_create_left_border_color_without_premium_license_for_group(
         user=user,
     )
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
-    with pytest.raises(NoPremiumLicenseError):
+    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,
             decorator_type_name="left_border_color",
@@ -109,7 +109,7 @@ def test_create_background_color_without_premium_license(premium_data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(NoPremiumLicenseError):
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,
             decorator_type_name="background_color",
@@ -130,14 +130,14 @@ def test_create_background_color_without_premium_license(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_background_color_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_premium_license_type
+    premium_data_fixture, alternative_per_group_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(
+    alternative_per_group_license_service.restrict_user_premium_to(
         user, [grid_view.table.database.group.id]
     )
     handler.create_decoration(
@@ -148,8 +148,8 @@ def test_create_background_color_without_premium_license_for_group(
         user=user,
     )
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
-    with pytest.raises(NoPremiumLicenseError):
+    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,
             decorator_type_name="background_color",

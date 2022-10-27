@@ -6,7 +6,7 @@ import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
 import KanbanView from '@baserow_premium/components/views/kanban/KanbanView'
 import KanbanViewHeader from '@baserow_premium/components/views/kanban/KanbanViewHeader'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
-import { PremiumPlugin } from '@baserow_premium/plugins'
+import PremiumFeatures from '@baserow_premium/features'
 
 class PremiumViewType extends ViewType {
   getDeactivatedText() {
@@ -18,9 +18,7 @@ class PremiumViewType extends ViewType {
   }
 
   isDeactivated(groupId) {
-    return !this.app.$registry
-      .get('plugin', PremiumPlugin.getType())
-      .activeLicenseHasPremiumFeatures(groupId)
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
   }
 }
 

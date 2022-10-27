@@ -1,6 +1,5 @@
 import { ViewDecoratorType } from '@baserow/modules/database/viewDecorators'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
-import { PremiumPlugin } from '@baserow_premium/plugins'
 
 import {
   GridViewType,
@@ -14,6 +13,7 @@ import backgroundDecoratorImage from '@baserow_premium/assets/images/backgroundD
 
 import LeftBorderColorViewDecorator from '@baserow_premium/components/views/LeftBorderColorViewDecorator'
 import BackgroundColorViewDecorator from '@baserow_premium/components/views/BackgroundColorViewDecorator'
+import PremiumFeatures from '@baserow_premium/features'
 
 export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
   static getType() {
@@ -48,9 +48,7 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
   }
 
   isDeactivated(groupId) {
-    return !this.app.$registry
-      .get('plugin', PremiumPlugin.getType())
-      .activeLicenseHasPremiumFeatures(groupId)
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
   }
 
   canAdd({ view }) {
@@ -136,9 +134,7 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
   }
 
   isDeactivated(groupId) {
-    return !this.app.$registry
-      .get('plugin', PremiumPlugin.getType())
-      .activeLicenseHasPremiumFeatures(groupId)
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
   }
 
   canAdd({ view }) {

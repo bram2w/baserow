@@ -94,4 +94,4 @@ def test_admin_dashboard(api_client, premium_data_fixture):
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
         assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-        assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+        assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"

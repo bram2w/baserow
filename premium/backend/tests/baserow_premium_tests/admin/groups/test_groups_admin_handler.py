@@ -6,7 +6,7 @@ from django.test.utils import override_settings
 import pytest
 from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
 from baserow_premium.admin.groups.handler import GroupsAdminHandler
-from baserow_premium.license.exceptions import NoPremiumLicenseError
+from baserow_premium.license.exceptions import PremiumFeaturesNotAvailableError
 
 from baserow.contrib.database.models import Database, Table
 from baserow.core.exceptions import IsNotAdminError
@@ -80,7 +80,7 @@ def test_delete_group_without_premium_license(send_mock, premium_data_fixture):
 
     handler = GroupsAdminHandler()
 
-    with pytest.raises(NoPremiumLicenseError):
+    with pytest.raises(PremiumFeaturesNotAvailableError):
         handler.delete_group(staff_user, group_1)
 
     send_mock.assert_not_called()

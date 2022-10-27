@@ -9,7 +9,7 @@ from baserow_premium.admin.users.exceptions import (
     CannotDeleteYourselfException,
     UserDoesNotExistException,
 )
-from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.license.handler import LicenseHandler
 
 from baserow.core.exceptions import IsNotAdminError
 from baserow.core.signals import before_user_deleted
@@ -47,7 +47,9 @@ class UserAdminHandler:
             a valid password.
         """
 
-        check_active_premium_license(requesting_user)
+        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
+            requesting_user
+        )
         self._raise_if_not_permitted(requesting_user)
         self._raise_if_locking_self_out_of_admin(
             is_active, is_staff, requesting_user, user_id
@@ -105,7 +107,9 @@ class UserAdminHandler:
             UnknownUserException.
         """
 
-        check_active_premium_license(requesting_user)
+        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
+            requesting_user
+        )
         self._raise_if_not_permitted(requesting_user)
 
         if requesting_user.id == user_id:

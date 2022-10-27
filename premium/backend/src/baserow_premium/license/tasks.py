@@ -11,14 +11,14 @@ def license_check(self):
     Periodic tasks that check all the licenses with the authority.
     """
 
-    from .handler import check_licenses
+    from .handler import LicenseHandler
     from .models import License
 
     all_licenses = License.objects.all()
 
     if len(all_licenses) > 0:
         with transaction.atomic():
-            check_licenses(all_licenses)
+            LicenseHandler.check_licenses(all_licenses)
 
 
 # noinspection PyUnusedLocal

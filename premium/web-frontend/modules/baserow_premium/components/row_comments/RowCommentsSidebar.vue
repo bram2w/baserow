@@ -1,6 +1,6 @@
 <template>
   <div>
-    <template v-if="!validPremiumLicense">
+    <template v-if="!hasPremiumFeaturesEnabled">
       <div class="row-comments">
         <div class="row-comments__empty">
           <i class="row-comments__empty-icon fas fa-comments"></i>
@@ -72,11 +72,11 @@
 <script>
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import { PremiumPlugin } from '@baserow_premium/plugins'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
+import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   name: 'RowCommentsSidebar',
@@ -110,10 +110,8 @@ export default {
     }
   },
   computed: {
-    validPremiumLicense() {
-      return this.$registry
-        .get('plugin', PremiumPlugin.getType())
-        .activeLicenseHasPremiumFeatures(this.database.group.id)
+    hasPremiumFeaturesEnabled() {
+      return this.$hasFeature(PremiumFeatures.PREMIUM, this.database.group.id)
     },
     ...mapGetters({
       comments: 'row_comments/getSortedRowComments',
@@ -125,7 +123,7 @@ export default {
     }),
   },
   async created() {
-    if (!this.validPremiumLicense) {
+    if (!this.hasPremiumFeaturesEnabled) {
       return
     }
 

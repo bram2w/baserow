@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from baserow_premium.license.handler import check_active_premium_license_for_group
+from baserow_premium.license.handler import LicenseHandler
 
 from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.views.handler import ViewHandler
@@ -20,11 +20,13 @@ from .serializers import (
 class PremiumDecoratorValueProviderType(DecoratorValueProviderType):
     def before_create_decoration(self, view, user):
         if user:
-            check_active_premium_license_for_group(user, view.table.database.group)
+            LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+                user, view.table.database.group
+            )
 
     def before_update_decoration(self, view_decoration, user):
         if user:
-            check_active_premium_license_for_group(
+            LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
                 user, view_decoration.view.table.database.group
             )
 

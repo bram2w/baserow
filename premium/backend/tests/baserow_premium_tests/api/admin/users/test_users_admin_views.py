@@ -125,7 +125,7 @@ def test_admin_list_users_without_premium_license(api_client, premium_data_fixtu
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -457,7 +457,7 @@ def test_admin_cannot_delete_user_without_premium_license(
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -535,7 +535,7 @@ def test_non_admin_cannot_patch_user_without_premium_license(
         HTTP_AUTHORIZATION=f"JWT {non_admin_user_token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
     non_admin_user.refresh_from_db()
     assert non_admin_user.email == "test@test.nl"
@@ -803,7 +803,7 @@ def test_admin_impersonate_user_without_premium_license(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
 
 @pytest.mark.django_db
