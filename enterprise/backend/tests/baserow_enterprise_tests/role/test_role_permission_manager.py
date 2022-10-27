@@ -47,7 +47,14 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
 
     group_1 = data_fixture.create_group(
         user=admin,
-        members=[builder, viewer, editor, viewer_plus, builder_less, no_role],
+        custom_permissions=[
+            (builder, "BUILDER"),
+            (viewer, "VIEWER"),
+            (editor, "EDITOR"),
+            (viewer_plus, "VIEWER"),
+            (builder_less, "BUILDER"),
+            (no_role, "NO_ROLE"),
+        ],
     )
     group_2 = data_fixture.create_group(
         user=another_admin,
@@ -70,33 +77,10 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
     table_2_2.get_model().objects.create()
 
     enterprise_data_fixture.create_role_assignment(
-        user=admin, role_uid="ADMIN", group=group_1, scope=group_1
-    )
-
-    enterprise_data_fixture.create_role_assignment(
-        user=builder, role_uid="BUILDER", group=group_1, scope=group_1
-    )
-    enterprise_data_fixture.create_role_assignment(
         user=builder, role_uid="BUILDER", group=group_2, scope=table_2_1
-    )
-
-    enterprise_data_fixture.create_role_assignment(
-        user=editor, role_uid="EDITOR", group=group_1, scope=group_1
-    )
-
-    enterprise_data_fixture.create_role_assignment(
-        user=viewer, role_uid="VIEWER", group=group_1, scope=group_1
-    )
-
-    enterprise_data_fixture.create_role_assignment(
-        user=viewer_plus, role_uid="VIEWER", group=group_1, scope=group_1
     )
     enterprise_data_fixture.create_role_assignment(
         user=viewer_plus, role_uid="BUILDER", group=group_1, scope=table_1_1
-    )
-
-    enterprise_data_fixture.create_role_assignment(
-        user=builder_less, role_uid="BUILDER", group=group_1, scope=group_1
     )
     enterprise_data_fixture.create_role_assignment(
         user=builder_less, role_uid="VIEWER", group=group_1, scope=table_1_1

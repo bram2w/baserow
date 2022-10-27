@@ -77,6 +77,8 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
+        # TODO if the scope is group then override GroupUser instead of making a new role_assignment
+
         content_types = ContentType.objects.get_for_models(scope, subject)
 
         role_assignment, _ = RoleAssignment.objects.update_or_create(

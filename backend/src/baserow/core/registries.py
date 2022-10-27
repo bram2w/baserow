@@ -1,6 +1,6 @@
 import abc
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union, List
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
@@ -401,6 +401,12 @@ class PermissionManagerType(Instance):
         """
 
         return queryset
+
+    def get_roles(self) -> List:
+        """
+        Get all the roles available for your permissions system
+        """
+        return []
 
 
 class PermissionManagerTypeRegistry(Registry[PermissionManagerType]):

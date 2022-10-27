@@ -6,6 +6,7 @@ class GroupFixtures:
         user = kwargs.pop("user", None)
         users = kwargs.pop("users", [])
         members = kwargs.pop("members", [])
+        custom_permissions = kwargs.pop("custom_permissions", [])
 
         if user:
             users.insert(0, user)
@@ -21,6 +22,11 @@ class GroupFixtures:
         for user in members:
             self.create_user_group(
                 group=group, user=user, permissions="MEMBER", order=0
+            )
+
+        for user, permissions in custom_permissions:
+            self.create_user_group(
+                group=group, user=user, permissions=permissions, order=0
             )
 
         return group
