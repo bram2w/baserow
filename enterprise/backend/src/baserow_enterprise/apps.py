@@ -44,7 +44,6 @@ class BaserowEnterpriseConfig(AppConfig):
         from baserow.core.trash.registries import trash_item_type_registry
 
         from .plugins import EnterprisePlugin
-        from .role.member_data_types import EnterpriseRolesDataType
         from .role.operations import AssignRoleGroupOperationType
 
         plugin_registry.register(EnterprisePlugin())
@@ -59,7 +58,6 @@ class BaserowEnterpriseConfig(AppConfig):
         trash_item_type_registry.register(TeamTrashableItemType())
 
         member_data_registry.register(EnterpriseMemberTeamsDataType())
-        member_data_registry.register(EnterpriseRolesDataType())
 
         object_scope_type_registry.register(TeamObjectScopeType())
         object_scope_type_registry.register(TeamSubjectObjectScopeType())
