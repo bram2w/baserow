@@ -8,7 +8,7 @@ from baserow_premium.admin.users.exceptions import (
     UserDoesNotExistException,
 )
 from baserow_premium.admin.users.handler import UserAdminHandler
-from baserow_premium.license.exceptions import PremiumFeaturesNotAvailableError
+from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.core.exceptions import IsNotAdminError
 from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
@@ -79,7 +79,7 @@ def test_admin_delete_user_without_premium_license(premium_data_fixture):
         first_name="Test1",
         is_staff=True,
     )
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         handler.delete_user(admin_user, admin_user.id)
 
 
@@ -305,7 +305,7 @@ def test_admin_update_user_without_premium_license(premium_data_fixture):
         first_name="Test1",
         is_staff=True,
     )
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         handler.update_user(admin_user, admin_user.id)
 
 

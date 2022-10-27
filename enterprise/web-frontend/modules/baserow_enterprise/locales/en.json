@@ -1,5 +1,6 @@
 {
     "enterprise": {
-        "licence": "Enterprise"
+        "license": "Enterprise",
+        "sidebarTooltip": "Your account has access to the enterprise features globally"
     }
 }

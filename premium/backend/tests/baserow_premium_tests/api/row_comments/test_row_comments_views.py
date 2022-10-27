@@ -101,7 +101,7 @@ def test_row_comments_api_view_without_premium_license(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -140,7 +140,7 @@ def test_row_comments_api_view_without_premium_license_for_group(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -425,7 +425,7 @@ def test_cant_make_a_row_without_premium_license(premium_data_fixture, api_clien
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 @pytest.mark.django_db

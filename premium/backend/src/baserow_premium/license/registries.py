@@ -21,6 +21,12 @@ class LicenseType(abc.ABC, Instance):
     all instance-wide licenses a user might have, the one with the highest order will
     be shown as a badge in the top of the sidebar in the GUI. """
 
+    instance_wide: bool = False
+    """
+    When true every user in the instance will have this license if it is active
+    regardless of if they are added to a seat on the license or not.
+    """
+
     def has_feature(self, feature: str):
         return feature in self.features
 

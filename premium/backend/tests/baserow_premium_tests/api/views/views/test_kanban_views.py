@@ -32,7 +32,7 @@ def test_list_without_valid_premium_license(api_client, premium_data_fixture):
     url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
     # The kanban view should work if it's a template.
     premium_data_fixture.create_template(group=kanban.table.database.group)
@@ -55,7 +55,7 @@ def test_list_without_valid_premium_license_for_group(
     url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
     alternative_per_group_license_service.restrict_user_premium_to(
         user, [kanban.table.database.group.id]

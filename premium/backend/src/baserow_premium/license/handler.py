@@ -38,17 +38,17 @@ from .constants import (
     AUTHORITY_RESPONSE_UPDATE,
 )
 from .exceptions import (
+    FeaturesNotAvailableError,
     LicenseAuthorityUnavailable,
     LicenseHasExpiredError,
     LicenseInstanceIdMismatchError,
     NoSeatsLeftInLicenseError,
-    PremiumFeaturesNotAvailableError,
     PremiumLicenseAlreadyExistsError,
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
 )
-from .features import PREMIUM
 from .models import LicenseUser
+from .registries import license_type_registry
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -56,53 +56,86 @@ User = get_user_model()
 
 class LicenseHandler:
     @classmethod
-    def raise_if_doesnt_have_instance_wide_premium_features(cls, user: AbstractUser):
-        """
-        Raises the `PremiumFeaturesNotAvailableError` if the user does not have an
-        active license granting them premium features.
-        """
-
-        if not cls.has_active_license_granting_feature_instance_wide(PREMIUM, user):
-            raise PremiumFeaturesNotAvailableError()
-
-    @classmethod
-    def raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-        cls, user: AbstractUser, group: Group
+    def raise_if_user_doesnt_have_feature_instance_wide(
+        cls, user: AbstractUser, feature: str
     ):
         """
-        Checks if the provided user has premium access features for a group or
-        instance-wide.
+        Raises the `FeaturesNotAvailableError` if the user does not have an
+        active license granting them the provided feature.
+        """
 
+        if not cls.user_has_feature_instance_wide(feature, user):
+            raise FeaturesNotAvailableError()
+
+    @classmethod
+    def raise_if_user_doesnt_have_feature(
+        cls, user: AbstractUser, group: Group, feature: str
+    ):
+        """
+        Checks if the provided user has the feature for a group or instance-wide.
+
+        :param feature: The feature the user must have.
         :param user: The user to check for feature access.
         :param group: The group that the user must have active premium features for.
-        :raises PremiumFeaturesNotAvailableError: if the user does not have premium
+        :raises FeaturesNotAvailableError: if the user does not have premium
             features from a license the provided group.
         """
 
-        if not cls.has_active_license_granting_feature_instance_wide_or_for_group(
-            PREMIUM, user, group
-        ):
-            raise PremiumFeaturesNotAvailableError()
+        if not cls.user_has_feature(feature, user, group):
+            raise FeaturesNotAvailableError()
 
     @classmethod
-    def has_active_license_granting_feature_instance_wide_or_for_group(
-        cls, feature: str, user: AbstractUser, group: Group
-    ):
+    def user_has_feature(cls, feature: str, user: AbstractUser, group: Group):
+        """
+        Checks if the user has a particular feature granted by an active license for a
+        group. This could be granted by a license specific to that group, or an instance
+        level license, or a license which is instance wide.
+
+        :param feature: The feature to check to see if active. Look for features.py
+            files for these constant strings to use.
+        :param user: The user to check.
+        :param group: The group that the user is attempting to use the feature in.
+        :return: True if the user is allowed to use that feature, False otherwise.
+        """
+
+        license_plugin = cls._get_license_plugin()
+        return license_plugin.user_has_feature(feature, user, group)
+
+    @classmethod
+    def instance_has_feature(cls, feature: str):
+        """
+        Checks if the Baserow instance has a particular feature granted by an active
+        instance wide license
+
+        :param feature: The feature to check to see if active. Look for features.py
+            files for these constant strings to use.
+        :return: True if the feature is enabled globally for all users.
+        """
+
+        license_plugin = cls._get_license_plugin()
+        return license_plugin.instance_has_feature(feature)
+
+    @classmethod
+    def user_has_feature_instance_wide(cls, feature: str, user: AbstractUser):
+        """
+        Checks if the Baserow instance has a particular feature granted by an active
+        instance wide license
+
+        :param feature: The feature to check to see if active. Look for features.py
+            files for these constant strings to use.
+        :param user: The user to check.
+        :return: True if the feature is enabled globally for all users.
+        """
+
+        license_plugin = cls._get_license_plugin()
+        return license_plugin.user_has_feature_instance_wide(feature, user)
+
+    @classmethod
+    def _get_license_plugin(cls):
         from baserow_premium.plugins import PremiumPlugin
 
         license_plugin = plugin_registry.get_by_type(PremiumPlugin).get_license_plugin()
-        return license_plugin.has_license_feature_instance_wide_or_for_group(
-            feature, user, group
-        )
-
-    @classmethod
-    def has_active_license_granting_feature_instance_wide(
-        cls, feature: str, user: AbstractUser
-    ):
-        from baserow_premium.plugins import PremiumPlugin
-
-        license_plugin = plugin_registry.get_by_type(PremiumPlugin).get_license_plugin()
-        return license_plugin.has_license_feature_instance_wide(feature, user)
+        return license_plugin
 
     @classmethod
     def get_public_key(cls):
@@ -392,6 +425,10 @@ class LicenseHandler:
                 "The license instance id does not match the instance id."
             )
 
+        instance_wide = license_type_registry.get(
+            decoded_license_payload["product_code"]
+        ).instance_wide
+
         # Loop over all licenses to check if a license with the same ID already
         # exists. We can't use `objects.filter` because we need to decode the license
         # with the public key before we can extract the id.
@@ -402,6 +439,7 @@ class LicenseHandler:
                 # and is newer.
                 if license_object.issued_on < issued_on:
                     license_object.license = license_payload_as_string
+                    license_object.cached_untrusted_instance_wide = instance_wide
                     license_object.save()
                     return license_object
                 # If the `issued_on` date of the existing license is higher or equal to
@@ -413,7 +451,12 @@ class LicenseHandler:
                     )
 
         # If the license doesn't exist we want to create a new one.
-        return License.objects.create(license=license_payload_as_string)
+        return License.objects.create(
+            license=license_payload_as_string,
+            # Cache the instance wide property on the license row so we can look them
+            # up quickly later.
+            cached_untrusted_instance_wide=instance_wide,
+        )
 
     @classmethod
     def remove_license(cls, requesting_user: User, license: License):

@@ -162,7 +162,7 @@ def test_exporting_json_writes_file_to_storage(
                 HTTP_AUTHORIZATION=f"JWT {token}",
             )
             assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-            assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+            assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -316,7 +316,7 @@ def test_exporting_xml_writes_file_to_storage(
                 HTTP_AUTHORIZATION=f"JWT {token}",
             )
             assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-            assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+            assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 def strip_indents_and_newlines(xml):

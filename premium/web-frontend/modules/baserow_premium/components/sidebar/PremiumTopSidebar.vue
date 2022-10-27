@@ -13,9 +13,12 @@
       </div>
     </div>
     <div
-      v-if="highestLicenseType"
+      v-if="
+        highestLicenseType && highestLicenseType.showInTopSidebarWhenActive()
+      "
       v-tooltip="highestLicenseType.getTopSidebarTooltip()"
       class="instance-wide-license"
+      :class="highestLicenseType.getLicenseBadgeClass()"
     >
       {{ highestLicenseType.getName() }}
     </div>

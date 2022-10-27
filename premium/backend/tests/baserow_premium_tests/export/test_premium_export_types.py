@@ -6,7 +6,7 @@ from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import make_aware, utc
 
 import pytest
-from baserow_premium.license.exceptions import PremiumFeaturesNotAvailableError
+from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.rows.handler import RowHandler
@@ -188,7 +188,7 @@ def test_can_export_every_interesting_different_field_to_json(
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cannot_export_json_without_premium_license(storage_mock, premium_data_fixture):
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "json"}
         )
@@ -204,7 +204,7 @@ def test_cannot_export_json_without_premium_license_for_group(
     # premium access to the group.
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     alternative_per_group_license_service.restrict_user_premium_to(user, [0])
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "json"}, user=user
         )
@@ -451,7 +451,7 @@ def test_if_xml_duplicate_name_and_value_are_escaped(
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cannot_export_xml_without_premium_license(storage_mock, premium_data_fixture):
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "xml"}
         )
@@ -467,7 +467,7 @@ def test_cannot_export_xml_without_premium_license_for_group(
     # premium access to the group.
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     alternative_per_group_license_service.restrict_user_premium_to(user, [0])
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "xml"}, user=user
         )

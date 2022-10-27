@@ -1,7 +1,7 @@
 from django.test.utils import override_settings
 
 import pytest
-from baserow_premium.license.exceptions import PremiumFeaturesNotAvailableError
+from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView
@@ -15,7 +15,7 @@ def test_create_survey_form_without_premium_license(premium_data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         handler.create_view(
             user=user, table=table, type_name="form", name="Form", mode="survey"
         )
@@ -68,7 +68,7 @@ def test_create_survey_form_without_premium_license_for_group(
     handler = ViewHandler()
 
     alternative_per_group_license_service.restrict_user_premium_to(user, [0])
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         handler.create_view(
             user=user, table=table, type_name="form", name="Form", mode="survey"
         )
@@ -82,7 +82,7 @@ def test_update_to_survey_form_without_premium_license(premium_data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         handler.update_view(user=user, view=form, mode="survey")
 
 
@@ -124,7 +124,7 @@ def test_update_survey_form_without_premium_license_for_group(
     handler = ViewHandler()
 
     alternative_per_group_license_service.restrict_user_premium_to(user, [0])
-    with pytest.raises(PremiumFeaturesNotAvailableError):
+    with pytest.raises(FeaturesNotAvailableError):
         handler.update_view(user=user, view=form, mode="survey")
 
 

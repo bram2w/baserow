@@ -11,6 +11,7 @@ from baserow.contrib.database.export.file_writer import FileWriter, QuerysetSeri
 from baserow.contrib.database.export.registries import TableExporter
 from baserow.contrib.database.views.view_types import GridViewType
 
+from ..license.features import PREMIUM
 from .utils import get_unique_name, safe_xml_tag_name, to_xml
 
 
@@ -20,8 +21,8 @@ class PremiumTableExporter(TableExporter):
         Checks if the related user access to a valid license before the job is created.
         """
 
-        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-            user, table.database.group
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            user, table.database.group, PREMIUM
         )
         super().before_job_create(user, table, view, export_options)
 

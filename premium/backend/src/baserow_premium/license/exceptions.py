@@ -2,7 +2,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_402_PAYMENT_REQUIRED
 
 
-class PremiumFeaturesNotAvailableError(APIException):
+class FeaturesNotAvailableError(APIException):
     """
     Raised when the related user does not have an active license for the premium
     version.
@@ -11,9 +11,8 @@ class PremiumFeaturesNotAvailableError(APIException):
     def __init__(self):
         super().__init__(
             {
-                "error": "ERROR_NO_PREMIUM_FEATURES_AVAILABLE",
-                "detail": "The related user does not have access to the premium "
-                "features.",
+                "error": "ERROR_FEATURE_NOT_AVAILABLE",
+                "detail": "The related user does not have access to these features.",
             },
             code=HTTP_402_PAYMENT_REQUIRED,
         )
