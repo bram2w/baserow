@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
     "channels",
     "drf_spectacular",
@@ -279,20 +280,31 @@ MAX_CLIENT_SESSION_ID_LENGTH = 256
 
 CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER = "ClientUndoRedoActionGroupId"
 MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP = 2
+WEBSOCKET_ID_HEADER = "WebsocketId"
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
-    "WebSocketId",
+    WEBSOCKET_ID_HEADER,
     PUBLIC_VIEW_AUTHORIZATION_HEADER,
     CLIENT_SESSION_ID_HEADER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER,
 ]
 
-JWT_AUTH = {
-    "JWT_EXPIRATION_DELTA": datetime.timedelta(seconds=60 * 60),
-    "JWT_ALLOW_REFRESH": True,
-    "JWT_REFRESH_EXPIRATION_DELTA": datetime.timedelta(days=7),
-    "JWT_AUTH_HEADER_PREFIX": "JWT",
-    "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt.jwt_response_payload_handler",
+ACCESS_TOKEN_LIFETIME = datetime.timedelta(
+    minutes=int(os.getenv("BASEROW_ACCESS_TOKEN_LIFETIME_MINUTES", 10))  # 10 minutes
+)
+REFRESH_TOKEN_LIFETIME = datetime.timedelta(
+    hours=int(os.getenv("BASEROW_REFRESH_TOKEN_LIFETIME_HOURS", 24 * 7))  # 7 days
+)
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": ACCESS_TOKEN_LIFETIME,
+    "REFRESH_TOKEN_LIFETIME": REFRESH_TOKEN_LIFETIME,
+    "AUTH_HEADER_TYPES": ("JWT",),
+    # It is recommended that you set BASEROW_JWT_SIGNING_KEY so it is independent
+    # from the Django SECRET_KEY. This will make changing the signing key used for
+    # tokens easier in the event that it is compromised.
+    "SIGNING_KEY": os.getenv("BASEROW_JWT_SIGNING_KEY", os.getenv("SECRET_KEY")),
+    "USER_AUTHENTICATION_RULE": lambda user: user is not None,
 }
 
 SPECTACULAR_SETTINGS = {

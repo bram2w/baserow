@@ -1,7 +1,7 @@
 Django==3.2.13
 django-cors-headers==3.8.0
 djangorestframework==3.13.1
-drf-jwt==1.19.1
+djangorestframework-simplejwt==5.2.0
 psycopg2==2.9.1
 Faker==8.11.0
 Twisted==22.1

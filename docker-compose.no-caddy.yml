@@ -31,6 +31,7 @@ version: "3.4"
 x-backend-variables: &backend-variables
   # Most users should only need to set these first four variables.
   SECRET_KEY: ${SECRET_KEY:?}
+  BASEROW_JWT_SIGNING_KEY: ${BASEROW_JWT_SIGNING_KEY:-}
   DATABASE_PASSWORD: ${DATABASE_PASSWORD:?}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?}
 

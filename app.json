@@ -22,6 +22,10 @@
       "description": "A unique string that is used to generate secrets.",
       "generator": "secret"
     },
+    "BASEROW_JWT_SIGNING_KEY": {
+      "description": "A unique string that is used to sign jwt tokens.",
+      "generator": "secret"
+    },
     "BASEROW_PUBLIC_URL": {
       "description": "The public URL of your Heroku Baserow app. Don't forget to replace YOUR_APP_NAME with the name of your app.",
       "value": "https://YOUR_APP_NAME.herokuapp.com",

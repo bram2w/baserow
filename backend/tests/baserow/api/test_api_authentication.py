@@ -14,10 +14,10 @@ def test_authenticate(api_client, data_fixture):
         reverse("api:groups:list"), **{"HTTP_AUTHORIZATION": f"JWT SOME_WRONG_TOKEN"}
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_DECODING_SIGNATURE"
+    assert response.json()["error"] == "ERROR_INVALID_TOKEN"
 
     response = api_client.get(
         reverse("api:groups:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_SIGNATURE_HAS_EXPIRED"
+    assert response.json()["error"] == "ERROR_INVALID_TOKEN"

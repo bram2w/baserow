@@ -2,15 +2,10 @@ import uuid
 from urllib.parse import parse_qs
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 
-import jwt
 from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
-from rest_framework_jwt.settings import api_settings
-
-jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER
-jwt_decode_token = api_settings.JWT_DECODE_HANDLER
+from rest_framework_simplejwt.exceptions import TokenError
 
 # Nosec disables spurious hardcoded password warning, this is not a password but instead
 # the value of the JWT token to be used when a user wants to connect anonymously.
@@ -29,6 +24,8 @@ def get_user(token):
     :rtype: User or None
     """
 
+    from baserow.api.user.jwt import get_user_from_jwt_token
+
     anonymous = token == ANONYMOUS_USER_TOKEN
     if anonymous:
         if settings.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
@@ -39,25 +36,9 @@ def get_user(token):
             return AnonymousUser()
     else:
         try:
-            payload = jwt_decode_token(token)
-        except jwt.InvalidTokenError:
+            return get_user_from_jwt_token(token)
+        except TokenError:
             return
-
-        User = get_user_model()
-        username = jwt_get_username_from_payload(payload)
-
-        if not username:
-            return
-
-        try:
-            user = User.objects.get_by_natural_key(username)
-        except User.DoesNotExist:
-            return
-
-        if not user.is_active:
-            return
-
-        return user
 
 
 class JWTTokenAuthMiddleware(BaseMiddleware):

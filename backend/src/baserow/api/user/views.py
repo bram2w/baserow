@@ -6,15 +6,16 @@ from django.db import transaction
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_jwt.settings import api_settings
-from rest_framework_jwt.views import ObtainJSONWebTokenView as RegularObtainJSONWebToken
-from rest_framework_jwt.views import (
-    RefreshJSONWebTokenView as RegularRefreshJSONWebToken,
+from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
 )
-from rest_framework_jwt.views import VerifyJSONWebTokenView as RegularVerifyJSONWebToken
 
 from baserow.api.actions.serializers import (
     UndoRedoResponseSerializer,
@@ -43,6 +44,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.models import GroupInvitation, Template
 from baserow.core.user.exceptions import (
+    DeactivatedUserException,
     DisabledSignupError,
     InvalidPassword,
     ResetPasswordDisabledError,
@@ -51,105 +53,118 @@ from baserow.core.user.exceptions import (
     UserNotFound,
 )
 from baserow.core.user.handler import UserHandler
+from baserow.core.user.utils import generate_session_tokens_for_user
 
 from .errors import (
     ERROR_ALREADY_EXISTS,
     ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
+    ERROR_DEACTIVATED_USER,
     ERROR_DISABLED_RESET_PASSWORD,
     ERROR_DISABLED_SIGNUP,
+    ERROR_INVALID_CREDENTIALS,
     ERROR_INVALID_OLD_PASSWORD,
     ERROR_INVALID_PASSWORD,
+    ERROR_INVALID_TOKEN,
     ERROR_UNDO_REDO_LOCK_CONFLICT,
     ERROR_USER_IS_LAST_ADMIN,
     ERROR_USER_NOT_FOUND,
 )
 from .exceptions import ClientSessionIdHeaderNotSetException
-from .schemas import authenticate_user_schema, create_user_response_schema
+from .schemas import (
+    authenticate_user_schema,
+    create_user_response_schema,
+    verify_user_schema,
+)
 from .serializers import (
     AccountSerializer,
     ChangePasswordBodyValidationSerializer,
     DashboardSerializer,
     DeleteUserBodyValidationSerializer,
-    NormalizedEmailWebTokenSerializer,
     RegisterSerializer,
     ResetPasswordBodyValidationSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
+    TokenObtainPairWithUserSerializer,
+    TokenRefreshWithUserSerializer,
+    TokenVerifyWithUserSerializer,
     UserSerializer,
 )
-
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 UndoRedoRequestSerializer = get_undo_request_serializer()
 
 
-class ObtainJSONWebToken(RegularObtainJSONWebToken):
+class ObtainJSONWebToken(TokenObtainPairView):
     """
     A slightly modified version of the ObtainJSONWebToken that uses an email as
     username and normalizes that email address using the normalize_email_address
     utility function.
     """
 
-    serializer_class = NormalizedEmailWebTokenSerializer
+    serializer_class = TokenObtainPairWithUserSerializer
 
     @extend_schema(
         tags=["User"],
         operation_id="token_auth",
         description=(
-            "Authenticates an existing user based on their username, which is their "
-            "email address, and their password. If successful a JWT token will be "
-            "generated that can be used to authorize for other endpoints that require "
-            "authorization. The token will be valid for {valid} minutes, so it has to "
-            "be refreshed using the **token_refresh** endpoint before that "
-            "time.".format(
-                valid=int(settings.JWT_AUTH["JWT_EXPIRATION_DELTA"].seconds / 60)
-            )
+            "Authenticates an existing user based on their email and their password. "
+            "If successful an access token and a refresh token will be returned."
         ),
         responses={
-            200: authenticate_user_schema,
-            400: {
+            200: create_user_response_schema,
+            401: {
                 "description": "A user with the provided username and password is "
                 "not found."
             },
         },
         auth=[],
     )
+    @map_exceptions(
+        {
+            AuthenticationFailed: ERROR_INVALID_CREDENTIALS,
+            DeactivatedUserException: ERROR_DEACTIVATED_USER,
+        }
+    )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
 
-class RefreshJSONWebToken(RegularRefreshJSONWebToken):
+class RefreshJSONWebToken(TokenRefreshView):
+    serializer_class = TokenRefreshWithUserSerializer
+
     @extend_schema(
         tags=["User"],
         operation_id="token_refresh",
         description=(
-            "Refreshes an existing JWT token. If the token is valid, a new "
-            "token will be included in the response. It will be valid for {valid} "
-            "minutes.".format(
-                valid=int(settings.JWT_AUTH["JWT_EXPIRATION_DELTA"].seconds / 60)
-            )
+            "Generate a new access_token that can be used to continue operating on Baserow "
+            "starting from a valid refresh token."
         ),
         responses={
             200: authenticate_user_schema,
-            400: {"description": "The token is invalid or expired."},
+            401: {"description": "The refresh token is invalid or expired."},
         },
         auth=[],
     )
+    @map_exceptions({InvalidToken: ERROR_INVALID_TOKEN})
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
 
-class VerifyJSONWebToken(RegularVerifyJSONWebToken):
+class VerifyJSONWebToken(TokenVerifyView):
+    serializer_class = TokenVerifyWithUserSerializer
+
     @extend_schema(
         tags=["User"],
         operation_id="token_verify",
-        description="Verifies if the token is still valid.",
+        description=(
+            "Verifies if the refresh token is valid and can be used "
+            "to generate a new access_token."
+        ),
         responses={
-            200: authenticate_user_schema,
-            400: {"description": "The token is invalid or expired."},
+            200: verify_user_schema,
+            401: {"description": "The refresh token is invalid or expired."},
         },
         auth=[],
     )
+    @map_exceptions({InvalidToken: ERROR_INVALID_TOKEN})
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
@@ -212,10 +227,14 @@ class UserView(APIView):
         response = {"user": UserSerializer(user).data}
 
         if data["authenticate"]:
-            payload = jwt_payload_handler(user)
-            token = jwt_encode_handler(payload)
-            response.update(token=token)
-            response.update(**user_data_registry.get_all_user_data(user, request))
+            response.update(
+                {
+                    **generate_session_tokens_for_user(
+                        user, include_refresh_token=True
+                    ),
+                    **user_data_registry.get_all_user_data(user, request),
+                }
+            )
 
         return Response(response)
 
@@ -260,7 +279,7 @@ class SendResetPasswordEmailView(APIView):
         handler = UserHandler()
 
         try:
-            user = handler.get_user(email=data["email"])
+            user = handler.get_active_user(email=data["email"])
             handler.send_reset_password_email(user, data["base_url"])
         except UserNotFound:
             pass

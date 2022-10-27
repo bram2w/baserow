@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid'
 export const state = () => ({
   refreshing: false,
   token: null,
+  refreshToken: null,
   user: null,
   additional: {},
   webSocketId: null,
@@ -20,9 +21,12 @@ export const state = () => ({
 })
 
 export const mutations = {
-  SET_USER_DATA(state, { token, user, ...additional }) {
-    state.token = token
-    state.token_data = jwtDecode(token)
+  /* eslint-disable camelcase */
+  SET_USER_DATA(state, { access_token, refresh_token, user, ...additional }) {
+    state.token = access_token
+    state.refreshToken = refresh_token
+    state.token_data = jwtDecode(state.token)
+    /* eslint-enable camelcase */
     state.user = user
     // Additional entries in the response payload could have been added via the
     // backend user data registry. We want to store them in the `additional` state so
@@ -62,10 +66,11 @@ export const actions = {
    */
   async login({ commit, dispatch, getters }, { email, password }) {
     const { data } = await AuthService(this.$client).login(email, password)
-    if (!getters.getPreventSetToken) {
-      setToken(data.token, this.app)
-    }
     commit('SET_USER_DATA', data)
+
+    if (!getters.getPreventSetToken) {
+      setToken(getters.refreshToken, this.app)
+    }
     dispatch('startRefreshTimeout')
     return data.user
   },
@@ -93,7 +98,7 @@ export const actions = {
       groupInvitationToken,
       templateId
     )
-    setToken(data.token, this.app)
+    setToken(data.refreshToken, this.app)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
   },
@@ -113,13 +118,16 @@ export const actions = {
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
    */
-  async refresh({ commit, state, dispatch, getters }, token) {
+  async refresh({ commit, dispatch, getters }, refreshToken) {
     try {
-      const { data } = await AuthService(this.$client).refresh(token)
+      const { data } = await AuthService(this.$client).refresh(refreshToken)
+      // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
+      // a new refresh token. In that case we keep using the old originally one stored in the cookie.
+      commit('SET_USER_DATA', { refresh_token: refreshToken, ...data })
+
       if (!getters.getPreventSetToken) {
-        setToken(data.token, this.app)
+        setToken(getters.refreshToken, this.app)
       }
-      commit('SET_USER_DATA', data)
       dispatch('startRefreshTimeout')
     } catch (error) {
       // If the server can't be reached because of a network error we want to
@@ -152,7 +160,7 @@ export const actions = {
     // The token expires within a given time. When 80% of that time has expired we want
     // to fetch a new token.
     this.refreshTimeout = setTimeout(() => {
-      dispatch('refresh', getters.token)
+      dispatch('refresh', getters.refreshToken)
       commit('SET_REFRESHING', false)
     }, Math.floor((getters.tokenExpireSeconds / 100) * 80) * 1000)
   },
@@ -204,6 +212,9 @@ export const getters = {
   },
   token(state) {
     return state.token
+  },
+  refreshToken(state) {
+    return state.refreshToken
   },
   webSocketId(state) {
     return state.webSocketId

@@ -51,24 +51,33 @@ User = get_user_model()
 
 
 class UserHandler:
-    def get_user(
-        self, user_id: Optional[int] = None, email: Optional[str] = None
+    def get_active_user(
+        self,
+        user_id: Optional[int] = None,
+        email: Optional[str] = None,
+        exclude_users_scheduled_to_be_deleted: bool = False,
     ) -> AbstractUser:
         """
-        Finds and returns a single user instance based on the provided parameters.
+        Finds and returns a single active user instance based on the provided
+        parameters.
 
         :param user_id: The user id of the user.
         :param email: The username, which is their email address, of the user.
-        :raises ValueError: When neither a `user_id` or `email` has been provided.
-        :raises UserNotFound: When the user with the provided parameters has not been
-            found.
+        :param exclude_users_scheduled_to_be_deleted: If set to True, the user will
+            not be returned if it is scheduled to be deleted.
+        :raises ValueError: When neither a `user_id` or `email` has been
+            provided.
+        :raises UserNotFound: When the user with the provided parameters has not
+            been found.
         :return: The requested user.
         """
 
         if not user_id and not email:
             raise ValueError("Either a user id or email must be provided.")
 
-        query = User.objects.all()
+        query = User.objects.filter(is_active=True)
+        if exclude_users_scheduled_to_be_deleted:
+            query = query.filter(profile__to_be_deleted=False)
 
         if user_id:
             query = query.filter(id=user_id)
@@ -278,7 +287,7 @@ class UserHandler:
         signer = self.get_reset_password_signer()
         user_id = signer.loads(token, max_age=settings.RESET_PASSWORD_TOKEN_MAX_AGE)
 
-        user = self.get_user(user_id=user_id)
+        user = self.get_active_user(user_id=user_id)
 
         try:
             validate_password(password, user)

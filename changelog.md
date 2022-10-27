@@ -37,6 +37,7 @@ For example:
 * Changed error codes returned by the premium license API endpoints to replacing `PREMIUM_LICENSE` with `LICENSE`. [#1230](https://gitlab.com/bramw/baserow/-/issues/1230)
 * List jobs endpoint "list_job" returns now an object with jobs instead of a list of jobs. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 * The "token_auth" endpoint response and "user_data_updated" messages now have a "active_licences" key instead of "premium" indicating what licenses the user has active. [#1230](https://gitlab.com/bramw/baserow/-/issues/1230)
+* Changed the JWT library to fix a problem causing the refresh-tokens not working properly. [#787]https://gitlab.com/bramw/baserow/-/issues/787)
 
 ## Released (2022-09-20 1.12.1)
 

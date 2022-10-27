@@ -13,6 +13,7 @@ x-backend-variables: &backend-variables
   SECRET_KEY: ${SECRET_KEY:?}
   DATABASE_PASSWORD: ${DATABASE_PASSWORD:?}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+  BASEROW_JWT_SIGNING_KEY: ${BASEROW_JWT_SIGNING_KEY:-}
   # If you manually change this line make sure you also change the duplicate line in
   # the web-frontend service.
   BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}

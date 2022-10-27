@@ -26,6 +26,7 @@ $ heroku labs:enable -a baserow-test-app runtime-dyno-metadata
 
 # Finally we need to set all the environment variables listed in the app.json file.
 $ heroku config:set -a baserow-test-app SECRET_KEY=REPLACE_WITH_SECRET_VALUE
+$ heroku config:set -a baserow-test-app BASEROW_JWT_SIGNING_KEY=REPLACE_WITH_JWT_SIGNING_VALUE
 $ heroku config:set -a baserow-test-app BASEROW_PUBLIC_URL=
 $ heroku config:set -a baserow-test-app BASEROW_AMOUNT_OF_WORKERS=1
 ```

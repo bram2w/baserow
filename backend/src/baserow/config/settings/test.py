@@ -6,6 +6,7 @@ TESTS = True
 
 # This is a hardcoded key for test runs only.
 SECRET_KEY = "test_hardcoded_secret_key"  # nosec
+SIMPLE_JWT["SIGNING_KEY"] = "test_hardcoded_jwt_signing_key"  # noqa: F405
 
 CELERY_BROKER_BACKEND = "memory"
 CELERY_TASK_ALWAYS_EAGER = True
