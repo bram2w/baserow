@@ -17,7 +17,7 @@ from baserow.core.registries import (
     operation_type_registry,
 )
 
-from .models import RoleAssignment, Role
+from .models import Role, RoleAssignment
 
 User = get_user_model()
 

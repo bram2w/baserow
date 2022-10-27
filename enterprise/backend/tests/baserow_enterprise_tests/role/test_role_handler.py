@@ -1,10 +1,10 @@
 from django.test import override_settings
 
 import pytest
-
-from baserow.core.models import GroupUser
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
+
+from baserow.core.models import GroupUser
 
 
 @pytest.mark.django_db
