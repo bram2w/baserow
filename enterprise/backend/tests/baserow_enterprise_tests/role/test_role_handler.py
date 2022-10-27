@@ -1,6 +1,8 @@
 from django.test import override_settings
 
 import pytest
+
+from baserow.core.models import GroupUser
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
 
@@ -13,7 +15,7 @@ from baserow_enterprise.role.models import Role, RoleAssignment
 def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(user=user, members=[user2])
 
     table = data_fixture.create_database_table(user=user)
 
@@ -39,17 +41,19 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     # Assign an other role
     role_assignment_handler.assign_role(user2, group, admin_role, scope=group)
     role_assignments = list(RoleAssignment.objects.all())
+    group_user = GroupUser.objects.get(group=group, user=user2)
 
-    assert len(role_assignments) == 2
+    assert len(role_assignments) == 1
+    assert group_user.permissions == admin_role.uid
 
     # Check that we don't create new RoleAssignment for the same scope/subject/group
     role_assignment_handler.assign_role(user2, group, admin_role, scope=table)
 
     role_assignments = list(RoleAssignment.objects.all())
-    assert len(role_assignments) == 2
+    assert len(role_assignments) == 1
 
     # Can we remove a role
     role_assignment_handler.assign_role(user2, group, None, scope=table)
 
     role_assignments = list(RoleAssignment.objects.all())
-    assert len(role_assignments) == 1
+    assert len(role_assignments) == 0

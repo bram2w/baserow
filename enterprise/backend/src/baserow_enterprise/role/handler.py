@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from baserow_enterprise.models import RoleAssignment
 
-from baserow.core.models import Group
+from baserow.core.models import Group, GroupUser
 from baserow.core.registries import object_scope_type_registry
 
 User = get_user_model()
@@ -77,7 +77,11 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
-        # TODO if the scope is group then override GroupUser instead of making a new role_assignment
+        # Group level permissions are not stored as RoleAssignment records
+        if scope == group:
+            return GroupUser.objects.filter(group=group, user=subject).update(
+                permissions=role.uid
+            )
 
         content_types = ContentType.objects.get_for_models(scope, subject)
 
