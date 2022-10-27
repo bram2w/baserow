@@ -1,6 +1,8 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import setupPremium from '@baserow_premium/plugin'
 import _ from 'lodash'
+import setupLicensePlugin from '@baserow_premium/plugins/license'
+import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
 
 export class PremiumTestApp extends TestApp {
   constructor(...args) {
@@ -8,6 +10,9 @@ export class PremiumTestApp extends TestApp {
     const store = this.store
     const app = this.getApp()
     setupPremium({ store, app }, (name, dep) => {
+      app[`$${name}`] = dep
+    })
+    setupLicensePlugin({ store, app }, (name, dep) => {
       app[`$${name}`] = dep
     })
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
@@ -33,13 +38,17 @@ export class PremiumTestApp extends TestApp {
 
   giveCurrentUserGlobalPremiumFeatures() {
     this.store.dispatch('auth/forceUpdateUserData', {
-      premium: { valid_license: true },
+      active_licenses: {
+        instance_wide: { [PremiumLicenseType.getType()]: true },
+      },
     })
   }
 
   giveCurrentUserPremiumFeatureForSpecificGroupOnly(groupId) {
     this.store.dispatch('auth/forceUpdateUserData', {
-      premium: { valid_license: [{ type: 'group', id: groupId }] },
+      active_licenses: {
+        per_group: { groupId: { [PremiumLicenseType.getType()]: true } },
+      },
     })
   }
 

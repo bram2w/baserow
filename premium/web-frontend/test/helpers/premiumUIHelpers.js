@@ -3,6 +3,6 @@
  */
 export class PremiumUIHelpers {
   static sidebarShowsPremiumEnabled(sidebarComponent) {
-    return sidebarComponent.find('.user-level-premium').exists()
+    return sidebarComponent.find('.instance-wide-license').exists()
   }
 }

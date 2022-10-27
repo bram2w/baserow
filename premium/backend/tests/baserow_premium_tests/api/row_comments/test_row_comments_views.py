@@ -101,13 +101,13 @@ def test_row_comments_api_view_without_premium_license(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_row_comments_api_view_without_premium_license_for_group(
-    premium_data_fixture, api_client, alternative_per_group_premium_license_type
+    premium_data_fixture, api_client, alternative_per_group_license_service
 ):
     user, token = premium_data_fixture.create_user_and_token(
         first_name="Test User", has_active_premium_license=True
@@ -116,8 +116,8 @@ def test_row_comments_api_view_without_premium_license_for_group(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(
-        user, [table.database.group.id]
+    alternative_per_group_license_service.restrict_user_premium_to(
+        user, table.database.group.id
     )
 
     response = api_client.get(
@@ -130,7 +130,7 @@ def test_row_comments_api_view_without_premium_license_for_group(
     )
     assert response.status_code == HTTP_200_OK
 
-    alternative_per_group_premium_license_type.restrict_user_premium_to(user, [0])
+    alternative_per_group_license_service.restrict_user_premium_to(user, 0)
     response = api_client.get(
         reverse(
             "api:premium:row_comments:item",
@@ -140,7 +140,7 @@ def test_row_comments_api_view_without_premium_license_for_group(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -425,7 +425,7 @@ def test_cant_make_a_row_without_premium_license(premium_data_fixture, api_clien
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
 
 
 @pytest.mark.django_db

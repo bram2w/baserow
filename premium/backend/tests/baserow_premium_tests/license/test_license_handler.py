@@ -11,27 +11,14 @@ from baserow_premium.license.exceptions import (
     LicenseAuthorityUnavailable,
     LicenseHasExpiredError,
     LicenseInstanceIdMismatchError,
-    NoPremiumLicenseError,
     NoSeatsLeftInLicenseError,
+    PremiumFeaturesNotAvailableError,
     PremiumLicenseAlreadyExistsError,
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
 )
-from baserow_premium.license.handler import (
-    add_user_to_license,
-    check_active_premium_license,
-    check_active_premium_license_for_group,
-    check_licenses,
-    decode_license,
-    fetch_license_status_with_authority,
-    fill_remaining_seats_of_license,
-    get_public_key,
-    has_active_premium_license,
-    register_license,
-    remove_all_users_from_license,
-    remove_license,
-    remove_user_from_license,
-)
+from baserow_premium.license.features import PREMIUM
+from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.license.models import License, LicenseUser
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
@@ -125,6 +112,12 @@ NOT_JSON_PAYLOAD_LICENSE = (
 )
 
 
+def has_active_premium_license_features(user):
+    return LicenseHandler.has_active_license_granting_feature_instance_wide(
+        PREMIUM, user
+    )
+
+
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_has_active_premium_license(data_fixture):
@@ -139,39 +132,45 @@ def test_has_active_premium_license(data_fixture):
     )
 
     with freeze_time("2021-08-01 12:00"):
-        assert not has_active_premium_license(user_in_license)
-        assert not has_active_premium_license(second_user_in_license)
-        assert not has_active_premium_license(user_not_in_license)
+        assert not has_active_premium_license_features(user_in_license)
+        assert not has_active_premium_license_features(second_user_in_license)
+        assert not has_active_premium_license_features(user_not_in_license)
 
     with freeze_time("2021-09-01 12:00"):
-        assert has_active_premium_license(user_in_license)
-        assert has_active_premium_license(second_user_in_license)
-        assert not has_active_premium_license(user_not_in_license)
+        assert has_active_premium_license_features(user_in_license)
+        assert has_active_premium_license_features(second_user_in_license)
+        assert not has_active_premium_license_features(user_not_in_license)
 
     with freeze_time("2021-10-01 12:00"):
-        assert not has_active_premium_license(user_in_license)
-        assert not has_active_premium_license(second_user_in_license)
-        assert not has_active_premium_license(user_not_in_license)
+        assert not has_active_premium_license_features(user_in_license)
+        assert not has_active_premium_license_features(second_user_in_license)
+        assert not has_active_premium_license_features(user_not_in_license)
 
     license_user_2.delete()
     with freeze_time("2021-09-01 12:00"):
-        assert has_active_premium_license(user_in_license)
-        assert not has_active_premium_license(second_user_in_license)
-        assert not has_active_premium_license(user_not_in_license)
+        assert has_active_premium_license_features(user_in_license)
+        assert not has_active_premium_license_features(second_user_in_license)
+        assert not has_active_premium_license_features(user_not_in_license)
 
-        check_active_premium_license(user_in_license)
+        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
+            user_in_license
+        )
 
-        with pytest.raises(NoPremiumLicenseError):
-            check_active_premium_license(second_user_in_license)
+        with pytest.raises(PremiumFeaturesNotAvailableError):
+            LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
+                second_user_in_license
+            )
 
-        with pytest.raises(NoPremiumLicenseError):
-            check_active_premium_license(user_not_in_license)
+        with pytest.raises(PremiumFeaturesNotAvailableError):
+            LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
+                user_not_in_license
+            )
 
     # When the license can't be decoded, it should also return false.
     invalid_user = data_fixture.create_user()
     invalid_license = License.objects.create(license="invalid")
     LicenseUser.objects.create(license=invalid_license, user=invalid_user)
-    assert not has_active_premium_license(invalid_user)
+    assert not has_active_premium_license_features(invalid_user)
 
 
 @pytest.mark.django_db
@@ -183,17 +182,21 @@ def test_check_active_premium_license_for_group_with_valid_license(data_fixture)
     LicenseUser.objects.create(license=license, user=user_in_license)
 
     with freeze_time("2021-08-01 12:00"):
-        with pytest.raises(NoPremiumLicenseError):
-            check_active_premium_license_for_group(user_in_license, group)
+        with pytest.raises(PremiumFeaturesNotAvailableError):
+            LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+                user_in_license, group
+            )
 
     with freeze_time("2021-09-01 12:00"):
-        check_active_premium_license_for_group(user_in_license, group)
+        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+            user_in_license, group
+        )
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_check_active_premium_license_for_group_with_patched_groups(
-    data_fixture, alternative_per_group_premium_license_type
+def test_check_active_premium_license_for_group_with_per_group_licenses(
+    data_fixture, alternative_per_group_license_service
 ):
     user_in_license = data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user_in_license)
@@ -201,27 +204,31 @@ def test_check_active_premium_license_for_group_with_patched_groups(
     group_3 = data_fixture.create_group(user=user_in_license)
     group_4 = data_fixture.create_group(user=user_in_license)
 
-    alternative_per_group_premium_license_type.per_user_id_license_object_lists[
-        user_in_license.id
-    ] = [
-        {"type": "group", "id": group_1.id},
-        {"type": "group", "id": group_2.id},
-        {"type": "something_else", "id": group_3.id},
-    ]
+    alternative_per_group_license_service.restrict_user_premium_to(
+        user_in_license, [group_1.id, group_2.id]
+    )
 
-    check_active_premium_license_for_group(user_in_license, group_1)
-    check_active_premium_license_for_group(user_in_license, group_2)
+    LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+        user_in_license, group_1
+    )
+    LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+        user_in_license, group_2
+    )
 
-    with pytest.raises(NoPremiumLicenseError):
-        check_active_premium_license_for_group(user_in_license, group_3)
+    with pytest.raises(PremiumFeaturesNotAvailableError):
+        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+            user_in_license, group_3
+        )
 
-    with pytest.raises(NoPremiumLicenseError):
-        check_active_premium_license_for_group(user_in_license, group_4)
+    with pytest.raises(PremiumFeaturesNotAvailableError):
+        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
+            user_in_license, group_4
+        )
 
 
 @override_settings(DEBUG=True)
 def test_get_public_key_debug():
-    public_key = get_public_key()
+    public_key = LicenseHandler.get_public_key()
     signature = base64.b64decode(
         b"UnRzVNbgO8XxAHEjn6uzGrjdVjwf5rU2BcOe+G2nKHhF50m8nf/DAmmk6rsCFolrCXke2tJFnER"
         b"0aeoPKwjZItnYJhkX0xt1PwkpImBoSZYQfdGycVuLwRv28yQaWP1tGonNIqpUuAiyuTrTEOWPid"
@@ -246,7 +253,7 @@ def test_get_public_key_debug():
 
 @override_settings(DEBUG=False)
 def test_get_public_key_production():
-    public_key = get_public_key()
+    public_key = LicenseHandler.get_public_key()
     signature = base64.b64decode(
         b"UnRzVNbgO8XxAHEjn6uzGrjdVjwf5rU2BcOe+G2nKHhF50m8nf/DAmmk6rsCFolrCXke2tJFnER"
         b"0aeoPKwjZItnYJhkX0xt1PwkpImBoSZYQfdGycVuLwRv28yQaWP1tGonNIqpUuAiyuTrTEOWPid"
@@ -276,7 +283,7 @@ def test_fetch_license_status_with_authority_unavailable(data_fixture):
     data_fixture.update_settings(instance_id="1")
 
     with pytest.raises(LicenseAuthorityUnavailable):
-        fetch_license_status_with_authority(["test"])
+        LicenseHandler.fetch_license_status_with_authority(["test"])
 
     responses.add(
         responses.POST,
@@ -286,7 +293,7 @@ def test_fetch_license_status_with_authority_unavailable(data_fixture):
     )
 
     with pytest.raises(LicenseAuthorityUnavailable):
-        fetch_license_status_with_authority(["test"])
+        LicenseHandler.fetch_license_status_with_authority(["test"])
 
     responses.add(
         responses.POST,
@@ -296,7 +303,7 @@ def test_fetch_license_status_with_authority_unavailable(data_fixture):
     )
 
     with pytest.raises(LicenseAuthorityUnavailable):
-        fetch_license_status_with_authority(["test"])
+        LicenseHandler.fetch_license_status_with_authority(["test"])
 
 
 @pytest.mark.django_db
@@ -313,7 +320,7 @@ def test_fetch_license_status_with_authority_invalid_response(data_fixture):
     )
 
     with pytest.raises(LicenseAuthorityUnavailable):
-        fetch_license_status_with_authority(["test"])
+        LicenseHandler.fetch_license_status_with_authority(["test"])
 
 
 @pytest.mark.django_db
@@ -329,7 +336,7 @@ def test_fetch_license_status_in_production_mode(data_fixture):
         status=200,
     )
 
-    response = fetch_license_status_with_authority(["test"])
+    response = LicenseHandler.fetch_license_status_with_authority(["test"])
     assert response["success"] is True
 
 
@@ -346,7 +353,7 @@ def test_fetch_license_status_with_authority(data_fixture):
         status=200,
     )
 
-    response = fetch_license_status_with_authority(["test"])
+    response = LicenseHandler.fetch_license_status_with_authority(["test"])
     assert len(response) == 1
     assert response["test"]["type"] == "ok"
 
@@ -389,7 +396,7 @@ def test_check_licenses_with_authority_check(premium_data_fixture):
             status=200,
         )
 
-        check_licenses(
+        LicenseHandler.check_licenses(
             [
                 invalid_license,
                 does_not_exist_license,
@@ -430,7 +437,7 @@ def test_check_licenses_without_authority_check(premium_data_fixture):
 
         assert License.objects.all().count() == 2
         assert license_object.users.all().count() == 4
-        check_licenses([license_object, license_object_2])
+        LicenseHandler.check_licenses([license_object, license_object_2])
         assert License.objects.all().count() == 1
         assert license_object.users.all().count() == 2
         assert license_object.last_check.year == 2021
@@ -438,7 +445,7 @@ def test_check_licenses_without_authority_check(premium_data_fixture):
 
 @override_settings(DEBUG=True)
 def test_decode_license_with_valid_license():
-    assert decode_license(VALID_ONE_SEAT_LICENSE) == {
+    assert LicenseHandler.decode_license(VALID_ONE_SEAT_LICENSE) == {
         "version": 1,
         "id": "1",
         "valid_from": "2021-08-29T19:52:57.842696",
@@ -450,7 +457,7 @@ def test_decode_license_with_valid_license():
         "issued_to_name": "Bram",
         "instance_id": "1",
     }
-    assert decode_license(VALID_UPGRADED_TEN_SEAT_LICENSE) == {
+    assert LicenseHandler.decode_license(VALID_UPGRADED_TEN_SEAT_LICENSE) == {
         "version": 1,
         "id": "1",
         "valid_from": "2021-08-29T19:52:57.842696",
@@ -462,7 +469,7 @@ def test_decode_license_with_valid_license():
         "issued_to_name": "Bram",
         "instance_id": "1",
     }
-    assert decode_license(VALID_TWO_SEAT_LICENSE) == {
+    assert LicenseHandler.decode_license(VALID_TWO_SEAT_LICENSE) == {
         "version": 1,
         "id": "2",
         "valid_from": "2021-08-29T19:53:37.092303",
@@ -474,7 +481,7 @@ def test_decode_license_with_valid_license():
         "issued_to_name": "Bram",
         "instance_id": "1",
     }
-    assert decode_license(VALID_INSTANCE_TWO_LICENSE) == {
+    assert LicenseHandler.decode_license(VALID_INSTANCE_TWO_LICENSE) == {
         "version": 1,
         "id": "1",
         "valid_from": "2021-08-29T19:52:57.842696",
@@ -491,31 +498,31 @@ def test_decode_license_with_valid_license():
 @override_settings(DEBUG=True)
 def test_invalid_signature_decode_license():
     with pytest.raises(InvalidLicenseError):
-        decode_license(INVALID_SIGNATURE_LICENSE)
+        LicenseHandler.decode_license(INVALID_SIGNATURE_LICENSE)
 
     with pytest.raises(InvalidLicenseError):
-        decode_license(INVALID_PAYLOAD_LICENSE)
+        LicenseHandler.decode_license(INVALID_PAYLOAD_LICENSE)
 
     with pytest.raises(InvalidLicenseError):
-        decode_license(b"test")
+        LicenseHandler.decode_license(b"test")
 
     with pytest.raises(InvalidLicenseError):
-        decode_license(b"test.test")
+        LicenseHandler.decode_license(b"test.test")
 
     with pytest.raises(InvalidLicenseError):
-        decode_license(b"test.test==")
+        LicenseHandler.decode_license(b"test.test==")
 
     with pytest.raises(InvalidLicenseError):
-        decode_license(b"eyJ2ZXJzaW9uIjog.rzAyL6qBkz_Eb==")
+        LicenseHandler.decode_license(b"eyJ2ZXJzaW9uIjog.rzAyL6qBkz_Eb==")
 
     with pytest.raises(InvalidLicenseError):
-        decode_license(NOT_JSON_PAYLOAD_LICENSE)
+        LicenseHandler.decode_license(NOT_JSON_PAYLOAD_LICENSE)
 
 
 @override_settings(DEBUG=True)
 def test_unsupported_version_decode_license():
     with pytest.raises(UnsupportedLicenseError):
-        decode_license(INVALID_VERSION_LICENSE)
+        LicenseHandler.decode_license(INVALID_VERSION_LICENSE)
 
 
 @pytest.mark.django_db
@@ -533,7 +540,7 @@ def test_register_license_with_authority_check_ok(data_fixture):
             status=200,
         )
 
-        license_1 = register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+        license_1 = LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
         assert license_1.license == VALID_ONE_SEAT_LICENSE.decode()
 
 
@@ -558,7 +565,7 @@ def test_register_license_with_authority_check_updated(data_fixture):
             status=200,
         )
 
-        license_1 = register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+        license_1 = LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
         assert license_1.license == VALID_UPGRADED_TEN_SEAT_LICENSE.decode()
         assert license_1.license_id == "1"
 
@@ -584,7 +591,7 @@ def test_register_license_with_authority_check_does_not_exist(data_fixture):
         )
 
         with pytest.raises(InvalidLicenseError):
-            register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
 @pytest.mark.django_db
@@ -608,7 +615,7 @@ def test_register_license_with_authority_check_instance_id_mismatch(data_fixture
         )
 
         with pytest.raises(LicenseInstanceIdMismatchError):
-            register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
 @pytest.mark.django_db
@@ -632,7 +639,7 @@ def test_register_license_with_authority_check_invalid(data_fixture):
         )
 
         with pytest.raises(InvalidLicenseError):
-            register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
 @pytest.mark.django_db
@@ -647,14 +654,14 @@ def test_register_license(data_fixture):
     admin_user = data_fixture.create_user(is_staff=True)
 
     with pytest.raises(IsNotAdminError):
-        register_license(normal_user, VALID_ONE_SEAT_LICENSE)
+        LicenseHandler.register_license(normal_user, VALID_ONE_SEAT_LICENSE)
 
     with freeze_time("2021-10-01 12:00"):
         with pytest.raises(LicenseHasExpiredError):
-            register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
     with freeze_time("2021-07-01 12:00"):
-        license_1 = register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+        license_1 = LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
         assert license_1.license == VALID_ONE_SEAT_LICENSE.decode()
 
         # Check if the license has actually been created.
@@ -664,12 +671,14 @@ def test_register_license(data_fixture):
 
     with freeze_time("2021-09-01 12:00"):
         with pytest.raises(LicenseInstanceIdMismatchError):
-            register_license(admin_user, VALID_INSTANCE_TWO_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_INSTANCE_TWO_LICENSE)
 
         with pytest.raises(PremiumLicenseAlreadyExistsError):
-            register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
-        license_2 = register_license(admin_user, VALID_TWO_SEAT_LICENSE.decode())
+        license_2 = LicenseHandler.register_license(
+            admin_user, VALID_TWO_SEAT_LICENSE.decode()
+        )
         assert license_2.license == VALID_TWO_SEAT_LICENSE.decode()
 
 
@@ -684,8 +693,12 @@ def test_upgrade_license_by_register(data_fixture):
     admin_user = data_fixture.create_user(is_staff=True)
 
     with freeze_time("2021-07-01 12:00"):
-        first_license_1 = register_license(admin_user, VALID_ONE_SEAT_LICENSE)
-        second_license_1 = register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
+        first_license_1 = LicenseHandler.register_license(
+            admin_user, VALID_ONE_SEAT_LICENSE
+        )
+        second_license_1 = LicenseHandler.register_license(
+            admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE
+        )
 
         assert first_license_1.id == second_license_1.id
         assert License.objects.all().count() == 1
@@ -704,15 +717,15 @@ def test_register_an_older_license(data_fixture):
     admin_user = data_fixture.create_user(is_staff=True)
 
     with freeze_time("2021-07-01 12:00"):
-        register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
+        LicenseHandler.register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
 
         # The same license already exists.
         with pytest.raises(PremiumLicenseAlreadyExistsError):
-            register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
 
         # An older license already exists.
         with pytest.raises(PremiumLicenseAlreadyExistsError):
-            register_license(admin_user, VALID_ONE_SEAT_LICENSE)
+            LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 
 @pytest.mark.django_db
@@ -729,9 +742,9 @@ def test_remove_license(data_fixture):
     LicenseUser.objects.create(license=license_object_2, user=user_2)
 
     with pytest.raises(IsNotAdminError):
-        remove_license(user_1, license_object)
+        LicenseHandler.remove_license(user_1, license_object)
 
-    remove_license(admin_1, license_object_2)
+    LicenseHandler.remove_license(admin_1, license_object_2)
     licenses = License.objects.all()
     assert len(licenses) == 1
     assert licenses[0].id == license_object.id
@@ -752,9 +765,11 @@ def test_add_user_to_license(mock_broadcast_to_users, data_fixture):
         license_object = License.objects.create(license=VALID_ONE_SEAT_LICENSE.decode())
 
         with pytest.raises(IsNotAdminError):
-            add_user_to_license(user_1, license_object, user_1)
+            LicenseHandler.add_user_to_license(user_1, license_object, user_1)
 
-        license_user = add_user_to_license(admin_1, license_object, user_1)
+        license_user = LicenseHandler.add_user_to_license(
+            admin_1, license_object, user_1
+        )
 
         assert license_user.user_id == user_1.id
         assert license_user.license_id == license_object.id
@@ -763,13 +778,15 @@ def test_add_user_to_license(mock_broadcast_to_users, data_fixture):
         args = mock_broadcast_to_users.delay.call_args
         assert args[0][0] == [user_1.id]
         assert args[0][1]["type"] == "user_data_updated"
-        assert args[0][1]["user_data"] == {"premium": {"valid_license": True}}
+        assert args[0][1]["user_data"] == {
+            "active_licenses": {"instance_wide": {"premium": True}}
+        }
 
         with pytest.raises(UserAlreadyOnLicenseError):
-            add_user_to_license(admin_1, license_object, user_1)
+            LicenseHandler.add_user_to_license(admin_1, license_object, user_1)
 
         with pytest.raises(NoSeatsLeftInLicenseError):
-            add_user_to_license(admin_1, license_object, user_2)
+            LicenseHandler.add_user_to_license(admin_1, license_object, user_2)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -784,10 +801,10 @@ def test_remove_user_from_license(mock_broadcast_to_users, data_fixture):
         LicenseUser.objects.create(license=license_object, user=user_1)
 
         with pytest.raises(IsNotAdminError):
-            remove_user_from_license(user_1, license_object, user_1)
+            LicenseHandler.remove_user_from_license(user_1, license_object, user_1)
 
         with transaction.atomic():
-            remove_user_from_license(admin_1, license_object, user_1)
+            LicenseHandler.remove_user_from_license(admin_1, license_object, user_1)
 
         assert LicenseUser.objects.all().count() == 0
 
@@ -795,7 +812,9 @@ def test_remove_user_from_license(mock_broadcast_to_users, data_fixture):
         args = mock_broadcast_to_users.delay.call_args
         assert args[0][0] == [user_1.id]
         assert args[0][1]["type"] == "user_data_updated"
-        assert args[0][1]["user_data"] == {"premium": {"valid_license": False}}
+        assert args[0][1]["user_data"] == {
+            "active_licenses": {"instance_wide": {"premium": False}}
+        }
 
 
 @pytest.mark.django_db(transaction=True)
@@ -812,9 +831,9 @@ def test_fill_remaining_seats_in_license(mock_broadcast_to_users, data_fixture):
         LicenseUser.objects.create(license=license_object, user=user_1)
 
         with pytest.raises(IsNotAdminError):
-            fill_remaining_seats_of_license(user_1, license_object)
+            LicenseHandler.fill_remaining_seats_of_license(user_1, license_object)
 
-        fill_remaining_seats_of_license(admin_1, license_object)
+        LicenseHandler.fill_remaining_seats_of_license(admin_1, license_object)
         license_users = LicenseUser.objects.filter(license=license_object).order_by(
             "user_id"
         )
@@ -829,12 +848,14 @@ def test_fill_remaining_seats_in_license(mock_broadcast_to_users, data_fixture):
         assert len(args[0][0]) == 1
         assert args[0][0][0] == user_2.id
         assert args[0][1]["type"] == "user_data_updated"
-        assert args[0][1]["user_data"] == {"premium": {"valid_license": True}}
+        assert args[0][1]["user_data"] == {
+            "active_licenses": {"instance_wide": {"premium": True}}
+        }
 
         license_object_2 = License.objects.create(
             license=VALID_ONE_SEAT_LICENSE.decode()
         )
-        created_license_users = fill_remaining_seats_of_license(
+        created_license_users = LicenseHandler.fill_remaining_seats_of_license(
             admin_1, license_object_2
         )
         assert len(created_license_users) == 1
@@ -867,9 +888,9 @@ def test_remove_all_users_from_license(mock_broadcast_to_users, data_fixture):
         LicenseUser.objects.create(license=license_object_2, user=user_2)
 
         with pytest.raises(IsNotAdminError):
-            remove_all_users_from_license(user_1, license_object)
+            LicenseHandler.remove_all_users_from_license(user_1, license_object)
 
-        remove_all_users_from_license(admin_1, license_object_2)
+        LicenseHandler.remove_all_users_from_license(admin_1, license_object_2)
         license_users = LicenseUser.objects.all()
         assert len(license_users) == 1
         assert license_users[0].license_id == license_object.id
@@ -882,4 +903,6 @@ def test_remove_all_users_from_license(mock_broadcast_to_users, data_fixture):
         assert user_1.id in args[0][0]
         assert user_2.id in args[0][0]
         assert args[0][1]["type"] == "user_data_updated"
-        assert args[0][1]["user_data"] == {"premium": {"valid_license": False}}
+        assert args[0][1]["user_data"] == {
+            "active_licenses": {"instance_wide": {"premium": False}}
+        }

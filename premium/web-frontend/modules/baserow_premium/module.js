@@ -23,6 +23,7 @@ export default function () {
   this.appendPlugin({
     src: path.resolve(__dirname, 'plugin.js'),
   })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/license.js') })
 
   // Override Baserow's existing default.scss in favor of our own because that one
   // imports the original. We do this so that we can use the existing variables,

@@ -1,4 +1,6 @@
 import jwtDecode from 'jwt-decode'
+import Vue from 'vue'
+import _ from 'lodash'
 
 import AuthService from '@baserow/modules/core/services/auth'
 import { setToken, unsetToken } from '@baserow/modules/core/utils/auth'
@@ -31,7 +33,12 @@ export const mutations = {
     if (user !== undefined) {
       Object.assign(state.user, user)
     }
-    Object.assign(state.additional, data)
+    // Deep merge using lodash customized to use Vue.set to maintain reactivity. Arrays
+    // and other non pure object types will be overridden, objects will be merged.
+    function customizer(objValue, srcValue, key, object) {
+      Vue.set(object, key, srcValue)
+    }
+    _.mergeWith(state.additional, data, customizer)
   },
   CLEAR_USER_DATA(state) {
     state.token = null

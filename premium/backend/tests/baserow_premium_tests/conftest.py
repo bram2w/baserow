@@ -1,12 +1,14 @@
 from collections import defaultdict
-from typing import Any, Dict, List, Union
+from typing import Dict, Generator, List, Set, Union
 
 from django.contrib.auth.models import AbstractUser
 
 # noinspection PyUnresolvedReferences
 import pytest
 from baserow_premium.license.license_types import PremiumLicenseType
-from baserow_premium.license.registries import LicenseType
+from baserow_premium.license.plugin import LicensePlugin
+from baserow_premium.license.registries import LicenseType, license_type_registry
+from baserow_premium.plugins import PremiumPlugin
 
 from baserow.test_utils.pytest_conftest import *  # noqa: F403, F401
 
@@ -22,45 +24,59 @@ def premium_data_fixture(data_fixture):
 
 
 @pytest.fixture
-def mutable_license_type_registry():
-    from baserow_premium.license.registries import license_type_registry
+def mutable_plugin_registry():
+    from baserow.core.registries import plugin_registry
 
-    before = license_type_registry.registry.copy()
-    yield license_type_registry
-    license_type_registry.registry = before
+    before = plugin_registry.registry.copy()
+    yield plugin_registry
+    plugin_registry.registry = before
 
 
-class PerGroupPremiumLicenseType(LicenseType):
-    type = PremiumLicenseType.type
-
+class PerGroupLicensePlugin(LicensePlugin):
     def __init__(self):
         super().__init__()
-        self.per_user_id_license_object_lists = defaultdict(list)
+        self.per_group_licenses = defaultdict(lambda: defaultdict(set))
 
-    def has_global_prem_or_specific_groups(
+    def get_active_instance_wide_licenses(
         self, user: AbstractUser
-    ) -> Union[bool, List[Dict[str, Any]]]:
-        return self.per_user_id_license_object_lists[user.id]
+    ) -> Generator[LicenseType, None, None]:
+        return
+        yield
+
+    def get_active_per_group_licenses(
+        self, user: AbstractUser
+    ) -> Dict[int, Set[LicenseType]]:
+        return self.per_group_licenses[user.id]
 
     def restrict_user_premium_to(
-        self, user: AbstractUser, group_ids_to_restrict_premium_to: List[int]
+        self, user: AbstractUser, group_ids_or_id: Union[int, List[int]]
     ):
-        self.per_user_id_license_object_lists[user.id] = [
-            {"type": "group", "id": group_id}
-            for group_id in group_ids_to_restrict_premium_to
-        ]
+        if isinstance(group_ids_or_id, int):
+            group_ids_or_id = [group_ids_or_id]
+        self.per_group_licenses[user.id] = defaultdict(set)
+        for group_id in group_ids_or_id:
+            self.per_group_licenses[user.id][group_id].add(
+                license_type_registry.get(PremiumLicenseType.type)
+            )
+
+
+class PremiumPluginWithPerGroupLicensePlugin(PremiumPlugin):
+    license_plugin = PerGroupLicensePlugin()
+
+    def get_license_plugin(self) -> LicensePlugin:
+        return self.license_plugin
 
 
 @pytest.fixture
-def alternative_per_group_premium_license_type(mutable_license_type_registry):
+def alternative_per_group_license_service(
+    mutable_plugin_registry,
+) -> PerGroupLicensePlugin:
     """
-    Overrides the existing premium license type with a test only stub version that
-    allows configuring whether or not a user has premium at a per group level.
+    Overrides the existing license service with a test only stub version that
+    allows configuring whether or not a user has premium features at a per group level.
     """
 
-    stub_license_type = PerGroupPremiumLicenseType()
-    mutable_license_type_registry.registry[
-        PerGroupPremiumLicenseType.type
-    ] = stub_license_type
+    stub_premium_plugin = PremiumPluginWithPerGroupLicensePlugin()
+    mutable_plugin_registry.registry[PremiumPlugin.type] = stub_premium_plugin
 
-    yield stub_license_type
+    yield stub_premium_plugin.get_license_plugin()

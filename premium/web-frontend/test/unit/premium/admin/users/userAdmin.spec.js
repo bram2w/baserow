@@ -83,8 +83,8 @@ describe('User Admin Component Tests', () => {
 
     // The last login and signed up dates are correctly formatted to the locale
     moment.locale('nl')
-    expect(lastLoginCell.text()).toBe('04/26/2021 7:50 AM')
-    expect(signedUpCell.text()).toBe('04/21/2021 12:04 PM')
+    expect(lastLoginCell.text()).toMatch(/^04\/26\/2021 \d+:50 (AM|PM)$/)
+    expect(signedUpCell.text()).toMatch(/^04\/21\/2021 \d+:04 (AM|PM)$/)
 
     // Shown as active
     expect(isActiveCell.text()).toBe('premium.user.active')
@@ -349,7 +349,7 @@ describe('User Admin Component Tests', () => {
       username: initialUsername,
     })
 
-    const usernameEnteredButNotSaved = '1'
+    const usernameEnteredButNotSaved = 'invalid'
 
     await ui.changeEmail(usernameEnteredButNotSaved, {
       clickSave: false,

@@ -21,14 +21,14 @@ class License(models.Model):
 
     @cached_property
     def payload(self):
-        from .handler import decode_license
+        from .handler import LicenseHandler
 
         possibly_encoded_license = self.license
         if isinstance(possibly_encoded_license, str):
             encoded_license = possibly_encoded_license.encode()
         else:
             encoded_license = possibly_encoded_license
-        return decode_license(encoded_license)
+        return LicenseHandler.decode_license(encoded_license)
 
     @property
     def license_id(self):
@@ -65,6 +65,12 @@ class License(models.Model):
     @property
     def issued_to_name(self):
         return self.payload["issued_to_name"]
+
+    @property
+    def license_type(self):
+        from baserow_premium.license.registries import license_type_registry
+
+        return license_type_registry.get(self.product_code)
 
 
 class LicenseUser(models.Model):

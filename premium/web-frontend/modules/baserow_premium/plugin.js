@@ -40,7 +40,7 @@ export default (context) => {
   const { store, app, isDev } = context
 
   app.$clientErrorMap.setError(
-    'ERROR_NO_ACTIVE_PREMIUM_LICENSE',
+    'ERROR_NO_PREMIUM_FEATURES_AVAILABLE',
     'License required',
     'This functionality requires an active premium license. Please refresh the page.'
   )

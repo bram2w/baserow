@@ -1,10 +1,9 @@
-import { PremiumPlugin } from '@baserow_premium/plugins'
 import { PremiumTestApp } from '@baserow_premium_test/helpers/premiumTestApp'
-import { LicenseType } from '@baserow_premium/licenseTypes'
+import PremiumFeatures from '@baserow_premium/features'
+import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
 
 describe('Test premium licensing', () => {
   let testApp = null
-  let premiumPluginUnderTest = null
   const fakeUserData = {
     user: {
       id: 256,
@@ -19,7 +18,6 @@ describe('Test premium licensing', () => {
 
   beforeAll(() => {
     testApp = new PremiumTestApp()
-    premiumPluginUnderTest = new PremiumPlugin({ app: testApp.getApp() })
   })
 
   afterEach(() => {
@@ -29,12 +27,14 @@ describe('Test premium licensing', () => {
   describe('test premium feature scenarios', () => {
     const testCases = [
       [
-        'when user has global premium license they have active premium features',
+        'when user has instance wide premium features they have active premium features',
         {
           whenUserDataIs: {
-            premium: { valid_license: true },
+            active_licenses: {
+              instance_wide: { [PremiumLicenseType.getType()]: true },
+            },
           },
-          thenActiveLicenseHasPremiumFeaturesIs: true,
+          thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
@@ -42,38 +42,58 @@ describe('Test premium licensing', () => {
           ' premium features',
         {
           whenUserDataIs: {
-            premium: { valid_license: false },
+            active_licenses: {
+              instance_wide: {},
+            },
           },
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has invalid valid_license they dont have active premium features',
+        'when user has invalid features they dont have active premium features',
         {
           whenUserDataIs: {
-            premium: { valid_license: {} },
+            active_licenses: { instance_wide: false },
           },
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has empty premium data they dont have active premium features',
+        'when user has invalid features they dont have active premium features - empty',
         {
           whenUserDataIs: {
-            premium: {},
+            active_licenses: {},
           },
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has global premium they have premium features for any specific' +
+        'when user has invalid features they dont have active premium features -' +
+          ' nothing ',
+        {
+          whenUserDataIs: {},
+          thenUserHasPremiumFeatureIs: false,
+        },
+      ],
+      [
+        'when user has invalid features they dont have active premium features -' +
+          ' list ',
+        {
+          whenUserDataIs: { active_licenses: { instance_wide: [] } },
+          thenUserHasPremiumFeatureIs: false,
+        },
+      ],
+      [
+        'when user has instance-wide premium they have premium features for any specific' +
           ' group',
         {
           whenUserDataIs: {
-            premium: { valid_license: true },
+            active_licenses: {
+              instance_wide: { [PremiumLicenseType.getType()]: true },
+            },
           },
           forGroup: 1,
-          thenActiveLicenseHasPremiumFeaturesIs: true,
+          thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
@@ -81,10 +101,15 @@ describe('Test premium licensing', () => {
           ' for any specific group',
         {
           whenUserDataIs: {
-            premium: { valid_license: false },
+            active_licenses: {
+              instance_wide: {
+                other_license: true,
+                [PremiumLicenseType.getType()]: false,
+              },
+            },
           },
           forGroup: 1,
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
@@ -92,10 +117,13 @@ describe('Test premium licensing', () => {
           ' active premium features',
         {
           whenUserDataIs: {
-            premium: { valid_license: [] },
+            active_licenses: {
+              instance_wide: { other_license: true },
+              per_group: {},
+            },
           },
           forGroup: 1,
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
@@ -103,10 +131,13 @@ describe('Test premium licensing', () => {
           ' active premium features',
         {
           whenUserDataIs: {
-            premium: { valid_license: [{ type: 'group', id: 1 }] },
+            active_licenses: {
+              instance_wide: { other_license: true },
+              per_group: { 1: { [PremiumLicenseType.getType()]: true } },
+            },
           },
           forGroup: 2,
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
@@ -114,15 +145,17 @@ describe('Test premium licensing', () => {
           ' active premium features',
         {
           whenUserDataIs: {
-            premium: {
-              valid_license: [
-                { type: 'group', id: 1 },
-                { type: 'group', id: 3 },
-              ],
+            active_licenses: {
+              instance_wide: { other_license: true },
+              per_group: {
+                1: { [PremiumLicenseType.getType()]: true },
+                2: { not_prem: true },
+                3: { [PremiumLicenseType.getType()]: true },
+              },
             },
           },
           forGroup: 2,
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
@@ -130,26 +163,33 @@ describe('Test premium licensing', () => {
           ' active ',
         {
           whenUserDataIs: {
-            premium: {
-              valid_license: [{ type: 'group', id: 1 }],
+            active_licenses: {
+              instance_wide: {},
+              per_group: {
+                1: { [PremiumLicenseType.getType()]: true },
+                2: { not_prem: true },
+                3: { [PremiumLicenseType.getType()]: true },
+              },
             },
           },
           forGroup: undefined,
-          thenActiveLicenseHasPremiumFeaturesIs: false,
+          thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
         'when user has prem license for a specific group then for that group they' +
-          ' will' +
-          ' have active premium features.',
+          ' will have active premium features.',
         {
           whenUserDataIs: {
-            premium: {
-              valid_license: [{ type: 'group', id: 1 }],
+            active_licenses: {
+              instance_wide: {},
+              per_group: {
+                1: { [PremiumLicenseType.getType()]: true },
+              },
             },
           },
           forGroup: 1,
-          thenActiveLicenseHasPremiumFeaturesIs: true,
+          thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
@@ -157,15 +197,16 @@ describe('Test premium licensing', () => {
           ' groups they will have have active premium features.',
         {
           whenUserDataIs: {
-            premium: {
-              valid_license: [
-                { type: 'group', id: 1 },
-                { type: 'group', id: 2 },
-              ],
+            active_licenses: {
+              instance_wide: {},
+              per_group: {
+                1: { [PremiumLicenseType.getType()]: true },
+                2: { [PremiumLicenseType.getType()]: true },
+              },
             },
           },
           forGroup: 2,
-          thenActiveLicenseHasPremiumFeaturesIs: true,
+          thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
@@ -173,16 +214,17 @@ describe('Test premium licensing', () => {
           ' groups they will have have active premium features.',
         {
           whenUserDataIs: {
-            premium: {
-              valid_license: [
-                { type: 'group', id: 1 },
-                { type: 'group', id: 2 },
-                { type: 'group', id: 3 },
-              ],
+            active_licenses: {
+              instance_wide: {},
+              per_group: {
+                1: { [PremiumLicenseType.getType()]: true },
+                2: { [PremiumLicenseType.getType()]: true },
+                3: { [PremiumLicenseType.getType()]: true },
+              },
             },
           },
           forGroup: 1,
-          thenActiveLicenseHasPremiumFeaturesIs: true,
+          thenUserHasPremiumFeatureIs: true,
         },
       ],
     ]
@@ -192,169 +234,21 @@ describe('Test premium licensing', () => {
         ...fakeUserData,
         ...testCaseSpecification.whenUserDataIs,
       })
-      expect(
-        premiumPluginUnderTest.activeLicenseHasPremiumFeatures(
-          testCaseSpecification.forGroup
+      if (testCaseSpecification.forGroup) {
+        const hasPerGroupPremium = testApp
+          .getApp()
+          .$hasFeature(PremiumFeatures.PREMIUM, testCaseSpecification.forGroup)
+        expect(hasPerGroupPremium).toBe(
+          testCaseSpecification.thenUserHasPremiumFeatureIs
         )
-      ).toBe(testCaseSpecification.thenActiveLicenseHasPremiumFeaturesIs)
-    })
-  })
-
-  describe('test premium feature with a plugin scenarios', () => {
-    class StubLicenseType extends LicenseType {
-      constructor({
-        hasPremiumFeatures,
-        isActiveGlobally,
-        activeForGroups = null,
-        app,
-      }) {
-        super({ app })
-        this.stubHasPremiumFeatures = hasPremiumFeatures
-        this.isActiveGlobally = isActiveGlobally
-        this.activeForGroups = activeForGroups || []
-      }
-
-      static getType() {
-        return 'stub'
-      }
-
-      getName() {
-        return 'stub'
-      }
-
-      hasPremiumFeatures() {
-        return this.stubHasPremiumFeatures
-      }
-
-      hasValidActiveLicense(forGroupId = undefined) {
-        if (this.isActiveGlobally) {
-          return true
-        } else {
-          return this.activeForGroups.includes(forGroupId)
-        }
-      }
-    }
-
-    const testCases = [
-      [
-        'test custom license type that is active with premium features grants the' +
-          ' user premium.',
-        {
-          whenUserDataIs: {
-            premium: {
-              valid_license: false,
-            },
-          },
-          extraLicenseTypes: [
-            (testApp) =>
-              new StubLicenseType({
-                hasPremiumFeatures: true,
-                isActiveGlobally: true,
-                app: testApp.getApp(),
-              }),
-          ],
-          thenActiveLicenseHasPremiumFeaturesIs: true,
-        },
-      ],
-      [
-        'test custom license type that is active without premium features does not ' +
-          'grant the user premium',
-        {
-          whenUserDataIs: {
-            premium: {
-              valid_license: false,
-            },
-          },
-          extraLicenseTypes: [
-            (testApp) =>
-              new StubLicenseType({
-                hasPremiumFeatures: false,
-                isActiveGlobally: true,
-                app: testApp.getApp(),
-              }),
-          ],
-          thenActiveLicenseHasPremiumFeaturesIs: false,
-        },
-      ],
-      [
-        'test no active license granting premium features means user has no premium',
-        {
-          whenUserDataIs: {
-            premium: {
-              valid_license: false,
-            },
-          },
-          extraLicenseTypes: [
-            (testApp) =>
-              new StubLicenseType({
-                hasPremiumFeatures: true,
-                isActiveGlobally: false,
-                app: testApp.getApp(),
-              }),
-          ],
-          thenActiveLicenseHasPremiumFeaturesIs: false,
-        },
-      ],
-      [
-        'when custom license type active for specific group and it grants premium' +
-          ' then the user gets premium for that group.',
-        {
-          whenUserDataIs: {
-            premium: {
-              valid_license: false,
-            },
-          },
-          extraLicenseTypes: [
-            (testApp) =>
-              new StubLicenseType({
-                hasPremiumFeatures: true,
-                isActiveGlobally: false,
-                activeForGroups: [1],
-                app: testApp.getApp(),
-              }),
-          ],
-          forGroup: 1,
-          thenActiveLicenseHasPremiumFeaturesIs: true,
-        },
-      ],
-      [
-        'when custom license type active for specific group and it grants premium' +
-          ' then the user does not get premium for other groups',
-        {
-          whenUserDataIs: {
-            premium: {
-              valid_license: false,
-            },
-          },
-          extraLicenseTypes: [
-            (testApp) =>
-              new StubLicenseType({
-                hasPremiumFeatures: true,
-                isActiveGlobally: false,
-                activeForGroups: [1],
-                app: testApp.getApp(),
-              }),
-          ],
-          forGroup: 2,
-          thenActiveLicenseHasPremiumFeaturesIs: false,
-        },
-      ],
-    ]
-
-    test.each(testCases)('%s', (name, testCaseSpecification) => {
-      const registry = testApp.getRegistry()
-      for (const extraLicenseType of testCaseSpecification.extraLicenseTypes) {
-        registry.register('license', extraLicenseType(testApp))
-      }
-      testApp.store.dispatch('auth/forceSetUserData', {
-        ...fakeUserData,
-        ...testCaseSpecification.whenUserDataIs,
-      })
-      expect(
-        premiumPluginUnderTest.activeLicenseHasPremiumFeatures(
-          testCaseSpecification.forGroup
+      } else {
+        const hasInstanceWidePremium = testApp
+          .getApp()
+          .$hasFeature(PremiumFeatures.PREMIUM)
+        expect(hasInstanceWidePremium).toBe(
+          testCaseSpecification.thenUserHasPremiumFeatureIs
         )
-      ).toBe(testCaseSpecification.thenActiveLicenseHasPremiumFeaturesIs)
+      }
     })
   })
 })

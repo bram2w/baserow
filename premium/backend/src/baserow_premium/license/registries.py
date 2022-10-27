@@ -1,7 +1,5 @@
 import abc
-from typing import Any, Dict, List, Union
-
-from django.contrib.auth.models import AbstractUser
+from typing import List
 
 from baserow.core.registry import Instance, Registry
 
@@ -13,36 +11,18 @@ class LicenseType(abc.ABC, Instance):
     to have different behaviour by implementing the various hook methods differently.
     """
 
-    @abc.abstractmethod
-    def has_global_prem_or_specific_groups(
-        self,
-        user: AbstractUser,
-    ) -> Union[bool, List[Dict[str, Any]]]:
-        """
-        Check for which groups the user has an active license. If `True` is returned it
-        means that the user has premium access to everything. If an object is returned,
-        it means that the user only has access to the specific groups in the returned
-        list of dictionaries.
+    features: List[str] = []
+    """
+    A list of features that this license type grants.
+    """
 
-        Example group list return value:
+    order: int
+    """The higher the order the more features/more expensive the license is. Out of
+    all instance-wide licenses a user might have, the one with the highest order will
+    be shown as a badge in the top of the sidebar in the GUI. """
 
-        [
-          {
-            "type": "group",
-            "id": 1,
-          },
-          {
-            "type": "group",
-            "id": 2,
-          }
-        ]
-
-        :param user: The user for whom must be checked if it has an active license.
-        :return: To which groups the user has an active premium license for or a
-            boolean indicating global premium access instead.
-        """
-
-        pass
+    def has_feature(self, feature: str):
+        return feature in self.features
 
 
 class LicenseTypeRegistry(Registry[LicenseType]):

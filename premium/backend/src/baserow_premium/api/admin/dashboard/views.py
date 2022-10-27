@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 
 from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
-from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -45,7 +45,7 @@ class AdminDashboardView(APIView):
         last 30 days is also included.
         """
 
-        check_active_premium_license(request.user)
+        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(request.user)
 
         handler = AdminDashboardHandler()
         total_users = User.objects.filter(is_active=True).count()

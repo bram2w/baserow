@@ -7,7 +7,7 @@ class BaserowPremiumConfig(AppConfig):
     def ready(self):
         # noinspection PyUnresolvedReferences
         import baserow_premium.row_comments.recievers  # noqa: F401
-        from baserow_premium.api.user.user_data_types import PremiumUserDataType
+        from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
         from baserow_premium.row_comments.row_metadata_types import (
             RowCommentCountMetadataType,
         )
@@ -43,7 +43,7 @@ class BaserowPremiumConfig(AppConfig):
 
         row_metadata_registry.register(RowCommentCountMetadataType())
 
-        user_data_registry.register(PremiumUserDataType())
+        user_data_registry.register(ActiveLicensesDataType())
 
         view_type_registry.register(KanbanViewType())
 

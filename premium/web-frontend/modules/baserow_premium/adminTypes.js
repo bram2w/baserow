@@ -1,5 +1,5 @@
 import { AdminType } from '@baserow/modules/core/adminTypes'
-import { PremiumPlugin } from '@baserow_premium/plugins'
+import PremiumFeatures from '@baserow_premium/features'
 
 class PremiumAdminType extends AdminType {
   getDeactivatedText() {
@@ -7,9 +7,7 @@ class PremiumAdminType extends AdminType {
   }
 
   isDeactivated() {
-    return !this.app.$registry
-      .get('plugin', PremiumPlugin.getType())
-      .activeLicenseHasPremiumFeatures()
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM)
   }
 }
 
