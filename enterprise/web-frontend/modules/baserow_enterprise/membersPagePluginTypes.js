@@ -20,34 +20,24 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   }
 
   mutateMembersTableColumns(columns, context) {
-    return this._replaceRoleColumn(
-      columns,
-      MembersRoleField,
-      'role_uid',
-      context
-    )
+    return this._replaceRoleColumn(columns, MembersRoleField, context)
   }
 
   mutateMembersInvitesTableColumns(columns, context) {
-    return this._replaceRoleColumn(
-      columns,
-      InvitesRoleField,
-      'permissions',
-      context
-    )
+    return this._replaceRoleColumn(columns, InvitesRoleField, context)
   }
 
   isDeactivated() {
     return !this.app.$featureFlags.includes('roles') // TODO make this depending on if somebody has RBAC
   }
 
-  _replaceRoleColumn(columns, FieldComponent, key, { group }) {
+  _replaceRoleColumn(columns, FieldComponent, { group }) {
     const existingRoleColumnIndex = columns.findIndex(
       (column) => column.key === 'permissions'
     )
     if (existingRoleColumnIndex !== -1) {
       columns[existingRoleColumnIndex] = new CrudTableColumn(
-        key,
+        'permissions',
         this.app.i18n.t('membersSettings.membersTable.columns.role'),
         FieldComponent,
         true,

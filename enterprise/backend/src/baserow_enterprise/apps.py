@@ -84,10 +84,6 @@ class BaserowEnterpriseConfig(AppConfig):
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 
-        # The signals must always be imported last because they use the registries
-        # which need to be filled first.
-        import baserow_enterprise.ws.signals  # noqa: F
-
 
 def sync_default_roles_after_migrate(sender, **kwargs):
     from .role.default_roles import default_roles

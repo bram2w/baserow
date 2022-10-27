@@ -29,7 +29,8 @@ export default {
   functional: true,
   methods: {
     roleName(roles, row) {
-      const role = roles.find((r) => r.uid === row.permissions)
+      const permissions = row.permissions === 'ADMIN' ? 'ADMIN' : 'MEMBER'
+      const role = roles.find((r) => r.uid === permissions)
       return role?.name || ''
     },
   },

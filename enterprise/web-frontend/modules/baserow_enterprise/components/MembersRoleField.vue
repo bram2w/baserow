@@ -15,7 +15,7 @@
       ref="editRoleContext"
       :row="row"
       :roles="roles"
-      role-value-column="role_uid"
+      role-value-column="permissions"
       @update-role="roleUpdate($event)"
     ></EditRoleContext>
   </div>
@@ -25,8 +25,8 @@
 import { mapGetters } from 'vuex'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
+import GroupService from '@baserow/modules/core/services/group'
 
 export default {
   name: 'MembersRoleField',
@@ -46,26 +46,25 @@ export default {
   },
   methods: {
     roleName(roles, row) {
-      const role = roles.find((r) => r.uid === row.role_uid)
+      const role = roles.find((r) => r.uid === row.permissions)
       return role?.name || ''
     },
     async roleUpdate({ uid: permissionsNew, row: member }) {
       const oldMember = clone(member)
       const newMember = clone(member)
-      newMember.role_uid = permissionsNew
+      newMember.permissions = permissionsNew
       this.$emit('row-update', newMember)
 
       try {
-        await RoleAssignmentsService(this.$client).assignRole(
-          newMember.user_id,
-          'auth.User',
-          this.column.additionalProps.groupId,
-          this.column.additionalProps.groupId,
-          'group',
-          permissionsNew
-        )
+        await GroupService(this.$client).updateUser(oldMember.id, {
+          permissions: newMember.permissions,
+        })
+        await this.$store.dispatch('group/forceUpdateGroupUser', {
+          groupId: this.column.additionalProps.groupId,
+          id: oldMember.id,
+          values: { permissions: newMember.permissions },
+        })
       } catch (error) {
-        this.$emit('row-update', oldMember)
         notifyIf(error, 'group')
       }
     },

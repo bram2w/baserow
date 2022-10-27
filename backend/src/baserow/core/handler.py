@@ -933,9 +933,7 @@ class CoreHandler:
             group=invitation.group,
             defaults={
                 "order": GroupUser.get_last_order(user),
-                "permissions": "ADMIN"
-                if invitation.permissions == "ADMIN"
-                else "MEMBER",
+                "permissions": invitation.permissions,
             },
         )
 
