@@ -6,6 +6,7 @@ from baserow_premium.api.views.errors import (
 )
 from baserow_premium.api.views.exceptions import CannotUpdatePremiumAttributesOnTemplate
 from baserow_premium.api.views.serializers import UpdatePremiumViewAttributesSerializer
+from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -49,7 +50,7 @@ class PremiumViewAttributesView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
-                    "ERROR_NO_PREMIUM_FEATURES_AVAILABLE",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_CANNOT_UPDATE_PREMIUM_ATTRIBUTES_ON_TEMPLATE",
                 ]
@@ -82,9 +83,7 @@ class PremiumViewAttributesView(APIView):
         if group.has_template():
             raise CannotUpdatePremiumAttributesOnTemplate()
 
-        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-            request.user, group
-        )
+        LicenseHandler.raise_if_user_doesnt_have_feature(request.user, group, PREMIUM)
 
         view_type = view_type_registry.get_by_model(view)
 

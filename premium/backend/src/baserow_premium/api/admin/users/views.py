@@ -19,6 +19,7 @@ from baserow_premium.api.admin.users.serializers import (
     UserAdminUpdateSerializer,
 )
 from baserow_premium.api.admin.views import AdminListingView
+from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -67,7 +68,9 @@ class UsersAdminView(AdminListingView):
         ),
     )
     def get(self, request):
-        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(request.user)
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+            request.user, PREMIUM
+        )
         return super().get(request)
 
 
@@ -96,7 +99,7 @@ class UserAdminView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
-                    "ERROR_NO_PREMIUM_FEATURES_AVAILABLE",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
                 ]
             ),
             401: None,
@@ -142,7 +145,7 @@ class UserAdminView(APIView):
                 [
                     "USER_ADMIN_CANNOT_DELETE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
-                    "ERROR_NO_PREMIUM_FEATURES_AVAILABLE",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
                 ]
             ),
             401: None,
@@ -204,7 +207,9 @@ class UserAdminImpersonateView(GenericAPIView):
         }
     )
     def post(self, request):
-        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(request.user)
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+            request.user, PREMIUM
+        )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

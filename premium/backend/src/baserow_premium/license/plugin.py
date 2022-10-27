@@ -1,12 +1,13 @@
 import logging
-from typing import Dict, Generator, Set
+from typing import Dict, Generator, Optional, Set
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
+from django.db.models import Q
 
 from baserow_premium.license.exceptions import InvalidLicenseError
 from baserow_premium.license.models import License
-from baserow_premium.license.registries import LicenseType, license_type_registry
+from baserow_premium.license.registries import LicenseType
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -18,9 +19,47 @@ class LicensePlugin:
     hence which features they can use.
     """
 
-    def has_license_feature_instance_wide(
-        self, feature: str, user: AbstractUser
+    def user_has_feature(
+        self,
+        feature: str,
+        user: AbstractUser,
+        group: Group,
     ) -> bool:
+        """
+        Returns if the provided user has a feature enabled for a specific group from
+        an active license or if they have that feature enabled instance wide and hence
+        also for this group.
+
+        :param feature: A string identifying a particular feature or set of features
+            a license can grant a user.
+        :param user: The user to check to see if they have a license active granting
+            them the feature.
+        :param group: The group to check to see if the user has the feature for.
+        """
+
+        return self.user_has_feature_instance_wide(feature, user) or (
+            self._has_license_feature_only_for_specific_group(feature, user, group)
+        )
+
+    def instance_has_feature(
+        self,
+        feature: str,
+    ) -> bool:
+        """
+        Checks if the Baserow instance has a particular feature granted by an active
+        instance wide license.
+
+        :param feature: The feature to check to see if active. Look for features.py
+            files for these constant strings to use.
+        :return: True if the feature is enabled globally for all users.
+        """
+
+        return any(
+            feature in license_type.features
+            for license_type in self.get_active_instance_wide_licenses(user=None)
+        )
+
+    def user_has_feature_instance_wide(self, feature: str, user: AbstractUser) -> bool:
         """
         Returns if the provided user has a feature enabled for the entire site,
         and not only for one specific group from an active license.
@@ -36,26 +75,7 @@ class LicensePlugin:
             for license_type in self.get_active_instance_wide_licenses(user)
         )
 
-    def has_license_feature_instance_wide_or_for_group(
-        self, feature: str, user: AbstractUser, group: Group
-    ) -> bool:
-        """
-        Returns if the provided user has a feature enabled for a specific group from
-        an active license or if they have that feature enabled instance wide and hence
-        also for this group.
-
-        :param feature: A string identifying a particular feature or set of features
-            a license can grant a user.
-        :param user: The user to check to see if they have a license active granting
-            them the feature.
-        :param group: The group to check to see if the user has the feature for.
-        """
-
-        return self.has_license_feature_instance_wide(
-            feature, user
-        ) or self.has_license_feature_only_for_specific_group(feature, user, group)
-
-    def has_license_feature_only_for_specific_group(
+    def _has_license_feature_only_for_specific_group(
         self, feature: str, user: AbstractUser, group: Group
     ) -> bool:
         """
@@ -77,22 +97,26 @@ class LicensePlugin:
         )
 
     def get_active_instance_wide_licenses(
-        self, user: AbstractUser
+        self, user: Optional[AbstractUser]
     ) -> Generator[LicenseType, None, None]:
         """
         For the provided user returns the active licenses they have instance wide.
+        If no user is provided then returns any licenses that are globally active for
+        every single user in the instance.
 
         :param user: The user to lookup active instance wide licenses for.
         """
 
-        available_licenses = License.objects.filter(
-            users__user_id__in=[user.id]
-        ).distinct()
+        available_license_q = Q(cached_untrusted_instance_wide=True)
+        if user is not None:
+            available_license_q |= Q(users__user_id__in=[user.id])
+
+        available_licenses = License.objects.filter(available_license_q).distinct()
 
         for available_license in available_licenses:
             try:
                 if available_license.is_active:
-                    yield license_type_registry.get(available_license.product_code)
+                    yield available_license.license_type
             except InvalidLicenseError:
                 pass
 

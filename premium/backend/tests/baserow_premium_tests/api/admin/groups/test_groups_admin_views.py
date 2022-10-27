@@ -175,7 +175,7 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
         HTTP_AUTHORIZATION=f"JWT {staff_token}",
     )
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 @pytest.mark.django_db
@@ -208,7 +208,7 @@ def test_delete_group(api_client, premium_data_fixture):
     url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": group.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_NO_PREMIUM_FEATURES_AVAILABLE"
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
 
 @pytest.mark.django_db

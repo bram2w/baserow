@@ -1,4 +1,5 @@
 from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
+from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 
 from baserow.core.exceptions import IsNotAdminError
@@ -18,7 +19,7 @@ class GroupsAdminHandler:
         :raises IsNotAdminError: If the user is not admin or staff.
         """
 
-        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(user)
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(user, PREMIUM)
 
         if not user.is_staff:
             raise IsNotAdminError()

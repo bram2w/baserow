@@ -1,3 +1,4 @@
+from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.views.exceptions import KanbanViewHasNoSingleSelectField
 from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
@@ -106,7 +107,7 @@ class KanbanViewView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD",
                     "ERROR_INVALID_SELECT_OPTION_PARAMETER",
-                    "ERROR_NO_PREMIUM_FEATURES_AVAILABLE",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
                 ]
             ),
             404: get_error_schema(["ERROR_KANBAN_DOES_NOT_EXIST"]),
@@ -133,8 +134,8 @@ class KanbanViewView(APIView):
         # We don't want to check if there is an active premium license if the group
         # is a template because that feature must then be available for demo purposes.
         if not group.has_template():
-            LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-                request.user, group
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                request.user, group, PREMIUM
             )
 
         group.has_user(request.user, raise_error=True, allow_if_template=True)

@@ -7,12 +7,12 @@ from django.test.utils import override_settings
 import pytest
 import responses
 from baserow_premium.license.exceptions import (
+    FeaturesNotAvailableError,
     InvalidLicenseError,
     LicenseAuthorityUnavailable,
     LicenseHasExpiredError,
     LicenseInstanceIdMismatchError,
     NoSeatsLeftInLicenseError,
-    PremiumFeaturesNotAvailableError,
     PremiumLicenseAlreadyExistsError,
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
@@ -113,9 +113,7 @@ NOT_JSON_PAYLOAD_LICENSE = (
 
 
 def has_active_premium_license_features(user):
-    return LicenseHandler.has_active_license_granting_feature_instance_wide(
-        PREMIUM, user
-    )
+    return LicenseHandler.user_has_feature_instance_wide(PREMIUM, user)
 
 
 @pytest.mark.django_db
@@ -152,18 +150,18 @@ def test_has_active_premium_license(data_fixture):
         assert not has_active_premium_license_features(second_user_in_license)
         assert not has_active_premium_license_features(user_not_in_license)
 
-        LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
-            user_in_license
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+            user_in_license, PREMIUM
         )
 
-        with pytest.raises(PremiumFeaturesNotAvailableError):
-            LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
-                second_user_in_license
+        with pytest.raises(FeaturesNotAvailableError):
+            LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+                second_user_in_license, PREMIUM
             )
 
-        with pytest.raises(PremiumFeaturesNotAvailableError):
-            LicenseHandler.raise_if_doesnt_have_instance_wide_premium_features(
-                user_not_in_license
+        with pytest.raises(FeaturesNotAvailableError):
+            LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+                user_not_in_license, PREMIUM
             )
 
     # When the license can't be decoded, it should also return false.
@@ -182,14 +180,14 @@ def test_check_active_premium_license_for_group_with_valid_license(data_fixture)
     LicenseUser.objects.create(license=license, user=user_in_license)
 
     with freeze_time("2021-08-01 12:00"):
-        with pytest.raises(PremiumFeaturesNotAvailableError):
-            LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-                user_in_license, group
+        with pytest.raises(FeaturesNotAvailableError):
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user_in_license, group, PREMIUM
             )
 
     with freeze_time("2021-09-01 12:00"):
-        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-            user_in_license, group
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            user_in_license, group, PREMIUM
         )
 
 
@@ -208,21 +206,17 @@ def test_check_active_premium_license_for_group_with_per_group_licenses(
         user_in_license, [group_1.id, group_2.id]
     )
 
-    LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-        user_in_license, group_1
-    )
-    LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-        user_in_license, group_2
-    )
+    LicenseHandler.raise_if_user_doesnt_have_feature(user_in_license, group_1, PREMIUM)
+    LicenseHandler.raise_if_user_doesnt_have_feature(user_in_license, group_2, PREMIUM)
 
-    with pytest.raises(PremiumFeaturesNotAvailableError):
-        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-            user_in_license, group_3
+    with pytest.raises(FeaturesNotAvailableError):
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            user_in_license, group_3, PREMIUM
         )
 
-    with pytest.raises(PremiumFeaturesNotAvailableError):
-        LicenseHandler.raise_if_doesnt_have_premium_features_instance_wide_or_for_group(
-            user_in_license, group_4
+    with pytest.raises(FeaturesNotAvailableError):
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            user_in_license, group_4, PREMIUM
         )
 
 
@@ -906,3 +900,34 @@ def test_remove_all_users_from_license(mock_broadcast_to_users, data_fixture):
         assert args[0][1]["user_data"] == {
             "active_licenses": {"instance_wide": {"premium": False}}
         }
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_check_active_premium_license_for_group_with_license_pretending_to_be_site_wide(
+    data_fixture,
+):
+    user_in_license = data_fixture.create_user()
+    group = data_fixture.create_group(user=user_in_license)
+    license = License.objects.create(
+        license=VALID_TWO_SEAT_LICENSE.decode(), cached_untrusted_instance_wide=True
+    )
+    LicenseUser.objects.create(license=license, user=user_in_license)
+
+    with freeze_time("2021-08-01 12:00"):
+        with pytest.raises(FeaturesNotAvailableError):
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user_in_license, group, PREMIUM
+            )
+
+    with freeze_time("2021-09-01 12:00"):
+        with pytest.raises(FeaturesNotAvailableError):
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user_in_license, group, PREMIUM
+            )
+
+    with freeze_time("2021-09-01 12:00"):
+        assert not LicenseHandler.instance_has_feature(PREMIUM)
+        assert not LicenseHandler.user_has_feature_instance_wide(
+            PREMIUM, user_in_license
+        )

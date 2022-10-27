@@ -6,6 +6,7 @@ import nl from '@baserow_enterprise/locales/nl.json'
 import de from '@baserow_enterprise/locales/de.json'
 import es from '@baserow_enterprise/locales/es.json'
 import it from '@baserow_enterprise/locales/it.json'
+import { EnterpriseLicenseType } from '@baserow_enterprise/licenseTypes'
 
 export default (context) => {
   const { app, isDev } = context
@@ -22,4 +23,6 @@ export default (context) => {
   }
 
   registerRealtimeEvents(app.$realtime)
+
+  app.$registry.register('license', new EnterpriseLicenseType(context))
 }
