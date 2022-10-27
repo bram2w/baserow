@@ -1,25 +1,39 @@
-from django.apps import apps
+from django.utils.translation import gettext_lazy as _
 
-import jwt
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework import exceptions
-from rest_framework_jwt.authentication import (
-    JSONWebTokenAuthentication as JWTJSONWebTokenAuthentication,
-)
-from rest_framework_jwt.blacklist.exceptions import MissingToken
-from rest_framework_jwt.compat import ExpiredSignature
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.settings import api_settings as jwt_settings
 
-from baserow.api.sessions import (
-    set_client_undo_redo_action_group_id_from_request_or_raise_if_invalid,
-    set_untrusted_client_session_id_from_request_or_raise_if_invalid,
-)
+from baserow.core.user.exceptions import DeactivatedUserException
+
+from .sessions import set_user_session_data_from_request
 
 
-class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
+class JSONWebTokenAuthentication(JWTAuthentication):
+    def get_user(self, validated_token):
+        """
+        Attempts to find and return a user using the given validated token.
+        """
+
+        try:
+            user_id = validated_token[jwt_settings.USER_ID_CLAIM]
+        except KeyError:
+            raise InvalidToken(_("Token contained no recognizable user identification"))
+
+        try:
+            user = self.user_model.objects.get(**{jwt_settings.USER_ID_FIELD: user_id})
+        except self.user_model.DoesNotExist:
+            raise exceptions.AuthenticationFailed(
+                _("User not found"), code="user_not_found"
+            )
+        return user
+
     def authenticate(self, request):
         """
         This method is basically a copy of
-        rest_framework_jwt.authentication.BaseJSONWebTokenAuthentication.authenticate
+        rest_framework_simplejwt.authentication.JWTAuthentication.authenticate
         it adds a machine readable errors to the responses.
 
         Returns a two-tuple of `User` and token if a valid signature has been
@@ -27,44 +41,21 @@ class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
         """
 
         try:
-            token = self.get_token_from_request(request)
-            if token is None:
+            auth_response = super().authenticate(request)
+            if auth_response is None:
                 return None
-        except MissingToken:
-            return None
+            user, token = auth_response
 
-        try:
-            payload = self.jwt_decode_token(token)
-        except ExpiredSignature:
-            msg = "Token has expired."
+            if not user.is_active:
+                raise DeactivatedUserException()
+
+        except InvalidToken:
             raise exceptions.AuthenticationFailed(
-                {"detail": msg, "error": "ERROR_SIGNATURE_HAS_EXPIRED"}
+                {"detail": "Invalid token", "error": "ERROR_INVALID_TOKEN"},
+                code="ERROR_INVALID_TOKEN",
             )
-        except jwt.DecodeError:
-            msg = "Error decoding token."
-            raise exceptions.AuthenticationFailed(
-                {"detail": msg, "error": "ERROR_DECODING_SIGNATURE"}
-            )
-        except jwt.InvalidTokenError:
-            msg = "Invalid token."
-            raise exceptions.AuthenticationFailed(msg)
 
-        if apps.is_installed("rest_framework_jwt.blacklist"):
-            from rest_framework_jwt.blacklist.models import BlacklistedToken
-
-            if BlacklistedToken.is_blocked(token, payload):
-                msg = "Token is blacklisted."
-                raise exceptions.PermissionDenied(
-                    {"detail": msg, "error": "ERROR_SIGNATURE_HAS_EXPIRED"}
-                )
-        user = self.authenticate_credentials(payload)
-
-        # @TODO this should actually somehow be moved to the ws app.
-        user.web_socket_id = request.headers.get("WebSocketId")
-        set_untrusted_client_session_id_from_request_or_raise_if_invalid(user, request)
-        set_client_undo_redo_action_group_id_from_request_or_raise_if_invalid(
-            user, request
-        )
+        set_user_session_data_from_request(user, request)
 
         return user, token
 

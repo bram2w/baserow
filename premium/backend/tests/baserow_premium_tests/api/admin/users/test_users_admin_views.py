@@ -8,7 +8,6 @@ from django.utils.datetime_safe import datetime
 import pytest
 from rest_framework.status import (
     HTTP_200_OK,
-    HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
@@ -146,7 +145,7 @@ def test_admin_with_invalid_token_cannot_see_admin_users(
         HTTP_AUTHORIZATION=f"JWT abc123",
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_DECODING_SIGNATURE"
+    assert response.json()["error"] == "ERROR_INVALID_TOKEN"
 
 
 @pytest.mark.django_db
@@ -869,9 +868,10 @@ def test_admin_impersonate_user(api_client, premium_data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_201_CREATED
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
-    assert "token" in response_json
+    assert "access_token" in response_json
+    assert "refresh_token" in response_json
     assert "password" not in response_json["user"]
     assert response_json["user"]["username"] == "specific_user@test.nl"
     assert response_json["user"]["first_name"] == "Test1"

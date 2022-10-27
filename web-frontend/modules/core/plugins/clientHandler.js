@@ -407,10 +407,16 @@ export function makeErrorResponseInterceptor(store, app, clientErrorMap) {
     error.handler = new ErrorHandler(store, app, clientErrorMap, error.response)
 
     // Add the error message in the response to the error object.
-    const rspCode = error.response?.status
+    const rspStatus = error.response?.status
     const rspData = error.response?.data
+    // disabled in the login page because the error is handled by the login form
+    const showAuthorizationPopupError =
+      rspStatus === 401 &&
+      !['ERROR_INVALID_CREDENTIALS', 'ERROR_DEACTIVATED_USER'].includes(
+        rspData?.error
+      )
 
-    if (rspCode === 401) {
+    if (showAuthorizationPopupError) {
       store.dispatch('notification/setAuthorizationError', true)
       error.handler.handled()
     } else if (

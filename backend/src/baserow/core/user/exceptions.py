@@ -28,3 +28,7 @@ class DisabledSignupError(Exception):
 
 class ResetPasswordDisabledError(Exception):
     """Raised when a password reset is attempted but the password reset is disabled."""
+
+
+class DeactivatedUserException(Exception):
+    pass
