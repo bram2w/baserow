@@ -112,6 +112,7 @@ export const actions = {
     commit('CLEAR_USER_DATA')
     await dispatch('group/clearAll', {}, { root: true })
     await dispatch('group/unselect', {}, { root: true })
+    await dispatch('job/clearAll', {}, { root: true })
   },
   /**
    * Refresh the existing token. If successful commit the new token and start a

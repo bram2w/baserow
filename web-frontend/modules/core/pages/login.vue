@@ -1,27 +1,37 @@
 <template>
   <div>
-    <div class="box__head">
-      <h1 class="box__head-title">
-        <nuxt-link :to="{ name: 'index' }">
-          <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-        </nuxt-link>
-      </h1>
+    <div class="box__head-logo">
+      <nuxt-link :to="{ name: 'index' }">
+        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+      </nuxt-link>
+    </div>
+    <div class="login-box__head">
+      <h1 class="box__head-title">{{ $t('login.title') }}</h1>
       <LangPicker />
     </div>
-    <AuthLogin :invitation="invitation" @success="success">
-      <ul class="action__links">
-        <li v-if="settings.allow_new_signups">
-          <nuxt-link :to="{ name: 'signup' }">
-            {{ $t('action.signUp') }}
-          </nuxt-link>
+    <AuthLogin :invitation="invitation" @success="success"> </AuthLogin>
+    <div>
+      <ul class="login-action__links">
+        <li v-for="loginAction in loginActions" :key="loginAction.name">
+          <component
+            :is="getLoginActionComponent(loginAction)"
+            :options="loginAction"
+          >
+          </component>
         </li>
         <li v-if="settings.allow_reset_password">
           <nuxt-link :to="{ name: 'forgot-password' }">
             {{ $t('login.forgotPassword') }}
           </nuxt-link>
         </li>
+        <li v-if="settings.allow_new_signups">
+          {{ $t('login.signUpText') }}
+          <nuxt-link :to="{ name: 'signup' }">
+            {{ $t('login.signUp') }}
+          </nuxt-link>
+        </li>
       </ul>
-    </AuthLogin>
+    </div>
   </div>
 </template>
 
@@ -41,6 +51,10 @@ export default {
       redirect('signup')
     }
 
+    // load authentication providers login options to populate the login
+    // page with external providers
+    await store.dispatch('authProvider/fetchLoginOptions')
+
     return await groupInvitationToken.asyncData({ route, app })
   },
   head() {
@@ -57,9 +71,15 @@ export default {
   computed: {
     ...mapGetters({
       settings: 'settings/get',
+      loginActions: 'authProvider/getAllLoginActions',
     }),
   },
   methods: {
+    getLoginActionComponent(loginAction) {
+      return this.$registry
+        .get('authProvider', loginAction.type)
+        .getLoginActionComponent()
+    },
     success() {
       const { original } = this.$route.query
       if (original && isRelativeUrl(original)) {

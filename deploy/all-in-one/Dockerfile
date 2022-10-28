@@ -55,6 +55,7 @@ RUN apt-get update && \
     vim \
     gawk \
     git \
+    xmlsec1 \
     && \
     # ========================
     # Install Node and Yarn

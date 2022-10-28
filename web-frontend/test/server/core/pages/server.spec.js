@@ -28,6 +28,10 @@ describe('index redirect', () => {
       },
     })
 
+    mock
+      .onGet('http://localhost/api/auth-provider/login-options/')
+      .reply(200, {})
+
     nuxt = await createNuxt(true)
     done()
   }, 300000)
@@ -52,7 +56,7 @@ describe('index redirect', () => {
 
   test('login page renders', async () => {
     const { html } = await nuxt.server.renderRoute('/login')
-    expect(html).toContain('Login')
+    expect(html).toContain('Sign In')
   })
 
   test('sign up page renders', async () => {

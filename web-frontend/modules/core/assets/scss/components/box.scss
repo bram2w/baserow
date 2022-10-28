@@ -10,9 +10,18 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
+  padding-bottom: 40px;
+  margin-bottom: 40px;
   border-bottom: 1px solid $color-neutral-200;
+}
+
+.box__head-logo {
+  height: 16px;
+  margin-bottom: 64px;
+
+  & img {
+    height: 100%;
+  }
 }
 
 .box__head-title {

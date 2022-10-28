@@ -287,7 +287,7 @@ class Application(
         "Template",
         on_delete=models.SET_NULL,
         null=True,
-        related_name="intalled_applications",
+        related_name="installed_applications",
     )
 
     class Meta:

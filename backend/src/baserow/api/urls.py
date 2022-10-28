@@ -6,6 +6,7 @@ from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView
 from baserow.core.registries import application_type_registry, plugin_registry
 
 from .applications import urls as application_urls
+from .auth_provider import urls as auth_provider_urls
 from .groups import urls as group_urls
 from .jobs import urls as jobs_urls
 from .settings import urls as settings_urls
@@ -31,6 +32,7 @@ urlpatterns = (
             name="redoc",
         ),
         path("settings/", include(settings_urls, namespace="settings")),
+        path("auth-provider/", include(auth_provider_urls, namespace="auth_provider")),
         path("user/", include(user_urls, namespace="user")),
         path("user-files/", include(user_files_urls, namespace="user_files")),
         path("groups/", include(group_urls, namespace="groups")),

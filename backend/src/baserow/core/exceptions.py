@@ -102,6 +102,14 @@ class ApplicationOperationNotSupported(Exception):
     """
 
 
+class AuthenticationProviderTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    pass
+
+
+class AuthenticationProviderTypeDoesNotExist(InstanceTypeDoesNotExist):
+    pass
+
+
 class BaseURLHostnameNotAllowed(Exception):
     """
     Raised when the provided base url is not allowed when requesting a password
