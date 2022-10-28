@@ -1,7 +1,10 @@
 {
     "enterprise": {
         "license": "Enterprise",
-        "sidebarTooltip": "Enterprise",
+        "sidebarTooltip": "Your account has access to the enterprise features globally",
+        "enterpriseFeatures": "Premium and Enterprise Features",
+        "rbac": "RBAC",
+        "sso": "SSO",
         "deactivated": "Deactivated"
     },
     "adminType": {
@@ -47,5 +50,27 @@
         "errorInvalidSamlRequest": "The SAML request is invalid.",
         "errorInvalidSamlResponse": "The SAML response is invalid.",
         "errorUserDeactivated": "The user has been disabled."
+    },
+    "roles": {
+        "admin": {
+            "name": "Admin",
+            "description": "Can fully configure and edit groups and applications."
+        },
+        "builder": {
+            "name": "Builder",
+            "description": "Can fully configure and edit applications."
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "Can fully edit data but not configure applications or groups."
+        },
+        "commenter": {
+            "name": "Commenter",
+            "description": "Can only read and comment on data."
+        },
+        "viewer": {
+            "name": "Viewer",
+            "description": "Can only read data."
+        }
     }
 }

@@ -80,9 +80,3 @@ export default {
   },
 }
 </script>
-
-<style>
-.layout__col-2 {
-  background-color: white;
-}
-</style>

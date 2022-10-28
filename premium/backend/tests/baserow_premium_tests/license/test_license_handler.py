@@ -9,11 +9,11 @@ import responses
 from baserow_premium.license.exceptions import (
     FeaturesNotAvailableError,
     InvalidLicenseError,
+    LicenseAlreadyExistsError,
     LicenseAuthorityUnavailable,
     LicenseHasExpiredError,
     LicenseInstanceIdMismatchError,
     NoSeatsLeftInLicenseError,
-    PremiumLicenseAlreadyExistsError,
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
 )
@@ -667,7 +667,7 @@ def test_register_license(data_fixture):
         with pytest.raises(LicenseInstanceIdMismatchError):
             LicenseHandler.register_license(admin_user, VALID_INSTANCE_TWO_LICENSE)
 
-        with pytest.raises(PremiumLicenseAlreadyExistsError):
+        with pytest.raises(LicenseAlreadyExistsError):
             LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
         license_2 = LicenseHandler.register_license(
@@ -714,11 +714,11 @@ def test_register_an_older_license(data_fixture):
         LicenseHandler.register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
 
         # The same license already exists.
-        with pytest.raises(PremiumLicenseAlreadyExistsError):
+        with pytest.raises(LicenseAlreadyExistsError):
             LicenseHandler.register_license(admin_user, VALID_UPGRADED_TEN_SEAT_LICENSE)
 
         # An older license already exists.
-        with pytest.raises(PremiumLicenseAlreadyExistsError):
+        with pytest.raises(LicenseAlreadyExistsError):
             LicenseHandler.register_license(admin_user, VALID_ONE_SEAT_LICENSE)
 
 

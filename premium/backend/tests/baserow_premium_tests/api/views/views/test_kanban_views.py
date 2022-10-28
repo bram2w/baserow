@@ -1107,30 +1107,39 @@ def test_get_public_kanban_view_with_single_select_and_cover(
 ):
     user, token = premium_data_fixture.create_user_and_token()
     table = premium_data_fixture.create_database_table(user=user)
-
+    single_select_field = premium_data_fixture.create_single_select_field(
+        table=table, order=0
+    )
     kanban_view = premium_data_fixture.create_kanban_view(
-        table=table,
-        user=user,
-        public=True,
+        table=table, user=user, public=True, single_select_field=single_select_field
     )
     single_select_field = kanban_view.single_select_field
 
     # Only information related the public field should be returned
-    cover_field = premium_data_fixture.create_file_field(table=table, name="cover")
-    public_field = premium_data_fixture.create_text_field(table=table, name="public")
-    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+    cover_field = premium_data_fixture.create_file_field(
+        table=table, name="cover", order=1
+    )
+    public_field = premium_data_fixture.create_text_field(
+        table=table, name="public", order=2
+    )
+    hidden_field = premium_data_fixture.create_text_field(
+        table=table, name="hidden", order=3
+    )
 
     kanban_view.card_cover_image_field = cover_field
     kanban_view.save()
 
     premium_data_fixture.create_kanban_view_field_option(
-        kanban_view, public_field, hidden=False
+        kanban_view, single_select_field, hidden=False, order=0
     )
     premium_data_fixture.create_kanban_view_field_option(
-        kanban_view, hidden_field, hidden=True
+        kanban_view, cover_field, hidden=True, order=1
     )
     premium_data_fixture.create_kanban_view_field_option(
-        kanban_view, cover_field, hidden=True
+        kanban_view, public_field, hidden=False, order=2
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True, order=3
     )
 
     # Can access as an anonymous user
@@ -1144,7 +1153,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
             {
                 "id": single_select_field.id,
                 "name": single_select_field.name,
-                "order": single_select_field.order,
+                "order": 0,
                 "primary": single_select_field.primary,
                 "select_options": [],
                 "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
@@ -1154,7 +1163,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
             {
                 "id": cover_field.id,
                 "name": cover_field.name,
-                "order": cover_field.order,
+                "order": 1,
                 "primary": cover_field.primary,
                 "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "type": "file",
@@ -1164,7 +1173,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "id": public_field.id,
                 "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "name": "public",
-                "order": 0,
+                "order": 2,
                 "primary": False,
                 "text_default": "",
                 "type": "text",

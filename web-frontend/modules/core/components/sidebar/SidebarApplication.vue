@@ -36,7 +36,7 @@
         </div>
         <ul class="context__menu">
           <slot name="context"></slot>
-          <li>
+          <li v-if="$hasPermission('application.update', application)">
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
               {{
@@ -46,14 +46,14 @@
               }}
             </a>
           </li>
-          <li>
+          <li v-if="$hasPermission('application.duplicate', application)">
             <SidebarDuplicateApplicationContextItem
               :application="application"
               :disabled="deleting"
               @click="$refs.context.hide()"
             ></SidebarDuplicateApplicationContextItem>
           </li>
-          <li>
+          <li v-if="$hasPermission('application.create_snapshot', application)">
             <a @click="openSnapshots">
               <i class="context__menu-icon fas fa-fw fa-history"></i>
               {{ $t('sidebarApplication.snapshots') }}
@@ -63,13 +63,13 @@
             ref="snapshotsModal"
             :application="application"
           ></SnapshotsModal>
-          <li>
+          <li v-if="$hasPermission('application.read_trash', application)">
             <a @click="showApplicationTrashModal">
               <i class="context__menu-icon fas fa-fw fa-recycle"></i>
               {{ $t('sidebarApplication.viewTrash') }}
             </a>
           </li>
-          <li>
+          <li v-if="$hasPermission('application.delete', application)">
             <a
               :class="{ 'context__menu-item--loading': deleting }"
               @click="deleteApplication()"

@@ -63,7 +63,9 @@
             v-on="$listeners"
           ></GridViewRows>
           <GridViewRowAdd
-            v-if="!readOnly"
+            v-if="
+              !readOnly && $hasPermission('database.table.create_row', table)
+            "
             :fields="fields"
             :include-row-details="includeRowDetails"
             :store-prefix="storePrefix"

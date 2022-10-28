@@ -51,7 +51,7 @@
           ></ViewsContext>
         </li>
         <li
-          v-if="hasSelectedView && !readOnly"
+          v-if="hasSelectedView && !readOnly && showViewContext"
           class="header__filter-item header__filter-item--no-margin-left"
         >
           <a
@@ -275,7 +275,17 @@ export default {
       )
     },
     showLogo() {
-      return this.view.show_logo && this.isPublic
+      return this.view?.show_logo && this.isPublic
+    },
+    showViewContext() {
+      return (
+        this.$hasPermission('database.table.run_export', this.table) ||
+        this.$hasPermission('database.table.import_rows', this.table) ||
+        this.$hasPermission('database.table.view.duplicate', this.table) ||
+        this.$hasPermission('database.table.view.update', this.table) ||
+        this.$hasPermission('database.table.view.delete', this.table) ||
+        this.$hasPermission('database.table.create_webhook', this.table)
+      )
     },
     ...mapGetters({
       isPublic: 'page/view/public/getIsPublic',

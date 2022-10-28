@@ -23,6 +23,9 @@ from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
 
+from ..fields.operations import RestoreFieldOperationType
+from ..table.operations import RestoreDatabaseTableOperationType
+from ..views.operations import RestoreViewOperationType
 from .models import TrashedRows
 
 User = get_user_model()
@@ -182,6 +185,9 @@ class TableTrashableItemType(TrashableItemType):
             trash_entry.related_items[related_type].extend(related_fields_to_trash)
             trash_entry.save()
 
+    def get_restore_operation_type(self) -> str:
+        return RestoreDatabaseTableOperationType.type
+
 
 class FieldTrashableItemType(TrashableItemType):
     type = "field"
@@ -233,6 +239,9 @@ class FieldTrashableItemType(TrashableItemType):
         # After the field is deleted we are going to to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
         field_type.after_delete(field, from_model, connection)
+
+    def get_restore_operation_type(self) -> str:
+        return RestoreFieldOperationType.type
 
 
 class RowTrashableItemType(TrashableItemType):
@@ -345,6 +354,12 @@ class RowTrashableItemType(TrashableItemType):
         table = self._get_table(table_id)
         return table.get_model()
 
+    def get_restore_operation_type(self) -> str:
+        return RestoreDatabaseTableOperationType.type
+
+    def get_restore_operation_context(self, trashed_entry, trashed_item) -> str:
+        return self._get_table(trashed_entry.parent_trash_item_id)
+
 
 class RowsTrashableItemType(TrashableItemType):
     type = "rows"
@@ -452,6 +467,12 @@ class RowsTrashableItemType(TrashableItemType):
         table = self._get_table(table_id)
         return table.get_model()
 
+    def get_restore_operation_type(self) -> str:
+        return RestoreDatabaseTableOperationType.type
+
+    def get_restore_operation_context(self, trashed_entry, trashed_item) -> str:
+        return trashed_item.table
+
 
 class ViewTrashableItemType(TrashableItemType):
     type = "view"
@@ -482,3 +503,6 @@ class ViewTrashableItemType(TrashableItemType):
 
     def get_name(self, trashed_item: View) -> str:
         return trashed_item.name
+
+    def get_restore_operation_type(self) -> str:
+        return RestoreViewOperationType.type

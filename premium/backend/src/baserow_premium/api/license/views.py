@@ -5,10 +5,10 @@ from django.db.models import Count, Q
 
 from baserow_premium.license.exceptions import (
     InvalidLicenseError,
+    LicenseAlreadyExistsError,
     LicenseHasExpiredError,
     LicenseInstanceIdMismatchError,
     NoSeatsLeftInLicenseError,
-    PremiumLicenseAlreadyExistsError,
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
 )
@@ -107,7 +107,7 @@ class AdminLicensesView(APIView):
                 ERROR_PREMIUM_LICENSE_INSTANCE_ID_MISMATCH
             ),
             LicenseHasExpiredError: ERROR_LICENSE_HAS_EXPIRED,
-            PremiumLicenseAlreadyExistsError: ERROR_LICENSE_ALREADY_EXISTS,
+            LicenseAlreadyExistsError: ERROR_LICENSE_ALREADY_EXISTS,
         }
     )
     def post(self, request, data):

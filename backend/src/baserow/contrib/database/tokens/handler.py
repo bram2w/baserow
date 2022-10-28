@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.utils import random_string
 
 from .exceptions import (
@@ -15,6 +16,11 @@ from .exceptions import (
     TokenDoesNotExist,
 )
 from .models import Token, TokenPermission
+from .operations import (
+    CreateTokenOperationType,
+    ReadTokenOperationType,
+    UseTokenOperationType,
+)
 
 
 class TokenHandler:
@@ -63,7 +69,9 @@ class TokenHandler:
             raise TokenDoesNotExist(f"The token with id {token_id} does not exist.")
 
         group = token.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ReadTokenOperationType.type, group=group, context=token
+        )
 
         return token
 
@@ -111,7 +119,9 @@ class TokenHandler:
         :rtype: Token
         """
 
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateTokenOperationType.type, group=group, context=group
+        )
 
         token = Token.objects.create(
             name=name, key=self.generate_unique_key(), user=user, group=group
@@ -330,7 +340,9 @@ class TokenHandler:
         if token.group_id != table.database.group_id:
             return False
 
-        if not table.database.group.has_user(token.user):
+        if not CoreHandler().check_permissions(
+            token.user, UseTokenOperationType.type, group=token.group, context=token
+        ):
             return False
 
         if isinstance(type_name, str):

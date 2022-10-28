@@ -2,8 +2,7 @@ import EditUserContext from '@baserow_premium/components/admin/users/contexts/Ed
 import Error from '@baserow/modules/core/components/Error'
 import ChangeUserPasswordModal from '@baserow_premium/components/admin/users/modals/ChangeUserPasswordModal'
 import EditUserModal from '@baserow_premium/components/admin/users/modals/EditUserModal'
-import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
-import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
+import CrudTableSearch from '@baserow/modules/core/components/crudTable/CrudTableSearch'
 import DeleteUserModal from '@baserow_premium/components/admin/users/modals/DeleteUserModal'
 
 export default class UserAdminUserHelpers {
@@ -12,19 +11,19 @@ export default class UserAdminUserHelpers {
   }
 
   findCells(numCellsExpected = 7) {
-    const cells = this.c.findAll('.crudtable__cell')
+    const cells = this.c.findAll('tbody .data-table__table-cell-content')
     expect(cells.length).toBe(numCellsExpected)
     return cells
   }
 
   findUsernameColumnCellsText() {
-    const cells = this.c.findAll('.crudtable__cell')
+    const cells = this.c.findAll('tbody .data-table__table-cell-content')
     const usernameCells = []
     const numRows = cells.length / 7
     for (let i = 0; i < numRows; i++) {
       usernameCells.push(
         cells
-          .at(i * 7 + 1)
+          .at(i * 7 + 0)
           .find('.user-admin-username__name')
           .text()
       )
@@ -35,13 +34,13 @@ export default class UserAdminUserHelpers {
   getRow(cells, rowNumber) {
     const offset = rowNumber * 7
     return {
-      userIdCell: cells.at(offset),
-      usernameCell: cells.at(offset + 1),
-      nameCell: cells.at(offset + 2),
-      groupsCell: cells.at(offset + 3),
-      lastLoginCell: cells.at(offset + 4),
-      signedUpCell: cells.at(offset + 5),
-      isActiveCell: cells.at(offset + 6),
+      usernameCell: cells.at(offset),
+      nameCell: cells.at(offset + 1),
+      groupsCell: cells.at(offset + 2),
+      lastLoginCell: cells.at(offset + 3),
+      signedUpCell: cells.at(offset + 4),
+      isActiveCell: cells.at(offset + 5),
+      moreCell: cells.at(offset + 6),
     }
   }
 
@@ -69,7 +68,7 @@ export default class UserAdminUserHelpers {
   }
 
   async openFirstUserActionsMenu() {
-    await this.c.get('.user-admin-username__menu').trigger('click')
+    await this.c.get('.data-table__more').trigger('click')
     return this.c.findComponent(EditUserContext)
   }
 
@@ -208,24 +207,25 @@ export default class UserAdminUserHelpers {
 
   async typeIntoSearchBox(searchText) {
     const searchBox = this.c.findComponent(CrudTableSearch)
-    await searchBox.find('a').trigger('click')
-    const searchBoxContext = searchBox.findComponent(CrudTableSearchContext)
-    const searchInput = searchBoxContext.find('input')
+    const searchInput = searchBox.find('input')
     searchInput.element.value = searchText
     await searchInput.trigger('input')
     await searchInput.trigger('keyup')
   }
 
   clickUsernameHeader() {
-    return this.clickHeaderAt(1)
+    return this.clickHeaderAt(0)
   }
 
   clickFullnameHeader() {
-    return this.clickHeaderAt(2)
+    return this.clickHeaderAt(1)
   }
 
   clickHeaderAt(index) {
-    return this.c.findAll('.crudtable__field').at(index).trigger('click')
+    return this.c
+      .findAll('.data-table__table-cell-head-link')
+      .at(index)
+      .trigger('click')
   }
 
   async clickConfirmDeleteUserInModal() {

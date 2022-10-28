@@ -3,7 +3,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any, Dict, List, NewType, Optional, Tuple, cast
+from typing import IO, Any, Dict, List, NewType, Optional, Tuple, TypedDict, cast
 from urllib.parse import urljoin, urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -16,6 +16,7 @@ from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
 
 from itsdangerous import URLSafeSerializer
+from rest_framework.exceptions import NotAuthenticated
 from tqdm import tqdm
 
 from baserow.core.user.utils import normalize_email_address
@@ -25,20 +26,22 @@ from .exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
     BaseURLHostnameNotAllowed,
+    CannotDeleteYourselfFromGroup,
     GroupDoesNotExist,
     GroupInvitationDoesNotExist,
     GroupInvitationEmailMismatch,
     GroupUserAlreadyExists,
     GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
-    IsNotAdminError,
+    InvalidPermissionContext,
+    PermissionDenied,
+    PermissionException,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserNotInGroup,
 )
 from .models import (
     GROUP_USER_PERMISSION_ADMIN,
-    GROUP_USER_PERMISSION_CHOICES,
     Application,
     Group,
     GroupInvitation,
@@ -47,7 +50,29 @@ from .models import (
     Template,
     TemplateCategory,
 )
-from .registries import application_type_registry
+from .operations import (
+    CreateApplicationsGroupOperationType,
+    CreateGroupOperationType,
+    CreateInvitationsGroupOperationType,
+    DeleteApplicationOperationType,
+    DeleteGroupInvitationOperationType,
+    DeleteGroupOperationType,
+    DeleteGroupUserOperationType,
+    DuplicateApplicationOperationType,
+    OrderApplicationsOperationType,
+    ReadApplicationOperationType,
+    UpdateApplicationOperationType,
+    UpdateGroupInvitationType,
+    UpdateGroupOperationType,
+    UpdateGroupUserOperationType,
+    UpdateSettingsOperationType,
+)
+from .registries import (
+    application_type_registry,
+    object_scope_type_registry,
+    operation_type_registry,
+    permission_manager_type_registry,
+)
 from .signals import (
     application_created,
     application_deleted,
@@ -65,11 +90,17 @@ from .signals import (
     groups_reordered,
 )
 from .trash.handler import TrashHandler
+from .types import ContextObject
 from .utils import ChildProgressBuilder, find_unused_name, set_allowed_attrs
 
 User = get_user_model()
 
 GroupForUpdate = NewType("GroupForUpdate", Group)
+
+
+class PermissionObjectResult(TypedDict):
+    name: str
+    permissions: Any
 
 
 class CoreHandler:
@@ -101,8 +132,9 @@ class CoreHandler:
         :rtype: Settings
         """
 
-        if not user.is_staff:
-            raise IsNotAdminError(user)
+        CoreHandler().check_permissions(
+            user, UpdateSettingsOperationType.type, context=settings_instance
+        )
 
         if not settings_instance:
             settings_instance = self.get_settings()
@@ -120,6 +152,191 @@ class CoreHandler:
 
         settings_instance.save()
         return settings_instance
+
+    def check_permissions(
+        self,
+        actor: AbstractUser,
+        operation_name: str,
+        group: Optional[Group] = None,
+        context: Optional[ContextObject] = None,
+        include_trash: bool = False,
+        raise_error: bool = True,
+        allow_if_template: bool = False,
+    ) -> bool:
+        """
+        Checks whether a specific Actor has the Permission to execute an Operation
+        on the given Context.
+
+        When we check a permission, all permission managers listed in
+        `settings.PERMISSION_MANAGERS` are called successively until one
+        gives a final answer (permitted or disallowed).
+
+        Each permission manager can answer with `True` if the operation is permitted,
+        raise a PermissionDenied subclass exception if the operation is disallowed and
+        return `None` if it can't take a definitive answer.
+
+        If None of the permission manager replied with a final answer, the operation is
+        denied by default.
+
+        :param actor: The actor who wants to execute the operation. Generally a `User`,
+            but can be a `Token`.
+        :param operation_name: The operation name the actor wants to execute.
+        :param group: The optional group in which  the operation takes place.
+        :param context: The optional object affected by the operation. For instance
+            if you are updating a `Table` object, the context is this `Table` object.
+        :param include_trash: If true then also checks if the given group has been
+            trashed instead of raising a DoesNotExist exception.
+        :param raise_error: Raise an exception when the permission is disallowed when
+            `True`. Return `False` instead when `False`. `True` by default.
+        :raise PermissionDenied: If the operation is disallowed a PermissionDenied is
+            raised.
+        :param allow_if_template: If true and if the group is related to a template,
+            then True is always returned and no exception will be raised.
+        :raise PermissionDenied: If the operation is disallowed and raise_error is
+            `True` a PermissionDenied is raised.
+        :return: `True` if the operation is permitted or `False` if the operation is
+            disallowed AND raise_error is `False`.
+        """
+
+        if settings.DEBUG or settings.TESTS:
+            self._ensure_context_matches_operation(context, operation_name)
+
+        if allow_if_template and group and group.has_template():
+            return True
+
+        for permission_manager_name in settings.PERMISSION_MANAGERS:
+            permission_manager_type = permission_manager_type_registry.get(
+                permission_manager_name
+            )
+            try:
+                allowed = permission_manager_type.check_permissions(
+                    actor,
+                    operation_name,
+                    group=group,
+                    context=context,
+                    include_trash=include_trash,
+                )
+            except (PermissionException, NotAuthenticated):
+                if raise_error:
+                    raise
+                else:
+                    return False
+            else:
+                if allowed is True:
+                    return True
+
+        # Here none af the permission managers has allowed the operation so the
+        # operation is denied by default.
+        if raise_error:
+            raise PermissionDenied(actor=actor)
+        else:
+            return False
+
+    def _ensure_context_matches_operation(self, context, operation_name):
+        context_types = {
+            t.type
+            for t in object_scope_type_registry.get_all_by_model_isinstance(context)
+        }
+        expected_operation_context_type = operation_type_registry.get(
+            operation_name
+        ).context_scope_name
+        if expected_operation_context_type not in context_types:
+            raise InvalidPermissionContext(
+                f"Incorrect context object matching {context_types} provided to "
+                f" check_permissions call. Was expected instead one of type "
+                f"{expected_operation_context_type} based on the operation type of "
+                f"{operation_name}."
+            )
+
+    def get_permissions(
+        self, actor: AbstractUser, group: Optional[Group] = None
+    ) -> List[PermissionObjectResult]:
+        """
+        Generates the object sent to a client to easily check the actor permissions over
+        the given group.
+
+        This object is generated by going over all permission managers listed in
+        `settings.PERMISSION_MANAGERS` and aggregating the results in a list of dict
+        containing permission manager type name and the value returned from the
+        permission manager. For example:
+
+        ```python
+        [
+            {
+                "name": "core",
+                "permissions": ["perm1", "perm2"]
+            },
+            {
+                "name": "staff"
+                "permissions": {
+                    "staff_only_permissions": ["perm3", "perm4"],
+                    "is_staff": True
+                }
+            },
+            ...
+        ]
+        ```
+
+        If the permission manager return value is None, it's ignored and not included
+        in the final result.
+
+        :param actor: The actor whom we want to compute the permission object for.
+        :param group: The optional group into which we want to compute the permission
+            object.
+        :return: The full permission object.
+        """
+
+        result = []
+        for permission_manager_name in settings.PERMISSION_MANAGERS:
+            permission_manager_type = permission_manager_type_registry.get(
+                permission_manager_name
+            )
+
+            perms = permission_manager_type.get_permissions_object(actor, group=group)
+            if perms is not None:
+                result.append(
+                    PermissionObjectResult(
+                        name=permission_manager_name, permissions=perms
+                    )
+                )
+
+        return result
+
+    def filter_queryset(
+        self,
+        actor: AbstractUser,
+        operation_name: str,
+        queryset: QuerySet,
+        group: Optional[Group] = None,
+        context: Optional[ContextObject] = None,
+    ) -> QuerySet:
+        """
+        filters a given queryset accordingly to the actor permissions in the specified
+        context.
+
+        All permission managers listed in `settings.PERMISSION_MANAGERS` are called
+        to let them the opportunity to filter the queryset if it's relevant for them.
+
+        :param actor: The actor whom we want to filter the queryset for.
+        :param operation_name: The list operation name we want the queryset to be
+            filtered for.
+        :param queryset: The queryset we want to filter. The queryset should contains
+            object that are in the same `ObjectScopeType` as the one described in the
+            `OperationType` corresponding to the given `operation_name`.
+        :param group: An optional group into which the operation occurs.
+        :param context: The optional context of the operation.
+        :return: The queryset, potentially filtered.
+        """
+
+        for permission_manager_name in settings.PERMISSION_MANAGERS:
+            permission_manager_type = permission_manager_type_registry.get(
+                permission_manager_name
+            )
+            queryset = permission_manager_type.filter_queryset(
+                actor, operation_name, queryset, group=group, context=context
+            )
+
+        return queryset
 
     def get_group_for_update(self, group_id: int) -> GroupForUpdate:
         return cast(
@@ -179,6 +396,11 @@ class CoreHandler:
         """
 
         group = Group.objects.create(name=name)
+
+        CoreHandler().check_permissions(
+            user, CreateGroupOperationType.type, group=group
+        )
+
         last_order = GroupUser.get_last_order(user)
         group_user = GroupUser.objects.create(
             group=group,
@@ -207,7 +429,10 @@ class CoreHandler:
         if not isinstance(group, Group):
             raise ValueError("The group is not an instance of Group.")
 
-        group.has_user(user, "ADMIN", raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateGroupOperationType.type, group=group, context=group
+        )
+
         group.name = name
         group.save()
 
@@ -294,7 +519,9 @@ class CoreHandler:
         if not isinstance(group, Group):
             raise ValueError("The group is not an instance of Group.")
 
-        group.has_user(user, "ADMIN", raise_error=True)
+        CoreHandler().check_permissions(
+            user, DeleteGroupOperationType.type, group=group, context=group
+        )
 
         # Load the group users before the group is deleted so that we can pass those
         # along with the signal.
@@ -379,7 +606,12 @@ class CoreHandler:
         if not isinstance(group_user, GroupUser):
             raise ValueError("The group user is not an instance of GroupUser.")
 
-        group_user.group.has_user(user, "ADMIN", raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            UpdateGroupUserOperationType.type,
+            group=group_user.group,
+            context=group_user,
+        )
 
         before_group_user_updated.send(self, group_user=group_user, **kwargs)
 
@@ -398,12 +630,22 @@ class CoreHandler:
         :type user: User
         :param group_user: The group user that must be deleted.
         :type group_user: GroupUser
+        :raises CannotDeleteYourselfFromGroup; If the user tries to delete himself
+            from the group.
         """
 
         if not isinstance(group_user, GroupUser):
             raise ValueError("The group user is not an instance of GroupUser.")
 
-        group_user.group.has_user(user, "ADMIN", raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteGroupUserOperationType.type,
+            group=group_user.group,
+            context=group_user,
+        )
+
+        if user.id == group_user.user_id:
+            raise CannotDeleteYourselfFromGroup("Cannot delete yourself from group.")
 
         before_group_user_deleted.send(
             self, user=group_user.user, group=group_user.group, group_user=group_user
@@ -562,10 +804,9 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        group.has_user(user, "ADMIN", raise_error=True)
-
-        if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
-            raise ValueError("Incorrect permissions provided.")
+        CoreHandler().check_permissions(
+            user, CreateInvitationsGroupOperationType.type, group=group, context=group
+        )
 
         email = normalize_email_address(email)
 
@@ -607,10 +848,12 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        invitation.group.has_user(user, "ADMIN", raise_error=True)
-
-        if permissions not in dict(GROUP_USER_PERMISSION_CHOICES):
-            raise ValueError("Incorrect permissions provided.")
+        CoreHandler().check_permissions(
+            user,
+            UpdateGroupInvitationType.type,
+            group=invitation.group,
+            context=invitation,
+        )
 
         invitation.permissions = permissions
         invitation.save()
@@ -630,7 +873,13 @@ class CoreHandler:
             group or doesn't have right permissions in the group.
         """
 
-        invitation.group.has_user(user, "ADMIN", raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteGroupInvitationOperationType.type,
+            group=invitation.group,
+            context=invitation,
+        )
+
         invitation.delete()
 
     def reject_group_invitation(self, user, invitation):
@@ -689,7 +938,11 @@ class CoreHandler:
         )
 
         group_user_added.send(
-            self, group_user_id=group_user.id, group_user=group_user, user=user
+            self,
+            group_user_id=group_user.id,
+            group_user=group_user,
+            user=user,
+            invitation=invitation,
         )
 
         invitation.delete()
@@ -714,7 +967,14 @@ class CoreHandler:
         """
 
         application = self.get_application(application_id, base_queryset=base_queryset)
-        application.group.has_user(user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            user,
+            ReadApplicationOperationType.type,
+            group=application.group,
+            context=application,
+        )
+
         return application
 
     def get_application(
@@ -780,7 +1040,9 @@ class CoreHandler:
         :return: The created application instance.
         """
 
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateApplicationsGroupOperationType.type, group=group, context=group
+        )
 
         # Figure out which model is used for the given application type.
         application_type = application_type_registry.get(type_name)
@@ -821,7 +1083,12 @@ class CoreHandler:
         :return: The updated application instance.
         """
 
-        application.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            UpdateApplicationOperationType.type,
+            group=application.group,
+            context=application,
+        )
 
         application.name = name
         application.save()
@@ -845,7 +1112,13 @@ class CoreHandler:
         """
 
         group = application.group
-        group.has_user(user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            user,
+            DuplicateApplicationOperationType.type,
+            group=application.group,
+            context=application,
+        )
 
         start_progress, export_progress, import_progress = 10, 30, 60
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
@@ -899,8 +1172,11 @@ class CoreHandler:
         :return: The old order of application ids.
         """
 
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, OrderApplicationsOperationType.type, group=group, context=group
+        )
 
+        # TODO add filter_queryset
         queryset = Application.objects.filter(group_id=group.id).order_by("order")
         application_ids = queryset.values_list("id", flat=True)
 
@@ -926,7 +1202,12 @@ class CoreHandler:
         if not isinstance(application, Application):
             raise ValueError("The application is not an instance of Application")
 
-        application.group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteApplicationOperationType.type,
+            group=application.group,
+            context=application,
+        )
 
         application_id = application.id
         TrashHandler.trash(user, application.group, application, application)
@@ -1225,7 +1506,10 @@ class CoreHandler:
         :return: The imported applications.
         """
 
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateApplicationsGroupOperationType.type, group=group, context=group
+        )
+
         template_path = self.get_valid_template_path_or_raise(template)
 
         content = template_path.read_text()

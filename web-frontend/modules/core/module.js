@@ -180,6 +180,7 @@ export default function CoreModule(options) {
     src: path.resolve(__dirname, 'plugins/realTimeHandler.js'),
   })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/auth.js') })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/permissions.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/featureFlags.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/papa.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/ensureRender.js') })

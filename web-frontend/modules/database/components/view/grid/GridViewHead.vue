@@ -6,7 +6,7 @@
       :style="{ width: gridViewRowDetailsWidth + 'px' }"
     >
       <GridViewRowIdentifierDropdown
-        v-if="!readOnly"
+        v-if="!readOnly && $hasPermission('database.table.view.update', view)"
         :row-identifier-type-selected="view.row_identifier_type"
         @change="onChangeIdentifierDropdown"
       ></GridViewRowIdentifierDropdown>

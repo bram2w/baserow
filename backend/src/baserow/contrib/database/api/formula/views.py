@@ -22,10 +22,14 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.models import FormulaField
-from baserow.contrib.database.formula import BaserowFormulaException
+from baserow.contrib.database.formula import (
+    BaserowFormulaException,
+    TypeFormulaOperationType,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 
 
 class TypeFormulaView(APIView):
@@ -74,7 +78,12 @@ class TypeFormulaView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            TypeFormulaOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         field = FormulaField(
             formula=data["formula"], table=table, name=data["name"], order=0

@@ -114,16 +114,9 @@
               {{ license.seats_taken }} / {{ license.seats }}
               {{ $t('licenses.seats') }}
             </li>
-            <li>
-              {{ $t('licenses.premiumFeatures') }}
-              <i
-                class="fas margin-left-1"
-                :class="
-                  licenseHasPremiumFeatures(license)
-                    ? 'fa-check license-yes'
-                    : 'fa-times license-no'
-                "
-              ></i>
+            <li v-if="licenseFeatureDescription(license)">
+              {{ licenseFeatureDescription(license) }}
+              <i class="fas margin-left-1 fa-check license-yes"></i>
             </li>
           </ul>
         </nuxt-link>
@@ -186,10 +179,8 @@ export default {
     getLicenseType(license) {
       return this.$registry.get('license', license.product_code)
     },
-    licenseHasPremiumFeatures(license) {
-      return this.getLicenseType(license)
-        .getFeatures()
-        .includes(PremiumFeatures.PREMIUM)
+    licenseFeatureDescription(license) {
+      return this.getLicenseType(license).getFeaturesDescription()
     },
   },
 }

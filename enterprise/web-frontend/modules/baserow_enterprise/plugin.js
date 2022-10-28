@@ -1,8 +1,10 @@
 import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
+import { RolePermissionManagerType } from '@baserow_enterprise/permissionManagerTypes'
 import { AuthProvidersType } from '@baserow_enterprise/adminTypes'
 import { SamlAuthProviderType } from '@baserow_enterprise/authProviderTypes'
 import authProviderAdminStore from '@baserow_enterprise/store/authProviderAdmin'
 
+import { EnterpriseMembersPagePluginType } from '@baserow_enterprise/membersPagePluginTypes'
 import en from '@baserow_enterprise/locales/en.json'
 import fr from '@baserow_enterprise/locales/fr.json'
 import nl from '@baserow_enterprise/locales/nl.json'
@@ -25,12 +27,22 @@ export default (context) => {
     i18n.mergeLocaleMessage('it', it)
   }
 
+  app.$registry.register(
+    'permissionManager',
+    new RolePermissionManagerType(context)
+  )
+
   store.registerModule('authProviderAdmin', authProviderAdminStore)
 
   app.$registry.register('admin', new AuthProvidersType(context))
   app.$registry.register('authProvider', new SamlAuthProviderType(context))
 
   registerRealtimeEvents(app.$realtime)
+
+  app.$registry.register(
+    'membersPagePlugins',
+    new EnterpriseMembersPagePluginType(context)
+  )
 
   app.$registry.register('license', new EnterpriseLicenseType(context))
 }

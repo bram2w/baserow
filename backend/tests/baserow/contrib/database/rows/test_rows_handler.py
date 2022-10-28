@@ -853,7 +853,6 @@ def test_get_include_exclude_fields_with_user_field_names(data_fixture):
 @pytest.mark.django_db
 def test_has_row(data_fixture):
     user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
     name_field = data_fixture.create_text_field(
         table=table, name="Name", text_default="Test"
@@ -878,9 +877,6 @@ def test_has_row(data_fixture):
             f"field_{price_field.id}": Decimal("59999.99"),
         },
     )
-
-    with pytest.raises(UserNotInGroup):
-        handler.has_row(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
         handler.has_row(user=user, table=table, row_id=99999, raise_error=True)

@@ -118,8 +118,8 @@
           >
           <ViewFieldsContext
             ref="customizeContext"
+            :view="view"
             :fields="fields"
-            :read-only="readOnly"
             :field-options="fieldOptions"
             :allow-hiding-fields="false"
             @update-order="$emit('ordered-fields', $event.order)"

@@ -2,9 +2,14 @@
   <div
     ref="fieldContextAnchor"
     class="grid-view-aggregation"
-    :class="{ 'read-only': readOnly }"
+    :class="{
+      'read-only':
+        readOnly ||
+        !$hasPermission('database.table.view.update_field_options', view),
+    }"
     @click.prevent="
       !readOnly &&
+        $hasPermission('database.table.view.update_field_options', view) &&
         $refs[`fieldContext`].toggle(
           $refs.fieldContextAnchor,
           'top',

@@ -20,8 +20,8 @@
       </a>
       <ViewFieldsContext
         ref="customizeContext"
+        :view="view"
         :fields="fields"
-        :read-only="readOnly"
         :field-options="fieldOptions"
         :cover-image-field="view.card_cover_image_field"
         :allow-cover-image-field="true"

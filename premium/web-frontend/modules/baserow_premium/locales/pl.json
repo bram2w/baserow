@@ -135,9 +135,6 @@
         "delete": "Usuń użytkownika",
         "edit": "Edytuj { username }"
     },
-    "crudTableSearchContext": {
-        "search": "Szukaj"
-    },
     "tableJSONExporter": {
         "encoding": "Kodowanie"
     },

@@ -1,7 +1,4 @@
 {
-    "table": {
-        "chooseView": "Choose view"
-    },
     "webhookModal": {
         "title": "{name} webhooks",
         "createWebhook": "Create webhook",
@@ -734,6 +731,7 @@
                     "message": "An error occurred while retrieving the adjacent row"
                 }
             }
-        }
+        },
+        "chooseView": "Choose view"
     }
 }

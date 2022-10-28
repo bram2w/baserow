@@ -27,7 +27,7 @@
         <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
       </div>
       <a
-        v-if="!readOnly"
+        v-if="!readOnly && showFieldContext"
         ref="contextLink"
         class="grid-view__description-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
@@ -43,7 +43,13 @@
         @update="$emit('refresh', $event)"
         @delete="$emit('refresh')"
       >
-        <li v-if="!field.primary && !readOnly">
+        <li
+          v-if="
+            !field.primary &&
+            !readOnly &&
+            $hasPermission('database.table.create_field', table)
+          "
+        >
           <a
             ref="insertLeftLink"
             @click="
@@ -54,7 +60,13 @@
             {{ $t('gridViewFieldType.insertLeft') }}
           </a>
         </li>
-        <li v-if="!field.primary && !readOnly">
+        <li
+          v-if="
+            !field.primary &&
+            !readOnly &&
+            $hasPermission('database.table.create_field', table)
+          "
+        >
           <a
             ref="insertRightLink"
             @click="
@@ -72,7 +84,11 @@
             @move-field="moveField($event)"
           ></InsertFieldContext>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="
+            !readOnly && $hasPermission('database.table.field.duplicate', field)
+          "
+        >
           <a
             @click=";[$refs.duplicateFieldModal.toggle(), $refs.context.hide()]"
           >
@@ -88,13 +104,23 @@
           ></DuplicateFieldModal>
         </li>
         <li />
-        <li v-if="canFilter">
+        <li
+          v-if="
+            canFilter &&
+            $hasPermission('database.table.view.create_filter', view)
+          "
+        >
           <a @click="createFilter($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-filter"></i>
             {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
-        <li v-if="getCanSortInView(field)">
+        <li
+          v-if="
+            getCanSortInView(field) &&
+            $hasPermission('database.table.view.create_sort', view)
+          "
+        >
           <a @click="createSort($event, view, field, 'ASC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -117,7 +143,12 @@
             ></i>
           </a>
         </li>
-        <li v-if="getCanSortInView(field)">
+        <li
+          v-if="
+            getCanSortInView(field) &&
+            $hasPermission('database.table.view.create_sort', view)
+          "
+        >
           <a @click="createSort($event, view, field, 'DESC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -140,7 +171,13 @@
             ></i>
           </a>
         </li>
-        <li v-if="!field.primary && canFilter">
+        <li
+          v-if="
+            !field.primary &&
+            canFilter &&
+            $hasPermission('database.table.view.update_field_options', view)
+          "
+        >
           <a @click="hide($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-eye-slash"></i>
             {{ $t('gridViewFieldType.hideField') }}
@@ -153,7 +190,10 @@
         :grid="view"
         :field="field"
         :width="width"
-        :read-only="readOnly"
+        :read-only="
+          readOnly ||
+          !$hasPermission('database.table.view.update_field_options', view)
+        "
         :store-prefix="storePrefix"
       ></GridViewFieldWidthHandle>
     </div>
@@ -218,6 +258,20 @@ export default {
         }
       }
       return false
+    },
+    showFieldContext() {
+      return (
+        this.$hasPermission('database.table.create_field', this.table) ||
+        this.$hasPermission('database.table.view.create_filter', this.view) ||
+        this.$hasPermission('database.table.view.create_sort', this.view) ||
+        this.$hasPermission(
+          'database.table.view.update_field_options',
+          this.view
+        ) ||
+        this.$hasPermission('database.table.field.duplicate', this.field) ||
+        this.$hasPermission('database.table.field.update', this.field) ||
+        this.$hasPermission('database.table.field.delete', this.field)
+      )
     },
   },
   beforeCreate() {

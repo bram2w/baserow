@@ -43,7 +43,11 @@
         >
         </SidebarItemPendingJob>
       </ul>
-      <a class="tree__sub-add" @click="$refs.importFileModal.show()">
+      <a
+        v-if="$hasPermission('database.create_table', application)"
+        class="tree__sub-add"
+        @click="$refs.importFileModal.show()"
+      >
         <i class="fas fa-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>

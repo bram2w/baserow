@@ -57,7 +57,7 @@ def test_list_group_invitations(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_INVALID_GROUP_PERMISSIONS"
-    assert response.json()["detail"] == "You need ['ADMIN'] permissions."
+    assert response.json()["detail"] == "You need group.list_invitations permissions."
 
     response = api_client.get(
         reverse("api:groups:invitations:list", kwargs={"group_id": group_1.id}),
@@ -142,24 +142,6 @@ def test_create_group_invitation(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_USER_INVALID_GROUP_PERMISSIONS"
-
-    response = api_client.post(
-        reverse("api:groups:invitations:list", kwargs={"group_id": group_1.id}),
-        {
-            "email": "NO_EMAIL",
-            "permissions": "NOT_EXISTING",
-            "message": "",
-            "base_url": "http://localhost:3000/invite",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_1}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"]["email"][0]["code"] == "invalid"
-    assert response_json["detail"]["permissions"][0]["code"] == "invalid_choice"
-    assert "message" not in response_json["detail"]
 
     response = api_client.post(
         reverse("api:groups:invitations:list", kwargs={"group_id": group_1.id}),
@@ -333,19 +315,6 @@ def test_update_group_invitation(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_USER_INVALID_GROUP_PERMISSIONS"
-
-    response = api_client.patch(
-        reverse(
-            "api:groups:invitations:item", kwargs={"group_invitation_id": invitation.id}
-        ),
-        {"permissions": "NOT_EXISTING"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_1}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"]["permissions"][0]["code"] == "invalid_choice"
 
     response = api_client.patch(
         reverse(

@@ -75,3 +75,8 @@ class UpdateGroupUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupUser
         fields = ("permissions",)
+
+
+class GetGroupUsersViewParamsSerializer(serializers.Serializer):
+    search = serializers.CharField(required=False, allow_null=True, default=None)
+    sorts = serializers.CharField(required=False, allow_null=True, default=None)

@@ -30,7 +30,7 @@ export default function ({ app }, inject) {
    */
   function highestInstanceWideLicenseType() {
     const orderedLicenses = instanceWideLicenseTypes().sort(
-      (a, b) => a.order - b.order
+      (a, b) => b.getOrder() - a.getOrder()
     )
     if (orderedLicenses.length === 0) {
       return null

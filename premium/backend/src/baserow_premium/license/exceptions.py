@@ -40,7 +40,7 @@ class LicenseInstanceIdMismatchError(Exception):
     """
 
 
-class PremiumLicenseAlreadyExistsError(Exception):
+class LicenseAlreadyExistsError(Exception):
     """Raised when trying to register a license that already exists."""
 
 

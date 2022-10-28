@@ -5,10 +5,15 @@ from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.models import RowComment
+from baserow_premium.row_comments.operations import (
+    CreateRowCommentsOperationType,
+    ReadRowCommentsOperationType,
+)
 from baserow_premium.row_comments.signals import row_comment_created
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.core.handler import CoreHandler
 
 User = get_user_model()
 
@@ -32,6 +37,14 @@ class RowCommentHandler:
         table = TableHandler().get_table(table_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(
             requesting_user, table.database.group, PREMIUM
+        )
+        # TODO: RBAC -> When row level permissions are introduced we also need to check
+        #       that the user can see the row
+        CoreHandler().check_permissions(
+            requesting_user,
+            ReadRowCommentsOperationType.type,
+            group=table.database.group,
+            context=table,
         )
 
         RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
@@ -67,6 +80,15 @@ class RowCommentHandler:
 
         if comment is None or comment == "":
             raise InvalidRowCommentException()
+
+        # TODO: RBAC -> When row level permissions are introduced we also need to check
+        #       that the user can see the row
+        CoreHandler().check_permissions(
+            requesting_user,
+            CreateRowCommentsOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
         row_comment = RowComment.objects.create(

@@ -30,6 +30,9 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   store.$client = app.client
   store.app = app
   app.$store = store
+  app.$hasFeature = function (feature, group) {
+    return true
+  }
   // Nuxt seems to allow both access patterns to get at the store?
   app.store = store
   const setupContext = {
@@ -118,6 +121,7 @@ export class TestApp {
         matched: [],
       },
       $featureFlags: { includes: () => true },
+      $hasPermission: () => true,
     }
     this._app.$clientErrorMap = new ClientErrorMap(this._app)
     this._vueContext = bootstrapVueContext()

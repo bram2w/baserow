@@ -38,3 +38,4 @@ djangorestframework-stubs==1.7.0
 mypy==0.961
 mypy-extensions==0.4.3
 isort==5.10.1
+ipython

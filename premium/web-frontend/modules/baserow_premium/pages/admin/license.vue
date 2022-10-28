@@ -162,17 +162,14 @@
               {{ license.issued_to_name }} ({{ license.issued_to_email }})
             </div>
           </div>
-          <div class="license-detail__item">
+          <div v-if="licenseFeatureDescription" class="license-detail__item">
             <div class="license-detail__item-label">
               <div class="license-detail__item-name">
-                {{ $t('license.premiumFeatures') }}
+                {{ licenseFeatureDescription }}
               </div>
             </div>
             <div class="license-detail__item-value">
-              <i
-                class="fas fa-check"
-                :class="hasPremiumFeatures ? 'license-yes' : 'license-no'"
-              ></i>
+              <i class="fas fa-check license-yes"></i>
             </div>
           </div>
           <div class="license-detail__item">
@@ -243,7 +240,6 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
 import LicenseService from '@baserow_premium/services/license'
 import DisconnectLicenseModal from '@baserow_premium/components/license/DisconnectLicenseModal'
-import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   components: { DisconnectLicenseModal, PaginatedDropdown },
@@ -276,8 +272,8 @@ export default {
     licenseType() {
       return this.$registry.get('license', this.license.product_code)
     },
-    hasPremiumFeatures() {
-      return this.licenseType.getFeatures().includes(PremiumFeatures.PREMIUM)
+    licenseFeatureDescription() {
+      return this.licenseType.getFeaturesDescription()
     },
   },
   methods: {

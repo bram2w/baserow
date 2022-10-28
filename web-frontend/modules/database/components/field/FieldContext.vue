@@ -1,7 +1,7 @@
 <template>
   <Context ref="context">
     <ul class="context__menu">
-      <li>
+      <li v-if="$hasPermission('database.table.field.update', field)">
         <a
           ref="updateFieldContextLink"
           class="grid-view__description-options"
@@ -26,7 +26,11 @@
         ></UpdateFieldContext>
       </li>
       <slot></slot>
-      <li v-if="!field.primary">
+      <li
+        v-if="
+          !field.primary && $hasPermission('database.table.field.delete', field)
+        "
+      >
         <a
           :class="{ 'context__menu-item--loading': deleteLoading }"
           @click="deleteField()"

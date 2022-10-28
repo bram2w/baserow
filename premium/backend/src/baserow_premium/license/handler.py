@@ -39,11 +39,11 @@ from .constants import (
 )
 from .exceptions import (
     FeaturesNotAvailableError,
+    LicenseAlreadyExistsError,
     LicenseAuthorityUnavailable,
     LicenseHasExpiredError,
     LicenseInstanceIdMismatchError,
     NoSeatsLeftInLicenseError,
-    PremiumLicenseAlreadyExistsError,
     UnsupportedLicenseError,
     UserAlreadyOnLicenseError,
 )
@@ -114,6 +114,22 @@ class LicenseHandler:
 
         license_plugin = cls._get_license_plugin()
         return license_plugin.instance_has_feature(feature)
+
+    @classmethod
+    def group_has_feature(cls, feature: str, group: Group):
+        """
+        Checks if the Baserow group has a particular feature granted to the group
+        itself.
+
+        :param feature: The feature to check to see if active. Look for features.py
+            files for these constant strings to use.
+        :param group: The group to check to see if the feature is active for everyone
+            in that group.
+        :return: True if the feature is enabled for a particular group.
+        """
+
+        license_plugin = cls._get_license_plugin()
+        return license_plugin.group_has_feature(feature, group)
 
     @classmethod
     def user_has_feature_instance_wide(cls, feature: str, user: AbstractUser):
@@ -355,7 +371,7 @@ class LicenseHandler:
 
         :param requesting_user: The user on whose behalf the license is registered.
         :param license_payload: The license that must be decoded and added.
-        :raises PremiumLicenseAlreadyExistsError: When the license already exists.
+        :raises LicenseAlreadyExistsError: When the license already exists.
         :raises LicenseHasExpiredError: When the license has expired.
         :return: The created license instance.
         """
@@ -446,9 +462,7 @@ class LicenseHandler:
                 # the new license, we want to raise the exception that the most license
                 # already exists.
                 else:
-                    raise PremiumLicenseAlreadyExistsError(
-                        "The license already exists."
-                    )
+                    raise LicenseAlreadyExistsError("The license already exists.")
 
         # If the license doesn't exist we want to create a new one.
         return License.objects.create(
