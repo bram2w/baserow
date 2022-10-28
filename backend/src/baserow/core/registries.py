@@ -7,13 +7,19 @@ from django.db.transaction import Atomic
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.utils import ChildProgressBuilder
 
-from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
+from .exceptions import (
+    ApplicationTypeAlreadyRegistered,
+    ApplicationTypeDoesNotExist,
+    AuthenticationProviderTypeAlreadyRegistered,
+    AuthenticationProviderTypeDoesNotExist,
+)
 from .export_serialized import CoreExportSerializedStructure
 from .registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
     ImportExportMixin,
     Instance,
+    MapAPIExceptionsInstanceMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
@@ -284,8 +290,47 @@ class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry
     already_registered_exception_class = ApplicationTypeAlreadyRegistered
 
 
+class AuthenticationProviderTypeRegistry(
+    MapAPIExceptionsInstanceMixin, APIUrlsRegistryMixin, ModelRegistryMixin, Registry
+):
+    """
+    With the authentication provider registry it is possible to register new
+    authentication providers. An authentication provider is an abstraction made
+    specifically for Baserow. If added to the registry a user can use that
+    authentication provider to login.
+    """
+
+    name = "authentication_provider"
+    does_not_exist_exception_class = AuthenticationProviderTypeDoesNotExist
+    already_registered_exception_class = AuthenticationProviderTypeAlreadyRegistered
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._default = None
+
+    def register_default(self, instance):
+        super().register(instance)
+        self._default = instance
+
+    def get_default_provider(self):
+        provider, _ = self._default.model_class.objects.get_or_create()
+        return provider
+
+    def get_default(self):
+        return self._default
+
+    def get_all_available_login_options(self):
+        login_options = {}
+        for provider in self.get_all():
+            provider_login_options = provider.get_login_options()
+            if provider_login_options:
+                login_options[provider.type] = provider_login_options
+        return login_options
+
+
 # A default plugin and application registry is created here, this is the one that is
 # used throughout the whole Baserow application. To add a new plugin or application use
 # these registries.
 plugin_registry = PluginRegistry()
 application_type_registry = ApplicationTypeRegistry()
+auth_provider_type_registry = AuthenticationProviderTypeRegistry()

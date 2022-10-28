@@ -22,6 +22,8 @@ For example:
 * Added the ability to double click a grid field name so that quick edits can be made. [#1147](https://gitlab.com/bramw/baserow/-/issues/1147).
 * Upgraded docker containers base images from `debian:buster-slim` to the latest stable `debian:bullseye-slim`.
 * Upgraded python version from `python-3.7.16` to `python-3.9.2`.
+* Added SAML protocol implementation for Single Sign On as an enterprise feature. [#1227](https://gitlab.com/bramw/baserow/-/issues/1227)
+ 
 
 ### Bug Fixes
 

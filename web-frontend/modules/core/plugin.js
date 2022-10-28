@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
 import { Registry } from '@baserow/modules/core/registry'
+import { PasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
 import {
   DuplicateApplicationJobType,
   InstallTemplateJobType,
@@ -19,6 +20,7 @@ import { SettingsAdminType } from '@baserow/modules/core/adminTypes'
 
 import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
+import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
 import groupStore from '@baserow/modules/core/store/group'
 import jobStore from '@baserow/modules/core/store/job'
@@ -53,6 +55,7 @@ export default (context, inject) => {
   const registry = new Registry()
   registry.registerNamespace('plugin')
   registry.registerNamespace('application')
+  registry.registerNamespace('authProvider')
   registry.registerNamespace('job')
   registry.registerNamespace('view')
   registry.registerNamespace('field')
@@ -71,6 +74,7 @@ export default (context, inject) => {
 
   store.registerModule('settings', settingsStore)
   store.registerModule('application', applicationStore)
+  store.registerModule('authProvider', authProviderStore)
   store.registerModule('auth', authStore)
   store.registerModule('job', jobStore)
   store.registerModule('group', groupStore)
@@ -78,6 +82,7 @@ export default (context, inject) => {
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
 
+  registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
   registry.register('job', new InstallTemplateJobType(context))
 }

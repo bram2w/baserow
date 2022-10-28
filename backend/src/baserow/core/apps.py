@@ -64,6 +64,13 @@ class CoreConfig(AppConfig):
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
 
+        from baserow.core.auth_provider.auth_provider_types import (
+            PasswordAuthProviderType,
+        )
+        from baserow.core.registries import auth_provider_type_registry
+
+        auth_provider_type_registry.register_default(PasswordAuthProviderType())
+
         # Clear the key after migration so we will trigger a new template sync.
         post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)
 

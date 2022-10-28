@@ -44,6 +44,7 @@ RUN apt-get update &&  \
     vim \
     git \
     gosu \
+    xmlsec1 \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \

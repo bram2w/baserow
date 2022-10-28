@@ -62,7 +62,7 @@ class FieldType(
             FieldType, field_type_registry
         )
 
-        class ExampleFieldModel(FieldType):
+        class ExampleFieldModel(Field):
             pass
 
         class ExampleFieldType(FieldType):

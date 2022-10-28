@@ -1,6 +1,7 @@
-from baserow_enterprise.features import RBAC, SSO
 from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.registries import LicenseType
+
+from baserow_enterprise.features import RBAC, SSO
 
 
 class EnterpriseLicenseType(LicenseType):

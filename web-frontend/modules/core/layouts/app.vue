@@ -65,7 +65,6 @@ export default {
       'undoRedo/updateCurrentScopeSet',
       CORE_ACTION_SCOPES.root(false)
     )
-    this.$store.dispatch('job/clearAll')
   },
   methods: {
     keyDown(event) {

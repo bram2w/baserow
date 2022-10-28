@@ -2,7 +2,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.utils import override_settings
 
 import pytest
-from baserow_enterprise.features import RBAC, SSO
 from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
 from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
@@ -10,6 +9,7 @@ from freezegun import freeze_time
 
 from baserow.api.user.registries import user_data_registry
 from baserow.core.models import Settings
+from baserow_enterprise.features import RBAC, SSO
 
 VALID_ONE_SEAT_ENTERPRISE_LICENSE = (
     # id: "1", instance_id: "1"

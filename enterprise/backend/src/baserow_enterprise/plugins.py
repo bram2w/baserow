@@ -1,8 +1,7 @@
 from django.urls import include, path
 
-from baserow_enterprise.api import urls as api_urls
-
 from baserow.core.registries import Plugin
+from baserow_enterprise.api import urls as api_urls
 
 
 class EnterprisePlugin(Plugin):

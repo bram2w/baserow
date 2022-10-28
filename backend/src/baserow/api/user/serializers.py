@@ -212,7 +212,7 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
         data = generate_session_tokens_for_user(user, include_refresh_token=True)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
 
-        UserHandler().user_signed_in(user)
+        UserHandler().user_signed_in_via_default_provider(user)
 
         return data
 

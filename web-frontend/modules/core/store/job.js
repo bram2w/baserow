@@ -226,6 +226,7 @@ export const actions = {
     jobs.forEach((job) => commit('DELETE_ITEM', job.id))
   },
   clearAll({ commit, dispatch }) {
+    clearTimeout(this.updateTimeoutId)
     commit('SET_ITEMS', [])
     commit('SET_LOADED', false)
   },

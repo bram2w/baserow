@@ -33,3 +33,5 @@ django-health-check==3.16.5
 psutil==5.9.0
 dj-database-url==0.5.0
 redis==4.1.4
+pysaml2==7.2.1
+validators==0.20.0

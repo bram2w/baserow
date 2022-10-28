@@ -1,6 +1,51 @@
 {
     "enterprise": {
         "license": "Enterprise",
-        "sidebarTooltip": "Your account has access to the enterprise features globally"
+        "sidebarTooltip": "Enterprise",
+        "deactivated": "Deactivated"
+    },
+    "adminType": {
+        "Authentication": "Authentication"
+    },
+    "authProviders": {
+        "title": "Authentication Providers",
+        "noProviders": "No authentication providers configured yet.",
+        "addProvider": "Add provider"
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "samlSettingsForm": {
+        "domain": "Domain",
+        "domainPlaceholder": "Insert the company domain name...",
+        "invalidDomain": "Invalid domain name",
+        "domainAlreadyExists": "A SAML provider for this domain already exists",
+        "metadata": "Metadata",
+        "metadataPlaceholder": "Paste the Identity Provider metadata...",
+        "invalidMetadata": "Invalid XML metadata for the Identity Provider"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Add a new {type}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Edit {name}"
+    },
+    "deleteAuthProviderModal": {
+        "title": "Delete {name}",
+        "comment": "Do you really want to delete this {type}?"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Sign in with SAML SSO",
+        "continueWithSaml": "Continue to the SAML provider",
+        "requestError": "This domain is not configured with SAML SSO"
+    },
+    "loginError": {
+        "title": "Something went wrong...",
+        "defaultErrorMessage": "An error occurred while trying to log in.",
+        "errorSsoFeatureNotActive": "The SSO feature is not active. Please contact your administrator.",
+        "errorInvalidSamlRequest": "The SAML request is invalid.",
+        "errorInvalidSamlResponse": "The SAML response is invalid.",
+        "errorUserDeactivated": "The user has been disabled."
     }
 }

@@ -280,8 +280,12 @@
         "logoff": "Logoff"
     },
     "login": {
-        "title": "Login",
-        "forgotPassword": "Forgot password"
+        "title": "Sign In",
+        "emailPlaceholder": "Enter your email address..",
+        "passwordPlaceholder": "Enter your password..",
+        "forgotPassword": "Forgot password?",
+        "signUpText": "Don't have an account?",
+        "signUp": "Sign Up"
     },
     "resetPassword": {
         "title": "Reset password",
