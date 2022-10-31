@@ -89,7 +89,6 @@ export default {
       }
     }
     el.autoScrollMouseMoveEvent = (event) => {
-      event.preventDefault()
       el.autoScrollLastMoveEvent = event
 
       if (el.autoScrollTimeout === null) {

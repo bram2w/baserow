@@ -30,7 +30,8 @@ For example:
 ### Refactors
 * Replace members modal with a new settings page. [#1229](https://gitlab.com/bramw/baserow/-/issues/1229)
 * Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
-* Selecting text in modals and contexts no longer closes the modal/context when releasing the mouse outside the modal/context. [#1243](https://gitlab.com/bramw/baserow/-/issues/1243)
+* Selecting text in models, contexts, form fields and grid view cells no longer unselects when releasing the mouse outside. [#1243](https://gitlab.com/bramw/baserow/-/issues/1243)
+* Fixed bug where it was not possible to select text in a selected and editing cell in Chrome. [#1234](https://gitlab.com/bramw/baserow/-/issues/1234)
 
 ### Refactors
 * Frontend now install templates as an async job in background instead of using a blocking call. [#885](https://gitlab.com/bramw/baserow/-/issues/885)

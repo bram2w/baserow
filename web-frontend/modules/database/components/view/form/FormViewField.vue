@@ -118,7 +118,7 @@
 </template>
 
 <script>
-import { isElement } from '@baserow/modules/core/utils/dom'
+import { isElement, onClickOutside } from '@baserow/modules/core/utils/dom'
 import { clone } from '@baserow/modules/core/utils/object'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
@@ -186,27 +186,27 @@ export default {
   methods: {
     select() {
       this.selected = true
-      this.$el.clickOutsideEvent = (event) => {
-        if (
-          this.selected &&
-          // If the user not clicked inside the field.
-          !isElement(this.$el, event.target) &&
-          // If the event was not related to deleting the filter.
-          !event.deletedFilterEvent &&
-          // If the event target is related to a child element that has moved to the
-          // body using the `moveToBody` mixin.
-          !this.movedToBodyChildren.some((child) => {
-            return isElement(child.$el, event.target)
-          })
-        ) {
-          this.unselect()
+      this.$el.clickOutsideEventCancel = onClickOutside(
+        this.$el,
+        (target, event) => {
+          if (
+            this.selected &&
+            // If the event was not related to deleting the filter.
+            !event.deletedFilterEvent &&
+            // If the event target is related to a child element that has moved to the
+            // body using the `moveToBody` mixin.
+            !this.movedToBodyChildren.some((child) => {
+              return isElement(child.$el, target)
+            })
+          ) {
+            this.unselect()
+          }
         }
-      }
-      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+      )
     },
     unselect() {
       this.selected = false
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      this.$el.clickOutsideEventCancel()
     },
     updateValue(value) {
       this.value = value

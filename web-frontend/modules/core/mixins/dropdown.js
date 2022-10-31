@@ -1,4 +1,9 @@
-import { isDomElement, isElement } from '@baserow/modules/core/utils/dom'
+import {
+  isDomElement,
+  isElement,
+  onClickOutside,
+} from '@baserow/modules/core/utils/dom'
+
 import dropdownHelpers from './dropdownHelpers'
 
 export default {
@@ -151,21 +156,17 @@ export default {
 
       // If the user clicks outside the dropdown while the list of choices of open we
       // have to hide them.
-      this.$el.clickOutsideEvent = (event) => {
+      this.$el.clickOutsideEventCancel = onClickOutside(this.$el, (target) => {
         if (
           // Check if the context menu is still open
           this.open &&
-          // If the click was outside the context element because we want to ignore
-          // clicks inside it.
-          !isElement(this.$el, event.target) &&
           // If the click was not on the opener because he can trigger the toggle
           // method.
-          !isElement(this.opener, event.target)
+          !isElement(this.opener, target)
         ) {
           this.hide()
         }
-      }
-      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+      })
 
       this.$el.keydownEvent = (event) => {
         if (
@@ -208,7 +209,7 @@ export default {
       this.query = ''
       this.search(this.query)
 
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      this.$el.clickOutsideEventCancel()
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     /**

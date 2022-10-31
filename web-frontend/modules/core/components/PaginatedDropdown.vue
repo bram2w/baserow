@@ -195,7 +195,7 @@ export default {
     hide() {
       this.open = false
       this.$emit('hide')
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      this.$el.clickOutsideEventCancel()
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     reset() {

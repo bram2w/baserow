@@ -55,3 +55,56 @@ export const findScrollableParent = (element) => {
     return findScrollableParent(element.parentNode)
   }
 }
+
+export const onClickOutside = (el, callback) => {
+  const insideEvent = new Set()
+
+  // Firefox and Chrome both can both have a different `target` element on `click`
+  // when you release the mouse at different coordinates. Therefore we expect this
+  // variable to be set on mousedown to be consistent.
+  let downElement = null
+
+  // Add the event to the `insideEvent` map. This allow to be sure a click event has
+  // been triggered from an element inside this context, even if the element has
+  // been removed after in the meantime.
+  el.clickOutsideClickEvent = (event) => {
+    insideEvent.add(event)
+  }
+  el.addEventListener('click', el.clickOutsideClickEvent)
+
+  el.clickOutsideMouseDownEvent = (event) => {
+    downElement = event.target
+  }
+  document.body.addEventListener('mousedown', el.clickOutsideMouseDownEvent)
+
+  el.clickOutsideEvent = (event) => {
+    const target = downElement || event.target
+
+    // If the event is from current context or any element inside current context
+    // the current event should be in the insideEvent map, even if the element
+    // has been removed from the DOM in the meantime
+    const insideContext = insideEvent.has(event)
+    if (insideContext) {
+      insideEvent.delete(event)
+    }
+
+    if (
+      // If the click was outside the context element because we want to ignore
+      // clicks inside it or any child of this element
+      !isElement(el, target) &&
+      !insideContext
+    ) {
+      callback(target, event)
+    }
+  }
+  document.body.addEventListener('click', el.clickOutsideEvent)
+
+  return () => {
+    el.removeEventListener('click', el.clickOutsideClickEvent)
+    document.body.removeEventListener(
+      'mousedown',
+      el.clickOutsideMouseDownEvent
+    )
+    document.body.removeEventListener('click', el.clickOutsideEvent)
+  }
+}

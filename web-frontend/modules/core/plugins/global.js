@@ -31,6 +31,7 @@ import sortable from '@baserow/modules/core/directives/sortable'
 import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
 import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
 import autoScroll from '@baserow/modules/core/directives/autoScroll'
+import clickOutside from '@baserow/modules/core/directives/clickOutside'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -63,3 +64,4 @@ Vue.directive('sortable', sortable)
 Vue.directive('autoOverflowScroll', autoOverflowScroll)
 Vue.directive('userFileUpload', userFileUpload)
 Vue.directive('autoScroll', autoScroll)
+Vue.directive('clickOutside', clickOutside)

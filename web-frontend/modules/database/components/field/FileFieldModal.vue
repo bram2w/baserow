@@ -3,7 +3,7 @@
     v-if="open"
     ref="modalWrapper"
     class="modal__wrapper file-field-modal__wrapper"
-    @mousedown="outside($event)"
+    @click="outside($event)"
   >
     <div class="file-field-modal">
       <div class="file-field-modal__head">
