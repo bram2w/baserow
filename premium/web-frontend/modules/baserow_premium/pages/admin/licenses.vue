@@ -182,6 +182,9 @@ export default {
     licenseFeatureDescription(license) {
       return this.getLicenseType(license).getFeaturesDescription()
     },
+    licenseSeatsInfo(license) {
+      return this.getLicenseType(license).getFeaturesDescription()
+    },
   },
 }
 </script>

@@ -1457,7 +1457,7 @@ def test_last_modified_datetime_equals_days_ago_filter_type(data_fixture):
         row_2 = model.objects.create(**{})
 
     # one day before the filter
-    with freeze_time(when - timedelta(hours=(when.hour + 1))):
+    with freeze_time(when - timedelta(hours=(when.hour + 2))):
         row_3 = model.objects.create(**{})
 
     with freeze_time(when.strftime("%Y-%m-%d")):

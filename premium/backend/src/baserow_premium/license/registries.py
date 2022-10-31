@@ -1,6 +1,8 @@
 import abc
 from typing import List
 
+from baserow_premium.license.models import License
+
 from baserow.core.registry import Instance, Registry
 
 
@@ -27,8 +29,19 @@ class LicenseType(abc.ABC, Instance):
     regardless of if they are added to a seat on the license or not.
     """
 
+    seats_manually_assigned: bool = True
+
     def has_feature(self, feature: str):
         return feature in self.features
+
+    def get_seats_taken(self, license_object_of_this_type: License) -> int:
+        raise NotImplementedError()
+
+    def get_free_users_count(self, license_object_of_this_type: License) -> int:
+        raise NotImplementedError()
+
+    def handle_seat_overflow(self, seats_taken: int, license_object: License):
+        raise NotImplementedError()
 
 
 class LicenseTypeRegistry(Registry[LicenseType]):

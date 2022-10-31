@@ -5,7 +5,9 @@
         "enterpriseFeatures": "Premium and Enterprise Features",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Deactivated"
+        "deactivated": "Deactivated",
+        "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any group then they will use a paid seat automatically.",
+        "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each groups members page."
     },
     "adminType": {
         "Authentication": "Authentication"

@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models import Count, Q
 
 from baserow_premium.license.exceptions import (
+    CantManuallyChangeSeatsError,
     InvalidLicenseError,
     LicenseAlreadyExistsError,
     LicenseHasExpiredError,
@@ -28,6 +29,7 @@ from baserow.api.user.errors import ERROR_USER_NOT_FOUND
 from baserow.core.db import LockedAtomicTransaction
 
 from .errors import (
+    ERROR_CANT_MANUALLY_CHANGE_SEATS,
     ERROR_INVALID_LICENSE,
     ERROR_LICENSE_ALREADY_EXISTS,
     ERROR_LICENSE_DOES_NOT_EXIST,
@@ -143,8 +145,9 @@ class AdminLicenseView(APIView):
     )
     @map_exceptions({License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST})
     def get(self, request, id):
-        license = License.objects.prefetch_related("users__user").get(pk=id)
-        return Response(LicenseWithUsersSerializer(license).data)
+        license_object = License.objects.prefetch_related("users__user").get(pk=id)
+        license_data = LicenseWithUsersSerializer(license_object).data
+        return Response(license_data)
 
     @extend_schema(
         parameters=[
@@ -209,6 +212,7 @@ class AdminLicenseUserView(APIView):
                 [
                     "ERROR_USER_ALREADY_ON_LICENSE",
                     "ERROR_NO_SEATS_LEFT_IN_LICENSE",
+                    "ERROR_CANT_MANUALLY_CHANGE_SEATS",
                 ]
             ),
             404: get_error_schema(
@@ -222,6 +226,7 @@ class AdminLicenseUserView(APIView):
             User.DoesNotExist: ERROR_USER_NOT_FOUND,
             UserAlreadyOnLicenseError: ERROR_USER_ALREADY_ON_LICENSE,
             NoSeatsLeftInLicenseError: ERROR_NO_SEATS_LEFT_IN_LICENSE,
+            CantManuallyChangeSeatsError: ERROR_CANT_MANUALLY_CHANGE_SEATS,
         }
     )
     @transaction.atomic
@@ -257,8 +262,12 @@ class AdminLicenseUserView(APIView):
         request=None,
         responses={
             204: None,
+            400: get_error_schema(["ERROR_CANT_MANUALLY_CHANGE_SEATS"]),
             404: get_error_schema(
-                ["ERROR_LICENSE_DOES_NOT_EXIST", "ERROR_USER_NOT_FOUND"]
+                [
+                    "ERROR_LICENSE_DOES_NOT_EXIST",
+                    "ERROR_USER_NOT_FOUND",
+                ]
             ),
         },
     )
@@ -266,6 +275,7 @@ class AdminLicenseUserView(APIView):
         {
             License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST,
             User.DoesNotExist: ERROR_USER_NOT_FOUND,
+            CantManuallyChangeSeatsError: ERROR_CANT_MANUALLY_CHANGE_SEATS,
         }
     )
     @transaction.atomic
@@ -298,10 +308,16 @@ class AdminLicenseFillSeatsView(APIView):
         request=None,
         responses={
             200: LicenseUserSerializer(many=True),
+            400: get_error_schema(["ERROR_CANT_MANUALLY_CHANGE_SEATS"]),
             404: get_error_schema(["ERROR_LICENSE_DOES_NOT_EXIST"]),
         },
     )
-    @map_exceptions({License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST})
+    @map_exceptions(
+        {
+            License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST,
+            CantManuallyChangeSeatsError: ERROR_CANT_MANUALLY_CHANGE_SEATS,
+        }
+    )
     @transaction.atomic
     def post(self, request, id):
         license = License.objects.get(pk=id)
@@ -334,10 +350,16 @@ class AdminRemoveAllUsersFromLicenseView(APIView):
         request=None,
         responses={
             204: None,
+            400: get_error_schema(["ERROR_CANT_MANUALLY_CHANGE_SEATS"]),
             404: get_error_schema(["ERROR_LICENSE_DOES_NOT_EXIST"]),
         },
     )
-    @map_exceptions({License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST})
+    @map_exceptions(
+        {
+            License.DoesNotExist: ERROR_LICENSE_DOES_NOT_EXIST,
+            CantManuallyChangeSeatsError: ERROR_CANT_MANUALLY_CHANGE_SEATS,
+        }
+    )
     @transaction.atomic
     def post(self, request, id):
         license = License.objects.get(pk=id)

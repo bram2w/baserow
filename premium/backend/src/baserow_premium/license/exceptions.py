@@ -56,5 +56,9 @@ class NoSeatsLeftInLicenseError(Exception):
     """Raised when there are no seats left in the license."""
 
 
+class CantManuallyChangeSeatsError(Exception):
+    """Raised if trying to assign/remove users from seats for a given license type"""
+
+
 class LicenseAuthorityUnavailable(Exception):
     """Raised when the license authority can't be reached."""

@@ -41,4 +41,18 @@ export class EnterpriseLicenseType extends LicenseType {
   getOrder() {
     return 100
   }
+
+  getSeatsManuallyAssigned() {
+    return false
+  }
+
+  getLicenseDescription(license) {
+    const { i18n } = this.app
+    return i18n.t('enterprise.licenseDescription')
+  }
+
+  getLicenseSeatOverflowWarning(license) {
+    const { i18n } = this.app
+    return i18n.t('enterprise.overflowWarning')
+  }
 }
