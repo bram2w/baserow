@@ -42,6 +42,18 @@ export class LicenseType extends Registerable {
   getOrder() {
     throw new Error('Must be set by the implementing sub class.')
   }
+
+  getSeatsManuallyAssigned() {
+    throw new Error('Must be set by the implementing sub class.')
+  }
+
+  getLicenseDescription(license) {
+    throw new Error('Must be set by the implementing sub class.')
+  }
+
+  getLicenseSeatOverflowWarning(license) {
+    throw new Error('Must be set by the implementing sub class.')
+  }
 }
 
 export class PremiumLicenseType extends LicenseType {
@@ -78,5 +90,18 @@ export class PremiumLicenseType extends LicenseType {
 
   getOrder() {
     return 10
+  }
+
+  getSeatsManuallyAssigned() {
+    return true
+  }
+
+  getLicenseDescription(license) {
+    const { i18n } = this.app
+    return i18n.t('license.description', license)
+  }
+
+  getLicenseSeatOverflowWarning(license) {
+    return ''
   }
 }

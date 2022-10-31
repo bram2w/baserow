@@ -4,18 +4,21 @@ import hashlib
 import json
 import logging
 from os.path import dirname, join
-from typing import List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, Group
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.utils.timezone import make_aware, now, utc
 
 import requests
 from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
-from baserow_premium.license.exceptions import InvalidLicenseError
+from baserow_premium.license.exceptions import (
+    CantManuallyChangeSeatsError,
+    InvalidLicenseError,
+)
 from baserow_premium.license.models import License
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
@@ -237,8 +240,37 @@ class LicenseHandler:
         return payload
 
     @classmethod
+    def send_license_info_and_fetch_license_status_with_authority(
+        cls, license_objects: List[License]
+    ):
+        license_payloads = []
+        extra_license_info = []
+
+        for license_object in license_objects:
+            license_payloads.append(license_object.license)
+
+            try:
+                license_type = license_object.license_type
+                extra_info = {
+                    "id": license_object.license_id,
+                    "seats_taken": license_type.get_seats_taken(license_object),
+                    "free_users_count": license_type.get_free_users_count(
+                        license_object
+                    ),
+                }
+                extra_license_info.append(extra_info)
+            except (InvalidLicenseError, UnsupportedLicenseError, DatabaseError):
+                pass
+
+        return cls.fetch_license_status_with_authority(
+            license_payloads, extra_license_info
+        )
+
+    @classmethod
     def fetch_license_status_with_authority(
-        cls, license_payloads: List[Union[str, bytes]]
+        cls,
+        license_payloads: List[Union[str, bytes]],
+        extra_license_info: Optional[List[Dict[str, Any]]] = None,
     ):
         """
         Fetches the state of the license with the authority. It could be that the
@@ -247,27 +279,32 @@ class LicenseHandler:
 
         :param license_payloads: A list of licenses that must be checked with the
             authority.
+        :param extra_license_info: A list of extra information about each license
+            to send to the authority.
         :return: The state of each license provided.
         """
-
-        license_payloads = [
-            payload if isinstance(payload, str) else payload.decode()
-            for payload in license_payloads
-        ]
 
         settings_object = CoreHandler().get_settings()
 
         try:
-            base_url = (
-                "http://172.17.0.1:8001" if settings.DEBUG else "https://api.baserow.io"
-            )
+            base_url = "https://api.baserow.io"
+            headers = {}
+
+            if settings.DEBUG:
+                base_url = "http://host.docker.internal:8001"
+                headers["Host"] = "localhost"
+
+            authority_url = f"{base_url}/api/saas/licenses/check/"
+
             response = requests.post(
-                f"{base_url}/api/saas/licenses/check/",
+                authority_url,
                 json={
                     "licenses": license_payloads,
                     "instance_id": settings_object.instance_id,
+                    "extra_license_info": extra_license_info,
                 },
                 timeout=10,
+                headers=headers,
             )
 
             if response.status_code == HTTP_200_OK:
@@ -302,13 +339,11 @@ class LicenseHandler:
         :return: The updated license objects.
         """
 
-        licenses_to_check = [
-            license_object.license for license_object in license_objects
-        ]
-
         try:
-            authority_response = cls.fetch_license_status_with_authority(
-                licenses_to_check
+            authority_response = (
+                cls.send_license_info_and_fetch_license_status_with_authority(
+                    license_objects
+                )
             )
 
             for license_object in license_objects:
@@ -345,15 +380,11 @@ class LicenseHandler:
                 license_object.delete()
                 continue
 
-            seats_taken = license_object.users.all().count()
+            seats_taken = license_object.license_type.get_seats_taken(license_object)
             if seats_taken > license_object.seats:
-                # If there are more seats taken than the license allows, we need to
-                # remove the active seats that are outside of the limit.
-                LicenseUser.objects.filter(
-                    pk__in=license_object.users.all()
-                    .order_by("pk")
-                    .values_list("pk")[license_object.seats : seats_taken]
-                ).delete()
+                license_object.license_type.handle_seat_overflow(
+                    seats_taken, license_object
+                )
 
             license_object.last_check = now()
             license_object.save()
@@ -513,6 +544,9 @@ class LicenseHandler:
                 "The user already has a seat on this license."
             )
 
+        if not license_object.license_type.seats_manually_assigned:
+            raise CantManuallyChangeSeatsError()
+
         seats_taken = license_object.users.all().count()
         if seats_taken >= license_object.seats:
             raise NoSeatsLeftInLicenseError(
@@ -552,6 +586,9 @@ class LicenseHandler:
         if not requesting_user.is_staff:
             raise IsNotAdminError()
 
+        if not license_object.license_type.seats_manually_assigned:
+            raise CantManuallyChangeSeatsError()
+
         LicenseUser.objects.filter(license=license_object, user=user).delete()
 
         al = user_data_registry.get_by_type(ActiveLicensesDataType)
@@ -583,6 +620,9 @@ class LicenseHandler:
 
         if not requesting_user.is_staff:
             raise IsNotAdminError()
+
+        if not license_object.license_type.seats_manually_assigned:
+            raise CantManuallyChangeSeatsError()
 
         already_in_license = license_object.users.all().values_list(
             "user_id", flat=True
@@ -630,6 +670,9 @@ class LicenseHandler:
 
         if not requesting_user.is_staff:
             raise IsNotAdminError()
+
+        if not license_object.license_type.seats_manually_assigned:
+            raise CantManuallyChangeSeatsError()
 
         license_users = LicenseUser.objects.filter(license=license_object)
         license_user_ids = list(license_users.values_list("user_id", flat=True))

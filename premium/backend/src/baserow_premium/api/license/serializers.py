@@ -19,6 +19,9 @@ class LicenseSerializer(serializers.ModelSerializer):
     valid_through = serializers.DateTimeField(
         help_text="Until which timestamp the license is active."
     )
+    free_users_count = serializers.SerializerMethodField(
+        help_text="The amount of free users that are currently using the license."
+    )
     seats_taken = serializers.SerializerMethodField(
         help_text="The amount of users that are currently using the license."
     )
@@ -49,6 +52,7 @@ class LicenseSerializer(serializers.ModelSerializer):
             "last_check",
             "valid_from",
             "valid_through",
+            "free_users_count",
             "seats_taken",
             "seats",
             "product_code",
@@ -59,9 +63,11 @@ class LicenseSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_seats_taken(self, obj):
-        return (
-            obj.seats_taken if hasattr(obj, "seats_taken") else obj.users.all().count()
-        )
+        return obj.license_type.get_seats_taken(obj)
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_free_users_count(self, obj):
+        return obj.license_type.get_free_users_count(obj)
 
 
 class RegisterLicenseSerializer(serializers.Serializer):

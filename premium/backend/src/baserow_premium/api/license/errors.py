@@ -42,3 +42,9 @@ ERROR_NO_SEATS_LEFT_IN_LICENSE = (
     HTTP_400_BAD_REQUEST,
     "Can't add the user because there are not seats left in the license.",
 )
+ERROR_CANT_MANUALLY_CHANGE_SEATS = (
+    "ERROR_CANT_MANUALLY_CHANGE_SEATS",
+    HTTP_400_BAD_REQUEST,
+    "Can't manually change seats for a license of this type as they are automatically "
+    "allocated.",
+)

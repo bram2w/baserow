@@ -641,7 +641,7 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
 @override_settings(
     PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
 )
-def test_filter_queryset(data_fixture, enterprise_data_fixture, synced_roles):
+def test_filter_queryset(data_fixture, enterprise_data_fixture):
     (
         admin,
         builder,
