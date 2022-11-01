@@ -8,7 +8,12 @@
             {{ $t('membersSettings.membersTable.actions.copyEmail') }}
           </a>
         </li>
-        <li v-if="member.user_id !== userId">
+        <li
+          v-if="
+            member.user_id !== userId &&
+            $hasPermission('group_user.delete', member)
+          "
+        >
           <a
             :class="{
               'context__menu-item--loading': removeLoading,
