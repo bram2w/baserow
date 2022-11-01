@@ -66,13 +66,24 @@ export default {
       loading: false,
       values: {
         email: '',
-        permissions: 'MEMBER',
+        permissions: '',
         message: '',
       },
     }
   },
   computed: {
     ...mapGetters({ roles: 'roles/getAllRoles' }),
+    defaultRole() {
+      return this.roles.length > 0 ? this.roles[this.roles.length - 1] : null
+    },
+  },
+  watch: {
+    defaultRole: {
+      handler(role) {
+        this.values.permissions = role.uid
+      },
+      immediate: true,
+    },
   },
   validations: {
     values: {
