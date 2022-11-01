@@ -22,7 +22,7 @@ from baserow.core.user.exceptions import UserAlreadyExist
 from baserow_enterprise.api.sso.saml.errors import ERROR_SAML_INVALID_LOGIN_REQUEST
 from baserow_enterprise.api.sso.utils import (
     SsoErrorCode,
-    get_saml_sso_login_url,
+    get_saml_login_relative_url,
     redirect_to_sign_in_error_page,
     redirect_user_on_success,
 )
@@ -57,7 +57,10 @@ class AssertionConsumerServiceView(View):
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
         try:
-            user = SamlAuthProviderHandler.sign_in_user(request)
+            saml_response = request.POST.get("SAMLResponse")
+            user = SamlAuthProviderHandler.sign_in_user_from_saml_response(
+                saml_response
+            )
         except (InvalidSamlResponse, InvalidSamlConfiguration):
             return redirect_to_sign_in_error_page(SsoErrorCode.INVALID_SAML_RESPONSE)
         except UserAlreadyExist:
@@ -85,7 +88,11 @@ class BaserowInitiatedSingleSignOn(View):
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
         try:
-            idp_sign_in_url = SamlAuthProviderHandler.get_sign_in_url(request)
+            user_email = request.GET.get("email")
+            requested_url = request.GET.get("original", "")
+            idp_sign_in_url = SamlAuthProviderHandler.get_sign_in_url(
+                user_email, requested_url
+            )
         except (InvalidSamlConfiguration, InvalidSamlRequest):
             return redirect_to_sign_in_error_page(SsoErrorCode.INVALID_SAML_REQUEST)
         return redirect(idp_sign_in_url)
@@ -143,6 +150,6 @@ class AdminAuthProvidersLoginUrlView(APIView):
             query_params.get("email")
         )
 
-        relative_saml_login_url = get_saml_sso_login_url(query_params)
-        redirect_url = urljoin(settings.PUBLIC_BACKEND_URL, relative_saml_login_url)
+        saml_login_relative_url = get_saml_login_relative_url(query_params)
+        redirect_url = urljoin(settings.PUBLIC_BACKEND_URL, saml_login_relative_url)
         return Response({"redirect_url": redirect_url})

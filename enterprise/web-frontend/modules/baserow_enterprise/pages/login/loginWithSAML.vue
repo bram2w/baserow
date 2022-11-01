@@ -1,65 +1,72 @@
 <template>
   <div>
-    <div class="box__head-logo">
-      <nuxt-link :to="{ name: 'index' }">
-        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-      </nuxt-link>
-    </div>
-    <div class="login-box__head">
-      <h1 class="box__head-title">
-        {{ $t('loginWithSaml.signInWithSaml') }}
-      </h1>
-    </div>
-    <form @submit.prevent="login">
-      <FormElement :error="fieldHasErrors('email')" class="login-control">
-        <label class="login-control__label">{{
-          $t('field.emailAddress')
-        }}</label>
-        <div class="control__elements">
-          <input
-            ref="email"
-            v-model="values.email"
-            :class="{
-              'input--error': fieldHasErrors('email') || loginRequestError,
-            }"
-            type="email"
-            :placeholder="$t('login.emailPlaceholder')"
-            class="input input--large"
-            @input="loginRequestError = null"
-            @blur="$v.values.email.$touch()"
-          />
-          <div class="login-error">
-            <div v-if="fieldHasErrors('email')">
-              <i class="fas fa-fw fa-exclamation-triangle"></i>
-              {{ $t('error.invalidEmail') }}
-            </div>
-            <div v-else-if="loginRequestError">
-              <i class="fas fa-fw fa-exclamation-triangle"></i>
-              {{ $t('loginWithSaml.requestError') }}
+    <div v-if="!redirectImmediately">
+      <div class="auth__logo">
+        <nuxt-link :to="{ name: 'index' }">
+          <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+        </nuxt-link>
+      </div>
+      <div class="auth__head auth__head--more-margin">
+        <h1 class="auth__head-title">
+          {{ $t('loginWithSaml.signInWithSaml') }}
+        </h1>
+      </div>
+      <form @submit.prevent="login">
+        <FormElement :error="fieldHasErrors('email')" class="auth__control">
+          <label class="auth__control-label">{{
+            $t('field.emailAddress')
+          }}</label>
+          <div class="control__elements">
+            <input
+              ref="email"
+              v-model="values.email"
+              :class="{
+                'input--error': fieldHasErrors('email') || loginRequestError,
+              }"
+              type="email"
+              :placeholder="$t('login.emailPlaceholder')"
+              class="input input--large"
+              @input="loginRequestError = null"
+              @blur="$v.values.email.$touch()"
+            />
+            <div class="auth__control-error">
+              <div v-if="fieldHasErrors('email')" class="error">
+                <i class="fas fa-fw fa-exclamation-triangle"></i>
+                {{ $t('error.invalidEmail') }}
+              </div>
+              <div v-else-if="loginRequestError" class="error">
+                <i class="fas fa-fw fa-exclamation-triangle"></i>
+                {{ $t('loginWithSaml.requestError') }}
+              </div>
             </div>
           </div>
-        </div>
-      </FormElement>
-    </form>
-    <div class="login-actions">
-      <button
-        :class="{ 'button--loading': loading }"
-        class="button login-button--full-width"
-        :disabled="loading"
-        @click="login"
-      >
-        {{ $t('loginWithSaml.continueWithSaml') }}
-      </button>
+        </FormElement>
+      </form>
+      <div class="auth__actions">
+        <button
+          :class="{ 'button--loading': loading }"
+          class="button button--full-width"
+          :disabled="loading"
+          @click="login"
+        >
+          {{ $t('loginWithSaml.continueWithSaml') }}
+        </button>
+      </div>
+      <div>
+        <ul class="auth__action-links">
+          <li>
+            {{ $t('loginWithSaml.loginText') }}
+            <nuxt-link :to="{ name: 'login' }">
+              {{ $t('action.login') }}
+            </nuxt-link>
+          </li>
+        </ul>
+      </div>
     </div>
-    <div class="actions">
-      <ul class="action__links">
-        <li>
-          <nuxt-link :to="{ name: 'login' }">
-            <i class="fas fa-arrow-left"></i>
-            {{ $t('action.back') }}
-          </nuxt-link>
-        </li>
-      </ul>
+    <div v-else>
+      <h2>
+        {{ $t('loginWithSaml.redirecting') }}
+      </h2>
     </div>
   </div>
 </template>
@@ -92,7 +99,7 @@ export default {
         ).getSamlLoginUrl({
           original: route.query.original,
         })
-        return redirect(data.redirect_url)
+        return { redirectImmediately: true, redirectUrl: data.redirect_url }
       }
 
       return { redirectUrl: loginOptions.saml.redirect_url }
@@ -105,6 +112,11 @@ export default {
       values: {
         email: '',
       },
+    }
+  },
+  mounted() {
+    if (this.redirectImmediately) {
+      window.location.href = this.redirectUrl
     }
   },
   methods: {

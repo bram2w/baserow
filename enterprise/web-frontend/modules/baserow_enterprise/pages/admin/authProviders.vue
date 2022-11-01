@@ -1,37 +1,43 @@
 <template>
-  <div class="auth-provider-admin">
-    <div class="auth-provider-admin__header">
-      <h2 class="auth-provider-admin__title">
-        {{ $t('authProviders.title') }}
-      </h2>
-      <a ref="createContextLink" class="button" @click="showCreateContext()">
-        {{ $t('authProviders.addProvider') }}
-        <CreateAuthProviderContext
-          ref="createContext"
-          :auth-provider-types="authProviderTypesCanBeCreated"
-          @create="showCreateModal($event)"
-        />
-        <CreateAuthProviderModal
-          ref="createModal"
-          :auth-provider-type="authProviderTypeToCreate"
-          @created="$refs.createModal.hide()"
-          @cancel="$refs.createModal.hide()"
-        />
-      </a>
+  <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
+    <div class="auth-provider-admin">
+      <div class="auth-provider-admin__header">
+        <h2 class="auth-provider-admin__title">
+          {{ $t('authProviders.title') }}
+        </h2>
+        <a
+          ref="createContextLink"
+          class="button button--large"
+          @click="showCreateContext()"
+        >
+          {{ $t('authProviders.addProvider') }}
+          <CreateAuthProviderContext
+            ref="createContext"
+            :auth-provider-types="authProviderTypesCanBeCreated"
+            @create="showCreateModal($event)"
+          />
+          <CreateAuthProviderModal
+            ref="createModal"
+            :auth-provider-type="authProviderTypeToCreate"
+            @created="$refs.createModal.hide()"
+            @cancel="$refs.createModal.hide()"
+          />
+        </a>
+      </div>
+      <div v-if="authProviders.length > 0" class="auth-provider-admin__items">
+        <component
+          :is="getAdminListComponent(authProvider)"
+          v-for="authProvider in authProviders"
+          :key="authProvider.id"
+          :auth-provider="authProvider"
+        >
+        </component>
+      </div>
+      <div v-else>
+        <p>{{ $t('authProviders.noProviders') }}</p>
+      </div>
+      <div v-for="authProvider in authProviders" :key="authProvider.id"></div>
     </div>
-    <div v-if="authProviders.length > 0" class="auth-provider-admin__items">
-      <component
-        :is="getAdminListComponent(authProvider)"
-        v-for="authProvider in authProviders"
-        :key="authProvider.id"
-        :auth-provider="authProvider"
-      >
-      </component>
-    </div>
-    <div v-else>
-      <p>{{ $t('authProviders.noProviders') }}</p>
-    </div>
-    <div v-for="authProvider in authProviders" :key="authProvider.id"></div>
   </div>
 </template>
 

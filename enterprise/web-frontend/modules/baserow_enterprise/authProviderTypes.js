@@ -14,6 +14,7 @@ import FacebookIcon from '@baserow_enterprise/assets/images/providers/Facebook.s
 import GitHubIcon from '@baserow_enterprise/assets/images/providers/GitHub.svg'
 import GitLabIcon from '@baserow_enterprise/assets/images/providers/GitLab.svg'
 import OpenIdIcon from '@baserow_enterprise/assets/images/providers/OpenID.svg'
+import VerifiedProviderIcon from '@baserow_enterprise/assets/images/providers/VerifiedProviderIcon.svg'
 
 export class SamlAuthProviderType extends AuthProviderType {
   getType() {
@@ -22,6 +23,10 @@ export class SamlAuthProviderType extends AuthProviderType {
 
   getIcon() {
     return SAMLIcon
+  }
+
+  getVerifiedIcon() {
+    return VerifiedProviderIcon
   }
 
   getName() {
@@ -60,8 +65,8 @@ export class SamlAuthProviderType extends AuthProviderType {
   populate(authProviderType) {
     const populated = super.populate(authProviderType)
     return {
-      isVerified: authProviderType.is_verified,
-      metadata: authProviderType.metadata,
+      acsUrl: authProviderType.acs_url,
+      relayStateUrl: authProviderType.relay_state_url,
       ...populated,
     }
   }

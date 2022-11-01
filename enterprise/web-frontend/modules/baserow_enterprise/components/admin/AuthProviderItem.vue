@@ -91,10 +91,10 @@ export default {
     onSettingsUpdated() {
       this.$refs.updateSettingsModal.hide()
     },
-    setEnabled(enabled) {
-      this.$store.dispatch('authProviderAdmin/update', {
+    async setEnabled(enabled) {
+      await this.$store.dispatch('authProviderAdmin/setEnabled', {
         authProvider: this.authProvider,
-        values: { enabled },
+        enabled,
       })
     },
   },

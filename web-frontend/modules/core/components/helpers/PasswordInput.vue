@@ -32,35 +32,51 @@ modules/core/validators.js
       :class="{ 'input--error': validationState.$error }"
       type="password"
       class="input input--large"
+      :autocomplete="autocomplete"
       :value="value"
+      :placeholder="placeholder"
       @blur="validationState.$touch()"
       @input="$emit('input', $event.target.value)"
     />
-    <div
-      v-if="validationState.$error && !validationState.required"
-      class="error"
-    >
-      {{ $t('error.inputRequired') }}
-    </div>
-    <div
-      v-if="validationState.$error && !validationState.maxLength"
-      class="error"
-    >
-      {{
-        $t('error.maxLength', {
-          max: validationState.$params.maxLength.max,
-        })
-      }}
-    </div>
-    <div
-      v-if="validationState.$error && !validationState.minLength"
-      class="error"
-    >
-      {{
-        $t('error.minLength', {
-          min: validationState.$params.minLength.min,
-        })
-      }}
+    <div :class="errorPlaceholderClass">
+      <div
+        v-if="validationState.$error && !validationState.required"
+        class="error"
+      >
+        <i
+          v-if="showErrorIcon"
+          class="fas fa-warning fa-exclamation-triangle"
+        ></i>
+        {{ $t('error.inputRequired') }}
+      </div>
+      <div
+        v-if="validationState.$error && !validationState.maxLength"
+        class="error"
+      >
+        <i
+          v-if="showErrorIcon"
+          class="fas fa-warning fa-exclamation-triangle"
+        ></i>
+        {{
+          $t('error.maxLength', {
+            max: validationState.$params.maxLength.max,
+          })
+        }}
+      </div>
+      <div
+        v-if="validationState.$error && !validationState.minLength"
+        class="error"
+      >
+        <i
+          v-if="showErrorIcon"
+          class="fas fa-warning fa-exclamation-triangle"
+        ></i>
+        {{
+          $t('error.minLength', {
+            min: validationState.$params.minLength.min,
+          })
+        }}
+      </div>
     </div>
   </div>
 </template>
@@ -76,6 +92,26 @@ export default {
     value: {
       type: String,
       required: true,
+    },
+    autocomplete: {
+      type: String,
+      required: false,
+      default: 'new-password',
+    },
+    placeholder: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    errorPlaceholderClass: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    showErrorIcon: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

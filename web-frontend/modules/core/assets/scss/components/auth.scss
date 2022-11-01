@@ -1,10 +1,53 @@
-.login-control {
+.auth__body {
+  background-color: $color-neutral-50;
+}
+
+.auth__page {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  padding: 48px 0;
+  max-width: 92%;
+  width: 520px;
+}
+
+.auth__logo {
+  height: 16px;
+  margin-bottom: 48px;
+
+  & img {
+    height: 100%;
+  }
+}
+
+.auth__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.auth__head--more-margin {
+  margin-bottom: 48px;
+}
+
+.auth__head-title {
+  word-break: break-word;
+  margin: 0;
+  padding: 0;
+}
+
+.auth__action {
+  margin: 24px 0;
+}
+
+.auth__control {
   display: block;
   font-size: 13px;
   font-weight: 700;
   color: $color-neutral-700;
-  margin-bottom: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 
   &.control--align-right {
     display: flex;
@@ -12,27 +55,17 @@
   }
 }
 
-.login-box__head {
+.auth__login-buttons {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   width: 100%;
+  margin-top: 48px;
   padding-bottom: 20px;
   margin-bottom: 40px;
 }
 
-.login-actions {
-  @extend %first-last-no-margin;
-
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  margin: 30px 0;
-  margin-top: 16px;
-}
-
-.login-control__label {
+.auth__control-label {
   display: block;
   font-size: 13px;
   font-weight: 600;
@@ -40,19 +73,22 @@
   color: $color-neutral-700;
 }
 
-.login-error {
+.auth__control-error {
   height: 16px;
   margin-top: 6px;
   font-weight: 500;
-  color: $color-neutral-700;
 
   & div i.fas {
     color: $color-error-500;
     margin-right: 4px;
   }
+
+  & .error {
+    color: $color-neutral-700;
+  }
 }
 
-.login-action__links {
+.auth__action-links {
   list-style: none;
   padding: 0;
   margin-top: 40px 0 0;
@@ -75,10 +111,6 @@
   }
 }
 
-.login-button--full-width {
-  @include button-size(15px, 44px, 28px);
-
-  margin-bottom: 16px;
-  width: 100%;
-  font-weight: 400;
+.auth__error-help {
+  margin: 32px 0;
 }

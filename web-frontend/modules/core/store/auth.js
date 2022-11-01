@@ -98,7 +98,7 @@ export const actions = {
       groupInvitationToken,
       templateId
     )
-    setToken(data.refreshToken, this.app)
+    setToken(data.refresh_token, this.app)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
   },

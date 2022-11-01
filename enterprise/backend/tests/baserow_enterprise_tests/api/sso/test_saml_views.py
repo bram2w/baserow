@@ -1,10 +1,10 @@
-"""
 import base64
 import io
 import urllib
 import zlib
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 from django.test import Client
@@ -22,6 +22,7 @@ from saml2 import saml, samlp, xmldsig
 from saml2.xml.schema import validate as validate_saml_xml
 
 from baserow.core.user.exceptions import UserAlreadyExist
+from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
 from baserow_enterprise.auth_provider.handler import AuthProviderHandler, UserInfo
 
 
@@ -52,7 +53,9 @@ def test_saml_provider_get_login_url(api_client, data_fixture, enterprise_data_f
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert "redirect_url" in response_json
-    assert response_json["redirect_url"] == "http://testserver/api/sso/saml/login/"
+    assert response_json["redirect_url"] == urljoin(
+        settings.PUBLIC_BACKEND_URL, "/api/sso/saml/login/"
+    )
 
     # if more than one SAML provider is enabled, this endpoint need a email address
     auth_provider_2 = enterprise_data_fixture.create_saml_auth_provider(
@@ -83,9 +86,8 @@ def test_saml_provider_get_login_url(api_client, data_fixture, enterprise_data_f
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert "redirect_url" in response_json
-    assert (
-        response_json["redirect_url"]
-        == f"http://testserver/api/sso/saml/login/?{query_params}"
+    assert response_json["redirect_url"] == urljoin(
+        settings.PUBLIC_BACKEND_URL, f"/api/sso/saml/login/?{query_params}"
     )
 
     query_params = urllib.parse.urlencode(
@@ -108,9 +110,8 @@ def test_saml_provider_get_login_url(api_client, data_fixture, enterprise_data_f
             "email": f"user@{auth_provider_2.domain}",
         }
     )
-    assert (
-        response_json["redirect_url"]
-        == f"http://testserver/api/sso/saml/login/?{response_query_params}"
+    assert response_json["redirect_url"] == urljoin(
+        settings.PUBLIC_BACKEND_URL, f"/api/sso/saml/login/?{response_query_params}"
     )
 
     query_params = urllib.parse.urlencode(
@@ -189,7 +190,9 @@ def test_user_can_initiate_saml_sso_with_enterprise_license(
     saml_request = decode_saml_request(idp_sign_in_url)
     assert validate_saml_xml(saml_request) is None
     response_query_params = parse_qs(urlparse(idp_sign_in_url).query)
-    assert response_query_params["RelayState"][0] == original_relative_url
+    assert response_query_params["RelayState"][0] == urljoin(
+        settings.PUBLIC_WEB_FRONTEND_URL, original_relative_url
+    )
 
     response = client.get(f"{sp_sso_saml_login_url}?email=john@acme.it")
     assert response.status_code == HTTP_302_FOUND
@@ -231,12 +234,13 @@ def test_get_or_create_user_and_sign_in_via_saml_identity(
     auth_provider_2 = enterprise_data_fixture.create_saml_auth_provider(
         domain="test2.com"
     )
-    user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-        user_info, auth_provider_2
-    )
+    with pytest.raises(DifferentAuthProvider):
+        user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
+            user_info, auth_provider_2
+        )
 
     assert User.objects.count() == 1
-    assert user.auth_providers.filter(id=auth_provider_2.id).exists()
+    assert not user.auth_providers.filter(id=auth_provider_2.id).exists()
 
     # a disabled user will raise a UserAlreadyExist exception
     user.is_active = False
@@ -253,10 +257,8 @@ def test_get_or_create_user_and_sign_in_via_saml_identity(
 def test_saml_assertion_consumer_service(
     api_client, data_fixture, enterprise_data_fixture
 ):
-    auth_provider_1 = enterprise_data_fixture.create_saml_auth_provider(
-        domain="test1.com"
-    )
-    _, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    enterprise_data_fixture.create_saml_auth_provider(domain="test1.com")
+    enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     client = Client()
     sp_sso_saml_acs_url = reverse("api:enterprise:sso:saml:acs")
@@ -280,4 +282,3 @@ def test_saml_assertion_consumer_service(
         response.headers["Location"]
         == "http://localhost:3000/login/error?error=errorInvalidSamlResponse"
     ), response.content
-"""

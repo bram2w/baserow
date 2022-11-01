@@ -281,7 +281,7 @@
         "logoff": "Logoff"
     },
     "login": {
-        "title": "Sign In",
+        "title": "Login",
         "emailPlaceholder": "Enter your email address..",
         "passwordPlaceholder": "Enter your password..",
         "forgotPassword": "Forgot password?",
@@ -307,7 +307,13 @@
         "disabled": "Sign up is disabled",
         "disabledMessage": "It's not possible to create an account because it has been disabled.",
         "requireFirstUser": "Welcome to Baserow!",
-        "requireFirstUserMessage": "Please fill the form below to create the admin user."
+        "requireFirstUserMessage": "Please fill the form below to create the admin user.",
+        "emailPlaceholder": "Enter your email address..",
+        "namePlaceholder": "Enter your name..",
+        "passwordPlaceholder": "Enter your password..",
+        "passwordRepeatPlaceholder": "Confirm your password..",
+        "loginText": "Already have an account?",
+        "login": "Login"
     },
     "forgotPassword": {
         "title": "Forgot password",
@@ -315,7 +321,8 @@
         "submit": "Send link",
         "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes.",
         "disabled": "Forgot password is disabled",
-        "disabledMessage": "It's not possible to reset the password because it has been disabled."
+        "disabledMessage": "It's not possible to reset the password because it has been disabled.",
+        "loginText": "Already have account and password?"
     },
     "settings": {
         "settingsTitle": "Admin settings",

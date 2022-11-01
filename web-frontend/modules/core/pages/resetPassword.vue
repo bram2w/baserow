@@ -1,11 +1,15 @@
 <template>
   <div>
     <div v-if="!success">
-      <div class="box__head">
-        <h1 class="box__head-title">{{ $t('resetPassword.title') }}</h1>
+      <div class="auth__logo">
+        <nuxt-link :to="{ name: 'index' }">
+          <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+        </nuxt-link>
+      </div>
+      <div class="auth__head auth__head--more-margin">
+        <h1 class="auth__head-title">{{ $t('resetPassword.title') }}</h1>
         <LangPicker />
       </div>
-
       <!-- Disabled info message -->
       <template v-if="!settings.allow_reset_password">
         <Alert
@@ -15,10 +19,7 @@
           :title="$t('resetPassword.disabled')"
           >{{ $t('resetPassword.disabledMessage') }}</Alert
         >
-        <nuxt-link
-          :to="{ name: 'login' }"
-          class="button button--large button--primary"
-        >
+        <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
           <i class="fas fa-arrow-left"></i>
           {{ $t('action.backToLogin') }}
         </nuxt-link>
@@ -28,19 +29,22 @@
       <div v-else>
         <Error :error="error"></Error>
         <form @submit.prevent="resetPassword">
-          <div class="control">
-            <label class="control__label">{{
+          <div class="auth__control">
+            <label class="auth__control-label">{{
               $t('resetPassword.newPassword')
             }}</label>
             <div class="control__elements">
               <PasswordInput
                 v-model="account.password"
                 :validation-state="$v.account.password"
+                :placeholder="$t('signup.passwordPlaceholder')"
+                :error-placeholder-class="'auth__control-error'"
+                :show-error-icon="true"
               />
             </div>
           </div>
-          <div class="control">
-            <label class="control__label">{{
+          <div class="auth__control">
+            <label class="auth__control-label">{{
               $t('resetPassword.repeatNewPassword')
             }}</label>
             <div class="control__elements">
@@ -51,13 +55,24 @@
                 class="input input--large"
                 @blur="$v.account.passwordConfirm.$touch()"
               />
-              <div v-if="$v.account.passwordConfirm.$error" class="error">
-                {{ $t('error.notMatchingPassword') }}
+              <div class="auth__control-error">
+                <div v-if="$v.account.passwordConfirm.$error" class="error">
+                  {{ $t('error.notMatchingPassword') }}
+                </div>
               </div>
             </div>
           </div>
-          <div class="actions">
-            <ul class="action__links">
+          <div class="auth__action">
+            <button
+              :class="{ 'button--loading': loading }"
+              class="button button--full-width"
+              :disabled="loading"
+            >
+              {{ $t('resetPassword.submit') }}
+            </button>
+          </div>
+          <div>
+            <ul class="auth__action-links">
               <li>
                 <nuxt-link :to="{ name: 'login' }">
                   <i class="fas fa-arrow-left"></i>
@@ -65,14 +80,6 @@
                 </nuxt-link>
               </li>
             </ul>
-            <button
-              :class="{ 'button--loading': loading }"
-              class="button button--large"
-              :disabled="loading"
-            >
-              {{ $t('resetPassword.submit') }}
-              <i class="fas fa-pencil-alt"></i>
-            </button>
           </div>
         </form>
       </div>
