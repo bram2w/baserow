@@ -6,10 +6,7 @@
         :key="authProviderType.type"
       >
         <a @click="$emit('create', authProviderType)">
-          <i
-            class="context__menu-icon fa-fw"
-            :class="getIconClass(authProviderType)"
-          ></i>
+          <AuthProviderIcon :icon="getIcon(authProviderType)" />
           {{ getName(authProviderType) }}
         </a>
       </li>
@@ -19,10 +16,11 @@
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
+import AuthProviderIcon from '@baserow_enterprise/components/AuthProviderIcon.vue'
 
 export default {
   name: 'CreateAuthProviderContext',
-  components: {},
+  components: { AuthProviderIcon },
   mixins: [context],
   props: {
     authProviderTypes: {
@@ -31,10 +29,8 @@ export default {
     },
   },
   methods: {
-    getIconClass(providerType) {
-      return this.$registry
-        .get('authProvider', providerType.type)
-        .getIconClass()
+    getIcon(providerType) {
+      return this.$registry.get('authProvider', providerType.type).getIcon()
     },
     getName(providerType) {
       return this.$registry.get('authProvider', providerType.type).getName()

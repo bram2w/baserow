@@ -15,5 +15,8 @@ export default (client) => {
     delete(id) {
       return client.delete(`/admin/auth-provider/${id}/`)
     },
+    fetchNextProviderId() {
+      return client.get(`/admin/auth-provider/next-id/`)
+    },
   }
 }

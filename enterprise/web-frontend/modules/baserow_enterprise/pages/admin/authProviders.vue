@@ -46,6 +46,7 @@ export default {
   middleware: 'staff',
   asyncData: async ({ store }) => {
     await store.dispatch('authProviderAdmin/fetchAll')
+    await store.dispatch('authProviderAdmin/fetchNextProviderId')
   },
   data() {
     return {

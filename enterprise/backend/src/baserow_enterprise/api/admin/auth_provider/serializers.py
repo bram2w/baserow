@@ -33,3 +33,7 @@ class UpdateAuthProviderSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "domain": {"required": False},
         }
+
+
+class NextAuthProviderIdSerializer(serializers.Serializer):
+    next_provider_id = serializers.IntegerField(help_text="The next guessed id.")

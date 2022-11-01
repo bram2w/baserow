@@ -94,6 +94,8 @@ export default {
         })
         return redirect(data.redirect_url)
       }
+
+      return { redirectUrl: loginOptions.saml.redirect_url }
     }
   },
   data() {

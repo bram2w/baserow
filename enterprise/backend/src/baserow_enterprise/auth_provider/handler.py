@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Type
 
 from django.contrib.auth.models import AbstractUser
-from django.db import transaction
+from django.db import connection, transaction
 
 from baserow.core.auth_provider.auth_provider_types import AuthProviderType
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
@@ -10,6 +10,7 @@ from baserow.core.auth_provider.models import AuthProviderModel
 from baserow.core.registries import auth_provider_type_registry
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user.handler import UserHandler
+from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
 
 SpecificAuthProviderModel = Type[AuthProviderModel]
 
@@ -111,7 +112,10 @@ class AuthProviderHandler:
         user_handler = UserHandler()
         try:
             user = user_handler.get_active_user(email=user_info.email)
-            user_handler.user_signed_in_via_provider(user, auth_provider.specific)
+
+            is_original_provider = auth_provider.users.filter(id=user.id).exists()
+            if not is_original_provider:
+                raise DifferentAuthProvider()
         except UserNotFound:
             with transaction.atomic():
                 user = user_handler.create_user(
@@ -123,3 +127,15 @@ class AuthProviderHandler:
                 )
 
         return user
+
+    @staticmethod
+    def get_next_provider_id() -> int:
+        """
+        Returns the next provider id so that the callback URL
+        can be guessed before the provided is created.
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT last_value + 1 FROM core_authprovidermodel_id_seq;")
+            row = cursor.fetchone()
+            return int(row[0])

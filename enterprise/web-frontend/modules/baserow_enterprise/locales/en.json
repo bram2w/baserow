@@ -51,7 +51,10 @@
         "errorSsoFeatureNotActive": "The SSO feature is not active. Please contact your administrator.",
         "errorInvalidSamlRequest": "The SAML request is invalid.",
         "errorInvalidSamlResponse": "The SAML response is invalid.",
-        "errorUserDeactivated": "The user has been disabled."
+        "errorUserDeactivated": "The user has been disabled.",
+        "errorProviderDoesNotExist": "This authentication provider doesn't exist or is not available.",
+        "errorAuthFlowError": "An error occured during the authentication flow with the selected provider.",
+        "errorDifferentProvider": "Please use the provider that you originally signed up with."
     },
     "roles": {
         "admin": {
@@ -74,5 +77,20 @@
             "name": "Viewer",
             "description": "Can only read data."
         }
+    },
+    "oauthSettingsForm": {
+        "providerName": "Name",
+        "providerNamePlaceholder": "Custom provider name",
+        "clientId": "Client ID",
+        "clientIdPlaceholder": "Provider's client ID",
+        "secret": "Secret",
+        "secretPlaceholder": "Provider's secret",
+        "baseUrl": "URL",
+        "baseUrlPlaceholder": "Provider's base URL",
+        "invalidBaseUrl": "The entered URL is not a valid provider URL",
+        "callbackUrl": "Callback URL"
+    },
+    "loginButton": {
+        "continueWith": "Continue with"
     }
 }

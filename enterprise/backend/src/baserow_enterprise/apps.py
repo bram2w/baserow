@@ -91,9 +91,21 @@ class BaserowEnterpriseConfig(AppConfig):
         license_type_registry.register(EnterpriseLicenseType())
 
         from baserow.core.registries import auth_provider_type_registry
+        from baserow_enterprise.sso.oauth2.auth_provider_types import (
+            FacebookAuthProviderType,
+            GitHubAuthProviderType,
+            GitLabAuthProviderType,
+            GoogleAuthProviderType,
+            OpenIdConnectAuthProviderType,
+        )
         from baserow_enterprise.sso.saml.auth_provider_types import SamlAuthProviderType
 
         auth_provider_type_registry.register(SamlAuthProviderType())
+        auth_provider_type_registry.register(GoogleAuthProviderType())
+        auth_provider_type_registry.register(FacebookAuthProviderType())
+        auth_provider_type_registry.register(GitHubAuthProviderType())
+        auth_provider_type_registry.register(GitLabAuthProviderType())
+        auth_provider_type_registry.register(OpenIdConnectAuthProviderType())
 
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)

@@ -533,3 +533,211 @@ def test_admin_can_get_saml_provider_with_an_enterprise_license(
     assert response_json["domain"] == saml_provider_1.domain
     assert response_json["metadata"] == saml_provider_1.metadata
     assert response_json["is_verified"] is False
+
+
+@pytest.mark.parametrize(
+    "provider_type,extra_params",
+    [
+        ("google", {}),
+        ("facebook", {}),
+        ("github", {}),
+        ("gitlab", {"base_url": "https://gitlab.com"}),
+        ("openid_connect", {"base_url": "https://gitlab.com"}),
+    ],
+)
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_create_and_get_oauth2_provider(
+    api_client, data_fixture, enterprise_data_fixture, provider_type, extra_params
+):
+    """
+    Tests that a provider can be successfully created, and that login options
+    endpoint will output correct information for the created provider.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+
+    # create provider
+
+    response = api_client.post(
+        reverse("api:enterprise:admin:auth_provider:list"),
+        {
+            "type": provider_type,
+            "name": "Provider name",
+            "client_id": "clientid",
+            "secret": "secret",
+            **extra_params,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] is not None
+    assert response_json["type"] == provider_type
+    assert response_json["name"] == "Provider name"
+    assert response_json["client_id"] == "clientid"
+    assert response_json["secret"] == "secret"
+    assert response_json["enabled"] is True
+
+    # get created provider
+
+    response = api_client.get(
+        reverse(
+            "api:enterprise:admin:auth_provider:item",
+            kwargs={"auth_provider_id": response_json["id"]},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == provider_type
+    assert response_json["enabled"] is True
+    assert response_json["name"] == "Provider name"
+    assert response_json["client_id"] == "clientid"
+    assert response_json["secret"] == "secret"
+    for param in extra_params:
+        assert response_json[param] == extra_params[param]
+
+    # ensure the login option is now listed in the login options
+
+    response = api_client.get(
+        reverse("api:auth_provider:login_options"),
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[provider_type]["items"][0]["name"] == "Provider name"
+    assert response_json[provider_type]["items"][0]["type"] == provider_type
+    assert response_json[provider_type]["items"][0]["redirect_url"]
+
+
+@pytest.mark.parametrize(
+    "provider_type,required_params",
+    [
+        ("google", ["name", "client_id", "secret"]),
+        ("facebook", ["name", "client_id", "secret"]),
+        ("github", ["name", "client_id", "secret"]),
+        ("gitlab", ["name", "client_id", "secret", "base_url"]),
+        ("openid_connect", ["name", "client_id", "secret", "base_url"]),
+    ],
+)
+@pytest.mark.django_db
+def test_create_oauth2_provider_required_fields(
+    api_client, data_fixture, enterprise_data_fixture, provider_type, required_params
+):
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    response = api_client.post(
+        reverse("api:enterprise:admin:auth_provider:list"),
+        {
+            "type": provider_type,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    for param in required_params:
+        assert param in response_json["detail"]
+
+
+@pytest.mark.parametrize(
+    "provider_type,extra_params",
+    [
+        ("google", {}),
+        ("facebook", {}),
+        ("github", {}),
+        ("gitlab", {"base_url": "https://gitlab.com"}),
+        ("openid_connect", {"base_url": "https://gitlab.com"}),
+    ],
+)
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_update_oauth2_provider(
+    api_client, data_fixture, enterprise_data_fixture, provider_type, extra_params
+):
+    """
+    Tests that a provider can be updated after it is created.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+
+    provider = enterprise_data_fixture.create_oauth_provider(
+        type=provider_type, **extra_params
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:enterprise:admin:auth_provider:item",
+            kwargs={"auth_provider_id": provider.id},
+        ),
+        {
+            "name": "Provider name updated",
+            "client_id": "clientid updated",
+            "secret": "secret updated",
+            "enabled": False,
+            **extra_params,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] is not None
+    assert response_json["type"] == provider_type
+    assert response_json["name"] == "Provider name updated"
+    assert response_json["client_id"] == "clientid updated"
+    assert response_json["secret"] == "secret updated"
+    assert response_json["enabled"] is False
+
+
+@pytest.mark.parametrize(
+    "provider_type",
+    [
+        "gitlab",
+        "openid_connect",
+    ],
+)
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_update_oauth_provider_invalid_url(
+    api_client, data_fixture, enterprise_data_fixture, provider_type
+):
+    """
+    Tests that OAuth provider cannot be updated with
+    invalid URL.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+
+    provider = enterprise_data_fixture.create_oauth_provider(
+        type=provider_type, base_url="https://gitlab.com"
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:enterprise:admin:auth_provider:item",
+            kwargs={"auth_provider_id": provider.id},
+        ),
+        {"base_url": "not_url"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert json.dumps(response_json["detail"]) == json.dumps(
+        {
+            "base_url": [
+                {
+                    "error": "Enter a valid URL.",
+                    "code": "invalid",
+                }
+            ]
+        }
+    )
