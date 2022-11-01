@@ -309,6 +309,7 @@ class CoreHandler:
         queryset: QuerySet,
         group: Optional[Group] = None,
         context: Optional[ContextObject] = None,
+        allow_if_template: Optional[bool] = False,
     ) -> QuerySet:
         """
         filters a given queryset accordingly to the actor permissions in the specified
@@ -325,8 +326,13 @@ class CoreHandler:
             `OperationType` corresponding to the given `operation_name`.
         :param group: An optional group into which the operation occurs.
         :param context: The optional context of the operation.
+        :param allow_if_template: If true and if the group is related to a template,
+            then we don't want to filter on the queryset.
         :return: The queryset, potentially filtered.
         """
+
+        if allow_if_template and group and group.has_template():
+            return queryset
 
         for permission_manager_name in settings.PERMISSION_MANAGERS:
             permission_manager_type = permission_manager_type_registry.get(

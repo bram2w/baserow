@@ -41,6 +41,7 @@ class DatabaseSerializer(ApplicationSerializer):
                 tables,
                 group=instance.group,
                 context=instance,
+                allow_if_template=True,
             )
 
         return TableSerializer(tables, many=True).data
