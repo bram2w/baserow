@@ -31,7 +31,7 @@
         @update-cover-image-field="updateCoverImageField"
       ></ViewFieldsContext>
     </li>
-    <li class="header__filter-item">
+    <li class="header__filter-item header__filter-item--right">
       <ViewSearch
         :view="view"
         :fields="fields"
