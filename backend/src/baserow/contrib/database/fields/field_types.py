@@ -2392,12 +2392,12 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
-        if not value:
+        select_option_mapping = id_mapping["database_field_select_options"]
+
+        if not value or value not in select_option_mapping:
             return
 
-        setattr(
-            row, field_name + "_id", id_mapping["database_field_select_options"][value]
-        )
+        setattr(row, field_name + "_id", select_option_mapping[value])
 
     def to_baserow_formula_type(self, field):
         return BaserowFormulaSingleSelectType()

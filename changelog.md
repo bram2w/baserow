@@ -30,6 +30,7 @@ For example:
 ### Refactors
 * Replace members modal with a new settings page. [#1229](https://gitlab.com/bramw/baserow/-/issues/1229)
 * Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
+* Duplicating a table with a removed single select option value no longer results in an error. [#1263](https://gitlab.com/bramw/baserow/-/issues/1263)
 * Selecting text in models, contexts, form fields and grid view cells no longer unselects when releasing the mouse outside. [#1243](https://gitlab.com/bramw/baserow/-/issues/1243)
 * Fixed bug where it was not possible to select text in a selected and editing cell in Chrome. [#1234](https://gitlab.com/bramw/baserow/-/issues/1234)
 * Fixed bug where the row metadata was not updated when receiving a realtime event.
