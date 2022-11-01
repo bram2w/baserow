@@ -122,7 +122,11 @@
           <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>
         </li>
         <li
-          v-if="hasCompatibleDecorator && !readOnly"
+          v-if="
+            hasCompatibleDecorator &&
+            !readOnly &&
+            $hasPermission('database.table.view.decoration.update', view)
+          "
           class="header__filter-item"
         >
           <ViewDecoratorMenu

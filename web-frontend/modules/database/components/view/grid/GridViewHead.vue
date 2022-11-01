@@ -27,7 +27,11 @@
       @move-field="moveField"
     ></GridViewFieldType>
     <div
-      v-if="includeAddField && !readOnly"
+      v-if="
+        includeAddField &&
+        !readOnly &&
+        $hasPermission('database.table.create_field', table)
+      "
       class="grid-view__column"
       :style="{ width: 100 + 'px' }"
     >
