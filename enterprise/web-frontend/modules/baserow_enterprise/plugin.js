@@ -1,8 +1,15 @@
 import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
 import { RolePermissionManagerType } from '@baserow_enterprise/permissionManagerTypes'
 import { AuthProvidersType } from '@baserow_enterprise/adminTypes'
-import { SamlAuthProviderType } from '@baserow_enterprise/authProviderTypes'
 import authProviderAdminStore from '@baserow_enterprise/store/authProviderAdmin'
+import {
+  SamlAuthProviderType,
+  GitHubAuthProviderType,
+  GoogleAuthProviderType,
+  FacebookAuthProviderType,
+  GitLabAuthProviderType,
+  OpenIdConnectAuthProviderType,
+} from '@baserow_enterprise/authProviderTypes'
 
 import { EnterpriseMembersPagePluginType } from '@baserow_enterprise/membersPagePluginTypes'
 import en from '@baserow_enterprise/locales/en.json'
@@ -36,6 +43,14 @@ export default (context) => {
 
   app.$registry.register('admin', new AuthProvidersType(context))
   app.$registry.register('authProvider', new SamlAuthProviderType(context))
+  app.$registry.register('authProvider', new GoogleAuthProviderType(context))
+  app.$registry.register('authProvider', new FacebookAuthProviderType(context))
+  app.$registry.register('authProvider', new GitHubAuthProviderType(context))
+  app.$registry.register('authProvider', new GitLabAuthProviderType(context))
+  app.$registry.register(
+    'authProvider',
+    new OpenIdConnectAuthProviderType(context)
+  )
 
   registerRealtimeEvents(app.$realtime)
 

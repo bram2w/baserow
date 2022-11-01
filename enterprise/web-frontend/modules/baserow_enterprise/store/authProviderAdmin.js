@@ -7,6 +7,7 @@ function populateProviderType(authProviderType, registry) {
 
 export const state = () => ({
   items: {},
+  nextProviderId: null,
 })
 
 export const mutations = {
@@ -37,6 +38,9 @@ export const mutations = {
       authProviders: authProviders.map((p) => (p.id === item.id ? item : p)),
     }
   },
+  SET_NEXT_PROVIDER_ID(state, providerId) {
+    state.nextProviderId = providerId
+  },
 }
 
 export const actions = {
@@ -52,12 +56,13 @@ export const actions = {
     commit('SET_ITEMS', items)
     return items
   },
-  async create({ commit }, { type, values }) {
+  async create({ commit, dispatch }, { type, values }) {
     const { data: item } = await authProviderAdmin(this.$client).create({
       type,
       ...values,
     })
     commit('ADD_ITEM', item)
+    await dispatch('fetchNextProviderId')
     return item
   },
   async update({ commit }, { authProvider, values }) {
@@ -71,6 +76,12 @@ export const actions = {
   async delete({ commit }, item) {
     await authProviderAdmin(this.$client).delete(item.id)
     commit('DELETE_ITEM', item)
+  },
+  async fetchNextProviderId({ commit }) {
+    const { data } = await authProviderAdmin(this.$client).fetchNextProviderId()
+    const providerId = data.next_provider_id
+    commit('SET_NEXT_PROVIDER_ID', providerId)
+    return providerId
   },
 }
 
@@ -98,6 +109,9 @@ export const getters = {
       }
     }
     return items
+  },
+  getNextProviderId: (state) => {
+    return state.nextProviderId
   },
 }
 

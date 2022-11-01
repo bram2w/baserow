@@ -1,7 +1,7 @@
 <template>
   <div class="auth-provider-admin__item">
+    <AuthProviderIcon :icon="getIcon()" />
     <div class="auth-provider-admin__item-name">
-      <i class="auth-provider-admin__item-icon" :class="getIconClass()" />
       {{ getName() }}
     </div>
     <div class="auth-provider-admin__item-menu">
@@ -41,6 +41,7 @@ import SwitchInput from '@baserow/modules/core/components/SwitchInput.vue'
 import EditAuthProviderMenuContext from '@baserow_enterprise/components/admin/contexts/EditAuthProviderMenuContext.vue'
 import UpdateSettingsAuthProviderModal from '@baserow_enterprise/components/admin/modals/UpdateSettingsAuthProviderModal.vue'
 import DeleteAuthProviderModal from '@baserow_enterprise/components/admin/modals/DeleteAuthProviderModal.vue'
+import AuthProviderIcon from '@baserow_enterprise/components/AuthProviderIcon.vue'
 
 export default {
   name: 'AuthProviderItem',
@@ -49,6 +50,7 @@ export default {
     DeleteAuthProviderModal,
     EditAuthProviderMenuContext,
     UpdateSettingsAuthProviderModal,
+    AuthProviderIcon,
   },
   props: {
     authProvider: {
@@ -57,10 +59,10 @@ export default {
     },
   },
   methods: {
-    getIconClass() {
+    getIcon() {
       return this.$registry
         .get('authProvider', this.authProvider.type)
-        .getIconClass()
+        .getIcon()
     },
     getName() {
       return this.$registry

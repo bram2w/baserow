@@ -17,6 +17,9 @@ class SsoErrorCode(Enum):
     INVALID_SAML_REQUEST = "errorInvalidSamlRequest"
     INVALID_SAML_RESPONSE = "errorInvalidSamlResponse"
     ERROR_USER_DEACTIVATED = "errorUserDeactivated"
+    PROVIDER_DOES_NOT_EXIST = "errorProviderDoesNotExist"
+    AUTH_FLOW_ERROR = "errorAuthFlowError"
+    DIFFERENT_PROVIDER = "errorDifferentProvider"
 
 
 def redirect_to_sign_in_error_page(

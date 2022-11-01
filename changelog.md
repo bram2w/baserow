@@ -10,8 +10,8 @@ For example:
 ## Unreleased
 
 ### New Features
-* Background pending tasks like duplication and template_install are restored in a new frontend session if unfinished. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 
+* Background pending tasks like duplication and template_install are restored in a new frontend session if unfinished. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 * Added Zapier integration code. [#816](https://gitlab.com/bramw/baserow/-/issues/816)
 * Made it possible to filter on the `created_on` and `updated_on` columns, even though
   they're not exposed via fields.
@@ -23,7 +23,7 @@ For example:
 * Upgraded docker containers base images from `debian:buster-slim` to the latest stable `debian:bullseye-slim`.
 * Upgraded python version from `python-3.7.16` to `python-3.9.2`.
 * Added SAML protocol implementation for Single Sign On as an enterprise feature. [#1227](https://gitlab.com/bramw/baserow/-/issues/1227)
- 
+* Added OAuth2 support for Single Sign On with Google, Facebook, GitHub, and GitLab as preconfigured providers. Added general support for OpenID Connect. [#1254](https://gitlab.com/bramw/baserow/-/issues/1254)
 
 ### Bug Fixes
 

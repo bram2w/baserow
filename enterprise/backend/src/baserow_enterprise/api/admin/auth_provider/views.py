@@ -22,7 +22,11 @@ from baserow_enterprise.auth_provider.handler import AuthProviderHandler
 from baserow_enterprise.sso.utils import check_sso_feature_is_active_or_raise
 
 from .errors import ERROR_AUTH_PROVIDER_DOES_NOT_EXIST
-from .serializers import CreateAuthProviderSerializer, UpdateAuthProviderSerializer
+from .serializers import (
+    CreateAuthProviderSerializer,
+    NextAuthProviderIdSerializer,
+    UpdateAuthProviderSerializer,
+)
 
 
 class AdminAuthProvidersView(APIView):
@@ -210,3 +214,25 @@ class AdminAuthProviderView(APIView):
         provider = handler.get_auth_provider(auth_provider_id)
         handler.delete_auth_provider(request.user, provider)
         return Response(status=204)
+
+
+class AdminNextAuthProvidersView(APIView):
+    permission_classes = (IsAdminUser,)
+
+    @extend_schema(
+        exclude=True,
+        tags=["Auth"],
+        request=None,
+        operation_id="get_next_auth_provider",
+        description=("Returns the guessed next provider's id."),
+        responses={200: NextAuthProviderIdSerializer},
+    )
+    @transaction.atomic
+    def get(self, request: Request) -> Response:
+        """Returns the guessed next provider's id."""
+
+        check_sso_feature_is_active_or_raise()
+
+        return Response(
+            {"next_provider_id": AuthProviderHandler.get_next_provider_id()}
+        )

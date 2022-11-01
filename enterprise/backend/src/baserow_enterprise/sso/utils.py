@@ -5,7 +5,6 @@ from baserow_enterprise.features import SSO
 
 
 def is_sso_feature_active():
-    # return True
     return LicenseHandler.instance_has_feature(SSO)
 
 

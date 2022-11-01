@@ -26,6 +26,7 @@ from baserow_enterprise.api.sso.utils import (
     redirect_to_sign_in_error_page,
     redirect_user_on_success,
 )
+from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
 from baserow_enterprise.sso.saml.exceptions import (
     InvalidSamlConfiguration,
     InvalidSamlRequest,
@@ -61,6 +62,8 @@ class AssertionConsumerServiceView(View):
             return redirect_to_sign_in_error_page(SsoErrorCode.INVALID_SAML_RESPONSE)
         except UserAlreadyExist:
             return redirect_to_sign_in_error_page(SsoErrorCode.ERROR_USER_DEACTIVATED)
+        except DifferentAuthProvider:
+            return redirect_to_sign_in_error_page(SsoErrorCode.DIFFERENT_PROVIDER)
 
         requested_url = request.POST["RelayState"]
         return redirect_user_on_success(user, requested_url)

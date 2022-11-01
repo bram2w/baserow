@@ -11,6 +11,7 @@
       <component
         :is="getProviderAdminSettingsFormComponent()"
         ref="providerSettingsForm"
+        :auth-provider-type="authProviderType"
         @submit="create($event)"
       >
         <div

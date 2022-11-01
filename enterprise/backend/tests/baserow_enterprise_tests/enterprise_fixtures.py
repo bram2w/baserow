@@ -1,3 +1,4 @@
+import faker
 from baserow_premium.license.models import License
 
 from baserow.core.models import Settings
@@ -10,6 +11,8 @@ VALID_ONE_SEAT_ENTERPRISE_LICENSE = (
 
 
 class EnterpriseFixtures:
+    faker = faker.Faker()
+
     def create_enterprise_admin_user_and_token(self, **kwargs):
         user, token = self.create_user_and_token(is_staff=True, **kwargs)
         self.enable_enterprise()

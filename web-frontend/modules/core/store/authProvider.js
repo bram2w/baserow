@@ -38,13 +38,17 @@ export const getters = {
     return state.loginOptionsLoaded
   },
   getAllLoginButtons: (state) => {
-    const loginActions = []
+    let optionsWithButton = []
     for (const loginOption of Object.values(state.loginOptions)) {
-      if (loginOption.hasLoginButton) {
-        loginActions.push(loginOption)
+      if (
+        loginOption.hasLoginButton &&
+        loginOption.items &&
+        loginOption.items.length > 0
+      ) {
+        optionsWithButton = optionsWithButton.concat(loginOption.items)
       }
     }
-    return loginActions
+    return optionsWithButton
   },
   getAllLoginActions: (state) => {
     const loginActions = []

@@ -1,4 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import PasswordAuthIcon from '@baserow/modules/core/assets/images/providers/Key.svg'
 
 /**
  * The authorization provider type base class that can be extended when creating
@@ -6,12 +7,9 @@ import { Registerable } from '@baserow/modules/core/registry'
  */
 export class AuthProviderType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
-   * recognize certain application types. If you for example want the database
-   * icon, you must return 'database' here. This will result in the classname
-   * 'fas fa-database'.
+   * The icon for the provider
    */
-  getIconClass() {
+  getIcon() {
     return null
   }
 
@@ -85,16 +83,16 @@ export class AuthProviderType extends Registerable {
   constructor(...args) {
     super(...args)
     this.type = this.getType()
-    this.iconClass = this.getIconClass()
+    this.icon = this.getIcon()
 
     if (this.type === null) {
-      throw new Error('The type name of an application type must be set.')
+      throw new Error('The type name of a provider type must be set.')
     }
-    if (this.iconClass === null) {
-      throw new Error('The icon class of an application type must be set.')
+    if (this.icon === null) {
+      throw new Error('The icon of a provider type must be set.')
     }
     if (this.name === null) {
-      throw new Error('The name of an application type must be set.')
+      throw new Error('The name of a provider type must be set.')
     }
   }
 
@@ -120,8 +118,8 @@ export class PasswordAuthProviderType extends AuthProviderType {
     return 'password'
   }
 
-  getIconClass() {
-    return 'key'
+  getIcon() {
+    return PasswordAuthIcon
   }
 
   getName() {
