@@ -159,12 +159,14 @@ export const registerRealtimeEvents = (realtime) => {
     const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
       for (let i = 0; i < data.rows.length; i++) {
+        const row = data.rows[i]
+
         viewType.rowCreated(
           context,
           data.table_id,
           store.getters['field/getAll'],
           data.rows[i],
-          data.metadata,
+          data.metadata[row.id],
           'page/'
         )
       }
@@ -184,7 +186,7 @@ export const registerRealtimeEvents = (realtime) => {
           store.getters['field/getAll'],
           rowBeforeUpdate,
           row,
-          data.metadata,
+          data.metadata[row.id],
           'page/'
         )
       }
