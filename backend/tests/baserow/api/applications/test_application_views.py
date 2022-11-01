@@ -17,6 +17,7 @@ from rest_framework.status import (
 from baserow.contrib.database.models import Database
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.handler import JobHandler
+from baserow.core.models import Template
 
 
 @pytest.mark.django_db
@@ -471,3 +472,29 @@ def test_duplicate_job_response_serializer(api_client, data_fixture):
     assert job_rsp["duplicated_application"]["id"] != application.id
     assert job_rsp["duplicated_application"]["name"] == f"{application.name} 2"
     assert job_rsp["duplicated_application"]["type"] == "database"
+
+
+@pytest.mark.django_db
+def test_anon_user_can_list_apps_of_app_in_template_group(
+    api_client,
+    data_fixture,
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    group = data_fixture.create_group(user=user)
+    app = data_fixture.create_database_application(user, group=group)
+    table = data_fixture.create_database_table(user, database=app)
+    template = Template(group=group, slug="test", icon="test", export_hash="test")
+    template.save()
+
+    response = api_client.get(
+        reverse("api:applications:list", kwargs={"group_id": group.id}),
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == app.id
+    tables = response_json[0]["tables"]
+    assert len(tables) == 1
+    assert tables[0]["id"] == table.id

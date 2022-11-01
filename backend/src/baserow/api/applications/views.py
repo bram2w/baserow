@@ -181,6 +181,7 @@ class ApplicationsView(APIView):
             applications,
             group=group,
             context=group,
+            allow_if_template=True,
         )
 
         data = [
