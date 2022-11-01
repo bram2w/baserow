@@ -77,7 +77,12 @@
           </ViewContext>
         </li>
         <li
-          v-if="hasSelectedView && view._.type.canFilter"
+          v-if="
+            hasSelectedView &&
+            view._.type.canFilter &&
+            ($hasPermission('database.table.view.create_filter', view) ||
+              readOnly)
+          "
           class="header__filter-item"
         >
           <ViewFilter
@@ -89,7 +94,12 @@
           ></ViewFilter>
         </li>
         <li
-          v-if="hasSelectedView && view._.type.canSort"
+          v-if="
+            hasSelectedView &&
+            view._.type.canSort &&
+            ($hasPermission('database.table.view.create_sort', view) ||
+              readOnly)
+          "
           class="header__filter-item"
         >
           <ViewSort
@@ -101,7 +111,12 @@
           ></ViewSort>
         </li>
         <li
-          v-if="hasSelectedView && view._.type.canShare && !readOnly"
+          v-if="
+            hasSelectedView &&
+            view._.type.canShare &&
+            !readOnly &&
+            $hasPermission('database.table.view.update_slug', view)
+          "
           class="header__filter-item"
         >
           <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>

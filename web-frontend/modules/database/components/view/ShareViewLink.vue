@@ -1,5 +1,5 @@
 <template>
-  <div v-if="$hasPermission('database.table.view.update_slug', view)">
+  <div>
     <a
       ref="contextLink"
       class="header__filter-link"
