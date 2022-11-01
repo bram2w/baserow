@@ -57,16 +57,16 @@ def get_valid_relay_state_url(
     """
 
     parsed_url = urlparse(requested_original_url)
-    dashboard_path = "/dashboard"
-    default_frontend_url = urljoin(settings.PUBLIC_WEB_FRONTEND_URL, dashboard_path)
-    parsed_default_frontend_url = urlparse(default_frontend_url)
+    default_frontend_url = get_saml_default_relay_state_url()
+    parsed_default_url = urlparse(default_frontend_url)
+    hostname_mismatch = parsed_url.hostname != parsed_default_url.hostname
 
+    if parsed_url.path in ["", "/"]:
+        parsed_url = parsed_url._replace(path=parsed_default_url.path)
     if parsed_url.hostname is None:
-        parsed_url = parsed_default_frontend_url._replace(path=parsed_url.path)
-    if parsed_url.path is None or parsed_url.path == "" or parsed_url.path == "/":
-        parsed_url = parsed_url._replace(path=parsed_default_frontend_url.path)
-    if parsed_url.hostname != parsed_default_frontend_url.hostname:
-        parsed_url = parsed_default_frontend_url
+        parsed_url = parsed_default_url._replace(path=parsed_url.path)
+    elif hostname_mismatch:
+        parsed_url = parsed_default_url
 
     return str(parsed_url.geturl())
 
@@ -106,14 +106,14 @@ def redirect_user_on_success(
     """
 
     # valid_frontend_url = get_valid_relay_state_url(requested_original_url)
-    requested_original_url = requested_original_url or urljoin(
-        settings.PUBLIC_WEB_FRONTEND_URL, "/dashboard"
+    requested_original_url = (
+        requested_original_url or get_saml_default_relay_state_url()
     )
     redirect_url = urlencode_user_token_for_frontend_url(requested_original_url, user)
     return redirect(redirect_url)
 
 
-def get_saml_sso_login_url(
+def get_saml_login_relative_url(
     query_params: Dict[str, str],
 ) -> str:
     """
@@ -132,3 +132,23 @@ def get_saml_sso_login_url(
         relative_url = f"{relative_url}?{urlencode(query)}"
 
     return relative_url
+
+
+def get_saml_acs_absolute_url() -> str:
+    """
+    Returns the url to the SAML ACS page.
+
+    :return: The absolute url to the ACS page for SAML SSO.
+    """
+
+    return urljoin(settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:acs"))
+
+
+def get_saml_default_relay_state_url() -> str:
+    """
+    Returns the url to the SAML relay state page.
+
+    :return: The absolute url to the relay state page for SAML SSO.
+    """
+
+    return urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/dashboard")

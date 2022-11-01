@@ -216,14 +216,14 @@ class AdminAuthProviderView(APIView):
         return Response(status=204)
 
 
-class AdminNextAuthProvidersView(APIView):
+class AdminNextAuthProviderIdView(APIView):
     permission_classes = (IsAdminUser,)
 
     @extend_schema(
         exclude=True,
         tags=["Auth"],
         request=None,
-        operation_id="get_next_auth_provider",
+        operation_id="get_next_auth_provider_id",
         description=("Returns the guessed next provider's id."),
         responses={200: NextAuthProviderIdSerializer},
     )

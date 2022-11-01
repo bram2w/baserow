@@ -32,9 +32,10 @@ export const mutations = {
   },
   UPDATE_ITEM(state, item) {
     const authProviderType = item.type
-    const authProviders = state.items[authProviderType]?.authProviders || []
+    const originalItemType = state.items[authProviderType]
+    const authProviders = originalItemType?.authProviders || []
     state.items[authProviderType] = {
-      ...state.items[authProviderType],
+      ...originalItemType,
       authProviders: authProviders.map((p) => (p.id === item.id ? item : p)),
     }
   },
@@ -83,6 +84,16 @@ export const actions = {
     commit('SET_NEXT_PROVIDER_ID', providerId)
     return providerId
   },
+  async setEnabled({ commit }, { authProvider, enabled }) {
+    // use optimistic update to enable/disable the auth provider
+    const wasEnabled = authProvider.enabled
+    commit('UPDATE_ITEM', { ...authProvider, enabled })
+    try {
+      await authProviderAdmin(this.$client).update(authProvider.id, { enabled })
+    } catch (error) {
+      commit('UPDATE_ITEM', { ...authProvider, enabled: wasEnabled })
+    }
+  },
 }
 
 export const getters = {
@@ -112,6 +123,9 @@ export const getters = {
   },
   getNextProviderId: (state) => {
     return state.nextProviderId
+  },
+  getType: (state) => (type) => {
+    return state.items[type]
   },
 }
 

@@ -1,18 +1,28 @@
 <template>
   <div>
-    <div class="box__head-logo">
+    <div class="auth__logo">
       <nuxt-link :to="{ name: 'index' }">
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
       </nuxt-link>
     </div>
-    <div class="login-box__head">
-      <h1 class="box__head-title">
-        {{ $t('loginError.title') }}
+    <div class="auth__head">
+      <h1 class="auth__head-title">
+        {{ $t('loginError.title') }} {{ errorMessage }}
       </h1>
     </div>
-    <p>
-      {{ errorMessage }}
+    <p class="auth__error-help">
+      {{ $t('loginError.help') }}
     </p>
+    <div>
+      <ul class="auth__action-links">
+        <li>
+          {{ $t('loginError.loginText') }}
+          <nuxt-link :to="{ name: 'login' }">
+            {{ $t('action.login') }}
+          </nuxt-link>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 

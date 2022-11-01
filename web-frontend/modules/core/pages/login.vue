@@ -1,28 +1,36 @@
 <template>
   <div>
-    <div class="box__head-logo">
+    <div class="auth__logo">
       <nuxt-link :to="{ name: 'index' }">
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
       </nuxt-link>
     </div>
-    <div class="login-box__head">
-      <h1 class="box__head-title">{{ $t('login.title') }}</h1>
+    <div class="auth__head">
+      <h1 class="auth__head-title">
+        {{ $t('login.title') }}
+      </h1>
       <LangPicker />
     </div>
-    <div v-if="loginButtons.length > 0" class="auth-provider-buttons">
+    <div
+      v-if="loginButtons.length > 0"
+      class="auth-provider-buttons auth-provider-buttons--border-bottom"
+      :class="{ 'auth-provider-buttons--small': smallLoginButtons }"
+    >
       <div v-for="loginButton in loginButtons" :key="loginButton.redirect_url">
         <component
           :is="getLoginButtonComponent(loginButton)"
           :redirect-url="loginButton.redirect_url"
           :name="loginButton.name"
           :icon="getLoginButtonIcon(loginButton)"
+          :small="smallLoginButtons"
         >
         </component>
       </div>
     </div>
+    <div v-else class="auth-provider-buttons__empty-space"></div>
     <AuthLogin :invitation="invitation" @success="success"> </AuthLogin>
     <div>
-      <ul class="login-action__links">
+      <ul class="auth__action-links">
         <li v-for="loginAction in loginActions" :key="loginAction.name">
           <component
             :is="getLoginActionComponent(loginAction)"
@@ -85,6 +93,9 @@ export default {
       loginActions: 'authProvider/getAllLoginActions',
       loginButtons: 'authProvider/getAllLoginButtons',
     }),
+    smallLoginButtons() {
+      return this.loginButtons.length > 2
+    },
   },
   methods: {
     getLoginActionComponent(loginAction) {

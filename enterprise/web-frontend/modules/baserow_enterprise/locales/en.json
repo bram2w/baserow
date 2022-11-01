@@ -28,7 +28,10 @@
         "domainAlreadyExists": "A SAML provider for this domain already exists",
         "metadata": "Metadata",
         "metadataPlaceholder": "Paste the Identity Provider metadata...",
-        "invalidMetadata": "Invalid XML metadata for the Identity Provider"
+        "invalidMetadata": "Invalid XML metadata for the Identity Provider",
+        "relayStateUrl": "Default Relay State URL",
+        "acsUrl": "Single Sign On URL",
+        "providerIsVerified": "The provider has been verified"
     },
     "createSettingsAuthProviderModal": {
         "title": "Add a new {type}"
@@ -41,12 +44,16 @@
         "comment": "Do you really want to delete this {type}?"
     },
     "loginWithSaml": {
-        "signInWithSaml": "Sign in with SAML SSO",
-        "continueWithSaml": "Continue to the SAML provider",
-        "requestError": "This domain is not configured with SAML SSO"
+        "signInWithSaml": "Login with SAML SSO",
+        "redirecting": "Redirecting to the Identity Provider...",
+        "continueWithSaml": "Continue to the SAML SSO provider",
+        "requestError": "This domain is not configured with SAML SSO",
+        "loginText": "Already have a password?"
     },
     "loginError": {
-        "title": "Something went wrong...",
+        "title": "Something went wrong. ",
+        "loginText": "Already have an account?",
+        "help": "Please contact your administrator for help.",
         "defaultErrorMessage": "An error occurred while trying to log in.",
         "errorSsoFeatureNotActive": "The SSO feature is not active. Please contact your administrator.",
         "errorInvalidSamlRequest": "The SAML request is invalid.",

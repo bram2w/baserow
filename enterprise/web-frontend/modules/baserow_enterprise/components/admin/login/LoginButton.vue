@@ -2,11 +2,12 @@
   <div>
     <a
       class="auth-provider-buttons__button"
+      :class="{ 'auth-provider-buttons__button--small': small }"
       :href="`${redirectUrl}`"
       target="_self"
     >
-      <AuthProviderIcon :icon="icon" />{{ $t('loginButton.continueWith') }}
-      {{ name }}
+      <AuthProviderIcon :icon="icon" />
+      <div v-if="!small">{{ $t('loginButton.continueWith') }} {{ name }}</div>
     </a>
   </div>
 </template>
@@ -29,6 +30,11 @@ export default {
     icon: {
       type: String,
       required: true,
+    },
+    small: {
+      type: Boolean,
+      default: false,
+      required: false,
     },
   },
 }

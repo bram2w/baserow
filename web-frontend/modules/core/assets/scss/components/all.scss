@@ -55,7 +55,6 @@
 @import 'decorator/value_provider_item';
 @import 'array_field';
 @import 'views/form';
-@import 'box_page';
 @import 'loading';
 @import 'notifications';
 @import 'dashboard';
@@ -105,4 +104,4 @@
 @import 'import_modal';
 @import 'row_edit_modal';
 @import 'data_table';
-@import "login";
+@import 'auth';

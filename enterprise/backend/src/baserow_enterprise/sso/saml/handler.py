@@ -2,19 +2,20 @@ import base64
 import binascii
 import logging
 from typing import Any, Dict, Optional
-from urllib.parse import urljoin
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.urls import reverse
 
 from defusedxml import ElementTree
-from rest_framework.request import Request
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, entity
 from saml2.client import Saml2Client
 from saml2.config import Config as Saml2Config
 from saml2.response import AuthnResponse
 
+from baserow_enterprise.api.sso.utils import (
+    get_saml_acs_absolute_url,
+    get_valid_relay_state_url,
+)
 from baserow_enterprise.auth_provider.handler import AuthProviderHandler, UserInfo
 from baserow_enterprise.sso.saml.models import SamlAuthProviderModel
 
@@ -32,7 +33,6 @@ class SamlAuthProviderHandler:
     def get_saml_client(
         cls,
         identity_provider_metadata: str,
-        assertion_consumer_service_url: str,
     ) -> Saml2Client:
         """
         Returns a SAML client with the correct configuration for the given
@@ -45,8 +45,10 @@ class SamlAuthProviderHandler:
         :return: The SAML client that can be used to authenticate the user.
         """
 
+        acs_url = get_saml_acs_absolute_url()
+
         saml_settings: Dict[str, Any] = {
-            "entityid": assertion_consumer_service_url,
+            "entityid": acs_url,
             "metadata": {"inline": [identity_provider_metadata]},
             "allow_unknown_attributes": True,
             "debug": settings.DEBUG,
@@ -54,8 +56,8 @@ class SamlAuthProviderHandler:
                 "sp": {
                     "endpoints": {
                         "assertion_consumer_service": [
-                            (assertion_consumer_service_url, BINDING_HTTP_REDIRECT),
-                            (assertion_consumer_service_url, BINDING_HTTP_POST),
+                            (acs_url, BINDING_HTTP_REDIRECT),
+                            (acs_url, BINDING_HTTP_POST),
                         ],
                     },
                     "allow_unsolicited": True,
@@ -145,8 +147,16 @@ class SamlAuthProviderHandler:
 
         user_identity = authn_response.get_identity()
         email = user_identity["user.email"][0]
-        first_name = user_identity["user.first_name"][0]
-        return UserInfo(email, first_name)
+        if "user.name" in user_identity:
+            name = user_identity["user.name"][0]
+        else:
+            first_name = user_identity["user.first_name"][0]
+            if "user.last_name" in user_identity:
+                last_name = user_identity["user.last_name"][0]
+            else:
+                last_name = ""
+            name = f"{first_name} {last_name}".strip()
+        return UserInfo(email, name)
 
     @classmethod
     def get_saml_auth_provider_from_email(
@@ -181,32 +191,30 @@ class SamlAuthProviderHandler:
             raise InvalidSamlRequest("No valid SAML identity provider found.")
 
     @classmethod
-    def sign_in_user(cls, request: Request) -> AbstractUser:
+    def sign_in_user_from_saml_response(cls, saml_response: str) -> AbstractUser:
         """
-        Signs in the user using the SAML response received from the identity provider.
+        Signs in the user using the SAML response received from the identity
+        provider.
 
-        :param request: The request that contains the SAML response.
+        :param saml_response: The encoded SAML response sent from the Identity
+            Provider.
         :raises InvalidSamlResponse: When the SAML response is not valid.
-        :raises InvalidSamlConfiguration: When the SAML configuration is not valid.
+        :raises InvalidSamlConfiguration: When the SAML configuration is not
+            valid.
         :return: The user that was signed in.
         """
 
-        saml_response = request.POST.get("SAMLResponse")
         if saml_response is None:
             raise InvalidSamlRequest(
                 "SAML response is missing. Verify the SAML provider configuration."
             )
-
-        acs_url = urljoin(
-            settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:acs")
-        )
 
         try:
             saml_auth_provider = cls.get_saml_auth_provider_from_saml_response(
                 saml_response
             )
 
-            saml_client = cls.get_saml_client(saml_auth_provider.metadata, acs_url)
+            saml_client = cls.get_saml_client(saml_auth_provider.metadata)
             authn_response = saml_client.parse_authn_request_response(
                 saml_response, entity.BINDING_HTTP_POST
             )
@@ -236,7 +244,6 @@ class SamlAuthProviderHandler:
     def get_sign_in_url_for_auth_provider(
         cls,
         saml_auth_provider: SamlAuthProviderModel,
-        acs_url: str,
         original_url: str = "",
     ) -> str:
         """
@@ -253,7 +260,7 @@ class SamlAuthProviderHandler:
         :return: The redirect url to the identity provider.
         """
 
-        saml_client = cls.get_saml_client(saml_auth_provider.metadata, acs_url)
+        saml_client = cls.get_saml_client(saml_auth_provider.metadata)
         _, info = saml_client.prepare_for_authenticate(relay_state=original_url)
 
         for key, value in info["headers"]:
@@ -264,26 +271,26 @@ class SamlAuthProviderHandler:
             raise InvalidSamlConfiguration("No Location header found in SAML response.")
 
     @classmethod
-    def get_sign_in_url(cls, request) -> str:
+    def get_sign_in_url(cls, user_email: str, original_url: str = "") -> str:
         """
         Returns the sign in url for the correct identity provider. This url is
         used to initiate the SAML authentication flow from the service provider.
 
-        :param request: The request that contains the email address of the user.
+        :param user_email: The email address of the user that wants to login.
+        :param original_url: The url to which the user would be redirected
+            after a successful login.
         :raises InvalidSamlRequest: If the email address is invalid.
         :raises InvalidSamlConfiguration: If the SAML configuration is invalid.
         :return: The redirect url to the identity provider.
         """
 
-        email = request.GET.get("email")
-        # original_requested_url = request.GET.get("original", "")
-        acs_url = urljoin(
-            settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:acs")
-        )
+        valid_relay_state_url = get_valid_relay_state_url(original_url)
 
         try:
-            saml_auth_provider = cls.get_saml_auth_provider_from_email(email)
-            return cls.get_sign_in_url_for_auth_provider(saml_auth_provider, acs_url)
+            saml_auth_provider = cls.get_saml_auth_provider_from_email(user_email)
+            return cls.get_sign_in_url_for_auth_provider(
+                saml_auth_provider, valid_relay_state_url
+            )
         except (InvalidSamlRequest, InvalidSamlConfiguration) as exc:
             raise exc
         except Exception as exc:

@@ -1,7 +1,16 @@
 <template>
   <form class="context__form" @submit.prevent="submit">
     <FormElement :error="fieldHasErrors('domain')" class="control">
-      <label class="control__label">{{ $t('samlSettingsForm.domain') }}</label>
+      <label class="control__label"
+        >{{ $t('samlSettingsForm.domain') }}
+        <img
+          v-if="authProvider && authProvider.is_verified"
+          class="control__label-right-icon"
+          :alt="$t('samlSettingsForm.providerIsVerified')"
+          :title="$t('samlSettingsForm.providerIsVerified')"
+          :src="getVerifiedIcon()"
+        />
+      </label>
       <div class="control__elements">
         <input
           ref="domain"
@@ -35,9 +44,9 @@
       </div>
     </FormElement>
     <FormElement :error="fieldHasErrors('metadata')" class="control">
-      <label class="control__label">{{
-        $t('samlSettingsForm.metadata')
-      }}</label>
+      <label class="control__label">
+        {{ $t('samlSettingsForm.metadata') }}
+      </label>
       <div class="control__elements">
         <textarea
           ref="metadata"
@@ -63,6 +72,20 @@
         </div>
       </div>
     </FormElement>
+    <div class="control">
+      <label class="control__label">{{
+        $t('samlSettingsForm.relayStateUrl')
+      }}</label>
+      <div class="control__elements">
+        <code>{{ getRelayStateUrl() }}</code>
+      </div>
+    </div>
+    <div class="control">
+      <label class="control__label">{{ $t('samlSettingsForm.acsUrl') }}</label>
+      <div class="control__elements">
+        <code>{{ getAcsUrl() }}</code>
+      </div>
+    </div>
     <slot></slot>
   </form>
 </template>
@@ -79,6 +102,11 @@ export default {
       type: Object,
       required: false,
       default: () => ({}),
+    },
+    authProviderType: {
+      type: String,
+      required: false,
+      default: null,
     },
   },
   data() {
@@ -102,6 +130,9 @@ export default {
         )
         .map((authProvider) => authProvider.domain)
     },
+    type() {
+      return this.authProviderType || this.authProvider.type
+    },
   },
   methods: {
     getDefaultValues() {
@@ -109,6 +140,16 @@ export default {
         domain: this.authProvider.domain || '',
         metadata: this.authProvider.metadata || '',
       }
+    },
+    getRelayStateUrl() {
+      return this.$store.getters['authProviderAdmin/getType'](this.type)
+        .relayStateUrl
+    },
+    getAcsUrl() {
+      return this.$store.getters['authProviderAdmin/getType'](this.type).acsUrl
+    },
+    getVerifiedIcon() {
+      return this.$registry.get('authProvider', this.type).getVerifiedIcon()
     },
     submit() {
       this.$v.$touch()

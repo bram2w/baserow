@@ -79,7 +79,7 @@
   }
 
   &::after {
-    content: " ";
+    content: ' ';
     position: absolute;
     left: 50%;
     top: 50%;
@@ -99,4 +99,12 @@
   @extend %ellipsis;
 
   display: block;
+}
+
+.button--full-width {
+  @include button-size(15px, 44px, 28px);
+
+  margin-bottom: 16px;
+  width: 100%;
+  font-weight: 400;
 }

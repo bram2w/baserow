@@ -1,7 +1,12 @@
 <template>
   <div>
-    <div class="box__head">
-      <h1 class="box__head-title">
+    <div class="auth__logo">
+      <nuxt-link :to="{ name: 'index' }">
+        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+      </nuxt-link>
+    </div>
+    <div class="auth__head auth__head--more-margin">
+      <h1 class="auth__head-title">
         {{ $t('signup.title') }}
       </h1>
       <LangPicker />
@@ -19,10 +24,7 @@
         :title="$t('signup.disabled')"
         >{{ $t('signup.disabledMessage') }}</Alert
       >
-      <nuxt-link
-        :to="{ name: 'login' }"
-        class="button button--large button--primary"
-      >
+      <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
         <i class="fas fa-arrow-left"></i>
         {{ $t('action.backToLogin') }}
       </nuxt-link>
@@ -33,11 +35,11 @@
         :invitation="invitation"
         @success="next"
       >
-        <ul v-if="!shouldShowAdminSignupPage" class="action__links">
+        <ul v-if="!shouldShowAdminSignupPage" class="auth__action-links">
           <li>
+            {{ $t('signup.loginText') }}
             <nuxt-link :to="{ name: 'login' }">
-              <i class="fas fa-arrow-left"></i>
-              {{ $t('action.back') }}
+              {{ $t('action.login') }}
             </nuxt-link>
           </li>
         </ul>

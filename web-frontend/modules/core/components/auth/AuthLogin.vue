@@ -18,8 +18,8 @@
     </Alert>
     <Error :error="error"></Error>
     <form @submit.prevent="login">
-      <FormElement :error="fieldHasErrors('email')" class="login-control">
-        <label class="login-control__label">{{
+      <FormElement :error="fieldHasErrors('email')" class="auth__control">
+        <label class="auth__control-label">{{
           $t('field.emailAddress')
         }}</label>
         <div class="control__elements">
@@ -37,20 +37,21 @@
             v-model="values.email"
             :class="{ 'input--error': fieldHasErrors('email') }"
             type="email"
+            autocomplete="username"
             :placeholder="$t('login.emailPlaceholder')"
             class="input input--large"
             @blur="$v.values.email.$touch()"
           />
-          <div class="login-error">
-            <div v-if="fieldHasErrors('email')">
+          <div class="auth__control-error">
+            <div v-if="fieldHasErrors('email')" class="error">
               <i class="fas fa-fw fa-exclamation-triangle"></i>
               {{ $t('error.invalidEmail') }}
             </div>
           </div>
         </div>
       </FormElement>
-      <FormElement :error="fieldHasErrors('password')" class="login-control">
-        <label class="login-control__label">{{ $t('field.password') }}</label>
+      <FormElement :error="fieldHasErrors('password')" class="auth__control">
+        <label class="auth__control-label">{{ $t('field.password') }}</label>
         <div class="control__elements">
           <input
             ref="password"
@@ -59,23 +60,23 @@
               'input--error': fieldHasErrors('password'),
             }"
             type="password"
+            autocomplete="current-password"
             class="input input--large"
             :placeholder="$t('login.passwordPlaceholder')"
             @blur="$v.values.password.$touch()"
           />
-          <div class="login-error">
-            <div v-if="fieldHasErrors('password')">
+          <div class="auth__control-error">
+            <div v-if="fieldHasErrors('password')" class="error">
               <i class="fas fa-warning fa-exclamation-triangle"></i>
               {{ $t('error.passwordRequired') }}
             </div>
           </div>
         </div>
       </FormElement>
-      <div class="login-actions">
-        <slot></slot>
+      <div class="auth__action">
         <button
           :class="{ 'button--loading': loading }"
-          class="button login-button--full-width"
+          class="button button--full-width"
           :disabled="loading"
         >
           {{ $t('action.signIn') }}
