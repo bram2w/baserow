@@ -100,9 +100,7 @@ export default {
   },
   methods: {
     getDropdownItemComponents() {
-      return this.$children.filter(
-        (child) => child.$options.name === 'DropdownItem'
-      )
+      return this.$children.filter((child) => child.isDropdownItem === true)
     },
     focusout(event) {
       // Hide only if we loose focus in profit of another element
