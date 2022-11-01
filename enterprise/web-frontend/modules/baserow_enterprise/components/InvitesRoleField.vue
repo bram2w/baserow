@@ -4,12 +4,12 @@
       ref="editRoleContextLink"
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
-      {{ roleName(roles, row) }}
+      {{ roleName(roles, rowSanitised) }}
       <i class="fas fa-chevron-down"></i>
     </a>
     <EditRoleContext
       ref="editRoleContext"
-      :row="row"
+      :row="rowSanitised"
       :roles="roles"
       role-value-column="permissions"
       @update-role="roleUpdate($event)"
@@ -39,6 +39,14 @@ export default {
   },
   computed: {
     ...mapGetters({ userId: 'auth/getUserId', roles: 'roles/getAllRoles' }),
+    rowSanitised() {
+      return {
+        ...this.row,
+        permissions: this.roles.some(({ uid }) => uid === this.row.permissions)
+          ? this.row.permissions
+          : 'BUILDER',
+      }
+    },
   },
   methods: {
     roleName(roles, row) {
@@ -53,8 +61,8 @@ export default {
 
       try {
         await GroupService(this.$client).updateInvitation(
-          invitation.id,
-          invitation
+          newInvitation.id,
+          newInvitation
         )
       } catch (error) {
         this.$emit('row-update', oldInvitation)
