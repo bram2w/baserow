@@ -1,7 +1,9 @@
 <template>
   <ul v-if="!tableLoading" class="header__filter header__filter--full-width">
     <li
-      v-if="$hasPermission('database.table.view.update', view)"
+      v-if="
+        $hasPermission('database.table.view.update', view, database.group.id)
+      "
       class="header__filter-item"
     >
       <a

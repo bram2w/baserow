@@ -8,6 +8,10 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 export default {
   name: 'GridViewFieldWidthHandle',
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     grid: {
       type: Object,
       required: true,
@@ -83,7 +87,13 @@ export default {
             field: this.field,
             values: { width: newWidth },
             oldValues: { width: this.startWidth },
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.grid,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {

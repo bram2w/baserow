@@ -41,6 +41,7 @@
       @selected="addValue(value, $event)"
     ></SelectRowModal>
     <ForeignRowEditModal
+      v-if="!readOnly"
       ref="rowEditModal"
       :table-id="field.link_row_table_id"
       @hidden="modalOpen = false"

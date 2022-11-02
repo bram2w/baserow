@@ -42,6 +42,7 @@
       </a>
     </div>
     <SelectRowModal
+      v-if="!readOnly"
       ref="selectModal"
       :table-id="field.link_row_table_id"
       :value="value"
@@ -49,6 +50,7 @@
       @hidden="hideModal"
     ></SelectRowModal>
     <ForeignRowEditModal
+      v-if="!readOnly"
       ref="rowEditModal"
       :table-id="field.link_row_table_id"
       @hidden="hideModal"
@@ -80,8 +82,7 @@ export default {
     this.$options.computed = {
       ...(this.$options.computed || {}),
       ...mapGetters({
-        publicGrid:
-          this.$options.propsData.storePrefix + 'view/public/getIsPublic',
+        publicGrid: 'page/view/public/getIsPublic',
       }),
     }
   },
@@ -106,6 +107,10 @@ export default {
      * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
+      if (this.readOnly) {
+        return true
+      }
+
       const openModals = [
         ...this.$refs.selectModal.$refs.modal.moveToBody.children.map(
           (child) => child.$el

@@ -41,6 +41,7 @@
       {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
     </a>
     <FieldCollaboratorDropdown
+      v-if="!readOnly"
       ref="dropdown"
       :collaborators="availableCollaborators"
       :disabled="readOnly"

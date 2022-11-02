@@ -18,8 +18,7 @@ export default {
       ...mapGetters({
         fieldOptions:
           this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
-        publicGrid:
-          this.$options.propsData.storePrefix + 'view/public/getIsPublic',
+        publicGrid: 'page/view/public/getIsPublic',
       }),
     }
   },

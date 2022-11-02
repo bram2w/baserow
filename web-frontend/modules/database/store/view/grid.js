@@ -887,12 +887,7 @@ export const actions = {
     })
 
     const gridId = getters.getLastGridId
-    const view = rootGetters['view/get'](gridId)
-
-    if (
-      !readOnly &&
-      this.app.$hasPermission('database.table.view.update_field_options', view)
-    ) {
+    if (!readOnly) {
       const updateValues = { field_options: {} }
       updateValues.field_options[field.id] = values
 
@@ -940,12 +935,7 @@ export const actions = {
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
     const gridId = getters.getLastGridId
-    const view = rootGetters['view/get'](gridId)
-
-    if (
-      !readOnly &&
-      this.app.$hasPermission('database.table.view.update_field_options', view)
-    ) {
+    if (!readOnly) {
       const updateValues = { field_options: newFieldOptions }
 
       try {

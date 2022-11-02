@@ -17,13 +17,15 @@
       class="grid-view__left"
       :fields="leftFields"
       :decorations-by-place="decorationsByPlace"
+      :database="database"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
       :include-row-details="true"
       :include-grid-view-identifier-dropdown="true"
       :read-only="
-        readOnly || !$hasPermission('database.table.update_row', table)
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
       "
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
@@ -59,10 +61,14 @@
     <GridViewFieldWidthHandle
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
+      :database="database"
       :grid="view"
       :field="leftFields[0]"
       :width="leftFieldsWidth"
-      :read-only="readOnly || !$hasPermission('database.table.move_row', table)"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.move_row', table, database.group.id)
+      "
       :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
     <GridViewSection
@@ -70,12 +76,14 @@
       class="grid-view__right"
       :fields="visibleFields"
       :decorations-by-place="decorationsByPlace"
+      :database="database"
       :table="table"
       :view="view"
       :include-add-field="true"
       :can-order-fields="true"
       :read-only="
-        readOnly || !$hasPermission('database.table.update_row', table)
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
       "
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
@@ -134,7 +142,14 @@
           </a>
         </li>
         <li
-          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
         >
           <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
@@ -142,7 +157,14 @@
           </a>
         </li>
         <li
-          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
         >
           <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
@@ -150,7 +172,14 @@
           </a>
         </li>
         <li
-          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
         >
           <a
             @click="
@@ -172,7 +201,14 @@
           </a>
         </li>
         <li
-          v-if="!readOnly && $hasPermission('database.table.delete_row', table)"
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.delete_row',
+              table,
+              database.group.id
+            )
+          "
         >
           <a @click="deleteRow(selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
@@ -189,10 +225,12 @@
       :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="
-        readOnly || !$hasPermission('database.table.update_row', table)
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
       "
       :enable-navigation="
-        !readOnly && $hasPermission('database.table.update_row', table)
+        !readOnly &&
+        $hasPermission('database.table.update_row', table, database.group.id)
       "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @toggle-hidden-fields-visibility="
@@ -983,7 +1021,11 @@ export default {
         textData.length === 0 ||
         textData[0].length === 0 ||
         this.readOnly ||
-        !this.$hasPermission('database.table.update_row', this.table)
+        !this.$hasPermission(
+          'database.table.update_row',
+          this.table,
+          this.database.group.id
+        )
       ) {
         return
       }

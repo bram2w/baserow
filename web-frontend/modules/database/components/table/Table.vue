@@ -80,8 +80,12 @@
           v-if="
             hasSelectedView &&
             view._.type.canFilter &&
-            ($hasPermission('database.table.view.create_filter', view) ||
-              readOnly)
+            (readOnly ||
+              $hasPermission(
+                'database.table.view.create_filter',
+                view,
+                database.group.id
+              ))
           "
           class="header__filter-item"
         >
@@ -97,8 +101,12 @@
           v-if="
             hasSelectedView &&
             view._.type.canSort &&
-            ($hasPermission('database.table.view.create_sort', view) ||
-              readOnly)
+            (readOnly ||
+              $hasPermission(
+                'database.table.view.create_sort',
+                view,
+                database.group.id
+              ))
           "
           class="header__filter-item"
         >
@@ -115,7 +123,11 @@
             hasSelectedView &&
             view._.type.canShare &&
             !readOnly &&
-            $hasPermission('database.table.view.update_slug', view)
+            $hasPermission(
+              'database.table.view.update_slug',
+              view,
+              database.group.id
+            )
           "
           class="header__filter-item"
         >
@@ -125,7 +137,11 @@
           v-if="
             hasCompatibleDecorator &&
             !readOnly &&
-            $hasPermission('database.table.view.decoration.update', view)
+            $hasPermission(
+              'database.table.view.decoration.update',
+              view,
+              database.group.id
+            )
           "
           class="header__filter-item"
         >
@@ -298,12 +314,36 @@ export default {
     },
     showViewContext() {
       return (
-        this.$hasPermission('database.table.run_export', this.table) ||
-        this.$hasPermission('database.table.import_rows', this.table) ||
-        this.$hasPermission('database.table.view.duplicate', this.table) ||
-        this.$hasPermission('database.table.view.update', this.table) ||
-        this.$hasPermission('database.table.view.delete', this.table) ||
-        this.$hasPermission('database.table.create_webhook', this.table)
+        this.$hasPermission(
+          'database.table.run_export',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.import_rows',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.duplicate',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.update',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.delete',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.create_webhook',
+          this.table,
+          this.database.group.id
+        )
       )
     },
     ...mapGetters({

@@ -31,6 +31,7 @@
           <div class="form-view-survey__center-inner-1">
             <div class="form-view-survey__center-inner-2">
               <FormViewField
+                :database="database"
                 :table="table"
                 :view="view"
                 :field="field"
@@ -118,6 +119,7 @@
           >
           <ViewFieldsContext
             ref="customizeContext"
+            :database="database"
             :view="view"
             :fields="fields"
             :field-options="fieldOptions"

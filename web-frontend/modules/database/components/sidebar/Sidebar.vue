@@ -44,7 +44,13 @@
         </SidebarItemPendingJob>
       </ul>
       <a
-        v-if="$hasPermission('database.create_table', application)"
+        v-if="
+          $hasPermission(
+            'database.create_table',
+            application,
+            application.group.id
+          )
+        "
         class="tree__sub-add"
         @click="$refs.importFileModal.show()"
       >

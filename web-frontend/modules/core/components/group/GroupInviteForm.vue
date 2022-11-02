@@ -56,11 +56,16 @@
 import { required, email } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
-import { mapGetters } from 'vuex'
 
 export default {
   name: 'GroupInviteForm',
   mixins: [form],
+  props: {
+    group: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       loading: false,
@@ -72,7 +77,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ roles: 'roles/getAllRoles' }),
+    roles() {
+      return this.group._.roles
+    },
     defaultRole() {
       return this.roles.length > 0 ? this.roles[this.roles.length - 1] : null
     },

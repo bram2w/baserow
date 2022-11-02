@@ -1,7 +1,11 @@
 <template>
   <Context>
     <ul class="context__menu">
-      <li v-if="$hasPermission('database.table.create_row', table)">
+      <li
+        v-if="
+          $hasPermission('database.table.create_row', table, database.group.id)
+        "
+      >
         <a @click=";[$emit('create-row'), hide()]">
           <i class="context__menu-icon fas fa-fw fa-plus"></i>
           {{ $t('kanbanViewStackContext.createCard') }}
@@ -10,7 +14,11 @@
       <li
         v-if="
           option !== null &&
-          $hasPermission('database.table.field.update', singleSelectField)
+          $hasPermission(
+            'database.table.field.update',
+            singleSelectField,
+            database.group.id
+          )
         "
       >
         <a
@@ -31,7 +39,11 @@
       <li
         v-if="
           option !== null &&
-          $hasPermission('database.table.field.update', singleSelectField)
+          $hasPermission(
+            'database.table.field.update',
+            singleSelectField,
+            database.group.id
+          )
         "
       >
         <a @click="$refs.deleteModal.show()">
@@ -82,6 +94,10 @@ export default {
   props: {
     option: {
       validator: (prop) => typeof prop === 'object' || prop === null,
+      required: true,
+    },
+    database: {
+      type: Object,
       required: true,
     },
     table: {

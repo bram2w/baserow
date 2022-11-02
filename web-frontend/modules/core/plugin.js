@@ -26,7 +26,6 @@ import {
 } from '@baserow/modules/core/permissionManagerTypes'
 
 import settingsStore from '@baserow/modules/core/store/settings'
-import permissionsStore from '@baserow/modules/core/store/permissions'
 import applicationStore from '@baserow/modules/core/store/application'
 import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
@@ -35,7 +34,6 @@ import jobStore from '@baserow/modules/core/store/job'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
-import rolesStore from '@baserow/modules/core/store/roles'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -97,8 +95,6 @@ export default (context, inject) => {
   inject('registry', registry)
 
   store.registerModule('settings', settingsStore)
-  store.registerModule('permissions', permissionsStore)
-  store.registerModule('roles', rolesStore)
   store.registerModule('application', applicationStore)
   store.registerModule('authProvider', authProviderStore)
   store.registerModule('auth', authStore)

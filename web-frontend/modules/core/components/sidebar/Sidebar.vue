@@ -152,7 +152,13 @@
               </div>
             </li>
             <li
-              v-if="$hasPermission('group.create_invitation', selectedGroup)"
+              v-if="
+                $hasPermission(
+                  'group.create_invitation',
+                  selectedGroup,
+                  selectedGroup.id
+                )
+              "
               class="tree__item"
             >
               <div class="tree__action">
@@ -176,7 +182,13 @@
               />
             </li>
             <nuxt-link
-              v-if="$hasPermission('group.list_group_users', selectedGroup)"
+              v-if="
+                $hasPermission(
+                  'group.list_group_users',
+                  selectedGroup,
+                  selectedGroup.id
+                )
+              "
               v-slot="{ href, navigate, isExactActive }"
               :to="{
                 name: 'settings-members',
@@ -220,7 +232,13 @@
             </ul>
             <li class="sidebar__new-wrapper">
               <a
-                v-if="$hasPermission('group.create_application', selectedGroup)"
+                v-if="
+                  $hasPermission(
+                    'group.create_application',
+                    selectedGroup,
+                    selectedGroup.id
+                  )
+                "
                 ref="createApplicationContextLink"
                 class="sidebar__new"
                 @click="
@@ -246,7 +264,10 @@
               v-for="(group, index) in groups"
               :key="group.id"
               class="tree__item"
-              :class="{ 'margin-top-2': index === 0 }"
+              :class="{
+                'margin-top-2': index === 0,
+                'tree__item--loading': group._.additionalLoading,
+              }"
             >
               <div class="tree__action tree__action--has-right-icon">
                 <a

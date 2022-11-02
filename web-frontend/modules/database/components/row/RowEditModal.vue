@@ -36,6 +36,7 @@
         :read-only="readOnly"
         :row="row"
         :table="table"
+        :database="database"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @order-fields="$emit('order-fields', $event)"
@@ -57,6 +58,7 @@
           :read-only="readOnly"
           :row="row"
           :table="table"
+          :database="database"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
@@ -64,7 +66,17 @@
         >
         </RowEditModalFieldsList>
       </RowEditModalHiddenFieldsSection>
-      <div v-if="!readOnly" class="actions">
+      <div
+        v-if="
+          !readOnly &&
+          $hasPermission(
+            'database.table.create_field',
+            table,
+            database.group.id
+          )
+        "
+        class="actions"
+      >
         <a
           ref="createFieldContextLink"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
@@ -109,8 +121,7 @@ export default {
   props: {
     database: {
       type: Object,
-      required: false,
-      default: null,
+      required: true,
     },
     table: {
       type: Object,
@@ -149,17 +160,15 @@ export default {
       default: false,
     },
   },
-  data() {
-    return {
-      optionalRightSideBar: this.$registry
-        .get('application', 'database')
-        .getRowEditModalRightSidebarComponent(this.table),
-    }
-  },
   computed: {
     ...mapGetters({
       navigationLoading: 'rowModalNavigation/getLoading',
     }),
+    optionalRightSideBar() {
+      return this.$registry
+        .get('application', 'database')
+        .getRowEditModalRightSidebarComponent(this.database, this.table)
+    },
     modalRow() {
       return this.$store.getters['rowModal/get'](this._uid)
     },

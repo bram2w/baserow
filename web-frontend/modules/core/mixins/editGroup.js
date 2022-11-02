@@ -29,8 +29,8 @@ export default {
 
       this.setLoading(group, false)
     },
-    selectGroup(group) {
-      this.$store.dispatch('group/select', group)
+    async selectGroup(group) {
+      await this.$store.dispatch('group/select', group)
       this.$emit('selected')
     },
   },

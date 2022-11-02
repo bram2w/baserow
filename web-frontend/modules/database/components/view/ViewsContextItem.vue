@@ -91,12 +91,36 @@ export default {
     },
     showViewContext() {
       return (
-        this.$hasPermission('database.table.run_export', this.table) ||
-        this.$hasPermission('database.table.import_rows', this.table) ||
-        this.$hasPermission('database.table.view.duplicate', this.table) ||
-        this.$hasPermission('database.table.create_webhook', this.table) ||
-        this.$hasPermission('database.table.view.update', this.view) ||
-        this.$hasPermission('database.table.view.delete', this.view)
+        this.$hasPermission(
+          'database.table.run_export',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.import_rows',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.duplicate',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.create_webhook',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.update',
+          this.view,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.delete',
+          this.view,
+          this.database.group.id
+        )
       )
     },
   },

@@ -38,6 +38,7 @@
       <FieldContext
         v-if="!readOnly"
         ref="context"
+        :database="database"
         :table="table"
         :field="field"
         @update="$emit('refresh', $event)"
@@ -47,7 +48,11 @@
           v-if="
             !field.primary &&
             !readOnly &&
-            $hasPermission('database.table.create_field', table)
+            $hasPermission(
+              'database.table.create_field',
+              table,
+              database.group.id
+            )
           "
         >
           <a
@@ -64,7 +69,11 @@
           v-if="
             !field.primary &&
             !readOnly &&
-            $hasPermission('database.table.create_field', table)
+            $hasPermission(
+              'database.table.create_field',
+              table,
+              database.group.id
+            )
           "
         >
           <a
@@ -86,7 +95,12 @@
         </li>
         <li
           v-if="
-            !readOnly && $hasPermission('database.table.field.duplicate', field)
+            !readOnly &&
+            $hasPermission(
+              'database.table.field.duplicate',
+              field,
+              database.group.id
+            )
           "
         >
           <a
@@ -107,7 +121,11 @@
         <li
           v-if="
             canFilter &&
-            $hasPermission('database.table.view.create_filter', view)
+            $hasPermission(
+              'database.table.view.create_filter',
+              view,
+              database.group.id
+            )
           "
         >
           <a @click="createFilter($event, view, field)">
@@ -118,7 +136,11 @@
         <li
           v-if="
             getCanSortInView(field) &&
-            $hasPermission('database.table.view.create_sort', view)
+            $hasPermission(
+              'database.table.view.create_sort',
+              view,
+              database.group.id
+            )
           "
         >
           <a @click="createSort($event, view, field, 'ASC')">
@@ -146,7 +168,11 @@
         <li
           v-if="
             getCanSortInView(field) &&
-            $hasPermission('database.table.view.create_sort', view)
+            $hasPermission(
+              'database.table.view.create_sort',
+              view,
+              database.group.id
+            )
           "
         >
           <a @click="createSort($event, view, field, 'DESC')">
@@ -175,7 +201,11 @@
           v-if="
             !field.primary &&
             canFilter &&
-            $hasPermission('database.table.view.update_field_options', view)
+            $hasPermission(
+              'database.table.view.update_field_options',
+              view,
+              database.group.id
+            )
           "
         >
           <a @click="hide($event, view, field)">
@@ -187,12 +217,17 @@
       <GridViewFieldWidthHandle
         v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
+        :database="database"
         :grid="view"
         :field="field"
         :width="width"
         :read-only="
           readOnly ||
-          !$hasPermission('database.table.view.update_field_options', view)
+          !$hasPermission(
+            'database.table.view.update_field_options',
+            view,
+            database.group.id
+          )
         "
         :store-prefix="storePrefix"
       ></GridViewFieldWidthHandle>
@@ -220,6 +255,10 @@ export default {
   },
   mixins: [gridViewHelpers],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
@@ -261,16 +300,41 @@ export default {
     },
     showFieldContext() {
       return (
-        this.$hasPermission('database.table.create_field', this.table) ||
-        this.$hasPermission('database.table.view.create_filter', this.view) ||
-        this.$hasPermission('database.table.view.create_sort', this.view) ||
+        this.$hasPermission(
+          'database.table.create_field',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.create_filter',
+          this.view,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.create_sort',
+          this.view,
+          this.database.group.id
+        ) ||
         this.$hasPermission(
           'database.table.view.update_field_options',
-          this.view
+          this.view,
+          this.database.group.id
         ) ||
-        this.$hasPermission('database.table.field.duplicate', this.field) ||
-        this.$hasPermission('database.table.field.update', this.field) ||
-        this.$hasPermission('database.table.field.delete', this.field)
+        this.$hasPermission(
+          'database.table.field.duplicate',
+          this.field,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.field.update',
+          this.field,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.field.delete',
+          this.field,
+          this.database.group.id
+        )
       )
     },
   },
@@ -364,6 +428,11 @@ export default {
             field,
             values: { hidden: true },
             oldValues: { hidden: false },
+            readOnly: !this.$hasPermission(
+              'database.table.view.update_field_options',
+              this.view,
+              this.database.group.id
+            ),
           }
         )
       } catch (error) {

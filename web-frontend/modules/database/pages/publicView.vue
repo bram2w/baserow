@@ -50,6 +50,7 @@ export default {
             id: PUBLIC_PLACEHOLDER_ENTITY_ID,
             type: DatabaseApplicationType.getType(),
             tables: [{ id: PUBLIC_PLACEHOLDER_ENTITY_ID }],
+            group: { id: PUBLIC_PLACEHOLDER_ENTITY_ID },
           },
         ],
       })

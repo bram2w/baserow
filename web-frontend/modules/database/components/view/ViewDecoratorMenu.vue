@@ -1,5 +1,13 @@
 <template>
-  <div v-if="$hasPermission('database.table.view.list_decoration', view)">
+  <div
+    v-if="
+      $hasPermission(
+        'database.table.view.list_decoration',
+        view,
+        database.group.id
+      )
+    "
+  >
     <a
       ref="contextLink"
       class="header__filter-link"
@@ -23,7 +31,11 @@
       :fields="fields"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.view.create_decoration', view)
+        !$hasPermission(
+          'database.table.view.create_decoration',
+          view,
+          database.group.id
+        )
       "
       @changed="$emit('changed')"
     ></ViewDecoratorContext>

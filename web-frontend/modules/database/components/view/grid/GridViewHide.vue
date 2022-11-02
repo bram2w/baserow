@@ -17,6 +17,7 @@
     </a>
     <ViewFieldsContext
       ref="context"
+      :database="database"
       :view="view"
       :fields="fields"
       :field-options="fieldOptions"
@@ -36,6 +37,10 @@ export default {
   name: 'GridViewHide',
   components: { ViewFieldsContext },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     fields: {
       type: Array,
       required: true,
@@ -81,7 +86,13 @@ export default {
           {
             newFieldOptions,
             oldFieldOptions,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {
@@ -96,7 +107,13 @@ export default {
             field,
             values,
             oldValues,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {
@@ -109,7 +126,13 @@ export default {
           this.storePrefix + 'view/grid/updateFieldOptionsOrder',
           {
             order,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {

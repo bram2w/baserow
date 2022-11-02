@@ -50,7 +50,10 @@
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <a
-        v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+        v-if="
+          !readOnly &&
+          $hasPermission('database.table.create_row', table, database.group.id)
+        "
         ref="addOptionContextLink"
         class="kanban-view__add-stack"
         @click="$refs.addOptionContext.toggle($refs.addOptionContextLink)"
@@ -65,6 +68,7 @@
     </div>
     <RowCreateModal
       ref="rowCreateModal"
+      :database="database"
       :table="table"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
@@ -89,7 +93,8 @@
       :hidden-fields="hiddenFields"
       :rows="allRows"
       :read-only="
-        readOnly || !$hasPermission('database.table.update_row', table)
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
       "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"

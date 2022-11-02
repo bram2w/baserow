@@ -53,15 +53,7 @@ export default () => {
       })
 
       const viewId = getters.getViewId
-      const view = rootGetters['view/get'](viewId)
-
-      if (
-        !readOnly &&
-        this.app.$hasPermission(
-          'database.table.view.update_field_options',
-          view
-        )
-      ) {
+      if (!readOnly) {
         const updateValues = { field_options: {} }
         updateValues.field_options[field.id] = values
 
@@ -100,15 +92,7 @@ export default () => {
       dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
       const viewId = getters.getViewId
-      const view = rootGetters['view/get'](viewId)
-
-      if (
-        !readOnly &&
-        this.app.$hasPermission(
-          'database.table.view.update_field_options',
-          view
-        )
-      ) {
+      if (!readOnly) {
         const updateValues = { field_options: newFieldOptions }
 
         try {
