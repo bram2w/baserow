@@ -83,6 +83,7 @@
       <GridViewCell
         v-for="field in fieldsToRender"
         :key="'row-field-' + row.id.toString() + '-' + field.id.toString()"
+        :group-id="groupId"
         :field="field"
         :row="row"
         :state="state"
@@ -120,6 +121,10 @@ export default {
   components: { GridViewRowExpandButton, GridViewCell, RecursiveWrapper },
   mixins: [gridViewHelpers],
   props: {
+    groupId: {
+      type: Number,
+      required: true,
+    },
     row: {
       type: Object,
       required: true,

@@ -1,14 +1,18 @@
 <template>
-  <Context ref="context">
+  <Context ref="context" @shown="fetchRolesAndPermissions">
     <div class="context__menu-title">{{ group.name }} ({{ group.id }})</div>
-    <ul class="context__menu">
-      <li v-if="$hasPermission('group.update', group)">
+    <div
+      v-if="group._.additionalLoading"
+      class="loading margin-left-2 margin-top-2 margin-bottom-2 margin-bottom-2"
+    ></div>
+    <ul v-else class="context__menu">
+      <li v-if="$hasPermission('group.update', group, group.id)">
         <a @click="$emit('rename')">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('groupContext.renameGroup') }}
         </a>
       </li>
-      <li v-if="$hasPermission('invitation.read', group)">
+      <li v-if="$hasPermission('invitation.read', group, group.id)">
         <a
           @click="
             $router.push({
@@ -24,7 +28,7 @@
           {{ $t('groupContext.members') }}
         </a>
       </li>
-      <li v-if="$hasPermission('group.read_trash', group)">
+      <li v-if="$hasPermission('group.read_trash', group, group.id)">
         <a @click="showGroupTrashModal">
           <i class="context__menu-icon fas fa-fw fa-recycle"></i>
           {{ $t('groupContext.viewTrash') }}
@@ -36,7 +40,7 @@
           {{ $t('groupContext.leaveGroup') }}
         </a>
       </li>
-      <li v-if="$hasPermission('group.delete', group)">
+      <li v-if="$hasPermission('group.delete', group, group.id)">
         <a
           :class="{ 'context__menu-item--loading': loading }"
           @click="deleteGroup"
@@ -47,7 +51,7 @@
       </li>
     </ul>
     <TrashModal
-      v-if="$hasPermission('group.read_trash', group)"
+      v-if="$hasPermission('group.read_trash', group, group.id)"
       ref="groupTrashModal"
       :initial-group="group"
     >
@@ -78,6 +82,10 @@ export default {
     }
   },
   methods: {
+    async fetchRolesAndPermissions() {
+      await this.$store.dispatch('group/fetchPermissions', this.group)
+      await this.$store.dispatch('group/fetchRoles', this.group)
+    },
     showGroupTrashModal() {
       this.$refs.context.hide()
       this.$refs.groupTrashModal.show()

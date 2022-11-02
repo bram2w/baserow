@@ -1,6 +1,7 @@
 <template>
   <component
     :is="getComponent(field)"
+    :group-id="groupId"
     :field="field"
     :value="value"
     :read-only="true"

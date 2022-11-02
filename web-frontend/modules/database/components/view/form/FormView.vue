@@ -8,7 +8,11 @@
       :enabled-fields="enabledFields"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.view.update_field_options', view)
+        !$hasPermission(
+          'database.table.view.update_field_options',
+          view,
+          database.group.id
+        )
       "
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"
@@ -20,7 +24,8 @@
       :view="view"
       :fields="enabledFields"
       :read-only="
-        readOnly || !$hasPermission('database.table.view.update', view)
+        readOnly ||
+        !$hasPermission('database.table.view.update', view, database.group.id)
       "
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"

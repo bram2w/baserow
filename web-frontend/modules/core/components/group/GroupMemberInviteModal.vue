@@ -4,7 +4,11 @@
       {{ $t('membersSettings.membersInviteModal.title') }}
     </h2>
     <Error :error="error"></Error>
-    <GroupInviteForm ref="inviteForm" @submitted="inviteSubmitted">
+    <GroupInviteForm
+      ref="inviteForm"
+      :group="group"
+      @submitted="inviteSubmitted"
+    >
       <div class="col col-12 align-right">
         <button
           :class="{ 'button--loading': inviteLoading }"

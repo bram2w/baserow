@@ -20,6 +20,7 @@
       </a>
       <ViewFieldsContext
         ref="customizeContext"
+        :database="database"
         :view="view"
         :fields="fields"
         :field-options="fieldOptions"
@@ -102,7 +103,13 @@ export default {
           {
             newFieldOptions,
             oldFieldOptions,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {
@@ -117,7 +124,13 @@ export default {
             field,
             values,
             oldValues,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {
@@ -130,7 +143,13 @@ export default {
           this.storePrefix + 'view/gallery/updateFieldOptionsOrder',
           {
             order,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {

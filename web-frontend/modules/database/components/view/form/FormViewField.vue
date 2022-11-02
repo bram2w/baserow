@@ -61,6 +61,7 @@
           :is="getFieldComponent()"
           ref="field"
           :slug="view.slug"
+          :group-id="database.group.id"
           :field="field"
           :value="value"
           :read-only="readOnly"
@@ -127,6 +128,10 @@ export default {
   name: 'FormViewField',
   components: { FieldContext, ViewFieldConditionsForm },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

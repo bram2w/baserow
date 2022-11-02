@@ -52,6 +52,7 @@
           v-if="!readOnly && showStackContextMenu"
           ref="editContext"
           :option="option"
+          :database="database"
           :table="table"
           :fields="fields"
           :single-select-field="singleSelectField"
@@ -89,9 +90,6 @@
               class="kanban-view__stack-card"
               :class="{
                 'kanban-view__stack-card--dragging': slot.row._.dragging,
-                'kanban-view__stack-card--disabled':
-                  readOnly ||
-                  !$hasPermission('database.table.update_row', table),
               }"
               @mousedown="cardDown($event, slot.row)"
               @mousemove="cardMoveOver($event, slot.row)"
@@ -107,7 +105,14 @@
       </InfiniteScroll>
       <div class="kanban-view__stack-foot">
         <a
-          v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
           class="button button--ghost kanban-view__stack-new-button"
           :disabled="draggingRow !== null"
           @click="!readOnly && $emit('create-row', { option })"
@@ -155,6 +160,10 @@ export default {
       validator: (prop) => typeof prop === 'object' || prop === null,
       required: false,
       default: null,
+    },
+    database: {
+      type: Object,
+      required: true,
     },
     table: {
       type: Object,
@@ -204,10 +213,15 @@ export default {
     showStackContextMenu() {
       return (
         this.singleSelectField &&
-        (this.$hasPermission('database.table.create_row', this.table) ||
+        (this.$hasPermission(
+          'database.table.create_row',
+          this.table,
+          this.database.group.id
+        ) ||
           this.$hasPermission(
             'database.table.field.update',
-            this.singleSelectField
+            this.singleSelectField,
+            this.database.group.id
           ))
       )
     },
@@ -310,7 +324,11 @@ export default {
 
       if (
         !this.readOnly &&
-        this.$hasPermission('database.table.move_row', this.table)
+        this.$hasPermission(
+          'database.table.move_row',
+          this.table,
+          this.database.group.id
+        )
       ) {
         const rect = event.target.getBoundingClientRect()
         this.downCardClientX = event.clientX

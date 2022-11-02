@@ -21,7 +21,7 @@
           </li>
         </nuxt-link>
         <nuxt-link
-          v-if="$hasPermission('group.list_invitations', group)"
+          v-if="$hasPermission('group.list_invitations', group, group.id)"
           v-slot="{ href, navigate, isExactActive }"
           :to="{
             name: 'settings-invites',
@@ -46,19 +46,33 @@
     </div>
   </div>
 </template>
+store/roles.js
 
 <script>
 export default {
   name: 'Settings',
   layout: 'app',
-  asyncData({ store, params, error }) {
-    const group = store.getters['group/get'](parseInt(params.groupId, 10))
-
-    if (group === undefined) {
+  async asyncData({ store, params, error }) {
+    try {
+      const group = await store.dispatch(
+        'group/selectById',
+        parseInt(params.groupId, 10)
+      )
+      return { group }
+    } catch (e) {
       return error({ statusCode: 404, message: 'Group not found.' })
     }
-
-    return { group }
+  },
+  mounted() {
+    this.$bus.$on('group-deleted', this.groupDeleted)
+  },
+  beforeDestroy() {
+    this.$bus.$off('group-deleted', this.groupDeleted)
+  },
+  methods: {
+    groupDeleted() {
+      this.$nuxt.$router.push({ name: 'dashboard' })
+    },
   },
 }
 </script>

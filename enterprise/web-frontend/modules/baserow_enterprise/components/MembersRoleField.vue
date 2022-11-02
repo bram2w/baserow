@@ -1,7 +1,14 @@
 <template>
   <div>
     <span
-      v-if="userId === row.user_id || !$hasPermission('group_user.update', row)"
+      v-if="
+        userId === row.user_id ||
+        !$hasPermission(
+          'group_user.update',
+          row,
+          column.additionalProps.groupId
+        )
+      "
     >
       {{ roleName(roles, row) }}
     </span>
@@ -44,7 +51,15 @@ export default {
     },
   },
   computed: {
-    ...mapGetters({ userId: 'auth/getUserId', roles: 'roles/getAllRoles' }),
+    group() {
+      return this.$store.getters['group/get'](
+        this.column.additionalProps.groupId
+      )
+    },
+    roles() {
+      return this.group ? this.group._.roles : []
+    },
+    ...mapGetters({ userId: 'auth/getUserId' }),
   },
   methods: {
     roleName(roles, row) {

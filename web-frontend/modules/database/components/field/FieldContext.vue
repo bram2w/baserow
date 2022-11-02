@@ -1,7 +1,15 @@
 <template>
   <Context ref="context">
     <ul class="context__menu">
-      <li v-if="$hasPermission('database.table.field.update', field)">
+      <li
+        v-if="
+          $hasPermission(
+            'database.table.field.update',
+            field,
+            database.group.id
+          )
+        "
+      >
         <a
           ref="updateFieldContextLink"
           class="grid-view__description-options"
@@ -28,7 +36,12 @@
       <slot></slot>
       <li
         v-if="
-          !field.primary && $hasPermission('database.table.field.delete', field)
+          !field.primary &&
+          $hasPermission(
+            'database.table.field.delete',
+            field,
+            database.group.id
+          )
         "
       >
         <a
@@ -55,6 +68,10 @@ export default {
   },
   mixins: [context],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

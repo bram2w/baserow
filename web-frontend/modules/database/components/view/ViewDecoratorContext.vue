@@ -75,7 +75,13 @@
         </div>
       </div>
       <div
-        v-if="$hasPermission('database.table.view.create_decoration', view)"
+        v-if="
+          $hasPermission(
+            'database.table.view.create_decoration',
+            view,
+            database.group.id
+          )
+        "
         class="decorator-context__footer"
       >
         <a

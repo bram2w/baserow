@@ -2,6 +2,7 @@
   <ul v-if="!tableLoading" class="header__filter header__filter--full-width">
     <li class="header__filter-item">
       <GridViewHide
+        :database="database"
         :view="view"
         :fields="fieldsAllowedToBeHidden"
         :read-only="readOnly"
@@ -29,6 +30,10 @@ export default {
   name: 'GridViewHeader',
   components: { GridViewHide, ViewSearch },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: true,

@@ -18,7 +18,7 @@
       </template>
       <template #header-right-side>
         <div
-          v-if="$hasPermission('group.create_invitation', group)"
+          v-if="$hasPermission('group.create_invitation', group, group.id)"
           class="button margin-left-2 button--large"
           @click="$refs.inviteModal.show()"
         >
@@ -91,7 +91,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ userId: 'auth/getUserId', roles: 'roles/getAllRoles' }),
+    ...mapGetters({ userId: 'auth/getUserId' }),
+    roles() {
+      return this.group._.roles
+    },
     service() {
       const service = GroupService(this.$client)
       const options = {
@@ -131,6 +134,7 @@ export default {
           {
             roles: this.roles,
             userId: this.userId,
+            groupId: this.group.id,
           }
         ),
         new CrudTableColumn(null, null, MoreField, false, false, true),

@@ -1,9 +1,16 @@
 <template>
-  <Context>
-    <ul class="context__menu">
+  <Context @shown="fetchRolesAndPermissions">
+    <div
+      v-if="group._.additionalLoading"
+      class="loading margin-left-2 margin-top-2 margin-right-2 margin-bottom-2"
+    ></div>
+    <ul v-else class="context__menu">
       <li v-for="(applicationType, type) in applications" :key="type">
         <a
           :ref="'createApplicationModalToggle' + type"
+          :class="{
+            disabled: !canCreateCreateApplication,
+          }"
           @click="toggleCreateApplicationModal(type)"
         >
           <i
@@ -20,7 +27,12 @@
         ></CreateApplicationModal>
       </li>
       <li>
-        <a @click=";[$refs.templateModal.show(), hide()]">
+        <a
+          :class="{
+            disabled: !canCreateCreateApplication,
+          }"
+          @click="openTemplateModal()"
+        >
           <i class="context__menu-icon fas fa-fw fa-file-alt"></i>
           {{ $t('createApplicationContext.fromTemplate') }}
         </a>
@@ -52,9 +64,32 @@ export default {
     applications() {
       return this.$registry.getAll('application')
     },
+    canCreateCreateApplication() {
+      return this.$hasPermission(
+        'group.create_application',
+        this.group,
+        this.group.id
+      )
+    },
   },
   methods: {
+    async fetchRolesAndPermissions() {
+      await this.$store.dispatch('group/fetchPermissions', this.group)
+      await this.$store.dispatch('group/fetchRoles', this.group)
+    },
+    openTemplateModal() {
+      if (!this.canCreateCreateApplication) {
+        return
+      }
+
+      this.$refs.templateModal.show()
+      this.hide()
+    },
     toggleCreateApplicationModal(type) {
+      if (!this.canCreateCreateApplication) {
+        return
+      }
+
       const target = this.$refs['createApplicationModalToggle' + type][0]
       this.$refs['createApplicationModal' + type][0].toggle(target)
       this.hide()

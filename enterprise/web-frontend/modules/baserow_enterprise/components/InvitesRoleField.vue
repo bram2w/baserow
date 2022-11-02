@@ -38,7 +38,15 @@ export default {
     },
   },
   computed: {
-    ...mapGetters({ userId: 'auth/getUserId', roles: 'roles/getAllRoles' }),
+    ...mapGetters({ userId: 'auth/getUserId' }),
+    group() {
+      return this.$store.getters['group/get'](
+        this.column.additionalProps.groupId
+      )
+    },
+    roles() {
+      return this.group ? this.group._.roles : []
+    },
     rowSanitised() {
       return {
         ...this.row,

@@ -139,7 +139,6 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
          
         <ul
           class="header__filter header__filter--full-width"
-          database="[object Object]"
           table="[object Object]"
         >
           <li

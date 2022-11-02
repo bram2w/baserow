@@ -12,6 +12,7 @@
           :is="getFieldComponent()"
           :key="field.field.id"
           ref="field"
+          :group-id="0"
           :slug="slug"
           :field="field.field"
           :value="value"

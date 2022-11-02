@@ -91,6 +91,7 @@
             update: order,
             handle: '[data-field-handle]',
           }"
+          :database="database"
           :table="table"
           :view="view"
           :field="field"

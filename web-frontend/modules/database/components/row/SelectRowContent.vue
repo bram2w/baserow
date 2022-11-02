@@ -41,6 +41,7 @@
     <RowCreateModal
       v-if="table"
       ref="rowCreateModal"
+      :database="database"
       :table="table"
       :sortable="false"
       :visible-fields="allFields"
@@ -105,7 +106,7 @@ export default {
     allFields() {
       return [].concat(this.primary || [], this.fields || [])
     },
-    table() {
+    databaseAndTable() {
       const databaseType = DatabaseApplicationType.getType()
       for (const application of this.$store.getters['application/getAll']) {
         if (application.type !== databaseType) {
@@ -117,11 +118,17 @@ export default {
         )
 
         if (foundTable) {
-          return foundTable
+          return [application, foundTable]
         }
       }
 
-      return null
+      return [null, null]
+    },
+    database() {
+      return this.databaseAndTable[0]
+    },
+    table() {
+      return this.databaseAndTable[1]
     },
     selectedRows() {
       return this.value.map(({ id }) => id)

@@ -8,6 +8,7 @@
     <GridViewRow
       v-for="(row, index) in rows"
       :key="`row-${row.id}`"
+      :group-id="groupId"
       :row="row"
       :fields="fields"
       :all-fields="allFields"
@@ -63,6 +64,10 @@ export default {
     },
     readOnly: {
       type: Boolean,
+      required: true,
+    },
+    groupId: {
+      type: Number,
       required: true,
     },
   },

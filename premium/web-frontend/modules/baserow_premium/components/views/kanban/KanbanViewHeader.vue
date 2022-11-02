@@ -31,7 +31,12 @@
           :view="view"
           :fields="fields"
           :read-only="
-            readOnly || !$hasPermission('database.table.view.update', view)
+            readOnly ||
+            !$hasPermission(
+              'database.table.view.update',
+              view,
+              database.group.id
+            )
           "
           :store-prefix="storePrefix"
           @refresh="$emit('refresh', $event)"
@@ -58,6 +63,7 @@
       </a>
       <ViewFieldsContext
         ref="customizeContext"
+        :database="database"
         :view="view"
         :fields="fields"
         :field-options="fieldOptions"
@@ -137,7 +143,13 @@ export default {
           {
             newFieldOptions,
             oldFieldOptions,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {
@@ -152,7 +164,13 @@ export default {
             field,
             values,
             oldValues,
-            readOnly: this.readOnly,
+            readOnly:
+              this.readOnly ||
+              !this.$hasPermission(
+                'database.table.view.update_field_options',
+                this.view,
+                this.database.group.id
+              ),
           }
         )
       } catch (error) {

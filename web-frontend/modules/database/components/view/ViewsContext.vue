@@ -24,7 +24,12 @@
         :key="view.id"
         v-sortable="{
           enabled:
-            !readOnly && $hasPermission('database.table.order_views', table),
+            !readOnly &&
+            $hasPermission(
+              'database.table.order_views',
+              table,
+              database.group.id
+            ),
           id: view.id,
           update: order,
           marginTop: -1.5,
@@ -40,7 +45,10 @@
       {{ $t('viewsContext.noViews') }}
     </div>
     <div
-      v-if="!readOnly && $hasPermission('database.table.create_view', table)"
+      v-if="
+        !readOnly &&
+        $hasPermission('database.table.create_view', table, database.group.id)
+      "
       class="select__footer"
     >
       <div class="select__footer-create">

@@ -60,7 +60,6 @@ import EditInviteContext from '@baserow/modules/core/components/settings/members
 import MemberRoleField from '@baserow/modules/core/components/settings/members/MemberRoleField'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 import { clone } from '@baserow/modules/core/utils/object'
-import { mapGetters } from 'vuex'
 
 export default {
   name: 'MembersInvitesTable',
@@ -84,7 +83,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ roles: 'roles/getAllRoles' }),
+    roles() {
+      return this.group._.roles
+    },
     service() {
       const service = GroupService(this.$client)
 
@@ -128,6 +129,7 @@ export default {
           {
             roles: this.roles,
             userId: 0,
+            groupId: this.group.id,
           }
         ),
         new CrudTableColumn(null, null, MoreField, false, false, true),

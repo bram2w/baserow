@@ -244,12 +244,7 @@ export const actions = {
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
     const kanbanId = getters.getLastKanbanId
-    const view = rootGetters['view/get'](kanbanId)
-
-    if (
-      !readOnly &&
-      this.app.$hasPermission('database.table.view.update_field_options', view)
-    ) {
+    if (!readOnly) {
       const updateValues = { field_options: newFieldOptions }
 
       try {
@@ -322,13 +317,7 @@ export const actions = {
       values,
     })
 
-    const kanbanId = getters.getLastKanbanId
-    const view = rootGetters['view/get'](kanbanId)
-
-    if (
-      !readOnly &&
-      this.app.$hasPermission('database.table.view.update_field_options', view)
-    ) {
+    if (!readOnly) {
       const kanbanId = getters.getLastKanbanId
       const oldValues = clone(getters.getAllFieldOptions[field.id])
       const updateValues = { field_options: {} }

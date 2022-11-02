@@ -26,7 +26,13 @@
             <i class="row-comments__empty-icon fas fa-comments"></i>
             <div class="row-comments__empty-text">
               <template
-                v-if="!$hasPermission('database.table.create_comment', table)"
+                v-if="
+                  !$hasPermission(
+                    'database.table.create_comment',
+                    table,
+                    database.group.id
+                  )
+                "
                 >{{ $t('rowCommentSidebar.readOnlyNoComment') }}</template
               >
               <template v-else>
@@ -56,7 +62,13 @@
             </InfiniteScroll>
           </div>
           <div
-            v-if="$hasPermission('database.table.create_comment', table)"
+            v-if="
+              $hasPermission(
+                'database.table.create_comment',
+                table,
+                database.group.id
+              )
+            "
             class="row-comments__foot"
           >
             <AutoExpandableTextareaInput
@@ -143,7 +155,11 @@ export default {
       const comment = this.comment.trim()
       if (
         !comment ||
-        !this.$hasPermission('database.table.create_comment', this.table)
+        !this.$hasPermission(
+          'database.table.create_comment',
+          this.table,
+          this.database.group.id
+        )
       ) {
         return
       }

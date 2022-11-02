@@ -1,7 +1,10 @@
 <template>
   <div class="gallery-view">
     <a
-      v-if="!readOnly && $hasPermission('database.table.create_view', table)"
+      v-if="
+        !readOnly &&
+        $hasPermission('database.table.create_view', table, database.group.id)
+      "
       class="gallery-view__add"
       @click="$refs.rowCreateModal.show()"
     >
@@ -44,12 +47,18 @@
           }"
           :class="{
             'gallery-view__card--dragging': slot.item && slot.item._.dragging,
-            'gallery-view__card--disabled':
-              readOnly || !$hasPermission('database.table.update_row', table),
           }"
           @mousedown="
-            $hasPermission('database.table.move_row', table) &&
-              rowDown($event, slot.item)
+            rowDown(
+              $event,
+              slot.item,
+              readOnly ||
+                !$hasPermission(
+                  'database.table.move_row',
+                  table,
+                  database.group.id
+                )
+            )
           "
           @mousemove="rowMoveOver($event, slot.item)"
           @mouseenter="rowMoveOver($event, slot.item)"
@@ -57,8 +66,12 @@
       </div>
     </div>
     <RowCreateModal
-      v-if="!readOnly && $hasPermission('database.table.create_row', table)"
+      v-if="
+        !readOnly &&
+        $hasPermission('database.table.create_row', table, database.group.id)
+      "
       ref="rowCreateModal"
+      :database="database"
       :table="table"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
@@ -82,7 +95,10 @@
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
-      :read-only="!$hasPermission('database.table.update_row', table)"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
+      "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"
       @toggle-hidden-fields-visibility="
