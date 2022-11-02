@@ -11,6 +11,16 @@ For example:
 
 ### New Features
 
+### Bug Fixes
+
+### Refactors
+
+### Breaking Changes
+
+## Released (2022-11-02 1.13.0)
+
+### New Features
+
 * Background pending tasks like duplication and template_install are restored in a new frontend session if unfinished. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 * Added Zapier integration code. [#816](https://gitlab.com/bramw/baserow/-/issues/816)
 * Made it possible to filter on the `created_on` and `updated_on` columns, even though
@@ -27,15 +37,15 @@ For example:
 
 ### Bug Fixes
 
-### Refactors
-* Replace members modal with a new settings page. [#1229](https://gitlab.com/bramw/baserow/-/issues/1229)
-* Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
-* Duplicating a table with a removed single select option value no longer results in an error. [#1263](https://gitlab.com/bramw/baserow/-/issues/1263)
-* Selecting text in models, contexts, form fields and grid view cells no longer unselects when releasing the mouse outside. [#1243](https://gitlab.com/bramw/baserow/-/issues/1243)
 * Fixed bug where it was not possible to select text in a selected and editing cell in Chrome. [#1234](https://gitlab.com/bramw/baserow/-/issues/1234)
 * Fixed bug where the row metadata was not updated when receiving a realtime event.
+* Duplicating a table with a removed single select option value no longer results in an error. [#1263](https://gitlab.com/bramw/baserow/-/issues/1263)
+* Selecting text in models, contexts, form fields and grid view cells no longer unselects when releasing the mouse outside. [#1243](https://gitlab.com/bramw/baserow/-/issues/1243)
+* Fixed slug rotation for GalleryView. [#1232](https://gitlab.com/bramw/baserow/-/issues/1232)
 
 ### Refactors
+
+* Replace members modal with a new settings page. [#1229](https://gitlab.com/bramw/baserow/-/issues/1229)
 * Frontend now install templates as an async job in background instead of using a blocking call. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
 * Changed the add label of several buttons.
 
@@ -43,7 +53,7 @@ For example:
 
 * Changed error codes returned by the premium license API endpoints to replacing `PREMIUM_LICENSE` with `LICENSE`. [#1230](https://gitlab.com/bramw/baserow/-/issues/1230)
 * List jobs endpoint "list_job" returns now an object with jobs instead of a list of jobs. [#885](https://gitlab.com/bramw/baserow/-/issues/885)
-* The "token_auth" endpoint response and "user_data_updated" messages now have a "active_licences" key instead of "premium" indicating what licenses the user has active. [#1230](https://gitlab.com/bramw/baserow/-/issues/1230)
+* The "token_auth" endpoint response and "user_data_updated" messages now have an "active_licenses" key instead of "premium" indicating what licenses the user has active. [#1230](https://gitlab.com/bramw/baserow/-/issues/1230)
 * Changed the JWT library to fix a problem causing the refresh-tokens not working properly. [#787]https://gitlab.com/bramw/baserow/-/issues/787)
 
 ## Released (2022-09-20 1.12.1)
