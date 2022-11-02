@@ -2105,6 +2105,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 120826,
                             "field_options": [
                                 {
@@ -3297,6 +3298,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 118888,
                             "field_options": [
                                 {

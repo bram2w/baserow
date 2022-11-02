@@ -378,6 +378,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 535066,
                             "field_options": [
                                 {
@@ -458,6 +459,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 535067,
                             "field_options": [
                                 {
@@ -538,6 +540,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 535084,
                             "field_options": [
                                 {
@@ -618,6 +621,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 535086,
                             "field_options": [
                                 {
@@ -8043,6 +8047,7 @@
                             ],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 535035,
                             "card_cover_image_field_id": 535025,
                             "field_options": [
@@ -9974,6 +9979,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 535043,
                             "field_options": [
                                 {

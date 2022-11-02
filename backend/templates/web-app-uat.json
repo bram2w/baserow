@@ -207,14 +207,14 @@
                             "name": "Test result (%)",
                             "order": 8,
                             "primary": false,
-                            "error": null,
+                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "if( \n  count(field(\"Related scripts\")) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "text"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 497968,
@@ -2169,6 +2169,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 497949,
                             "field_options": [
                                 {
@@ -2303,6 +2304,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 497965,
                             "field_options": [
                                 {
@@ -2437,6 +2439,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 497966,
                             "field_options": [
                                 {
@@ -7593,6 +7596,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 497997,
                             "field_options": [
                                 {
@@ -7885,14 +7889,14 @@
                             "name": "Tests accepted (%)",
                             "order": 7,
                             "primary": false,
-                            "error": null,
+                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "text"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 497975,
@@ -7917,14 +7921,14 @@
                             "name": "Percentage for filter",
                             "order": 10,
                             "primary": false,
-                            "error": null,
+                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 5,
+                            "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  0, \n  multiply( \n    divide( \n      count( \n        filter( \n          field(\"Related tests\"), \n          lookup(\"Related tests\", \"Is accepted\") \n        ) \n      ), \n      tonumber( \n        join( \n          totext( \n            field(\"Tests count\") \n          ), \n          \"\" \n        ) \n      ) \n    ), \n    100 \n  ) \n)",
-                            "formula_type": "number"
+                            "formula_type": "invalid"
                         }
                     ],
                     "views": [
@@ -7953,12 +7957,6 @@
                                             {
                                                 "color": "dark-red",
                                                 "filters": [
-                                                    {
-                                                        "id": "ed41e898-3687-45fc-bb00-83e7197b48fa",
-                                                        "type": "lower_than",
-                                                        "field": 499629,
-                                                        "value": "70"
-                                                    },
                                                     {
                                                         "id": "190abfbc-d7c0-4ff2-9d16-645ceb130461",
                                                         "type": "higher_than",
@@ -8084,14 +8082,7 @@
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
-                            "filters": [
-                                {
-                                    "id": 42939,
-                                    "field_id": 499629,
-                                    "type": "lower_than",
-                                    "value": "100"
-                                }
-                            ],
+                            "filters": [],
                             "sortings": [
                                 {
                                     "id": 26503,
@@ -8211,14 +8202,7 @@
                             "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
-                            "filters": [
-                                {
-                                    "id": 42938,
-                                    "field_id": 499629,
-                                    "type": "higher_than",
-                                    "value": "99.99"
-                                }
-                            ],
+                            "filters": [],
                             "sortings": [
                                 {
                                     "id": 26502,
@@ -8731,14 +8715,14 @@
                             "name": "Tests accepted (%)",
                             "order": 11,
                             "primary": false,
-                            "error": null,
+                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "text"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 496386,
@@ -8793,14 +8777,14 @@
                             "name": "Percentage for filter",
                             "order": 19,
                             "primary": false,
-                            "error": null,
+                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 10,
+                            "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  0, \n  multiply( \n    divide( \n      add( \n        count( \n          filter( \n            field(\"Related tests as manager\"), \n            lookup(\"Related tests as manager\", \"Is accepted\") \n          ) \n        ), \n        count( \n          filter( \n            field(\"Related tests as tester\"), \n            lookup(\"Related tests as tester\", \"Is accepted\") \n          ) \n        ) \n      ), \n      tonumber( \n        join( \n          totext( \n            field(\"Tests count\") \n          ), \n          \"\" \n        ) \n      ) \n    ), \n    100 \n  ) \n)",
-                            "formula_type": "number"
+                            "formula_type": "invalid"
                         }
                     ],
                     "views": [
@@ -8834,12 +8818,6 @@
                                                         "type": "higher_than",
                                                         "field": 496383,
                                                         "value": "0"
-                                                    },
-                                                    {
-                                                        "id": "fe7d094a-7c15-4a8e-85f6-acb8c4739386",
-                                                        "type": "lower_than",
-                                                        "field": 498658,
-                                                        "value": "50"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -8987,14 +8965,7 @@
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
-                            "filters": [
-                                {
-                                    "id": 42956,
-                                    "field_id": 498658,
-                                    "type": "higher_than",
-                                    "value": "99.99"
-                                }
-                            ],
+                            "filters": [],
                             "sortings": [
                                 {
                                     "id": 26528,
@@ -9142,12 +9113,6 @@
                             "filter_type": "AND",
                             "filters_disabled": false,
                             "filters": [
-                                {
-                                    "id": 42957,
-                                    "field_id": 498658,
-                                    "type": "lower_than",
-                                    "value": "100"
-                                },
                                 {
                                     "id": 42960,
                                     "field_id": 496383,

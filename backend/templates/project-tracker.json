@@ -664,6 +664,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 133727,
                             "field_options": [
                                 {

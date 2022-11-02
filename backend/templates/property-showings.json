@@ -2018,6 +2018,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 458896,
                             "card_cover_image_field_id": 483529,
                             "field_options": [
@@ -2111,6 +2112,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 477276,
                             "card_cover_image_field_id": 483529,
                             "field_options": [
@@ -3102,6 +3104,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 458926,
                             "card_cover_image_field_id": 458962,
                             "field_options": [
@@ -3871,6 +3874,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 458936,
                             "field_options": [
                                 {
