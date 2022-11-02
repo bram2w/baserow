@@ -267,7 +267,8 @@
         "exports": "Exportación JSON y XML",
         "rowColoring": "Coloración de las filas",
         "admin": "Funciones de administración",
-        "surveyForm": "Formulario de encuesta"
+        "surveyForm": "Formulario de encuesta",
+        "publicLogoRemoval": "Eliminación del logo público"
     },
     "formViewModeType": {
         "surveyDescription": "Un campo es visible al mismo tiempo.",

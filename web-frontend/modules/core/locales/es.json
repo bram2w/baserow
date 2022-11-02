@@ -11,7 +11,10 @@
         "viewTrash": "ver papelera",
         "deleteApplication": "Borrar {type}",
         "duplicateApplication": "Duplicar {tipo}",
-        "snapshots": "Imágenes"
+        "snapshots": "Imágenes",
+        "rename": "Renombrar",
+        "duplicate": "Duplicar",
+        "delete": "Borrar"
     },
     "sidebar": {
         "createGroup": "Crea un grupo",
@@ -21,7 +24,8 @@
         "admin": "Admin",
         "dashboard": "Tablero",
         "trash": "Papelera",
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "members": "Miembros"
     },
     "accountForm": {
         "nameLabel": "Tu nombre",
@@ -396,5 +400,13 @@
         "daysAgo": "Hace 0 días | Hace 1 día | Hace {n} días",
         "monthsAgo": "Hace 0 meses | Hace 1 mes | Hace {n} meses",
         "yearsAgo": "Hace 0 años | Hace 1 año | Hace {n} años"
+    },
+    "InstallTemplateJobType": {
+        "installing": "Instalando",
+        "installedTitle": "Plantilla instalada"
+    },
+    "duplicateApplicationJobType": {
+        "duplicatedTitle": "Aplicación duplicada",
+        "duplicating": "Duplicando"
     }
 }

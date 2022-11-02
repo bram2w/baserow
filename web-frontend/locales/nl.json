@@ -28,7 +28,8 @@
         "deactivate": "Deactiveren",
         "paste": "Plakken",
         "duplicate": "Dupliceer",
-        "remove": "Verwijder"
+        "remove": "Verwijder",
+        "login": "Inloggen"
     },
     "adminType": {
         "settings": "Instellingen"

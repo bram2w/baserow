@@ -24,7 +24,8 @@
         "admin": "Administration",
         "dashboard": "Accueil",
         "trash": "Corbeille",
-        "settings": "Mon compte"
+        "settings": "Mon compte",
+        "members": "Membres"
     },
     "accountForm": {
         "nameLabel": "Votre nom",
@@ -215,7 +216,11 @@
     },
     "login": {
         "title": "Identification",
-        "forgotPassword": "Mot de passe oublié"
+        "forgotPassword": "Mot de passe oublié",
+        "signUp": "S'inscrire",
+        "emailPlaceholder": "Entrez votre adresse e-mail..",
+        "passwordPlaceholder": "Entrez votre mot de passe..",
+        "signUpText": "Vous n'avez pas de compte ?"
     },
     "resetPassword": {
         "title": "Nouveau mot de passe",
@@ -236,7 +241,13 @@
         "disabled": "Création de compte desactivée",
         "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée.",
         "requireFirstUser": "Bienvenue sur Baserow !",
-        "requireFirstUserMessage": "Veuillez remplir le formulaire ci-dessous afin de créer le compte administrateur."
+        "requireFirstUserMessage": "Veuillez remplir le formulaire ci-dessous afin de créer le compte administrateur.",
+        "login": "Login",
+        "emailPlaceholder": "Entrez votre adresse e-mail..",
+        "namePlaceholder": "Entrez votre nom..",
+        "passwordPlaceholder": "Entrez votre mot de passe..",
+        "passwordRepeatPlaceholder": "Confirmez votre mot de passe..",
+        "loginText": "Vous avez déjà un compte?"
     },
     "forgotPassword": {
         "title": "Mot de passe oublié",
@@ -244,7 +255,8 @@
         "submit": "Envoyer le lien",
         "confirmation": "Si un compte correspond à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie d'ici quelques minutes.",
         "disabled": "Mot de passe oublié desactivé",
-        "disabledMessage": "Vous ne pouvez pas réinitialiser votre mot de passe car la réinitialisation de mot de passe a été désactivée."
+        "disabledMessage": "Vous ne pouvez pas réinitialiser votre mot de passe car la réinitialisation de mot de passe a été désactivée.",
+        "loginText": "Vous avez déjà un compte et un mot de passe ?"
     },
     "settings": {
         "settingsTitle": "Paramètres",
@@ -403,5 +415,51 @@
     "duplicateApplicationJobType": {
         "duplicating": "Duplication",
         "duplicatedTitle": "Application dupliquée"
+    },
+    "InstallTemplateJobType": {
+        "installing": "Installation",
+        "installedTitle": "Modèle installé"
+    },
+    "membersSettings": {
+        "invitesTable": {
+            "columns": {
+                "role": "Rôle",
+                "email": "Courriel",
+                "message": "Message"
+            },
+            "actions": {
+                "copyEmail": "Copier l’e-mail",
+                "remove": "Annuler l'invitation"
+            },
+            "title": "{invitesAmount} Invitations en attente dans {nom du groupe}"
+        },
+        "membersInviteModal": {
+            "title": "Inviter des membres du groupe",
+            "submit": "Envoyer une invitation",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "L’utilisateur est déjà dans le groupe.",
+                    "text": "Il n’est pas possible d’envoyer une invitation lorsque l’utilisateur est déjà membre du groupe."
+                }
+            }
+        },
+        "membersTable": {
+            "actions": {
+                "remove": "Supprimer du groupe",
+                "copyEmail": "Copier l’e-mail"
+            },
+            "columns": {
+                "name": "Nom",
+                "role": "Rôle",
+                "email": "Courriel"
+            },
+            "title": "{userAmount} Membres dans {nom du groupe}",
+            "inviteMember": "Inviter un membre"
+        },
+        "membersTabTitle": "Membres",
+        "invitesTabTitle": "Invite"
+    },
+    "crudTableSearch": {
+        "search": "Recherche"
     }
 }

@@ -682,7 +682,12 @@
             "notification": {
                 "notFound": {
                     "previous": {
-                        "message": "Er is geen vorige rij"
+                        "message": "Er is geen vorige rij",
+                        "title": "Geen rijen meer"
+                    },
+                    "next": {
+                        "title": "Geen rijen meer",
+                        "message": "Er is geen volgende rij"
                     }
                 },
                 "error": {

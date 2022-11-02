@@ -162,7 +162,8 @@
         "order": "Orden de campos en la tabla. 0 para el primer campo.",
         "primary": "Indica si el campo es un campo principal. Si es `verdadero`, el campo no se puede eliminar y el valor debe representar la fila completa.",
         "type": "Tipo definido para este campo.",
-        "extraProps": "Algunas propiedades adicionales no se describen aquí porque son específicas del tipo."
+        "extraProps": "Algunas propiedades adicionales no se describen aquí porque son específicas del tipo.",
+        "readOnly": "Indica si el campo es de sólo lectura. Si es cierto, no es posible actualizar el valor de la celda."
     },
     "apiDocsTableDeleteRow": {
         "description": "Elimina una fila {name} existente.",
@@ -696,5 +697,17 @@
     },
     "rowEditFieldMultipleCollaborators": {
         "addCollaborator": "Agregar un colaborador"
+    },
+    "duplicateTableJobType": {
+        "duplicatedTitle": "Tabla duplicada",
+        "duplicating": "Duplicando"
+    },
+    "apiDocsUploadFile": {
+        "description": "Sube un archivo a Baserow cargando el contenido del archivo directamente. Se espera una multiparte de `archivo` que contenga el contenido del archivo. La respuesta se puede utilizar para [subir un archivo a una fila]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "file": "La multiparte `archivo` que contiene el contenido del archivo."
+    },
+    "apiDocsUploadFileViaURL": {
+        "url": "La URL que desea que Baserow descargue y cargue en tu nombre.",
+        "description": "Sube un archivo a Baserow descargándolo de la URL proporcionada. La respuesta puede utilizarse para [cargar un archivo en una fila]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row)."
     }
 }
