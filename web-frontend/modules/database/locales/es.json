@@ -214,7 +214,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Necesita al menos otra tabla en la misma base de datos para vincular.",
-        "selectTableLabel": "Seleccione una tabla para vincular"
+        "selectTableLabel": "Seleccione una tabla para vincular",
+        "hasRelatedFieldLabel": "Crear campo relacionado en la tabla vinculada"
     },
     "fieldSelectOptions": {
         "add": "Añadir una opción"
@@ -346,7 +347,10 @@
         "importButton": "Importar",
         "fieldMappingTitle": "Cartografía de campo",
         "fieldMappingDescription": "Hemos asignado automáticamente las columnas de los campos Baserow en su tabla. Puedes cambiarlas a continuación. Cualquier celda incompatible permanecerá vacía después de la importación.",
-        "selectImportMessage": "Selecciona los datos que quieras importar."
+        "selectImportMessage": "Selecciona los datos que quieras importar.",
+        "filePreview": "Vista previa del contenido del archivo",
+        "importPreview": "Vista previa de la importación",
+        "changeImporterType": "Cambiar el tipo de importación"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Haga clic para editar la fórmula",
@@ -638,7 +642,8 @@
     "formViewField": {
         "required": "requerido",
         "showWhenMatchingConditions": "mostrar cuando se cumplen las condiciones",
-        "addCondition": "Añadir condición"
+        "addCondition": "Añadir condición",
+        "descriptionPlaceholder": "Descripción"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicar campo",
@@ -690,10 +695,30 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Agregar una imagen de portada",
         "addLogo": "Añadir un logo",
-        "noFields": "Este formulario no tiene ningún campo. Haz clic en un campo de la barra lateral izquierda para añadir uno."
+        "noFields": "Este formulario no tiene ningún campo. Haz clic en un campo de la barra lateral izquierda para añadir uno.",
+        "titlePlaceholder": "Título",
+        "descriptionPlaceholder": "Descripción"
     },
     "table": {
-        "chooseView": "Elige la vista"
+        "chooseView": "Elige la vista",
+        "adjacentRow": {
+            "notification": {
+                "error": {
+                    "title": "Se ha producido un error",
+                    "message": "Se ha producido un error al recuperar la fila adyacente"
+                },
+                "notFound": {
+                    "next": {
+                        "title": "No hay más filas",
+                        "message": "No hay ninguna fila siguiente"
+                    },
+                    "previous": {
+                        "title": "No hay más filas",
+                        "message": "No hay fila anterior"
+                    }
+                }
+            }
+        }
     },
     "rowEditFieldMultipleCollaborators": {
         "addCollaborator": "Agregar un colaborador"
