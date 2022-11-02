@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
 
+from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
 from baserow.core.registries import object_scope_type_registry
 from baserow_enterprise.models import RoleAssignment
@@ -123,8 +124,10 @@ class RoleAssignmentHandler:
         # Group level permissions are not stored as RoleAssignment records
         if scope == group:
             group_user = GroupUser.objects.get(group=group, user=subject)
-            group_user.permissions = "MEMBER" if role.uid == "BUILDER" else role.uid
-            group_user.save()
+            new_permissions = "MEMBER" if role.uid == "BUILDER" else role.uid
+            CoreHandler().force_update_group_user(
+                None, group_user, permissions=new_permissions
+            )
 
             # We need to fake a RoleAssignment instance here to keep the same
             # return interface
