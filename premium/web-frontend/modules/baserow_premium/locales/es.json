@@ -222,7 +222,10 @@
         "rowUsage": "Uso de fila",
         "storeUsage": "Uso de almacenamiento",
         "disconnectLicense": "Desconectar licencia",
-        "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada."
+        "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada.",
+        "moreSeatsNeededTitle": "Se necesitan más asientos",
+        "contactSalesMoreSeats": "Contacta el departamento de ventas para obtener más asientos",
+        "automaticSeatsProgressBarStatus": "{asientos_ocupados} / {asientos} asientos pagados y {recuento_de_usuarios_libres} asientos libres en uso"
     },
     "conditionalColorValueProviderForm": {
         "addCondition": "Añadir condición",
@@ -279,5 +282,11 @@
         "orderFields": "Campos de pedido",
         "more": "Más información",
         "deactivated": "El formulario de la encuesta está disponible en la versión premium."
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Esconder el logo de Baserow en la vista compartida",
+            "premiumModalName": "eliminación del logo público"
+        }
     }
 }
