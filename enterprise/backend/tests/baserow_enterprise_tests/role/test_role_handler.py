@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import override_settings
 
 import pytest
@@ -123,12 +125,13 @@ def test_remove_role(data_fixture):
     assert role_assignment_table is None
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @override_settings(
     FEATURE_FLAGS=["roles"],
     PERMISSION_MANAGERS=["core", "staff", "member", "basic", "role"],
 )
-def test_assign_role(data_fixture):
+@patch("baserow.ws.signals.broadcast_to_group")
+def test_assign_role(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, group=group)
@@ -136,6 +139,17 @@ def test_assign_role(data_fixture):
     role = Role.objects.get(uid="ADMIN")
 
     role_assignment_group = RoleAssignmentHandler().assign_role(user, group, role=role)
+
+    mock_broadcast_to_group.delay.assert_called_once()
+    args = mock_broadcast_to_group.delay.call_args
+    assert args[0][0] == group.id
+    assert args[0][1]["type"] == "group_user_updated"
+    group_user = group.groupuser_set.get()
+    assert args[0][1]["id"] == group_user.id
+    assert args[0][1]["group_id"] == group.id
+    assert args[0][1]["group_user"]["user_id"] == group_user.user_id
+    assert args[0][1]["group_user"]["permissions"] == role.uid
+
     role_assignment_table = RoleAssignmentHandler().assign_role(
         user, group, role=role, scope=table
     )

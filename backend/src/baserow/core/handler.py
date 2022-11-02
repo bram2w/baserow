@@ -597,16 +597,18 @@ class CoreHandler:
 
         return group_user
 
-    def update_group_user(self, user, group_user, **kwargs):
+    def update_group_user(
+        self,
+        user: AbstractUser,
+        group_user: GroupUser,
+        **kwargs,
+    ) -> GroupUser:
         """
         Updates the values of an existing group user.
 
         :param user: The user on whose behalf the group user is deleted.
-        :type user: User
         :param group_user: The group user that must be updated.
-        :type group_user: GroupUser
         :return: The updated group user instance.
-        :rtype: GroupUser
         """
 
         if not isinstance(group_user, GroupUser):
@@ -619,13 +621,20 @@ class CoreHandler:
             context=group_user,
         )
 
-        before_group_user_updated.send(self, group_user=group_user, **kwargs)
+        return self.force_update_group_user(user, group_user, **kwargs)
 
+    def force_update_group_user(
+        self, user: Optional[AbstractUser], group_user: GroupUser, **kwargs
+    ) -> GroupUser:
+        """
+        Forcibly updates the group users attributes without checking permissions whilst
+        sending all the appropriate signals that an update has been done.
+        """
+
+        before_group_user_updated.send(self, group_user=group_user, **kwargs)
         group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
         group_user.save()
-
         group_user_updated.send(self, group_user=group_user, user=user)
-
         return group_user
 
     def delete_group_user(self, user, group_user):
