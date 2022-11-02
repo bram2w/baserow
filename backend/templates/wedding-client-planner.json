@@ -2564,6 +2564,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 227281,
                             "card_cover_image_field_id": 221561,
                             "field_options": [
@@ -3808,6 +3809,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 221564,
                             "field_options": [
                                 {

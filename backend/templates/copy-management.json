@@ -985,6 +985,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 418807,
                             "field_options": [
                                 {
@@ -1101,6 +1102,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 418968,
                             "field_options": [
                                 {
@@ -2116,6 +2118,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 418982,
                             "field_options": [
                                 {

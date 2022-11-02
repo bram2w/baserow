@@ -5321,14 +5321,14 @@
                             "name": "Over/under",
                             "order": 6,
                             "primary": false,
-                            "error": null,
+                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator + was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": 2,
+                            "number_decimal_places": null,
                             "array_formula_type": null,
                             "formula": "minus( \n  add( \n    tonumber(join(totext(field(\"Funds raised\")), \"\")), \n    field(\"Ticket sales\") \n  ), \n  tonumber(join(totext(field(\"Cost\")), \"\")) \n)",
-                            "formula_type": "number"
+                            "formula_type": "invalid"
                         },
                         {
                             "id": 350915,

@@ -1590,6 +1590,7 @@
                             ],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 474755,
                             "field_options": [
                                 {
@@ -1725,6 +1726,7 @@
                             ],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 474756,
                             "field_options": [
                                 {
@@ -1853,6 +1855,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 474767,
                             "field_options": [
                                 {
@@ -3652,6 +3655,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 474630,
                             "card_cover_image_field_id": 474629,
                             "field_options": [
