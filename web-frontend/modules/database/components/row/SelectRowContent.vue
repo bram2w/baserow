@@ -2,12 +2,6 @@
   <div>
     <div v-if="!loaded" class="select-row-modal__initial-loading"></div>
     <div v-if="loaded" :class="{ 'select-row-modal__loading': loading }">
-      <Scrollbars
-        ref="scrollbars"
-        horizontal="getHorizontalScrollbarElement"
-        :style="{ left: '240px' }"
-        @horizontal="horizontalScroll"
-      ></Scrollbars>
       <div class="select-row-modal__search">
         <i class="fas fa-search select-row-modal__search-icon"></i>
         <input
@@ -20,125 +14,34 @@
           @keypress.enter="doSearch(visibleSearch, true)"
         />
       </div>
-      <div v-scroll="scroll" class="select-row-modal__rows">
-        <div class="select-row-modal__left">
-          <div class="select-row-modal__head">
-            <div
-              class="select-row-modal__field select-row-modal__field--first"
-            ></div>
-            <div class="select-row-modal__field">
-              <i
-                class="fas select-row-modal__field-icon"
-                :class="'fa-' + primary._.type.iconClass"
-              ></i>
-              {{ primary.name }}
-            </div>
-          </div>
-          <div class="select-row-modal__body">
-            <div
-              v-for="row in rows"
-              :key="'left-select-row-' + tableId + '-' + row.id"
-              class="select-row-modal__row"
-              :class="{
-                'select-row-modal__row--hover': row._.hover,
-                'select-row-modal__row--selected': isAlreadySelected(row.id),
-              }"
-              @mouseover="setRowHover(row, true)"
-              @mouseleave="setRowHover(row, false)"
-              @click="select(row, primary, fields)"
-            >
-              <div class="select-row-modal__cell select-row-modal__cell--first">
-                {{ row.id }}
-              </div>
-              <div class="select-row-modal__cell">
-                <SelectRowField :field="primary" :row="row"></SelectRowField>
-              </div>
-            </div>
-            <div
-              class="select-row-modal__row"
-              :class="{ 'select-row-modal__row--hover': addRowHover }"
-              @mouseover="addRowHover = true"
-              @mouseleave="addRowHover = false"
-              @click="$refs.rowCreateModal.show()"
-            >
-              <a
-                class="
-                  select-row-modal__cell
-                  select-row-modal__cell--single
-                  select-row-modal__add-row
-                "
-                ><i class="fas fa-plus"></i
-              ></a>
-            </div>
-          </div>
-          <div class="select-row-modal__foot">
+      <div class="select-row-modal__rows">
+        <SimpleGrid
+          :fixed-fields="[primary]"
+          :fields="fields"
+          :rows="rows"
+          :full-height="true"
+          :can-add-row="true"
+          :with-footer="true"
+          :show-hovered-row="true"
+          :selected-rows="selectedRows"
+          :show-row-id="true"
+          @add-row="$refs.rowCreateModal.show()"
+          @row-click="select($event)"
+        >
+          <template #footLeft>
             <Paginator
               :total-pages="totalPages"
               :page="page"
               @change-page="fetch"
             ></Paginator>
-          </div>
-        </div>
-        <div ref="right" class="select-row-modal__right">
-          <div class="select-row-modal__head">
-            <div
-              v-for="field in fields"
-              :key="field.id"
-              class="select-row-modal__field"
-            >
-              <i
-                class="fas select-row-modal__field-icon"
-                :class="'fa-' + field._.type.iconClass"
-              ></i>
-              {{ field.name }}
-            </div>
-          </div>
-          <div class="select-row-modal__body">
-            <div
-              v-for="row in rows"
-              :key="'right-select-row-' + tableId + '-' + row.id"
-              class="select-row-modal__row"
-              :class="{
-                'select-row-modal__row--hover': row._.hover,
-                'select-row-modal__row--selected': isAlreadySelected(row.id),
-              }"
-              @mouseover="setRowHover(row, true)"
-              @mouseleave="setRowHover(row, false)"
-              @click="select(row, primary, fields)"
-            >
-              <div
-                v-for="field in fields"
-                :key="'select-row-' + row.id + '-field-' + field.id"
-                class="select-row-modal__cell"
-              >
-                <SelectRowField :field="field" :row="row"></SelectRowField>
-              </div>
-            </div>
-            <div
-              class="select-row-modal__row"
-              :style="{ width: addRowWidth }"
-              :class="{ 'select-row-modal__row--hover': addRowHover }"
-              @mouseover="addRowHover = true"
-              @mouseleave="addRowHover = false"
-              @click="$refs.rowCreateModal.show()"
-            >
-              <div
-                class="select-row-modal__cell select-row-modal__cell--single"
-              ></div>
-            </div>
-          </div>
-          <div
-            class="select-row-modal__foot"
-            :style="{
-              width: fields.length * 200 + 'px',
-            }"
-          ></div>
-        </div>
+          </template>
+        </SimpleGrid>
       </div>
     </div>
     <RowCreateModal
       v-if="table"
       ref="rowCreateModal"
+      :database="database"
       :table="table"
       :sortable="false"
       :visible-fields="allFields"
@@ -159,7 +62,6 @@ import { populateRow } from '@baserow/modules/database/store/view/grid'
 import ViewService from '@baserow/modules/database/services/view'
 
 import Paginator from '@baserow/modules/core/components/Paginator'
-import SelectRowField from '@baserow/modules/database/components/row/SelectRowField'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
@@ -168,10 +70,11 @@ import {
   sortFieldsByOrderAndIdFunction,
 } from '@baserow/modules/database/utils/view'
 import { GridViewType } from '@baserow/modules/database/viewTypes'
+import SimpleGrid from '@baserow/modules/database/components/view/grid/SimpleGrid.vue'
 
 export default {
   name: 'SelectRowContent',
-  components: { Paginator, SelectRowField, RowCreateModal },
+  components: { Paginator, RowCreateModal, SimpleGrid },
   props: {
     tableId: {
       type: Number,
@@ -200,13 +103,10 @@ export default {
     }
   },
   computed: {
-    addRowWidth() {
-      return this.fields.length * 200 + 'px'
-    },
     allFields() {
       return [].concat(this.primary || [], this.fields || [])
     },
-    table() {
+    databaseAndTable() {
       const databaseType = DatabaseApplicationType.getType()
       for (const application of this.$store.getters['application/getAll']) {
         if (application.type !== databaseType) {
@@ -218,11 +118,20 @@ export default {
         )
 
         if (foundTable) {
-          return foundTable
+          return [application, foundTable]
         }
       }
 
-      return null
+      return [null, null]
+    },
+    database() {
+      return this.databaseAndTable[0]
+    },
+    table() {
+      return this.databaseAndTable[1]
+    },
+    selectedRows() {
+      return this.value.map(({ id }) => id)
     },
   },
   async mounted() {
@@ -250,48 +159,6 @@ export default {
     })
   },
   methods: {
-    /**
-     * Returns the scrollable element for the scrollbar.
-     */
-    getHorizontalScrollbarElement() {
-      return this.$refs.right
-    },
-    /**
-     * Event that is called when the users does any form of scrolling on the whole grid
-     * surface.
-     */
-    scroll(pixelY, pixelX) {
-      const left = this.$refs.right.scrollLeft + pixelX
-      this.horizontalScroll(left)
-      this.$refs.scrollbars.update()
-    },
-    horizontalScroll(left) {
-      this.$refs.right.scrollLeft = left
-    },
-    /**
-     * Returns true if the value already contains the given row id.
-     */
-    isAlreadySelected(rowId) {
-      for (let i = 0; i < this.value.length; i++) {
-        if (this.value[i].id === rowId) {
-          return true
-        }
-      }
-      return false
-    },
-    /**
-     * Because the rows are split in a left and right section we need JavaScript to
-     * show a hover effect of the whole row. This method makes sure the correct row has
-     * the correct hover state.
-     */
-    setRowHover(row, value) {
-      if (this.lastHoveredRow !== null && this.lastHoveredRow.id !== row.id) {
-        this.lastHoveredRow._.hover = false
-      }
-
-      row._.hover = value
-      this.lastHoveredRow = row
-    },
     /**
      * Fetches all the fields of the given table id. We need the fields so that we can
      * show the data in the correct format.
@@ -401,12 +268,16 @@ export default {
     /**
      * Called when the user selects a row.
      */
-    select(row, primary, fields) {
-      if (this.isAlreadySelected(row.id)) {
+    select(row) {
+      if (this.selectedRows.includes(row.id)) {
         return
       }
 
-      this.$emit('selected', { row, primary, fields })
+      this.$emit('selected', {
+        row,
+        primary: this.primary,
+        fields: this.fields,
+      })
     },
     /**
      * Focuses the search field when the component mounts.
@@ -443,7 +314,7 @@ export default {
           'page/'
         )
 
-        this.select(populateRow(rowCreated), this.primary, this.fields)
+        this.select(populateRow(rowCreated))
 
         callback()
       } catch (error) {

@@ -21,6 +21,7 @@
     </label>
     <FieldContext
       ref="context"
+      :database="database"
       :table="table"
       :field="field"
       @update="$emit('field-updated', $event)"
@@ -39,6 +40,7 @@
     <component
       :is="getFieldComponent(field.type)"
       ref="field"
+      :group-id="database.group.id"
       :field="field"
       :value="row['field_' + field.id]"
       :read-only="readOnly"
@@ -54,6 +56,10 @@ export default {
   name: 'RowEditModalField',
   components: { FieldContext },
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

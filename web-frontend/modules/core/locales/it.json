@@ -24,7 +24,8 @@
         "admin": "Admin",
         "dashboard": "Dashboard",
         "trash": "Cestino",
-        "settings": "Impostazioni"
+        "settings": "Impostazioni",
+        "members": "Membri"
     },
     "accountForm": {
         "nameLabel": "Il tuo nome",
@@ -218,8 +219,12 @@
         "shareOnLinkedIn": "Condividi su LinkedIn"
     },
     "login": {
-        "title": "Accedi",
-        "forgotPassword": "Password dimenticata"
+        "title": "Login",
+        "forgotPassword": "Password dimenticata?",
+        "emailPlaceholder": "Inserisci la tua email...",
+        "passwordPlaceholder": "Inserisci la tua password...",
+        "signUpText": "Non hai un account?",
+        "signUp": "Registrati"
     },
     "resetPassword": {
         "title": "Reimposta password",
@@ -240,7 +245,13 @@
         "disabled": "Registrazione disabilitata",
         "disabledMessage": "Non è possibile creare un account perché è stato disabilitato.",
         "requireFirstUser": "Benvenuto su Baserow!",
-        "requireFirstUserMessage": "Per favore, riempi i campi qui sotto per creare un nuovo account con i permessi di admin."
+        "requireFirstUserMessage": "Per favore, riempi i campi qui sotto per creare un nuovo account con i permessi di admin.",
+        "namePlaceholder": "Inserisci il tuo nome..",
+        "passwordRepeatPlaceholder": "Conferma la password..",
+        "loginText": "Hai già un account?",
+        "login": "Login",
+        "emailPlaceholder": "Inserisci la tua email..",
+        "passwordPlaceholder": "Inserisci una password.."
     },
     "forgotPassword": {
         "title": "Password dimenticata",
@@ -248,7 +259,8 @@
         "submit": "Invia link",
         "confirmation": "Se il tuo indirizzo e-mail è presente nel nostro database, riceverai in pochi minuti a tale indirizzo un link per la reimpostazione della password.",
         "disabled": "Password dimenticata",
-        "disabledMessage": "Non è possibile reimpostare la password perché è stato disabilitato."
+        "disabledMessage": "Non è possibile reimpostare la password perché è stato disabilitato.",
+        "loginText": "Hai già account e password?"
     },
     "settings": {
         "settingsTitle": "Impostazioni admin",
@@ -403,5 +415,51 @@
     "duplicateApplicationJobType": {
         "duplicating": "Duplicando",
         "duplicatedTitle": "Applicazione duplicata"
+    },
+    "InstallTemplateJobType": {
+        "installing": "Installando",
+        "installedTitle": "Template installato"
+    },
+    "crudTableSearch": {
+        "search": "Cerca"
+    },
+    "membersSettings": {
+        "membersTabTitle": "Membri",
+        "invitesTabTitle": "Inviti",
+        "membersTable": {
+            "title": "{userAmount} membri di {groupName}",
+            "inviteMember": "Invita membro",
+            "columns": {
+                "name": "Nome",
+                "email": "Email",
+                "role": "Ruolo"
+            },
+            "actions": {
+                "remove": "Rimuovi dal gruppo",
+                "copyEmail": "Copia email"
+            }
+        },
+        "invitesTable": {
+            "title": "{invitesAmount} inviti in attesa per {groupName}",
+            "columns": {
+                "email": "Email",
+                "message": "Messaggio",
+                "role": "Ruolo"
+            },
+            "actions": {
+                "remove": "Cancella invito",
+                "copyEmail": "Copia email"
+            }
+        },
+        "membersInviteModal": {
+            "title": "Invita membro nel gruppo",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "text": "Non è possibile inviare un invito se l'utente non fa parte del gruppo.",
+                    "title": "L'utente fa già parte del gruppo."
+                }
+            },
+            "submit": "Manda invito"
+        }
     }
 }

@@ -1,9 +1,0 @@
-.user-level-premium {
-  background-color: $color-primary-500;
-  border-radius: 3px;
-  color: $white;
-  padding: 0 4px;
-
-  @include fixed-height(14px, 11px);
-  @include absolute(4px, 4px, auto, auto);
-}

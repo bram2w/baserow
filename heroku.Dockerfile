@@ -1,9 +1,9 @@
-ARG FROM_IMAGE=baserow/baserow:1.12.1
+ARG FROM_IMAGE=baserow/baserow:1.13.0
 # This is pinned as version pinning is done by the CI setting FROM_IMAGE.
 # hadolint ignore=DL3006
 FROM $FROM_IMAGE as image_base
 
-RUN apt-get remove -y postgresql postgresql-contrib redis-server
+RUN apt-get remove -y "postgresql-$POSTGRES_VERSION" redis-server
 
 ENV DATA_DIR=/baserow/data
 # We have to build the data dir in the docker image as Caddy does not allow it in their

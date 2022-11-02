@@ -7,7 +7,7 @@ tool gives you the powers of a developer without leaving your browser.
 * Easily self-hosted with no storage restrictions or sign-up on https://baserow.io to
   get started immediately.
 * Alternative to Airtable.
-* Open-core with all non-premium features under
+* Open-core with all non-premium and non-enterprise features under
   the [MIT License](https://choosealicense.com/licenses/mit/) allowing commercial and
   private use.
 * Headless and API first.
@@ -17,7 +17,7 @@ tool gives you the powers of a developer without leaving your browser.
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
 ```bash
-docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.12.1
+docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.13.0
 ```
 
 ![Baserow screenshot](docs/assets/screenshot.png "Baserow screenshot")
@@ -90,7 +90,7 @@ Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.12.1
+Version: 1.13.0
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 

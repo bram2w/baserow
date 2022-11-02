@@ -238,13 +238,13 @@ export const actions = {
    * backend with the changed values. If the request fails the action is reverted.
    */
   async updateAllFieldOptions(
-    { dispatch, getters },
+    { dispatch, getters, rootGetters },
     { kanban, newFieldOptions, oldFieldOptions, readOnly = false }
   ) {
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
 
+    const kanbanId = getters.getLastKanbanId
     if (!readOnly) {
-      const kanbanId = getters.getLastKanbanId
       const updateValues = { field_options: newFieldOptions }
 
       try {
@@ -309,7 +309,7 @@ export const actions = {
    * Updates the field options of a specific field.
    */
   async updateFieldOptionsOfField(
-    { commit, getters },
+    { commit, getters, rootGetters },
     { kanban, field, values, readOnly = false }
   ) {
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
@@ -892,22 +892,18 @@ export const actions = {
    */
   async deleteStack(
     { getters, commit, dispatch },
-    { fields, optionId, deferredFieldUpdate = false }
+    { singleSelectField, optionId, deferredFieldUpdate = false }
   ) {
-    const field = fields.find(
-      (field) => field.id === getters.getSingleSelectFieldId
-    )
-
-    const options = clone(field.select_options)
+    const options = clone(singleSelectField.select_options)
     const index = options.findIndex((o) => o.id === optionId)
     options.splice(index, 1)
 
     const updateValues = {
-      type: field.type,
+      type: singleSelectField.type,
       select_options: options,
     }
     const { data } = await FieldService(this.$client).update(
-      field.id,
+      singleSelectField.id,
       updateValues
     )
 
@@ -916,8 +912,8 @@ export const actions = {
       await dispatch(
         'field/forceUpdate',
         {
-          field,
-          oldField: clone(field),
+          singleSelectField,
+          oldField: clone(singleSelectField),
           data,
           relatedFields: data.related_fields,
         },

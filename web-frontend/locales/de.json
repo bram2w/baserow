@@ -28,7 +28,8 @@
         "activate": "Aktivieren",
         "deactivate": "Deaktivieren",
         "duplicate": "Duplizieren",
-        "remove": "Entfernen"
+        "remove": "Entfernen",
+        "login": "Anmelden"
     },
     "adminType": {
         "settings": "Einstellungen"
@@ -360,7 +361,11 @@
         "filterDescription": "Filtert einen Ausdruck, der einen Verweis auf ein Nachschlage-/Verknüpfungsfeld oder einen Aufruf einer Nachschlagefunktion enthält, nach unten.",
         "roundDescription": "Gibt das erste Argument gerundet auf die im zweiten Argument angegebene Anzahl von Ziffern zurück.",
         "intDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden.",
-        "truncDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden."
+        "truncDescription": "Gibt nur das erste Argument zurück, das in eine ganze Zahl umgewandelt wurde, indem alle Dezimalstellen abgeschnitten wurden.",
+        "linkDescription": "Erstellt einen Hyperlink unter Verwendung der im ersten Argument angegebenen URI.",
+        "buttonDescription": "Erstellt einen Knopf unter Verwendung der URI (erstes Argument) und der Bezeichnung (zweites Argument).",
+        "getLinkLabelDescription": "Ruft die Beschriftung aus einer Formel ab, via eines Links oder Knopfes.",
+        "getLinkUrlDescription": "Ruft die URL aus einer Formel ab, via eines Links oder Knopfes."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"

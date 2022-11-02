@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from baserow_premium.api import urls as api_urls
+from baserow_premium.license.plugin import LicensePlugin
 
 from baserow.core.registries import Plugin
 
@@ -12,3 +13,6 @@ class PremiumPlugin(Plugin):
         return [
             path("", include(api_urls, namespace=self.type)),
         ]
+
+    def get_license_plugin(self) -> LicensePlugin:
+        return LicensePlugin()

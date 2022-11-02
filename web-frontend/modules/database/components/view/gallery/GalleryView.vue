@@ -1,7 +1,10 @@
 <template>
   <div class="gallery-view">
     <a
-      v-if="!readOnly"
+      v-if="
+        !readOnly &&
+        $hasPermission('database.table.create_view', table, database.group.id)
+      "
       class="gallery-view__add"
       @click="$refs.rowCreateModal.show()"
     >
@@ -44,17 +47,31 @@
           }"
           :class="{
             'gallery-view__card--dragging': slot.item && slot.item._.dragging,
-            'gallery-view__card--disabled': readOnly,
           }"
-          @mousedown="rowDown($event, slot.item)"
+          @mousedown="
+            rowDown(
+              $event,
+              slot.item,
+              readOnly ||
+                !$hasPermission(
+                  'database.table.move_row',
+                  table,
+                  database.group.id
+                )
+            )
+          "
           @mousemove="rowMoveOver($event, slot.item)"
           @mouseenter="rowMoveOver($event, slot.item)"
         ></RowCard>
       </div>
     </div>
     <RowCreateModal
-      v-if="!readOnly"
+      v-if="
+        !readOnly &&
+        $hasPermission('database.table.create_row', table, database.group.id)
+      "
       ref="rowCreateModal"
+      :database="database"
       :table="table"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
@@ -71,13 +88,17 @@
     ></RowCreateModal>
     <RowEditModal
       ref="rowEditModal"
+      enable-navigation
       :database="database"
       :table="table"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
-      :read-only="false"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
+      "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"
       @toggle-hidden-fields-visibility="
@@ -89,6 +110,8 @@
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
       @field-created="showFieldCreated"
+      @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
+      @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
     >
     </RowEditModal>
   </div>
@@ -148,10 +171,6 @@ export default {
       type: String,
       required: true,
     },
-    row: {
-      validator: (prop) => typeof prop === 'object' || prop === null,
-      required: true,
-    },
   },
   data() {
     return {
@@ -165,6 +184,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
     firstRows() {
       return this.allRows.slice(0, 200)
     },
@@ -198,6 +220,11 @@ export default {
       const fieldId = this.view.card_cover_image_field
       return this.fields.find((field) => field.id === fieldId) || null
     },
+    activeSearchTerm() {
+      return this.$store.getters[
+        `${this.storePrefix}view/gallery/getActiveSearchTerm`
+      ]
+    },
   },
   watch: {
     cardHeight() {
@@ -209,6 +236,14 @@ export default {
       this.$nextTick(() => {
         this.updateBuffer(true, false)
       })
+    },
+    row: {
+      deep: true,
+      handler(row) {
+        if (row !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(row)
+        }
+      },
     },
   },
   mounted() {
@@ -273,8 +308,7 @@ export default {
     this.$refs.scroll.addEventListener('scroll', this.$el.scrollEvent)
 
     if (this.row !== null) {
-      const rowClone = populateRow(clone(this.row))
-      this.$refs.rowEditModal.show(this.row.id, rowClone)
+      this.populateAndEditRow(this.row)
     }
   },
   beforeDestroy() {
@@ -414,6 +448,14 @@ export default {
     showFieldCreated({ fetchNeeded, ...context }) {
       this.fieldCreated({ fetchNeeded, ...context })
       this.showHiddenFieldsInRowModal = true
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
   },
 }

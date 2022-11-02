@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
     "channels",
     "drf_spectacular",
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     "baserow.ws",
     "baserow.contrib.database",
     "baserow_premium",
+    "baserow_enterprise",
 ]
 
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
@@ -278,21 +280,33 @@ MAX_CLIENT_SESSION_ID_LENGTH = 256
 
 CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER = "ClientUndoRedoActionGroupId"
 MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP = 2
+WEBSOCKET_ID_HEADER = "WebsocketId"
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
-    "WebSocketId",
+    WEBSOCKET_ID_HEADER,
     PUBLIC_VIEW_AUTHORIZATION_HEADER,
     CLIENT_SESSION_ID_HEADER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER,
 ]
 
-JWT_AUTH = {
-    "JWT_EXPIRATION_DELTA": datetime.timedelta(seconds=60 * 60),
-    "JWT_ALLOW_REFRESH": True,
-    "JWT_REFRESH_EXPIRATION_DELTA": datetime.timedelta(days=7),
-    "JWT_AUTH_HEADER_PREFIX": "JWT",
-    "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt.jwt_response_payload_handler",
+ACCESS_TOKEN_LIFETIME = datetime.timedelta(
+    minutes=int(os.getenv("BASEROW_ACCESS_TOKEN_LIFETIME_MINUTES", 10))  # 10 minutes
+)
+REFRESH_TOKEN_LIFETIME = datetime.timedelta(
+    hours=int(os.getenv("BASEROW_REFRESH_TOKEN_LIFETIME_HOURS", 24 * 7))  # 7 days
+)
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": ACCESS_TOKEN_LIFETIME,
+    "REFRESH_TOKEN_LIFETIME": REFRESH_TOKEN_LIFETIME,
+    "AUTH_HEADER_TYPES": ("JWT",),
+    # It is recommended that you set BASEROW_JWT_SIGNING_KEY so it is independent
+    # from the Django SECRET_KEY. This will make changing the signing key used for
+    # tokens easier in the event that it is compromised.
+    "SIGNING_KEY": os.getenv("BASEROW_JWT_SIGNING_KEY", os.getenv("SECRET_KEY")),
+    "USER_AUTHENTICATION_RULE": lambda user: user is not None,
 }
+
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Baserow API spec",
@@ -302,7 +316,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.12.1",
+    "VERSION": "1.13.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -642,6 +656,10 @@ BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
 # features for developers. See docs/development/feature-flags.md for more info.
 FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
 
+PERMISSION_MANAGERS = os.getenv(
+    "BASEROW_PERMISSION_MANAGERS", "core,staff,member,role,basic"
+).split(",")
+
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
 )
@@ -743,6 +761,6 @@ for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
         # The plugin should have a setup function which accepts a 'settings' object.
         # This settings object is an AttrDict shadowing our local variables so the
         # plugin can access the Django settings and modify them prior to startup.
-        result = mod.setup(AttrDict({k: v for k, v in vars().items() if k.isupper()}))
+        result = mod.setup(AttrDict(vars()))
     except ImportError:
         pass

@@ -4,6 +4,9 @@ from rest_framework.exceptions import NotAuthenticated
 
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.operations import (
+    ListenToAllDatabaseTableEventsOperationType,
+)
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
@@ -11,6 +14,7 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.ws.registries import PageType
 
 
@@ -30,7 +34,12 @@ class TablePageType(PageType):
         try:
             handler = TableHandler()
             table = handler.get_table(table_id)
-            table.database.group.has_user(user, raise_error=True)
+            CoreHandler().check_permissions(
+                user,
+                ListenToAllDatabaseTableEventsOperationType.type,
+                group=table.database.group,
+                context=table,
+            )
         except (UserNotInGroup, TableDoesNotExist, NotAuthenticated):
             return False
 

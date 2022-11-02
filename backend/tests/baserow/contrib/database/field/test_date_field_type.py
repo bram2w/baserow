@@ -627,3 +627,41 @@ def test_get_set_export_serialized_value_date_field(data_fixture):
     assert old_row_1_datetime == getattr(row_1, datetime_field_name)
     assert old_row_2_date == getattr(row_2, date_field_name)
     assert old_row_2_datetime == getattr(row_2, datetime_field_name)
+
+
+@pytest.mark.django_db
+def test_date_field_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    date_field = data_fixture.create_date_field(table=table)
+
+    data_fixture.create_view_sort(view=grid_view, field=date_field, order="DESC")
+
+    handler = RowHandler()
+    [row_a, row_b, row_c] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{date_field.id}": "2010-02-03",
+            },
+            {
+                f"field_{date_field.id}": "2010-02-04",
+            },
+            {
+                f"field_{date_field.id}": "2010-02-05",
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    row_b = base_queryset.get(pk=row_b.id)
+    previous_row = handler.get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_c.id
+    assert next_row.id == row_a.id

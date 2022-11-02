@@ -7,7 +7,7 @@
           This form doesn't have any fields. Use Baserow to add at least one
           field.
         </div>
-        <FormViewPoweredBy></FormViewPoweredBy>
+        <FormViewPoweredBy v-if="showLogo"></FormViewPoweredBy>
       </div>
       <component
         :is="component"
@@ -26,6 +26,7 @@
         :is-redirect="isRedirect"
         :submit-action-redirect-url="submitActionRedirectUrl"
         :submit-action-message="submitActionMessage"
+        :show-logo="showLogo"
         @submit="submit"
       ></component>
     </div>
@@ -132,6 +133,7 @@ export default {
       submitText: data.submit_text,
       fields: data.fields,
       mode: data.mode,
+      showLogo: data.show_logo,
       values,
       publicAuthToken,
     }

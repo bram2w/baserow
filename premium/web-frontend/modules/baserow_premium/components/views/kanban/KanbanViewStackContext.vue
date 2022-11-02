@@ -1,13 +1,26 @@
 <template>
   <Context>
     <ul class="context__menu">
-      <li>
+      <li
+        v-if="
+          $hasPermission('database.table.create_row', table, database.group.id)
+        "
+      >
         <a @click=";[$emit('create-row'), hide()]">
           <i class="context__menu-icon fas fa-fw fa-plus"></i>
           {{ $t('kanbanViewStackContext.createCard') }}
         </a>
       </li>
-      <li v-if="option !== null">
+      <li
+        v-if="
+          option !== null &&
+          $hasPermission(
+            'database.table.field.update',
+            singleSelectField,
+            database.group.id
+          )
+        "
+      >
         <a
           ref="updateContextLink"
           @click="$refs.updateContext.toggle($refs.updateContextLink)"
@@ -23,7 +36,16 @@
           @saved="hide()"
         ></KanbanViewUpdateStackContext>
       </li>
-      <li v-if="option !== null">
+      <li
+        v-if="
+          option !== null &&
+          $hasPermission(
+            'database.table.field.update',
+            singleSelectField,
+            database.group.id
+          )
+        "
+      >
         <a @click="$refs.deleteModal.show()">
           <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
           {{ $t('kanbanViewStackContext.deleteStack') }}
@@ -74,9 +96,22 @@ export default {
       validator: (prop) => typeof prop === 'object' || prop === null,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
+    table: {
+      type: Object,
+      required: true,
+    },
     fields: {
       type: Array,
       required: true,
+    },
+    singleSelectField: {
+      type: Object,
+      required: false,
+      default: null,
     },
     storePrefix: {
       type: String,
@@ -97,7 +132,7 @@ export default {
           this.storePrefix + 'view/kanban/deleteStack',
           {
             optionId: this.option.id,
-            fields: this.fields,
+            singleSelectField: this.singleSelectField,
             deferredFieldUpdate: true,
           }
         )

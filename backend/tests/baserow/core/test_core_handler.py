@@ -564,16 +564,6 @@ def test_create_group_invitation(mock_send_email, data_fixture):
             base_url="http://localhost:3000/invite",
         )
 
-    with pytest.raises(ValueError):
-        handler.create_group_invitation(
-            user=user,
-            group=group,
-            email="test@test.nl",
-            permissions="NOT_EXISTING",
-            message="Test",
-            base_url="http://localhost:3000/invite",
-        )
-
     invitation = handler.create_group_invitation(
         user=user,
         group=group,
@@ -650,11 +640,6 @@ def test_update_group_invitation(data_fixture):
     with pytest.raises(UserNotInGroup):
         handler.update_group_invitation(
             user=user_2, invitation=group_invitation, permissions="ADMIN"
-        )
-
-    with pytest.raises(ValueError):
-        handler.update_group_invitation(
-            user=user, invitation=group_invitation, permissions="NOT_EXISTING"
         )
 
     invitation = handler.update_group_invitation(
@@ -964,7 +949,7 @@ def test_export_import_group_application(data_fixture):
     imported_database = imported_applications[0]
     assert imported_database.id != database.id
     assert imported_database.name == database.name
-    assert imported_database.order == database.order
+    assert imported_database.order == database.order + 1
     assert imported_database.table_set.all().count() == 1
     assert database.id in id_mapping["applications"]
     assert id_mapping["applications"][database.id] == imported_database.id

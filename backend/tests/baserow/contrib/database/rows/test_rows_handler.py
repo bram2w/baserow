@@ -7,6 +7,7 @@ from django.db import models
 
 import pytest
 from freezegun import freeze_time
+from pyinstrument import Profiler
 from pytz import UTC
 
 from baserow.contrib.database.api.utils import (
@@ -285,6 +286,178 @@ def test_get_row(data_fixture):
     assert getattr(row_tmp, f"field_{name_field.id}") == "Tesla"
     assert getattr(row_tmp, f"field_{speed_field.id}") == 240
     assert getattr(row_tmp, f"field_{price_field.id}") == Decimal("59999.99")
+
+
+@pytest.mark.django_db
+def test_get_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    handler = RowHandler()
+    rows = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "Tesla",
+            },
+            {
+                f"field_{name_field.id}": "Audi",
+            },
+            {
+                f"field_{name_field.id}": "BMW",
+            },
+        ],
+    )
+
+    queryset = table.get_model().objects.all()
+    next_row = handler.get_adjacent_row(rows[1], queryset)
+    previous_row = handler.get_adjacent_row(rows[1], queryset, previous=True)
+
+    assert next_row.id == rows[2].id
+    assert previous_row.id == rows[0].id
+
+
+@pytest.mark.django_db
+def test_get_adjacent_row_with_custom_filters(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    handler = RowHandler()
+    [row_1, row_2, row_3] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "Tesla",
+            },
+            {
+                f"field_{name_field.id}": "Audi",
+            },
+            {
+                f"field_{name_field.id}": "BMW",
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.filter(id__in=[row_2.id, row_3.id])
+
+    next_row = handler.get_adjacent_row(row_2, base_queryset)
+    previous_row = handler.get_adjacent_row(row_2, base_queryset, previous=True)
+
+    assert next_row.id == row_3.id
+    assert previous_row is None
+
+
+@pytest.mark.django_db
+def test_get_adjacent_row_with_view_sort(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    view = data_fixture.create_grid_view(table=table)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    data_fixture.create_view_sort(view=view, field=name_field, order="DESC")
+
+    handler = RowHandler()
+    [row_1, row_2, row_3] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "A",
+            },
+            {
+                f"field_{name_field.id}": "B",
+            },
+            {
+                f"field_{name_field.id}": "C",
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    next_row = handler.get_adjacent_row(row_2, base_queryset, view=view)
+    previous_row = handler.get_adjacent_row(
+        row_2, base_queryset, previous=True, view=view
+    )
+
+    assert next_row.id == row_1.id
+    assert previous_row.id == row_3.id
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+def test_get_adjacent_row_performance_many_rows(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    handler = RowHandler()
+
+    row_amount = 100000
+    row_values = [{f"field_{name_field.id}": "Tesla"} for _ in range(row_amount)]
+
+    rows = handler.create_rows(user=user, table=table, rows_values=row_values)
+
+    profiler = Profiler()
+    profiler.start()
+    next_row = handler.get_adjacent_row(rows[5])
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))
+
+    assert next_row.id == rows[6].id
+    assert table.get_model().objects.count() == row_amount
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+def test_get_adjacent_row_performance_many_fields(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+
+    handler = RowHandler()
+
+    field_amount = 1000
+    fields = [
+        data_fixture.create_text_field(table=table, name=f"Field_{i}")
+        for i in range(field_amount)
+    ]
+
+    row_amount = 4000
+    row_values = []
+    for i in range(row_amount):
+        row_value = {f"field_{field.id}": "Tesla" for field in fields}
+        row_values.append(row_value)
+
+    rows = handler.create_rows(user=user, table=table, rows_values=row_values)
+
+    profiler = Profiler()
+    profiler.start()
+    next_row = handler.get_adjacent_row(rows[5])
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))
+
+    assert next_row.id == rows[6].id
+    assert table.get_model().objects.count() == row_amount
 
 
 @pytest.mark.django_db
@@ -680,7 +853,6 @@ def test_get_include_exclude_fields_with_user_field_names(data_fixture):
 @pytest.mark.django_db
 def test_has_row(data_fixture):
     user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
     name_field = data_fixture.create_text_field(
         table=table, name="Name", text_default="Test"
@@ -705,9 +877,6 @@ def test_has_row(data_fixture):
             f"field_{price_field.id}": Decimal("59999.99"),
         },
     )
-
-    with pytest.raises(UserNotInGroup):
-        handler.has_row(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
         handler.has_row(user=user, table=table, row_id=99999, raise_error=True)

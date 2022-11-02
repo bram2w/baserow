@@ -82,4 +82,21 @@ export class BaserowPlugin extends Registerable {
   getAppLayoutComponent() {
     return null
   }
+
+  /**
+   * If set, this components in the list will be rendered directly after the user
+   * creates an account. It must emit a `success` event when the user must be
+   * redirected to the next page.
+   */
+  getAfterSignupStepComponent() {
+    return []
+  }
+
+  /*
+   * Every registered plugin can display multiple additional public share link options
+   * which will be visible on the share public view context.
+   */
+  getAdditionalShareLinkOptions() {
+    return []
+  }
 }

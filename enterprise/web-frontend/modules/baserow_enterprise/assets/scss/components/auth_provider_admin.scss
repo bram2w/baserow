@@ -1,0 +1,59 @@
+.auth-provider-admin {
+  width: 100%;
+  max-width: 640px;
+  padding: 8px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.auth-provider-admin__header {
+  margin-top: 48px;
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.auth-provider-admin__item {
+  &:first-child {
+    border-top: 1px solid $color-neutral-200;
+  }
+
+  border-bottom: 1px solid $color-neutral-200;
+  height: 64px;
+  font-size: 14px;
+  line-height: 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.auth-provider-admin__item-icon {
+  padding-right: 16px;
+}
+
+.auth-provider-admin__item-name {
+  flex: 1;
+}
+
+.auth-provider-admin__item-menu {
+  padding-right: 24px;
+
+  & a {
+    color: $color-neutral-500;
+
+    &:hover {
+      color: $color-primary-500;
+    }
+  }
+}
+
+.auth-provider-admin__item-toggle {
+  padding-right: 24px;
+
+  &.active {
+    &::before {
+      background-color: $color-primary-500;
+    }
+  }
+}

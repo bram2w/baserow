@@ -5,6 +5,10 @@ export default {
   data() {
     return {
       open: false,
+      // Firefox and Chrome both can both have a different `target` element on `click`
+      // when you release the mouse at different coordinates. Therefore we expect this
+      // variable to be set on mousedown to be consistent.
+      downElement: null,
     }
   },
   destroyed() {
@@ -33,6 +37,10 @@ export default {
       this.$emit('show')
       window.addEventListener('keyup', this.keyup)
       document.body.classList.add('prevent-scroll')
+      this.$el.mouseDownEvent = (event) => {
+        this.downElement = event.target
+      }
+      document.body.addEventListener('mousedown', this.$el.mouseDownEvent)
     },
     /**
      * Hide the modal.
@@ -54,13 +62,14 @@ export default {
 
       window.removeEventListener('keyup', this.keyup)
       document.body.classList.remove('prevent-scroll')
+      document.body.removeEventListener('mousedown', this.$el.mouseDownEvent)
     },
     /**
      * If someone actually clicked on the modal wrapper and not one of his children the
      * modal should be closed.
      */
-    outside(event) {
-      if (event.target === this.$refs.modalWrapper && this.canClose) {
+    outside() {
+      if (this.downElement === this.$refs.modalWrapper && this.canClose) {
         this.hide()
       }
     },

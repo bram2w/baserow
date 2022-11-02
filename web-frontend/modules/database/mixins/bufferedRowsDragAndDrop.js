@@ -56,55 +56,58 @@ export default {
      * the dragging if the user moves the mouse a bit. Otherwise, if the mouse is
      * release without moving, the edit modal is opened.
      */
-    rowDown(event, row) {
+    rowDown(event, row, readOnly = false) {
       // If it isn't a left click.
-      if (event.button !== 0 || row === null || this.readOnly) {
+      if (event.button !== 0 || row === null) {
         return
       }
 
       event.preventDefault()
 
-      const rect = event.target.getBoundingClientRect()
       this.dragAndDropDownRow = row
-      this.dragAndDropRowClientX = event.clientX
-      this.dragAndDropRowClientY = event.clientY
-      this.dragAndDropDownRowTop = event.clientY - rect.top
-      this.dragAndDropDownRowLeft = event.clientX - rect.left
-
-      this.clonedElement = document.createElement('div')
-      this.clonedElement.innerHTML = event.target.outerHTML
-      this.clonedElement.style = `position: absolute; left: 0; top: 0; width: ${rect.width}px; z-index: 10;`
-      this.clonedElement.firstChild.classList.add(this.dragAndDropCloneClass)
-
-      this.clonedWrapper = document.createElement('div')
-      this.clonedWrapper.style =
-        'position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; pointer-event: none;'
-      this.clonedWrapper.appendChild(this.clonedElement)
-
-      this.$el.keydownEvent = (event) => {
-        if (event.key === 'Escape') {
-          if (this.dragAndDropDraggingRow !== null) {
-            this.$store.dispatch(
-              `${this.getDragAndDropStoreName(this)}/cancelRowDrag`,
-              {
-                view: this.view,
-                fields: this.fields,
-                row: this.dragAndDropDraggingRow,
-              }
-            )
-          }
-          this.rowCancel(event)
-        }
-      }
-      document.body.addEventListener('keydown', this.$el.keydownEvent)
-
-      this.$el.mouseMoveEvent = (event) => this.rowMove(event)
-      window.addEventListener('mousemove', this.$el.mouseMoveEvent)
 
       this.$el.mouseUpEvent = (event) => this.rowUp(event)
       window.addEventListener('mouseup', this.$el.mouseUpEvent)
 
-      this.rowMove(event)
+      if (!readOnly) {
+        const rect = event.target.getBoundingClientRect()
+        this.dragAndDropRowClientX = event.clientX
+        this.dragAndDropRowClientY = event.clientY
+        this.dragAndDropDownRowTop = event.clientY - rect.top
+        this.dragAndDropDownRowLeft = event.clientX - rect.left
+
+        this.clonedElement = document.createElement('div')
+        this.clonedElement.innerHTML = event.target.outerHTML
+        this.clonedElement.style = `position: absolute; left: 0; top: 0; width: ${rect.width}px; z-index: 10;`
+        this.clonedElement.firstChild.classList.add(this.dragAndDropCloneClass)
+
+        this.clonedWrapper = document.createElement('div')
+        this.clonedWrapper.style =
+          'position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; pointer-event: none;'
+        this.clonedWrapper.appendChild(this.clonedElement)
+
+        this.$el.keydownEvent = (event) => {
+          if (event.key === 'Escape') {
+            if (this.dragAndDropDraggingRow !== null) {
+              this.$store.dispatch(
+                `${this.getDragAndDropStoreName(this)}/cancelRowDrag`,
+                {
+                  view: this.view,
+                  fields: this.fields,
+                  row: this.dragAndDropDraggingRow,
+                }
+              )
+            }
+            this.rowCancel(event)
+          }
+        }
+        document.body.addEventListener('keydown', this.$el.keydownEvent)
+
+        this.$el.mouseMoveEvent = (event) => this.rowMove(event)
+        window.addEventListener('mousemove', this.$el.mouseMoveEvent)
+
+        this.rowMove(event)
+      }
     },
     /**
      * Called when moving the mouse after the down event on a row. If we're not in a
@@ -170,7 +173,10 @@ export default {
     },
     rowCancel() {
       this.dragAndDropDownRow = null
-      this.clonedWrapper.remove()
+      // If the view is read only, the clonedWrapper is never created.
+      if (this.clonedWrapper) {
+        this.clonedWrapper.remove()
+      }
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
       window.removeEventListener('mousemove', this.$el.mouseMoveEvent)
       window.removeEventListener('mouseup', this.$el.mouseUpEvent)

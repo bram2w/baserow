@@ -88,6 +88,10 @@ class View(
         blank=True,
         help_text="The password required to access the public view URL.",
     )
+    show_logo = models.BooleanField(
+        default=True,
+        help_text="Indicates whether the logo should be shown in the public view.",
+    )
 
     @property
     def public_view_has_password(self) -> bool:
@@ -97,7 +101,7 @@ class View(
         :return: True if the public view is password protected, False otherwise.
         """
 
-        return self.public_view_password != ""
+        return self.public_view_password != ""  # nosec b105
 
     def rotate_slug(self):
         """

@@ -409,14 +409,10 @@ export class FieldType extends Registerable {
    * Generate a field sample for the given field that is displayed in auto-doc.
    * @returns a sample for this field.
    */
-  getDocsFieldResponseExample({
-    id,
-    table_id: tableId,
-    name,
-    order,
-    type,
-    primary,
-  }) {
+  getDocsFieldResponseExample(
+    { id, table_id: tableId, name, order, type, primary },
+    readOnly
+  ) {
     return {
       id,
       table_id: tableId,
@@ -424,6 +420,7 @@ export class FieldType extends Registerable {
       order,
       type,
       primary,
+      read_only: readOnly,
     }
   }
 

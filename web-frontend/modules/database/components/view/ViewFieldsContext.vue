@@ -8,6 +8,13 @@
         <div class="control__elements">
           <Dropdown
             :value="coverImageField"
+            :disabled="
+              !$hasPermission(
+                'database.table.view.update',
+                view,
+                database.group.id
+              )
+            "
             @input="
               coverImageField !== $event &&
                 $emit('update-cover-image-field', $event)
@@ -101,12 +108,16 @@ export default {
   name: 'ViewFieldsContext',
   mixins: [context],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     fields: {
       type: Array,
       required: true,
     },
-    readOnly: {
-      type: Boolean,
+    view: {
+      type: Object,
       required: true,
     },
     fieldOptions: {

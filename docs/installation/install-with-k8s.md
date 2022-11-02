@@ -156,7 +156,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-asgi
-          image: baserow/backend:1.12.1 
+          image: baserow/backend:1.13.0 
           workingDir: /baserow
           args:
             - "gunicorn"
@@ -213,7 +213,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-wsgi
-          image: baserow/backend:1.12.1
+          image: baserow/backend:1.13.0
           workingDir: /baserow
           args:
             - "gunicorn-wsgi"
@@ -272,7 +272,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-worker
-          image: baserow/backend:1.12.1
+          image: baserow/backend:1.13.0
           args:
             - "celery-worker"
           imagePullPolicy: Always
@@ -289,7 +289,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-export-worker
-          image: baserow/backend:1.12.1
+          image: baserow/backend:1.13.0
           args:
             - "celery-exportworker"
           imagePullPolicy: Always
@@ -306,7 +306,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-beat-worker
-          image: baserow/backend:1.12.1
+          image: baserow/backend:1.13.0
           args:
             - "celery-beat"
           imagePullPolicy: Always
@@ -347,7 +347,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: web-frontend
-          image: baserow/web-frontend:1.12.1
+          image: baserow/web-frontend:1.13.0
           args:
             - nuxt
           ports:

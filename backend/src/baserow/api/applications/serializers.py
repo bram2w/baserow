@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.api.groups.serializers import GroupSerializer
+from baserow.core.db import specific_iterator
 from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
 
@@ -20,15 +21,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        # It could be that the application related to the instance is already in the
-        # context else we can call the specific_class property to find it.
-        application = self.context.get("application")
-        if not application:
-            application = application_type_registry.get_by_model(
-                instance.specific_class
-            )
+        return application_type_registry.get_by_model(instance.specific_class).type
 
-        return application.type
+
+class SpecificApplicationSerializer(ApplicationSerializer):
+    def to_representation(self, instance):
+        return get_application_serializer(instance).to_representation(instance)
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
@@ -72,4 +70,23 @@ def get_application_serializer(instance, **kwargs):
     if not serializer_class:
         serializer_class = ApplicationSerializer
 
-    return serializer_class(instance, context={"application": application}, **kwargs)
+    context = kwargs.pop("context", {})
+
+    context["application"] = application
+
+    return serializer_class(instance, context=context, **kwargs)
+
+
+class InstallTemplateJobApplicationsSerializer(serializers.JSONField):
+    def to_representation(self, value):
+        application_ids = super().to_representation(value)
+
+        if not application_ids:
+            return None
+
+        applications = specific_iterator(
+            Application.objects.select_related("content_type", "group").filter(
+                pk__in=application_ids, group__trashed=False
+            )
+        )
+        return [get_application_serializer(app).data for app in applications]

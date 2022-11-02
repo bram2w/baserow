@@ -162,7 +162,8 @@
         "order": "Orden de campos en la tabla. 0 para el primer campo.",
         "primary": "Indica si el campo es un campo principal. Si es `verdadero`, el campo no se puede eliminar y el valor debe representar la fila completa.",
         "type": "Tipo definido para este campo.",
-        "extraProps": "Algunas propiedades adicionales no se describen aquí porque son específicas del tipo."
+        "extraProps": "Algunas propiedades adicionales no se describen aquí porque son específicas del tipo.",
+        "readOnly": "Indica si el campo es de sólo lectura. Si es cierto, no es posible actualizar el valor de la celda."
     },
     "apiDocsTableDeleteRow": {
         "description": "Elimina una fila {name} existente.",
@@ -213,7 +214,8 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Necesita al menos otra tabla en la misma base de datos para vincular.",
-        "selectTableLabel": "Seleccione una tabla para vincular"
+        "selectTableLabel": "Seleccione una tabla para vincular",
+        "hasRelatedFieldLabel": "Crear campo relacionado en la tabla vinculada"
     },
     "fieldSelectOptions": {
         "add": "Añadir una opción"
@@ -298,10 +300,6 @@
     "tableForm": {
         "name": "Nombre"
     },
-    "tableImporterPreview": {
-        "label": "Vista previa rápida",
-        "remaining": "{remaining} otras filas"
-    },
     "tableXMLImporter": {
         "fileLabel": "Elija el archivo XML",
         "fileDescription": "Puede importar un XML existente cargando el archivo .XML con datos tabulares, es decir:",
@@ -349,7 +347,10 @@
         "importButton": "Importar",
         "fieldMappingTitle": "Cartografía de campo",
         "fieldMappingDescription": "Hemos asignado automáticamente las columnas de los campos Baserow en su tabla. Puedes cambiarlas a continuación. Cualquier celda incompatible permanecerá vacía después de la importación.",
-        "selectImportMessage": "Selecciona los datos que quieras importar."
+        "selectImportMessage": "Selecciona los datos que quieras importar.",
+        "filePreview": "Vista previa del contenido del archivo",
+        "importPreview": "Vista previa de la importación",
+        "changeImporterType": "Cambiar el tipo de importación"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Haga clic para editar la fórmula",
@@ -641,7 +642,8 @@
     "formViewField": {
         "required": "requerido",
         "showWhenMatchingConditions": "mostrar cuando se cumplen las condiciones",
-        "addCondition": "Añadir condición"
+        "addCondition": "Añadir condición",
+        "descriptionPlaceholder": "Descripción"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicar campo",
@@ -693,12 +695,44 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Agregar una imagen de portada",
         "addLogo": "Añadir un logo",
-        "noFields": "Este formulario no tiene ningún campo. Haz clic en un campo de la barra lateral izquierda para añadir uno."
+        "noFields": "Este formulario no tiene ningún campo. Haz clic en un campo de la barra lateral izquierda para añadir uno.",
+        "titlePlaceholder": "Título",
+        "descriptionPlaceholder": "Descripción"
     },
     "table": {
-        "chooseView": "Elige la vista"
+        "chooseView": "Elige la vista",
+        "adjacentRow": {
+            "notification": {
+                "error": {
+                    "title": "Se ha producido un error",
+                    "message": "Se ha producido un error al recuperar la fila adyacente"
+                },
+                "notFound": {
+                    "next": {
+                        "title": "No hay más filas",
+                        "message": "No hay ninguna fila siguiente"
+                    },
+                    "previous": {
+                        "title": "No hay más filas",
+                        "message": "No hay fila anterior"
+                    }
+                }
+            }
+        }
     },
     "rowEditFieldMultipleCollaborators": {
         "addCollaborator": "Agregar un colaborador"
+    },
+    "duplicateTableJobType": {
+        "duplicatedTitle": "Tabla duplicada",
+        "duplicating": "Duplicando"
+    },
+    "apiDocsUploadFile": {
+        "description": "Sube un archivo a Baserow cargando el contenido del archivo directamente. Se espera una multiparte de `archivo` que contenga el contenido del archivo. La respuesta se puede utilizar para [subir un archivo a una fila]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
+        "file": "La multiparte `archivo` que contiene el contenido del archivo."
+    },
+    "apiDocsUploadFileViaURL": {
+        "url": "La URL que desea que Baserow descargue y cargue en tu nombre.",
+        "description": "Sube un archivo a Baserow descargándolo de la URL proporcionada. La respuesta puede utilizarse para [cargar un archivo en una fila]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row)."
     }
 }

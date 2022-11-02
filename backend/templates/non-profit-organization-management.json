@@ -61,7 +61,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 38437,
-                            "link_row_related_field_id": 206664
+                            "link_row_related_field_id": 206664,
+                            "has_related_field": true
                         },
                         {
                             "id": 158053,
@@ -79,7 +80,8 @@
                             "order": 9,
                             "primary": false,
                             "link_row_table_id": 29796,
-                            "link_row_related_field_id": 158083
+                            "link_row_related_field_id": 158083,
+                            "has_related_field": true
                         },
                         {
                             "id": 205211,
@@ -97,7 +99,8 @@
                             "order": 12,
                             "primary": false,
                             "link_row_table_id": 38057,
-                            "link_row_related_field_id": 205213
+                            "link_row_related_field_id": 205213,
+                            "has_related_field": true
                         },
                         {
                             "id": 205226,
@@ -106,7 +109,8 @@
                             "order": 13,
                             "primary": false,
                             "link_row_table_id": 38061,
-                            "link_row_related_field_id": 205227
+                            "link_row_related_field_id": 205227,
+                            "has_related_field": true
                         },
                         {
                             "id": 205236,
@@ -130,7 +134,8 @@
                             "order": 15,
                             "primary": false,
                             "link_row_table_id": 38438,
-                            "link_row_related_field_id": 206666
+                            "link_row_related_field_id": 206666,
+                            "has_related_field": true
                         },
                         {
                             "id": 209585,
@@ -196,6 +201,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 165579,
@@ -310,7 +316,7 @@
                         {
                             "id": 45902,
                             "type": "grid",
-                            "name": "Community oriented events",
+                            "name": "Community-oriented events",
                             "order": 2,
                             "filter_type": "AND",
                             "filters_disabled": false,
@@ -331,6 +337,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238161,
@@ -466,6 +473,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238174,
@@ -601,6 +609,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238186,
@@ -1135,7 +1144,8 @@
                             "order": 6,
                             "primary": false,
                             "link_row_table_id": 29800,
-                            "link_row_related_field_id": 158054
+                            "link_row_related_field_id": 158054,
+                            "has_related_field": true
                         },
                         {
                             "id": 206658,
@@ -1144,7 +1154,8 @@
                             "order": 7,
                             "primary": false,
                             "link_row_table_id": 38438,
-                            "link_row_related_field_id": 206657
+                            "link_row_related_field_id": 206657,
+                            "has_related_field": true
                         },
                         {
                             "id": 209575,
@@ -1153,7 +1164,8 @@
                             "order": 8,
                             "primary": false,
                             "link_row_table_id": 38437,
-                            "link_row_related_field_id": 209574
+                            "link_row_related_field_id": 209574,
+                            "has_related_field": true
                         },
                         {
                             "id": 227104,
@@ -1181,6 +1193,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 165563,
@@ -1289,6 +1302,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 233459,
@@ -1400,6 +1414,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 233466,
@@ -1493,6 +1508,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 237163,
@@ -1593,7 +1609,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8091,
@@ -1602,7 +1621,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8092,
@@ -1611,7 +1633,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8093,
@@ -1620,7 +1645,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8094,
@@ -1629,7 +1657,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8095,
@@ -1638,7 +1669,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8096,
@@ -1647,7 +1681,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8097,
@@ -1656,7 +1693,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 32767
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         },
@@ -1675,11 +1715,14 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 227104,
                             "field_options": [
                                 {
                                     "id": 5170,
                                     "field_id": 227104,
-                                    "hidden": false,
+                                    "hidden": true,
                                     "order": 0
                                 },
                                 {
@@ -2092,7 +2135,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 29800,
-                            "link_row_related_field_id": 205212
+                            "link_row_related_field_id": 205212,
+                            "has_related_field": true
                         },
                         {
                             "id": 209586,
@@ -2115,6 +2159,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 231881,
@@ -2255,7 +2300,7 @@
                         {
                             "id": 205217,
                             "type": "text",
-                            "name": "Name of place",
+                            "name": "Name",
                             "order": 0,
                             "primary": true,
                             "text_default": ""
@@ -2282,7 +2327,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 38062,
-                            "link_row_related_field_id": 205225
+                            "link_row_related_field_id": 205225,
+                            "has_related_field": true
                         },
                         {
                             "id": 205227,
@@ -2291,7 +2337,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 29800,
-                            "link_row_related_field_id": 205226
+                            "link_row_related_field_id": 205226,
+                            "has_related_field": true
                         },
                         {
                             "id": 205237,
@@ -2333,6 +2380,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 231898,
@@ -2405,6 +2453,9 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 205219,
                             "field_options": [
                                 {
                                     "id": 5171,
@@ -2421,7 +2472,7 @@
                                 {
                                     "id": 5173,
                                     "field_id": 205219,
-                                    "hidden": false,
+                                    "hidden": true,
                                     "order": 32767
                                 },
                                 {
@@ -2453,7 +2504,10 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
+                            "public": false,
                             "single_select_field_id": 205237,
+                            "card_cover_image_field_id": 205219,
                             "field_options": [
                                 {
                                     "id": 467,
@@ -2470,7 +2524,7 @@
                                 {
                                     "id": 469,
                                     "field_id": 205219,
-                                    "hidden": false,
+                                    "hidden": true,
                                     "order": 32767
                                 },
                                 {
@@ -2630,7 +2684,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 38061,
-                            "link_row_related_field_id": 205224
+                            "link_row_related_field_id": 205224,
+                            "has_related_field": true
                         },
                         {
                             "id": 205342,
@@ -2686,6 +2741,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 231901,
@@ -2776,6 +2832,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238093,
@@ -2857,6 +2914,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238099,
@@ -2938,6 +2996,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238105,
@@ -3010,6 +3069,9 @@
                                     "order": "ASC"
                                 }
                             ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 323621,
                             "field_options": [
                                 {
                                     "id": 5177,
@@ -3046,6 +3108,12 @@
                                     "field_id": 205349,
                                     "hidden": false,
                                     "order": 32767
+                                },
+                                {
+                                    "id": 57261,
+                                    "field_id": 323621,
+                                    "hidden": true,
+                                    "order": 32767
                                 }
                             ]
                         },
@@ -3058,7 +3126,10 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
+                            "public": false,
                             "single_select_field_id": 205342,
+                            "card_cover_image_field_id": 323621,
                             "field_options": [
                                 {
                                     "id": 473,
@@ -3094,6 +3165,12 @@
                                     "id": 478,
                                     "field_id": 205349,
                                     "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 33413,
+                                    "field_id": 323621,
+                                    "hidden": true,
                                     "order": 32767
                                 }
                             ]
@@ -3256,7 +3333,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 29800,
-                            "link_row_related_field_id": 158052
+                            "link_row_related_field_id": 158052,
+                            "has_related_field": true
                         },
                         {
                             "id": 209574,
@@ -3265,7 +3343,8 @@
                             "order": 4,
                             "primary": false,
                             "link_row_table_id": 29796,
-                            "link_row_related_field_id": 209575
+                            "link_row_related_field_id": 209575,
+                            "has_related_field": true
                         },
                         {
                             "id": 308762,
@@ -3305,6 +3384,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 233445,
@@ -3392,6 +3472,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 376699,
@@ -3473,6 +3554,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 376706,
@@ -3693,7 +3775,8 @@
                             "order": 3,
                             "primary": false,
                             "link_row_table_id": 29796,
-                            "link_row_related_field_id": 206658
+                            "link_row_related_field_id": 206658,
+                            "has_related_field": true
                         },
                         {
                             "id": 206662,
@@ -3743,7 +3826,8 @@
                             "order": 6,
                             "primary": false,
                             "link_row_table_id": 29800,
-                            "link_row_related_field_id": 206665
+                            "link_row_related_field_id": 206665,
+                            "has_related_field": true
                         },
                         {
                             "id": 207050,
@@ -3809,6 +3893,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 233448,
@@ -3920,6 +4005,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238112,
@@ -4031,6 +4117,7 @@
                             "sortings": [],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238121,
@@ -4141,6 +4228,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238131,
@@ -4251,6 +4339,7 @@
                             ],
                             "decorations": [],
                             "public": false,
+                            "row_identifier_type": "id",
                             "field_options": [
                                 {
                                     "id": 238140,
@@ -4363,7 +4452,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 0
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8076,
@@ -4372,7 +4464,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 1
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8080,
@@ -4381,7 +4476,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 2
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8081,
@@ -4390,7 +4488,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8078,
@@ -4399,7 +4500,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8083,
@@ -4408,7 +4512,10 @@
                                     "description": "",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 5
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8079,
@@ -4417,7 +4524,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 6
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8082,
@@ -4426,7 +4536,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 7
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 8084,
@@ -4435,7 +4548,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 8
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         },
@@ -4448,6 +4564,8 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
+                            "public": false,
                             "single_select_field_id": 207052,
                             "field_options": [
                                 {
@@ -4521,6 +4639,8 @@
                             "filters_disabled": false,
                             "filters": [],
                             "sortings": [],
+                            "decorations": [],
+                            "public": false,
                             "single_select_field_id": 206663,
                             "field_options": [
                                 {

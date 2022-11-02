@@ -86,7 +86,6 @@
     },
     "usersAdminTable": {
         "allUsers": "All users",
-        "id": "ID",
         "username": "Username",
         "name": "Name",
         "groups": "Groups",
@@ -134,9 +133,6 @@
     "editUserModal": {
         "delete": "Delete user",
         "edit": "Edit { username }"
-    },
-    "crudTableSearchContext": {
-        "search": "Search"
     },
     "tableJSONExporter": {
         "encoding": "Encoding"
@@ -190,7 +186,8 @@
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
         "rowColoring": "Row coloring",
-        "surveyForm": "Survey form"
+        "surveyForm": "Survey form",
+        "publicLogoRemoval": "Public logo removal"
     },
     "licenses": {
         "titleNoLicenses": "No licenses found",
@@ -232,7 +229,10 @@
         "rowUsage": "Row usage",
         "storeUsage": "Storage usage",
         "disconnectLicense": "Disconnect license",
-        "disconnectDescription": "If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
+        "disconnectDescription": "If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance.",
+        "moreSeatsNeededTitle": "More Seats Needed",
+        "contactSalesMoreSeats": "Contact Sales for more seats",
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} paid seats and {free_users_count} free seats in use"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Left border",
@@ -275,5 +275,11 @@
         "orderFields": "Order fields",
         "deactivated": "Survey form is available in the premium version.",
         "more": "More information"
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Hide Baserow logo on shared view",
+            "premiumModalName": "public logo removal"
+        }
     }
 }

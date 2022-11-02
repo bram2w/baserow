@@ -13,11 +13,14 @@
       </div>
     </div>
     <div
-      v-if="accountLevelPremium"
-      v-tooltip="$t('premiumTopSidebar.premiumDescription')"
-      class="user-level-premium"
+      v-if="
+        highestLicenseType && highestLicenseType.showInTopSidebarWhenActive()
+      "
+      v-tooltip="highestLicenseType.getTopSidebarTooltip()"
+      class="instance-wide-license"
+      :class="highestLicenseType.getLicenseBadgeClass()"
     >
-      {{ $t('premiumTopSidebar.premium') }}
+      {{ highestLicenseType.getName() }}
     </div>
   </div>
 </template>
@@ -33,17 +36,12 @@ export default {
     }
   },
   computed: {
-    accountLevelPremium() {
-      const validLicense = this.additionalUserData?.premium?.valid_license
-      // The user has account level premium if the `valid_license` value is exactly
-      // `true`. If it's an array, it means that it only has premium access for certain
-      // groups.
-      return validLicense === true
-    },
     ...mapGetters({
-      additionalUserData: 'auth/getAdditionalUserData',
       impersonating: 'impersonating/getImpersonating',
     }),
+    highestLicenseType() {
+      return this.$highestLicenseType()
+    },
   },
   methods: {
     resolveAdminUsersHref() {

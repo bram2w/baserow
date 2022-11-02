@@ -68,16 +68,16 @@ def test_get_user(data_fixture):
     handler = UserHandler()
 
     with pytest.raises(ValueError):
-        handler.get_user()
+        handler.get_active_user()
 
     with pytest.raises(UserNotFound):
-        handler.get_user(user_id=-1)
+        handler.get_active_user(user_id=-1)
 
     with pytest.raises(UserNotFound):
-        handler.get_user(email="user3@localhost")
+        handler.get_active_user(email="user3@localhost")
 
-    assert handler.get_user(user_id=user_1.id).id == user_1.id
-    assert handler.get_user(email=user_1.email).id == user_1.id
+    assert handler.get_active_user(user_id=user_1.id).id == user_1.id
+    assert handler.get_active_user(email=user_1.email).id == user_1.id
 
 
 @pytest.mark.django_db

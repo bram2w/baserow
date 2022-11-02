@@ -28,7 +28,8 @@
         "deactivate": "Desactivar",
         "paste": "Pegar",
         "duplicate": "Duplicar",
-        "remove": "Eliminar"
+        "remove": "Eliminar",
+        "login": "Iniciar sesión"
     },
     "adminType": {
         "settings": "Ajustes"
@@ -186,6 +187,10 @@
             "rowsCreated": "Se crearon las filas",
             "rowsUpdated": "Las filas fueron actualizadas",
             "rowsDeleted": "Se han eliminado las filas"
+        },
+        "form": {
+            "invalidURLTitle": "URL inválida.",
+            "invalidURLDescription": "La URL del webhook no es válida, es inaccesible o está prohibida."
         }
     },
     "clientHandler": {
@@ -274,7 +279,12 @@
         "updateRows": "Actualizar filas",
         "deleteRows": "Borrar filas",
         "batchRows": "Lote",
-        "singleRow": "Único"
+        "singleRow": "Único",
+        "uploadFile": "Subir archivo",
+        "uploadFileDescription": "La multiparte `archivo` que contiene el contenido del archivo.",
+        "uploadFileViaUrl": "Subir el archivo a través de la URL",
+        "uploadFileViaUrlDescription": "Sube un archivo a Baserow descargándolo de la URL proporcionada.",
+        "fileUploads": "Carga de archivos"
     },
     "exporterType": {
         "csv": "Exportar a CSV"
@@ -351,7 +361,11 @@
         "filterDescription": "Filtra una expresión que involucra una referencia de campo de búsqueda/vínculo o una llamada de función de búsqueda.",
         "roundDescription": "Devuelve el primer argumento redondeado al número de dígitos especificado por el segundo argumento.",
         "intDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales.",
-        "truncDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales."
+        "truncDescription": "Devuelve sólo el primer argumento convertido en un entero truncando los decimales.",
+        "linkDescription": "Crea un hipervínculo utilizando la URL proporcionada en el primer argumento.",
+        "buttonDescription": "Crea un botón utilizando la URL (primer argumento) y la etiqueta (segundo argumento).",
+        "getLinkLabelDescription": "Obtiene la etiqueta de una fórmula utilizando las funciones de enlace o botón.",
+        "getLinkUrlDescription": "Obtiene la URL de una fórmula utilizando las funciones de enlace o botón."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"

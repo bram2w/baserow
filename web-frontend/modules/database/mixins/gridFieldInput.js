@@ -28,6 +28,22 @@ export default {
       }
     },
   },
+  mounted() {
+    this.$el.leftMouseDownEvent = this.$el.addEventListener(
+      'mousedown',
+      (event) => {
+        // The `GridViewCell` component initiates the multiple selection when left
+        // clicking on the element. This is something we want to prevent while editing
+        // by stopping the propagation.
+        if (event.button === 0 && this.editing) {
+          event.stopPropagation()
+        }
+      }
+    )
+  },
+  beforeDestroy() {
+    this.$el.removeEventListener('mousedown', this.$el.leftMouseDownEvent)
+  },
   methods: {
     /**
      * Event that is called when the column is selected. Here we will add an event

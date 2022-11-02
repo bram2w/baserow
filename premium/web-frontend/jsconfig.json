@@ -3,7 +3,10 @@
     "baseUrl": ".",
     "paths": {
       "@baserow_premium/*": [
-        "./*"
+        "./modules/baserow_premium/*"
+      ],
+      "@baserow_premium_test/*": [
+        "./test/*"
       ]
     }
   },

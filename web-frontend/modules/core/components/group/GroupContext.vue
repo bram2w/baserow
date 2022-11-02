@@ -1,20 +1,34 @@
 <template>
-  <Context ref="context">
+  <Context ref="context" @shown="fetchRolesAndPermissions">
     <div class="context__menu-title">{{ group.name }} ({{ group.id }})</div>
-    <ul class="context__menu">
-      <li v-if="group.permissions === 'ADMIN'">
+    <div
+      v-if="group._.additionalLoading"
+      class="loading margin-left-2 margin-top-2 margin-bottom-2 margin-bottom-2"
+    ></div>
+    <ul v-else class="context__menu">
+      <li v-if="$hasPermission('group.update', group, group.id)">
         <a @click="$emit('rename')">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('groupContext.renameGroup') }}
         </a>
       </li>
-      <li v-if="group.permissions === 'ADMIN'">
-        <a @click=";[$refs.groupMembersModal.show(), hide()]">
+      <li v-if="$hasPermission('invitation.read', group, group.id)">
+        <a
+          @click="
+            $router.push({
+              name: 'settings-members',
+              params: {
+                groupId: group.id,
+              },
+            })
+            hide()
+          "
+        >
           <i class="context__menu-icon fas fa-fw fa-users"></i>
           {{ $t('groupContext.members') }}
         </a>
       </li>
-      <li v-if="group.permissions === 'ADMIN'">
+      <li v-if="$hasPermission('group.read_trash', group, group.id)">
         <a @click="showGroupTrashModal">
           <i class="context__menu-icon fas fa-fw fa-recycle"></i>
           {{ $t('groupContext.viewTrash') }}
@@ -26,7 +40,7 @@
           {{ $t('groupContext.leaveGroup') }}
         </a>
       </li>
-      <li v-if="group.permissions === 'ADMIN'">
+      <li v-if="$hasPermission('group.delete', group, group.id)">
         <a
           :class="{ 'context__menu-item--loading': loading }"
           @click="deleteGroup"
@@ -36,13 +50,8 @@
         </a>
       </li>
     </ul>
-    <GroupMembersModal
-      v-if="group.permissions === 'ADMIN'"
-      ref="groupMembersModal"
-      :group="group"
-    ></GroupMembersModal>
     <TrashModal
-      v-if="group.permissions === 'ADMIN'"
+      v-if="$hasPermission('group.read_trash', group, group.id)"
       ref="groupTrashModal"
       :initial-group="group"
     >
@@ -52,7 +61,6 @@
 </template>
 
 <script>
-import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
@@ -60,7 +68,7 @@ import LeaveGroupModal from '@baserow/modules/core/components/group/LeaveGroupMo
 
 export default {
   name: 'GroupContext',
-  components: { LeaveGroupModal, TrashModal, GroupMembersModal },
+  components: { LeaveGroupModal, TrashModal },
   mixins: [context],
   props: {
     group: {
@@ -74,13 +82,9 @@ export default {
     }
   },
   methods: {
-    showGroupMembersModal() {
-      // We need to make sure that the group members modal is rendered before we can
-      // open it.
-      this.$refs.context.forceRender()
-      this.$nextTick(() => {
-        this.$refs.groupMembersModal.show()
-      })
+    async fetchRolesAndPermissions() {
+      await this.$store.dispatch('group/fetchPermissions', this.group)
+      await this.$store.dispatch('group/fetchRoles', this.group)
     },
     showGroupTrashModal() {
       this.$refs.context.hide()

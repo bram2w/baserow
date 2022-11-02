@@ -1,7 +1,4 @@
 {
-    "table": {
-        "chooseView": "Choose view"
-    },
     "webhookModal": {
         "title": "{name} webhooks",
         "createWebhook": "Create webhook",
@@ -169,7 +166,8 @@
         "order": "Field order in table. 0 for the first field.",
         "primary": "Indicates if the field is a primary field. If `true` the field cannot be deleted and the value should represent the whole row.",
         "type": "Type defined for this field.",
-        "extraProps": "Some extra properties are not described here because they are type specific."
+        "extraProps": "Some extra properties are not described here because they are type specific.",
+        "readOnly": "Indicates whether the field is a read only field. If true, it's not possible to update the cell value."
     },
     "apiDocsTableDeleteRow": {
         "description": "Deletes an existing {name} row.",
@@ -244,7 +242,7 @@
     "fieldLinkRowSubForm": {
         "noTable": "You need at least one other table in the same database to link to.",
         "selectTableLabel": "Select a table to link to",
-        "hasRelatedFieldLabel": "Create related field"
+        "hasRelatedFieldLabel": "Create related field in linked table"
     },
     "fieldSelectOptions": {
         "add": "Add an option"
@@ -297,10 +295,10 @@
         "hideHiddenFields": "Hide hidden fields"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Add another option"
+        "addOption": "Choose an option"
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Add a collaborator"
+        "addCollaborator": "Choose a collaborator"
     },
     "rowEditFieldFile": {
         "addFile": "Add a file",
@@ -314,7 +312,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Add another link"
+        "addLink": "Choose a link"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "Choose CSV file",
@@ -368,6 +366,7 @@
     },
     "importFileModal": {
         "title": "Create new table",
+        "changeImporterType": "Change import type",
         "additionalImportTitle": "Import into {table}",
         "importLabel": "Would you like to import existing data?",
         "newTable": "Start with a new table",
@@ -713,5 +712,26 @@
         "titlePlaceholder": "Title",
         "descriptionPlaceholder": "Description",
         "noFields": "This form doesn't have any fields. Click on a field in the left sidebar to add one."
+    },
+    "table": {
+        "adjacentRow": {
+            "notification": {
+                "notFound": {
+                    "next": {
+                        "title": "No more rows",
+                        "message": "There is no next row"
+                    },
+                    "previous": {
+                        "title": "No more rows",
+                        "message": "There is no previous row"
+                    }
+                },
+                "error": {
+                    "title": "Error occurred",
+                    "message": "An error occurred while retrieving the adjacent row"
+                }
+            }
+        },
+        "chooseView": "Choose view"
     }
 }

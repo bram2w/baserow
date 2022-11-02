@@ -24,6 +24,13 @@
   margin-right: 6px;
 }
 
+.control__label-right-icon {
+  margin-left: 6px;
+  height: 16px;
+  top: 3px;
+  position: relative;
+}
+
 .control__description {
   font-size: 13px;
   line-height: 160%;
@@ -120,10 +127,11 @@
 
   &.input__with-icon--loading {
     &::after {
-      content: " ";
+      content: ' ';
+      margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(10px, 10px, auto, auto);
+      @include absolute(50%, 10px, auto, auto);
     }
 
     i {
@@ -152,7 +160,7 @@
   &::before {
     @include absolute(5px, auto, 0, 0);
 
-    content: "";
+    content: '';
     font-family: $font-awesome-font-family;
     font-weight: $font-awesome-font-weight;
     border: 1px solid $color-neutral-400;
@@ -178,6 +186,15 @@
       color: $color-neutral-500;
     }
   }
+
+  &.checkbox--small::before {
+    @include absolute(6px, auto, 0, 0);
+
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    font-size: 12px;
+  }
 }
 
 .radio {
@@ -195,7 +212,7 @@
   &::before {
     @include absolute(5px, auto, 0, 0);
 
-    content: "";
+    content: '';
     font-family: $font-awesome-font-family;
     font-weight: $font-awesome-font-weight;
     font-size: 10px;
@@ -263,7 +280,7 @@
   }
 
   &::before {
-    content: "";
+    content: '';
     border-radius: 12px;
     width: 22px;
     height: 12px;
@@ -273,7 +290,7 @@
   }
 
   &::after {
-    content: "";
+    content: '';
     border-radius: 100%;
     width: 6px;
     height: 6px;

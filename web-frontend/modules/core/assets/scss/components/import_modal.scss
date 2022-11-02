@@ -1,0 +1,52 @@
+.import-modal__preview {
+  border: 1px solid $color-neutral-200;
+  display: inline-block;
+  overflow: auto;
+  max-width: 100%;
+}
+
+.import-modal__header {
+  @extend .box__title;
+
+  display: flex;
+  align-items: baseline;
+}
+
+.import-modal__title {
+  margin: 0;
+}
+
+.import-modal__field-mapping {
+  @include absolute(0, 0, 0, 0);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.import-modal__field-mapping-body {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  padding-right: 34px;
+}
+
+.import-modal__field-mapping--empty {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 30px 0 30px;
+  height: 100%;
+  border-top-left-radius: 6px;
+}
+
+.import-modal__field-mapping-empty-icon {
+  font-size: 30px;
+  margin-bottom: 30px;
+}
+
+.import-modal__field-mapping-empty-text {
+  font-size: 14px;
+  line-height: 160%;
+}

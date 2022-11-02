@@ -3,8 +3,14 @@ import { DatabaseApplicationType } from '@baserow/modules/database/applicationTy
 import GridViewRowExpandButtonWithCommentCount from '@baserow_premium/components/row_comments/GridViewRowExpandButtonWithCommentCount'
 
 export class PremiumDatabaseApplicationType extends DatabaseApplicationType {
-  getRowEditModalRightSidebarComponent(readOnly) {
-    return readOnly ? null : RowCommentsSidebar
+  getRowEditModalRightSidebarComponent(database, table) {
+    return this.app.$hasPermission(
+      'database.table.list_comments',
+      table,
+      database.group.id
+    )
+      ? RowCommentsSidebar
+      : null
   }
 
   getRowExpandButtonComponent() {

@@ -360,6 +360,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
                 "primary": False,
                 "text_default": "",
                 "type": "text",
+                "read_only": False,
             }
         ],
         "view": {
@@ -383,6 +384,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
             },
             "type": "gallery",
             "card_cover_image_field": None,
+            "show_logo": True,
         },
     }
 

@@ -30,8 +30,11 @@
         :field="field"
         @input="updateValue('field_' + field.field.id, $event)"
       ></FormPageField>
-      <div class="form-view__actions">
-        <FormViewPoweredBy></FormViewPoweredBy>
+      <div
+        class="form-view__actions"
+        :class="{ 'form-view__actions--single': !showLogo }"
+      >
+        <FormViewPoweredBy v-if="showLogo"></FormViewPoweredBy>
         <div class="form-view__submit">
           <button
             class="button button--primary button--large"
@@ -48,6 +51,7 @@
       :is-redirect="isRedirect"
       :submit-action-redirect-url="submitActionRedirectUrl"
       :submit-action-message="submitActionMessage"
+      :show-logo="showLogo"
     ></FormViewSubmitted>
   </div>
 </template>

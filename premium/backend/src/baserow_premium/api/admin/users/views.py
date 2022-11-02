@@ -19,20 +19,21 @@ from baserow_premium.api.admin.users.serializers import (
     UserAdminUpdateSerializer,
 )
 from baserow_premium.api.admin.views import AdminListingView
-from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.license.features import PREMIUM
+from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED
+from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework_jwt.serializers import ImpersonateAuthTokenSerializer
-from rest_framework_jwt.views import ImpersonateJSONWebTokenView
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import get_error_schema
 from baserow.api.user.schemas import authenticate_user_schema
+from baserow.api.user.serializers import get_all_user_data_serialized
+from baserow.core.user.utils import generate_session_tokens_for_user
 
 from .serializers import BaserowImpersonateAuthTokenSerializer
 
@@ -67,7 +68,9 @@ class UsersAdminView(AdminListingView):
         ),
     )
     def get(self, request):
-        check_active_premium_license(request.user)
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+            request.user, PREMIUM
+        )
         return super().get(request)
 
 
@@ -96,7 +99,7 @@ class UserAdminView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
-                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
                 ]
             ),
             401: None,
@@ -142,7 +145,7 @@ class UserAdminView(APIView):
                 [
                     "USER_ADMIN_CANNOT_DELETE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
-                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
                 ]
             ),
             401: None,
@@ -169,7 +172,17 @@ class UserAdminView(APIView):
         return Response(status=204)
 
 
-class UserAdminImpersonateView(ImpersonateJSONWebTokenView):
+class UserAdminImpersonateView(GenericAPIView):
+    """
+    Impersonate the user by retrieving its JWT.
+
+    Returns:
+        dict: {
+            "access_token": user's JWT token,
+            "refresh_refresh": user's JWT refresh token
+        }
+    """
+
     permission_classes = (IsAdminUser,)
     serializer_class = BaserowImpersonateAuthTokenSerializer
 
@@ -182,7 +195,7 @@ class UserAdminImpersonateView(ImpersonateJSONWebTokenView):
             "order to do this. It's not possible to impersonate a superuser or staff."
             "\n\nThis is a **premium** feature."
         ),
-        request=ImpersonateAuthTokenSerializer,
+        request=BaserowImpersonateAuthTokenSerializer,
         responses={
             200: authenticate_user_schema,
         },
@@ -194,21 +207,23 @@ class UserAdminImpersonateView(ImpersonateJSONWebTokenView):
         }
     )
     def post(self, request):
-        check_active_premium_license(request.user)
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+            request.user, PREMIUM
+        )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data.get("token")
-        user = serializer.validated_data.get("user")
-
-        response = JSONWebTokenAuthentication.jwt_create_response_payload(
-            token=token, user=user, request=request
-        )
+        user = serializer.validated_data["user"]
 
         logger.info(
             f"{request.user.username} ({request.user.id}) requested an "
             f"impersonate token for {user.username} ({user.id})."
         )
 
-        return Response(response, status=HTTP_201_CREATED)
+        serialized_data = {
+            **generate_session_tokens_for_user(user, include_refresh_token=True),
+            **get_all_user_data_serialized(user, request),
+        }
+
+        return Response(serialized_data, status=HTTP_200_OK)

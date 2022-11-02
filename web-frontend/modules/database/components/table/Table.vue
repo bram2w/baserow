@@ -7,6 +7,9 @@
     >
       <div v-show="tableLoading" class="header__loading"></div>
       <ul v-if="!tableLoading" class="header__filter">
+        <li v-if="showLogo" class="header__filter-item">
+          <BaserowLogo class="header__filter-logo" />
+        </li>
         <li class="header__filter-item header__filter-item--grids">
           <a
             ref="viewsSelectToggle"
@@ -48,7 +51,7 @@
           ></ViewsContext>
         </li>
         <li
-          v-if="hasSelectedView && !readOnly"
+          v-if="hasSelectedView && !readOnly && showViewContext"
           class="header__filter-item header__filter-item--no-margin-left"
         >
           <a
@@ -74,7 +77,16 @@
           </ViewContext>
         </li>
         <li
-          v-if="hasSelectedView && view._.type.canFilter"
+          v-if="
+            hasSelectedView &&
+            view._.type.canFilter &&
+            (readOnly ||
+              $hasPermission(
+                'database.table.view.create_filter',
+                view,
+                database.group.id
+              ))
+          "
           class="header__filter-item"
         >
           <ViewFilter
@@ -86,7 +98,16 @@
           ></ViewFilter>
         </li>
         <li
-          v-if="hasSelectedView && view._.type.canSort"
+          v-if="
+            hasSelectedView &&
+            view._.type.canSort &&
+            (readOnly ||
+              $hasPermission(
+                'database.table.view.create_sort',
+                view,
+                database.group.id
+              ))
+          "
           class="header__filter-item"
         >
           <ViewSort
@@ -98,13 +119,30 @@
           ></ViewSort>
         </li>
         <li
-          v-if="hasSelectedView && view._.type.canShare && !readOnly"
+          v-if="
+            hasSelectedView &&
+            view._.type.canShare &&
+            !readOnly &&
+            $hasPermission(
+              'database.table.view.update_slug',
+              view,
+              database.group.id
+            )
+          "
           class="header__filter-item"
         >
           <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>
         </li>
         <li
-          v-if="hasCompatibleDecorator && !readOnly"
+          v-if="
+            hasCompatibleDecorator &&
+            !readOnly &&
+            $hasPermission(
+              'database.table.view.decoration.update',
+              view,
+              database.group.id
+            )
+          "
           class="header__filter-item"
         >
           <ViewDecoratorMenu
@@ -139,11 +177,18 @@
         :table="table"
         :view="view"
         :fields="fields"
-        :row="row"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @refresh="refresh"
         @selected-row="$emit('selected-row', $event)"
+        @navigate-previous="
+          (row, activeSearchTerm) =>
+            $emit('navigate-previous', row, activeSearchTerm)
+        "
+        @navigate-next="
+          (row, activeSearchTerm) =>
+            $emit('navigate-next', row, activeSearchTerm)
+        "
       />
       <div v-if="viewLoading" class="loading-overlay"></div>
     </div>
@@ -151,6 +196,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import ResizeObserver from 'resize-observer-polyfill'
 
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
@@ -163,6 +209,7 @@ import ViewDecoratorMenu from '@baserow/modules/database/components/view/ViewDec
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
+import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -170,6 +217,7 @@ import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLi
  */
 export default {
   components: {
+    BaserowLogo,
     ShareViewLink,
     EditableViewName,
     ViewsContext,
@@ -207,11 +255,6 @@ export default {
     view: {
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === undefined,
-    },
-    row: {
-      type: Object,
-      required: false,
-      default: null,
     },
     tableLoading: {
       type: Boolean,
@@ -266,6 +309,46 @@ export default {
           .some((deco) => deco.isCompatible(this.view))
       )
     },
+    showLogo() {
+      return this.view?.show_logo && this.isPublic
+    },
+    showViewContext() {
+      return (
+        this.$hasPermission(
+          'database.table.run_export',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.import_rows',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.duplicate',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.update',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.delete',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.create_webhook',
+          this.table,
+          this.database.group.id
+        )
+      )
+    },
+    ...mapGetters({
+      isPublic: 'page/view/public/getIsPublic',
+    }),
   },
   watch: {
     tableLoading(value) {

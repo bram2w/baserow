@@ -13,10 +13,14 @@ from baserow.contrib.database.fields.registries import field_type_registry
 
 class FieldSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField(help_text="The type of the related field.")
+    read_only = serializers.SerializerMethodField(
+        help_text="Indicates whether the field is a read only field. If true, "
+        "it's not possible to update the cell value."
+    )
 
     class Meta:
         model = Field
-        fields = ("id", "table_id", "name", "order", "type", "primary")
+        fields = ("id", "table_id", "name", "order", "type", "primary", "read_only")
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
@@ -25,6 +29,10 @@ class FieldSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
         return field_type_registry.get_by_model(instance.specific_class).type
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_read_only(self, instance):
+        return field_type_registry.get_by_model(instance.specific_class).read_only
 
 
 class RelatedFieldsSerializer(serializers.Serializer):

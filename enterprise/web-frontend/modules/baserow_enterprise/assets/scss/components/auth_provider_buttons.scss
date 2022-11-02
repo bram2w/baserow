@@ -1,0 +1,48 @@
+.auth-provider-buttons {
+  display: flex;
+  flex-direction: column;
+  margin-top: 48px;
+  padding-bottom: 16px;
+  margin-bottom: 32px;
+}
+
+.auth-provider-buttons--border-bottom {
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.auth-provider-buttons__empty-space {
+  margin-bottom: 48px;
+}
+
+.auth-provider-buttons--small {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 16px;
+
+  & div {
+    width: 100%;
+  }
+
+  & .auth-provider-icon {
+    margin-right: 0;
+  }
+}
+
+.auth-provider-buttons__button {
+  color: $color-neutral-900;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  padding: 10px 16px;
+  gap: 8px;
+  border: 1px solid $color-neutral-900;
+  border-radius: 4px;
+  background-color: white;
+  margin-bottom: 20px;
+}
+
+.auth-provider-buttons__button:hover {
+  text-decoration: none;
+}

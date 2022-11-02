@@ -1,0 +1,103 @@
+{
+    "enterprise": {
+        "license": "Enterprise",
+        "sidebarTooltip": "Your account has access to the enterprise features globally",
+        "enterpriseFeatures": "Premium and Enterprise Features",
+        "rbac": "RBAC",
+        "sso": "SSO",
+        "deactivated": "Deactivated",
+        "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any group then they will use a paid seat automatically.",
+        "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each groups members page."
+    },
+    "adminType": {
+        "Authentication": "Authentication"
+    },
+    "authProviders": {
+        "title": "Authentication Providers",
+        "noProviders": "No authentication providers configured yet.",
+        "addProvider": "Add provider"
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "samlSettingsForm": {
+        "domain": "Domain",
+        "domainPlaceholder": "Insert the company domain name...",
+        "invalidDomain": "Invalid domain name",
+        "domainAlreadyExists": "A SAML provider for this domain already exists",
+        "metadata": "Metadata",
+        "metadataPlaceholder": "Paste the Identity Provider metadata...",
+        "invalidMetadata": "Invalid XML metadata for the Identity Provider",
+        "relayStateUrl": "Default Relay State URL",
+        "acsUrl": "Single Sign On URL",
+        "providerIsVerified": "The provider has been verified"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Add a new {type}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Edit {name}"
+    },
+    "deleteAuthProviderModal": {
+        "title": "Delete {name}",
+        "comment": "Do you really want to delete this {type}?"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Login with SAML SSO",
+        "redirecting": "Redirecting to the Identity Provider...",
+        "continueWithSaml": "Continue to the SAML SSO provider",
+        "requestError": "This domain is not configured with SAML SSO",
+        "loginText": "Already have a password?"
+    },
+    "loginError": {
+        "title": "Something went wrong. ",
+        "loginText": "Already have an account?",
+        "help": "Please contact your administrator for help.",
+        "defaultErrorMessage": "An error occurred while trying to log in.",
+        "errorSsoFeatureNotActive": "The SSO feature is not active. Please contact your administrator.",
+        "errorInvalidSamlRequest": "The SAML request is invalid.",
+        "errorInvalidSamlResponse": "The SAML response is invalid.",
+        "errorUserDeactivated": "The user has been disabled.",
+        "errorProviderDoesNotExist": "This authentication provider doesn't exist or is not available.",
+        "errorAuthFlowError": "An error occured during the authentication flow with the selected provider.",
+        "errorDifferentProvider": "Please use the provider that you originally signed up with."
+    },
+    "roles": {
+        "admin": {
+            "name": "Admin",
+            "description": "Can fully configure and edit groups and applications."
+        },
+        "builder": {
+            "name": "Builder",
+            "description": "Can fully configure and edit applications."
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "Can fully edit data but not configure applications or groups."
+        },
+        "commenter": {
+            "name": "Commenter",
+            "description": "Can only read and comment on data."
+        },
+        "viewer": {
+            "name": "Viewer",
+            "description": "Can only read data."
+        }
+    },
+    "oauthSettingsForm": {
+        "providerName": "Name",
+        "providerNamePlaceholder": "Custom provider name",
+        "clientId": "Client ID",
+        "clientIdPlaceholder": "Provider's client ID",
+        "secret": "Secret",
+        "secretPlaceholder": "Provider's secret",
+        "baseUrl": "URL",
+        "baseUrlPlaceholder": "Provider's base URL",
+        "invalidBaseUrl": "The entered URL is not a valid provider URL",
+        "callbackUrl": "Callback URL"
+    },
+    "loginButton": {
+        "continueWith": "Continue with"
+    }
+}

@@ -2,9 +2,22 @@
   <div
     ref="fieldContextAnchor"
     class="grid-view-aggregation"
-    :class="{ 'read-only': readOnly }"
+    :class="{
+      'read-only':
+        readOnly ||
+        !$hasPermission(
+          'database.table.view.update_field_options',
+          view,
+          database.group.id
+        ),
+    }"
     @click.prevent="
       !readOnly &&
+        $hasPermission(
+          'database.table.view.update_field_options',
+          view,
+          database.group.id
+        ) &&
         $refs[`fieldContext`].toggle(
           $refs.fieldContextAnchor,
           'top',
@@ -57,6 +70,10 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'GridViewFieldFooter',
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     field: {
       type: Object,
       required: true,
@@ -171,6 +188,11 @@ export default {
           {
             field: this.field,
             values,
+            readOnly: !this.$hasPermission(
+              'database.table.view.update_field_options',
+              this.view,
+              this.database.group.id
+            ),
           }
         )
       } finally {

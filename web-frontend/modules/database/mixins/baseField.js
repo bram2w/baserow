@@ -5,6 +5,13 @@
 export default {
   props: {
     /**
+     * The group ID of the group where parent table and database are in.
+     */
+    groupId: {
+      type: Number,
+      required: true,
+    },
+    /**
      * Contains the field type object. Because each field type can have different
      * settings you need this in order to render the correct component or implement
      * correct validation.

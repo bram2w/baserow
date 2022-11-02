@@ -48,7 +48,14 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.operations import (
+    ReadAggregationDatabaseTableOperationType,
+)
 from baserow.contrib.database.rows.registries import row_metadata_registry
+from baserow.contrib.database.table.operations import (
+    ListAggregationDatabaseTableOperationType,
+    ListRowsDatabaseTableOperationType,
+)
 from baserow.contrib.database.views.exceptions import (
     AggregationTypeDoesNotExist,
     NoAuthorizationToPubliclySharedView,
@@ -64,6 +71,7 @@ from baserow.contrib.database.views.registries import (
     view_type_registry,
 )
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 
 from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .schemas import (
@@ -240,8 +248,13 @@ class GridViewView(APIView):
         view = view_handler.get_view(view_id, GridView)
         view_type = view_type_registry.get_by_model(view)
 
-        view.table.database.group.has_user(
-            request.user, raise_error=True, allow_if_template=True
+        group = view.table.database.group
+        CoreHandler().check_permissions(
+            request.user,
+            ListRowsDatabaseTableOperationType.type,
+            group=group,
+            context=view.table,
+            allow_if_template=True,
         )
         field_ids = get_include_exclude_field_ids(
             view.table, include_fields, exclude_fields
@@ -334,7 +347,12 @@ class GridViewView(APIView):
         """
 
         view = ViewHandler().get_view(view_id, GridView)
-        view.table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            ListRowsDatabaseTableOperationType.type,
+            group=view.table.database.group,
+            context=view.table,
+        )
 
         model = view.table.get_model(field_ids=data["field_ids"])
         results = model.objects.filter(pk__in=data["row_ids"])
@@ -423,9 +441,12 @@ class GridViewFieldAggregationsView(APIView):
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
 
-        # Check permission
-        view.table.database.group.has_user(
-            request.user, raise_error=True, allow_if_template=True
+        CoreHandler().check_permissions(
+            request.user,
+            ListAggregationDatabaseTableOperationType.type,
+            group=view.table.database.group,
+            context=view.table,
+            allow_if_template=True,
         )
 
         # Compute aggregation
@@ -527,11 +548,14 @@ class GridViewFieldAggregationView(APIView):
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
 
-        # Check permission
-        view.table.database.group.has_user(
-            request.user, raise_error=True, allow_if_template=True
-        )
         field_instance = FieldHandler().get_field(field_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadAggregationDatabaseTableOperationType.type,
+            group=view.table.database.group,
+            context=field_instance,
+            allow_if_template=True,
+        )
 
         aggregation_type = request.GET.get("type")
 

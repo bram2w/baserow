@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.views import APIView
 
 from baserow.api.decorators import (
@@ -40,6 +41,7 @@ from baserow.contrib.database.api.rows.errors import (
     ERROR_ROW_IDS_NOT_UNIQUE,
 )
 from baserow.contrib.database.api.rows.serializers import (
+    GetRowAdjacentSerializer,
     example_pagination_row_serializer_class,
 )
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
@@ -72,9 +74,17 @@ from baserow.contrib.database.rows.actions import (
 )
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.operations import (
+    ReadAdjacentRowDatabaseRowOperationType,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.operations import (
+    CreateRowDatabaseTableOperationType,
+    ListRowNamesDatabaseTableOperationType,
+    ListRowsDatabaseTableOperationType,
+)
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.views.exceptions import (
@@ -86,6 +96,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .schemas import row_names_response_schema
@@ -267,7 +278,11 @@ class RowsView(APIView):
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
             404: get_error_schema(
-                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
+                [
+                    "ERROR_TABLE_DOES_NOT_EXIST",
+                    "ERROR_FIELD_DOES_NOT_EXIST",
+                    "ERROR_VIEW_DOES_NOT_EXIST",
+                ]
             ),
         },
     )
@@ -293,7 +308,13 @@ class RowsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ListRowsDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         TokenHandler().check_table_permissions(request, "read", table, False)
         search = query_params.get("search")
@@ -431,6 +452,14 @@ class RowsView(APIView):
         table = TableHandler().get_table(table_id)
 
         TokenHandler().check_table_permissions(request, "create", table, False)
+
+        CoreHandler().check_permissions(
+            request.user,
+            CreateRowDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
+
         user_field_names = "user_field_names" in request.GET
         model = table.get_model()
 
@@ -527,7 +556,8 @@ class RowNamesView(APIView):
         for name, value in request.GET.items():
             if not name.startswith("table__"):
                 raise QueryParameterValidationException(
-                    detail='Only table Id prefixed by "table__" are allowed as parameter.',
+                    detail='Only table Id prefixed by "table__" are allowed as '
+                    "parameter.",
                     code="invalid_parameter",
                 )
 
@@ -558,9 +588,14 @@ class RowNamesView(APIView):
             table = table_handler.get_table(table_id, base_queryset=table_queryset)
 
             if not database:
-                # Check permission once
                 database = table.database
-                database.group.has_user(request.user, raise_error=True)
+
+            CoreHandler().check_permissions(
+                request.user,
+                ListRowNamesDatabaseTableOperationType.type,
+                group=database.group,
+                context=table,
+            )
 
             token_handler.check_table_permissions(request, "read", table, False)
 
@@ -1236,3 +1271,145 @@ class BatchDeleteRowsView(APIView):
         )
 
         return Response(status=204)
+
+
+class RowAdjacentView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns the row of the table related to the provided "
+                "value.",
+            ),
+            OpenApiParameter(
+                name="row_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns the row adjacent the provided value.",
+            ),
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Applies the filters and sorts of the provided view.",
+            ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description=(
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
+                ),
+            ),
+            OpenApiParameter(
+                name="previous",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description=(
+                    "A flag query parameter which if provided returns the"
+                    "previous row to the specified row_id. If it's not set"
+                    "it will return the next row."
+                ),
+            ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="If provided, the adjacent row will be one that matches"
+                "the search query.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="get_adjacent_database_table_row",
+        description=(
+            "Fetches the adjacent row to a given row_id in the table with the "
+            "given table_id. If the previous flag is set it will return the "
+            "previous row, otherwise it will return the next row. You can specify"
+            "a view_id and it will apply the filters and sorts of the provided "
+            "view."
+        ),
+        responses={
+            200: get_example_row_serializer_class(
+                example_type="get", user_field_names=True
+            ),
+            204: None,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_TABLE_DOES_NOT_EXIST",
+                    "ERROR_ROW_DOES_NOT_EXIST",
+                    "ERROR_VIEW_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+        }
+    )
+    @validate_query_parameters(GetRowAdjacentSerializer)
+    def get(
+        self, request: Request, table_id: int, row_id: int, query_params: Dict[str, Any]
+    ) -> Response:
+
+        previous = query_params.get("previous")
+        view_id = query_params.get("view_id")
+        user_field_names = query_params.get("user_field_names")
+        search = query_params.get("search")
+
+        table = TableHandler().get_table(table_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadAdjacentRowDatabaseRowOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
+
+        model = table.get_model()
+        queryset = model.objects.all().enhance_by_fields()
+
+        if search is not None:
+            queryset = queryset.search_all_fields(search)
+
+        view = None
+        if view_id:
+            view_handler = ViewHandler()
+            view = view_handler.get_view(view_id)
+
+            if view.table_id != table.id:
+                raise ViewDoesNotExist()
+
+            queryset = view_handler.apply_filters(view, queryset)
+            queryset = view_handler.apply_sorting(view, queryset)
+
+        try:
+            row = queryset.get(pk=row_id)
+        except model.DoesNotExist:
+            raise RowDoesNotExist(row_id)
+
+        adjacent_row = RowHandler().get_adjacent_row(
+            row, queryset, previous=previous, view=view
+        )
+
+        # Don't fail, just let the user know there isn't an adjacent row
+        if adjacent_row is None:
+            return Response(status=HTTP_204_NO_CONTENT)
+
+        serializer_class = get_row_serializer_class(
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
+        )
+        serializer = serializer_class(adjacent_row)
+
+        return Response(serializer.data)

@@ -17,6 +17,7 @@ from baserow.contrib.database.fields.field_filters import (
     FilterBuilder,
 )
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
+from baserow.contrib.database.fields.models import CreatedOnField, LastModifiedField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.cache import (
     get_cached_model_field_attrs,
@@ -34,7 +35,9 @@ from baserow.core.mixins import (
 )
 from baserow.core.utils import split_comma_separated_string
 
-deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
+deconstruct_filter_key_regex = re.compile(
+    r"filter__field_([0-9]+|created_on|updated_on)__([a-zA-Z0-9_]*)$"
+)
 
 
 class TableModelQuerySet(models.QuerySet):
@@ -205,7 +208,8 @@ class TableModelQuerySet(models.QuerySet):
             field_order = field_type.get_order(field, field_name, order_direction)
 
             if isinstance(field_order, AnnotatedOrder):
-                annotations = {**annotations, **field_order.annotation}
+                if field_order.annotation is not None:
+                    annotations = {**annotations, **field_order.annotation}
                 field_order = field_order.order
 
             if field_order:
@@ -241,6 +245,12 @@ class TableModelQuerySet(models.QuerySet):
             'filter__field_{id}__{view_filter_type}': {value}.
         }
 
+        In addition to that, it's also possible to directly filter on the
+        `created_on` and `updated_on` fields, even if the CreatedOn and LastModified
+        fields are not created. This can be done by providing
+        `filter__field_created_on__{view_filter_type}` or
+        `filter__field_updated_on__{view_filter_type}` as keys in the `filter_object`.
+
         :param filter_object: The object containing the field and filter type as key
             and the filter value as value.
         :type filter_object: object
@@ -272,21 +282,32 @@ class TableModelQuerySet(models.QuerySet):
             if not matches:
                 continue
 
-            field_id = int(matches[1])
+            fixed_field_instance_mapping = {
+                "created_on": CreatedOnField(),
+                "updated_on": LastModifiedField(),
+            }
 
-            if field_id not in self.model._field_objects or (
-                only_filter_by_field_ids is not None
-                and field_id not in only_filter_by_field_ids
-            ):
-                raise FilterFieldNotFound(field_id, f"Field {field_id} does not exist.")
+            if matches[1] in fixed_field_instance_mapping.keys():
+                field_name = matches[1]
+                field_instance = fixed_field_instance_mapping.get(field_name)
+            else:
+                field_id = int(matches[1])
 
-            field_object = self.model._field_objects[field_id]
-            field_instance = field_object["field"]
-            field_name = field_object["name"]
-            field_type = field_object["type"].type
+                if field_id not in self.model._field_objects or (
+                    only_filter_by_field_ids is not None
+                    and field_id not in only_filter_by_field_ids
+                ):
+                    raise FilterFieldNotFound(
+                        field_id, f"Field {field_id} does not exist."
+                    )
+
+                field_object = self.model._field_objects[field_id]
+                field_instance = field_object["field"]
+                field_name = field_object["name"]
+                field_type = field_object["type"].type
+
             model_field = self.model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(matches[2])
-
             if not view_filter_type.field_is_compatible(field_instance):
                 raise ViewFilterTypeNotAllowedForField(
                     matches[2],
@@ -299,7 +320,7 @@ class TableModelQuerySet(models.QuerySet):
             for value in values:
                 filter_builder.filter(
                     view_filter_type.get_filter(
-                        field_name, value, model_field, field_object["field"]
+                        field_name, value, model_field, field_instance
                     )
                 )
 

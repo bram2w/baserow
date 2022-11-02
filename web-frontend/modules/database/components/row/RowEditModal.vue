@@ -8,6 +8,23 @@
     @hidden="$emit('hidden', { row })"
   >
     <template #content>
+      <div v-if="enableNavigation" class="row-edit-modal__navigation">
+        <div v-if="navigationLoading" class="loading"></div>
+        <template v-else>
+          <a
+            class="row-edit-modal__navigation__item"
+            @click="$emit('navigate-previous', previousRow)"
+          >
+            <i class="fa fa-lg fa-chevron-up"></i>
+          </a>
+          <a
+            class="row-edit-modal__navigation__item"
+            @click="$emit('navigate-next', nextRow)"
+          >
+            <i class="fa fa-lg fa-chevron-down"></i>
+          </a>
+        </template>
+      </div>
       <h2 class="box__title">
         {{ heading }}
       </h2>
@@ -19,6 +36,7 @@
         :read-only="readOnly"
         :row="row"
         :table="table"
+        :database="database"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @order-fields="$emit('order-fields', $event)"
@@ -40,6 +58,7 @@
           :read-only="readOnly"
           :row="row"
           :table="table"
+          :database="database"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
@@ -47,7 +66,17 @@
         >
         </RowEditModalFieldsList>
       </RowEditModalHiddenFieldsSection>
-      <div v-if="!readOnly" class="actions">
+      <div
+        v-if="
+          !readOnly &&
+          $hasPermission(
+            'database.table.create_field',
+            table,
+            database.group.id
+          )
+        "
+        class="actions"
+      >
         <a
           ref="createFieldContextLink"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
@@ -66,7 +95,6 @@
       <component
         :is="optionalRightSideBar"
         :row="row"
-        :read-only="readOnly"
         :table="table"
         :database="database"
       ></component>
@@ -75,8 +103,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import modal from '@baserow/modules/core/mixins/modal'
-
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import RowEditModalFieldsList from './RowEditModalFieldsList.vue'
 import RowEditModalHiddenFieldsSection from './RowEditModalHiddenFieldsSection.vue'
@@ -93,8 +121,7 @@ export default {
   props: {
     database: {
       type: Object,
-      required: false,
-      default: null,
+      required: true,
     },
     table: {
       type: Object,
@@ -127,15 +154,21 @@ export default {
       type: Boolean,
       required: true,
     },
-  },
-  data() {
-    return {
-      optionalRightSideBar: this.$registry
-        .get('application', 'database')
-        .getRowEditModalRightSidebarComponent(this.readOnly),
-    }
+    enableNavigation: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   computed: {
+    ...mapGetters({
+      navigationLoading: 'rowModalNavigation/getLoading',
+    }),
+    optionalRightSideBar() {
+      return this.$registry
+        .get('application', 'database')
+        .getRowEditModalRightSidebarComponent(this.database, this.table)
+    },
     modalRow() {
       return this.$store.getters['rowModal/get'](this._uid)
     },
@@ -147,6 +180,17 @@ export default {
     },
     row() {
       return this.modalRow.row
+    },
+    rowIndex() {
+      return this.rows.findIndex((r) => r !== null && r.id === this.rowId)
+    },
+    nextRow() {
+      return this.rowIndex !== -1 && this.rows.length > this.rowIndex + 1
+        ? this.rows[this.rowIndex + 1]
+        : null
+    },
+    previousRow() {
+      return this.rowIndex > 0 ? this.rows[this.rowIndex - 1] : null
     },
     heading() {
       const field = getPrimaryOrFirstField(this.visibleFields)

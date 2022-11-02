@@ -1,6 +1,11 @@
 <template>
   <ul v-if="!tableLoading" class="header__filter header__filter--full-width">
-    <li class="header__filter-item">
+    <li
+      v-if="
+        $hasPermission('database.table.view.update', view, database.group.id)
+      "
+      class="header__filter-item"
+    >
       <a
         v-if="!readOnly"
         ref="modeContextLink"

@@ -12,6 +12,10 @@
   border-radius: 5px;
   height: 100%;
   transition-timing-function: linear;
+
+  &--overflow {
+    background-color: $color-error-500;
+  }
 }
 
 .progress-bar__status-text {

@@ -1,11 +1,8 @@
 <template>
   <div>
     <Notifications></Notifications>
-    <div class="box-page__header"></div>
-    <div class="box-page">
-      <div class="box">
-        <nuxt />
-      </div>
+    <div class="auth__page">
+      <nuxt />
     </div>
   </div>
 </template>
@@ -16,5 +13,12 @@ import Notifications from '@baserow/modules/core/components/notifications/Notifi
 export default {
   components: { Notifications },
   middleware: ['settings', 'urlCheck'],
+  head() {
+    return {
+      bodyAttrs: {
+        class: 'auth__body',
+      },
+    }
+  },
 }
 </script>

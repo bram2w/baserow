@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.fields import CharField, EmailField
 from rest_framework.serializers import ModelSerializer
-from rest_framework_jwt.serializers import ImpersonateAuthTokenSerializer
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.api.user.validators import password_validation
@@ -84,8 +83,16 @@ class UserAdminUpdateSerializer(
         }
 
 
-class BaserowImpersonateAuthTokenSerializer(ImpersonateAuthTokenSerializer):
+class BaserowImpersonateAuthTokenSerializer(serializers.Serializer):
+    """
+    Serializer used for impersonation.
+    """
+
+    User = get_user_model()
     # It's not allowed to impersonate a superuser or staff.
     user = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(is_superuser=False, is_staff=False)
     )
+
+    class Meta:
+        fields = ("user",)

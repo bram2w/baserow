@@ -135,9 +135,6 @@
         "delete": "Usuń użytkownika",
         "edit": "Edytuj { username }"
     },
-    "crudTableSearchContext": {
-        "search": "Szukaj"
-    },
     "tableJSONExporter": {
         "encoding": "Kodowanie"
     },
@@ -190,7 +187,8 @@
         "exports": "Eksport JSON i XML",
         "admin": "Funkcjonalność administratora",
         "rowColoring": "Kolorowanie wierszy",
-        "surveyForm": "Formularz ankiety"
+        "surveyForm": "Formularz ankiety",
+        "publicLogoRemoval": "Usunięcie logo publicznego"
     },
     "licenses": {
         "titleNoLicenses": "Nie znaleziono licencji",
@@ -275,5 +273,11 @@
         "survey": "Ankieta",
         "surveyDescription": "Jedno pole jest widoczne w tym samym czasie.",
         "onlyForPremium": "Dostępne w wersji premium"
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Ukryj logo Baserow w widoku udostępnionym",
+            "premiumModalName": "usuwanie logo publicznego"
+        }
     }
 }

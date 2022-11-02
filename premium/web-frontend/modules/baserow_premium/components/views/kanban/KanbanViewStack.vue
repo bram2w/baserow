@@ -34,7 +34,7 @@
           {{ stack.count }}
         </div>
         <a
-          v-if="!readOnly"
+          v-if="!readOnly && showStackContextMenu"
           ref="editContextLink"
           class="kanban-view__options"
           @click="
@@ -49,9 +49,13 @@
           <i class="fas fa-ellipsis-h"></i>
         </a>
         <KanbanViewStackContext
+          v-if="!readOnly && showStackContextMenu"
           ref="editContext"
           :option="option"
+          :database="database"
+          :table="table"
           :fields="fields"
+          :single-select-field="singleSelectField"
           :store-prefix="storePrefix"
           @create-row="$emit('create-row', { option })"
           @refresh="$emit('refresh', $event)"
@@ -86,7 +90,6 @@
               class="kanban-view__stack-card"
               :class="{
                 'kanban-view__stack-card--dragging': slot.row._.dragging,
-                'kanban-view__stack-card--disabled': readOnly,
               }"
               @mousedown="cardDown($event, slot.row)"
               @mousemove="cardMoveOver($event, slot.row)"
@@ -102,7 +105,14 @@
       </InfiniteScroll>
       <div class="kanban-view__stack-foot">
         <a
-          v-if="!readOnly"
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
           class="button button--ghost kanban-view__stack-new-button"
           :disabled="draggingRow !== null"
           @click="!readOnly && $emit('create-row', { option })"
@@ -151,6 +161,10 @@ export default {
       required: false,
       default: null,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
@@ -196,6 +210,21 @@ export default {
     }
   },
   computed: {
+    showStackContextMenu() {
+      return (
+        this.singleSelectField &&
+        (this.$hasPermission(
+          'database.table.create_row',
+          this.table,
+          this.database.group.id
+        ) ||
+          this.$hasPermission(
+            'database.table.field.update',
+            this.singleSelectField,
+            this.database.group.id
+          ))
+      )
+    },
     /**
      * In order for the virtual scrolling to work, we need to know what the height of
      * the card is to correctly position it.
@@ -226,6 +255,9 @@ export default {
     coverImageField() {
       const fieldId = this.view.card_cover_image_field
       return this.fields.find((field) => field.id === fieldId) || null
+    },
+    singleSelectField() {
+      return this.fields.find((field) => field.id === this.singleSelectFieldId)
     },
   },
   watch: {
@@ -266,6 +298,9 @@ export default {
         draggingOriginalStackId:
           this.$options.propsData.storePrefix +
           'view/kanban/getDraggingOriginalStackId',
+        singleSelectFieldId:
+          this.$options.propsData.storePrefix +
+          'view/kanban/getSingleSelectFieldId',
       }),
     }
   },
@@ -277,49 +312,58 @@ export default {
      */
     cardDown(event, row) {
       // If it isn't a left click.
-      if (event.button !== 0 || this.readOnly) {
+      if (event.button !== 0) {
         return
       }
 
       event.preventDefault()
 
-      const rect = event.target.getBoundingClientRect()
       this.downCardRow = row
-      this.downCardClientX = event.clientX
-      this.downCardClientY = event.clientY
-      this.downCardTop = event.clientY - rect.top
-      this.downCardLeft = event.clientX - rect.left
-
-      this.copyElement = document.createElement('div')
-      this.copyElement.innerHTML = event.target.outerHTML
-      this.copyElement.style = `position: absolute; left: 0; top: 0; width: ${rect.width}px; z-index: 10;`
-      this.copyElement.firstChild.classList.add(
-        'kanban-view__stack-card--dragging-copy'
-      )
-
-      this.$el.keydownEvent = (event) => {
-        if (event.key === 'Escape') {
-          if (this.draggingRow !== null) {
-            this.$store.dispatch(
-              this.storePrefix + 'view/kanban/cancelRowDrag',
-              {
-                row: this.draggingRow,
-                originalStackId: this.draggingOriginalStackId,
-              }
-            )
-          }
-          this.cardCancel(event)
-        }
-      }
-      document.body.addEventListener('keydown', this.$el.keydownEvent)
-
-      this.$el.mouseMoveEvent = (event) => this.cardMove(event)
-      window.addEventListener('mousemove', this.$el.mouseMoveEvent)
-
       this.$el.mouseUpEvent = (event) => this.cardUp(event)
       window.addEventListener('mouseup', this.$el.mouseUpEvent)
 
-      this.cardMove(event)
+      if (
+        !this.readOnly &&
+        this.$hasPermission(
+          'database.table.move_row',
+          this.table,
+          this.database.group.id
+        )
+      ) {
+        const rect = event.target.getBoundingClientRect()
+        this.downCardClientX = event.clientX
+        this.downCardClientY = event.clientY
+        this.downCardTop = event.clientY - rect.top
+        this.downCardLeft = event.clientX - rect.left
+
+        this.copyElement = document.createElement('div')
+        this.copyElement.innerHTML = event.target.outerHTML
+        this.copyElement.style = `position: absolute; left: 0; top: 0; width: ${rect.width}px; z-index: 10;`
+        this.copyElement.firstChild.classList.add(
+          'kanban-view__stack-card--dragging-copy'
+        )
+
+        this.$el.keydownEvent = (event) => {
+          if (event.key === 'Escape') {
+            if (this.draggingRow !== null) {
+              this.$store.dispatch(
+                this.storePrefix + 'view/kanban/cancelRowDrag',
+                {
+                  row: this.draggingRow,
+                  originalStackId: this.draggingOriginalStackId,
+                }
+              )
+            }
+            this.cardCancel(event)
+          }
+        }
+        document.body.addEventListener('keydown', this.$el.keydownEvent)
+
+        this.$el.mouseMoveEvent = (event) => this.cardMove(event)
+        window.addEventListener('mousemove', this.$el.mouseMoveEvent)
+
+        this.cardMove(event)
+      }
     },
     async cardMove(event) {
       if (this.draggingRow === null) {
@@ -362,9 +406,12 @@ export default {
     },
     cardCancel() {
       this.downCardRow = null
-      this.copyElement.remove()
-      document.body.removeEventListener('keydown', this.$el.keydownEvent)
-      window.removeEventListener('mousemove', this.$el.mouseMoveEvent)
+      if (this.copyElement !== null) {
+        this.copyElement.remove()
+        this.copyElement = null
+        document.body.removeEventListener('keydown', this.$el.keydownEvent)
+        window.removeEventListener('mousemove', this.$el.mouseMoveEvent)
+      }
       window.removeEventListener('mouseup', this.$el.mouseUpEvent)
     },
     async cardMoveOver(event, row) {

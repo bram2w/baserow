@@ -28,7 +28,8 @@
         "deactivate": "Deactiveren",
         "paste": "Plakken",
         "duplicate": "Dupliceer",
-        "remove": "Verwijder"
+        "remove": "Verwijder",
+        "login": "Inloggen"
     },
     "adminType": {
         "settings": "Instellingen"
@@ -360,7 +361,11 @@
         "filterDescription": "Filtert een uitdrukking met een lookup/link veldverwijzing of een lookup-functie oproep.",
         "intDescription": "Retourneert alleen het eerste argument dat is omgezet in een geheel getal door decimalen af te rekken.",
         "roundDescription": "Geeft het eerste argument afgerond op het aantal cijfers dat is opgegeven door het tweede argument.",
-        "truncDescription": "Geeft alleen het eerste argument terug, omgezet in een geheel getal door decimalen af te kappen."
+        "truncDescription": "Geeft alleen het eerste argument terug, omgezet in een geheel getal door decimalen af te kappen.",
+        "linkDescription": "Creëert een hyperlink met de URI van het eerste argument.",
+        "buttonDescription": "Maakt een knop aan met behulp van de URI (eerste argument) en het label (tweede argument).",
+        "getLinkLabelDescription": "Haalt het label uit een formule met behulp van de link of button functies.",
+        "getLinkUrlDescription": "Haalt de url uit een formule met behulp van de link of button functies."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

@@ -10,3 +10,9 @@ ERROR_GROUP_USER_ALREADY_EXISTS = (
     HTTP_400_BAD_REQUEST,
     "The user is already a member of the group.",
 )
+ERROR_CANNOT_DELETE_YOURSELF_FROM_GROUP = (
+    "ERROR_CANNOT_DELETE_YOURSELF_FROM_GROUP",
+    HTTP_400_BAD_REQUEST,
+    "You cannot delete yourself from the group. Use the leave group endpoint for "
+    "that.",
+)

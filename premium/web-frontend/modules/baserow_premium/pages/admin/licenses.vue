@@ -90,13 +90,9 @@
             </div>
             <div
               class="license-plan margin-right-1"
-              :class="{
-                'license-plan--premium': license.product_code === 'premium',
-              }"
+              :class="getLicenseType(license).getLicenseBadgeClass()"
             >
-              <template v-if="license.product_code === 'premium'">{{
-                $t('licenses.premium')
-              }}</template>
+              {{ getLicenseType(license).getName() }}
             </div>
             <div
               v-if="!license.is_active"
@@ -118,16 +114,9 @@
               {{ license.seats_taken }} / {{ license.seats }}
               {{ $t('licenses.seats') }}
             </li>
-            <li>
-              {{ $t('licenses.premiumFeatures') }}
-              <i
-                class="fas margin-left-1"
-                :class="
-                  license.product_code === 'premium'
-                    ? 'fa-check license-yes'
-                    : 'fa-times license-no'
-                "
-              ></i>
+            <li v-if="licenseFeatureDescription(license)">
+              {{ licenseFeatureDescription(license) }}
+              <i class="fas margin-left-1 fa-check license-yes"></i>
             </li>
           </ul>
         </nuxt-link>
@@ -186,6 +175,15 @@ export default {
     },
     copyToClipboard(value) {
       copyToClipboard(value)
+    },
+    getLicenseType(license) {
+      return this.$registry.get('license', license.product_code)
+    },
+    licenseFeatureDescription(license) {
+      return this.getLicenseType(license).getFeaturesDescription()
+    },
+    licenseSeatsInfo(license) {
+      return this.getLicenseType(license).getFeaturesDescription()
     },
   },
 }

@@ -16,7 +16,7 @@ version: "3.4"
 services:
   baserow:
     container_name: baserow
-    image: baserow/baserow:1.12.1
+    image: baserow/baserow:1.13.0
     environment:
       BASEROW_PUBLIC_URL: 'http://localhost'
     ports:
@@ -38,7 +38,7 @@ If you haven't already installed docker and docker-compose on your computer you 
 so by following the instructions on https://docs.docker.com/desktop/ and
 https://docs.docker.com/compose/install/.
 
-> Docker-compose version 3.4 and Docker version 19.03 are the minimum versions
+> Docker-compose version 1.19.0 and Docker version 19.03 are the minimum versions
 > required by our provided files.
 
 ## Downloading the Baserow example docker-compose.yml
@@ -50,7 +50,10 @@ and running:
 
 ```bash
 curl -o docker-compose.yml https://gitlab.com/bramw/baserow/-/raw/master/docker-compose.yml
+curl -o .env https://gitlab.com/bramw/baserow/-/raw/master/.env.example 
 curl -o Caddyfile https://gitlab.com/bramw/baserow/-/raw/master/Caddyfile
+# Edit .env and set your own secure passwords for the 3 required variables at the top. 
+gedit .env
 docker-compose up -d
 ```
 
@@ -60,6 +63,9 @@ or by directly cloning our git repo so you can get updates easier:
 cd ~/baserow
 git clone --depth=1 --branch master https://gitlab.com/bramw/baserow.git
 cd baserow
+cp .env.example .env
+# Edit .env and set your own secure passwords for the 3 required variables at the top. 
+gedit .env
 docker-compose up -d
 # To update to the latest run:
 docker-compose down

@@ -1,14 +1,31 @@
+from typing import Dict, Optional
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
-from rest_framework_jwt.serializers import JSONWebTokenSerializer
+from rest_framework.request import Request
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenRefreshSerializer,
+    TokenVerifySerializer,
+)
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
+from baserow.api.user.jwt import get_user_from_jwt_token
+from baserow.api.user.registries import user_data_registry
 from baserow.api.user.validators import language_validation, password_validation
 from baserow.core.models import Template
+from baserow.core.user.exceptions import DeactivatedUserException
 from baserow.core.user.handler import UserHandler
-from baserow.core.user.utils import normalize_email_address
+from baserow.core.user.utils import (
+    generate_session_tokens_for_user,
+    normalize_email_address,
+    prepare_user_tokens_payload,
+)
 
 User = get_user_model()
 
@@ -139,10 +156,37 @@ class NormalizedEmailField(serializers.EmailField):
         return normalize_email_address(data)
 
 
-class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
+def get_all_user_data_serialized(
+    user: AbstractUser, request: Optional[Request] = None
+) -> Dict:
+    """
+    Update the payload with the additional user data that must be added.
+    The `user_data_registry` contains instances that want to add additional
+    information to this payload.
+
+    :param user: The user for which the data must be serialized.
+    :param request: The request that is used to generate the data.
+    :return: A dictionary with the serialized data for the user.
+    """
+
+    return {
+        "user": UserSerializer(user, context={"request": request}).data,
+        **user_data_registry.get_all_user_data(user, request),
+    }
+
+
+@extend_schema_serializer(deprecate_fields=["username"])
+class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
+    email = NormalizedEmailField(required=False)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields[self.username_field] = NormalizedEmailField()
+        self.fields[self.username_field] = NormalizedEmailField(
+            required=False, help_text="Deprecated. Use `email` instead."
+        )
+
+    def get_username(self, value):
+        return value
 
     def validate(self, attrs):
         """
@@ -151,18 +195,66 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
         login timestamp.
         """
 
-        # In the future, when migrating away from the JWT implementation, we want to
-        # respond with machine readable error codes when authentication fails.
-        validated_data = super().validate(attrs)
+        # this permits to use "email" as field in the serializer giving us compatibility
+        # with the TokenObtainPairSerializer that expects "username" instead.
+        if not attrs.get(self.username_field):
+            email = attrs.get("email")
+            if not email:
+                raise serializers.ValidationError({"email": "This field is required."})
+            attrs[self.username_field] = email
 
-        user = validated_data["user"]
+        super().validate(attrs)
+
+        user = self.user
         if not user.is_active:
-            msg = "User account is disabled."
-            raise serializers.ValidationError(msg)
+            raise DeactivatedUserException()
 
-        UserHandler().user_signed_in(user)
+        data = generate_session_tokens_for_user(user, include_refresh_token=True)
+        data.update(**get_all_user_data_serialized(user, self.context["request"]))
 
-        return validated_data
+        UserHandler().user_signed_in_via_default_provider(user)
+
+        return data
+
+
+@extend_schema_serializer(exclude_fields=["refresh"], deprecate_fields=["token"])
+class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
+    refresh_token = serializers.CharField(required=False)
+    token = serializers.CharField(
+        required=False, help_text="Deprecated. Use `refresh_token` instead."
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        del self.fields["refresh"]
+
+    def validate(self, attrs):
+        attrs["refresh"] = attrs.pop("refresh_token", attrs.get("token"))
+        validated_data = super().validate(attrs)
+        access_token = validated_data["access"]
+
+        user = get_user_from_jwt_token(access_token)
+        data = prepare_user_tokens_payload(access_token, validated_data.get("refresh"))
+        data.update(**get_all_user_data_serialized(user, self.context["request"]))
+        return data
+
+
+@extend_schema_serializer(deprecate_fields=["token"])
+class TokenVerifyWithUserSerializer(TokenVerifySerializer):
+    refresh_token = serializers.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["token"] = serializers.CharField(
+            required=False, help_text="Deprecated. Use `refresh_token` instead."
+        )
+
+    def validate(self, attrs):
+        refresh_token = attrs["token"] = attrs.pop("refresh_token", attrs.get("token"))
+        super().validate(attrs)
+
+        user = get_user_from_jwt_token(refresh_token, token_class=RefreshToken)
+        return get_all_user_data_serialized(user, self.context["request"])
 
 
 class DashboardSerializer(serializers.Serializer):

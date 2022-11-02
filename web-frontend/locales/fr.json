@@ -28,7 +28,8 @@
         "deactivate": "Désactiver",
         "paste": "Coller",
         "duplicate": "Dupliquer",
-        "remove": "Supprimer"
+        "remove": "Supprimer",
+        "login": "S'identifier"
     },
     "adminType": {
         "settings": "Paramètres"
@@ -360,7 +361,11 @@
         "filterDescription": "Filtre une expression impliquant un champ rapporté,un champ lien vers une table ou un appel de la fonction lookup.",
         "roundDescription": "Renvoie le premier argument arrondi au nombre de chiffres spécifié par le second argument.",
         "intDescription": "Renvoie uniquement le premier argument converti en un nombre entier en tronquant les décimales éventuelles.",
-        "truncDescription": "Renvoie uniquement le premier argument converti en un nombre entier en tronquant les décimales éventuelles."
+        "truncDescription": "Renvoie uniquement le premier argument converti en un nombre entier en tronquant les décimales éventuelles.",
+        "linkDescription": "Crée un lien hypertexte à l’aide de l’URI fourni dans le premier argument.",
+        "buttonDescription": "Crée un bouton en utilisant l'URI (premier argument) et le label (deuxième argument).",
+        "getLinkLabelDescription": "Obtient l'étiquette d'une formule à l'aide des fonctions de lien ou de bouton.",
+        "getLinkUrlDescription": "Obtient l'url à partir d'une formule utilisant les fonctions de lien ou de bouton."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

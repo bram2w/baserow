@@ -1,4 +1,9 @@
-import { isDomElement, isElement } from '@baserow/modules/core/utils/dom'
+import {
+  isDomElement,
+  isElement,
+  onClickOutside,
+} from '@baserow/modules/core/utils/dom'
+
 import dropdownHelpers from './dropdownHelpers'
 
 export default {
@@ -94,6 +99,9 @@ export default {
     this.observer.disconnect()
   },
   methods: {
+    getDropdownItemComponents() {
+      return this.$children.filter((child) => child.isDropdownItem === true)
+    },
     focusout(event) {
       // Hide only if we loose focus in profit of another element
       if (event.relatedTarget) {
@@ -134,7 +142,7 @@ export default {
         this.showSearch && this.$refs.search.focus()
 
         // Scroll to the selected child.
-        this.$children.forEach((child) => {
+        this.getDropdownItemComponents().forEach((child) => {
           if (child.value === this.value) {
             this.$refs.items.scrollTop =
               child.$el.offsetTop -
@@ -146,21 +154,17 @@ export default {
 
       // If the user clicks outside the dropdown while the list of choices of open we
       // have to hide them.
-      this.$el.clickOutsideEvent = (event) => {
+      this.$el.clickOutsideEventCancel = onClickOutside(this.$el, (target) => {
         if (
           // Check if the context menu is still open
           this.open &&
-          // If the click was outside the context element because we want to ignore
-          // clicks inside it.
-          !isElement(this.$el, event.target) &&
           // If the click was not on the opener because he can trigger the toggle
           // method.
-          !isElement(this.opener, event.target)
+          !isElement(this.opener, target)
         ) {
           this.hide()
         }
-      }
-      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+      })
 
       this.$el.keydownEvent = (event) => {
         if (
@@ -203,7 +207,7 @@ export default {
       this.query = ''
       this.search(this.query)
 
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      this.$el.clickOutsideEventCancel()
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     /**
@@ -219,7 +223,7 @@ export default {
      */
     search(query) {
       this.hasItems = query === ''
-      this.$children.forEach((item) => {
+      this.getDropdownItemComponents().forEach((item) => {
         if (item.search(query)) {
           this.hasItems = true
         }
@@ -230,8 +234,8 @@ export default {
      * so the requested property of the child is returned
      */
     getSelectedProperty(value, property) {
-      for (const i in this.$children) {
-        const item = this.$children[i]
+      for (const i in this.getDropdownItemComponents()) {
+        const item = this.getDropdownItemComponents()[i]
         if (item.value === value) {
           return item[property]
         }
@@ -243,8 +247,8 @@ export default {
      * @return {boolean}
      */
     hasValue() {
-      for (const i in this.$children) {
-        const item = this.$children[i]
+      for (const i in this.getDropdownItemComponents()) {
+        const item = this.getDropdownItemComponents()[i]
         if (item.value === this.value) {
           return true
         }
@@ -252,11 +256,11 @@ export default {
       return false
     },
     /**
-     * A nasty hack, but in some cases the $children have not yet been loaded when the
+     * A nasty hack, but in some cases the dropdownItemComponents have not yet been loaded when the
      * `selectName` and `selectIcon` are computed. This would result in an empty
      * initial value of the Dropdown because the correct value can't be extracted from
      * the DropdownItem. With this hack we force the computed properties to recompute
-     * when the component is mounted. At this moment the $children have been added.
+     * when the component is mounted. At this moment the dropdownItemComponents have been added.
      */
     forceRefreshSelectedValue() {
       this._computedWatchers.selectedName.run()
@@ -268,7 +272,7 @@ export default {
      * the index of the current child, the next child enabled child is set as hover.
      */
     handleUpAndDownArrowPress(event) {
-      const children = this.$children.filter(
+      const children = this.getDropdownItemComponents().filter(
         (child) => !child.disabled && child.isVisible(this.query)
       )
 

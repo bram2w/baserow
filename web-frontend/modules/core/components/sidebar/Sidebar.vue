@@ -151,19 +151,61 @@
                 ></GroupContext>
               </div>
             </li>
-            <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
+            <li
+              v-if="
+                $hasPermission(
+                  'group.create_invitation',
+                  selectedGroup,
+                  selectedGroup.id
+                )
+              "
+              class="tree__item"
+            >
               <div class="tree__action">
-                <a class="tree__link" @click="$refs.groupMembersModal.show()">
-                  <i class="tree__icon tree__icon--type fas fa-users"></i>
+                <a class="tree__link" @click="$refs.inviteModal.show()">
+                  <i class="tree__icon tree__icon--type fas fa-user-plus"></i>
 
                   {{ $t('sidebar.inviteOthers') }}
                 </a>
-                <GroupMembersModal
-                  ref="groupMembersModal"
-                  :group="selectedGroup"
-                ></GroupMembersModal>
               </div>
+              <GroupMemberInviteModal
+                ref="inviteModal"
+                :group="selectedGroup"
+                @invite-submitted="
+                  $router.push({
+                    name: 'settings-invites',
+                    params: {
+                      groupId: selectedGroup.id,
+                    },
+                  })
+                "
+              />
             </li>
+            <nuxt-link
+              v-if="
+                $hasPermission(
+                  'group.list_group_users',
+                  selectedGroup,
+                  selectedGroup.id
+                )
+              "
+              v-slot="{ href, navigate, isExactActive }"
+              :to="{
+                name: 'settings-members',
+                params: {
+                  groupId: selectedGroup.id,
+                },
+              }"
+            >
+              <li class="tree__item" :class="{ active: isExactActive }">
+                <div class="tree__action">
+                  <a :href="href" class="tree__link" @click="navigate">
+                    <i class="tree__icon tree__icon--type fas fa-users"></i>
+                    {{ $t('sidebar.members') }}
+                  </a>
+                </div>
+              </li>
+            </nuxt-link>
             <ul class="tree">
               <component
                 :is="getApplicationComponent(application)"
@@ -190,6 +232,13 @@
             </ul>
             <li class="sidebar__new-wrapper">
               <a
+                v-if="
+                  $hasPermission(
+                    'group.create_application',
+                    selectedGroup,
+                    selectedGroup.id
+                  )
+                "
                 ref="createApplicationContextLink"
                 class="sidebar__new"
                 @click="
@@ -215,7 +264,10 @@
               v-for="(group, index) in groups"
               :key="group.id"
               class="tree__item"
-              :class="{ 'margin-top-2': index === 0 }"
+              :class="{
+                'margin-top-2': index === 0,
+                'tree__item--loading': group._.additionalLoading,
+              }"
             >
               <div class="tree__action tree__action--has-right-icon">
                 <a
@@ -237,13 +289,9 @@
         </ul>
       </div>
       <div class="sidebar__foot sidebar__foot--with-undo-redo">
-        <a class="sidebar__logo" href="https://baserow.io" target="_blank">
-          <img
-            height="14"
-            src="@baserow/modules/core/static/img/logo.svg"
-            alt="Baserow logo"
-          />
-        </a>
+        <div class="sidebar__logo">
+          <BaserowLogo />
+        </div>
         <div class="sidebar__foot-links">
           <a
             class="sidebar__foot-link"
@@ -292,13 +340,16 @@ import CreateApplicationContext from '@baserow/modules/core/components/applicati
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
 import GroupContext from '@baserow/modules/core/components/group/GroupContext'
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
-import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
+import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
+import GroupMemberInviteModal from '@baserow/modules/core/components/group/GroupMemberInviteModal'
+
 export default {
   name: 'Sidebar',
   components: {
+    BaserowLogo,
     SettingsModal,
     CreateApplicationContext,
     SidebarAdminItem,
@@ -306,8 +357,8 @@ export default {
     GroupsContext,
     GroupContext,
     CreateGroupModal,
-    GroupMembersModal,
     TrashModal,
+    GroupMemberInviteModal,
   },
   mixins: [editGroup, undoRedo],
   computed: {

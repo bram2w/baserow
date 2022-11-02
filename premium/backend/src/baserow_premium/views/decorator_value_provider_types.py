@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from baserow_premium.license.handler import check_active_premium_license_for_group
+from baserow_premium.license.handler import LicenseHandler
 
 from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.views.handler import ViewHandler
@@ -10,6 +10,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
 )
 
+from ..license.features import PREMIUM
 from .decorator_types import BackgroundColorDecoratorType, LeftBorderColorDecoratorType
 from .serializers import (
     ConditionalColorValueProviderConfColorsSerializer,
@@ -20,12 +21,14 @@ from .serializers import (
 class PremiumDecoratorValueProviderType(DecoratorValueProviderType):
     def before_create_decoration(self, view, user):
         if user:
-            check_active_premium_license_for_group(user, view.table.database.group)
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user, view.table.database.group, PREMIUM
+            )
 
     def before_update_decoration(self, view_decoration, user):
         if user:
-            check_active_premium_license_for_group(
-                user, view_decoration.view.table.database.group
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user, view_decoration.view.table.database.group, PREMIUM
             )
 
 

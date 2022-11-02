@@ -130,9 +130,6 @@
         "delete": "Eliminar usuario",
         "edit": "Editar {username}"
     },
-    "crudTableSearchContext": {
-        "search": "Buscar"
-    },
     "tableJSONExporter": {
         "encoding": "Codificación"
     },
@@ -225,7 +222,10 @@
         "rowUsage": "Uso de fila",
         "storeUsage": "Uso de almacenamiento",
         "disconnectLicense": "Desconectar licencia",
-        "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada."
+        "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada.",
+        "moreSeatsNeededTitle": "Se necesitan más asientos",
+        "contactSalesMoreSeats": "Contacta el departamento de ventas para obtener más asientos",
+        "automaticSeatsProgressBarStatus": "{asientos_ocupados} / {asientos} asientos pagados y {recuento_de_usuarios_libres} asientos libres en uso"
     },
     "conditionalColorValueProviderForm": {
         "addCondition": "Añadir condición",
@@ -270,7 +270,8 @@
         "exports": "Exportación JSON y XML",
         "rowColoring": "Coloración de las filas",
         "admin": "Funciones de administración",
-        "surveyForm": "Formulario de encuesta"
+        "surveyForm": "Formulario de encuesta",
+        "publicLogoRemoval": "Eliminación del logo público"
     },
     "formViewModeType": {
         "surveyDescription": "Un campo es visible al mismo tiempo.",
@@ -281,5 +282,11 @@
         "orderFields": "Campos de pedido",
         "more": "Más información",
         "deactivated": "El formulario de la encuesta está disponible en la versión premium."
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Esconder el logo de Baserow en la vista compartida",
+            "premiumModalName": "eliminación del logo público"
+        }
     }
 }

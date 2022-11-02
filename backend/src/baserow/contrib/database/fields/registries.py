@@ -62,7 +62,7 @@ class FieldType(
             FieldType, field_type_registry
         )
 
-        class ExampleFieldModel(FieldType):
+        class ExampleFieldModel(Field):
             pass
 
         class ExampleFieldType(FieldType):
@@ -622,6 +622,8 @@ class FieldType(
         based on the select option value.
         Additionally an annotation can be returned which will get applied to the
         queryset.
+        If you are implementing this method you should also implement the
+        get_value_for_filter method.
 
         :param field: The related field object instance.
         :type field: Field
@@ -1347,6 +1349,22 @@ class FieldType(
         """
 
         return []
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> any:
+        """
+        Returns the value of a field in a row that can be used for SQL filtering.
+        Usually this is just a string or int value stored in the row but for
+        some field types this is not the case. For example a multiple select field will
+        return a list of values which need to be converted to a string for filtering.
+        If you are implementing this method you should also implement the get_order
+        method.
+
+        :param row: The row which contains the field value.
+        :param field_name: The name of the field to get the value for.
+        :return: The value of the field in the row in a filterable format.
+        """
+
+        return getattr(row, field_name)
 
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):

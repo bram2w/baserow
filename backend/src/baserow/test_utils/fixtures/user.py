@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework_jwt.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from baserow.api.sessions import (
     set_client_undo_redo_action_group_id,
@@ -9,15 +9,14 @@ from baserow.api.sessions import (
 from baserow.core.models import GROUP_USER_PERMISSION_ADMIN, GroupUser, UserProfile
 
 User = get_user_model()
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 
 class UserFixtures:
     def generate_token(self, user):
-        payload = jwt_payload_handler(user)
-        token = jwt_encode_handler(payload)
-        return token
+        return str(AccessToken.for_user(user))
+
+    def generate_refresh_token(self, user):
+        return str(RefreshToken.for_user(user))
 
     def create_user(self, **kwargs):
         profile_data = {}

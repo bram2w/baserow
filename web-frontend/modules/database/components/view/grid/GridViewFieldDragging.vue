@@ -1,5 +1,5 @@
 <template>
-  <div v-show="dragging">
+  <div v-show="dragging && moved">
     <div
       class="grid-view__field-dragging"
       :style="{ width: draggingWidth + 'px', left: draggingLeft + 'px' }"
@@ -40,12 +40,16 @@ export default {
     return {
       // Indicates if the user is dragging a field to another position.
       dragging: false,
+      // Indicates whether the user has moved the mouse more than the 3px threshold.
+      moved: false,
       // The field object that is being dragged.
       field: null,
       // The id of the field where the dragged field must be placed after.
       targetFieldId: null,
       // The horizontal starting position of the mouse.
-      mouseStart: 0,
+      mouseStartX: 0,
+      // The vertical starting position of the mouse.
+      mouseStartY: 0,
       // The horizontal scrollbar offset starting position.
       scrollStart: 0,
       // The width of the dragging animation, this is equal to the width of the field.
@@ -83,7 +87,9 @@ export default {
       this.field = field
       this.targetFieldId = field.id
       this.dragging = true
-      this.mouseStart = event.clientX
+      this.moved = false
+      this.mouseStartX = event.clientX
+      this.mouseStartY = event.clientY
       this.scrollStart = this.$parent.$el.scrollLeft
       this.draggingLeft = 0
       this.targetLeft = 0
@@ -101,7 +107,6 @@ export default {
         }
       }
       document.body.addEventListener('keydown', this.$el.keydownEvent)
-      this.move(event, false)
     },
     /**
      * The move method is called when every time the user moves the mouse while
@@ -115,6 +120,22 @@ export default {
         event = this.lastMoveEvent
       }
 
+      // Sometimes the user could accidentally drag the element one or two pixels while
+      // clicking it. Because it could be annoying that the click doesn't work because
+      // the moving state started, we check here if the user has at least dragged
+      // the element 3 pixels vertically or horizontally before starting the moved
+      // state.
+      if (!this.moved) {
+        if (
+          Math.abs(event.clientX - this.mouseStartX) > 3 ||
+          Math.abs(event.clientY - this.mouseStartY) > 3
+        ) {
+          this.moved = true
+        } else {
+          return
+        }
+      }
+
       // This is the horizontally scrollable element.
       const element = this.$parent.$el
 
@@ -125,7 +146,7 @@ export default {
       this.draggingLeft = Math.min(
         this.getFieldLeft(this.field.id) +
           event.clientX -
-          this.mouseStart +
+          this.mouseStartX +
           this.$parent.$el.scrollLeft -
           this.scrollStart,
         this.containerWidth - this.draggingWidth
@@ -205,6 +226,8 @@ export default {
      */
     cancel() {
       this.dragging = false
+      this.mouseStartX = 0
+      this.mouseStartY = 0
       window.removeEventListener('mousemove', this.$el.moveEvent)
       window.removeEventListener('mouseup', this.$el.upEvent)
       document.body.addEventListener('keydown', this.$el.keydownEvent)
@@ -218,6 +241,10 @@ export default {
     async up(event) {
       event.preventDefault()
       this.cancel()
+
+      if (!this.moved) {
+        return
+      }
 
       // We don't need to do anything if the field needs to be placed after itself
       // because that wouldn't change the position.

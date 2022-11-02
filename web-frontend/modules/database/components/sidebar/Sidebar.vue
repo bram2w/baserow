@@ -19,7 +19,7 @@
         </nuxt-link>
       </li>
     </template>
-    <template v-if="application._.selected" #body>
+    <template v-if="isAppSelected(application)" #body>
       <ul class="tree__subs">
         <SidebarItem
           v-for="table in orderedTables"
@@ -43,7 +43,17 @@
         >
         </SidebarItemPendingJob>
       </ul>
-      <a class="tree__sub-add" @click="$refs.importFileModal.show()">
+      <a
+        v-if="
+          $hasPermission(
+            'database.create_table',
+            application,
+            application.group.id
+          )
+        "
+        class="tree__sub-add"
+        @click="$refs.importFileModal.show()"
+      >
         <i class="fas fa-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>
@@ -53,6 +63,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
 import SidebarItemPendingJob from '@baserow/modules/database/components/sidebar/SidebarItemPendingJob'
@@ -90,6 +101,7 @@ export default {
           .isJobPartOfApplication(job, this.application)
       )
     },
+    ...mapGetters({ isAppSelected: 'application/isSelected' }),
   },
   methods: {
     async selected(application) {

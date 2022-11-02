@@ -17,7 +17,7 @@ class Instance(object):
     It must be extended so properties and methods can be added.
     """
 
-    type = None
+    type: str
     """A unique string that identifies the instance."""
 
     def __init__(self):
@@ -31,7 +31,7 @@ class ModelInstanceMixin:
     be used in combination with a registry that extends the ModelRegistryMixin.
     """
 
-    model_class = None
+    model_class: Type
 
     def __init__(self):
         if not self.model_class:
@@ -244,7 +244,7 @@ K = TypeVar("K")
 
 
 class Registry(Generic[T]):
-    name = None
+    name: str
     """The unique name that is used when raising exceptions."""
 
     does_not_exist_exception_class = InstanceTypeDoesNotExist
@@ -254,7 +254,7 @@ class Registry(Generic[T]):
     """The exception that is raised when an instance is already registered."""
 
     def __init__(self):
-        if not self.name:
+        if not getattr(self, "name", None):
             raise ImproperlyConfigured(
                 "The name must be set on an "
                 "InstanceModelRegistry to raise proper errors."
@@ -281,7 +281,7 @@ class Registry(Generic[T]):
 
         return self.registry[type_name]
 
-    def get_by_type(self, instance_type: Type[K]) -> K:
+    def get_by_type(self, instance_type: Type[T]) -> T:
         return self.get(instance_type.type)
 
     def get_all(self) -> ValuesView[T]:
@@ -401,6 +401,22 @@ class ModelRegistryMixin(Generic[P, T]):
         raise self.does_not_exist_exception_class(
             f"The {self.name} model instance {model_instance} does not exist."
         )
+
+    def get_all_by_model_isinstance(self, model_instance: P) -> List[T]:
+        """
+        Returns all registered types which are an instance of the provided
+        model_instance.
+        """
+
+        all_matching_non_abstract_types = []
+        for value in self.registry.values():
+            value_model_class = value.model_class
+            if value_model_class == model_instance or isinstance(
+                model_instance, value_model_class
+            ):
+                all_matching_non_abstract_types.append(value)
+
+        return all_matching_non_abstract_types
 
 
 class CustomFieldsRegistryMixin:

@@ -44,7 +44,8 @@
     "python.linting.mypyEnabled": true,
     "mypy.targets": [
         "backend/src/",
-        "premium/backend/src/"
+        "premium/backend/src/",
+        "enterprise/backend/src/"
     ],
     "python.analysis.typeCheckingMode": "off",
     "mypy.configFile": "backend/mypy.ini",
@@ -60,11 +61,13 @@
     "python.linting.mypyPath": "mypy",
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/backend/src",
-        "${workspaceFolder}/premium/backend/src"
+        "${workspaceFolder}/premium/backend/src",
+        "${workspaceFolder}/enterprise/backend/src"
     ],
     "python.analysis.extraPaths": [
         "${workspaceFolder}/backend/src",
-        "${workspaceFolder}/premium/backend/src"
+        "${workspaceFolder}/premium/backend/src",
+        "${workspaceFolder}/enterprise/backend/src"
     ],
     "python.linting.pycodestyleEnabled": false,
     "python.linting.pydocstyleEnabled": false,
@@ -84,6 +87,7 @@
     ],
     "python.formatting.blackArgs": [
         "premium/backend",
+        "enterprise/backend",
         "--extend-exclude='/generated/'",
         "--check"
     ],

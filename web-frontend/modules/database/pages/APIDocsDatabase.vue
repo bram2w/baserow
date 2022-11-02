@@ -275,7 +275,10 @@ export default {
         description: fieldType.getDocsDescription(field),
         requestExample: fieldType.getDocsRequestExample(field),
         responseExample: fieldType.getDocsResponseExample(field),
-        fieldResponseExample: fieldType.getDocsFieldResponseExample(field),
+        fieldResponseExample: fieldType.getDocsFieldResponseExample(
+          field,
+          fieldType.isReadOnly
+        ),
         isReadOnly: fieldType.isReadOnly,
       }
       return field

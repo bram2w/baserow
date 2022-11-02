@@ -15,7 +15,9 @@ class InvalidPassword(Exception):
 
 
 class UserIsLastAdmin(Exception):
-    """Raised when a user wants to delete himself but is the last site wide admin."""
+    """
+    Raised when a user wants to delete himself but is the last instance wide admin.
+    """
 
 
 class DisabledSignupError(Exception):
@@ -26,3 +28,7 @@ class DisabledSignupError(Exception):
 
 class ResetPasswordDisabledError(Exception):
     """Raised when a password reset is attempted but the password reset is disabled."""
+
+
+class DeactivatedUserException(Exception):
+    pass

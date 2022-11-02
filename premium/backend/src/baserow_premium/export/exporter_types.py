@@ -2,7 +2,7 @@ import json
 from collections import OrderedDict
 from typing import List, Type
 
-from baserow_premium.license.handler import check_active_premium_license_for_group
+from baserow_premium.license.handler import LicenseHandler
 
 from baserow.contrib.database.api.export.serializers import (
     BaseExporterOptionsSerializer,
@@ -11,6 +11,7 @@ from baserow.contrib.database.export.file_writer import FileWriter, QuerysetSeri
 from baserow.contrib.database.export.registries import TableExporter
 from baserow.contrib.database.views.view_types import GridViewType
 
+from ..license.features import PREMIUM
 from .utils import get_unique_name, safe_xml_tag_name, to_xml
 
 
@@ -20,7 +21,9 @@ class PremiumTableExporter(TableExporter):
         Checks if the related user access to a valid license before the job is created.
         """
 
-        check_active_premium_license_for_group(user, table.database.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            user, table.database.group, PREMIUM
+        )
         super().before_job_create(user, table, view, export_options)
 
 

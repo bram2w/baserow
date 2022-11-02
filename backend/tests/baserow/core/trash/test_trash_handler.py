@@ -70,7 +70,7 @@ def test_a_trash_entry_older_than_setting_gets_marked_for_permanent_deletion(
     with freeze_time(trashed_at):
         TrashHandler.trash(user, group_to_delete, None, group_to_delete)
 
-    entry = _get_trash_entry(user, "group", None, group_to_delete.id)
+    entry = _get_trash_entry("group", None, group_to_delete.id)
     assert not entry.should_be_permanently_deleted
 
     datetime_when_trash_item_should_still_be_kept = trashed_at + half_time
@@ -130,6 +130,8 @@ def test_a_group_marked_for_perm_deletion_raises_a_404_when_asked_for_trash_cont
 
     with pytest.raises(GroupDoesNotExist):
         TrashHandler.get_trash_contents(user, group_to_delete.id, None)
+    with pytest.raises(GroupDoesNotExist):
+        TrashHandler.get_trash_contents_for_emptying(user, group_to_delete.id, None)
 
 
 @pytest.mark.django_db
@@ -168,6 +170,10 @@ def test_an_app_marked_for_perm_deletion_raises_a_404_when_asked_for_trash_conte
 
     with pytest.raises(ApplicationDoesNotExist):
         TrashHandler.get_trash_contents(user, group.id, trashed_database.id)
+    with pytest.raises(ApplicationDoesNotExist):
+        TrashHandler.get_trash_contents_for_emptying(
+            user, group.id, trashed_database.id
+        )
 
 
 @pytest.mark.django_db
@@ -182,9 +188,9 @@ def test_a_trashed_app_shows_up_in_trash_structure(
         TrashHandler.trash(user, group, trashed_database, trashed_database)
 
     structure = TrashHandler.get_trash_structure(user)
-    applications_qs = structure["groups"][0]["applications"]
-    assert applications_qs.count() == 1
-    assert applications_qs.get().trashed
+    applications = structure["groups"][0]["applications"]
+    assert len(applications) == 1
+    assert applications[0].trashed
 
 
 @pytest.mark.django_db
@@ -204,7 +210,7 @@ def test_an_app_marked_for_perm_deletion_no_longer_shows_up_in_trash_structure(
     trash_entry.save()
 
     for group in TrashHandler.get_trash_structure(user)["groups"]:
-        assert group["applications"].count() == 0
+        assert len(group["applications"]) == 0
 
 
 @pytest.mark.django_db(transaction=True)

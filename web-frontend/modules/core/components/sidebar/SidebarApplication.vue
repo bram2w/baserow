@@ -31,10 +31,20 @@
         <i class="fas fa-ellipsis-v"></i>
       </a>
       <Context ref="context">
-        <div class="context__menu-title">{{ application.name }}</div>
+        <div class="context__menu-title">
+          {{ application.name }} ({{ application.id }})
+        </div>
         <ul class="context__menu">
           <slot name="context"></slot>
-          <li>
+          <li
+            v-if="
+              $hasPermission(
+                'application.update',
+                application,
+                application.group.id
+              )
+            "
+          >
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
               {{
@@ -44,14 +54,30 @@
               }}
             </a>
           </li>
-          <li>
+          <li
+            v-if="
+              $hasPermission(
+                'application.duplicate',
+                application,
+                application.group.id
+              )
+            "
+          >
             <SidebarDuplicateApplicationContextItem
               :application="application"
               :disabled="deleting"
               @click="$refs.context.hide()"
             ></SidebarDuplicateApplicationContextItem>
           </li>
-          <li>
+          <li
+            v-if="
+              $hasPermission(
+                'application.create_snapshot',
+                application,
+                application.group.id
+              )
+            "
+          >
             <a @click="openSnapshots">
               <i class="context__menu-icon fas fa-fw fa-history"></i>
               {{ $t('sidebarApplication.snapshots') }}
@@ -61,13 +87,29 @@
             ref="snapshotsModal"
             :application="application"
           ></SnapshotsModal>
-          <li>
+          <li
+            v-if="
+              $hasPermission(
+                'application.read_trash',
+                application,
+                application.group.id
+              )
+            "
+          >
             <a @click="showApplicationTrashModal">
               <i class="context__menu-icon fas fa-fw fa-recycle"></i>
               {{ $t('sidebarApplication.viewTrash') }}
             </a>
           </li>
-          <li>
+          <li
+            v-if="
+              $hasPermission(
+                'application.delete',
+                application,
+                application.group.id
+              )
+            "
+          >
             <a
               :class="{ 'context__menu-item--loading': deleting }"
               @click="deleteApplication()"

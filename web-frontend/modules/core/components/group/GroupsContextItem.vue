@@ -3,7 +3,7 @@
     class="select__item"
     :class="{
       active: group._.selected,
-      'select__item--loading': group._.loading,
+      'select__item--loading': group._.loading || group._.additionalLoading,
     }"
   >
     <a class="select__item-link" @click="selectGroup(group)">

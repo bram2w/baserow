@@ -528,6 +528,8 @@
 
   .grid-view__description-name {
     @extend %ellipsis;
+
+    user-select: none;
   }
 
   &.grid-view__description--loading {

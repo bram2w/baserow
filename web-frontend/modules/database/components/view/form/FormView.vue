@@ -6,7 +6,14 @@
       :view="view"
       :fields="disabledFields"
       :enabled-fields="enabledFields"
-      :read-only="readOnly"
+      :read-only="
+        readOnly ||
+        !$hasPermission(
+          'database.table.view.update_field_options',
+          view,
+          database.group.id
+        )
+      "
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"
       @refresh="$emit('refresh', $event)"
@@ -16,7 +23,10 @@
       :table="table"
       :view="view"
       :fields="enabledFields"
-      :read-only="readOnly"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.view.update', view, database.group.id)
+      "
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"
     ></FormViewPreview>

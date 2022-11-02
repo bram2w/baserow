@@ -11,7 +11,10 @@
         "viewTrash": "ver papelera",
         "deleteApplication": "Borrar {type}",
         "duplicateApplication": "Duplicar {tipo}",
-        "snapshots": "Imágenes"
+        "snapshots": "Imágenes",
+        "rename": "Renombrar",
+        "duplicate": "Duplicar",
+        "delete": "Borrar"
     },
     "sidebar": {
         "createGroup": "Crea un grupo",
@@ -21,7 +24,8 @@
         "admin": "Admin",
         "dashboard": "Tablero",
         "trash": "Papelera",
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "members": "Miembros"
     },
     "accountForm": {
         "nameLabel": "Tu nombre",
@@ -212,7 +216,11 @@
     },
     "login": {
         "title": "Acceso",
-        "forgotPassword": "Olvidó contraseña"
+        "forgotPassword": "Olvidó contraseña",
+        "passwordPlaceholder": "Introduce tu contraseña...",
+        "signUpText": "¿No tienes cuenta?",
+        "signUp": "Inscribirse",
+        "emailPlaceholder": "Introduce tu correo electrónico..."
     },
     "resetPassword": {
         "title": "Restablecer la contraseña",
@@ -233,7 +241,13 @@
         "disabled": "Registro está deshabilitado",
         "disabledMessage": "No es posible crear una cuenta porque ha sido deshabilitada.",
         "requireFirstUser": "¡Bienvenido a Baserow!",
-        "requireFirstUserMessage": "Por favor llena la forma de abajo para crear el usuario administrador."
+        "requireFirstUserMessage": "Por favor llena la forma de abajo para crear el usuario administrador.",
+        "login": "Iniciar sesión",
+        "passwordPlaceholder": "Introduce tu contraseña...",
+        "emailPlaceholder": "Introduce tu correo electrónico...",
+        "passwordRepeatPlaceholder": "Confirma tu contraseña...",
+        "loginText": "¿Ya tienes una cuenta?",
+        "namePlaceholder": "Introduce tu nombre..."
     },
     "forgotPassword": {
         "title": "Se te olvidó tu contraseña",
@@ -241,7 +255,8 @@
         "submit": "Enviar enlace",
         "confirmation": "Si su dirección de correo electrónico existe en nuestra base de datos, recibirá un enlace de restablecimiento de contraseña en su dirección de correo electrónico en unos minutos.",
         "disabled": "Se te olvidó tu contraseña",
-        "disabledMessage": "No es posible restablecer la contraseña porque ha sido deshabilitada."
+        "disabledMessage": "No es posible restablecer la contraseña porque ha sido deshabilitada.",
+        "loginText": "¿Ya tienes cuenta y contraseña?"
     },
     "settings": {
         "settingsTitle": "Configuración de administrador",
@@ -396,5 +411,55 @@
         "daysAgo": "Hace 0 días | Hace 1 día | Hace {n} días",
         "monthsAgo": "Hace 0 meses | Hace 1 mes | Hace {n} meses",
         "yearsAgo": "Hace 0 años | Hace 1 año | Hace {n} años"
+    },
+    "InstallTemplateJobType": {
+        "installing": "Instalando",
+        "installedTitle": "Plantilla instalada"
+    },
+    "duplicateApplicationJobType": {
+        "duplicatedTitle": "Aplicación duplicada",
+        "duplicating": "Duplicando"
+    },
+    "crudTableSearch": {
+        "search": "Buscar"
+    },
+    "membersSettings": {
+        "membersTable": {
+            "columns": {
+                "email": "Correo electrónico",
+                "role": "Función",
+                "name": "Nombre"
+            },
+            "actions": {
+                "remove": "Eliminar del grupo",
+                "copyEmail": "Copiar correo electrónico"
+            },
+            "title": "{usuarioCantidad} Miembros en {nombreDelGrupo}",
+            "inviteMember": "Invitar a un miembro"
+        },
+        "invitesTable": {
+            "columns": {
+                "role": "Función",
+                "message": "Mensaje",
+                "email": "Correo electrónico"
+            },
+            "actions": {
+                "copyEmail": "Copiar correo electrónico",
+                "remove": "Cancelar la invitación"
+            },
+            "title": "{invitacionesCantidad} Invitaciones pendientes en {nombreDelGrupo}"
+        },
+        "membersInviteModal": {
+            "title": "Invitar a miembros del grupo",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "El usuario ya está en el grupo.",
+                    "text": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo."
+                }
+            },
+            "submit": "Enviar invitación"
+        },
+        "membersTabTitle": "Miembros",
+        "invitesTabTitle": "Invitaciones"
     }
 }

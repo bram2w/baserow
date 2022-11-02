@@ -12,10 +12,11 @@ below.
 
 ```bash
 $ git clone --branch develop https://gitlab.com/bramw/baserow.git
-$ cd baserow
-$ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-$ # OR use our ./dev.sh script which also ensures your dev containers run as your user
-$ ./dev.sh --build
+# Our supplied ./dev.sh script wraps docker-compose setting the correct env vars for 
+# you to get hot code reloading working well.
+$ ./dev.sh 
+# Run ./dev.sh help for further details.
+$ ./dev.sh help
 ```
 
 ## Installing requirements
@@ -80,10 +81,7 @@ docker-compose command using the `docker-compose.yml` file. It might take a whil
 the command to finish, this is because the images have to be built from scratch.
 
 ```
-$ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-$ # Or instead you can use ./dev.sh which also ensures the dev environment runs as you 
 $ ./dev.sh 
-$ # Run ./dev.sh for more details on what it can do! 
 Building backend
 ...
 Starting db    ... done

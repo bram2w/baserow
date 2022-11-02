@@ -1,10 +1,14 @@
 import contextlib
 import os
 
+from django.apps import apps
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS
 
 import pytest
+
+from baserow.core.apps import sync_operations_after_migrate
+from baserow_enterprise.apps import sync_default_roles_after_migrate
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
@@ -15,6 +19,12 @@ def data_fixture():
     from .fixtures import Fixtures
 
     return Fixtures()
+
+
+@pytest.fixture
+def synced_roles(db):
+    sync_operations_after_migrate(None, apps=apps)
+    sync_default_roles_after_migrate(None, apps=apps)
 
 
 @pytest.fixture()
@@ -106,8 +116,9 @@ def patch_filefield_storage(tmpdir):
     return patch
 
 
-# We reuse this file in the premium backend folder, if you run a pytest session over
-# plugins and the core at the same time pytest will crash if this called multiple times.
+# We reuse this file in the premium/enterprise backend folder, if you run a pytest
+# session over plugins and the core at the same time pytest will crash if this
+# called multiple times.
 def pytest_addoption(parser):
     # Unfortunately a simple decorator doesn't work here as pytest is doing some
     # exciting reflection of sorts over this function and crashes if it is wrapped.

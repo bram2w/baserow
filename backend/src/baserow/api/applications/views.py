@@ -43,6 +43,10 @@ from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Application
+from baserow.core.operations import (
+    CreateApplicationsGroupOperationType,
+    ListApplicationsGroupOperationType,
+)
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
@@ -60,6 +64,10 @@ application_type_serializers = {
     )
     for application_type in application_type_registry.registry.values()
 }
+
+DuplicateApplicationJobTypeSerializer = job_type_registry.get(
+    DuplicateApplicationJobType.type
+).get_serializer_class(base_class=JobSerializer)
 
 
 class AllApplicationsView(APIView):
@@ -96,7 +104,10 @@ class AllApplicationsView(APIView):
         )
 
         data = [
-            get_application_serializer(application).data for application in applications
+            get_application_serializer(
+                application, context={"request": request, "application": application}
+            ).data
+            for application in applications
         ]
         return Response(data)
 
@@ -151,11 +162,27 @@ class ApplicationsView(APIView):
         """
 
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, raise_error=True, allow_if_template=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ListApplicationsGroupOperationType.type,
+            group=group,
+            context=group,
+            allow_if_template=True,
+        )
 
         applications = Application.objects.select_related(
             "content_type", "group"
         ).filter(group=group)
+
+        applications = CoreHandler().filter_queryset(
+            request.user,
+            ListApplicationsGroupOperationType.type,
+            applications,
+            group=group,
+            context=group,
+            allow_if_template=True,
+        )
 
         data = [
             get_application_serializer(application).data for application in applications
@@ -205,6 +232,14 @@ class ApplicationsView(APIView):
         """Creates a new application for a user."""
 
         group = CoreHandler().get_group(group_id)
+
+        CoreHandler().check_permissions(
+            request.user,
+            CreateApplicationsGroupOperationType.type,
+            group=group,
+            context=group,
+        )
+
         application = action_type_registry.get_by_type(CreateApplicationActionType).do(
             request.user, group, data["type"], name=data["name"]
         )
@@ -423,7 +458,7 @@ class AsyncDuplicateApplicationView(APIView):
             CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Applications"],
-        operation_id="async_duplicate_application",
+        operation_id="duplicate_application_async",
         description=(
             "Duplicate an application if the authorized user is in the application's "
             "group. All the related children are also going to be duplicated. For example "
@@ -431,7 +466,7 @@ class AsyncDuplicateApplicationView(APIView):
             "views and rows are going to be duplicated."
         ),
         responses={
-            202: DuplicateApplicationJobType().get_serializer_class(),
+            202: DuplicateApplicationJobTypeSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

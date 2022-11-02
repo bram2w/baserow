@@ -1,0 +1,40 @@
+.page-tabs {
+  width: 100%;
+  display: flex;
+  gap: 24px;
+  flex-wrap: nowrap;
+  list-style: none;
+  margin: 0;
+  padding: 0 40px;
+  border-bottom: solid 1px $color-neutral-200;
+  background-color: $white;
+}
+
+.page-tabs__item {
+  position: relative;
+  height: 51px;
+
+  &.page-tabs__item--active::after {
+    content: "";
+    height: 1px;
+    background-color: $color-primary-600;
+
+    @include absolute(auto, 0, -1px, 0);
+  }
+}
+
+.page-tabs__link {
+  color: $color-neutral-600;
+  display: block;
+  font-size: 14px;
+  line-height: 51px;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:hover,
+  .page-tabs__item--active & {
+    color: $color-primary-600;
+  }
+}

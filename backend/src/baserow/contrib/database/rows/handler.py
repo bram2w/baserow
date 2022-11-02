@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+from copy import copy
 from decimal import Decimal
 from math import ceil, floor
 from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
@@ -7,7 +8,7 @@ from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import F, Max, QuerySet
+from django.db.models import F, Max, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 from django.utils.encoding import force_str
 
@@ -16,16 +17,32 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_OR,
+    AnnotatedQ,
+    FilterBuilder,
+)
 from baserow.contrib.database.fields.models import LinkRowField
-from baserow.contrib.database.fields.registries import FieldType
+from baserow.contrib.database.fields.registries import FieldType, field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.table.operations import (
+    CreateRowDatabaseTableOperationType,
+    ImportRowsDatabaseTableOperationType,
+)
 from baserow.contrib.database.trash.models import TrashedRows
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
+from .operations import (
+    DeleteDatabaseRowOperationType,
+    MoveRowDatabaseRowOperationType,
+    ReadDatabaseRowOperationType,
+    UpdateDatabaseRowOperationType,
+)
 from .signals import (
     before_rows_delete,
     before_rows_update,
@@ -297,6 +314,8 @@ class RowHandler:
         :param row_id: The id of the row that must be fetched.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
+        :param base_queryset: A queryset that can be used to already pre-filter
+            the results.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The requested row instance.
         """
@@ -308,14 +327,129 @@ class RowHandler:
             base_queryset = model.objects
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            ReadDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         try:
             row = base_queryset.get(id=row_id)
         except model.DoesNotExist:
-            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+            raise RowDoesNotExist(row_id)
 
         return row
+
+    def get_adjacent_row(self, row, original_queryset, previous=False, view=None):
+        """
+        Fetches the adjacent row of the provided row. By default, the next row will
+        be fetched. This will be done by applying the order as greater than or lower
+        than filter using the values of the provided row.
+
+        :param row: An instance of the row where the adjacent row must be
+            fetched from.
+        :param original_queryset: The original queryset that was used to fetch the
+            row. This should contain all the orders, annotations, filters that were
+            used when fetching the row.
+        :param previous: If the previous row should be fetched.
+        :param view: The view which contains the sorts that need to be applied to the
+            queryset, to find the right adjacent field.
+        :return: The adjacent rows.
+        """
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        default_sorting = ["order", "id"]
+
+        if previous:
+            original_queryset = original_queryset.reverse()
+
+        # Sort query set
+        if view:
+            queryset_sorted = ViewHandler().apply_sorting(view, original_queryset)
+        else:
+            direction_prefix = "-" if previous else ""
+            sorting = [f"{direction_prefix}{sort}" for sort in default_sorting]
+            queryset_sorted = original_queryset.order_by(*sorting)
+
+        # Apply filters to find the adjacent row
+        filter_builder = FilterBuilder(FILTER_TYPE_OR)
+
+        previous_fields = {}
+        # Append view sorting
+        if view:
+            for view_sort in view.viewsort_set.all():
+                field = view_sort.field
+                field_name = field.db_column
+                field_type = field_type_registry.get_by_model(
+                    view_sort.field.specific_class
+                )
+
+                if previous:
+                    if view_sort.order == "DESC":
+                        order_direction = "ASC"
+                    else:
+                        order_direction = "DESC"
+                else:
+                    order_direction = view_sort.order
+
+                order_direction_suffix = "__gt" if order_direction == "ASC" else "__lt"
+
+                order = field_type.get_order(field, field_name, order_direction)
+
+                annotation = None
+                expression_name = None
+                if order is None:
+                    # In this case there isn't a custom implementation for the order
+                    # and we can assume that we can just filter by th field name.
+                    filter_key = f"{field_name}{order_direction_suffix}"
+                else:
+                    # In this case the field type is more complex and probably requires
+                    # joins in order to filter on the field. We will add the order
+                    # expression to the queryset and filter on that expression.
+                    annotation = order.annotation
+                    order = order.order
+                    expression_name = order.expression.name
+                    filter_key = f"{expression_name}{order_direction_suffix}"
+
+                value = field_type.get_value_for_filter(row, field_name)
+
+                q_kwargs = copy(previous_fields)
+                q_kwargs[filter_key] = value
+
+                q = Q(**q_kwargs)
+
+                # As the key we want to use the field name without any direction suffix.
+                # In the case of a "normal" field type, that will just be the field_name
+                # But in the case of a more complex field type, it might be the
+                # expression name.
+                # An expression name could look like `field_1__value` while a field name
+                # will always be like `field_1`.
+                previous_fields[expression_name or field_name] = value
+
+                if annotation:
+                    q = AnnotatedQ(annotation=annotation, q=q)
+
+                filter_builder.filter(q)
+
+        # Append default sorting
+        for field_name in default_sorting:
+            direction_suffix = "__lt" if previous else "__gt"
+            filter_key = f"{field_name}{direction_suffix}"
+
+            value = getattr(row, field_name)
+
+            q_kwargs = copy(previous_fields)
+            q_kwargs[filter_key] = value
+
+            previous_fields[field_name] = value
+
+            filter_builder.filter(Q(**q_kwargs))
+
+        queryset_filtered = filter_builder.apply_to_queryset(queryset_sorted)
+
+        return queryset_filtered.first()
 
     def get_row_for_update(
         self,
@@ -410,11 +544,15 @@ class RowHandler:
         :rtype: bool
         """
 
+        CoreHandler().check_permissions(
+            user,
+            ReadDatabaseRowOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
+
         if model is None:
             model = table.get_model(field_ids=[])
-
-        group = table.database.group
-        group.has_user(user, raise_error=True)
 
         row_exists = model.objects.filter(id=row_id).exists()
         if not row_exists and raise_error:
@@ -451,8 +589,12 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            CreateRowDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         instance = self.force_create_row(
             table, values, model, before_row, user_field_names
@@ -637,7 +779,9 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateDatabaseRowOperationType.type, group=group, context=table
+        )
 
         if model is None:
             model = table.get_model()
@@ -755,7 +899,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            CreateRowDatabaseTableOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1018,7 +1167,9 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ImportRowsDatabaseTableOperationType.type, group=group, context=table
+        )
 
         error_report = RowErrorReport(data)
 
@@ -1138,7 +1289,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            UpdateDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1419,7 +1575,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            MoveRowDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1518,7 +1679,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if model is None:
             model = table.get_model()
@@ -1591,7 +1757,12 @@ class RowHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteDatabaseRowOperationType.type,
+            group=group,
+            context=table,
+        )
 
         if not model:
             model = table.get_model()

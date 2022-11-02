@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "private": true,
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
@@ -9,13 +9,13 @@
     "node": ">=16.14.0 <17"
   },
   "scripts": {
-    "build": "nuxt build",
-    "build-local": "nuxt build --config-file ./config/nuxt.config.local.js",
+    "build": "NODE_ENV=production nuxt build",
+    "build-local": "NODE_ENV=production nuxt build --config-file ./config/nuxt.config.local.js",
     "dev": "nuxt --hostname 0.0.0.0",
     "start": "nuxt start --hostname 0.0.0.0",
-    "eslint": "eslint -c .eslintrc.js --ext .js,.vue . ../premium/web-frontend",
+    "eslint": "eslint -c .eslintrc.js --ext .js,.vue . ../premium/web-frontend ../enterprise/web-frontend",
     "lint": "yarn eslint && yarn stylelint",
-    "stylelint": "stylelint **/*.scss ../premium/web-frontend/**/*.scss --syntax scss",
+    "stylelint": "stylelint **/*.scss ../premium/web-frontend/**/*.scss ../enterprise/web-frontend/**/*.scss --syntax scss",
     "jest": "jest --verbose false",
     "test": "yarn jest"
   },

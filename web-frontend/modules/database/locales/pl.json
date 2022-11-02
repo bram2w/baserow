@@ -162,7 +162,8 @@
         "order": "Kolejność pól w tabeli. 0 dla pierwszego pola.",
         "primary": "Wskazuje czy pole jest polem głównym. Jeśli `true`, pole nie może być usunięte, a wartość powinna reprezentować cały wiersz.",
         "type": "Typ zdefiniowany dla tego pola.",
-        "extraProps": "Niektóre dodatkowe właściwości nie zostały tu opisane, ponieważ są specyficzne dla danego typu."
+        "extraProps": "Niektóre dodatkowe właściwości nie zostały tu opisane, ponieważ są specyficzne dla danego typu.",
+        "readOnly": "Wskazuje, czy pole jest polem tylko do odczytu. Jeśli ma wartość true, nie można zaktualizować wartości komórki."
     },
     "apiDocsTableDeleteRow": {
         "description": "Usuwa istniejący wiersz {name}.",
@@ -226,7 +227,7 @@
     "fieldLinkRowSubForm": {
         "noTable": "Potrzebujesz co najmniej jednej innej tabeli w tej samej bazie danych, aby połączyć się z nią.",
         "selectTableLabel": "Wybierz tabelę, do której chcesz utworzyć link",
-        "hasRelatedFieldLabel": "Utwórz powiązane pole"
+        "hasRelatedFieldLabel": "Utwórz powiązane pole w podlinkowanej tabeli"
     },
     "fieldSelectOptions": {
         "add": "Dodaj opcję"
@@ -319,10 +320,6 @@
     "tableForm": {
         "name": "Nazwa"
     },
-    "tableImporterPreview": {
-        "label": "Szybki podgląd",
-        "remaining": "{remaining} inne wiersze"
-    },
     "tableXMLImporter": {
         "fileLabel": "Wybierz plik XML",
         "fileDescription": "Istniejący kod XML można zaimportować, przesyłając plik .XML z danymi tabelarycznymi, tj.:",
@@ -370,7 +367,10 @@
         "stateCreateTable": "Tworzę tabelę...",
         "fieldMappingTitle": "Mapowanie pól",
         "fieldMappingDescription": "Automatycznie zmapowaliśmy kolumny pól Baserow w Twojej tabeli. Możesz je zmienić poniżej. Każda niezgodna komórka pozostanie pusta po imporcie.",
-        "selectImportMessage": "Proszę wybrać dane do importu."
+        "selectImportMessage": "Proszę wybrać dane do importu.",
+        "filePreview": "Podgląd zawartości pliku",
+        "changeImporterType": "Zmień typ importu",
+        "importPreview": "Podgląd importu"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Kliknij, aby edytować formułę",
@@ -646,7 +646,8 @@
     "formViewField": {
         "required": "wymagane",
         "showWhenMatchingConditions": "pokaż, kiedy warunki są spełnione",
-        "addCondition": "Dodaj warunek"
+        "addCondition": "Dodaj warunek",
+        "descriptionPlaceholder": "Opis"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplikuj pola",
@@ -685,7 +686,25 @@
         "fields": "Pola"
     },
     "table": {
-        "chooseView": "Wybierz widok"
+        "chooseView": "Wybierz widok",
+        "adjacentRow": {
+            "notification": {
+                "notFound": {
+                    "next": {
+                        "title": "Nie ma już rzędów",
+                        "message": "Nie ma następnego wiersza"
+                    },
+                    "previous": {
+                        "title": "Nigdy więcej wierszy",
+                        "message": "Nie ma poprzedniego wiersza"
+                    }
+                },
+                "error": {
+                    "title": "Wystąpił błąd",
+                    "message": "Wystąpił błąd podczas pobierania sąsiedniego wiersza"
+                }
+            }
+        }
     },
     "formViewModeType": {
         "formDescription": "Wszystkie pola są widoczne i ułożone pionowo.",
@@ -708,6 +727,12 @@
     "formViewModePreviewForm": {
         "addCoverImage": "Dodaj zdjęcie na okładkę",
         "addLogo": "Dodaj logo",
-        "noFields": "Ten formularz nie ma żadnych pól. Kliknij na pole w lewym pasku bocznym, aby je dodać."
+        "noFields": "Ten formularz nie ma żadnych pól. Kliknij na pole w lewym pasku bocznym, aby je dodać.",
+        "descriptionPlaceholder": "Opis",
+        "titlePlaceholder": "Tytuł"
+    },
+    "duplicateTableJobType": {
+        "duplicating": "Powielanie",
+        "duplicatedTitle": "Tabela zduplikowana"
     }
 }

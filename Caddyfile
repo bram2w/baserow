@@ -24,5 +24,11 @@
 		}
 	}
 
+	handle_path /static/* {
+		file_server {
+			root {$STATIC_ROOT:/baserow/static/}
+		}
+	}
+
 	reverse_proxy {$PRIVATE_WEB_FRONTEND_URL:localhost:3000}
 }

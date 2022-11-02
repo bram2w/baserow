@@ -112,21 +112,6 @@ export const actions = {
       throw error
     }
   },
-  /**
-   * Fetches one application for the authenticated user.
-   */
-  async fetch({ commit, dispatch }, applicationId) {
-    commit('SET_LOADING', true)
-    try {
-      const { data } = await ApplicationService(this.$client).get(applicationId)
-      dispatch('forceCreate', data)
-      commit('SET_LOADING', false)
-      return data
-    } catch (error) {
-      commit('SET_LOADING', false)
-      throw error
-    }
-  },
   forceSetAll({ commit }, { applications }) {
     applications.forEach((part, index) => {
       populateApplication(applications[index], this.$registry)
@@ -188,9 +173,14 @@ export const actions = {
   /**
    * Forcefully create an item in the store without making a call to the server.
    */
-  forceCreate({ commit }, data) {
+  forceCreate({ commit, state }, data) {
     populateApplication(data, this.$registry)
-    commit('ADD_ITEM', data)
+    const index = state.items.findIndex((item) => item.id === data.id)
+    if (index === -1) {
+      commit('ADD_ITEM', data)
+    } else {
+      commit('UPDATE_ITEM', { id: data.id, values: data })
+    }
   },
   /**
    * Updates the values of an existing application.
@@ -300,6 +290,9 @@ export const getters = {
   },
   isLoaded(state) {
     return state.loaded
+  },
+  isSelected: (state) => (application) => {
+    return state.selected.id === application.id
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)

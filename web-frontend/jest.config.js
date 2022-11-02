@@ -6,17 +6,23 @@ const junitReporterConfig = process.env.JEST_JUNIT_OUTPUT_DIR
     }
   : {}
 module.exports = {
-  // The rootDir used by jest must be the root of the repository so the premium tests
-  // and frontend code are contained within jest's rootDir. This is because:
+  // The rootDir used by jest must be the root of the repository so the
+  // premium/enterprise tests and frontend code are contained within jest's rootDir.
+  // This is because:
   // - Jest cannot collect coverage for files outside of its rootDir
   // - Jest struggles to run tests which are outside of its rootDir.
   rootDir: '..',
-  roots: ['<rootDir>/web-frontend/', '<rootDir>/premium/web-frontend'],
+  roots: [
+    '<rootDir>/web-frontend/',
+    '<rootDir>/premium/web-frontend',
+    '<rootDir>/enterprise/web-frontend',
+  ],
   moduleDirectories: ['<rootDir>/web-frontend/node_modules/'],
   modulePaths: ['<rootDir>/web-frontend/node_modules/'],
   projects: [
     '<rootDir>/web-frontend/test/unit',
     '<rootDir>/premium/web-frontend/test/unit',
+    '<rootDir>/enterprise/web-frontend/test/unit',
     '<rootDir>/web-frontend/test/server',
   ],
   coverageReporters: [
@@ -25,6 +31,7 @@ module.exports = {
   ],
   collectCoverageFrom: [
     '<rootDir>/premium/web-frontend/modules/**/*.{js,Vue,vue}',
+    '<rootDir>/enterprise/web-frontend/modules/**/*.{js,Vue,vue}',
     '<rootDir>/web-frontend/modules/**/*.{js,Vue,vue}',
     '!**/node_modules/**',
     '!**/.nuxt/**',

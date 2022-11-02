@@ -149,20 +149,21 @@
     "apiDocsIntro": {
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
         "autoDocDescription": "Cette documentation est générée automatiquement à partir des table et des champs disponibles dans votre basse de données. Si vous effectuez des modifications sur la base, les tables ou bien sur les champs des tables, cela peut également modifier l'API. Par conséquent, assurez-vous de mettre à jour les clients de votre API dans ce cas.",
-        "databaseId": "Identifiant de la base :",
-        "jsClient": "Client pour les exemples de requêtes en JavaScript :",
-        "pythonClient": "Client pour les examples de requêtes en Python :"
+        "databaseId": "L´identifiant de la base est :",
+        "jsClient": "Exemple  JavaScript de la requete API:",
+        "pythonClient": "Example  en Python de la requete API  :"
     },
     "apiDocsTableListFields": {
         "description": "Afin de lister les champs de la table {name} une requête de type {get} doit être envoyé auprès du point d'accès des champs de celle-ci. Le jeton d'authentification doit avoir les droits de création, modification et suppression afin de pouvoir lister les champs de la table.",
         "resultFieldProperties": "Propriétés des champs de la réponse",
         "id": "Clé primaire du champ. Permet de générer le nom de la colonne en base de données en ajoutant le prefix `field_`.",
         "name": "Nom du champ.",
-        "tableId": "Clé étrangère de la table.",
-        "order": "Ordre du champ dans la table. 0 est le premier champ.",
+        "tableId": "ID de table associée.",
+        "order": "Ordre du champ dans la table. 0 est pour le premier champ.",
         "primary": "Indique si le champ est une clé primaire. Si la valeur est `true` le champ ne peut être effacé et ses valeurs doivent représenter la ligne entière.",
         "type": "Type défini pour ce champ.",
-        "extraProps": "Certaines propriétés ne sont pas décrites ici car elles sont spécifiques au type de champ concerné."
+        "extraProps": "Certaines propriétés ne sont pas décrites ici car elles sont spécifiques au type de champ concerné.",
+        "readOnly": "Indique si le champ est un champ de lecture uniquement. Si oui, il n'est pas possible de mettre à jour la valeur de la cellule."
     },
     "apiDocsTableDeleteRow": {
         "description": "Supprime une ligne de la table *{name}*.",
@@ -299,10 +300,6 @@
     "tableForm": {
         "name": "Nom"
     },
-    "tableImporterPreview": {
-        "label": "Aperçu",
-        "remaining": "{remaining} autres lignes"
-    },
     "tableXMLImporter": {
         "fileLabel": "Choisissez un fichier XML",
         "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",
@@ -352,7 +349,8 @@
         "fieldMappingDescription": "Nous avons automatiquement fait la correspondance entre les colonnes du fichier et les champs Baserow dans votre table. Vous pouvez les modifier ci-dessous. Toute cellule incompatible avec le type du champ sélectionné restera vide après l'importation.",
         "selectImportMessage": "Veuillez sélectionner les données à importer.",
         "filePreview": "Aperçu du contenu du fichier",
-        "importPreview": "Aperçu de l'import"
+        "importPreview": "Aperçu de l'import",
+        "changeImporterType": "Modifier le type d'importation"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
@@ -698,7 +696,25 @@
         "descriptionPlaceholder": "Description"
     },
     "table": {
-        "chooseView": "Choisir la vue"
+        "chooseView": "Choisir la vue",
+        "adjacentRow": {
+            "notification": {
+                "notFound": {
+                    "next": {
+                        "message": "Il n'y a pas de ligne suivante",
+                        "title": "Plus de rangées"
+                    },
+                    "previous": {
+                        "title": "Plus de lignes",
+                        "message": "Il n’y a pas de ligne précédente"
+                    }
+                },
+                "error": {
+                    "message": "Une erreur s’est produite lors de la récupération de la ligne adjacente",
+                    "title": "Une erreur s'est produite"
+                }
+            }
+        }
     },
     "fieldmultipleCollaboratorsDropdown": {
         "notFound": "Collaborateur non trouvé"

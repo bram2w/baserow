@@ -14,7 +14,6 @@ def test_create_job(mock_run_async, data_fixture, api_client):
     data_fixture.register_temp_job_types()
 
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
 
     response = api_client.post(
         reverse("api:jobs:list"),
@@ -117,35 +116,93 @@ def test_list_jobs(data_fixture, api_client):
     job_1 = data_fixture.create_fake_job(user=user)
     job_2 = data_fixture.create_fake_job(user=user, state="failed")
     job_3 = data_fixture.create_fake_job()
+    url = reverse("api:jobs:list")
 
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+
+    job_1_json = {
+        "id": job_1.id,
+        "type": "tmp_job_type_1",
+        "progress_percentage": 0,
+        "state": "pending",
+        "human_readable_error": "",
+        "test_field": 42,
+    }
+
+    job_2_json = {
+        "id": job_2.id,
+        "type": "tmp_job_type_1",
+        "progress_percentage": 0,
+        "state": "failed",
+        "human_readable_error": "",
+        "test_field": 42,
+    }
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {"jobs": [job_1_json, job_2_json]}
+
+    valid_job_states = ",".join(["pending", "finished"])
     response = api_client.get(
-        reverse(
-            "api:jobs:list",
-        ),
+        f"{url}?states={valid_job_states}",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == HTTP_200_OK
-    json = response.json()
+    assert response.json() == {"jobs": [job_1_json]}
 
-    assert json == [
-        {
-            "id": job_1.id,
-            "type": "tmp_job_type_1",
-            "progress_percentage": 0,
-            "state": "pending",
-            "human_readable_error": "",
-            "test_field": 42,
+    response = api_client.get(
+        f"{url}?states=!finished",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {"jobs": [job_1_json, job_2_json]}
+
+    response = api_client.get(
+        f"{url}?states=importing",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert response.json() == {
+        "error": "ERROR_QUERY_PARAMETER_VALIDATION",
+        "detail": {
+            "states": [
+                {
+                    "error": "State importing is not a valid state. "
+                    "Valid states are: pending, finished, failed.",
+                    "code": "invalid",
+                }
+            ],
         },
-        {
-            "id": job_2.id,
-            "type": "tmp_job_type_1",
-            "progress_percentage": 0,
-            "state": "failed",
-            "human_readable_error": "",
-            "test_field": 42,
+    }
+
+    response = api_client.get(
+        f"{url}?job_ids={job_2.id},{job_3.id}",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {"jobs": [job_2_json]}
+
+    response = api_client.get(
+        f"{url}?job_ids=invalid_job_id",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert response.json() == {
+        "error": "ERROR_QUERY_PARAMETER_VALIDATION",
+        "detail": {
+            "job_ids": [
+                {
+                    "error": "Job id invalid_job_id is not a valid integer.",
+                    "code": "invalid",
+                }
+            ],
         },
-    ]
+    }
 
 
 @pytest.mark.django_db

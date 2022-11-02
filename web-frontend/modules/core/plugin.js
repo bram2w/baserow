@@ -1,7 +1,11 @@
 import Vue from 'vue'
 
 import { Registry } from '@baserow/modules/core/registry'
-import { DuplicateApplicationJobType } from '@baserow/modules/core/jobTypes'
+import { PasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
+import {
+  DuplicateApplicationJobType,
+  InstallTemplateJobType,
+} from '@baserow/modules/core/jobTypes'
 
 import {
   AccountSettingsType,
@@ -14,8 +18,16 @@ import {
 } from '@baserow/modules/core/userFileUploadTypes'
 import { SettingsAdminType } from '@baserow/modules/core/adminTypes'
 
+import {
+  BasicPermissionManagerType,
+  CorePermissionManagerType,
+  StaffPermissionManagerType,
+  GroupMemberPermissionManagerType,
+} from '@baserow/modules/core/permissionManagerTypes'
+
 import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
+import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
 import groupStore from '@baserow/modules/core/store/group'
 import jobStore from '@baserow/modules/core/store/job'
@@ -49,15 +61,31 @@ export default (context, inject) => {
 
   const registry = new Registry()
   registry.registerNamespace('plugin')
+  registry.registerNamespace('permissionManager')
   registry.registerNamespace('application')
+  registry.registerNamespace('authProvider')
   registry.registerNamespace('job')
   registry.registerNamespace('view')
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
+  registry.registerNamespace('membersPagePlugins')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
+  registry.register('permissionManager', new CorePermissionManagerType(context))
+  registry.register(
+    'permissionManager',
+    new StaffPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new GroupMemberPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new BasicPermissionManagerType(context)
+  )
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(
     'userFileUpload',
@@ -68,6 +96,7 @@ export default (context, inject) => {
 
   store.registerModule('settings', settingsStore)
   store.registerModule('application', applicationStore)
+  store.registerModule('authProvider', authProviderStore)
   store.registerModule('auth', authStore)
   store.registerModule('job', jobStore)
   store.registerModule('group', groupStore)
@@ -75,5 +104,7 @@ export default (context, inject) => {
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
 
+  registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
+  registry.register('job', new InstallTemplateJobType(context))
 }

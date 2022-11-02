@@ -5,7 +5,7 @@ ARG FROM_WEBFRONTEND_IMAGE=baserow_web-frontend
 FROM $FROM_BACKEND_IMAGE as backend_image_base
 # hadolint ignore=DL3006
 FROM $FROM_WEBFRONTEND_IMAGE as web_frontend_image_base
-FROM debian:buster-slim as base
+FROM debian:bullseye-slim as base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -30,16 +30,24 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install --no-install-recommends -y \
     make supervisor curl gnupg2 \
     build-essential \
+    lsb-release \
+    ca-certificates \
+    && \
+    # Postgresql repository has to be added manually to get pre-13 versions.
+    echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && \
+    # Install the correct version of postgresql and the remaining packages
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+    postgresql-$POSTGRES_VERSION \
+    postgresql-client-$POSTGRES_VERSION \
     libpq-dev \
     redis-server \
-    postgresql \
-    postgresql-contrib \
-    postgresql-client \
     python3 \
     python3-pip \
     python3-dev \
     python3-venv \
-    ca-certificates \
     tini \
     psmisc \
     gosu \
@@ -47,6 +55,7 @@ RUN apt-get update && \
     vim \
     gawk \
     git \
+    xmlsec1 \
     && \
     # ========================
     # Install Node and Yarn

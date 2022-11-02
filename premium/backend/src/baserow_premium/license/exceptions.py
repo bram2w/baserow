@@ -2,7 +2,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_402_PAYMENT_REQUIRED
 
 
-class NoPremiumLicenseError(APIException):
+class FeaturesNotAvailableError(APIException):
     """
     Raised when the related user does not have an active license for the premium
     version.
@@ -11,50 +11,53 @@ class NoPremiumLicenseError(APIException):
     def __init__(self):
         super().__init__(
             {
-                "error": "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
-                "detail": "The related user does not have access to the premium "
-                "version.",
+                "error": "ERROR_FEATURE_NOT_AVAILABLE",
+                "detail": "The related user does not have access to these features.",
             },
             code=HTTP_402_PAYMENT_REQUIRED,
         )
         self.status_code = HTTP_402_PAYMENT_REQUIRED
 
 
-class InvalidPremiumLicenseError(Exception):
+class InvalidLicenseError(Exception):
     """
-    Raised when a provided premium license is not valid. This could be because the
+    Raised when a provided license is not valid. This could be because the
     signature is incorrect or the payload does not contain the required information.
     """
 
 
-class UnsupportedPremiumLicenseError(Exception):
+class UnsupportedLicenseError(Exception):
     """
     Raised when the version of the license is not supported. This probably means that
     Baserow must be upgraded.
     """
 
 
-class PremiumLicenseInstanceIdMismatchError(Exception):
+class LicenseInstanceIdMismatchError(Exception):
     """
     Raised when trying to register a license and the instance ids of the license and
     self hosted copy don't match.
     """
 
 
-class PremiumLicenseAlreadyExists(Exception):
+class LicenseAlreadyExistsError(Exception):
     """Raised when trying to register a license that already exists."""
 
 
-class PremiumLicenseHasExpired(Exception):
+class LicenseHasExpiredError(Exception):
     """Raised when trying to register a license that is expired."""
 
 
-class UserAlreadyOnPremiumLicenseError(Exception):
+class UserAlreadyOnLicenseError(Exception):
     """Raised when the user already has a seat in the license."""
 
 
-class NoSeatsLeftInPremiumLicenseError(Exception):
+class NoSeatsLeftInLicenseError(Exception):
     """Raised when there are no seats left in the license."""
+
+
+class CantManuallyChangeSeatsError(Exception):
+    """Raised if trying to assign/remove users from seats for a given license type"""
 
 
 class LicenseAuthorityUnavailable(Exception):

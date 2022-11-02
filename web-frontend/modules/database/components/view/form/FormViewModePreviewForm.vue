@@ -91,6 +91,7 @@
             update: order,
             handle: '[data-field-handle]',
           }"
+          :database="database"
           :table="table"
           :view="view"
           :field="field"
@@ -104,8 +105,11 @@
         >
         </FormViewField>
       </div>
-      <div class="form-view__actions">
-        <FormViewPoweredBy></FormViewPoweredBy>
+      <div
+        class="form-view__actions"
+        :class="{ 'form-view__actions--single': !view.show_logo }"
+      >
+        <FormViewPoweredBy v-if="view.show_logo"></FormViewPoweredBy>
         <div class="form-view__submit">
           <Editable
             ref="submit_text"

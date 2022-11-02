@@ -6,7 +6,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, validate_body_custom_fields
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body_custom_fields,
+    validate_query_parameters,
+)
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
@@ -14,13 +18,31 @@ from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 
 from .errors import ERROR_JOB_DOES_NOT_EXIST, ERROR_MAX_JOB_COUNT_EXCEEDED
-from .serializers import CreateJobSerializer, JobSerializer
+from .serializers import CreateJobSerializer, JobSerializer, ListJobQuerySerializer
 
 
 class JobsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="states",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="A comma separated list of jobs state to look for. "
+                "The only possible values are: `pending`, `finished` and `failed`. "
+                "It's possible to exclude a state by prefixing it with a `!`. ",
+            ),
+            OpenApiParameter(
+                name="job_ids",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="A comma separated list of job ids in the desired order."
+                "The jobs will be returned in the same order as the ids."
+                "If a job id is not found it will be ignored.",
+            ),
+        ],
         tags=["Jobs"],
         operation_id="list_job",
         description=(
@@ -31,16 +53,23 @@ class JobsView(APIView):
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
                 job_type_registry, JobSerializer, many=True
-            ),
+            )
         },
     )
-    def get(self, request):
+    @validate_query_parameters(ListJobQuerySerializer, return_validated=True)
+    def get(self, request, query_params):
 
-        jobs = JobHandler().get_jobs_for_user(request.user)
-        data = [
+        states = query_params.get("states", None)
+        job_ids = query_params.get("job_ids", None)
+
+        jobs = JobHandler().get_jobs_for_user(
+            request.user, filter_states=states, filter_ids=job_ids
+        )
+
+        serialized_jobs = [
             job_type_registry.get_serializer(job, JobSerializer).data for job in jobs
         ]
-        return Response(data)
+        return Response({"jobs": serialized_jobs})
 
     @extend_schema(
         tags=["Jobs"],
@@ -83,7 +112,6 @@ class JobsView(APIView):
         """Creates a new job."""
 
         type_name = data.pop("type")
-
         job_type = job_type_registry.get(type_name)
 
         # Because each type can raise custom exceptions while creating the

@@ -28,6 +28,9 @@ export default {
   },
   data() {
     return {
+      // This field is being used by `getDropdownItemComponents` in ``dropdown.js to
+      // figure out if the child component is a dropdown item or not
+      isDropdownItem: true,
       query: '',
     }
   },

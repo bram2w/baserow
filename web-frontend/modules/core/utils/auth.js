@@ -1,4 +1,5 @@
 import { isSecureURL } from '@baserow/modules/core/utils/string'
+import jwtDecode from 'jwt-decode'
 
 const cookieTokenName = 'jwt_token'
 
@@ -20,4 +21,19 @@ export const unsetToken = ({ $cookies }, key = cookieTokenName) => {
 
 export const getToken = ({ $cookies }, key = cookieTokenName) => {
   return $cookies.get(key)
+}
+
+export const getTokenIfEnoughTimeLeft = (
+  { $cookies },
+  key = cookieTokenName
+) => {
+  const token = getToken({ $cookies }, key)
+  if (!token) return null
+
+  const decodedToken = jwtDecode(token)
+  const now = Math.ceil(new Date().getTime() / 1000)
+  // Return the token if it is still valid for more of the 10% of the lifespan.
+  if ((decodedToken.exp - now) / (decodedToken.exp - decodedToken.iat) > 0.1) {
+    return token
+  }
 }

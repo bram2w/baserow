@@ -498,6 +498,41 @@
           <a class="button button--loading">Loading</a>
           <a class="button button--ghost button--loading">Loading</a>
         </div>
+        <div
+          class="margin-bottom-3"
+          style="background-color: #ffffff; padding: 20px"
+        >
+          <Tabs>
+            <Tab :selected="true" :title="'Tab 1'">
+              <p>
+                Tab 1 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+            <Tab :title="'Tab 2'">
+              <p>
+                Tab 2 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+            <Tab :title="'Tab 3'">
+              <p>
+                Tab 3 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+          </Tabs>
+        </div>
+
         <div class="margin-bottom-3">
           <div class="tooltip margin-bottom-2">
             <div class="tooltip__content">Example tooltip</div>
@@ -521,6 +556,38 @@
                   <i class="context__menu-icon fas fa-fw fa-trash"></i>
                   Delete table
                 </a>
+              </li>
+              <li>
+                <a href="#" class="context__menu-item--loading">
+                  <i class="context__menu-icon fas fa-fw fa-trash"></i>
+                  Loading
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="context" style="max-width: 264px">
+            <div class="context__menu-title">Workspace permissions</div>
+            <ul class="context__menu context__menu--can-be-active">
+              <li>
+                <a href="#" class="active">
+                  Admin
+                  <div class="context__menu-item-description">
+                    Description of what an admin can or can’t do on the
+                    workspace.
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="context__menu-item--loading">
+                  Builder
+                  <div class="context__menu-item-description">
+                    Description of what a builder can or can’t do on the
+                    workspace.
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a class="color-error" href="#"> Remove from workspace </a>
               </li>
             </ul>
           </div>
@@ -574,6 +641,8 @@
               </a>
             </div>
           </div>
+        </div>
+        <div class="margin-bottom-3 style-guide__contexts">
           <div class="select">
             <div class="select__search">
               <i class="select__search-icon fas fa-search"></i>
@@ -642,11 +711,19 @@
               </li>
             </ul>
             <div class="select__footer">
-              <div class="select__footer-multiple">
-                <div class="select__footer-multiple-label">Add a view:</div>
-                <a href="#" class="select__footer-multiple-item">
-                  <i class="select__footer-multiple-icon fas fa-th"></i>
-                  Grid
+              <div class="select__footer-create">
+                <a class="select__footer-create-link"
+                  ><i class="select__footer-create-icon fas fa-bars"></i>
+                  Grid </a
+                ><a class="select__footer-create-link"
+                  ><i class="select__footer-create-icon fas fa-th-large"></i>
+                  Gallery </a
+                ><a class="select__footer-create-link"
+                  ><i class="select__footer-create-icon fas fa-edit"></i>
+                  Form </a
+                ><a class="select__footer-create-link"
+                  ><i class="select__footer-create-icon fas fa-trello fab"></i>
+                  Kanban
                 </a>
               </div>
             </div>
@@ -1021,34 +1098,40 @@
             <a class="modal__close">
               <i class="fas fa-times"></i>
             </a>
-            <div class="modal__box-sidebar">
+            <div
+              class="
+                modal__box-sidebar
+                modal__box-sidebar--left
+                modal__box-sidebar--scrollable
+              "
+            >
               <div class="modal-sidebar__head">
                 <div class="modal-sidebar__head-initials-icon">B</div>
                 <div class="modal-sidebar__head-name">Settings</div>
               </div>
               <ul class="modal-sidebar__nav">
                 <li>
-                  <a href="#" class="modal-sidebar__nav-link">
-                    <i class="fas fa-user-circle modal-sidebar__nav-icon"></i>
-                    Profile
-                  </a>
-                </li>
-                <li>
-                  <a href="#" class="modal-sidebar__nav-link">
-                    <i class="fas fa-user modal-sidebar__nav-icon"></i>
+                  <a class="modal-sidebar__nav-link active"
+                    ><i class="fas modal-sidebar__nav-icon fa-user"></i>
                     Account
                   </a>
                 </li>
                 <li>
-                  <a href="#" class="modal-sidebar__nav-link active">
-                    <i class="fas fa-lock modal-sidebar__nav-icon"></i>
+                  <a class="modal-sidebar__nav-link"
+                    ><i class="fas modal-sidebar__nav-icon fa-lock"></i>
                     Password
                   </a>
                 </li>
                 <li>
-                  <a href="#" class="modal-sidebar__nav-link">
-                    <i class="fas fa-envelope modal-sidebar__nav-icon"></i>
-                    Email
+                  <a class="modal-sidebar__nav-link"
+                    ><i class="fas modal-sidebar__nav-icon fa-key"></i>
+                    API Tokens
+                  </a>
+                </li>
+                <li>
+                  <a class="modal-sidebar__nav-link"
+                    ><i class="fas modal-sidebar__nav-icon fa-user-slash"></i>
+                    Delete account
                   </a>
                 </li>
               </ul>
@@ -1265,6 +1348,180 @@
                   <div class="card-text">
                     <a href="#">+316 12345678</a>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="margin-bottom-3"
+          style="background-color: #ffffff; position: relative; height: 1000px"
+        >
+          <div class="data-table">
+            <div class="data-table__header">
+              <h1 class="data-table__title">12 Members in ACME Corp</h1>
+              <div class="data-table__actions">
+                <div class="input__with-icon input__with-icon--left">
+                  <input
+                    type="text"
+                    placeholder="Find member..."
+                    class="input input--large"
+                  />
+                  <i class="fas fa-search"></i>
+                </div>
+                <a href="#" class="button button--large margin-left-2"
+                  >Invite member</a
+                >
+              </div>
+            </div>
+            <div class="data-table__body">
+              <table class="data-table__table">
+                <thead>
+                  <tr class="data-table__table-row">
+                    <th
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--sticky-left
+                        data-table__table-cell--header
+                      "
+                    >
+                      <div class="data-table__table-cell-head">
+                        <Checkbox
+                          v-model="checkbox"
+                          class="checkbox--small"
+                        ></Checkbox>
+                      </div>
+                    </th>
+                    <th
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
+                    >
+                      <div class="data-table__table-cell-head">
+                        <a href="#" class="data-table__table-cell-head-link"
+                          >Name</a
+                        >
+                        <div>
+                          <i class="fas fa-sort-down"></i>
+                          0
+                        </div>
+                      </div>
+                    </th>
+                    <th
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
+                    >
+                      <div class="data-table__table-cell-head">Email</div>
+                    </th>
+                    <th
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
+                    >
+                      <div class="data-table__table-cell-head">
+                        Workspace permissions
+                        <div>
+                          <i class="fas fa-sort-up"></i>
+                          1
+                        </div>
+                      </div>
+                    </th>
+                    <th
+                      class="
+                        data-table__table-cell data-table__table-cell--header
+                      "
+                    >
+                      <div class="data-table__table-cell-head">Team</div>
+                    </th>
+                    <th
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--header
+                        data-table__table-cell--sticky-right
+                      "
+                    >
+                      <div class="data-table__table-cell-head"></div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(i, i2) in new Array(10)"
+                    :key="i2"
+                    class="data-table__table-row"
+                    :class="{
+                      'data-table__table-row--selected': i2 === 2,
+                      'data-table__table-row--hover': i2 === 4,
+                    }"
+                  >
+                    <td
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--sticky-left
+                      "
+                    >
+                      <div class="data-table__table-cell-content">
+                        <Checkbox
+                          v-model="checkbox"
+                          class="checkbox--small"
+                        ></Checkbox>
+                      </div>
+                    </td>
+                    <td class="data-table__table-cell">
+                      <div class="data-table__table-cell-content">
+                        This is a very long name that doesn't completely fit.
+                      </div>
+                    </td>
+                    <td class="data-table__table-cell">
+                      <div class="data-table__table-cell-content">
+                        This is a very long name that doesn't completely fit.
+                      </div>
+                    </td>
+                    <td class="data-table__table-cell">
+                      <div class="data-table__table-cell-content">
+                        This is a very long name that doesn't completely fit.
+                      </div>
+                    </td>
+                    <td class="data-table__table-cell">
+                      <div class="data-table__table-cell-content">
+                        This is a very long name that doesn't completely fit.
+                      </div>
+                    </td>
+                    <td
+                      class="
+                        data-table__table-cell
+                        data-table__table-cell--sticky-right
+                      "
+                    >
+                      <div class="data-table__table-cell-content">
+                        <div class="data-table__more-wrapper">
+                          <a href="#" class="data-table__more">
+                            <i class="fas fa-ellipsis-h"></i>
+                          </a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="data-table__footer">
+              <div class="paginator">
+                <div class="paginator__name">page</div>
+                <div class="paginator__group">
+                  <a class="paginator__button paginator__button--disabled"
+                    ><i class="fas fa-caret-left"></i
+                  ></a>
+                  <input
+                    type="number"
+                    class="input paginator__page-input"
+                    value="1"
+                  />
+                  <div class="paginator__count">of 233</div>
+                  <a class="paginator__button"
+                    ><i class="fas fa-caret-right"></i
+                  ></a>
                 </div>
               </div>
             </div>

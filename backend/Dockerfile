@@ -1,28 +1,40 @@
 # syntax = docker/dockerfile:1.3
-FROM debian:buster-slim as base
+FROM debian:bullseye-slim as base
 
 ARG UID
 ENV UID=${UID:-9999}
 ARG GID
 ENV GID=${GID:-9999}
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # We might be running as a user which already exists in this image. In that situation
 # Everything is OK and we should just continue on.
 RUN groupadd -g $GID baserow_docker_group || exit 0
 RUN useradd --shell /bin/bash -u $UID -g $GID -o -c "" -m baserow_docker_user -l || exit 0
 ENV DOCKER_USER=baserow_docker_user
+ENV POSTGRES_VERSION=11
 ENV BASEROW_IMAGE_TYPE="backend"
 
 RUN apt-get update &&  \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     build-essential \
+    lsb-release \
+    ca-certificates \
     curl \
     gnupg2 \
     libpq-dev \
     dos2unix \
     tini \
-    postgresql-client \
+    && \
+    # Postgresql repository has to be added manually to get pre-13 versions.
+    echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
+    postgresql-client-$POSTGRES_VERSION \
     gettext \
     procps \
     python3 \
@@ -32,6 +44,7 @@ RUN apt-get update &&  \
     vim \
     git \
     gosu \
+    xmlsec1 \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \
@@ -67,13 +80,14 @@ COPY --chown=$UID:$GID ./docs /baserow/docs
 #        and not cached even though we already have separate layers above.
 COPY --chown=$UID:$GID ./backend /baserow/backend
 COPY --chown=$UID:$GID ./premium/backend /baserow/premium/backend
+COPY --chown=$UID:$GID ./enterprise/backend /baserow/enterprise/backend
 
 WORKDIR /baserow/backend
 
 # Ensure that Python outputs everything that's printed inside
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src
+ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src:/baserow/enterprise/backend/src
 
 COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \

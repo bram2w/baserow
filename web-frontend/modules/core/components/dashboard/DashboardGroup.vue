@@ -31,12 +31,6 @@
           :group="group"
           :component-arguments="componentArguments"
         ></component>
-        <a
-          v-if="group.permissions === 'ADMIN'"
-          class="dashboard__group-link"
-          @click="$refs.context.showGroupMembersModal()"
-          >{{ $t('dashboardGroup.showMembers') }}</a
-        >
       </div>
     </div>
     <component
@@ -79,6 +73,7 @@
           >
             <i class="fas fa-plus"></i>
           </div>
+
           <div class="dashboard__group-item-name">
             {{ $t('dashboardGroup.createApplication') }}
           </div>

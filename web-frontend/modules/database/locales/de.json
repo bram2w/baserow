@@ -162,7 +162,8 @@
         "order": "Reihenfolge der Felder in der Tabelle. 0 für das erste Feld.",
         "primary": "Gibt an, wenn das Feld ein Primärfeld ist. Wenn `true`, kann das Feld nicht gelöscht werden und der Wert sollte die gesamte Zeile repräsentieren.",
         "type": "Für dieses Feld definierter Typ.",
-        "extraProps": "Einige zusätzliche Eigenschaften werden hier nicht beschrieben, da sie typspezifisch sind."
+        "extraProps": "Einige zusätzliche Eigenschaften werden hier nicht beschrieben, da sie typspezifisch sind.",
+        "readOnly": "Zeigt an, ob das Feld ein schreibgeschütztes Feld ist. Wenn \"true\", kann der Wert der Zelle nicht aktualisiert werden."
     },
     "apiDocsTableDeleteRow": {
         "description": "Löscht eine vorhandene {name} Zeile.",
@@ -214,7 +215,7 @@
     "fieldLinkRowSubForm": {
         "noTable": "Sie benötigen mindestens eine weitere Tabelle in derselben Datenbank, auf die Sie verweisen können.",
         "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung",
-        "hasRelatedFieldLabel": "Zugehöriges Feld erstellen"
+        "hasRelatedFieldLabel": "Verknüpftes Feld in verknüpfter Tabelle erstellen"
     },
     "fieldSelectOptions": {
         "add": "Eine Option hinzufügen"
@@ -267,7 +268,7 @@
         "hideHiddenFields": "Versteckte Felder ausblenden"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Eine weitere Option hinzufügen"
+        "addOption": "Wähle eine Option"
     },
     "rowEditFieldFile": {
         "addFile": "Eine Datei hinzufügen",
@@ -281,7 +282,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Weiteren Link hinzufügen"
+        "addLink": "Wählen Sie einen Link"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "CSV-Datei auswählen",
@@ -298,10 +299,6 @@
     },
     "tableForm": {
         "name": "Name"
-    },
-    "tableImporterPreview": {
-        "label": "Schnelle Vorschau",
-        "remaining": "{remaining} andere Zeilen"
     },
     "tableXMLImporter": {
         "fileLabel": "XML-Datei auswählen",
@@ -352,7 +349,8 @@
         "reportTitleSuccess": "Import erfolgreich, aber...",
         "reportTitleFailure": "Fehlerhafte Zeilen",
         "filePreview": "Vorschau des Dateiinhalts",
-        "importPreview": "Importvorschau"
+        "importPreview": "Importvorschau",
+        "changeImporterType": "Importtyp ändern"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klicken Sie zum Bearbeiten der Formel",
@@ -694,7 +692,25 @@
         "file": "Der `file` Multipart, der den Dateiinhalt enthält."
     },
     "table": {
-        "chooseView": "Ansicht wählen"
+        "chooseView": "Ansicht wählen",
+        "adjacentRow": {
+            "notification": {
+                "notFound": {
+                    "previous": {
+                        "title": "Keine Zeilen mehr",
+                        "message": "Es gibt keine vorherige Zeile"
+                    },
+                    "next": {
+                        "message": "Es gibt keine nächste Zeile",
+                        "title": "Keine Zeilen mehr"
+                    }
+                },
+                "error": {
+                    "title": "Fehler aufgetreten",
+                    "message": "Beim Abrufen der angrenzenden Zeile ist ein Fehler aufgetreten"
+                }
+            }
+        }
     },
     "fieldmultipleCollaboratorsDropdown": {
         "notFound": "Mitarbeiter nicht gefunden"
@@ -709,7 +725,7 @@
         "url": "Die URL, die Baserow in Ihrem Namen herunterladen und hochladen soll."
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Einen Mitarbeiter hinzufügen"
+        "addCollaborator": "Wählen Sie einen Mitarbeiter"
     },
     "gridViewFieldFile": {
         "dropFileHere": "Dateien hier ablegen",

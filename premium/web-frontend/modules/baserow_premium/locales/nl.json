@@ -130,9 +130,6 @@
         "delete": "Gebruiker verwijderen",
         "edit": "Bewerk { gebruikersnaam }"
     },
-    "crudTableSearchContext": {
-        "search": "Zoeken"
-    },
     "tableJSONExporter": {
         "encoding": "Codering"
     },
@@ -224,7 +221,10 @@
         "rowUsage": "Rijgebruik",
         "storeUsage": "Opslaggebruik",
         "disconnectLicense": "Licentie ontkoppelen",
-        "disconnectDescription": "Als je deze licentie ontkoppelt terwijl deze actief is, hebben de toegewezen gebruikers geen toegang meer tot het relevante plan. Deze handeling zal de licentie effectief verwijderen. Neem contact op met ons support team via {contact} als je deze licentie wilt gebruiken in een andere zelf-gehoste installatie."
+        "disconnectDescription": "Als je deze licentie ontkoppelt terwijl deze actief is, hebben de toegewezen gebruikers geen toegang meer tot het relevante plan. Deze handeling zal de licentie effectief verwijderen. Neem contact op met ons support team via {contact} als je deze licentie wilt gebruiken in een andere zelf-gehoste installatie.",
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} betaalde stoelen en {free_users_count} vrije stoelen in gebruik",
+        "moreSeatsNeededTitle": "Meer seats nodig",
+        "contactSalesMoreSeats": "Neem contact op met sales voor meer seats"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Linkerrand",
@@ -264,7 +264,8 @@
         "kanbanView": "Kanban-weergave",
         "exports": "JSON- en XML-export",
         "admin": "Admin functionaliteit",
-        "surveyForm": "Enquêteformulier"
+        "surveyForm": "Enquêteformulier",
+        "publicLogoRemoval": "Publiek logo verwijderen"
     },
     "premiumModal": {
         "title": "Upgrade om de {name} te gebruiken",
@@ -280,5 +281,11 @@
         "orderFields": "Order velden",
         "deactivated": "Enquêteformulier is beschikbaar in de premium versie.",
         "more": "Meer informatie"
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Verberg Baserow logo in gedeelde weergave",
+            "premiumModalName": "publieke logo verwijderen"
+        }
     }
 }

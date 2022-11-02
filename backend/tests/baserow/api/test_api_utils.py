@@ -373,6 +373,7 @@ def test_get_serializer_class(data_fixture):
     assert group_serializer_2.data == {"id": str(group.id), "name": "Group 1"}
 
 
+@override_settings(DEBUG=False)
 def test_api_error_if_url_trailing_slash_is_missing(api_client):
 
     invalid_url = "/api/invalid-url"

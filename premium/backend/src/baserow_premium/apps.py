@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+from baserow.core.registries import operation_type_registry
+
 
 class BaserowPremiumConfig(AppConfig):
     name = "baserow_premium"
@@ -7,7 +9,7 @@ class BaserowPremiumConfig(AppConfig):
     def ready(self):
         # noinspection PyUnresolvedReferences
         import baserow_premium.row_comments.recievers  # noqa: F401
-        from baserow_premium.api.user.user_data_types import PremiumUserDataType
+        from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
         from baserow_premium.row_comments.row_metadata_types import (
             RowCommentCountMetadataType,
         )
@@ -43,7 +45,7 @@ class BaserowPremiumConfig(AppConfig):
 
         row_metadata_registry.register(RowCommentCountMetadataType())
 
-        user_data_registry.register(PremiumUserDataType())
+        user_data_registry.register(ActiveLicensesDataType())
 
         view_type_registry.register(KanbanViewType())
 
@@ -56,6 +58,19 @@ class BaserowPremiumConfig(AppConfig):
         decorator_value_provider_type_registry.register(
             ConditionalColorValueProviderType()
         )
+
+        from baserow_premium.license.license_types import PremiumLicenseType
+        from baserow_premium.license.registries import license_type_registry
+
+        license_type_registry.register(PremiumLicenseType())
+
+        from .row_comments.operations import (
+            CreateRowCommentsOperationType,
+            ReadRowCommentsOperationType,
+        )
+
+        operation_type_registry.register(ReadRowCommentsOperationType())
+        operation_type_registry.register(CreateRowCommentsOperationType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

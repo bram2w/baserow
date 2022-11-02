@@ -644,31 +644,28 @@ def test_airtable_import_foreign_key_column(data_fixture, api_client):
     assert baserow_field.link_row_table_id == "tblRpq315qnnIcg5IjI"
     assert baserow_field.link_row_related_field_id == "fldFh5wIL430N62LN6t"
 
-    assert (
-        airtable_column_type.to_baserow_export_serialized_value(
+    assert airtable_column_type.to_baserow_export_serialized_value(
+        {
+            "tblRpq315qnnIcg5IjI": {
+                "recWkle1IOXcLmhILmO": 1,
+                "rec5pdtuKyE71lfK1Ah": 2,
+            }
+        },
+        airtable_field,
+        baserow_field,
+        [
             {
-                "tblRpq315qnnIcg5IjI": {
-                    "recWkle1IOXcLmhILmO": 1,
-                    "rec5pdtuKyE71lfK1Ah": 2,
-                }
+                "foreignRowId": "recWkle1IOXcLmhILmO",
+                "foreignRowDisplayName": "Bram 1",
             },
-            airtable_field,
-            baserow_field,
-            [
-                {
-                    "foreignRowId": "recWkle1IOXcLmhILmO",
-                    "foreignRowDisplayName": "Bram 1",
-                },
-                {
-                    "foreignRowId": "rec5pdtuKyE71lfK1Ah",
-                    "foreignRowDisplayName": "Bram 2",
-                },
-            ],
-            UTC,
-            {},
-        )
-        == [1, 2]
-    )
+            {
+                "foreignRowId": "rec5pdtuKyE71lfK1Ah",
+                "foreignRowDisplayName": "Bram 2",
+            },
+        ],
+        UTC,
+        {},
+    ) == [1, 2]
 
     # link to same table row
     airtable_field = {

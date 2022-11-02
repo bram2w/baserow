@@ -17,9 +17,14 @@
         "duplicating": "Duplicating",
         "duplicatedTitle": "Application duplicated"
     },
+    "InstallTemplateJobType": {
+        "installing": "Installing",
+        "installedTitle": "Template installed"
+    },
     "sidebar": {
         "createGroup": "Create group",
         "inviteOthers": "Invite others",
+        "members": "Members",
         "logoff": "Logoff",
         "errorNoGroup": "You don’t have any groups.",
         "admin": "Admin",
@@ -102,7 +107,6 @@
         "leave": "Leave group"
     },
     "dashboardGroup": {
-        "showMembers": "Members",
         "createApplication": "Create new"
     },
     "groupInvitation": {
@@ -277,7 +281,11 @@
     },
     "login": {
         "title": "Login",
-        "forgotPassword": "Forgot password"
+        "emailPlaceholder": "Enter your email address..",
+        "passwordPlaceholder": "Enter your password..",
+        "forgotPassword": "Forgot password?",
+        "signUpText": "Don't have an account?",
+        "signUp": "Sign Up"
     },
     "resetPassword": {
         "title": "Reset password",
@@ -298,7 +306,13 @@
         "disabled": "Sign up is disabled",
         "disabledMessage": "It's not possible to create an account because it has been disabled.",
         "requireFirstUser": "Welcome to Baserow!",
-        "requireFirstUserMessage": "Please fill the form below to create the admin user."
+        "requireFirstUserMessage": "Please fill the form below to create the admin user.",
+        "emailPlaceholder": "Enter your email address..",
+        "namePlaceholder": "Enter your name..",
+        "passwordPlaceholder": "Enter your password..",
+        "passwordRepeatPlaceholder": "Confirm your password..",
+        "loginText": "Already have an account?",
+        "login": "Login"
     },
     "forgotPassword": {
         "title": "Forgot password",
@@ -306,7 +320,8 @@
         "submit": "Send link",
         "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes.",
         "disabled": "Forgot password is disabled",
-        "disabledMessage": "It's not possible to reset the password because it has been disabled."
+        "disabledMessage": "It's not possible to reset the password because it has been disabled.",
+        "loginText": "Already have account and password?"
     },
     "settings": {
         "settingsTitle": "Admin settings",
@@ -400,5 +415,47 @@
         "daysAgo": "0 days ago | 1 day ago | {n} days ago",
         "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
         "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
+    },
+    "crudTableSearch": {
+        "search": "Search"
+    },
+    "membersSettings": {
+        "membersTabTitle": "Members",
+        "invitesTabTitle": "Invites",
+        "membersTable": {
+            "title": "{userAmount} Members in {groupName}",
+            "inviteMember": "Invite member",
+            "columns": {
+                "name": "Name",
+                "email": "Email",
+                "role": "Role"
+            },
+            "actions": {
+                "copyEmail": "Copy email",
+                "remove": "Remove from group"
+            }
+        },
+        "invitesTable": {
+            "title": "{invitesAmount} Pending invites in {groupName}",
+            "columns": {
+                "email": "Email",
+                "message": "Message",
+                "role": "Role"
+            },
+            "actions": {
+                "copyEmail": "Copy email",
+                "remove": "Cancel invite"
+            }
+        },
+        "membersInviteModal": {
+            "title": "Invite group members",
+            "submit": "Send invite",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "User is already in the group.",
+                    "text": "It is not possible to send an invitation when the user is already a member of the group."
+                }
+            }
+        }
     }
 }

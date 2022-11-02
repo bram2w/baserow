@@ -24,14 +24,11 @@
           <div class="control__elements">
             <Dropdown v-model="values.permissions" :show-search="false">
               <DropdownItem
-                :name="$t('permission.admin')"
-                value="ADMIN"
-                :description="$t('permission.adminDescription')"
-              ></DropdownItem>
-              <DropdownItem
-                :name="$t('permission.member')"
-                value="MEMBER"
-                :description="$t('permission.memberDescription')"
+                v-for="role in roles"
+                :key="role.uid"
+                :name="role.name"
+                :value="role.uid"
+                :description="role.description"
               ></DropdownItem>
             </Dropdown>
           </div>
@@ -63,15 +60,37 @@ import form from '@baserow/modules/core/mixins/form'
 export default {
   name: 'GroupInviteForm',
   mixins: [form],
+  props: {
+    group: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       loading: false,
       values: {
         email: '',
-        permissions: 'MEMBER',
+        permissions: '',
         message: '',
       },
     }
+  },
+  computed: {
+    roles() {
+      return this.group._.roles
+    },
+    defaultRole() {
+      return this.roles.length > 0 ? this.roles[this.roles.length - 1] : null
+    },
+  },
+  watch: {
+    defaultRole: {
+      handler(role) {
+        this.values.permissions = role.uid
+      },
+      immediate: true,
+    },
   },
   validations: {
     values: {

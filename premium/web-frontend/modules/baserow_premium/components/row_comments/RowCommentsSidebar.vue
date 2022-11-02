@@ -1,6 +1,6 @@
 <template>
   <div>
-    <template v-if="!validPremiumLicense">
+    <template v-if="!hasPremiumFeaturesEnabled">
       <div class="row-comments">
         <div class="row-comments__empty">
           <i class="row-comments__empty-icon fas fa-comments"></i>
@@ -25,9 +25,16 @@
           <div v-if="totalCount === 0" class="row-comments__empty">
             <i class="row-comments__empty-icon fas fa-comments"></i>
             <div class="row-comments__empty-text">
-              <template v-if="readOnly">{{
-                $t('rowCommentSidebar.readOnlyNoComment')
-              }}</template>
+              <template
+                v-if="
+                  !$hasPermission(
+                    'database.table.create_comment',
+                    table,
+                    database.group.id
+                  )
+                "
+                >{{ $t('rowCommentSidebar.readOnlyNoComment') }}</template
+              >
               <template v-else>
                 {{ $t('rowCommentSidebar.noComment') }}
               </template>
@@ -54,7 +61,16 @@
               </template>
             </InfiniteScroll>
           </div>
-          <div v-if="!readOnly" class="row-comments__foot">
+          <div
+            v-if="
+              $hasPermission(
+                'database.table.create_comment',
+                table,
+                database.group.id
+              )
+            "
+            class="row-comments__foot"
+          >
             <AutoExpandableTextareaInput
               ref="AutoExpandableTextarea"
               v-model="comment"
@@ -72,11 +88,11 @@
 <script>
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import { PremiumPlugin } from '@baserow_premium/plugins'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
+import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   name: 'RowCommentsSidebar',
@@ -99,10 +115,6 @@ export default {
       required: true,
       type: Object,
     },
-    readOnly: {
-      required: true,
-      type: Boolean,
-    },
   },
   data() {
     return {
@@ -110,11 +122,8 @@ export default {
     }
   },
   computed: {
-    validPremiumLicense() {
-      return PremiumPlugin.hasValidPremiumLicense(
-        this.additionalUserData,
-        this.database.group.id
-      )
+    hasPremiumFeaturesEnabled() {
+      return this.$hasFeature(PremiumFeatures.PREMIUM, this.database.group.id)
     },
     ...mapGetters({
       comments: 'row_comments/getSortedRowComments',
@@ -126,7 +135,7 @@ export default {
     }),
   },
   async created() {
-    if (!this.validPremiumLicense) {
+    if (!this.hasPremiumFeaturesEnabled) {
       return
     }
 
@@ -144,7 +153,14 @@ export default {
   methods: {
     async postComment() {
       const comment = this.comment.trim()
-      if (!comment || this.readOnly) {
+      if (
+        !comment ||
+        !this.$hasPermission(
+          'database.table.create_comment',
+          this.table,
+          this.database.group.id
+        )
+      ) {
         return
       }
       try {

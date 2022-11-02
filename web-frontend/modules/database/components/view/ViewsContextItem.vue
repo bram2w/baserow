@@ -26,7 +26,7 @@
       ref="deactivatedClickModal"
       :name="viewType.getName()"
     ></component>
-    <template v-if="!readOnly">
+    <template v-if="!readOnly && showViewContext">
       <a
         ref="contextLink"
         class="select__item-options"
@@ -88,6 +88,40 @@ export default {
     },
     deactivatedClickModal() {
       return this.deactivated ? this.viewType.getDeactivatedClickModal() : null
+    },
+    showViewContext() {
+      return (
+        this.$hasPermission(
+          'database.table.run_export',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.import_rows',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.duplicate',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.create_webhook',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.update',
+          this.view,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.delete',
+          this.view,
+          this.database.group.id
+        )
+      )
     },
   },
   methods: {

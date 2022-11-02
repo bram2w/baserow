@@ -1,4 +1,5 @@
-from baserow_premium.license.handler import check_active_premium_license_for_group
+from baserow_premium.license.features import PREMIUM
+from baserow_premium.license.handler import LicenseHandler
 
 from baserow.contrib.database.views.registries import DecoratorType
 
@@ -6,12 +7,14 @@ from baserow.contrib.database.views.registries import DecoratorType
 class PremiumDecoratorType(DecoratorType):
     def before_create_decoration(self, view, user):
         if user:
-            check_active_premium_license_for_group(user, view.table.database.group)
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user, view.table.database.group, PREMIUM
+            )
 
     def before_update_decoration(self, view_decoration, user):
         if user:
-            check_active_premium_license_for_group(
-                user, view_decoration.view.table.database.group
+            LicenseHandler.raise_if_user_doesnt_have_feature(
+                user, view_decoration.view.table.database.group, PREMIUM
             )
 
 

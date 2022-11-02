@@ -7,6 +7,12 @@ import createNuxt from '@baserow/test/helpers/create-nuxt'
 let nuxt = null
 let mock = null
 
+// expire at 05/18/2033
+const token =
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6' +
+  'InRlc3RAdGVzdCIsImV4cCI6MTk5OTk5OTk5OSwiZW1haWwiOiJ0ZXN0QHRlc3QubmwiL' +
+  'CJpYXQiOjE1NjI3NzM0MTR9.8kNGEaddqqitRdL4iiwzoBSdMKdo92610dU7ReZxU1E'
+
 describe('index redirect', () => {
   beforeAll(async (done) => {
     mock = new MockAdapter(axios)
@@ -15,16 +21,16 @@ describe('index redirect', () => {
     // refresh endpoint is stubbed so that it will always provide a valid
     // unexpired token.
     mock.onPost('http://localhost/api/user/token-refresh/').reply(200, {
-      token:
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2' +
-        'VybmFtZSI6InRlc3RAdGVzdCIsImV4cCI6MTk5OTk5OTk5OSwiZW1haWwiO' +
-        'iJ0ZXN0QHRlc3QubmwiLCJvcmlnX2lhdCI6MTU2Mjc3MzQxNH0.2i0gqrcH' +
-        '5uy7mk4kf3LoLpZYXoyMrOfi0fDQneVcaFE',
+      access_token: token,
       user: {
         first_name: 'Test',
         username: 'test@test.nl',
       },
     })
+
+    mock
+      .onGet('http://localhost/api/auth-provider/login-options/')
+      .reply(200, {})
 
     nuxt = await createNuxt(true)
     done()
@@ -39,7 +45,7 @@ describe('index redirect', () => {
   test('if authenticated', async () => {
     const req = httpMocks.createRequest({
       headers: {
-        cookie: 'jwt_token=test1',
+        cookie: `jwt_token=${token}`,
       },
     })
     const res = httpMocks.createResponse()

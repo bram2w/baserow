@@ -23,7 +23,13 @@
         :ref="'view-' + view.id"
         :key="view.id"
         v-sortable="{
-          enabled: !readOnly,
+          enabled:
+            !readOnly &&
+            $hasPermission(
+              'database.table.order_views',
+              table,
+              database.group.id
+            ),
           id: view.id,
           update: order,
           marginTop: -1.5,
@@ -38,7 +44,13 @@
     <div v-if="!isLoading && views.length == 0" class="context__description">
       {{ $t('viewsContext.noViews') }}
     </div>
-    <div v-if="!readOnly" class="select__footer">
+    <div
+      v-if="
+        !readOnly &&
+        $hasPermission('database.table.create_view', table, database.group.id)
+      "
+      class="select__footer"
+    >
       <div class="select__footer-create">
         <CreateViewLink
           v-for="(viewType, type) in viewTypes"

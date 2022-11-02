@@ -23,6 +23,7 @@
         :read-only="readOnly"
         :row="row"
         :table="table"
+        :database="database"
         :can-modify-fields="canModifyFields"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
@@ -73,6 +74,10 @@ export default {
       required: true,
     },
     table: {
+      type: Object,
+      required: true,
+    },
+    database: {
       type: Object,
       required: true,
     },

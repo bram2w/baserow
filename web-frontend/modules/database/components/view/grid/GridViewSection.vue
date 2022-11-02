@@ -13,6 +13,7 @@
   >
     <div class="grid-view__inner" :style="{ 'min-width': width + 'px' }">
       <GridViewHead
+        :database="database"
         :table="table"
         :view="view"
         :fields="fields"
@@ -54,6 +55,7 @@
             ref="rows"
             :view="view"
             :fields="fieldsToRender"
+            :group-id="database.group.id"
             :all-fields="fields"
             :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
@@ -63,7 +65,14 @@
             v-on="$listeners"
           ></GridViewRows>
           <GridViewRowAdd
-            v-if="!readOnly"
+            v-if="
+              !readOnly &&
+              $hasPermission(
+                'database.table.create_row',
+                table,
+                database.group.id
+              )
+            "
             :fields="fields"
             :include-row-details="includeRowDetails"
             :store-prefix="storePrefix"
@@ -80,6 +89,7 @@
             :style="{ width: getFieldWidth(field.id) + 'px' }"
           >
             <GridViewFieldFooter
+              :database="database"
               :field="field"
               :view="view"
               :store-prefix="storePrefix"
@@ -131,6 +141,10 @@ export default {
       required: true,
     },
     decorationsByPlace: {
+      type: Object,
+      required: true,
+    },
+    database: {
       type: Object,
       required: true,
     },

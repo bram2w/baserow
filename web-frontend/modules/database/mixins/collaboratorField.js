@@ -4,8 +4,7 @@ export default {
   mixins: [selectDropdown],
   computed: {
     groupCollaborators() {
-      const groupId = this.$store.getters['group/selectedId']
-      const group = this.$store.getters['group/get'](groupId)
+      const group = this.$store.getters['group/get'](this.groupId)
       return group.users
     },
     availableCollaborators() {

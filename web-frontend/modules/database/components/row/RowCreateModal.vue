@@ -13,6 +13,7 @@
         :read-only="false"
         :row="row"
         :table="table"
+        :database="database"
         :can-modify-fields="canModifyFields"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
@@ -35,6 +36,7 @@
           :read-only="false"
           :row="row"
           :table="table"
+          :database="database"
           :can-modify-fields="canModifyFields"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
@@ -74,6 +76,10 @@ export default {
   },
   mixins: [modal, error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,

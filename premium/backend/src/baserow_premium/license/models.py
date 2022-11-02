@@ -11,6 +11,15 @@ User = get_user_model()
 class License(models.Model):
     license = models.TextField()
     last_check = models.DateTimeField(null=True)
+    cached_untrusted_instance_wide = models.BooleanField(default=False)
+    """
+    This property is purely set to make looking up instance wide licenses quicker.
+    You must always explicitly check `license.is_instance_wide` per looked up license
+    as we only trust the `.license` payload attribute and is_instance_wide will check
+    using the payload.
+    The `cached_untrusted_instance_wide` value might have been manipulated and is not
+    signed and hence is untrusted on its own.
+    """
 
     def save(self, *args, **kwargs):
         try:
@@ -21,12 +30,14 @@ class License(models.Model):
 
     @cached_property
     def payload(self):
-        from .handler import decode_license
+        from .handler import LicenseHandler
 
-        premium_license = self.license
-        if isinstance(premium_license, str):
-            premium_license = premium_license.encode()
-        return decode_license(premium_license)
+        possibly_encoded_license = self.license
+        if isinstance(possibly_encoded_license, str):
+            encoded_license = possibly_encoded_license.encode()
+        else:
+            encoded_license = possibly_encoded_license
+        return LicenseHandler.decode_license(encoded_license)
 
     @property
     def license_id(self):
@@ -42,7 +53,25 @@ class License(models.Model):
 
     @property
     def is_active(self):
-        return self.valid_from <= now() <= self.valid_through
+        """
+        An active license is one which is valid right now and has valid cached
+        properties which haven't been manipulated.
+        """
+
+        return (
+            self.valid_from <= now() <= self.valid_through
+            and self.valid_cached_properties
+        )
+
+    @property
+    def valid_cached_properties(self):
+        """
+        Returns True if the cached properties on the license database row match the
+        decoded properties from the signed license. If they don't match then manual
+        changes have been made to the cached properties.
+        """
+
+        return self.cached_untrusted_instance_wide == self.license_type.instance_wide
 
     @property
     def product_code(self):
@@ -63,6 +92,12 @@ class License(models.Model):
     @property
     def issued_to_name(self):
         return self.payload["issued_to_name"]
+
+    @property
+    def license_type(self):
+        from baserow_premium.license.registries import license_type_registry
+
+        return license_type_registry.get(self.product_code)
 
 
 class LicenseUser(models.Model):

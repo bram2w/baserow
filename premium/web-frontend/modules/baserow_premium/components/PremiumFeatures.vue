@@ -24,5 +24,9 @@
       <i class="fas fa-fw fa-check premium-features__feature-icon"></i>
       {{ $t('premiumFeatures.surveyForm') }}
     </li>
+    <li class="premium-features__feature">
+      <i class="fas fa-fw fa-check premium-features__feature-icon"></i>
+      {{ $t('premiumFeatures.publicLogoRemoval') }}
+    </li>
   </ul>
 </template>

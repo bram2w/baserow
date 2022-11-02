@@ -37,10 +37,13 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
+      - ./enterprise/backend/:/baserow/enterprise/backend
       - ./deploy/plugins/install_plugin.sh:/baserow/plugins/install_plugin.sh
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   web-frontend:
     image: baserow_web-frontend_dev:latest
@@ -61,6 +64,7 @@ services:
       # directly into the image instead of whatever is on your local filesystem.
       - /baserow/web-frontend/node_modules
       - ./premium/web-frontend/:/baserow/premium/web-frontend
+      - ./enterprise/web-frontend/:/baserow/enterprise/web-frontend
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -80,6 +84,7 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
+      - ./enterprise/backend/:/baserow/enterprise/backend
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -99,9 +104,12 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
+      - ./enterprise/backend/:/baserow/enterprise/backend
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   celery-beat-worker:
     image: baserow_backend_dev:latest
@@ -118,9 +126,12 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
+      - ./enterprise/backend/:/baserow/enterprise/backend
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   mjml-email-compiler:
     build:

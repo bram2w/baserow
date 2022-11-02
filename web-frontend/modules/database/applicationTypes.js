@@ -19,7 +19,7 @@ export class DatabaseApplicationType extends ApplicationType {
    * @return The component to use as the row edit modal's right sidebar or null to not
    *    use one.
    */
-  getRowEditModalRightSidebarComponent(readOnly) {
+  getRowEditModalRightSidebarComponent(database, table) {
     return null
   }
 

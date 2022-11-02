@@ -74,6 +74,11 @@ from baserow.contrib.database.fields.exceptions import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.job_types import DuplicateFieldJobType
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.operations import (
+    CreateFieldOperationType,
+    ListFieldsOperationType,
+    ReadFieldOperationType,
+)
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.exceptions import (
     FailedToLockTableDueToConflict,
@@ -85,6 +90,7 @@ from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
@@ -100,6 +106,10 @@ from .serializers import (
     UniqueRowValuesSerializer,
     UpdateFieldSerializer,
 )
+
+DuplicateFieldJobTypeSerializer = job_type_registry.get(
+    DuplicateFieldJobType.type
+).get_serializer_class(base_class=JobSerializer)
 
 
 class FieldsView(APIView):
@@ -156,8 +166,13 @@ class FieldsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(
-            request.user, raise_error=True, allow_if_template=True
+
+        CoreHandler().check_permissions(
+            request.user,
+            ListFieldsOperationType.type,
+            group=table.database.group,
+            context=table,
+            allow_if_template=True,
         )
 
         TokenHandler().check_table_permissions(
@@ -249,7 +264,12 @@ class FieldsView(APIView):
         table = TableHandler().get_table_for_update(
             table_id, nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
         )
-        table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            CreateFieldOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         # field_create permission doesn't exists, so any call of this endpoint with a
         # token will be rejected.
@@ -306,7 +326,13 @@ class FieldView(APIView):
         """Selects a single field and responds with a serialized version."""
 
         field = FieldHandler().get_field(field_id)
-        field.table.database.group.has_user(request.user, raise_error=True)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadFieldOperationType.type,
+            group=field.table.database.group,
+            context=field,
+        )
+
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
 
@@ -536,7 +562,7 @@ class AsyncDuplicateFieldView(APIView):
             "if the authorized user has access to the database's group."
         ),
         responses={
-            202: DuplicateFieldJobType().get_serializer_class(),
+            202: DuplicateFieldJobTypeSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

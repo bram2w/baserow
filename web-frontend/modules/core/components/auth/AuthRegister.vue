@@ -18,8 +18,10 @@
     </Alert>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
-      <div class="control">
-        <label class="control__label">{{ $t('field.emailAddress') }}</label>
+      <div class="auth__control">
+        <label class="auth__control-label">{{
+          $t('field.emailAddress')
+        }}</label>
         <div class="control__elements">
           <input
             v-if="invitation !== null"
@@ -35,50 +37,68 @@
             v-model="account.email"
             :class="{ 'input--error': $v.account.email.$error }"
             type="text"
+            autocomplete="username"
             class="input input--large"
+            :placeholder="$t('signup.emailPlaceholder')"
             @blur="$v.account.email.$touch()"
           />
-          <div v-if="$v.account.email.$error" class="error">
-            {{ $t('error.invalidEmail') }}
+          <div class="auth__control-error">
+            <div v-if="$v.account.email.$error" class="error">
+              <i class="fas fa-warning fa-exclamation-triangle"></i>
+              {{ $t('error.invalidEmail') }}
+            </div>
           </div>
         </div>
       </div>
-      <div class="control">
-        <label class="control__label">{{ $t('field.name') }}</label>
+      <div class="auth__control">
+        <label class="auth__control-label">{{ $t('field.name') }}</label>
         <div class="control__elements">
           <input
             v-model="account.name"
             :class="{ 'input--error': $v.account.name.$error }"
             type="text"
             class="input input--large"
+            :placeholder="$t('signup.namePlaceholder')"
             @blur="$v.account.name.$touch()"
           />
-          <div v-if="$v.account.name.$error" class="error">
-            {{ $t('error.minMaxLength', { min: 2, max: 150 }) }}
+          <div class="auth__control-error">
+            <div v-if="$v.account.name.$error" class="error">
+              <i class="fas fa-warning fa-exclamation-triangle"></i>
+              {{ $t('error.minMaxLength', { min: 2, max: 150 }) }}
+            </div>
           </div>
         </div>
       </div>
-      <div class="control">
-        <label class="control__label">{{ $t('field.password') }}</label>
+      <div class="auth__control">
+        <label class="auth__control-label">{{ $t('field.password') }}</label>
         <div class="control__elements">
           <PasswordInput
             v-model="account.password"
             :validation-state="$v.account.password"
+            :placeholder="$t('signup.passwordPlaceholder')"
+            :error-placeholder-class="'auth__control-error'"
+            :show-error-icon="true"
           />
         </div>
       </div>
-      <div class="control">
-        <label class="control__label">{{ $t('field.passwordRepeat') }}</label>
+      <div class="auth__control">
+        <label class="auth__control-label">{{
+          $t('field.passwordRepeat')
+        }}</label>
         <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
             :class="{ 'input--error': $v.account.passwordConfirm.$error }"
             type="password"
             class="input input--large"
+            :placeholder="$t('signup.passwordRepeatPlaceholder')"
             @blur="$v.account.passwordConfirm.$touch()"
           />
-          <div v-if="$v.account.passwordConfirm.$error" class="error">
-            {{ $t('error.notMatchingPassword') }}
+          <div class="auth__control-error">
+            <div v-if="$v.account.passwordConfirm.$error" class="error">
+              <i class="fas fa-warning fa-exclamation-triangle"></i>
+              {{ $t('error.notMatchingPassword') }}
+            </div>
           </div>
         </div>
       </div>
@@ -89,17 +109,16 @@
         :key="index"
         @updated-account="updatedAccount"
       ></component>
-      <div class="actions">
-        <slot></slot>
+      <div class="auth__action">
         <button
           :class="{ 'button--loading': loading }"
-          class="button button--large"
+          class="button button--full-width"
           :disabled="loading"
         >
           {{ $t('action.signUp') }}
-          <i class="fas fa-user-plus"></i>
         </button>
       </div>
+      <slot></slot>
     </form>
   </div>
 </template>

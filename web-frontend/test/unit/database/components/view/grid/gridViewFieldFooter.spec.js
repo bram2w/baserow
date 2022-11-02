@@ -47,9 +47,15 @@ describe('Field footer component', () => {
       id: 1,
     }
 
+    const database = {
+      id: 1,
+      group: { id: 1 },
+    }
+
     // field with no aggregation
     const wrapper1 = await mountComponent({
       view,
+      database,
       field: { id: 1, type: 'text' },
       storePrefix: 'page/',
     })
@@ -58,6 +64,7 @@ describe('Field footer component', () => {
     // Field with aggregation
     const wrapper2 = await mountComponent({
       view,
+      database,
       field: { id: 2, type: 'text' },
       storePrefix: 'page/',
     })
@@ -90,6 +97,11 @@ describe('Field footer component', () => {
       id: 2,
     }
 
+    const database = {
+      id: 1,
+      group: { id: 1 },
+    }
+
     mockServer.getAllFieldAggregationData(view.id, {
       field_3: 256,
     })
@@ -103,6 +115,7 @@ describe('Field footer component', () => {
     // Field with aggregation
     const wrapper = await mountComponent({
       view,
+      database,
       field: { id: 3, type: 'text' },
       storePrefix: 'page/',
     })

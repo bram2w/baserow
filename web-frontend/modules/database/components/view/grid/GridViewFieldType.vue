@@ -19,13 +19,15 @@
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
       <div class="grid-view__description-name">
-        {{ field.name }}
+        <span ref="quickEditLink" @dblclick="handleQuickEdit()">
+          {{ field.name }}
+        </span>
       </div>
       <div v-if="field.error" class="grid-view__description-icon-error">
         <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
       </div>
       <a
-        v-if="!readOnly"
+        v-if="!readOnly && showFieldContext"
         ref="contextLink"
         class="grid-view__description-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
@@ -36,12 +38,23 @@
       <FieldContext
         v-if="!readOnly"
         ref="context"
+        :database="database"
         :table="table"
         :field="field"
         @update="$emit('refresh', $event)"
         @delete="$emit('refresh')"
       >
-        <li v-if="!field.primary && !readOnly">
+        <li
+          v-if="
+            !field.primary &&
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_field',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a
             ref="insertLeftLink"
             @click="
@@ -52,7 +65,17 @@
             {{ $t('gridViewFieldType.insertLeft') }}
           </a>
         </li>
-        <li v-if="!field.primary && !readOnly">
+        <li
+          v-if="
+            !field.primary &&
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_field',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a
             ref="insertRightLink"
             @click="
@@ -70,7 +93,16 @@
             @move-field="moveField($event)"
           ></InsertFieldContext>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.field.duplicate',
+              field,
+              database.group.id
+            )
+          "
+        >
           <a
             @click=";[$refs.duplicateFieldModal.toggle(), $refs.context.hide()]"
           >
@@ -86,13 +118,31 @@
           ></DuplicateFieldModal>
         </li>
         <li />
-        <li v-if="canFilter">
+        <li
+          v-if="
+            canFilter &&
+            $hasPermission(
+              'database.table.view.create_filter',
+              view,
+              database.group.id
+            )
+          "
+        >
           <a @click="createFilter($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-filter"></i>
             {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
-        <li v-if="getCanSortInView(field)">
+        <li
+          v-if="
+            getCanSortInView(field) &&
+            $hasPermission(
+              'database.table.view.create_sort',
+              view,
+              database.group.id
+            )
+          "
+        >
           <a @click="createSort($event, view, field, 'ASC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -115,7 +165,16 @@
             ></i>
           </a>
         </li>
-        <li v-if="getCanSortInView(field)">
+        <li
+          v-if="
+            getCanSortInView(field) &&
+            $hasPermission(
+              'database.table.view.create_sort',
+              view,
+              database.group.id
+            )
+          "
+        >
           <a @click="createSort($event, view, field, 'DESC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -138,7 +197,17 @@
             ></i>
           </a>
         </li>
-        <li v-if="!field.primary && canFilter">
+        <li
+          v-if="
+            !field.primary &&
+            canFilter &&
+            $hasPermission(
+              'database.table.view.update_field_options',
+              view,
+              database.group.id
+            )
+          "
+        >
           <a @click="hide($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-eye-slash"></i>
             {{ $t('gridViewFieldType.hideField') }}
@@ -148,10 +217,18 @@
       <GridViewFieldWidthHandle
         v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
+        :database="database"
         :grid="view"
         :field="field"
         :width="width"
-        :read-only="readOnly"
+        :read-only="
+          readOnly ||
+          !$hasPermission(
+            'database.table.view.update_field_options',
+            view,
+            database.group.id
+          )
+        "
         :store-prefix="storePrefix"
       ></GridViewFieldWidthHandle>
     </div>
@@ -178,6 +255,10 @@ export default {
   },
   mixins: [gridViewHelpers],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
@@ -217,6 +298,45 @@ export default {
       }
       return false
     },
+    showFieldContext() {
+      return (
+        this.$hasPermission(
+          'database.table.create_field',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.create_filter',
+          this.view,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.create_sort',
+          this.view,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.view.update_field_options',
+          this.view,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.field.duplicate',
+          this.field,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.field.update',
+          this.field,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.field.delete',
+          this.field,
+          this.database.group.id
+        )
+      )
+    },
   },
   beforeCreate() {
     this.$options.computed = {
@@ -230,6 +350,20 @@ export default {
   methods: {
     moveField($event) {
       this.$emit('move-field', $event)
+      this.$refs.context.hide()
+    },
+    async handleQuickEdit() {
+      if (this.readOnly) return false
+      await this.$refs.context.toggle(
+        this.$refs.quickEditLink,
+        'bottom',
+        'left',
+        0
+      )
+      this.$refs.context.showUpdateFieldContext()
+    },
+    quickEditField($event) {
+      this.$emit('updated', $event)
       this.$refs.context.hide()
     },
     async createFilter(event, view, field) {
@@ -294,6 +428,11 @@ export default {
             field,
             values: { hidden: true },
             oldValues: { hidden: false },
+            readOnly: !this.$hasPermission(
+              'database.table.view.update_field_options',
+              this.view,
+              this.database.group.id
+            ),
           }
         )
       } catch (error) {
@@ -301,7 +440,6 @@ export default {
       }
     },
     startDragging(event, field) {
-      event.preventDefault()
       this.$emit('dragging', { field, event })
     },
     getSortIndicator(field, index) {

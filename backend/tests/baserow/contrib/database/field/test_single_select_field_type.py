@@ -794,3 +794,92 @@ def test_get_set_export_serialized_value_single_select_field(data_fixture):
     assert getattr(imported_row_3, f"field_{imported_field.id}_id") != option_b.id
     assert getattr(imported_row_3, f"field_{imported_field.id}").value == "B"
     assert getattr(imported_row_3, f"field_{imported_field.id}").color == "red"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_get_set_export_serialized_value_single_select_field_with_deleted_option(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    imported_group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_single_select_field(table=table)
+    option_a = data_fixture.create_select_option(field=field, value="A", color="green")
+
+    core_handler = CoreHandler()
+
+    model = table.get_model()
+    model.objects.create(**{f"field_{field.id}_id": option_a.id})
+
+    # Deleting the option doesn't set the row value to None.
+    option_a.delete()
+
+    exported_applications = core_handler.export_group_applications(group, BytesIO())
+    imported_applications, id_mapping = core_handler.import_applications_to_group(
+        imported_group, exported_applications, BytesIO(), None
+    )
+    imported_database = imported_applications[0]
+    imported_table = imported_database.table_set.all()[0]
+    imported_field = imported_table.field_set.all().first().specific
+
+    assert imported_table.id != table.id
+    assert imported_field.id != field.id
+
+    imported_model = imported_table.get_model()
+    all = imported_model.objects.all()
+    assert len(all) == 1
+    imported_row_1 = all[0]
+
+    assert getattr(imported_row_1, f"field_{imported_field.id}") is None
+    assert getattr(imported_row_1, f"field_{imported_field.id}_id") is None
+
+
+@pytest.mark.django_db
+def test_single_select_adjacent_row(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="B", color="red", order=1
+    )
+    option_c = data_fixture.create_select_option(
+        field=single_select_field, value="C", color="green", order=2
+    )
+    data_fixture.create_view_sort(
+        view=grid_view, field=single_select_field, order="ASC"
+    )
+
+    handler = RowHandler()
+    [row_b, row_c, row_a] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{single_select_field.id}": option_b.id,
+            },
+            {
+                f"field_{single_select_field.id}": option_c.id,
+            },
+            {
+                f"field_{single_select_field.id}": option_a.id,
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    previous_row = handler.get_adjacent_row(
+        row_b, base_queryset, previous=True, view=grid_view
+    )
+    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+
+    assert previous_row.id == row_a.id
+    assert next_row.id == row_c.id

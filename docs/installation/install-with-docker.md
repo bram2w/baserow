@@ -27,7 +27,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
@@ -50,7 +50,7 @@ docker run \
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.12.1` image by default runs all of Baserow's various services in a
+The `baserow/baserow:1.13.0` image by default runs all of Baserow's various services in a
 single container for ease of use. A quick summary of its features are:
 
 * Runs a Postgres database and Redis server by default internally and stores all data in
@@ -143,7 +143,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### Behind a reverse proxy already handling ssl
@@ -156,7 +156,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### On a nonstandard HTTP port
@@ -169,7 +169,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 3001:80 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### With an external PostgresSQL server
@@ -188,7 +188,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### With an external Redis server
@@ -207,7 +207,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### With an external email server
@@ -227,7 +227,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### With a Postgresql server running on the same host as the Baserow docker container
@@ -265,7 +265,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### Supply secrets using files
@@ -292,7 +292,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 ### Start just the embedded database
@@ -305,7 +305,7 @@ docker run -it \
   --name baserow \
   -p 5432:5432 \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.12.1 \
+  baserow/baserow:1.13.0 \
   start-only-db 
 # Now get the password from
 docker exec -it baserow cat /baserow/data/.pgpass
@@ -323,7 +323,7 @@ docker run -it \
   --rm \
   --name baserow \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.12.1 \
+  baserow/baserow:1.13.0 \
   backend-cmd-with-db manage dbshell
 ```
 
@@ -367,6 +367,8 @@ docker run --rm -v baserow_data:/baserow/data -v $PWD:/backup ubuntu tar cvf /ba
 docker stop baserow
 docker run --rm -v baserow_data:/baserow/data -v $PWD:/backup ubuntu tar cvf /backup/backup.tar /baserow/data
 docker run --rm -v new_baserow_data_volume $PWD:/backup ubuntu bash -c "mkdir -p /baserow/data && cd /baserow/data && tar xvf /backup/backup.tar --strip 1"
+# Now launch Baserow using the new data volume with your normal run command:
+docker run -v new_baserow_data_volume:/baserow/data ..... 
 ```
 
 ### Backup only Baserow's Postgres database
@@ -379,16 +381,16 @@ the command below.
 
 ```bash 
 # First read the help message for this command
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.12.1 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.13.0 \
    backend-cmd-with-db backup
 
 # By default backs up to the backups folder in the baserow_data volume.
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.12.1 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.13.0 \
    backend-cmd-with-db backup -f /baserow/data/backups/backup.tar.gz
 
 # Or backup to a file on your host instead run something like:
 docker run -it --rm -v baserow_data:/baserow/data -v $PWD:/baserow/host \
-   baserow/baserow:1.12.1 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
+   baserow/baserow:1.13.0 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
 ```
 
 ### Restore only Baserow's Postgres Database
@@ -457,7 +459,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.12.1
+  baserow/baserow:1.13.0
 ```
 
 Or you can just store it directly in the volume at `baserow_data/env` meaning it will be
@@ -466,7 +468,7 @@ loaded whenever you mount in this data volume.
 ### Building your own image from Baserow
 
 ```dockerfile
-FROM baserow/baserow:1.12.1
+FROM baserow/baserow:1.13.0
 
 # Any .sh files found in /baserow/supervisor/env/ will be sourced and loaded at startup
 # useful for storing your own environment variable overrides.

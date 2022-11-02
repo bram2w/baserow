@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 
 from baserow.core.utils import Progress
@@ -88,15 +88,40 @@ class JobHandler:
         except Job.DoesNotExist:
             raise JobDoesNotExist(f"The job with id {job_id} does not exist.")
 
-    def get_jobs_for_user(self, user: AbstractUser) -> List[Job]:
+    def get_jobs_for_user(
+        self,
+        user: AbstractUser,
+        filter_states: Optional[List[str]],
+        filter_ids: Optional[List[int]],
+    ) -> QuerySet:
         """
         Returns all jobs belonging to the specified user.
 
-        :param user: The user we want the jobs for
-        :return: A list of jobs
+        :param user: The user we want the jobs for.
+        :param filter_states: A list of states that the jobs should have, or not
+            have if prefixed with a !.
+        :param filter_ids: A list of specific job ids to return.
+        :return: A QuerySet with the filtered jobs for the user.
         """
 
-        return Job.objects.filter(user=user).select_related("content_type")
+        def get_job_states_filter(states):
+            states_q = Q()
+            for state in states:
+                if state.startswith("!"):
+                    states_q &= ~Q(state=state[1:])
+                else:
+                    states_q |= Q(state=state)
+            return states_q
+
+        queryset = Job.objects.filter(user=user)
+
+        if filter_states:
+            queryset = queryset.filter(get_job_states_filter(filter_states))
+
+        if filter_ids:
+            queryset = queryset.filter(id__in=filter_ids)
+
+        return queryset.select_related("content_type")
 
     def get_pending_or_running_jobs(
         self,

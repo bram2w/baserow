@@ -24,7 +24,8 @@
         "admin": "Administrator",
         "dashboard": "Dashboard",
         "trash": "Papierkorb",
-        "settings": "Einstellungen"
+        "settings": "Einstellungen",
+        "members": "Mitglieder"
     },
     "accountForm": {
         "nameLabel": "Ihr Name",
@@ -223,7 +224,11 @@
     },
     "login": {
         "title": "Anmeldung",
-        "forgotPassword": "Passwort vergessen"
+        "forgotPassword": "Passwort vergessen?",
+        "signUpText": "Sie haben noch kein Konto?",
+        "emailPlaceholder": "Geben Sie Ihre E-Mail Adresse ein.",
+        "passwordPlaceholder": "Geben Sie Ihr Passwort ein..",
+        "signUp": "Anmelden"
     },
     "resetPassword": {
         "title": "Passwort zurücksetzen",
@@ -244,7 +249,13 @@
         "disabled": "Registrierung ist deaktiviert",
         "disabledMessage": "Es ist nicht möglich, ein Konto zu erstellen, da es deaktiviert wurde.",
         "requireFirstUser": "Willkommen in Baserow!",
-        "requireFirstUserMessage": "Bitte füllen Sie das untenstehende Formular aus, um den Admin-Benutzer zu erstellen."
+        "requireFirstUserMessage": "Bitte füllen Sie das untenstehende Formular aus, um den Admin-Benutzer zu erstellen.",
+        "namePlaceholder": "Geben Sie Ihren Namen ein..",
+        "emailPlaceholder": "Geben Sie Ihre E-Mail Adresse ein.",
+        "passwordPlaceholder": "Geben Sie Ihr Passwort ein.",
+        "loginText": "Sie haben bereits ein Konto?",
+        "passwordRepeatPlaceholder": "Bestätigen Sie Ihr Passwort..",
+        "login": "Einloggen"
     },
     "forgotPassword": {
         "title": "Passwort vergessen",
@@ -252,7 +263,8 @@
         "submit": "Link senden",
         "confirmation": "Wenn Ihre E-Mail-Adresse in unserer Datenbank vorhanden ist, erhalten Sie in wenigen Minuten einen Link zum Zurücksetzen des Passworts an Ihre E-Mail-Adresse.",
         "disabled": "Passwort-Zurücksetzung ist deaktiviert",
-        "disabledMessage": "Es ist nicht möglich, ein Passwort zurückzusetzen, da es deaktiviert wurde."
+        "disabledMessage": "Es ist nicht möglich, ein Passwort zurückzusetzen, da es deaktiviert wurde.",
+        "loginText": "Sie haben bereits ein Konto und ein Passwort?"
     },
     "settings": {
         "settingsTitle": "Administrator-Einstellungen",
@@ -403,5 +415,51 @@
     "duplicateApplicationJobType": {
         "duplicating": "Duplizieren",
         "duplicatedTitle": "Anwendung dupliziert"
+    },
+    "InstallTemplateJobType": {
+        "installing": "Installieren",
+        "installedTitle": "Vorlage installiert"
+    },
+    "crudTableSearch": {
+        "search": "Suchen"
+    },
+    "membersSettings": {
+        "membersTabTitle": "Mitglieder",
+        "invitesTabTitle": "Einladungen",
+        "membersTable": {
+            "title": "{userAmount} Mitglieder in {groupName}",
+            "actions": {
+                "copyEmail": "E-Mail kopieren",
+                "remove": "Aus der Gruppe entfernen"
+            },
+            "inviteMember": "Mitglied einladen",
+            "columns": {
+                "name": "Name",
+                "email": "E-Mail",
+                "role": "Rolle"
+            }
+        },
+        "invitesTable": {
+            "columns": {
+                "email": "E-Mail",
+                "message": "Nachricht",
+                "role": "Rolle"
+            },
+            "actions": {
+                "copyEmail": "E-Mail kopieren",
+                "remove": "Einladung abbrechen"
+            },
+            "title": "{invitesAmount} Ausstehende Einladungen in {groupName}"
+        },
+        "membersInviteModal": {
+            "title": "Gruppenmitglieder einladen",
+            "submit": "Einladung senden",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "Der Benutzer ist bereits Mitglied der Gruppe.",
+                    "text": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied der Gruppe ist."
+                }
+            }
+        }
     }
 }

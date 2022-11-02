@@ -46,14 +46,18 @@ User = get_user_model()
 # permissions to update, delete and manage the members of a group.
 GROUP_USER_PERMISSION_ADMIN = "ADMIN"
 GROUP_USER_PERMISSION_MEMBER = "MEMBER"
-GROUP_USER_PERMISSION_CHOICES = (
-    (GROUP_USER_PERMISSION_ADMIN, "Admin"),
-    (GROUP_USER_PERMISSION_MEMBER, "Member"),
-)
 
 
 def get_default_application_content_type():
     return ContentType.objects.get_for_model(Application)
+
+
+class Operation(models.Model):
+    """
+    An operation
+    """
+
+    name = models.CharField(max_length=255, unique=True)
 
 
 class Settings(models.Model):
@@ -194,6 +198,9 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     def __str__(self):
         return f"<Group id={self.id}, name={self.name}>"
 
+    def __repr__(self):
+        return f"<Group id={self.id}, name={self.name}>"
+
 
 class GroupUser(
     ParentGroupTrashableModelMixin,
@@ -217,7 +224,6 @@ class GroupUser(
     permissions = models.CharField(
         default=GROUP_USER_PERMISSION_MEMBER,
         max_length=32,
-        choices=GROUP_USER_PERMISSION_CHOICES,
         help_text="The permissions that the user has within the group.",
     )
 
@@ -253,7 +259,6 @@ class GroupInvitation(
     permissions = models.CharField(
         default=GROUP_USER_PERMISSION_MEMBER,
         max_length=32,
-        choices=GROUP_USER_PERMISSION_CHOICES,
         help_text="The permissions that the user is going to get within the group "
         "after accepting the invitation.",
     )
@@ -282,6 +287,12 @@ class Application(
         verbose_name="content type",
         related_name="applications",
         on_delete=models.SET(get_default_application_content_type),
+    )
+    installed_from_template = models.ForeignKey(
+        "Template",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="installed_applications",
     )
 
     class Meta:
@@ -455,3 +466,17 @@ class Snapshot(models.Model):
 
     class Meta:
         unique_together = ("name", "snapshot_from_application")
+
+
+class InstallTemplateJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        help_text="The group where the template is installed.",
+    )
+    template = models.ForeignKey(
+        Template,
+        on_delete=models.CASCADE,
+        help_text="The template that is installed.",
+    )
+    installed_applications = models.JSONField(default=list)

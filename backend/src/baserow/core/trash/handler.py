@@ -1,8 +1,9 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
@@ -19,6 +20,12 @@ from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
+)
+from baserow.core.trash.operations import (
+    EmptyApplicationTrashOperationType,
+    EmptyGroupTrashOperationType,
+    ReadApplicationTrashOperationType,
+    ReadGroupTrashOperationType,
 )
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 from baserow.core.trash.signals import permanently_deleted
@@ -115,10 +122,22 @@ class TrashHandler:
             _check_parent_id_valid(parent_trash_item_id, trashable_item_type)
 
             trash_entry = _get_trash_entry(
-                user, trash_item_type, parent_trash_item_id, trash_item_id
+                trash_item_type, parent_trash_item_id, trash_item_id
             )
 
             trash_item = trashable_item_type.lookup_trashed_item(trash_entry, {})
+
+            from baserow.core.handler import CoreHandler
+
+            CoreHandler().check_permissions(
+                user,
+                trashable_item_type.get_restore_operation_type(),
+                include_trash=True,
+                group=trash_entry.group,
+                context=trashable_item_type.get_restore_operation_context(
+                    trash_entry, trash_item
+                ),
+            )
 
             if TrashHandler.item_has_a_trashed_parent(
                 trash_item,
@@ -145,16 +164,27 @@ class TrashHandler:
 
         structure = {"groups": []}
         groups = _get_groups_excluding_perm_deleted(user)
+        from baserow.core.handler import CoreHandler
+
         for group in groups:
-            applications = _get_applications_excluding_perm_deleted(group)
-            structure["groups"].append(
-                {
-                    "id": group.id,
-                    "trashed": group.trashed,
-                    "name": group.name,
-                    "applications": applications,
-                }
+            can_view_group = CoreHandler().check_permissions(
+                user,
+                ReadGroupTrashOperationType.type,
+                group=group,
+                context=group,
+                raise_error=False,
+                include_trash=True,
             )
+            if can_view_group:
+                applications = _get_applications_excluding_perm_deleted(group, user)
+                structure["groups"].append(
+                    {
+                        "id": group.id,
+                        "trashed": group.trashed,
+                        "name": group.name,
+                        "applications": applications,
+                    }
+                )
 
         return structure
 
@@ -184,7 +214,7 @@ class TrashHandler:
         """
 
         with transaction.atomic():
-            trash_contents = TrashHandler.get_trash_contents(
+            trash_contents = TrashHandler.get_trash_contents_for_emptying(
                 requesting_user, group_id, application_id
             )
             trash_contents.update(should_be_permanently_deleted=True)
@@ -285,6 +315,58 @@ class TrashHandler:
         )
 
     @staticmethod
+    def get_trash_contents_for_emptying(
+        user: User, group_id: int, application_id: Optional[int]
+    ) -> QuerySet:
+        """
+        Looks up the trash contents for a particular group optionally filtered by
+        the provided application id.
+        :param user: The user who is requesting to see the trash contents.
+        :param group_id: The group to lookup trash contents inside of.
+        :param application_id: The optional application to filter down the trash
+            contents to only this group.
+        :raises GroupDoesNotExist: If the group_id is for an non
+            existent group.
+        :raises ApplicationDoesNotExist: If the application_id is for an non
+            existent application.
+        :raises ApplicationNotInGroup: If the application_id is for an application
+            not in the requested group.
+        :raises UserNotInGroup: If the user does not belong to the group.
+        :return: a queryset of the trash items in the group optionally filtered by
+            the provided application.
+        """
+
+        group = _get_group(group_id)
+
+        application = _get_application(application_id, group)
+
+        from baserow.core.handler import CoreHandler
+
+        if application is not None:
+            CoreHandler().check_permissions(
+                user,
+                EmptyApplicationTrashOperationType.type,
+                group=group,
+                context=application,
+                include_trash=True,
+            )
+        else:
+            CoreHandler().check_permissions(
+                user,
+                EmptyGroupTrashOperationType.type,
+                group=group,
+                context=group,
+                include_trash=True,
+            )
+
+        trash_contents = TrashEntry.objects.filter(
+            group=group, should_be_permanently_deleted=False
+        )
+        if application:
+            trash_contents = trash_contents.filter(application=application)
+        return trash_contents
+
+    @staticmethod
     def get_trash_contents(
         user: User, group_id: int, application_id: Optional[int]
     ) -> QuerySet:
@@ -306,9 +388,28 @@ class TrashHandler:
             the provided application.
         """
 
-        group = _get_group(group_id, user)
+        group = _get_group(group_id)
 
-        application = _get_application(application_id, group, user)
+        application = _get_application(application_id, group)
+
+        from baserow.core.handler import CoreHandler
+
+        if application is not None:
+            CoreHandler().check_permissions(
+                user,
+                ReadApplicationTrashOperationType.type,
+                group=group,
+                context=application,
+                include_trash=True,
+            )
+        else:
+            CoreHandler().check_permissions(
+                user,
+                ReadGroupTrashOperationType.type,
+                group=group,
+                context=group,
+                include_trash=True,
+            )
 
         trash_contents = TrashEntry.objects.filter(
             group=group, should_be_permanently_deleted=False
@@ -355,7 +456,7 @@ class TrashHandler:
                 trash_item_type = trash_item_type_registry.get_by_model(item)
 
 
-def _get_group(group_id, user):
+def _get_group(group_id):
     try:
         group = Group.objects_and_trash.get(id=group_id)
     except Group.DoesNotExist:
@@ -363,16 +464,15 @@ def _get_group(group_id, user):
     # Check that the group is not marked for perm deletion, if so we don't want
     # to display it's contents anymore as it should be permanently deleted soon.
     try:
-        trash_entry = _get_trash_entry(user, "group", None, group.id)
+        trash_entry = _get_trash_entry("group", None, group.id)
         if trash_entry.should_be_permanently_deleted:
             raise GroupDoesNotExist
     except TrashItemDoesNotExist:
         pass
-    group.has_user(user, raise_error=True, include_trash=True)
     return group
 
 
-def _get_application(application_id, group, user):
+def _get_application(application_id: int, group: Group) -> Optional[Application]:
     if application_id is not None:
         try:
             application = Application.objects_and_trash.get(id=application_id)
@@ -380,7 +480,7 @@ def _get_application(application_id, group, user):
             raise ApplicationDoesNotExist()
 
         try:
-            trash_entry = _get_trash_entry(user, "application", None, application.id)
+            trash_entry = _get_trash_entry("application", None, application.id)
             if trash_entry.should_be_permanently_deleted:
                 raise ApplicationDoesNotExist
         except TrashItemDoesNotExist:
@@ -429,7 +529,11 @@ def _get_groups_excluding_perm_deleted(user):
     return groups
 
 
-def _get_applications_excluding_perm_deleted(group):
+def _get_applications_excluding_perm_deleted(
+    group: Group, user: AbstractUser
+) -> List[Application]:
+    from baserow.core.handler import CoreHandler
+
     perm_deleted_apps = TrashEntry.objects.filter(
         trash_item_type="application",
         should_be_permanently_deleted=True,
@@ -442,11 +546,22 @@ def _get_applications_excluding_perm_deleted(group):
         .exclude(id__in=perm_deleted_apps)
         .order_by("order", "id")
     )
-    return applications
+    filtered_applications = []
+    for application in applications:
+        can_view_application = CoreHandler().check_permissions(
+            user,
+            ReadApplicationTrashOperationType.type,
+            group=group,
+            context=application,
+            raise_error=False,
+            include_trash=True,
+        )
+        if can_view_application:
+            filtered_applications.append(application)
+    return filtered_applications
 
 
 def _get_trash_entry(
-    requesting_user: User,
     trash_item_type: str,
     parent_trash_item_id: Optional[int],
     trash_item_id: int,
@@ -458,9 +573,6 @@ def _get_trash_entry(
     :param parent_trash_item_id: The parent id of the item to look for a trash
         entry for.
     :param trash_item_type: The trashable type of the item.
-    :param requesting_user: The user requesting to get the trashed item ,
-        they must be in the group of the trashed item otherwise this will raise
-        UserNotInGroup if not.
     :returns The trash entry for the specified baserow item.
     :raises UserNotInGroup: If the requesting_user is not in the trashed items
         group.
@@ -474,5 +586,4 @@ def _get_trash_entry(
         )
     except TrashEntry.DoesNotExist:
         raise TrashItemDoesNotExist()
-    trash_entry.group.has_user(requesting_user, raise_error=True, include_trash=True)
     return trash_entry

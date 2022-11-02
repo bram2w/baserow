@@ -6,7 +6,10 @@
       :style="{ width: gridViewRowDetailsWidth + 'px' }"
     >
       <GridViewRowIdentifierDropdown
-        v-if="!readOnly"
+        v-if="
+          !readOnly &&
+          $hasPermission('database.table.view.update', view, database.group.id)
+        "
         :row-identifier-type-selected="view.row_identifier_type"
         @change="onChangeIdentifierDropdown"
       ></GridViewRowIdentifierDropdown>
@@ -14,6 +17,7 @@
     <GridViewFieldType
       v-for="field in fields"
       :key="'field-type-' + field.id"
+      :database="database"
       :table="table"
       :view="view"
       :field="field"
@@ -27,7 +31,11 @@
       @move-field="moveField"
     ></GridViewFieldType>
     <div
-      v-if="includeAddField && !readOnly"
+      v-if="
+        includeAddField &&
+        !readOnly &&
+        $hasPermission('database.table.create_field', table, database.group.id)
+      "
       class="grid-view__column"
       :style="{ width: 100 + 'px' }"
     >
@@ -65,6 +73,10 @@ export default {
   props: {
     fields: {
       type: Array,
+      required: true,
+    },
+    database: {
+      type: Object,
       required: true,
     },
     table: {

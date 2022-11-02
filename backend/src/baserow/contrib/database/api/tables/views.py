@@ -33,6 +33,10 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.file_import.job_type import FileImportJobType
 from baserow.contrib.database.handler import DatabaseHandler
+from baserow.contrib.database.operations import (
+    CreateTableDatabaseTableOperationType,
+    ListTablesDatabaseTableOperationType,
+)
 from baserow.contrib.database.table.actions import (
     CreateTableActionType,
     DeleteTableActionType,
@@ -50,8 +54,13 @@ from baserow.contrib.database.table.exceptions import (
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.job_types import DuplicateTableJobType
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.operations import (
+    ImportRowsDatabaseTableOperationType,
+    ReadDatabaseTableOperationType,
+)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInGroup
+from baserow.core.handler import CoreHandler
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
@@ -73,9 +82,13 @@ from .serializers import (
     TableUpdateSerializer,
 )
 
-FileImportJobSerializerClass = FileImportJobType().get_serializer_class(
-    base_class=JobSerializer
-)
+FileImportJobSerializerClass = job_type_registry.get(
+    FileImportJobType.type
+).get_serializer_class(base_class=JobSerializer)
+
+DuplicateTableJobTypeSerializer = job_type_registry.get(
+    DuplicateTableJobType.type
+).get_serializer_class(base_class=JobSerializer)
 
 
 class TablesView(APIView):
@@ -117,8 +130,24 @@ class TablesView(APIView):
         """Lists all the tables of a database."""
 
         database = DatabaseHandler().get_database(database_id)
-        database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ListTablesDatabaseTableOperationType.type,
+            group=database.group,
+            context=database,
+        )
+
         tables = Table.objects.filter(database=database).prefetch_related("import_jobs")
+
+        tables = CoreHandler().filter_queryset(
+            request.user,
+            ListTablesDatabaseTableOperationType.type,
+            tables,
+            group=database.group,
+            context=database,
+        )
+
         serializer = TableSerializer(tables, many=True)
         return Response(serializer.data)
 
@@ -182,7 +211,13 @@ class TablesView(APIView):
         """Creates a new table in a database."""
 
         database = DatabaseHandler().get_database(database_id)
-        database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            CreateTableDatabaseTableOperationType.type,
+            group=database.group,
+            context=database,
+        )
 
         limit = settings.BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT
         if limit and len(data) > limit:
@@ -253,7 +288,13 @@ class AsyncCreateTableView(APIView):
         """Creates a job to create a new table in a database."""
 
         database = DatabaseHandler().get_database(database_id)
-        database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            CreateTableDatabaseTableOperationType.type,
+            group=database.group,
+            context=database,
+        )
 
         file_import_job = JobHandler().create_and_start_job(
             request.user,
@@ -303,7 +344,14 @@ class TableView(APIView):
         """Responds with a serialized table instance."""
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ReadDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
+
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -438,7 +486,13 @@ class AsyncTableImportView(APIView):
 
         table_handler = TableHandler()
         table = table_handler.get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+
+        CoreHandler().check_permissions(
+            request.user,
+            ImportRowsDatabaseTableOperationType.type,
+            group=table.database.group,
+            context=table,
+        )
 
         data = data["data"]
 
@@ -521,13 +575,13 @@ class AsyncDuplicateTableView(APIView):
             CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database tables"],
-        operation_id="duplicate_database_table",
+        operation_id="duplicate_database_table_async",
         description=(
-            "Duplicates the table with the provided `table_id` parameter "
+            "Start a job to duplicate the table with the provided `table_id` parameter "
             "if the authorized user has access to the database's group."
         ),
         responses={
-            202: DuplicateTableJobType().get_serializer_class(),
+            202: DuplicateTableJobTypeSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

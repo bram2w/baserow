@@ -40,6 +40,7 @@
         !parent.alive.includes(props.field.id)
       "
       ref="unselectedField"
+      :group-id="props.groupId"
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :state="props.state"
@@ -49,6 +50,7 @@
       :is="$options.methods.getComponent(parent, props)"
       v-else
       ref="selectedField"
+      :group-id="props.groupId"
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :selected="parent.isCellSelected(props.field.id)"

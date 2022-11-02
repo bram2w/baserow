@@ -15,6 +15,7 @@
     </a>
     <a
       v-show="!database._.loading"
+      v-if="showOptions"
       class="tree__options"
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
       @mousedown.stop
@@ -22,27 +23,51 @@
       <i class="fas fa-ellipsis-v"></i>
     </a>
     <Context ref="context">
-      <div class="context__menu-title">{{ table.name }}</div>
+      <div class="context__menu-title">{{ table.name }} ({{ table.id }})</div>
       <ul class="context__menu">
-        <li>
+        <li
+          v-if="
+            $hasPermission(
+              'database.table.run_export',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a @click="exportTable()">
             <i class="context__menu-icon fas fa-fw fa-file-export"></i>
             {{ $t('sidebarItem.exportTable') }}
           </a>
         </li>
-        <li>
+        <li
+          v-if="
+            $hasPermission(
+              'database.table.create_webhook',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a @click="openWebhookModal()">
             <i class="context__menu-icon fas fa-fw fa-globe"></i>
             Webhooks
           </a>
         </li>
-        <li>
+        <li
+          v-if="
+            $hasPermission('database.table.update', table, database.group.id)
+          "
+        >
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
             {{ $t('action.rename') }}
           </a>
         </li>
-        <li>
+        <li
+          v-if="
+            $hasPermission('database.table.duplicate', table, database.group.id)
+          "
+        >
           <SidebarDuplicateTableContextItem
             :database="database"
             :table="table"
@@ -50,7 +75,11 @@
             @click="$refs.context.hide()"
           ></SidebarDuplicateTableContextItem>
         </li>
-        <li>
+        <li
+          v-if="
+            $hasPermission('database.table.delete', table, database.group.id)
+          "
+        >
           <a
             :class="{ 'context__menu-item--loading': deleteLoading }"
             @click="deleteTable()"
@@ -97,6 +126,32 @@ export default {
     return {
       deleteLoading: false,
     }
+  },
+  computed: {
+    showOptions() {
+      return (
+        this.$hasPermission(
+          'database.table.run_export',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.create_webhook',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.update',
+          this.table,
+          this.database.group.id
+        ) ||
+        this.$hasPermission(
+          'database.table.duplicate',
+          this.table,
+          this.database.group.id
+        )
+      )
+    },
   },
   methods: {
     setLoading(database, value) {

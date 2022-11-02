@@ -52,6 +52,7 @@ def test_list_fields(api_client, data_fixture):
     assert response_json[0]["type"] == "text"
     assert response_json[0]["primary"]
     assert response_json[0]["text_default"] == field_1.text_default
+    assert response_json[0]["read_only"] is False
 
     assert response_json[1]["id"] == field_3.id
     assert response_json[1]["type"] == "number"
@@ -126,6 +127,27 @@ def test_list_fields(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_list_read_only_fields(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_created_on_field(table=table_1, order=1)
+
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        **{"HTTP_AUTHORIZATION": f"JWT {jwt_token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == field_1.id
+    assert response_json[0]["type"] == "created_on"
+    assert response_json[0]["read_only"] is True
 
 
 @pytest.mark.django_db

@@ -17,12 +17,16 @@
       class="grid-view__left"
       :fields="leftFields"
       :decorations-by-place="decorationsByPlace"
+      :database="database"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
       :include-row-details="true"
       :include-grid-view-identifier-dropdown="true"
-      :read-only="readOnly"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
+      "
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
@@ -57,10 +61,14 @@
     <GridViewFieldWidthHandle
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
+      :database="database"
       :grid="view"
       :field="leftFields[0]"
       :width="leftFieldsWidth"
-      :read-only="readOnly"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.move_row', table, database.group.id)
+      "
       :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
     <GridViewSection
@@ -68,11 +76,15 @@
       class="grid-view__right"
       :fields="visibleFields"
       :decorations-by-place="decorationsByPlace"
+      :database="database"
       :table="table"
       :view="view"
       :include-add-field="true"
       :can-order-fields="true"
-      :read-only="readOnly"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
+      "
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
@@ -92,21 +104,6 @@
       @edit-modal="openRowEditModal($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
-      <template #foot>
-        <div v-if="publicGrid" class="grid-view__foot-logo">
-          <a
-            href="https://baserow.io"
-            target="_blank"
-            title="Baserow - open source no-code database tool and Airtable alternative"
-          >
-            <img
-              height="14"
-              src="@baserow/modules/core/static/img/logo.svg"
-              alt="Baserow - open source no-code database tool and Airtable alternative"
-            />
-          </a>
-        </div>
-      </template>
     </GridViewSection>
     <GridViewRowDragging
       ref="rowDragging"
@@ -144,19 +141,46 @@
             {{ $t('gridView.selectRow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.create_row',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a
             @click="
               ;[addRowAfter(selectedRow, selectedRow), $refs.rowContext.hide()]
@@ -176,7 +200,16 @@
             {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.delete_row',
+              table,
+              database.group.id
+            )
+          "
+        >
           <a @click="deleteRow(selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             {{ $t('gridView.deleteRow') }}
@@ -191,7 +224,14 @@
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
-      :read-only="readOnly"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
+      "
+      :enable-navigation="
+        !readOnly &&
+        $hasPermission('database.table.update_row', table, database.group.id)
+      "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
@@ -203,6 +243,8 @@
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
       @field-created="fieldCreated"
+      @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
+      @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
     ></RowEditModal>
   </div>
 </template>
@@ -254,10 +296,6 @@ export default {
       type: Object,
       required: true,
     },
-    row: {
-      validator: (prop) => typeof prop === 'object' || prop === null,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -272,6 +310,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
     allVisibleFields() {
       return this.leftFields.concat(this.visibleFields)
     },
@@ -308,6 +349,11 @@ export default {
     leftWidth() {
       return this.leftFieldsWidth + this.gridViewRowDetailsWidth
     },
+    activeSearchTerm() {
+      return this.$store.getters[
+        `${this.storePrefix}view/grid/getActiveSearchTerm`
+      ]
+    },
   },
   watch: {
     fieldOptions: {
@@ -321,6 +367,14 @@ export default {
     fields() {
       // When a field is added or removed, we want to update the scrollbars.
       this.fieldsUpdated()
+    },
+    row: {
+      deep: true,
+      handler(row) {
+        if (row !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(row)
+        }
+      },
     },
   },
   beforeCreate() {
@@ -366,8 +420,7 @@ export default {
     )
 
     if (this.row !== null) {
-      const rowClone = populateRow(clone(this.row))
-      this.$refs.rowEditModal.show(this.row.id, rowClone)
+      this.populateAndEditRow(this.row)
     }
   },
   beforeDestroy() {
@@ -651,6 +704,14 @@ export default {
     openRowEditModal(rowId) {
       this.$refs.rowEditModal.show(rowId)
       this.$emit('selected-row', rowId)
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
     /**
      * When a cell is selected we want to make sure it is visible in the viewport, so
@@ -954,9 +1015,18 @@ export default {
      */
     async pasteData(textData, jsonData, rowIndex, fieldIndex) {
       // If the data is an empty array, we don't have to do anything because there is
-      // nothing to update. If the view is in read only mode, we can't paste so not
-      // doing anything.
-      if (textData.length === 0 || textData[0].length === 0 || this.readOnly) {
+      // nothing to update. If the view is in read only mode or if we don't have the
+      // permission, we can't paste so not doing anything.
+      if (
+        textData.length === 0 ||
+        textData[0].length === 0 ||
+        this.readOnly ||
+        !this.$hasPermission(
+          'database.table.update_row',
+          this.table,
+          this.database.group.id
+        )
+      ) {
         return
       }
 

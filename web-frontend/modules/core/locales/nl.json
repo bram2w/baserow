@@ -24,7 +24,8 @@
         "admin": "Beheerder",
         "dashboard": "Dashboard",
         "trash": "Prullenbak",
-        "settings": "Instellingen"
+        "settings": "Instellingen",
+        "members": "Leden"
     },
     "accountForm": {
         "nameLabel": "Je naam",
@@ -215,7 +216,11 @@
     },
     "login": {
         "title": "Inloggen",
-        "forgotPassword": "Wachtwoord vergeten"
+        "forgotPassword": "Wachtwoord vergeten",
+        "emailPlaceholder": "Voer je e-mailadres in..",
+        "passwordPlaceholder": "Voer je wachtwoord in.",
+        "signUpText": "Heb je geen account?",
+        "signUp": "Aanmelden"
     },
     "resetPassword": {
         "title": "Wachtwoord resetten",
@@ -236,7 +241,13 @@
         "disabled": "Aanmelden is uitgeschakeld",
         "disabledMessage": "Het is niet mogelijk om een account aan te maken omdat het is uitgeschakeld.",
         "requireFirstUser": "Welkom bij Baserow!",
-        "requireFirstUserMessage": "Vul het onderstaande formulier in om de admin gebruiker aan te maken."
+        "requireFirstUserMessage": "Vul het onderstaande formulier in om de admin gebruiker aan te maken.",
+        "passwordPlaceholder": "Voer je wachtwoord in.",
+        "namePlaceholder": "Voer je naam in..",
+        "passwordRepeatPlaceholder": "Bevestig je wachtwoord.",
+        "loginText": "Heb je al een account?",
+        "emailPlaceholder": "Voer je e-mailadres in..",
+        "login": "Inloggen"
     },
     "forgotPassword": {
         "title": "Wachtwoord vergeten",
@@ -244,7 +255,8 @@
         "submit": "Stuur link",
         "confirmation": "Als je e-mailadres in onze database voorkomt, ontvangt je binnen enkele minuten op je e-mailadres een link om je wachtwoord opnieuw in te stellen.",
         "disabled": "Wachtwoord resetten is uitgeschakeld",
-        "disabledMessage": "Het is niet mogelijk om een wachtwoord opnieuw in te stellen omdat het is uitgeschakeld."
+        "disabledMessage": "Het is niet mogelijk om een wachtwoord opnieuw in te stellen omdat het is uitgeschakeld.",
+        "loginText": "Heb je al een account en wachtwoord?"
     },
     "settings": {
         "settingsTitle": "Beheerdersinstellingen",
@@ -403,5 +415,51 @@
     "duplicateApplicationJobType": {
         "duplicatedTitle": "Applicatie gedupliceerd",
         "duplicating": "Dupliceren"
+    },
+    "InstallTemplateJobType": {
+        "installedTitle": "Template geïnstalleerd",
+        "installing": "Installeren"
+    },
+    "membersSettings": {
+        "membersTable": {
+            "columns": {
+                "email": "E-mail",
+                "role": "Rol",
+                "name": "Naam"
+            },
+            "actions": {
+                "copyEmail": "E-mail kopiëren",
+                "remove": "Verwijderen uit groep"
+            },
+            "title": "{userAmount} Leden in {groupName}",
+            "inviteMember": "Lid uitnodigen"
+        },
+        "membersTabTitle": "Leden",
+        "invitesTable": {
+            "columns": {
+                "email": "E-mail",
+                "message": "Bericht",
+                "role": "Role"
+            },
+            "title": "{invitesAmount} Uitnodigingen in behandeling in {groupName}",
+            "actions": {
+                "copyEmail": "E-mail kopiëren",
+                "remove": "Uitnodiging annuleren"
+            }
+        },
+        "membersInviteModal": {
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "Gebruiker zit al in de groep.",
+                    "text": "Het is niet mogelijk een uitnodiging te sturen wanneer de gebruiker al lid is van de groep."
+                }
+            },
+            "submit": "Stuur uitnodiging",
+            "title": "Groepsleden uitnodigen"
+        },
+        "invitesTabTitle": "Uitnodigingen"
+    },
+    "crudTableSearch": {
+        "search": "Zoeken"
     }
 }

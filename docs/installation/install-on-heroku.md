@@ -115,6 +115,7 @@ have a custom domain then this value can be empty.
 ## Environment variables
 
 * SECRET_KEY: A unique string that is used to generate secrets.
+* BASEROW_JWT_SIGNING_KEY: A unique string that is used to sign jwt tokens.
 * BASEROW_PUBLIC_URL: The public URL of your Heroku Baserow app. If empty, the default
   Heroku app URL is used, but if it differs it must be changed.
   (eg. https://baserow-test.com).

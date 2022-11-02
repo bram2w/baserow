@@ -14,7 +14,7 @@
     <div v-else class="form-view__submitted-message">
       {{ submitActionMessage || 'Thanks for submitting the form!' }}
     </div>
-    <FormViewPoweredBy></FormViewPoweredBy>
+    <FormViewPoweredBy v-if="showLogo"></FormViewPoweredBy>
   </div>
 </template>
 
@@ -37,6 +37,10 @@ export default {
     },
     submitActionMessage: {
       type: String,
+      required: true,
+    },
+    showLogo: {
+      type: Boolean,
       required: true,
     },
   },

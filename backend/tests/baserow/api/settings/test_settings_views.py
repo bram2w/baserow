@@ -51,7 +51,7 @@ def test_require_first_admin_user_is_false_after_admin_creation(api_client):
     )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
-    token = response_json["token"]
+    token = response_json["access_token"]
 
     response = api_client.get(
         reverse("api:settings:get"),

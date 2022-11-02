@@ -18,11 +18,9 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ApplicationService from '@baserow/modules/core/services/application'
-import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 
 export default {
   name: 'SidebarDuplicateApplicationContextItem',
-  mixins: [jobProgress],
   props: {
     application: {
       type: Object,
@@ -37,44 +35,17 @@ export default {
   data() {
     return {
       duplicating: false,
+      job: null,
     }
   },
+  watch: {
+    'job.state'(newState) {
+      if (['finished', 'failed'].includes(newState)) {
+        this.duplicating = false
+      }
+    },
+  },
   methods: {
-    showError(title, message) {
-      this.$store.dispatch(
-        'notification/error',
-        { title, message },
-        { root: true }
-      )
-    },
-    // eslint-disable-next-line require-await
-    async onJobFailed() {
-      await this.$store.dispatch('job/forceUpdate', {
-        job: this.job,
-        data: this.job,
-      })
-
-      this.duplicating = false
-    },
-    async onJobPollingError(error) {
-      await this.$store.dispatch('job/forceDelete', this.job)
-      this.duplicating = false
-      notifyIf(error, 'application')
-    },
-    async onJobUpdated() {
-      await this.$store.dispatch('job/forceUpdate', {
-        job: this.job,
-        data: this.job,
-      })
-    },
-    // eslint-disable-next-line require-await
-    async onJobDone() {
-      await this.$store.dispatch('job/forceUpdate', {
-        job: this.job,
-        data: this.job,
-      })
-      this.duplicating = false
-    },
     async duplicateApplication() {
       if (this.duplicating || this.disabled) {
         return
@@ -85,13 +56,14 @@ export default {
         const { data: job } = await ApplicationService(
           this.$client
         ).asyncDuplicate(this.application.id)
-        this.startJobPoller(job)
-        this.$store.dispatch('job/forceCreate', job)
+        this.job = job
+        this.$store.dispatch('job/create', job)
       } catch (error) {
         this.duplicating = false
         notifyIf(error, 'application')
+      } finally {
+        this.$emit('click')
       }
-      this.$emit('click')
     },
   },
 }

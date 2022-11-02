@@ -17,6 +17,8 @@ import MarkdownIt from '@baserow/modules/core/components/MarkdownIt'
 import DownloadLink from '@baserow/modules/core/components/DownloadLink'
 import FormElement from '@baserow/modules/core/components/FormElement'
 import Alert from '@baserow/modules/core/components/Alert'
+import Tabs from '@baserow/modules/core/components/Tabs'
+import Tab from '@baserow/modules/core/components/Tab'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -29,6 +31,7 @@ import sortable from '@baserow/modules/core/directives/sortable'
 import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
 import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
 import autoScroll from '@baserow/modules/core/directives/autoScroll'
+import clickOutside from '@baserow/modules/core/directives/clickOutside'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -47,6 +50,8 @@ Vue.component('DownloadLink', DownloadLink)
 Vue.component('FormElement', FormElement)
 Vue.component('Picker', Picker)
 Vue.component('ProgressBar', ProgressBar)
+Vue.component('Tab', Tab)
+Vue.component('Tabs', Tabs)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)
@@ -59,3 +64,4 @@ Vue.directive('sortable', sortable)
 Vue.directive('autoOverflowScroll', autoOverflowScroll)
 Vue.directive('userFileUpload', userFileUpload)
 Vue.directive('autoScroll', autoScroll)
+Vue.directive('clickOutside', clickOutside)

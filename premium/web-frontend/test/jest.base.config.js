@@ -10,6 +10,7 @@ module.exports = {
     '^@baserow/(.*)$': '<rootDir>/web-frontend/$1',
     '^@baserow_premium/(.*)$':
       '<rootDir>/premium/web-frontend/modules/baserow_premium/$1',
+    '^@baserow_premium_test/(.*)$': '<rootDir>/premium/web-frontend/test/$1',
     '^@/(.*)$': '<rootDir>/web-frontend/$1',
     '^~/(.*)$': '<rootDir>/web-frontend/$1',
     '^vue$': '<rootDir>/web-frontend/node_modules/vue/dist/vue.common.js',
@@ -18,6 +19,7 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
     '.*\\.(vue)$': '<rootDir>/web-frontend/node_modules/vue-jest',
+    '^.+\\.svg$': '<rootDir>/web-frontend/test/helpers/stubSvgTransformer.js',
   },
   transformIgnorePatterns: [
     `<rootDir>/web-frontend/node_modules/(?!(baserow|${esModules})/)`,

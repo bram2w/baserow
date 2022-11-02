@@ -125,9 +125,6 @@
         "delete": "删除用户",
         "edit": "编辑{ username }"
     },
-    "crudTableSearchContext": {
-        "search": "搜索"
-    },
     "tableJSONExporter": {
         "encoding": ""
     },

@@ -27,6 +27,7 @@ version: "3.4"
 x-backend-variables: &backend-variables
   # Most users should only need to set these first four variables.
   SECRET_KEY: ${SECRET_KEY:?}
+  BASEROW_JWT_SIGNING_KEY: ${BASEROW_JWT_SIGNING_KEY:-}
   DATABASE_PASSWORD: ${DATABASE_PASSWORD:?}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?}
   # If you manually change this line make sure you also change the duplicate line in
@@ -109,6 +110,7 @@ x-backend-variables: &backend-variables
   BASEROW_JOB_CLEANUP_INTERVAL_MINUTES:
   BASEROW_MAX_ROW_REPORT_ERROR_COUNT:
   BASEROW_JOB_SOFT_TIME_LIMIT:
+  BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS:
   BASEROW_INITIAL_CREATE_SYNC_TABLE_DATA_LIMIT:
   BASEROW_MAX_SNAPSHOTS_PER_GROUP:
   BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS:
@@ -122,6 +124,7 @@ x-backend-variables: &backend-variables
   BASEROW_WEBHOOKS_MAX_PER_TABLE:
   BASEROW_WEBHOOKS_MAX_CALL_LOG_ENTRIES:
   BASEROW_WEBHOOKS_REQUEST_TIMEOUT_SECONDS:
+  BASEROW_PERMISSION_MANAGERS:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
@@ -152,7 +155,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.12.1
+    image: baserow/backend:1.13.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -165,7 +168,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.12.1
+    image: baserow/web-frontend:1.13.0
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -188,7 +191,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.12.1
+    image: baserow/backend:1.13.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -205,7 +208,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.12.1
+    image: baserow/backend:1.13.0
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -222,7 +225,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.12.1
+    image: baserow/backend:1.13.0
     restart: unless-stopped
     command: celery-beat
     environment:

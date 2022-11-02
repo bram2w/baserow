@@ -5,10 +5,42 @@ import {
   unsetGroupCookie,
 } from '@baserow/modules/core/utils/group'
 import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstants'
+import PermissionsService from '@baserow/modules/core/services/permissions'
+import RolesService from '@baserow/modules/core/services/roles'
 
 function populateGroup(group) {
-  group._ = { loading: false, selected: false }
+  group._ = {
+    loading: false,
+    selected: false,
+    additionalLoading: false,
+    permissionsLoaded: false,
+    permissions: null,
+    rolesLoaded: false,
+    roles: null,
+  }
   return group
+}
+
+const appendRoleTranslations = (roles, registry) => {
+  const translationMap = Object.values(
+    registry.getAll('permissionManager')
+  ).reduce(
+    (translations, manager) => ({
+      ...translations,
+      ...manager.getRolesTranslations(),
+    }),
+    {}
+  )
+  return roles.map((role) => {
+    if (translationMap[role.uid]) {
+      return {
+        uid: role.uid,
+        description: translationMap[role.uid].description,
+        name: translationMap[role.uid].name,
+      }
+    }
+    return role
+  })
 }
 
 export const state = () => ({
@@ -37,6 +69,12 @@ export const mutations = {
       return
     }
     group._.loading = value
+  },
+  SET_ITEM_ADDITIONAL_LOADING(state, { group, value }) {
+    if (!Object.prototype.hasOwnProperty.call(group, '_')) {
+      return
+    }
+    group._.additionalLoading = value
   },
   ADD_ITEM(state, item) {
     item = populateGroup(item)
@@ -100,6 +138,22 @@ export const mutations = {
     state.items[groupIndex].users = state.items[groupIndex].users.filter(
       (item) => item.id !== id
     )
+  },
+  SET_PERMISSIONS(state, { groupId, permissions }) {
+    const groupIndex = state.items.findIndex((item) => item.id === groupId)
+    if (groupIndex === -1) {
+      return
+    }
+    state.items[groupIndex]._.permissions = permissions
+    state.items[groupIndex]._.permissionsLoaded = true
+  },
+  SET_ROLES(state, { groupId, roles }) {
+    const groupIndex = state.items.findIndex((item) => item.id === groupId)
+    if (groupIndex === -1) {
+      return
+    }
+    state.items[groupIndex]._.roles = roles
+    state.items[groupIndex]._.rolesLoaded = true
   },
 }
 
@@ -227,6 +281,7 @@ export const actions = {
    */
   forceDelete({ commit, dispatch, rootGetters }, group) {
     dispatch('job/deleteForGroup', group, { root: true })
+    this.$bus.$emit('group-deleted', { group })
     const applications = rootGetters['application/getAllOfGroup'](group)
     applications.forEach((application) => {
       return dispatch('application/forceDelete', application, { root: true })
@@ -238,10 +293,46 @@ export const actions = {
 
     commit('DELETE_ITEM', group.id)
   },
+  async fetchPermissions({ commit, getters }, group) {
+    // The permissions only have to be loaded once.
+    if (group._.permissionsLoaded) {
+      return
+    }
+
+    commit('SET_ITEM_ADDITIONAL_LOADING', { group, value: true })
+
+    try {
+      const { data } = await PermissionsService(this.$client).get(group)
+      commit('SET_PERMISSIONS', { groupId: group.id, permissions: data })
+    } finally {
+      commit('SET_ITEM_ADDITIONAL_LOADING', { group, value: false })
+    }
+  },
+  async fetchRoles({ commit, getters }, group) {
+    // The roles only have to be loaded once.
+    if (group._.rolesLoaded) {
+      return
+    }
+
+    commit('SET_ITEM_ADDITIONAL_LOADING', { group, value: true })
+
+    try {
+      const { data } = await RolesService(
+        this.$client,
+        this.app.$hasFeature
+      ).get(group)
+      const translatedRoles = appendRoleTranslations(data, this.app.$registry)
+      commit('SET_ROLES', { groupId: group.id, roles: translatedRoles })
+    } finally {
+      commit('SET_ITEM_ADDITIONAL_LOADING', { group, value: false })
+    }
+  },
   /**
    * Select a group and fetch all the applications related to that group.
    */
-  select({ commit, dispatch }, group) {
+  async select({ commit, dispatch }, group) {
+    await dispatch('fetchPermissions', group)
+    await dispatch('fetchRoles', group)
     commit('SET_SELECTED', group)
     setGroupCookie(group.id, this.app)
     dispatch(
@@ -251,6 +342,7 @@ export const actions = {
         root: true,
       }
     )
+    return group
   },
   /**
    * Select a group by a given group id.
@@ -371,6 +463,13 @@ export const getters = {
     }
 
     return state.selected.id
+  },
+  selectedGroup(state) {
+    if (!Object.prototype.hasOwnProperty.call(state.selected, 'id')) {
+      throw new Error('There is no selected group.')
+    }
+
+    return state.selected
   },
   getAllUsers(state) {
     const users = {}

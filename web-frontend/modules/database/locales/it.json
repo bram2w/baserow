@@ -162,7 +162,8 @@
         "order": "Ordine dei campi nella tabella. 0 per il primo campo.",
         "primary": "Indica se il campo è un campo primario. Se `true`, il campo non può essere eliminato e il valore deve rappresentare l'intera riga.",
         "type": "Tipo definito per questo campo.",
-        "extraProps": "Alcune proprietà extra non sono descritte qui perché sono specifiche del tipo."
+        "extraProps": "Alcune proprietà extra non sono descritte qui perché sono specifiche del tipo.",
+        "readOnly": "Indica se un campo e in sola lettura. Se vero, non è possibile modificare il valore delle cella."
     },
     "apiDocsTableDeleteRow": {
         "description": "Elimina una riga esistente {nome}.",
@@ -214,7 +215,7 @@
     "fieldLinkRowSubForm": {
         "noTable": "Serve almeno un'altra tabella nello stesso database a cui collegarsi.",
         "selectTableLabel": "Seleziona una tabella a cui collegarsi",
-        "hasRelatedFieldLabel": "Crea campo relativo nell'altra tabella"
+        "hasRelatedFieldLabel": "Create related field in linked table"
     },
     "fieldSelectOptions": {
         "add": "Aggiungi un'opzione"
@@ -267,7 +268,7 @@
         "hideHiddenFields": "Nascondi campi nascosti"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Aggiungi un'altra opzione"
+        "addOption": "Scegli una opzione"
     },
     "rowEditFieldFile": {
         "addFile": "Aggiungi un file",
@@ -281,7 +282,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Aggiungi un altro collegamento"
+        "addLink": "Scegli un collegamento"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "Scegli file CSV",
@@ -298,10 +299,6 @@
     },
     "tableForm": {
         "name": "Nome"
-    },
-    "tableImporterPreview": {
-        "label": "Anteprima rapida",
-        "remaining": "{remaining} altre righe"
     },
     "tableXMLImporter": {
         "fileLabel": "Scegli file XML",
@@ -352,7 +349,8 @@
         "importButton": "Importa",
         "selectImportMessage": "Per favore scegli i dati da importare.",
         "filePreview": "Anteprima contenuto file",
-        "importPreview": "Anteprima dei dati che verranno importati"
+        "importPreview": "Anteprima dei dati che verranno importati",
+        "changeImporterType": "Cambia tipo di importazione"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Clicca per modificare la formula",
@@ -694,14 +692,32 @@
         "descriptionPlaceholder": "Descrizione"
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Aggiungi un collaboratore"
+        "addCollaborator": "Scegli un collaboratore"
     },
     "formViewModeType": {
         "formDescription": "Tutti i campi sono visibili verticalmente uno dopo l'altro.",
         "form": "Form"
     },
     "table": {
-        "chooseView": "Scegli vista"
+        "chooseView": "Scegli vista",
+        "adjacentRow": {
+            "notification": {
+                "error": {
+                    "title": "Errore imprevisto",
+                    "message": "Si è verificato un errore imprevisto nel tentativo di caricare la riga adiacente"
+                },
+                "notFound": {
+                    "next": {
+                        "title": "Nessuna riga",
+                        "message": "Non sono presenti altre righe"
+                    },
+                    "previous": {
+                        "title": "Nessuna riga successiva",
+                        "message": "Non è presente nessuna riga precedente"
+                    }
+                }
+            }
+        }
     },
     "gridViewFieldFile": {
         "dropHere": "Trascina qui",

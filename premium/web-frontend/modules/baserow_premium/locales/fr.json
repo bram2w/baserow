@@ -130,9 +130,6 @@
         "delete": "Supprimer l'utilisateur",
         "edit": "Modifier {username}"
     },
-    "crudTableSearchContext": {
-        "search": "Chercher"
-    },
     "tableJSONExporter": {
         "encoding": "Encodage"
     },
@@ -224,7 +221,10 @@
         "rowUsage": "Nombre de ligne",
         "storeUsage": "Espace disponible",
         "disconnectLicense": "Déconnecter la licence",
-        "disconnectDescription": "Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+        "disconnectDescription": "Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée.",
+        "moreSeatsNeededTitle": "Besoin de plus d´utilisateurs",
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} utilisateurs payants et {free_users_count} utilisateurs gratuits",
+        "contactSalesMoreSeats": "Contacter un Vendeur pour plus d´utilisateurs"
     },
     "viewDecoratorType": {
         "onlyOneDecoratorPerView": "Vous ne pouvez utiliser qu'une seule décoration de ce type par vue",
@@ -269,7 +269,8 @@
         "exports": "Export JSON et XML",
         "admin": "Administration avancée",
         "rowColoring": "Coloration des lignes",
-        "surveyForm": "Sondage"
+        "surveyForm": "Sondage",
+        "publicLogoRemoval": "Suppression du logo public"
     },
     "formViewModePreviewSurvey": {
         "deactivated": "Les sondage sont disponibles dans la version premium.",
@@ -280,5 +281,11 @@
         "onlyForPremium": "Disponible en version premium",
         "survey": "Sondage",
         "surveyDescription": "Un seul champ est visible à la fois."
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Masquer le logo Baserow sur la vue partagée",
+            "premiumModalName": "suppression du logo public"
+        }
     }
 }

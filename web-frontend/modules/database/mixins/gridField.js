@@ -1,4 +1,4 @@
-import { isElement } from '@baserow/modules/core/utils/dom'
+import { onClickOutside } from '@baserow/modules/core/utils/dom'
 import baseField from '@baserow/modules/database/mixins/baseField'
 import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 
@@ -86,23 +86,23 @@ export default {
       // Register a body click event listener so that we can detect if a user has
       // clicked outside the field. If that happens we want to unselect the field and
       // possibly save the value.
-      this.$el.clickOutsideEvent = (event) => {
-        if (
-          // Check if the event has the 'preventFieldCellUnselect' attribute which
-          // if true should prevent the field from being unselected.
-          !(
-            'preventFieldCellUnselect' in event &&
-            event.preventFieldCellUnselect
-          ) &&
-          // If the click was outside the column element.
-          !isElement(this.$el, event.target) &&
-          // If the child field allows to unselect when clicked outside.
-          this.canUnselectByClickingOutside(event)
-        ) {
-          this.$emit('unselect')
+      this.$el.clickOutsideEventCancel = onClickOutside(
+        this.$el,
+        (target, event) => {
+          if (
+            // Check if the event has the 'preventFieldCellUnselect' attribute which
+            // if true should prevent the field from being unselected.
+            !(
+              'preventFieldCellUnselect' in event &&
+              event.preventFieldCellUnselect
+            ) &&
+            // If the child field allows to unselect when clicked outside.
+            this.canUnselectByClickingOutside(event)
+          ) {
+            this.$emit('unselect')
+          }
         }
-      }
-      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+      )
 
       // Event that is called when a key is pressed while the field is selected.
       this.$el.keyDownEvent = (event) => {
@@ -221,7 +221,14 @@ export default {
      */
     _beforeUnSelect() {
       this.$el.removeEventListener('click', this.$el.clickEvent)
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      if (
+        Object.prototype.hasOwnProperty.call(
+          this.$el,
+          'clickOutsideEventCancel'
+        )
+      ) {
+        this.$el.clickOutsideEventCancel()
+      }
       document.body.removeEventListener('keydown', this.$el.keyDownEvent)
       document.removeEventListener('paste', this.$el.pasteEvent)
       this.beforeUnSelect()

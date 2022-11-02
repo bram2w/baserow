@@ -8,7 +8,7 @@ from rest_framework import serializers
 User = get_user_model()
 
 
-class PremiumLicenseSerializer(serializers.ModelSerializer):
+class LicenseSerializer(serializers.ModelSerializer):
     license_id = serializers.CharField(help_text="Unique identifier of the license.")
     is_active = serializers.BooleanField(
         help_text="Indicates if the backend deems the license valid."
@@ -18,6 +18,9 @@ class PremiumLicenseSerializer(serializers.ModelSerializer):
     )
     valid_through = serializers.DateTimeField(
         help_text="Until which timestamp the license is active."
+    )
+    free_users_count = serializers.SerializerMethodField(
+        help_text="The amount of free users that are currently using the license."
     )
     seats_taken = serializers.SerializerMethodField(
         help_text="The amount of users that are currently using the license."
@@ -49,6 +52,7 @@ class PremiumLicenseSerializer(serializers.ModelSerializer):
             "last_check",
             "valid_from",
             "valid_through",
+            "free_users_count",
             "seats_taken",
             "seats",
             "product_code",
@@ -59,34 +63,36 @@ class PremiumLicenseSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_seats_taken(self, obj):
-        return (
-            obj.seats_taken if hasattr(obj, "seats_taken") else obj.users.all().count()
-        )
+        return obj.license_type.get_seats_taken(obj)
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_free_users_count(self, obj):
+        return obj.license_type.get_free_users_count(obj)
 
 
-class RegisterPremiumLicenseSerializer(serializers.Serializer):
+class RegisterLicenseSerializer(serializers.Serializer):
     license = serializers.CharField(help_text="The license that you want to register.")
 
 
-class PremiumLicenseUserSerializer(serializers.ModelSerializer):
+class LicenseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "first_name", "email")
 
 
-class PremiumLicenseWithUsersSerializer(PremiumLicenseSerializer):
+class LicenseWithUsersSerializer(LicenseSerializer):
     users = serializers.SerializerMethodField()
 
-    class Meta(PremiumLicenseSerializer.Meta):
-        fields = PremiumLicenseSerializer.Meta.fields + ("users",)
+    class Meta(LicenseSerializer.Meta):
+        fields = LicenseSerializer.Meta.fields + ("users",)
 
-    @extend_schema_field(PremiumLicenseUserSerializer(many=True))
+    @extend_schema_field(LicenseUserSerializer(many=True))
     def get_users(self, object):
         users = [user.user for user in object.users.all()]
-        return PremiumLicenseUserSerializer(users, many=True).data
+        return LicenseUserSerializer(users, many=True).data
 
 
-class PremiumLicenseUserLookupSerializer(serializers.ModelSerializer):
+class LicenseUserLookupSerializer(serializers.ModelSerializer):
     value = serializers.SerializerMethodField(
         help_text="The name and the email " "address of the user."
     )

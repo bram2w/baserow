@@ -130,9 +130,6 @@
         "delete": "Elimina utente",
         "edit": "Modifica {username}"
     },
-    "crudTableSearchContext": {
-        "search": "Cerca"
-    },
     "tableJSONExporter": {
         "encoding": "Codifica"
     },
@@ -225,7 +222,10 @@
         "rowUsage": "Utilizzo riga",
         "storeUsage": "Utilizzo archiviazione",
         "disconnectLicense": "Disconnetti licenza",
-        "disconnectDescription": "Sei sicuro di voler disconnettere questa licenza? Se la disconnetti mentre è attiva, tutti gli utenti collegati non avranno più accesso alle funzionalità del piano. La licenza verrà quindi rimossa. Se vuoi usare questa licenza in un'altra istanza self-hosted, contatta il nostro team di supporto tramite {contact}."
+        "disconnectDescription": "Sei sicuro di voler disconnettere questa licenza? Se la disconnetti mentre è attiva, tutti gli utenti collegati non avranno più accesso alle funzionalità del piano. La licenza verrà quindi rimossa. Se vuoi usare questa licenza in un'altra istanza self-hosted, contatta il nostro team di supporto tramite {contact}.",
+        "contactSalesMoreSeats": "Contatta il nostro team di vendita per avere più postazioni",
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} postazioni paganti e {free_users_count} postazioni libere in uso",
+        "moreSeatsNeededTitle": "È necessario aumentare il numero di postazioni"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Bordo sinistro",
@@ -265,7 +265,8 @@
         "rowColoring": "Colorazione righe",
         "rowComments": "Commenti di riga",
         "exports": "Esportazione in formato JSON e XML",
-        "surveyForm": "Sondaggio"
+        "surveyForm": "Sondaggio",
+        "publicLogoRemoval": "Rimozione logo"
     },
     "premiumModal": {
         "title": "Fai l'upgrade per usare {name}",
@@ -281,5 +282,11 @@
         "orderFields": "Ordina campi",
         "more": "Maggiori informazioni",
         "deactivated": "Modalità sondaggio è disponibile nella versione premium."
+    },
+    "shareLinkOptions": {
+        "baserowLogo": {
+            "label": "Nascondi il logo di Baserow nella viste pubbliche",
+            "premiumModalName": "rimozione logo"
+        }
     }
 }

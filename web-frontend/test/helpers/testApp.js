@@ -30,6 +30,11 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   store.$client = app.client
   store.app = app
   app.$store = store
+  app.$hasFeature = function (feature, group) {
+    return true
+  }
+  // Nuxt seems to allow both access patterns to get at the store?
+  app.store = store
   const setupContext = {
     store,
     app,
@@ -106,10 +111,17 @@ export class TestApp {
       $i18n: {
         getBrowserLocale: () => 'en',
       },
+      $router: {
+        resolve({ name, params }) {
+          return new URL(`https://${name}`)
+        },
+      },
       $route: {
         params: {},
+        matched: [],
       },
       $featureFlags: { includes: () => true },
+      $hasPermission: () => true,
     }
     this._app.$clientErrorMap = new ClientErrorMap(this._app)
     this._vueContext = bootstrapVueContext()
@@ -139,6 +151,7 @@ export class TestApp {
         return Promise.reject(error)
       }
     )
+    this._wrappers = []
   }
 
   dontFailOnErrorResponses() {
@@ -154,13 +167,17 @@ export class TestApp {
    * in your test suits afterEach method!
    */
   async afterEach() {
+    // Destroy all constructed components so when we replace the state no reactivity
+    // starts running in existing components.
+    this._wrappers.forEach((w) => w.destroy())
+    this._wrappers = []
     // Flushing promises should be done before the mock reset to avoid raising
     // unwanted exceptions
     await flushPromises()
     this.mock.reset()
     this.failOnErrorResponses()
-    this.store.replaceState(_.cloneDeep(this._initialCleanStoreState))
     this._vueContext.teardownVueContext()
+    this.store.replaceState(_.cloneDeep(this._initialCleanStoreState))
   }
 
   /**
@@ -196,6 +213,7 @@ export class TestApp {
     if (wrapper.vm) {
       await this.callFetchOnChildren(wrapper.vm)
     }
+    this._wrappers.push(wrapper)
     return wrapper
   }
 
@@ -210,6 +228,22 @@ export class TestApp {
     for (const child of c.$children) {
       await this.callFetchOnChildren(child)
     }
+  }
+
+  getApp() {
+    return this._app
+  }
+
+  getStore() {
+    return this._app.store
+  }
+
+  getRegistry() {
+    return this._app.$registry
+  }
+
+  setRouteToBe(name) {
+    this._app.$route.matched = [{ name }]
   }
 }
 /**
@@ -242,5 +276,30 @@ export const UIHelpers = {
     await activeCell.trigger('click')
 
     return activeCell.find('input')
+  },
+  getSidebarItemNames(sidebarComponent) {
+    return sidebarComponent
+      .findAll('.sidebar__nav .tree__action')
+      .wrappers.map((t) => t.text())
+  },
+  getDisabledSidebarItemNames(sidebarComponent) {
+    return sidebarComponent
+      .findAll('.sidebar__nav .tree__action--disabled')
+      .wrappers.map((t) => t.text())
+  },
+  async selectSidebarItem(sidebarComponent, itemName) {
+    const allNames = []
+    for (const wrapper of sidebarComponent.findAll(
+      '.sidebar__nav .tree__action'
+    ).wrappers) {
+      allNames.push(wrapper.text())
+      if (wrapper.text() === itemName) {
+        await wrapper.trigger('click')
+        return
+      }
+    }
+    throw new Error(
+      `Did not find ${itemName} in the Sidebar to click, only found ${allNames}`
+    )
   },
 }

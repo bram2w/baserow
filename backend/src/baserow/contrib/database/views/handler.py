@@ -20,10 +20,32 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.views.operations import (
+    CreateViewFilterOperationType,
+    CreateViewOperationType,
+    CreateViewSortOperationType,
+    DeleteViewDecorationOperationType,
+    DeleteViewFilterOperationType,
+    DeleteViewOperationType,
+    DeleteViewSortOperationType,
+    DuplicateViewOperationType,
+    OrderViewsOperationType,
+    ReadViewFilterOperationType,
+    ReadViewOperationType,
+    ReadViewsOrderOperationType,
+    ReadViewSortOperationType,
+    UpdateViewFieldOptionsOperationType,
+    UpdateViewFilterOperationType,
+    UpdateViewOperationType,
+    UpdateViewSlugOperationType,
+    UpdateViewSortOperationType,
+)
+from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     MirrorDict,
@@ -176,7 +198,9 @@ class ViewHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateViewOperationType.type, group=group, context=table
+        )
 
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
@@ -228,7 +252,9 @@ class ViewHandler:
         """
 
         group = original_view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, DuplicateViewOperationType.type, group=group, context=original_view
+        )
 
         view_type = view_type_registry.get_by_model(original_view)
 
@@ -294,7 +320,9 @@ class ViewHandler:
             raise ValueError("The view is not an instance of View.")
 
         group = view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateViewOperationType.type, group=group, context=view
+        )
 
         view_type = view_type_registry.get_by_model(view)
         view_type.before_view_update(data, view, user)
@@ -305,6 +333,7 @@ class ViewHandler:
             "filter_type",
             "filters_disabled",
             "public_view_password",
+            "show_logo",
         ] + view_type.allowed_fields
         view = set_allowed_attrs(view_values, allowed_fields, view)
         view.save()
@@ -329,7 +358,9 @@ class ViewHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, OrderViewsOperationType.type, group=group, context=table
+        )
 
         queryset = View.objects.filter(table_id=table.id)
         view_ids = queryset.values_list("id", flat=True)
@@ -352,7 +383,9 @@ class ViewHandler:
         """
 
         group = table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ReadViewsOrderOperationType.type, group=group, context=table
+        )
 
         queryset = View.objects.filter(table_id=table.id)
 
@@ -385,7 +418,9 @@ class ViewHandler:
             raise ValueError("The view is not an instance of View")
 
         group = view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, DeleteViewOperationType.type, group=group, context=view
+        )
 
         view_id = view.id
 
@@ -428,7 +463,12 @@ class ViewHandler:
             # Here we check the permissions only if we have a user. If the field options
             # update is triggered by user a action, we have one from the view but in
             # some situation, we have automatic processing and we don't have any user.
-            view.table.database.group.has_user(user, raise_error=True)
+            CoreHandler().check_permissions(
+                user,
+                UpdateViewFieldOptionsOperationType.type,
+                group=view.table.database.group,
+                context=view,
+            )
 
         if not fields:
             fields = Field.objects.filter(table=view.table)
@@ -670,7 +710,12 @@ class ViewHandler:
             )
 
         group = view_filter.view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            ReadViewFilterOperationType.type,
+            group=group,
+            context=view_filter,
+        )
 
         return view_filter
 
@@ -704,7 +749,9 @@ class ViewHandler:
         """
 
         group = view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, CreateViewFilterOperationType.type, group=group, context=view
+        )
 
         # Check if view supports filtering
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -766,7 +813,12 @@ class ViewHandler:
         """
 
         group = view_filter.view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            UpdateViewFilterOperationType.type,
+            group=group,
+            context=view_filter,
+        )
 
         type_name = type_name if type_name is not None else view_filter.type
         field = field if field is not None else view_filter.field
@@ -810,7 +862,12 @@ class ViewHandler:
         """
 
         group = view_filter.view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteViewFilterOperationType.type,
+            group=group,
+            context=view_filter,
+        )
 
         view_filter_id = view_filter.id
         view_filter.delete()
@@ -943,7 +1000,9 @@ class ViewHandler:
             )
 
         group = view_sort.view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ReadViewSortOperationType.type, group=group, context=view_sort
+        )
 
         return view_sort
 
@@ -971,7 +1030,12 @@ class ViewHandler:
         """
 
         group = view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, ReadFieldOperationType.type, group=group, context=field
+        )
+        CoreHandler().check_permissions(
+            user, CreateViewSortOperationType.type, group=group, context=view
+        )
 
         # Check if view supports sorting.
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -1032,10 +1096,15 @@ class ViewHandler:
             raise ViewSortDoesNotExist(f"The view {view_sort.view.id} is trashed.")
 
         group = view_sort.view.table.database.group
-        group.has_user(user, raise_error=True)
-
         field = field if field is not None else view_sort.field
         order = order if order is not None else view_sort.order
+
+        CoreHandler().check_permissions(
+            user, ReadFieldOperationType.type, group=group, context=field
+        )
+        CoreHandler().check_permissions(
+            user, UpdateViewSortOperationType.type, group=group, context=view_sort
+        )
 
         # If the field has changed we need to check if the field belongs to the table.
         if (
@@ -1084,7 +1153,9 @@ class ViewHandler:
         """
 
         group = view_sort.view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, DeleteViewSortOperationType.type, group=group, context=view_sort
+        )
 
         view_sort_id = view_sort.id
         view_sort.delete()
@@ -1269,7 +1340,12 @@ class ViewHandler:
         """
 
         group = view_decoration.view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user,
+            DeleteViewDecorationOperationType.type,
+            group=group,
+            context=view_decoration,
+        )
 
         view_decoration_id = view_decoration.id
         view_decoration.delete()
@@ -1633,7 +1709,9 @@ class ViewHandler:
             raise CannotShareViewTypeError()
 
         group = view.table.database.group
-        group.has_user(user, raise_error=True)
+        CoreHandler().check_permissions(
+            user, UpdateViewSlugOperationType.type, group=group, context=view
+        )
 
         view.slug = slug
         view.save()
@@ -1685,8 +1763,13 @@ class ViewHandler:
         if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist("The view does not exist.")
 
-        user_in_group = user and view.table.database.group.has_user(user)
-
+        user_in_group = user and CoreHandler().check_permissions(
+            user,
+            ReadViewOperationType.type,
+            group=view.table.database.group,
+            context=view,
+            raise_error=False,
+        )
         if not user_in_group:
             if not view.public:
                 raise ViewDoesNotExist("The view does not exist.")

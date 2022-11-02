@@ -1457,7 +1457,7 @@ def test_last_modified_datetime_equals_days_ago_filter_type(data_fixture):
         row_2 = model.objects.create(**{})
 
     # one day before the filter
-    with freeze_time(when - timedelta(hours=(when.hour + 1))):
+    with freeze_time(when - timedelta(hours=(when.hour + 2))):
         row_3 = model.objects.create(**{})
 
     with freeze_time(when.strftime("%Y-%m-%d")):
@@ -2774,6 +2774,21 @@ def test_date_before_filter_type(data_fixture):
     assert len(ids) == 1
     assert row.id in ids
 
+    view_filter.field = date_time_field
+    view_filter.value = "2021-07-06 01:20"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = date_time_field
+    view_filter.value = "2021-07-06 01:40"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id in ids
+    assert row_2.id in ids
+
     view_filter.value = ""
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
@@ -2834,7 +2849,30 @@ def test_date_after_filter_type(data_fixture):
     assert row_4.id in ids
 
     view_filter.field = date_time_field
+    view_filter.value = "2021-07-05"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_4.id in ids
+
+    view_filter.field = date_time_field
     view_filter.value = "2021-07-06"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_4.id in ids
+
+    view_filter.field = date_time_field
+    view_filter.value = "2021-07-06 01:40"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_4.id in ids
+
+    view_filter.field = date_time_field
+    view_filter.value = "2021-07-06 02:41"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1

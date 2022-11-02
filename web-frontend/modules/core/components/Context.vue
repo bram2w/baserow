@@ -1,15 +1,16 @@
 <template>
-  <div
-    class="context"
-    :class="{ 'visibility-hidden': !open || !updatedOnce }"
-    @click="onClick($event)"
-  >
+  <div class="context" :class="{ 'visibility-hidden': !open || !updatedOnce }">
     <slot v-if="openedOnce"></slot>
   </div>
 </template>
 
 <script>
-import { isElement, isDomElement } from '@baserow/modules/core/utils/dom'
+import {
+  isElement,
+  isDomElement,
+  onClickOutside,
+} from '@baserow/modules/core/utils/dom'
+
 import MoveToBody from '@baserow/modules/core/mixins/moveToBody'
 
 export default {
@@ -29,7 +30,6 @@ export default {
       updatedOnce: false,
       // If opened once, should stay in DOM to keep nested content
       openedOnce: false,
-      insideEvent: new Set(),
     }
   },
   methods: {
@@ -66,7 +66,7 @@ export default {
       }
 
       if (value) {
-        this.show(
+        return this.show(
           target,
           vertical,
           horizontal,
@@ -76,14 +76,6 @@ export default {
       } else {
         this.hide()
       }
-    },
-    /**
-     * Add the event to the `insideEvent` map. This allow to be sure a click event has
-     * been triggered from an element inside this context, even if the element has
-     * been removed after in the meantime.
-     */
-    onClick(event) {
-      this.insideEvent.add(event)
     },
     /**
      * Calculate the position, show the context menu and register a click event on the
@@ -134,37 +126,23 @@ export default {
       await this.$nextTick()
       updatePosition()
 
-      this.$el.clickOutsideEvent = (event) => {
-        // If the event is from current context or any element inside current context
-        // the current event should be in the insideEvent map, even if the element
-        // has been removed from the DOM in the meantime
-        const insideContext = this.insideEvent.has(event)
-        if (insideContext) {
-          this.insideEvent.delete(event)
+      this.$el.cancelOnClickOutside = onClickOutside(this.$el, (target) => {
+        if (
+          this.open &&
+          // If the prop allows it to be closed by clicking outside.
+          this.hideOnClickOutside &&
+          // If the click was not on the opener because he can trigger the toggle
+          // method.
+          !isElement(this.opener, target) &&
+          // If the click was not inside one of the context children of this context
+          // menu.
+          !this.moveToBody.children.some((child) => {
+            return isElement(child.$el, target)
+          })
+        ) {
+          this.hide()
         }
-
-        // Check if the context menu is still open
-        if (this.open) {
-          if (
-            // If the prop allows it to be closed by clicking outside.
-            this.hideOnClickOutside &&
-            // If the click was outside the context element because we want to ignore
-            // clicks inside it or any child of this element
-            !insideContext &&
-            // If the click was not on the opener because he can trigger the toggle
-            // method.
-            !isElement(this.opener, event.target) &&
-            // If the click was not inside one of the context children of this context
-            // menu.
-            !this.moveToBody.children.some((child) => {
-              return isElement(child.$el, event.target)
-            })
-          ) {
-            this.hide()
-          }
-        }
-      }
-      document.body.addEventListener('click', this.$el.clickOutsideEvent)
+      })
 
       this.$el.updatePositionEvent = (event) => {
         updatePosition()
@@ -193,9 +171,13 @@ export default {
         this.$emit('hidden')
       }
 
-      this.insideEvent = new Set()
-
-      document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      // If the context menu was never opened, it doesn't have the
+      // `cancelOnClickOutside`, so we can't call it.
+      if (
+        Object.prototype.hasOwnProperty.call(this.$el, 'cancelOnClickOutside')
+      ) {
+        this.$el.cancelOnClickOutside()
+      }
       window.removeEventListener('scroll', this.$el.updatePositionEvent, true)
       window.removeEventListener('resize', this.$el.updatePositionEvent)
     },

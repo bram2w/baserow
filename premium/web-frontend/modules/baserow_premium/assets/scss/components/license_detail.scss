@@ -39,7 +39,7 @@
   flex-basis: 60%;
 }
 
-.license-body__body-right {
+.license-detail__body-right {
   flex-basis: 40%;
 
   @media screen and (min-width: 800px) {
@@ -135,4 +135,15 @@
 .license-detail__actions {
   margin-top: 20px;
   height: 20px; // placeholder height for the loading animation when visible.
+}
+
+.license-detail__available-seats {
+  width: 100%;
+  max-width: 400px;
+}
+
+.license-detail__available-seats-status {
+  color: $color-neutral-400;
+  padding-top: 5px;
+  font-size: 12px;
 }

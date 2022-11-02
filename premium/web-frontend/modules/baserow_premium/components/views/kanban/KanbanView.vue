@@ -50,7 +50,10 @@
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <a
-        v-if="!readOnly"
+        v-if="
+          !readOnly &&
+          $hasPermission('database.table.create_row', table, database.group.id)
+        "
         ref="addOptionContextLink"
         class="kanban-view__add-stack"
         @click="$refs.addOptionContext.toggle($refs.addOptionContextLink)"
@@ -65,6 +68,7 @@
     </div>
     <RowCreateModal
       ref="rowCreateModal"
+      :database="database"
       :table="table"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
@@ -81,13 +85,17 @@
     ></RowCreateModal>
     <RowEditModal
       ref="rowEditModal"
+      enable-navigation
       :database="database"
       :table="table"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
-      :read-only="false"
+      :read-only="
+        readOnly ||
+        !$hasPermission('database.table.update_row', table, database.group.id)
+      "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"
       @toggle-hidden-fields-visibility="
@@ -102,6 +110,8 @@
         fieldCreated($event)
         showHiddenFieldsInRowModal = true
       "
+      @navigate-previous="$emit('navigate-previous', $event)"
+      @navigate-next="$emit('navigate-next', $event)"
     ></RowEditModal>
   </div>
 </template>
@@ -155,10 +165,6 @@ export default {
       type: Boolean,
       required: true,
     },
-    row: {
-      validator: (prop) => typeof prop === 'object' || prop === null,
-      required: true,
-    },
   },
   data() {
     return {
@@ -166,6 +172,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
     /**
      * Returns the visible field objects in the right order.
      */
@@ -202,6 +211,16 @@ export default {
       })
     },
   },
+  watch: {
+    row: {
+      deep: true,
+      handler(row) {
+        if (row !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(row)
+        }
+      },
+    },
+  },
   beforeCreate() {
     this.$options.computed = {
       ...(this.$options.computed || {}),
@@ -217,8 +236,7 @@ export default {
   },
   mounted() {
     if (this.row !== null) {
-      const rowClone = populateRow(clone(this.row))
-      this.$refs.rowEditModal.show(this.row.id, rowClone)
+      this.populateAndEditRow(this.row)
     }
   },
   methods: {
@@ -272,6 +290,14 @@ export default {
       } catch (error) {
         notifyIf(error, 'field')
       }
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
   },
 }

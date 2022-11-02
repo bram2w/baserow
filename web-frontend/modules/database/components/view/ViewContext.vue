@@ -2,37 +2,70 @@
   <Context ref="context">
     <div class="context__menu-title">{{ view.name }} ({{ view.id }})</div>
     <ul class="context__menu">
-      <li v-if="hasValidExporter">
+      <li
+        v-if="
+          hasValidExporter &&
+          $hasPermission('database.table.run_export', table, database.group.id)
+        "
+      >
         <a @click="exportView()">
           <i class="context__menu-icon fas fa-fw fa-file-export"></i>
           {{ $t('viewContext.exportView') }}
         </a>
       </li>
-      <li>
+      <li
+        v-if="
+          $hasPermission('database.table.import_rows', table, database.group.id)
+        "
+      >
         <a @click="importFile()">
           <i class="context__menu-icon fas fa-fw fa-file-import"></i>
           {{ $t('viewContext.importFile') }}
         </a>
       </li>
-      <li>
+      <li
+        v-if="
+          $hasPermission(
+            'database.table.view.duplicate',
+            table,
+            database.group.id
+          )
+        "
+      >
         <a @click="duplicateView()">
           <i class="context__menu-icon fas fa-fw fa-clone"></i>
           {{ $t('viewContext.duplicateView') }}
         </a>
       </li>
-      <li>
+      <li
+        v-if="
+          $hasPermission(
+            'database.table.create_webhook',
+            table,
+            database.group.id
+          )
+        "
+      >
         <a @click="openWebhookModal()">
           <i class="context__menu-icon fas fa-fw fa-globe"></i>
           {{ $t('viewContext.webhooks') }}
         </a>
       </li>
-      <li>
+      <li
+        v-if="
+          $hasPermission('database.table.view.update', view, database.group.id)
+        "
+      >
         <a @click="enableRename()">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('viewContext.renameView') }}
         </a>
       </li>
-      <li>
+      <li
+        v-if="
+          $hasPermission('database.table.view.delete', view, database.group.id)
+        "
+      >
         <a @click="deleteView()">
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           {{ $t('viewContext.deleteView') }}

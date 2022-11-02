@@ -162,7 +162,8 @@
         "order": "Volgorde van de velden in de tabel. 0 voor het eerste veld.",
         "primary": "Geeft aan of het veld een primair veld is. Indien `waar` (true) kan het veld niet worden verwijderd en moet de waarde de hele rij vertegenwoordigen.",
         "type": "Type gedefinieerd voor dit veld.",
-        "extraProps": "Sommige extra eigenschappen worden hier niet beschreven omdat ze type-specifiek zijn."
+        "extraProps": "Sommige extra eigenschappen worden hier niet beschreven omdat ze type-specifiek zijn.",
+        "readOnly": "Geeft aan of het veld een alleen-lezen veld is. Indien waar, is het niet mogelijk de celwaarde bij te werken."
     },
     "apiDocsTableDeleteRow": {
         "description": "Verwijdert een bestaande {name} rij.",
@@ -299,10 +300,6 @@
     "tableForm": {
         "name": "Naam"
     },
-    "tableImporterPreview": {
-        "label": "Snelle voorbeeldweergave",
-        "remaining": "{remaining} andere rijen"
-    },
     "tableXMLImporter": {
         "fileLabel": "Kies XML-bestand",
         "fileDescription": "Je kunt een bestaande XML importeren door het .XML-bestand met gegevens in tabelvorm te uploaden, d.w.z:",
@@ -352,7 +349,8 @@
         "fieldMappingDescription": "Wij hebben de kolommen van de Baserow-velden in uw tabel automatisch toegewezen. U kunt ze hieronder wijzigen. Elke niet-compatibele cel zal leeg blijven na de import.",
         "selectImportMessage": "Selecteer gegevens om te importeren.",
         "filePreview": "Voorbeeld van bestandsinhoud",
-        "importPreview": "Importvoorbeeld"
+        "importPreview": "Importvoorbeeld",
+        "changeImporterType": "Importtype wijzigen"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klik om de formule te bewerken",
@@ -401,7 +399,7 @@
         "add": "{view} toevoegen"
     },
     "shareViewLink": {
-        "shareView": "{viewTypeSharingLinkName} delen",
+        "shareView": "Deel {viewTypeSharingLinkName}",
         "shareViewTitle": "Maak een deelbare privé-link naar de {viewTypeSharingLinkName}",
         "sharedViewTitle": "Deze {viewTypeSharingLinkName} wordt momenteel gedeeld via een privé-link",
         "sharedViewDescription": "Mensen die de link hebben kunnen de {viewTypeSharingLinkName} zien.",
@@ -679,7 +677,25 @@
         "restore": "herstellen"
     },
     "table": {
-        "chooseView": "Kies weergave"
+        "chooseView": "Kies weergave",
+        "adjacentRow": {
+            "notification": {
+                "notFound": {
+                    "previous": {
+                        "message": "Er is geen vorige rij",
+                        "title": "Geen rijen meer"
+                    },
+                    "next": {
+                        "title": "Geen rijen meer",
+                        "message": "Er is geen volgende rij"
+                    }
+                },
+                "error": {
+                    "title": "Fout opgetreden",
+                    "message": "Er is een fout opgetreden tijdens het ophalen van de aangrenzende rij"
+                }
+            }
+        }
     },
     "fieldmultipleCollaboratorsDropdown": {
         "notFound": "Medewerker niet gevonden"

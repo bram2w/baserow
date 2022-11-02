@@ -14,13 +14,14 @@ from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeTimedSerializer
 
+from baserow.core.auth_provider.models import AuthProviderModel
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser, Template, UserLogEntry, UserProfile
-from baserow.core.registries import plugin_registry
+from baserow.core.registries import auth_provider_type_registry, plugin_registry
 from baserow.core.signals import (
     before_user_deleted,
     user_deleted,
@@ -51,24 +52,33 @@ User = get_user_model()
 
 
 class UserHandler:
-    def get_user(
-        self, user_id: Optional[int] = None, email: Optional[str] = None
+    def get_active_user(
+        self,
+        user_id: Optional[int] = None,
+        email: Optional[str] = None,
+        exclude_users_scheduled_to_be_deleted: bool = False,
     ) -> AbstractUser:
         """
-        Finds and returns a single user instance based on the provided parameters.
+        Finds and returns a single active user instance based on the provided
+        parameters.
 
         :param user_id: The user id of the user.
         :param email: The username, which is their email address, of the user.
-        :raises ValueError: When neither a `user_id` or `email` has been provided.
-        :raises UserNotFound: When the user with the provided parameters has not been
-            found.
+        :param exclude_users_scheduled_to_be_deleted: If set to True, the user will
+            not be returned if it is scheduled to be deleted.
+        :raises ValueError: When neither a `user_id` or `email` has been
+            provided.
+        :raises UserNotFound: When the user with the provided parameters has not
+            been found.
         :return: The requested user.
         """
 
         if not user_id and not email:
             raise ValueError("Either a user id or email must be provided.")
 
-        query = User.objects.all()
+        query = User.objects.filter(is_active=True)
+        if exclude_users_scheduled_to_be_deleted:
+            query = query.filter(profile__to_be_deleted=False)
 
         if user_id:
             query = query.filter(id=user_id)
@@ -87,9 +97,10 @@ class UserHandler:
         name: str,
         email: str,
         password: str,
-        language: str = settings.LANGUAGE_CODE,
+        language: Optional[str] = None,
         group_invitation_token: Optional[str] = None,
         template: Template = None,
+        auth_provider: Optional[AuthProviderModel] = None,
     ) -> AbstractUser:
         """
         Creates a new user with the provided information and creates a new group and
@@ -104,6 +115,9 @@ class UserHandler:
             accepted and initial group will not be created.
         :param template: If provided, that template will be installed into the newly
             created group.
+        :param authentication_provider: If provided, a reference to the authentication
+            provider will be stored in order to be able to provide different options
+            for the user to login.
         :raises: UserAlreadyExist: When a user with the provided username (email)
             already exists.
         :raises GroupInvitationEmailMismatch: If the group invitation email does not
@@ -115,6 +129,9 @@ class UserHandler:
         """
 
         core_handler = CoreHandler()
+
+        if language is None:
+            language = settings.LANGUAGE_CODE
 
         email = normalize_email_address(email)
 
@@ -135,10 +152,10 @@ class UserHandler:
                     "user."
                 )
 
-        settings = core_handler.get_settings()
-        allow_new_signups = settings.allow_new_signups
+        instance_settings = core_handler.get_settings()
+        allow_new_signups = instance_settings.allow_new_signups
         allow_signup_for_invited_user = (
-            settings.allow_signups_via_group_invitations
+            instance_settings.allow_signups_via_group_invitations
             and group_invitation is not None
         )
         if not (allow_new_signups or allow_signup_for_invited_user):
@@ -146,12 +163,12 @@ class UserHandler:
 
         user = User(first_name=name, email=email, username=email)
 
-        try:
-            validate_password(password, user)
-        except ValidationError as e:
-            raise PasswordDoesNotMatchValidation(e.messages)
-
-        user.set_password(password)
+        if password is not None:
+            try:
+                validate_password(password, user)
+            except ValidationError as e:
+                raise PasswordDoesNotMatchValidation(e.messages)
+            user.set_password(password)
 
         if not User.objects.exists():
             # This is the first ever user created in this baserow instance and
@@ -159,9 +176,9 @@ class UserHandler:
             # can set baserow wide settings.
             user.is_staff = True
 
-        if settings.show_admin_signup_page:
-            settings.show_admin_signup_page = False
-            settings.save()
+        if instance_settings.show_admin_signup_page:
+            instance_settings.show_admin_signup_page = False
+            instance_settings.save()
 
         user.save()
 
@@ -185,6 +202,11 @@ class UserHandler:
         # Call the user_created method for each plugin that is in the registry.
         for plugin in plugin_registry.registry.values():
             plugin.user_created(user, group_user.group, group_invitation, template)
+
+        # register the authentication provider used to create the user
+        if auth_provider is None:
+            auth_provider = auth_provider_type_registry.get_default_provider()
+        auth_provider.user_signed_in(user)
 
         return user
 
@@ -278,7 +300,7 @@ class UserHandler:
         signer = self.get_reset_password_signer()
         user_id = signer.loads(token, max_age=settings.RESET_PASSWORD_TOKEN_MAX_AGE)
 
-        user = self.get_user(user_id=user_id)
+        user = self.get_active_user(user_id=user_id)
 
         try:
             validate_password(password, user)
@@ -320,6 +342,29 @@ class UserHandler:
         user.save()
 
         return user
+
+    def user_signed_in_via_default_provider(self, user: AbstractUser):
+        """
+        Registers that a user has signed in via the default authentication provider.
+
+        :param user: The user that has signed in.
+        """
+
+        default_provider = auth_provider_type_registry.get_default_provider()
+        self.user_signed_in_via_provider(user, default_provider)
+
+    def user_signed_in_via_provider(
+        self, user: AbstractUser, authentication_provider: AuthProviderModel
+    ):
+        """
+        Registers the authentication provider used to authenticate the user.
+
+        :param user: The user instance.
+        :param authentication_provider: The authentication provider instance.
+        """
+
+        authentication_provider.user_signed_in(user)
+        self.user_signed_in(user)
 
     def user_signed_in(self, user: AbstractUser):
         """
