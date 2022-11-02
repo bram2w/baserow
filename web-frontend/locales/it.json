@@ -28,7 +28,8 @@
         "deactivate": "Disattiva",
         "paste": "Incolla",
         "duplicate": "Duplica",
-        "remove": "Rimuovi"
+        "remove": "Rimuovi",
+        "login": "Login"
     },
     "adminType": {
         "settings": "Impostazioni"
@@ -360,7 +361,11 @@
         "filterDescription": "Filtra un'espressione che coinvolge un riferimento a un campo di ricerca/collegamento o una chiamata a una funzione di ricerca.",
         "roundDescription": "Ritorna il primo argomento arrotondato al numero di cifre specificato nel secondo argomento.",
         "intDescription": "Ritorna il primo argomento convertito ad intero e troncato della parte decimale.",
-        "truncDescription": "Ritorna solo il primo argomento convertito ad intero troncando i decimali."
+        "truncDescription": "Ritorna solo il primo argomento convertito ad intero troncando i decimali.",
+        "linkDescription": "Crea un link usando l'URI fornito come primo argomento.",
+        "buttonDescription": "Crea un bottone usando l'URI (primo argomento) e un'etichetta (secondo argomento).",
+        "getLinkLabelDescription": "Crea l'etichetta da una formula usando il link o la funzione 'button'.",
+        "getLinkUrlDescription": "Crea l'URL da una formula usando il link o la funzione 'button'."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

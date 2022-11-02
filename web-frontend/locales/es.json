@@ -28,7 +28,8 @@
         "deactivate": "Desactivar",
         "paste": "Pegar",
         "duplicate": "Duplicar",
-        "remove": "Eliminar"
+        "remove": "Eliminar",
+        "login": "Iniciar sesión"
     },
     "adminType": {
         "settings": "Ajustes"
