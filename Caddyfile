@@ -24,10 +24,6 @@
 		}
 	}
 
-	handle /admin/* {
-		reverse_proxy {$PRIVATE_BACKEND_URL:localhost:8000}
-	}
-
 	handle_path /static/* {
 		file_server {
 			root {$STATIC_ROOT:/baserow/static/}
