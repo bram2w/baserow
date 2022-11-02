@@ -273,7 +273,7 @@ text-unidecode==1.3
     # via faker
 tqdm==4.62.3
     # via -r base.in
-twisted[tls]==22.1.0
+twisted[tls]==22.10.0
     # via
     #   -r base.in
     #   daphne
