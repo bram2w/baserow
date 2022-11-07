@@ -19,7 +19,7 @@
       <div v-for="loginButton in loginButtons" :key="loginButton.redirect_url">
         <component
           :is="getLoginButtonComponent(loginButton)"
-          :redirect-url="loginButton.redirect_url"
+          :redirect-url="addOriginalParamToUrl(loginButton.redirect_url)"
           :name="loginButton.name"
           :icon="getLoginButtonIcon(loginButton)"
           :small="smallLoginButtons"
@@ -67,7 +67,9 @@ export default {
   layout: 'login',
   async asyncData({ redirect, route, app, store }) {
     if (store.getters['settings/get'].show_admin_signup_page === true) {
-      redirect('signup')
+      return redirect('signup')
+    } else if (store.getters['auth/isAuthenticated']) {
+      return redirect('dashboard')
     }
 
     // load authentication providers login options to populate the login
@@ -117,6 +119,16 @@ export default {
         this.$nuxt.$router.push(original)
       } else {
         this.$nuxt.$router.push({ name: 'dashboard' })
+      }
+    },
+    addOriginalParamToUrl(url) {
+      const { original } = this.$route.query
+      if (original && isRelativeUrl(original)) {
+        const parsedUrl = new URL(url)
+        parsedUrl.searchParams.append('original', original)
+        return parsedUrl.toString()
+      } else {
+        return url
       }
     },
   },

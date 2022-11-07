@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -22,9 +23,9 @@ from baserow.core.user.exceptions import UserAlreadyExist
 from baserow_enterprise.api.sso.saml.errors import ERROR_SAML_INVALID_LOGIN_REQUEST
 from baserow_enterprise.api.sso.utils import (
     SsoErrorCode,
-    get_saml_login_relative_url,
     redirect_to_sign_in_error_page,
     redirect_user_on_success,
+    urlencode_query_params,
 )
 from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
 from baserow_enterprise.sso.saml.exceptions import (
@@ -150,6 +151,8 @@ class AdminAuthProvidersLoginUrlView(APIView):
             query_params.get("email")
         )
 
-        saml_login_relative_url = get_saml_login_relative_url(query_params)
-        redirect_url = urljoin(settings.PUBLIC_BACKEND_URL, saml_login_relative_url)
-        return Response({"redirect_url": redirect_url})
+        saml_login_url = urljoin(
+            settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:login")
+        )
+        saml_login_url = urlencode_query_params(saml_login_url, query_params)
+        return Response({"redirect_url": saml_login_url})

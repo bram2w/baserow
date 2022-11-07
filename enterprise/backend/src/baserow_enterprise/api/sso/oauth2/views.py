@@ -31,6 +31,12 @@ class OAuth2LoginView(APIView):
                 type=OpenApiTypes.INT,
                 description="The id of the provider for redirect.",
             ),
+            OpenApiParameter(
+                name="original",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="The relative part of URL that the user wanted to access.",
+            ),
         ],
         tags=["Auth"],
         operation_id="oauth_provider_login_redirect",
@@ -60,7 +66,9 @@ class OAuth2LoginView(APIView):
             return redirect_to_sign_in_error_page(SsoErrorCode.PROVIDER_DOES_NOT_EXIST)
 
         redirect_url = provider_type.get_authorization_url(
-            provider.specific_class.objects.get(id=provider_id)
+            provider.specific_class.objects.get(id=provider_id),
+            session=request.session,
+            original_url=request.query_params.get("original"),
         )
 
         return redirect(redirect_url)
@@ -111,9 +119,9 @@ class OAuth2CallbackView(APIView):
             provider = AuthProviderHandler.get_auth_provider(provider_id)
             provider_type = auth_provider_type_registry.get_by_model(provider)
             code = request.query_params.get("code", None)
-            userinfo = provider_type.get_user_info(provider, code)
+            user_info = provider_type.get_user_info(provider, code, request.session)
             user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-                userinfo, provider
+                user_info, provider
             )
         except AuthProviderModelNotFound:
             return redirect_to_sign_in_error_page(SsoErrorCode.PROVIDER_DOES_NOT_EXIST)
@@ -124,4 +132,12 @@ class OAuth2CallbackView(APIView):
         except DifferentAuthProvider:
             return redirect_to_sign_in_error_page(SsoErrorCode.DIFFERENT_PROVIDER)
 
-        return redirect_user_on_success(user)
+        redirect = redirect_user_on_success(
+            user,
+            request.session.get("oauth_original_url"),
+        )
+        if "oauth_state" in request.session:
+            del request.session["oauth_state"]
+        if "oauth_original_url" in request.session:
+            del request.session["oauth_original_url"]
+        return redirect

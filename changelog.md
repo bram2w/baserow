@@ -11,6 +11,8 @@ For example:
 
 ### New Features
 
+* OAuth 2 flows now support redirects to specific pages. [#1288](https://gitlab.com/bramw/baserow/-/issues/1288)
+
 ### Bug Fixes
 
 ### Refactors
