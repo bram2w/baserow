@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
 from django.conf import settings
+from django.contrib.sessions.backends.base import SessionBase
 from django.urls import reverse
 
 import requests
@@ -90,28 +91,42 @@ class OAuth2AuthProviderMixin:
 
         return self.AUTHORIZATION_URL
 
-    def get_authorization_url(self, instance: AuthProviderModel) -> str:
+    def get_authorization_url(
+        self,
+        instance: AuthProviderModel,
+        session: SessionBase,
+        original_url: Optional[str] = None,
+    ) -> str:
         """
         Generates authorization URL for the instance provider that will
         start OAuth2 login flow.
 
         :param instance: A subclass of AuthProviderModel for which to
             generate the login URL.
+        :param original_url: URL that the user will be redirected to after
+            the auth flow is completed.
+        :param session: Django session object to store and retrieve oauth state.
         :return: URL that will redirect user to the provider's login
             page.
         """
 
-        oauth = self.get_oauth_session(instance)
+        oauth = self.get_oauth_session(instance, session)
         authorization_url, state = oauth.authorization_url(self.get_base_url(instance))
+        session["oauth_state"] = state
+        if original_url:
+            session["oauth_original_url"] = original_url
         return authorization_url
 
-    def get_oauth_session(self, instance: AuthProviderModel) -> OAuth2Session:
+    def get_oauth_session(
+        self, instance: AuthProviderModel, session: SessionBase
+    ) -> OAuth2Session:
         """
         Creates OAuth2Session client to be used to interact with the provider
         during OAuth2 flow.
 
         :param instance: A subclass of AuthProviderModel for which to
             create the session client.
+        :param session: Django session object to store and retrieve oauth state.
         :return: HTTP client with the correct session.
         """
 
@@ -119,6 +134,13 @@ class OAuth2AuthProviderMixin:
             OAUTH_BACKEND_URL,
             reverse("api:enterprise:sso:oauth2:callback", args=(instance.id,)),
         )
+        if "oauth_state" in session:
+            return OAuth2Session(
+                instance.client_id,
+                redirect_uri=redirect_uri,
+                scope=self.SCOPE,
+                state=session["oauth_state"],
+            )
         return OAuth2Session(
             instance.client_id, redirect_uri=redirect_uri, scope=self.SCOPE
         )
@@ -145,7 +167,9 @@ class GoogleAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
     ACCESS_TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token"  # nosec B105
     USER_INFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"  # nosec B105
 
-    def get_user_info(self, instance: GoogleAuthProviderModel, code: str) -> UserInfo:
+    def get_user_info(
+        self, instance: GoogleAuthProviderModel, code: str, session: SessionBase
+    ) -> UserInfo:
         """
         Queries the provider to obtain user info data (name and email).
 
@@ -153,13 +177,14 @@ class GoogleAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
             info.
         :param code: The security code that was passed from the provider to
             the callback endpoint.
+        :param session: Django session object to store and retrieve oauth state.
         :raises AuthFlowError if the provider is unavailable, misconfigured or
             the provided code is not valid.
         :return: User info with user's name and email.
         """
 
         try:
-            oauth = self.get_oauth_session(instance)
+            oauth = self.get_oauth_session(instance, session)
             oauth.fetch_token(
                 self.ACCESS_TOKEN_URL,
                 code=code,
@@ -192,7 +217,9 @@ class GitHubAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
     USER_INFO_URL = "https://api.github.com/user"  # nosec B105
     EMAILS_URL = "https://api.github.com/user/emails"
 
-    def get_user_info(self, instance: GitHubAuthProviderModel, code: str) -> UserInfo:
+    def get_user_info(
+        self, instance: GitHubAuthProviderModel, code: str, session: SessionBase
+    ) -> UserInfo:
         """
         Queries the provider to obtain user info data (name and email).
 
@@ -200,13 +227,14 @@ class GitHubAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
             info.
         :param code: The security code that was passed from the provider to
             the callback endpoint.
+        :param session: Django session object to store and retrieve oauth state.
         :raises AuthFlowError if the provider is unavailable, misconfigured or
             the provided code is not valid.
         :return: User info with user's name and email.
         """
 
         try:
-            oauth = self.get_oauth_session(instance)
+            oauth = self.get_oauth_session(instance, session)
             token = oauth.fetch_token(
                 self.ACCESS_TOKEN_URL,
                 code=code,
@@ -266,7 +294,9 @@ class GitLabAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
     def get_base_url(self, instance: AuthProviderModel) -> str:
         return f"{instance.base_url}{self.AUTHORIZATION_PATH}"
 
-    def get_user_info(self, instance: GitLabAuthProviderModel, code: str) -> UserInfo:
+    def get_user_info(
+        self, instance: GitLabAuthProviderModel, code: str, session: SessionBase
+    ) -> UserInfo:
         """
         Queries the provider to obtain user info data (name and email).
 
@@ -274,13 +304,14 @@ class GitLabAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
             info.
         :param code: The security code that was passed from the provider to
             the callback endpoint.
+        :param session: Django session object to store and retrieve oauth state.
         :raises AuthFlowError if the provider is unavailable, misconfigured or
             the provided code is not valid.
         :return: User info with user's name and email.
         """
 
         try:
-            oauth = self.get_oauth_session(instance)
+            oauth = self.get_oauth_session(instance, session)
             oauth.fetch_token(
                 instance.base_url + self.ACCESS_TOKEN_PATH,
                 code=code,
@@ -312,13 +343,23 @@ class FacebookAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
     ACCESS_TOKEN_URL = "https://graph.facebook.com/oauth/access_token"  # nosec B105
     USER_INFO_URL = "https://graph.facebook.com/me?fields=id,email,name"  # nosec B105
 
-    def get_authorization_url(self, instance: FacebookAuthProviderModel) -> str:
-        oauth = self.get_oauth_session(instance)
+    def get_authorization_url(
+        self,
+        instance: FacebookAuthProviderModel,
+        session: SessionBase,
+        original_url: Optional[str] = None,
+    ) -> str:
+        oauth = self.get_oauth_session(instance, session)
         oauth = facebook_compliance_fix(oauth)
         authorization_url, state = oauth.authorization_url(self.AUTHORIZATION_URL)
+        session["oauth_state"] = state
+        if original_url:
+            session["oauth_original_url"] = original_url
         return authorization_url
 
-    def get_user_info(self, instance: FacebookAuthProviderModel, code: str) -> UserInfo:
+    def get_user_info(
+        self, instance: FacebookAuthProviderModel, code: str, session: SessionBase
+    ) -> UserInfo:
         """
         Queries the provider to obtain user info data (name and email).
 
@@ -326,13 +367,14 @@ class FacebookAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
             info.
         :param code: The security code that was passed from the provider to
             the callback endpoint.
+        :param session: Django session object to store and retrieve oauth state.
         :raises AuthFlowError if the provider is unavailable, misconfigured or
             the provided code is not valid.
         :return: User info with user's name and email.
         """
 
         try:
-            oauth = self.get_oauth_session(instance)
+            oauth = self.get_oauth_session(instance, session)
             oauth = facebook_compliance_fix(oauth)
             oauth.fetch_token(
                 self.ACCESS_TOKEN_URL,
@@ -388,7 +430,7 @@ class OpenIdConnectAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
         return instance.authorization_url
 
     def get_user_info(
-        self, instance: OpenIdConnectAuthProviderModel, code: str
+        self, instance: OpenIdConnectAuthProviderModel, code: str, session: SessionBase
     ) -> UserInfo:
         """
         Queries the provider to obtain user info data (name and email).
@@ -397,13 +439,14 @@ class OpenIdConnectAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
             info.
         :param code: The security code that was passed from the provider to
             the callback endpoint.
+        :param session: Django session object to store and retrieve oauth state.
         :raises AuthFlowError if the provider is unavailable, misconfigured or
             the provided code is not valid.
         :return: User info with user's name and email.
         """
 
         try:
-            oauth = self.get_oauth_session(instance)
+            oauth = self.get_oauth_session(instance, session)
             oauth.fetch_token(
                 instance.access_token_url,
                 code=code,

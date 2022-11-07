@@ -12,10 +12,8 @@ from saml2.client import Saml2Client
 from saml2.config import Config as Saml2Config
 from saml2.response import AuthnResponse
 
-from baserow_enterprise.api.sso.utils import (
-    get_saml_acs_absolute_url,
-    get_valid_relay_state_url,
-)
+from baserow.core.registries import auth_provider_type_registry
+from baserow_enterprise.api.sso.utils import get_valid_frontend_url
 from baserow_enterprise.auth_provider.handler import AuthProviderHandler, UserInfo
 from baserow_enterprise.sso.saml.models import SamlAuthProviderModel
 
@@ -30,9 +28,9 @@ logger = logging.getLogger(__name__)
 
 class SamlAuthProviderHandler:
     @classmethod
-    def get_saml_client(
+    def prepare_saml_client(
         cls,
-        identity_provider_metadata: str,
+        saml_auth_provider: SamlAuthProviderModel,
     ) -> Saml2Client:
         """
         Returns a SAML client with the correct configuration for the given
@@ -45,11 +43,14 @@ class SamlAuthProviderHandler:
         :return: The SAML client that can be used to authenticate the user.
         """
 
-        acs_url = get_saml_acs_absolute_url()
+        saml_provider_type = auth_provider_type_registry.get_by_model(
+            saml_auth_provider
+        )
+        acs_url = saml_provider_type.get_acs_absolute_url()
 
         saml_settings: Dict[str, Any] = {
             "entityid": acs_url,
-            "metadata": {"inline": [identity_provider_metadata]},
+            "metadata": {"inline": [saml_auth_provider.metadata]},
             "allow_unknown_attributes": True,
             "debug": settings.DEBUG,
             "service": {
@@ -214,7 +215,7 @@ class SamlAuthProviderHandler:
                 saml_response
             )
 
-            saml_client = cls.get_saml_client(saml_auth_provider.metadata)
+            saml_client = cls.prepare_saml_client(saml_auth_provider)
             authn_response = saml_client.parse_authn_request_response(
                 saml_response, entity.BINDING_HTTP_POST
             )
@@ -260,7 +261,7 @@ class SamlAuthProviderHandler:
         :return: The redirect url to the identity provider.
         """
 
-        saml_client = cls.get_saml_client(saml_auth_provider.metadata)
+        saml_client = cls.prepare_saml_client(saml_auth_provider)
         _, info = saml_client.prepare_for_authenticate(relay_state=original_url)
 
         for key, value in info["headers"]:
@@ -284,7 +285,7 @@ class SamlAuthProviderHandler:
         :return: The redirect url to the identity provider.
         """
 
-        valid_relay_state_url = get_valid_relay_state_url(original_url)
+        valid_relay_state_url = get_valid_frontend_url(original_url)
 
         try:
             saml_auth_provider = cls.get_saml_auth_provider_from_email(user_email)

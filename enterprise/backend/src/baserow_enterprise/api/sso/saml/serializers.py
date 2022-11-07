@@ -1,3 +1,4 @@
+from typing import Dict
 from urllib.parse import urlparse
 
 from rest_framework import serializers
@@ -17,3 +18,7 @@ class SamlLoginRequestSerializer(serializers.Serializer):
         if urlparse(value).hostname is not None:
             return None
         return value
+
+    def to_representation(self, instance) -> Dict[str, str]:
+        data = super().to_representation(instance)
+        return {k: v for k, v in data.items() if v is not None}
