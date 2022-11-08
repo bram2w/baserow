@@ -16,6 +16,7 @@ For example:
 ### Bug Fixes
 
 ### Refactors
+* Changed `TableGroupStorageUsageItemType.calculate_storage_usage` to use a PL/pgSQL function to speedup the storage usage calculation.
 
 ### Breaking Changes
 

@@ -524,7 +524,7 @@ EXPORT_FILE_EXPIRE_MINUTES = 60
 
 USAGE_CALCULATION_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
-ROW_COUNT_INTERVAL = crontab(minute=0, hour=0)  # Midnight
+ROW_COUNT_INTERVAL = crontab(minute=0, hour=3)  # 3am
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 

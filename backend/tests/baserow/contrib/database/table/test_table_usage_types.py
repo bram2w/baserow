@@ -14,7 +14,9 @@ def test_table_group_storage_usage_item_type(data_fixture):
     table = data_fixture.create_database_table(user=user, database=database)
     file_field = data_fixture.create_file_field(table=table)
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
+    table_group_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 0
 
@@ -24,7 +26,7 @@ def test_table_group_storage_usage_item_type(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 500
 
@@ -34,7 +36,7 @@ def test_table_group_storage_usage_item_type(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_2.name}]})
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 700
 
@@ -52,12 +54,14 @@ def test_table_group_storage_usage_item_type_trashed_table(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
+    table_group_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 500
 
     TrashHandler().trash(user, group, database, table)
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
     assert usage == 0
 
 
@@ -74,12 +78,14 @@ def test_table_group_storage_usage_item_type_trashed_database(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
+    table_group_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 500
 
     TrashHandler().trash(user, group, database, database)
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
     assert usage == 0
 
 
@@ -103,13 +109,15 @@ def test_table_group_storage_usage_item_type_unique_files(data_fixture):
         {file_field.id: [{"name": user_file_1.name}, {"name": user_file_1.name}]},
     )
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
+    table_group_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 500
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 500
 
@@ -117,7 +125,7 @@ def test_table_group_storage_usage_item_type_unique_files(data_fixture):
         user, table_2, {file_field_table_2.id: [{"name": user_file_1.name}]}
     )
 
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
 
     assert usage == 500
 
@@ -128,7 +136,7 @@ def test_table_group_storage_usage_item_type_unique_files(data_fixture):
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_table_group_storage_usage_item_type_performance(data_fixture):
-    files_amount = 1000
+    files_amount = 5000
     file_size_each = 200
 
     user = data_fixture.create_user()
@@ -142,7 +150,7 @@ def test_table_group_storage_usage_item_type_performance(data_fixture):
             f"field_{file_field.id}": [
                 {
                     "name": data_fixture.create_user_file(
-                        is_image=True, size=file_size_each
+                        is_image=True, size=file_size_each, uploaded_by=user
                     ).name
                 }
             ]
@@ -154,7 +162,9 @@ def test_table_group_storage_usage_item_type_performance(data_fixture):
 
     profiler = Profiler()
     profiler.start()
-    usage = TableGroupStorageUsageItemType().calculate_storage_usage(group.id)
+    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
+    table_group_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
