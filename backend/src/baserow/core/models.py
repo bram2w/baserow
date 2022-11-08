@@ -120,6 +120,7 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=160)
     users = models.ManyToManyField(User, through="GroupUser")
     storage_usage = models.IntegerField(null=True)
+    storage_usage_updated_at = models.DateTimeField(null=True)
 
     def application_set_including_trash(self):
         """
