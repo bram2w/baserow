@@ -49,7 +49,7 @@ class UserAdminHandler:
         """
 
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            requesting_user, PREMIUM
+            PREMIUM, requesting_user
         )
         self._raise_if_not_permitted(requesting_user)
         self._raise_if_locking_self_out_of_admin(
@@ -109,7 +109,7 @@ class UserAdminHandler:
         """
 
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            requesting_user, PREMIUM
+            PREMIUM, requesting_user
         )
         self._raise_if_not_permitted(requesting_user)
 

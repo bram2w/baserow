@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 ### Bug Fixes
+* Raise an exception when a user doesn't have a required feature on an endpoint
 
 ### Refactors
 

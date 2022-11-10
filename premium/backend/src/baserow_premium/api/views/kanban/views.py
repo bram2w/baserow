@@ -137,7 +137,7 @@ class KanbanViewView(APIView):
         # is a template because that feature must then be available for demo purposes.
         if not group.has_template():
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                request.user, group, PREMIUM
+                PREMIUM, request.user, group
             )
 
         CoreHandler().check_permissions(

@@ -47,7 +47,7 @@ class AdminDashboardView(APIView):
         """
 
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            request.user, PREMIUM
+            PREMIUM, request.user
         )
 
         handler = AdminDashboardHandler()
