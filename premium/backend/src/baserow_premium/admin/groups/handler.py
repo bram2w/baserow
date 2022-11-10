@@ -19,7 +19,7 @@ class GroupsAdminHandler:
         :raises IsNotAdminError: If the user is not admin or staff.
         """
 
-        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(user, PREMIUM)
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(PREMIUM, user)
 
         if not user.is_staff:
             raise IsNotAdminError()

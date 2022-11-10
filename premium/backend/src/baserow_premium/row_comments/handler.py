@@ -36,7 +36,7 @@ class RowCommentHandler:
 
         table = TableHandler().get_table(table_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            requesting_user, table.database.group, PREMIUM
+            PREMIUM, requesting_user, table.database.group
         )
         # TODO: RBAC -> When row level permissions are introduced we also need to check
         #       that the user can see the row
@@ -75,7 +75,7 @@ class RowCommentHandler:
 
         table = TableHandler().get_table(table_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            requesting_user, table.database.group, PREMIUM
+            PREMIUM, requesting_user, table.database.group
         )
 
         if comment is None or comment == "":

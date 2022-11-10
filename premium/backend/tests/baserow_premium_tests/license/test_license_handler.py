@@ -151,17 +151,17 @@ def test_has_active_premium_license(data_fixture):
         assert not has_active_premium_license_features(user_not_in_license)
 
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            user_in_license, PREMIUM
+            PREMIUM, user_in_license
         )
 
         with pytest.raises(FeaturesNotAvailableError):
             LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-                second_user_in_license, PREMIUM
+                PREMIUM, second_user_in_license
             )
 
         with pytest.raises(FeaturesNotAvailableError):
             LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-                user_not_in_license, PREMIUM
+                PREMIUM, user_not_in_license
             )
 
     # When the license can't be decoded, it should also return false.
@@ -182,12 +182,12 @@ def test_check_active_premium_license_for_group_with_valid_license(data_fixture)
     with freeze_time("2021-08-01 12:00"):
         with pytest.raises(FeaturesNotAvailableError):
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                user_in_license, group, PREMIUM
+                PREMIUM, user_in_license, group
             )
 
     with freeze_time("2021-09-01 12:00"):
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            user_in_license, group, PREMIUM
+            PREMIUM, user_in_license, group
         )
 
 
@@ -206,17 +206,17 @@ def test_check_active_premium_license_for_group_with_per_group_licenses(
         user_in_license, [group_1.id, group_2.id]
     )
 
-    LicenseHandler.raise_if_user_doesnt_have_feature(user_in_license, group_1, PREMIUM)
-    LicenseHandler.raise_if_user_doesnt_have_feature(user_in_license, group_2, PREMIUM)
+    LicenseHandler.raise_if_user_doesnt_have_feature(PREMIUM, user_in_license, group_1)
+    LicenseHandler.raise_if_user_doesnt_have_feature(PREMIUM, user_in_license, group_2)
 
     with pytest.raises(FeaturesNotAvailableError):
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            user_in_license, group_3, PREMIUM
+            PREMIUM, user_in_license, group_3
         )
 
     with pytest.raises(FeaturesNotAvailableError):
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            user_in_license, group_4, PREMIUM
+            PREMIUM, user_in_license, group_4
         )
 
 
@@ -917,13 +917,13 @@ def test_check_active_premium_license_for_group_with_license_pretending_to_be_si
     with freeze_time("2021-08-01 12:00"):
         with pytest.raises(FeaturesNotAvailableError):
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                user_in_license, group, PREMIUM
+                PREMIUM, user_in_license, group
             )
 
     with freeze_time("2021-09-01 12:00"):
         with pytest.raises(FeaturesNotAvailableError):
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                user_in_license, group, PREMIUM
+                PREMIUM, user_in_license, group
             )
 
     with freeze_time("2021-09-01 12:00"):

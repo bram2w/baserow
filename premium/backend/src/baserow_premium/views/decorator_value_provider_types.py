@@ -22,13 +22,13 @@ class PremiumDecoratorValueProviderType(DecoratorValueProviderType):
     def before_create_decoration(self, view, user):
         if user:
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                user, view.table.database.group, PREMIUM
+                PREMIUM, user, view.table.database.group
             )
 
     def before_update_decoration(self, view_decoration, user):
         if user:
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                user, view_decoration.view.table.database.group, PREMIUM
+                PREMIUM, user, view_decoration.view.table.database.group
             )
 
 

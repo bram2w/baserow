@@ -60,7 +60,9 @@ User = get_user_model()
 class LicenseHandler:
     @classmethod
     def raise_if_user_doesnt_have_feature_instance_wide(
-        cls, user: AbstractUser, feature: str
+        cls,
+        feature: str,
+        user: AbstractUser,
     ):
         """
         Raises the `FeaturesNotAvailableError` if the user does not have an
@@ -72,14 +74,14 @@ class LicenseHandler:
 
     @classmethod
     def raise_if_user_doesnt_have_feature(
-        cls, user: AbstractUser, group: Group, feature: str
+        cls, feature: str, user: AbstractUser, group: Group
     ):
         """
         Checks if the provided user has the feature for a group or instance-wide.
 
-        :param feature: The feature the user must have.
         :param user: The user to check for feature access.
         :param group: The group that the user must have active premium features for.
+        :param feature: The feature the user must have.
         :raises FeaturesNotAvailableError: if the user does not have premium
             features from a license the provided group.
         """
