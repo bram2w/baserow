@@ -17,10 +17,39 @@ class SsoErrorCode(Enum):
     FEATURE_NOT_ACTIVE = "errorSsoFeatureNotActive"
     INVALID_SAML_REQUEST = "errorInvalidSamlRequest"
     INVALID_SAML_RESPONSE = "errorInvalidSamlResponse"
-    ERROR_USER_DEACTIVATED = "errorUserDeactivated"
+    USER_DEACTIVATED = "errorUserDeactivated"
     PROVIDER_DOES_NOT_EXIST = "errorProviderDoesNotExist"
     AUTH_FLOW_ERROR = "errorAuthFlowError"
     DIFFERENT_PROVIDER = "errorDifferentProvider"
+    GROUP_INVITATION_EMAIL_MISMATCH = "errorGroupInvitationEmailMismatch"
+    SIGNUP_DISABLED = "errorSignupDisabled"
+
+
+def map_sso_exceptions(mapping: Dict[Exception, SsoErrorCode]):
+    """
+    This decorator can be used to map exceptions to SSO error codes. If the
+    decorated function raises an exception that is in the mapping, the
+    redirect_to_sign_in_error_page() function will be called with the mapped
+    error code. If the exception is not in the mapping, it will be raised
+    normally.
+
+    :param mapping: A dictionary that maps exceptions to SSO error codes.
+    :return: The decorator.
+    """
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                for exception, error_code in mapping.items():
+                    if isinstance(e, exception):
+                        return redirect_to_sign_in_error_page(error_code)
+                raise e
+
+        return wrapper
+
+    return decorator
 
 
 def urlencode_query_params(url: str, query_params: Dict[str, str]) -> str:
@@ -59,6 +88,7 @@ def redirect_to_sign_in_error_page(
 
 def get_valid_frontend_url(
     requested_original_url: Optional[str] = None,
+    query_params: Optional[Dict[str, str]] = None,
 ) -> str:
     """
     Returns a valid absolute frontend url based on the original url requested
@@ -88,6 +118,9 @@ def get_valid_frontend_url(
     elif requested_url_parsed.hostname != default_frontend_url_parsed.hostname:
         # return the default url if the requested url is external to Baserow
         requested_url_parsed = default_frontend_url_parsed
+
+    if query_params:
+        return urlencode_query_params(requested_url_parsed.geturl(), query_params)
 
     return str(requested_url_parsed.geturl())
 

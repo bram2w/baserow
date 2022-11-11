@@ -3,7 +3,7 @@
     <a
       class="auth-provider-buttons__button"
       :class="{ 'auth-provider-buttons__button--small': small }"
-      :href="`${redirectUrl}`"
+      :href="`${loginUrl}`"
       target="_self"
     >
       <AuthProviderIcon :icon="icon" />
@@ -35,6 +35,24 @@ export default {
       type: Boolean,
       default: false,
       required: false,
+    },
+    invitation: {
+      required: false,
+      validator: (prop) => typeof prop === 'object' || prop === null,
+      default: null,
+    },
+  },
+  computed: {
+    loginUrl() {
+      const { groupInvitationToken } = this.$route.query
+      const parsedUrl = new URL(this.redirectUrl)
+      if (groupInvitationToken) {
+        parsedUrl.searchParams.append(
+          'group_invitation_token',
+          groupInvitationToken
+        )
+      }
+      return parsedUrl.toString()
     },
   },
 }

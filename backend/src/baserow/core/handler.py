@@ -830,7 +830,7 @@ class CoreHandler:
                 f"The user {email} is already part of the " f"group."
             )
 
-        invitation, created = GroupInvitation.objects.update_or_create(
+        invitation, _ = GroupInvitation.objects.update_or_create(
             group=group,
             email=email,
             defaults={

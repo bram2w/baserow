@@ -1,14 +1,21 @@
+from typing import Any, Dict
+
 from django.db import transaction
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from baserow.api.decorators import validate_query_parameters
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
+from baserow.core.exceptions import GroupInvitationEmailMismatch
 from baserow.core.registries import auth_provider_type_registry
-from baserow.core.user.exceptions import UserAlreadyExist
+from baserow.core.user.exceptions import DeactivatedUserException, DisabledSignupError
+from baserow_enterprise.api.sso.serializers import SsoLoginRequestSerializer
 from baserow_enterprise.api.sso.utils import (
     SsoErrorCode,
     redirect_to_sign_in_error_page,
@@ -37,6 +44,12 @@ class OAuth2LoginView(APIView):
                 type=OpenApiTypes.INT,
                 description="The relative part of URL that the user wanted to access.",
             ),
+            OpenApiParameter(
+                name="group_invitation_token",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="The invitation token sent to the user to join a specific group.",
+            ),
         ],
         tags=["Auth"],
         operation_id="oauth_provider_login_redirect",
@@ -49,8 +62,11 @@ class OAuth2LoginView(APIView):
         },
         auth=[],
     )
+    @validate_query_parameters(SsoLoginRequestSerializer, return_validated=True)
     @transaction.atomic
-    def get(self, request, provider_id):
+    def get(
+        self, request: Request, provider_id: int, query_params: Dict[str, Any]
+    ) -> HttpResponseRedirect:
         """
         Redirects users to the authorization URL of the chosen provider
         to start OAuth2 login flow.
@@ -68,7 +84,7 @@ class OAuth2LoginView(APIView):
         redirect_url = provider_type.get_authorization_url(
             provider.specific_class.objects.get(id=provider_id),
             session=request.session,
-            original_url=request.query_params.get("original"),
+            query_params=query_params,
         )
 
         return redirect(redirect_url)
@@ -104,7 +120,7 @@ class OAuth2CallbackView(APIView):
         auth=[],
     )
     @transaction.atomic
-    def get(self, request, provider_id):
+    def get(self, request: Request, provider_id: int) -> HttpResponseRedirect:
         """
         Processes callback from OAuth2 authentication provider by
         using the 'code' parameter to obtain tokens and query for user
@@ -119,7 +135,9 @@ class OAuth2CallbackView(APIView):
             provider = AuthProviderHandler.get_auth_provider(provider_id)
             provider_type = auth_provider_type_registry.get_by_model(provider)
             code = request.query_params.get("code", None)
-            user_info = provider_type.get_user_info(provider, code, request.session)
+            user_info, original_url = provider_type.get_user_info(
+                provider, code, request.session
+            )
             user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
                 user_info, provider
             )
@@ -127,17 +145,15 @@ class OAuth2CallbackView(APIView):
             return redirect_to_sign_in_error_page(SsoErrorCode.PROVIDER_DOES_NOT_EXIST)
         except AuthFlowError:
             return redirect_to_sign_in_error_page(SsoErrorCode.AUTH_FLOW_ERROR)
-        except UserAlreadyExist:
-            return redirect_to_sign_in_error_page(SsoErrorCode.ERROR_USER_DEACTIVATED)
+        except DeactivatedUserException:
+            return redirect_to_sign_in_error_page(SsoErrorCode.USER_DEACTIVATED)
         except DifferentAuthProvider:
             return redirect_to_sign_in_error_page(SsoErrorCode.DIFFERENT_PROVIDER)
+        except GroupInvitationEmailMismatch:
+            return redirect_to_sign_in_error_page(
+                SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH
+            )
+        except DisabledSignupError:
+            return redirect_to_sign_in_error_page(SsoErrorCode.SIGNUP_DISABLED)
 
-        redirect = redirect_user_on_success(
-            user,
-            request.session.get("oauth_original_url"),
-        )
-        if "oauth_state" in request.session:
-            del request.session["oauth_state"]
-        if "oauth_original_url" in request.session:
-            del request.session["oauth_original_url"]
-        return redirect
+        return redirect_user_on_success(user, original_url)
