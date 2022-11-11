@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 * OAuth 2 flows now support redirects to specific pages. [#1288](https://gitlab.com/bramw/baserow/-/issues/1288)
+* Add support for language selection and group invitation tokens for OAuth 2 and SAML. [#1293](https://gitlab.com/bramw/baserow/-/issues/1293) 
 
 ### Bug Fixes
 * Raise an exception when a user doesn't have a required feature on an endpoint

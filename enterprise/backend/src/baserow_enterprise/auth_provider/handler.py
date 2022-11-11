@@ -2,11 +2,14 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Type
 
 from django.contrib.auth.models import AbstractUser
-from django.db import connection, transaction
+from django.db import connection
+
+from psycopg2 import sql
 
 from baserow.core.auth_provider.auth_provider_types import AuthProviderType
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
 from baserow.core.auth_provider.models import AuthProviderModel
+from baserow.core.handler import CoreHandler
 from baserow.core.registries import auth_provider_type_registry
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user.handler import UserHandler
@@ -20,6 +23,7 @@ class UserInfo:
     email: str
     name: str
     language: Optional[str] = None
+    group_invitation_token: Optional[str] = None
 
 
 class AuthProviderHandler:
@@ -116,15 +120,22 @@ class AuthProviderHandler:
             is_original_provider = auth_provider.users.filter(id=user.id).exists()
             if not is_original_provider:
                 raise DifferentAuthProvider()
-        except UserNotFound:
-            with transaction.atomic():
-                user = user_handler.create_user(
-                    email=user_info.email,
-                    name=user_info.name,
-                    language=user_info.language,
-                    password=None,
-                    auth_provider=auth_provider,
+
+            if user_info.group_invitation_token:
+                core_handler = CoreHandler()
+                invitation = core_handler.get_group_invitation_by_token(
+                    user_info.group_invitation_token
                 )
+                core_handler.accept_group_invitation(user, invitation)
+        except UserNotFound:
+            user = user_handler.create_user(
+                name=user_info.name,
+                email=user_info.email,
+                password=None,
+                language=user_info.language,
+                group_invitation_token=user_info.group_invitation_token,
+                auth_provider=auth_provider,
+            )
 
         return user
 
@@ -136,6 +147,11 @@ class AuthProviderHandler:
         """
 
         with connection.cursor() as cursor:
-            cursor.execute("SELECT last_value + 1 FROM core_authprovidermodel_id_seq;")
-            row = cursor.fetchone()
-            return int(row[0])
+            cursor.execute(
+                sql.SQL("SELECT last_value + 1 from {table_id_seq};").format(
+                    table_id_seq=sql.Identifier(
+                        f"{AuthProviderModel._meta.db_table}_id_seq"
+                    )
+                )
+            )
+            return int(cursor.fetchone()[0])

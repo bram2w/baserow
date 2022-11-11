@@ -199,6 +199,7 @@ class UserView(APIView):
     @map_exceptions(
         {
             UserAlreadyExist: ERROR_ALREADY_EXISTS,
+            DeactivatedUserException: ERROR_DEACTIVATED_USER,
             BadSignature: BAD_TOKEN_SIGNATURE,
             GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
             GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,

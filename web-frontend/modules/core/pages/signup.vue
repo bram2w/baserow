@@ -25,7 +25,6 @@
         >{{ $t('signup.disabledMessage') }}</Alert
       >
       <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
-        <i class="fas fa-arrow-left"></i>
         {{ $t('action.backToLogin') }}
       </nuxt-link>
     </template>
@@ -35,7 +34,20 @@
         :invitation="invitation"
         @success="next"
       >
+        <LoginButtons
+          show-border="top"
+          :hide-if-no-buttons="true"
+          :invitation="invitation"
+        />
         <ul v-if="!shouldShowAdminSignupPage" class="auth__action-links">
+          <li v-for="loginAction in loginActions" :key="loginAction.name">
+            <component
+              :is="getLoginActionComponent(loginAction)"
+              :options="loginAction"
+              :invitation="invitation"
+            >
+            </component>
+          </li>
           <li>
             {{ $t('signup.loginText') }}
             <nuxt-link :to="{ name: 'login' }">
@@ -59,11 +71,23 @@ import { mapGetters } from 'vuex'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 import AuthRegister from '@baserow/modules/core/components/auth/AuthRegister'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
+import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
 
 export default {
-  components: { AuthRegister, LangPicker },
-  mixins: [groupInvitationToken],
+  components: { AuthRegister, LangPicker, LoginButtons },
   layout: 'login',
+  async asyncData({ app, route, store, redirect }) {
+    if (store.getters['auth/isAuthenticated']) {
+      return redirect('dashboard')
+    }
+
+    // if this page is accessed directly, load the login options to
+    // populate the page with all the authentication providers
+    if (!store.getters['authProvider/getLoginOptionsLoaded']) {
+      await store.dispatch('authProvider/fetchLoginOptions')
+    }
+    return await groupInvitationToken.asyncData({ route, app })
+  },
   data() {
     return {
       afterSignupStep: -1,
@@ -95,9 +119,15 @@ export default {
     },
     ...mapGetters({
       settings: 'settings/get',
+      loginActions: 'authProvider/getAllLoginActions',
     }),
   },
   methods: {
+    getLoginActionComponent(loginAction) {
+      return this.$registry
+        .get('authProvider', loginAction.type)
+        .getLoginActionComponent()
+    },
     next() {
       if (this.afterSignupStep + 1 < this.afterSignupStepComponents.length) {
         this.afterSignupStep++

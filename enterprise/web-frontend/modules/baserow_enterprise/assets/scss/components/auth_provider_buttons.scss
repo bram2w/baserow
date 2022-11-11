@@ -1,17 +1,28 @@
 .auth-provider-buttons {
   display: flex;
   flex-direction: column;
-  margin-top: 48px;
-  padding-bottom: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .auth-provider-buttons--border-bottom {
+  padding-bottom: 20px;
   border-bottom: 1px solid $color-neutral-200;
+  margin-bottom: 32px;
+  margin-top: 40px;
 }
 
-.auth-provider-buttons__empty-space {
-  margin-bottom: 48px;
+.auth-provider-buttons--border-top {
+  padding-top: 40px;
+  border-top: 1px solid $color-neutral-200;
+  margin-bottom: 0;
+}
+
+.auth-provider-buttons__no-buttons {
+  margin-bottom: 32px;
+}
+
+.auth-provider-buttons__no-buttons--hide {
+  display: none;
 }
 
 .auth-provider-buttons--small {

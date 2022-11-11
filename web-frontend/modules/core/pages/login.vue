@@ -11,23 +11,7 @@
       </h1>
       <LangPicker />
     </div>
-    <div
-      v-if="loginButtons.length > 0"
-      class="auth-provider-buttons auth-provider-buttons--border-bottom"
-      :class="{ 'auth-provider-buttons--small': smallLoginButtons }"
-    >
-      <div v-for="loginButton in loginButtons" :key="loginButton.redirect_url">
-        <component
-          :is="getLoginButtonComponent(loginButton)"
-          :redirect-url="addOriginalParamToUrl(loginButton.redirect_url)"
-          :name="loginButton.name"
-          :icon="getLoginButtonIcon(loginButton)"
-          :small="smallLoginButtons"
-        >
-        </component>
-      </div>
-    </div>
-    <div v-else class="auth-provider-buttons__empty-space"></div>
+    <LoginButtons show-border="bottom" :invitation="invitation" />
     <AuthLogin :invitation="invitation" @success="success"> </AuthLogin>
     <div>
       <ul class="auth__action-links">
@@ -35,6 +19,7 @@
           <component
             :is="getLoginActionComponent(loginAction)"
             :options="loginAction"
+            :invitation="invitation"
           >
           </component>
         </li>
@@ -58,12 +43,13 @@
 import { mapGetters } from 'vuex'
 
 import AuthLogin from '@baserow/modules/core/components/auth/AuthLogin'
-import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
+import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 
 export default {
-  components: { AuthLogin, LangPicker },
+  components: { AuthLogin, LangPicker, LoginButtons },
   layout: 'login',
   async asyncData({ redirect, route, app, store }) {
     if (store.getters['settings/get'].show_admin_signup_page === true) {
@@ -93,9 +79,8 @@ export default {
     ...mapGetters({
       settings: 'settings/get',
       loginActions: 'authProvider/getAllLoginActions',
-      loginButtons: 'authProvider/getAllLoginButtons',
     }),
-    smallLoginButtons() {
+    showSmallLoginButtons() {
       return this.loginButtons.length > 2
     },
   },
@@ -105,30 +90,12 @@ export default {
         .get('authProvider', loginAction.type)
         .getLoginActionComponent()
     },
-    getLoginButtonComponent(loginButton) {
-      return this.$registry
-        .get('authProvider', loginButton.type)
-        .getLoginButtonComponent()
-    },
-    getLoginButtonIcon(loginButton) {
-      return this.$registry.get('authProvider', loginButton.type).getIcon()
-    },
     success() {
       const { original } = this.$route.query
       if (original && isRelativeUrl(original)) {
         this.$nuxt.$router.push(original)
       } else {
         this.$nuxt.$router.push({ name: 'dashboard' })
-      }
-    },
-    addOriginalParamToUrl(url) {
-      const { original } = this.$route.query
-      if (original && isRelativeUrl(original)) {
-        const parsedUrl = new URL(url)
-        parsedUrl.searchParams.append('original', original)
-        return parsedUrl.toString()
-      } else {
-        return url
       }
     },
   },

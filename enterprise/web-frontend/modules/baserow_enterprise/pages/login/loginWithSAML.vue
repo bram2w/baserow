@@ -72,38 +72,55 @@
 </template>
 
 <script>
+import decamelize from 'decamelize'
 import { required, email } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
+import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import { SamlAuthProviderType } from '@baserow_enterprise/authProviderTypes'
 import samlAuthProviderService from '@baserow_enterprise/services/samlAuthProvider'
 
 export default {
   mixins: [form, error],
   layout: 'login',
   async asyncData({ app, redirect, store, route }) {
+    // the SuperUser must create the account using username and password
     if (store.getters['settings/get'].show_admin_signup_page === true) {
-      redirect('signup')
+      return redirect({ name: 'signup' })
     }
 
     // if this page is accessed directly, load the login options to
     // populate the page with all the authentication providers
     if (!store.getters['authProvider/getLoginOptionsLoaded']) {
-      const loginOptions = await store.dispatch(
-        'authProvider/fetchLoginOptions'
-      )
-      if (!loginOptions.saml) {
-        return redirect('/login')
-      } else if (!loginOptions.saml.domainRequired) {
+      await store.dispatch('authProvider/fetchLoginOptions')
+    }
+
+    const samlLoginOptions = store.getters[
+      'authProvider/getLoginOptionsForType'
+    ](new SamlAuthProviderType().getType())
+
+    if (!samlLoginOptions) {
+      return redirect({ name: 'login', query: route.query }) // no SAML provider enabled
+    }
+
+    // in case the email is not necessary or provided via group invitation,
+    // redirect the user directly to the SAML provider
+    const { invitation } = await groupInvitationToken.asyncData({ route, app })
+    if (!samlLoginOptions.domainRequired || invitation?.email) {
+      try {
         const { data } = await samlAuthProviderService(
           app.$client
         ).getSamlLoginUrl({
+          email: invitation?.email,
           original: route.query.original,
         })
         return { redirectImmediately: true, redirectUrl: data.redirect_url }
+      } catch (error) {
+        return { values: { email: invitation?.email }, loginRequestError: true }
       }
-
-      return { redirectUrl: loginOptions.saml.redirect_url }
     }
+
+    return { redirectUrl: samlLoginOptions.redirect_url }
   },
   data() {
     return {
@@ -116,7 +133,9 @@ export default {
   },
   mounted() {
     if (this.redirectImmediately) {
-      window.location.href = this.redirectUrl
+      window.location.href = this.getRedirectUrlWithValidQueryParams(
+        this.redirectUrl
+      )
     }
   },
   methods: {
@@ -139,11 +158,22 @@ export default {
           email: this.values.email,
           original,
         })
-        window.location = data.redirect_url
+        window.location = this.getRedirectUrlWithValidQueryParams(
+          data.redirect_url
+        )
       } catch (error) {
         this.loginRequestError = true
         this.loading = false
       }
+    },
+    getRedirectUrlWithValidQueryParams(url) {
+      const parsedUrl = new URL(url)
+      for (const [key, value] of Object.entries(this.$route.query)) {
+        if (['language', 'groupInvitationToken'].includes(key)) {
+          parsedUrl.searchParams.append(decamelize(key), value)
+        }
+      }
+      return parsedUrl.toString()
     },
   },
   validations: {
