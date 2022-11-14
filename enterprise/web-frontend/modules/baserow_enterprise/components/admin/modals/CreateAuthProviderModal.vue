@@ -14,12 +14,14 @@
         :auth-provider-type="authProviderType"
         @submit="create($event)"
       >
-        <div
-          class="context__form-actions context__form-actions--multiple-actions"
-        >
-          <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
+        <div class="actions">
+          <ul class="action__links">
+            <li>
+              <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
+            </li>
+          </ul>
           <button
-            class="button"
+            class="button button--primary"
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >

@@ -5,11 +5,7 @@
         <h2 class="auth-provider-admin__title">
           {{ $t('authProviders.title') }}
         </h2>
-        <a
-          ref="createContextLink"
-          class="button button--large"
-          @click="showCreateContext()"
-        >
+        <a ref="createContextLink" class="button" @click="showCreateContext()">
           {{ $t('authProviders.addProvider') }}
           <CreateAuthProviderContext
             ref="createContext"
