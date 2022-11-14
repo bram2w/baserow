@@ -1,5 +1,5 @@
 <template>
-  <form class="context__form" @submit.prevent="submit">
+  <form @submit.prevent="submit">
     <FormElement :error="fieldHasErrors('name')" class="control">
       <label class="control__label">{{
         $t('oauthSettingsForm.providerName')
