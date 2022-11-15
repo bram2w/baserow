@@ -16,6 +16,7 @@ For example:
 
 ### Bug Fixes
 * Raise an exception when a user doesn't have a required feature on an endpoint
+* `permanently_delete_marked_trash` task no longer fails on permanently deleting a table before an associated rows batch.  [#1266](https://gitlab.com/bramw/baserow/-/issues/1266)
 
 ### Refactors
 * Changed `TableGroupStorageUsageItemType.calculate_storage_usage` to use a PL/pgSQL function to speedup the storage usage calculation.

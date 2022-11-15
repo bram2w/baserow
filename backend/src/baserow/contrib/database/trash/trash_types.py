@@ -461,7 +461,10 @@ class RowsTrashableItemType(TrashableItemType):
     def lookup_trashed_item(
         self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
     ):
-        return TrashedRows.objects.get(id=trashed_entry.trash_item_id)
+        try:
+            return TrashedRows.objects.get(id=trashed_entry.trash_item_id)
+        except TrashedRows.DoesNotExist:
+            raise TrashItemDoesNotExist()
 
     def _get_table_model(self, table_id):
         table = self._get_table(table_id)
