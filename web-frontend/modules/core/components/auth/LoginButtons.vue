@@ -33,6 +33,11 @@ import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 export default {
   name: 'LoginButtons',
   props: {
+    original: {
+      type: String,
+      required: false,
+      default: null,
+    },
     showBorder: {
       type: String,
       validate: (value) => ['top', 'bottom', 'none'].includes(value),
@@ -55,6 +60,13 @@ export default {
     showSmallLoginButtons() {
       return this.loginButtons.length > 2
     },
+    computedOriginal() {
+      let original = this.original
+      if (!original) {
+        original = this.$route.query.original
+      }
+      return original
+    },
   },
   methods: {
     getLoginButtonComponent(loginButton) {
@@ -66,7 +78,7 @@ export default {
       return this.$registry.get('authProvider', loginButton.type).getIcon()
     },
     addOriginalParamToUrl(url) {
-      const { original } = this.$route.query
+      const original = this.computedOriginal
       if (original && isRelativeUrl(original)) {
         const parsedUrl = new URL(url)
         parsedUrl.searchParams.append('original', original)

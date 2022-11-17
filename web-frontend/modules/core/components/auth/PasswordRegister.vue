@@ -139,7 +139,7 @@ import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInpu
 import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
-  name: 'AuthRegister',
+  name: 'PasswordRegister',
   components: { PasswordInput },
   mixins: [error],
   props: {

@@ -93,7 +93,7 @@ import error from '@baserow/modules/core/mixins/error'
 import GroupService from '@baserow/modules/core/services/group'
 
 export default {
-  name: 'AuthLogin',
+  name: 'PasswordLogin',
   mixins: [form, error],
   props: {
     invitation: {
