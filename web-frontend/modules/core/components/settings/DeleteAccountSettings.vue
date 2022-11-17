@@ -112,6 +112,7 @@ import AuthService from '@baserow/modules/core/services/auth'
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
 import { passwordValidation } from '@baserow/modules/core/validators'
 import GroupService from '@baserow/modules/core/services/group'
+import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export default {
   components: { PasswordInput },
@@ -161,9 +162,8 @@ export default {
     },
   },
   methods: {
-    async logoff() {
-      await this.$store.dispatch('auth/logoff')
-      this.$nuxt.$router.push({ name: 'login' })
+    logoff() {
+      logoutAndRedirectToLogin(this.$nuxt.$router, this.$store)
       this.$store.dispatch('notification/success', {
         title: this.$t('deleteAccountSettings.accountDeletedSuccessTitle'),
         message: this.$t('deleteAccountSettings.accountDeletedSuccessMessage'),
