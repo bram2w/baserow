@@ -29,7 +29,7 @@
       </nuxt-link>
     </template>
     <template v-else>
-      <AuthRegister
+      <PasswordRegister
         v-if="afterSignupStep < 0"
         :invitation="invitation"
         @success="next"
@@ -39,23 +39,18 @@
           :hide-if-no-buttons="true"
           :invitation="invitation"
         />
-        <ul v-if="!shouldShowAdminSignupPage" class="auth__action-links">
-          <li v-for="loginAction in loginActions" :key="loginAction.name">
-            <component
-              :is="getLoginActionComponent(loginAction)"
-              :options="loginAction"
-              :invitation="invitation"
-            >
-            </component>
-          </li>
+        <LoginActions
+          v-if="!shouldShowAdminSignupPage"
+          :invitation="invitation"
+        >
           <li>
             {{ $t('signup.loginText') }}
             <nuxt-link :to="{ name: 'login' }">
               {{ $t('action.login') }}
             </nuxt-link>
           </li>
-        </ul>
-      </AuthRegister>
+        </LoginActions>
+      </PasswordRegister>
       <component
         :is="afterSignupStepComponents[afterSignupStep]"
         v-else
@@ -67,25 +62,20 @@
 
 <script>
 import { mapGetters } from 'vuex'
-
-import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
-import AuthRegister from '@baserow/modules/core/components/auth/AuthRegister'
+import PasswordRegister from '@baserow/modules/core/components/auth/PasswordRegister'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
 import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
+import LoginActions from '@baserow/modules/core/components/auth/LoginActions'
+import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 
 export default {
-  components: { AuthRegister, LangPicker, LoginButtons },
+  components: { PasswordRegister, LangPicker, LoginButtons, LoginActions },
   layout: 'login',
   async asyncData({ app, route, store, redirect }) {
     if (store.getters['auth/isAuthenticated']) {
       return redirect('dashboard')
     }
-
-    // if this page is accessed directly, load the login options to
-    // populate the page with all the authentication providers
-    if (!store.getters['authProvider/getLoginOptionsLoaded']) {
-      await store.dispatch('authProvider/fetchLoginOptions')
-    }
+    await store.dispatch('authProvider/fetchLoginOptions')
     return await groupInvitationToken.asyncData({ route, app })
   },
   data() {
@@ -123,11 +113,6 @@ export default {
     }),
   },
   methods: {
-    getLoginActionComponent(loginAction) {
-      return this.$registry
-        .get('authProvider', loginAction.type)
-        .getLoginActionComponent()
-    },
     next() {
       if (this.afterSignupStep + 1 < this.afterSignupStepComponents.length) {
         this.afterSignupStep++

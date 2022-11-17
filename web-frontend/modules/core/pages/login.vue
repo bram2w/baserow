@@ -1,67 +1,27 @@
 <template>
   <div>
-    <div class="auth__logo">
-      <nuxt-link :to="{ name: 'index' }">
-        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-      </nuxt-link>
-    </div>
-    <div class="auth__head">
-      <h1 class="auth__head-title">
-        {{ $t('login.title') }}
-      </h1>
-      <LangPicker />
-    </div>
-    <LoginButtons show-border="bottom" :invitation="invitation" />
-    <AuthLogin :invitation="invitation" @success="success"> </AuthLogin>
-    <div>
-      <ul class="auth__action-links">
-        <li v-for="loginAction in loginActions" :key="loginAction.name">
-          <component
-            :is="getLoginActionComponent(loginAction)"
-            :options="loginAction"
-            :invitation="invitation"
-          >
-          </component>
-        </li>
-        <li v-if="settings.allow_reset_password">
-          <nuxt-link :to="{ name: 'forgot-password' }">
-            {{ $t('login.forgotPassword') }}
-          </nuxt-link>
-        </li>
-        <li v-if="settings.allow_new_signups">
-          {{ $t('login.signUpText') }}
-          <nuxt-link :to="{ name: 'signup' }">
-            {{ $t('login.signUp') }}
-          </nuxt-link>
-        </li>
-      </ul>
-    </div>
+    <Login
+      :display-header="true"
+      :redirect-on-success="true"
+      :invitation="invitation"
+    ></Login>
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
-import AuthLogin from '@baserow/modules/core/components/auth/AuthLogin'
-import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
-import LangPicker from '@baserow/modules/core/components/LangPicker'
+import Login from '@baserow/modules/core/components/auth/Login'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
-import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 
 export default {
-  components: { AuthLogin, LangPicker, LoginButtons },
+  components: { Login },
   layout: 'login',
-  async asyncData({ redirect, route, app, store }) {
+  async asyncData({ app, route, store, redirect }) {
     if (store.getters['settings/get'].show_admin_signup_page === true) {
-      return redirect('signup')
+      return redirect({ name: 'signup' })
     } else if (store.getters['auth/isAuthenticated']) {
-      return redirect('dashboard')
+      return redirect({ name: 'dashboard' })
     }
-
-    // load authentication providers login options to populate the login
-    // page with external providers
     await store.dispatch('authProvider/fetchLoginOptions')
-
     return await groupInvitationToken.asyncData({ route, app })
   },
   head() {
@@ -74,30 +34,6 @@ export default {
         },
       ],
     }
-  },
-  computed: {
-    ...mapGetters({
-      settings: 'settings/get',
-      loginActions: 'authProvider/getAllLoginActions',
-    }),
-    showSmallLoginButtons() {
-      return this.loginButtons.length > 2
-    },
-  },
-  methods: {
-    getLoginActionComponent(loginAction) {
-      return this.$registry
-        .get('authProvider', loginAction.type)
-        .getLoginActionComponent()
-    },
-    success() {
-      const { original } = this.$route.query
-      if (original && isRelativeUrl(original)) {
-        this.$nuxt.$router.push(original)
-      } else {
-        this.$nuxt.$router.push({ name: 'dashboard' })
-      }
-    },
   },
 }
 </script>
