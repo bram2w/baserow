@@ -12,6 +12,7 @@ export const state = () => ({
   token: null,
   refreshToken: null,
   user: null,
+  authenticated: false,
   additional: {},
   webSocketId: null,
   // Indicates whether a token should be set persistently as a cookie using the
@@ -32,6 +33,7 @@ export const mutations = {
     // backend user data registry. We want to store them in the `additional` state so
     // that it can be used by other modules.
     state.additional = additional
+    state.authenticated = true
   },
   UPDATE_USER_DATA(state, { user, ...data }) {
     if (user !== undefined) {
@@ -44,9 +46,16 @@ export const mutations = {
     }
     _.mergeWith(state.additional, data, customizer)
   },
+  LOGOFF(state) {
+    state.token = null
+    state.refreshToken = null
+    state.authenticated = false
+  },
   CLEAR_USER_DATA(state) {
     state.token = null
+    state.refreshToken = null
     state.user = null
+    state.authenticated = false
   },
   SET_REFRESHING(state, refreshing) {
     state.refreshing = refreshing
@@ -106,13 +115,19 @@ export const actions = {
    * Logs off the user by removing the token as a cookie and clearing the user
    * data.
    */
-  async logoff({ commit, dispatch }) {
+  logoff({ commit }) {
     unsetToken(this.app)
     unsetGroupCookie(this.app)
-    commit('CLEAR_USER_DATA')
+    commit('LOGOFF')
+  },
+  /**
+   * Clears all the user data present in any other stores.
+   */
+  async clearAllStoreUserData({ commit, dispatch }) {
     await dispatch('group/clearAll', {}, { root: true })
     await dispatch('group/unselect', {}, { root: true })
     await dispatch('job/clearAll', {}, { root: true })
+    commit('CLEAR_USER_DATA')
   },
   /**
    * Refresh the existing token. If successful commit the new token and start a
@@ -206,7 +221,7 @@ export const actions = {
 
 export const getters = {
   isAuthenticated(state) {
-    return !!state.user
+    return state.authenticated
   },
   isRefreshing(state) {
     return state.refreshing
