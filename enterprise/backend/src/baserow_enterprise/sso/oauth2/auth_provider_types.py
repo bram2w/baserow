@@ -160,6 +160,9 @@ class OAuth2AuthProviderMixin:
     def get_user_info_url(self, instance: AuthProviderModel) -> str:
         return self.USER_INFO_URL
 
+    def get_access_token_url(self, instance: AuthProviderModel) -> str:
+        return self.ACCESS_TOKEN_URL
+
     def before_fetch_token(self, oauth: OAuth2Session) -> None:
         pass
 
@@ -170,7 +173,7 @@ class OAuth2AuthProviderMixin:
             oauth = self.get_oauth_session(instance, session)
             self.before_fetch_token(oauth)
             token = oauth.fetch_token(
-                self.ACCESS_TOKEN_URL,
+                self.get_access_token_url(instance),
                 code=code,
                 client_secret=instance.secret,
             )
@@ -339,6 +342,9 @@ class GitLabAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
     def get_user_info_url(self, instance: AuthProviderModel) -> str:
         return f"{instance.base_url}{self.USER_INFO_PATH}"
 
+    def get_access_token_url(self, instance: AuthProviderModel) -> str:
+        return f"{instance.base_url}{self.ACCESS_TOKEN_PATH}"
+
 
 class FacebookAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
     """
@@ -367,7 +373,7 @@ class FacebookAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
         oauth = facebook_compliance_fix(oauth)
         authorization_url, state = oauth.authorization_url(self.AUTHORIZATION_URL)
         session["oauth_state"] = state
-        self.add_params_to_session(session, query_params)
+        self.push_request_data_to_session(session, query_params)
         return authorization_url
 
     def before_fetch_token(self, oauth: OAuth2Session) -> None:
@@ -412,6 +418,12 @@ class OpenIdConnectAuthProviderType(OAuth2AuthProviderMixin, AuthProviderType):
 
     def get_base_url(self, instance: AuthProviderModel) -> str:
         return instance.authorization_url
+
+    def get_access_token_url(self, instance: AuthProviderModel) -> str:
+        return instance.access_token_url
+
+    def get_user_info_url(self, instance: AuthProviderModel) -> str:
+        return instance.user_info_url
 
     def get_wellknown_urls(self, base_url: str) -> WellKnownUrls:
         """
