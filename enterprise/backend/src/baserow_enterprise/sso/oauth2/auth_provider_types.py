@@ -193,12 +193,15 @@ class OAuth2AuthProviderMixin:
         """
 
         request_data = self.pop_request_data_from_session(session)
-        return UserInfo(
-            name=oauth_response_data.get("name"),
-            email=oauth_response_data.get("email"),
-            group_invitation_token=request_data.get("group_invitation_token", None),
-            language=request_data.get("language", None),
-        ), request_data.get("original", "")
+        return (
+            UserInfo(
+                name=oauth_response_data.get("name"),
+                email=oauth_response_data.get("email"),
+                group_invitation_token=request_data.get("group_invitation_token", None),
+                language=request_data.get("language", None),
+            ),
+            request_data.get("original", ""),
+        )
 
     def get_user_info(
         self, instance: AuthProviderModel, code: str, session: SessionBase

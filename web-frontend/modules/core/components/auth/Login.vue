@@ -15,6 +15,7 @@
     </div>
     <LoginButtons
       show-border="bottom"
+      :hide-if-no-buttons="loginButtonsCompact"
       :invitation="invitation"
       :original="original"
     />
@@ -68,6 +69,11 @@ export default {
       required: false,
       validator: (prop) => typeof prop === 'object' || prop === null,
       default: null,
+    },
+    loginButtonsCompact: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   computed: {
