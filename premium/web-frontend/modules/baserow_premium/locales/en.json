@@ -200,11 +200,10 @@
         "premium": "Premium",
         "expired": "Expired",
         "validity": "Valid from {start} through {end}",
-        "seats": "seats",
-        "premiumFeatures": "Premium features"
+        "seats": "seats"
     },
     "license": {
-        "title": "{product_code} plan",
+        "title": "{name} plan",
         "users": "Users",
         "description": "Choose the users that can use the {product_code} plan. This license allows you to grant {product_code} to a maximum of {seats} users.",
         "seatLeft": "You have no seats left|You have one seat left|You have {count} seats left",
@@ -223,7 +222,6 @@
         "checkNow": "check now",
         "seats": "Seats (amount of users)",
         "licensedTo": "Licensed to",
-        "premiumFeatures": "Premium features",
         "applications": "Applications / databases",
         "unlimited": "Unlimited",
         "rowUsage": "Row usage",
@@ -232,7 +230,10 @@
         "disconnectDescription": "If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance.",
         "moreSeatsNeededTitle": "More Seats Needed",
         "contactSalesMoreSeats": "Contact Sales for more seats",
-        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} paid seats and {free_users_count} free seats in use"
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} paid seats and {free_users_count} free seats in use",
+        "premiumFeatureName": "Premium",
+        "enterpriseFeatureName": "Enterprise",
+        "supportFeatureName": "Support"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Left border",

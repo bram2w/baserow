@@ -2,7 +2,6 @@
     "enterprise": {
         "license": "Enterprise",
         "sidebarTooltip": "Your account has access to the enterprise features globally",
-        "enterpriseFeatures": "Premium and Enterprise Features",
         "rbac": "RBAC",
         "sso": "SSO",
         "deactivated": "Deactivated",
@@ -101,5 +100,12 @@
     },
     "loginButton": {
         "continueWith": "Continue with"
+    },
+    "enterpriseFeatures": {
+        "sso": "Single Sign On",
+        "rbac": "Role-based access control"
+    },
+    "chatwootSuportSidebarGroup": {
+        "directSupport": "Direct support"
     }
 }

@@ -10,9 +10,18 @@
       <p class="placeholder__content">
         {{ $t('licenses.noLicensesDescription') }}
       </p>
-      <PremiumFeatures
-        class="licenses__features margin-bottom-2"
-      ></PremiumFeatures>
+      <div class="licenses__features margin-bottom-2">
+        <div
+          v-for="licenseType in licenseTypesWithFeatureComponent"
+          :key="licenseType.type"
+        >
+          <h2>{{ licenseType.getName() }}</h2>
+          <component
+            :is="licenseType.getFeaturesComponent()"
+            class="margin-bottom-2"
+          ></component>
+        </div>
+      </div>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.registerModal.show()">
           <i class="fas fa-plus"></i>
@@ -114,9 +123,18 @@
               {{ license.seats_taken }} / {{ license.seats }}
               {{ $t('licenses.seats') }}
             </li>
-            <li v-if="licenseFeatureDescription(license)">
-              {{ licenseFeatureDescription(license) }}
-              <i class="fas margin-left-1 fa-check license-yes"></i>
+            <li
+              v-for="(feature, index) in licenseFeatureDescription(license)"
+              :key="index"
+            >
+              {{ feature.name }}
+              <i
+                class="fas margin-left-1 fa-check"
+                :class="{
+                  'fa-check license-yes': feature.enabled,
+                  'fa-times license-no': !feature.enabled,
+                }"
+              ></i>
             </li>
           </ul>
         </nuxt-link>
@@ -131,12 +149,18 @@ import LicenseService from '@baserow_premium/services/license'
 import RegisterLicenseModal from '@baserow_premium/components/license/RegisterLicenseModal'
 import RedirectToBaserowModal from '@baserow_premium/components/RedirectToBaserowModal'
 import PremiumFeatures from '@baserow_premium/components/PremiumFeatures'
+import EnterpriseFeatures from '@baserow_enterprise/components/EnterpriseFeatures'
 import moment from '@baserow/modules/core/moment'
 import SettingsService from '@baserow/modules/core/services/settings'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
-  components: { RedirectToBaserowModal, RegisterLicenseModal, PremiumFeatures },
+  components: {
+    RedirectToBaserowModal,
+    RegisterLicenseModal,
+    PremiumFeatures,
+    EnterpriseFeatures,
+  },
   layout: 'app',
   middleware: 'staff',
   async asyncData({ app, error }) {
@@ -168,6 +192,11 @@ export default {
           a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
         )
     },
+    licenseTypesWithFeatureComponent() {
+      return Object.values(this.$registry.getAll('license')).filter(
+        (licenseType) => licenseType.getFeaturesComponent() !== null
+      )
+    },
   },
   methods: {
     localDate(date) {
@@ -180,9 +209,6 @@ export default {
       return this.$registry.get('license', license.product_code)
     },
     licenseFeatureDescription(license) {
-      return this.getLicenseType(license).getFeaturesDescription()
-    },
-    licenseSeatsInfo(license) {
       return this.getLicenseType(license).getFeaturesDescription()
     },
   },
