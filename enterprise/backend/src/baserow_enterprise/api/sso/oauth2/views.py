@@ -18,6 +18,7 @@ from baserow.core.user.exceptions import DeactivatedUserException, DisabledSignu
 from baserow_enterprise.api.sso.serializers import SsoLoginRequestSerializer
 from baserow_enterprise.api.sso.utils import (
     SsoErrorCode,
+    map_sso_exceptions,
     redirect_to_sign_in_error_page,
     redirect_user_on_success,
 )
@@ -63,6 +64,11 @@ class OAuth2LoginView(APIView):
         auth=[],
     )
     @validate_query_parameters(SsoLoginRequestSerializer, return_validated=True)
+    @map_sso_exceptions(
+        {
+            AuthProviderModelNotFound: SsoErrorCode.PROVIDER_DOES_NOT_EXIST,
+        }
+    )
     @transaction.atomic
     def get(
         self, request: Request, provider_id: int, query_params: Dict[str, Any]
@@ -75,11 +81,8 @@ class OAuth2LoginView(APIView):
         if not is_sso_feature_active():
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
-        try:
-            provider = AuthProviderHandler.get_auth_provider(provider_id)
-            provider_type = auth_provider_type_registry.get_by_model(provider)
-        except AuthProviderModelNotFound:
-            return redirect_to_sign_in_error_page(SsoErrorCode.PROVIDER_DOES_NOT_EXIST)
+        provider = AuthProviderHandler.get_auth_provider(provider_id)
+        provider_type = auth_provider_type_registry.get_by_model(provider)
 
         redirect_url = provider_type.get_authorization_url(
             provider.specific_class.objects.get(id=provider_id),
@@ -119,6 +122,16 @@ class OAuth2CallbackView(APIView):
         },
         auth=[],
     )
+    @map_sso_exceptions(
+        {
+            AuthProviderModelNotFound: SsoErrorCode.PROVIDER_DOES_NOT_EXIST,
+            AuthFlowError: SsoErrorCode.AUTH_FLOW_ERROR,
+            DeactivatedUserException: SsoErrorCode.USER_DEACTIVATED,
+            DifferentAuthProvider: SsoErrorCode.DIFFERENT_PROVIDER,
+            GroupInvitationEmailMismatch: SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH,
+            DisabledSignupError: SsoErrorCode.SIGNUP_DISABLED,
+        }
+    )
     @transaction.atomic
     def get(self, request: Request, provider_id: int) -> HttpResponseRedirect:
         """
@@ -131,29 +144,14 @@ class OAuth2CallbackView(APIView):
         if not is_sso_feature_active():
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
-        try:
-            provider = AuthProviderHandler.get_auth_provider(provider_id)
-            provider_type = auth_provider_type_registry.get_by_model(provider)
-            code = request.query_params.get("code", None)
-            user_info, original_url = provider_type.get_user_info(
-                provider, code, request.session
-            )
-            user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-                user_info, provider
-            )
-        except AuthProviderModelNotFound:
-            return redirect_to_sign_in_error_page(SsoErrorCode.PROVIDER_DOES_NOT_EXIST)
-        except AuthFlowError:
-            return redirect_to_sign_in_error_page(SsoErrorCode.AUTH_FLOW_ERROR)
-        except DeactivatedUserException:
-            return redirect_to_sign_in_error_page(SsoErrorCode.USER_DEACTIVATED)
-        except DifferentAuthProvider:
-            return redirect_to_sign_in_error_page(SsoErrorCode.DIFFERENT_PROVIDER)
-        except GroupInvitationEmailMismatch:
-            return redirect_to_sign_in_error_page(
-                SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH
-            )
-        except DisabledSignupError:
-            return redirect_to_sign_in_error_page(SsoErrorCode.SIGNUP_DISABLED)
+        provider = AuthProviderHandler.get_auth_provider(provider_id)
+        provider_type = auth_provider_type_registry.get_by_model(provider)
+        code = request.query_params.get("code", None)
+        user_info, original_url = provider_type.get_user_info(
+            provider, code, request.session
+        )
+        user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
+            user_info, provider
+        )
 
         return redirect_user_on_success(user, original_url)
