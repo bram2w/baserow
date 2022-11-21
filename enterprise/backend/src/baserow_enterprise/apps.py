@@ -86,8 +86,12 @@ class BaserowEnterpriseConfig(AppConfig):
 
         from baserow_premium.license.registries import license_type_registry
 
-        from baserow_enterprise.license_types import EnterpriseLicenseType
+        from baserow_enterprise.license_types import (
+            EnterpriseLicenseType,
+            EnterpriseWithoutSupportLicenseType,
+        )
 
+        license_type_registry.register(EnterpriseWithoutSupportLicenseType())
         license_type_registry.register(EnterpriseLicenseType())
 
         from baserow.core.registries import auth_provider_type_registry

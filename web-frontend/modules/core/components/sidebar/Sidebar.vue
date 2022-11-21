@@ -209,6 +209,12 @@
                 </div>
               </li>
             </nuxt-link>
+            <component
+              :is="component"
+              v-for="(component, index) in sidebarGroupComponents"
+              :key="index"
+              :group="selectedGroup"
+            ></component>
             <ul class="tree">
               <component
                 :is="getApplicationComponent(application)"
@@ -396,6 +402,11 @@ export default {
     sidebarMainMenuComponents() {
       return Object.values(this.$registry.getAll('plugin'))
         .map((plugin) => plugin.getSidebarMainMenuComponent())
+        .filter((component) => component !== null)
+    },
+    sidebarGroupComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getSidebarGroupComponent(this.selectedGroup))
         .filter((component) => component !== null)
     },
     pendingJobs() {

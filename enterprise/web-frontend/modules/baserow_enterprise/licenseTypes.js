@@ -1,9 +1,11 @@
-import EnterpriseFeatures from '@baserow_enterprise/features'
-import PremiumFeatures from '@baserow_premium/features'
+import EnterpriseFeaturesObject from '@baserow_enterprise/features'
+import PremiumFeaturesObject from '@baserow_premium/features'
 import { LicenseType } from '@baserow_premium/licenseTypes'
-export class EnterpriseLicenseType extends LicenseType {
+import EnterpriseFeatures from '@baserow_enterprise/components/EnterpriseFeatures'
+
+export class EnterpriseWithoutSupportLicenseType extends LicenseType {
   static getType() {
-    return 'enterprise'
+    return 'enterprise_without_support'
   }
 
   getName() {
@@ -17,15 +19,28 @@ export class EnterpriseLicenseType extends LicenseType {
 
   getFeaturesDescription() {
     const { i18n } = this.app
-    return i18n.t('enterprise.enterpriseFeatures')
+    return [
+      {
+        name: i18n.t('license.premiumFeatureName'),
+        enabled: true,
+      },
+      {
+        name: i18n.t('license.enterpriseFeatureName'),
+        enabled: true,
+      },
+      {
+        name: i18n.t('license.supportFeatureName'),
+        enabled: false,
+      },
+    ]
   }
 
   getFeatures() {
     return [
-      PremiumFeatures.PREMIUM,
-      EnterpriseFeatures.RBAC,
-      EnterpriseFeatures.SSO,
-      EnterpriseFeatures.TEAMS,
+      PremiumFeaturesObject.PREMIUM,
+      EnterpriseFeaturesObject.RBAC,
+      EnterpriseFeaturesObject.SSO,
+      EnterpriseFeaturesObject.TEAMS,
     ]
   }
 
@@ -54,5 +69,29 @@ export class EnterpriseLicenseType extends LicenseType {
   getLicenseSeatOverflowWarning(license) {
     const { i18n } = this.app
     return i18n.t('enterprise.overflowWarning')
+  }
+
+  getFeaturesComponent() {
+    return EnterpriseFeatures
+  }
+}
+
+export class EnterpriseLicenseType extends EnterpriseWithoutSupportLicenseType {
+  static getType() {
+    return 'enterprise'
+  }
+
+  getFeatures() {
+    return super.getFeatures().concat(EnterpriseFeaturesObject.SUPPORT)
+  }
+
+  getFeaturesDescription() {
+    const description = super.getFeaturesDescription()
+    description[2].enabled = true
+    return description
+  }
+
+  getFeaturesComponent() {
+    return null
   }
 }
