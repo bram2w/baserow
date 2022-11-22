@@ -90,7 +90,7 @@ class RegisterSerializer(serializers.Serializer):
     authenticate = serializers.BooleanField(
         required=False,
         default=False,
-        help_text="Indicates whether an authentication token should be generated and "
+        help_text="Indicates whether an authentication JWT should be generated and "
         "be included in the response.",
     )
     group_invitation_token = serializers.CharField(

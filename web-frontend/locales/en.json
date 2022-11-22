@@ -42,7 +42,7 @@
     "settingType": {
         "account": "Account",
         "password": "Password",
-        "tokens": "API Tokens",
+        "tokens": "Database tokens",
         "deleteAccount": "Delete account"
     },
     "userFileUploadType": {

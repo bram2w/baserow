@@ -15,7 +15,8 @@ class Token(ParentGroupTrashableModelMixin, models.Model):
     """
 
     name = models.CharField(
-        max_length=100, help_text="The human readable name of the token for the user."
+        max_length=100,
+        help_text="The human readable name of the database token for the user.",
     )
     key = models.CharField(
         max_length=32,
