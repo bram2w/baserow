@@ -28,6 +28,7 @@
         :value="values['field_' + field.field.id]"
         :slug="$route.params.slug"
         :field="field"
+        :class="{ hidden: field._.hiddenViaQueryParam }"
         @input="updateValue('field_' + field.field.id, $event)"
       ></FormPageField>
       <div

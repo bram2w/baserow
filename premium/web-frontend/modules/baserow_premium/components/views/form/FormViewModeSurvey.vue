@@ -2,8 +2,18 @@
   <div class="form-view-survey">
     <template v-if="!submitted">
       <form @submit.prevent="validateAndNext(questionIndex)">
+        <!-- This component must exist for validation purposes. -->
+        <FormPageField
+          v-for="field in visibleFieldsWithHiddenViaQueryParam"
+          :key="field.field.id"
+          :ref="'field-' + field.field.id"
+          :value="values['field_' + field.field.id]"
+          :slug="$route.params.slug"
+          :field="field"
+          :class="{ hidden: true }"
+        ></FormPageField>
         <div
-          v-for="(field, index) in visibleFields"
+          v-for="(field, index) in visibleFieldsWithoutHiddenViaQueryParam"
           :key="field.field.id"
           class="form-view-survey__center"
           :class="{
@@ -23,13 +33,17 @@
               ></FormPageField>
               <div class="form-view__field-actions">
                 <a
-                  v-if="index < visibleFields.length - 1"
+                  v-if="
+                    index < visibleFieldsWithoutHiddenViaQueryParam.length - 1
+                  "
                   class="button button--primary button--large"
                   @click="validateAndNext(index)"
                   >Next</a
                 >
                 <button
-                  v-else-if="index >= visibleFields.length - 1"
+                  v-else-if="
+                    index >= visibleFieldsWithoutHiddenViaQueryParam.length - 1
+                  "
                   class="button button--primary button--large"
                   :class="{ 'button--loading': loading }"
                   :disabled="loading"
@@ -73,6 +87,7 @@
     <div v-else-if="submitted" class="form-view-survey__center">
       <div class="form-view-survey__center-inner">
         <FormViewSubmitted
+          :show-logo="showLogo"
           :is-redirect="isRedirect"
           :submit-action-redirect-url="submitActionRedirectUrl"
           :submit-action-message="submitActionMessage"
@@ -106,7 +121,16 @@ export default {
       return this.questionIndex > 0
     },
     canNext() {
-      return this.questionIndex < this.visibleFields.length - 1
+      return (
+        this.questionIndex <
+        this.visibleFieldsWithoutHiddenViaQueryParam.length - 1
+      )
+    },
+    visibleFieldsWithoutHiddenViaQueryParam() {
+      return this.visibleFields.filter((field) => !field._.hiddenViaQueryParam)
+    },
+    visibleFieldsWithHiddenViaQueryParam() {
+      return this.visibleFields.filter((field) => field._.hiddenViaQueryParam)
     },
   },
   methods: {
@@ -125,7 +149,7 @@ export default {
       this.questionIndex++
     },
     validateAndNext(fieldIndex) {
-      const field = this.visibleFields[fieldIndex]
+      const field = this.visibleFieldsWithoutHiddenViaQueryParam[fieldIndex]
       field._.touched = true
 
       const ref = this.$refs['field-' + field.field.id][0]
@@ -134,7 +158,10 @@ export default {
         return
       }
 
-      if (fieldIndex === this.visibleFields.length - 1) {
+      if (
+        fieldIndex ===
+        this.visibleFieldsWithoutHiddenViaQueryParam.length - 1
+      ) {
         this.$emit('submit')
       } else {
         this.next()
