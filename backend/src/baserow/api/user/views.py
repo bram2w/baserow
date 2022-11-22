@@ -139,7 +139,7 @@ class RefreshJSONWebToken(TokenRefreshView):
         ),
         responses={
             200: authenticate_user_schema,
-            401: {"description": "The refresh token is invalid or expired."},
+            401: {"description": "The JWT refresh token is invalid or expired."},
         },
         auth=[],
     )
@@ -160,7 +160,7 @@ class VerifyJSONWebToken(TokenVerifyView):
         ),
         responses={
             200: verify_user_schema,
-            401: {"description": "The refresh token is invalid or expired."},
+            401: {"description": "The JWT refresh token is invalid or expired."},
         },
         auth=[],
     )
@@ -178,7 +178,7 @@ class UserView(APIView):
         operation_id="create_user",
         description=(
             "Creates a new user based on the provided values. If desired an "
-            "authentication token can be generated right away. After creating an "
+            "authentication JWT can be generated right away. After creating an "
             "account the initial group containing a database is created."
         ),
         responses={
@@ -326,7 +326,7 @@ class ResetPasswordView(APIView):
     )
     @validate_body(ResetPasswordBodyValidationSerializer)
     def post(self, request, data):
-        """Changes users password if the provided token is valid."""
+        """Changes users password if the provided reset token is valid."""
 
         handler = UserHandler()
         handler.reset_password(data["token"], data["password"])

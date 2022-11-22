@@ -2,7 +2,7 @@ token_permissions_field_value_schema = {
     "anyOf": [
         {
             "type": "boolean",
-            "description": "Indicating if the API token has permissions to all tables.",
+            "description": "Indicating if the database token has permissions to all tables.",
             "example": True,
         },
         {
@@ -35,7 +35,7 @@ token_permissions_field_value_schema = {
 token_permissions_field_schema = {
     "type": "object",
     "description": (
-        "Indicates per operation which permissions the API token has within the whole "
+        "Indicates per operation which permissions the database token has within the whole "
         "group. If the value of for example `create` is `true`, then the token can "
         "create rows in all tables related to the group. If a list is provided with "
         'for example `[["table", 1]]` then the token only has create permissions for '

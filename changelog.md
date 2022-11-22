@@ -19,6 +19,7 @@ For example:
 
 ### Bug Fixes
 
+* Standardize the API documentation "token" references.
 * Raise an exception when a user doesn't have a required feature on an endpoint
 * Fixed authenticated state changing before redirected to the login page when logging off. [#1328](https://gitlab.com/bramw/baserow/-/issues/1328)
 * `permanently_delete_marked_trash` task no longer fails on permanently deleting a table before an associated rows batch.  [#1266](https://gitlab.com/bramw/baserow/-/issues/1266)
