@@ -77,7 +77,7 @@ click-repl==0.2.0
     # via celery
 constantly==15.1.0
     # via twisted
-cryptography==38.0.1
+cryptography==38.0.3
     # via
     #   autobahn
     #   pyopenssl
