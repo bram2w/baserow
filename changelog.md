@@ -15,6 +15,7 @@ For example:
 * Add support for language selection and group invitation tokens for OAuth 2 and SAML. [#1293](https://gitlab.com/bramw/baserow/-/issues/1293)
 * Implemented the option to start direct support if the instance is on the enterprise plan.
 * Calendar / date field picker: Highlight the current date and weekend [#1128](https://gitlab.com/bramw/baserow/-/issues/1128)
+* Made it possible to optionally hide fields in a publicly shared form by providing the `hide_FIELD` query parameter. [#1096](https://gitlab.com/bramw/baserow/-/issues/1096)
 
 ### Bug Fixes
 

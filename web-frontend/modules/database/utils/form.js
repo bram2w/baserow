@@ -13,3 +13,13 @@ export function getPrefills(query) {
     return prefills
   }, Object.create(null))
 }
+
+export function getHiddenFieldNames(query) {
+  return Object.keys(query)
+    .filter((key) => {
+      return key.startsWith('hide_')
+    })
+    .map((key) => {
+      return key.replace('hide_', '').replaceAll('+', ' ')
+    })
+}

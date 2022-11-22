@@ -348,11 +348,15 @@
             "addField": "Add field"
         },
         "fieldsDescription": "All the fields are in the form.",
-        "prefillInfoLink": "Pre-fill values dynamically",
+        "prefillOrHideInfoLink": "Prefill or hide dynamically",
         "modal": {
-            "title": "Pre-fill values dynamically",
+            "title": "Prefill or hide fields dynamically",
             "descriptionPartOne": "Forms can be prefilled in order to help the user fill in the form faster.",
             "descriptionPartTwo": "All fields which are available in the form can be prefilled.",
+            "howToHide": {
+                "title": "How to hide a field",
+                "description": "If you want to hide a field dynamically, you can do so via query parameters added to the public from url. These query parameters are prefixed with `hide_` to avoid collision with potential future query parameters."
+            },
             "howToPrefill": {
                 "title": "How to prefill a form",
                 "description": "If you want to prefill a form with data you can do so via query parameters added to the public form url. These query parameters are prefixed with `prefill` to avoid any collision with potential future query parameters."
