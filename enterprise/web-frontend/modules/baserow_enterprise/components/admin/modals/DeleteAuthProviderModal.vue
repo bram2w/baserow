@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal small>
     <h2 class="box__title">
       {{ $t('deleteAuthProviderModal.title', { name: getProviderName() }) }}
     </h2>
@@ -8,16 +8,22 @@
         $t('deleteAuthProviderModal.comment', { type: getProviderTypeName() })
       }}
     </p>
-    <div class="context__form-actions context__form-actions--multiple-actions">
-      <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
-      <button
-        class="button button--error"
-        :class="{ 'button--loading': loading }"
-        :disabled="loading"
-        @click="deleteProvider"
-      >
-        {{ $t('action.delete') }}
-      </button>
+    <div>
+      <div class="actions">
+        <ul class="action__links">
+          <li>
+            <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
+          </li>
+        </ul>
+        <button
+          class="button button--error"
+          :class="{ 'button--loading': loading }"
+          :disabled="loading"
+          @click="deleteProvider"
+        >
+          {{ $t('action.delete') }}
+        </button>
+      </div>
     </div>
   </Modal>
 </template>

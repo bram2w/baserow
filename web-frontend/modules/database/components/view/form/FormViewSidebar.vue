@@ -70,12 +70,14 @@
         ></CreateFieldContext>
       </div>
     </div>
-    <div class="form-view__sidebar-prefill-link">
-      <a @click="showFormPrefillModal">
+    <div class="form-view__sidebar-prefill-or-hide-link">
+      <a @click="showFormPrefillOrHideModal">
         <i class="fas fa-question-circle"></i>
-        {{ $t('formSidebar.prefillInfoLink') }}
+        {{ $t('formSidebar.prefillOrHideInfoLink') }}
       </a>
-      <FormPrefillModal ref="formPrefillModal"></FormPrefillModal>
+      <FormPrefillOrHideModal
+        ref="formPrefillOrHideModal"
+      ></FormPrefillOrHideModal>
     </div>
   </div>
 </template>
@@ -84,11 +86,15 @@
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
 import FormViewSidebarField from '@baserow/modules/database/components/view/form/FormViewSidebarField'
-import FormPrefillModal from '@baserow/modules/database/components/view/form/FormPrefillModal'
+import FormPrefillOrHideModal from '@baserow/modules/database/components/view/form/FormPrefillOrHideModal'
 
 export default {
   name: 'FormViewSidebar',
-  components: { FormPrefillModal, CreateFieldContext, FormViewSidebarField },
+  components: {
+    FormPrefillOrHideModal,
+    CreateFieldContext,
+    FormViewSidebarField,
+  },
   mixins: [formViewHelpers],
   props: {
     database: {
@@ -130,8 +136,8 @@ export default {
     order(order) {
       this.$emit('ordered-fields', order)
     },
-    showFormPrefillModal() {
-      this.$refs.formPrefillModal.show()
+    showFormPrefillOrHideModal() {
+      this.$refs.formPrefillOrHideModal.show()
     },
   },
 }

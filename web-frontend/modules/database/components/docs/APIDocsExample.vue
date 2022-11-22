@@ -224,7 +224,7 @@ export default {
         example += `\n-X ${this.type} \\`
       }
 
-      example += '\n-H "Authorization: Token YOUR_API_KEY" \\'
+      example += '\n-H "Authorization: Token YOUR_DATABASE_TOKEN" \\'
 
       if (this.request !== false) {
         index++
@@ -258,7 +258,7 @@ export default {
       }
 
       example += `${this.url} HTTP`
-      example += '\nAuthorization: Token YOUR_API_KEY'
+      example += '\nAuthorization: Token YOUR_DATABASE_TOKEN'
 
       if (this.fileRequest !== '') {
         example += '\nContent-Length: YOUR_CONTENT_LENGTH'
@@ -295,7 +295,7 @@ export default {
 
       example += `\n  url: "${this.url}",`
       example += '\n  headers: {'
-      example += '\n    Authorization: "Token YOUR_API_KEY"'
+      example += '\n    Authorization: "Token YOUR_DATABASE_TOKEN"'
 
       if (this.fileRequest !== '') {
         index++
@@ -328,7 +328,7 @@ export default {
       example += `\n    "${this.url}",`
 
       example += '\n    headers={'
-      example += `\n        "Authorization": "Token YOUR_API_KEY"`
+      example += `\n        "Authorization": "Token YOUR_DATABASE_TOKEN"`
 
       if (this.request !== false) {
         index++

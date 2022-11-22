@@ -52,7 +52,7 @@ class AssignRoleActionType(ActionType):
         :return: The created RoleAssignment if role is not `None` else `None`.
         """
 
-        LicenseHandler.user_has_feature(RBAC, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
         CoreHandler().check_permissions(
             user, AssignRoleGroupOperationType.type, group=group, context=group
         )
@@ -96,7 +96,7 @@ class AssignRoleActionType(ActionType):
 
         group = Group.objects.get(id=params.group_id)
 
-        LicenseHandler.user_has_feature(RBAC, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
         CoreHandler().check_permissions(
             user, AssignRoleGroupOperationType.type, group=group, context=group
         )
@@ -125,7 +125,7 @@ class AssignRoleActionType(ActionType):
 
         group = Group.objects.get(id=params.group_id)
 
-        LicenseHandler.user_has_feature(RBAC, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
         CoreHandler().check_permissions(
             user, AssignRoleGroupOperationType.type, group=group, context=group
         )

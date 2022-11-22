@@ -1,12 +1,13 @@
 from enum import Enum
 from typing import Dict, Optional
-from urllib.parse import urlencode, urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from django.urls import reverse
+
+from requests.models import PreparedRequest
 
 from baserow.core.user.utils import generate_session_tokens_for_user
 
@@ -16,10 +17,53 @@ class SsoErrorCode(Enum):
     FEATURE_NOT_ACTIVE = "errorSsoFeatureNotActive"
     INVALID_SAML_REQUEST = "errorInvalidSamlRequest"
     INVALID_SAML_RESPONSE = "errorInvalidSamlResponse"
-    ERROR_USER_DEACTIVATED = "errorUserDeactivated"
+    USER_DEACTIVATED = "errorUserDeactivated"
     PROVIDER_DOES_NOT_EXIST = "errorProviderDoesNotExist"
     AUTH_FLOW_ERROR = "errorAuthFlowError"
     DIFFERENT_PROVIDER = "errorDifferentProvider"
+    GROUP_INVITATION_EMAIL_MISMATCH = "errorGroupInvitationEmailMismatch"
+    SIGNUP_DISABLED = "errorSignupDisabled"
+
+
+def map_sso_exceptions(mapping: Dict[Exception, SsoErrorCode]):
+    """
+    This decorator can be used to map exceptions to SSO error codes. If the
+    decorated function raises an exception that is in the mapping, the
+    redirect_to_sign_in_error_page() function will be called with the mapped
+    error code. If the exception is not in the mapping, it will be raised
+    normally.
+
+    :param mapping: A dictionary that maps exceptions to SSO error codes.
+    :return: The decorator.
+    """
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                for exception, error_code in mapping.items():
+                    if isinstance(e, exception):
+                        return redirect_to_sign_in_error_page(error_code)
+                raise e
+
+        return wrapper
+
+    return decorator
+
+
+def urlencode_query_params(url: str, query_params: Dict[str, str]) -> str:
+    """
+    Adds the query parameters to the provided url.
+
+    :param url: The url to which the query parameters should be added.
+    :param query_params: The query parameters that should be added to the url.
+    :return: The url with the query parameters added.
+    """
+
+    req = PreparedRequest()
+    req.prepare_url(url, query_params)
+    return req.url
 
 
 def redirect_to_sign_in_error_page(
@@ -34,60 +78,69 @@ def redirect_to_sign_in_error_page(
         message encoded as query param.
     """
 
-    frontend_error_page_url = settings.PUBLIC_WEB_FRONTEND_URL + "/login/error"
+    frontend_error_page_url = urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/login/error")
     if error_code:
-        error_frontend_code = error_code.value
-        frontend_error_page_url += "?" + urlencode({"error": error_frontend_code})
+        frontend_error_page_url = urlencode_query_params(
+            frontend_error_page_url, {"error": error_code.value}
+        )
     return redirect(frontend_error_page_url)
 
 
-def get_valid_relay_state_url(
+def get_valid_frontend_url(
     requested_original_url: Optional[str] = None,
+    query_params: Optional[Dict[str, str]] = None,
 ) -> str:
     """
     Returns a valid absolute frontend url based on the original url requested
-    before the redirection to the login. If the original url is relative, it
-    will be prefixed with the frontend hostname to make the IdP redirection
-    work. If the original url is external to Baserow, the default public
-    frontend url will be returned instead.
+    before the redirection to the login (can be relative or absolute). If the
+    original url is relative, it will be prefixed with the frontend hostname to
+    make the IdP redirection work. If the original url is external to Baserow,
+    the default frontend dashboard url will be returned instead.
 
     :param requested_original_url: The url to which the user should be
         redirected after a successful login.
     :return: The url with the token as a query parameter.
     """
 
-    parsed_url = urlparse(requested_original_url)
-    default_frontend_url = get_saml_default_relay_state_url()
-    parsed_default_url = urlparse(default_frontend_url)
-    hostname_mismatch = parsed_url.hostname != parsed_default_url.hostname
+    requested_url_parsed = urlparse(requested_original_url or "")
+    default_frontend_url_parsed = urlparse(get_default_redirect_frontend_url())
 
-    if parsed_url.path in ["", "/"]:
-        parsed_url = parsed_url._replace(path=parsed_default_url.path)
-    if parsed_url.hostname is None:
-        parsed_url = parsed_default_url._replace(path=parsed_url.path)
-    elif hostname_mismatch:
-        parsed_url = parsed_default_url
+    if requested_url_parsed.path in ["", "/"]:
+        # use the default frontend path if the requested one is empty
+        requested_url_parsed = requested_url_parsed._replace(
+            path=default_frontend_url_parsed.path
+        )
+    if requested_url_parsed.hostname is None:
+        # provide a correct absolute url if the requested one is relative
+        requested_url_parsed = default_frontend_url_parsed._replace(
+            path=requested_url_parsed.path
+        )
+    elif requested_url_parsed.hostname != default_frontend_url_parsed.hostname:
+        # return the default url if the requested url is external to Baserow
+        requested_url_parsed = default_frontend_url_parsed
 
-    return str(parsed_url.geturl())
+    if query_params:
+        return urlencode_query_params(requested_url_parsed.geturl(), query_params)
+
+    return str(requested_url_parsed.geturl())
 
 
-def urlencode_user_token_for_frontend_url(frontend_url: str, user: AbstractUser) -> str:
+def urlencode_user_token(frontend_url: str, user: AbstractUser) -> str:
     """
-    Adds the token as a query parameter to the provided frontend url.
-    Please ensure to call the get_url_for_frontend_page_if_valid_or_default()
-    method before calling this method, so to be sure to encode the refresh token
-    in a valid Baserow frontend url.
+    Adds the token as a query parameter to the provided frontend url. Please
+    ensure to call the get_url_for_frontend_page_if_valid_or_default() method
+    before calling this method, so to be sure to encode the refresh token in a
+    valid Baserow frontend url.
 
-    :param frontend_url: The url to which the user should be redirected
-        after a successful login.
+    :param frontend_url: The valid frontend url to which the user should be
+        redirected after a successful login.
     :param user: The user that sign in with an external provider and is going to
         start a new session in Baserow.
     :return: The url with the token as a query parameter.
     """
 
-    parsed_url = urlparse(frontend_url)
     user_tokens = generate_session_tokens_for_user(user, include_refresh_token=True)
-    return parsed_url._replace(query="token=" + user_tokens["refresh_token"]).geturl()
+    return urlencode_query_params(frontend_url, {"token": user_tokens["refresh_token"]})
 
 
 def redirect_user_on_success(
@@ -102,53 +155,20 @@ def redirect_user_on_success(
         start a new session in Baserow.
     :param requested_original_url: The url to which the user should be
         redirected after a successful login.
-    :return: The redrect HTTP response to the url with the token as a query parameter.
+    :return: The redirect HTTP response to the url with the token as a query
+        parameter.
     """
 
-    # valid_frontend_url = get_valid_relay_state_url(requested_original_url)
-    requested_original_url = (
-        requested_original_url or get_saml_default_relay_state_url()
-    )
-    redirect_url = urlencode_user_token_for_frontend_url(requested_original_url, user)
+    valid_frontend_url = get_valid_frontend_url(requested_original_url)
+    redirect_url = urlencode_user_token(valid_frontend_url, user)
     return redirect(redirect_url)
 
 
-def get_saml_login_relative_url(
-    query_params: Dict[str, str],
-) -> str:
+def get_default_redirect_frontend_url() -> str:
     """
-    Returns the url to the SAML login page. The url is constructed based on the
-    request and the SAML configuration.
+    Returns the url to the frontend dashboard.
 
-    :param query_params: The already validated request query parameters to
-        encode in the login url.
-    :return: The relative url to the login page for the Baserow initiated SAML
-        SSO.
-    """
-
-    relative_url = reverse("api:enterprise:sso:saml:login")
-    if query_params:
-        query = {k: v for k, v in query_params.items() if v is not None}
-        relative_url = f"{relative_url}?{urlencode(query)}"
-
-    return relative_url
-
-
-def get_saml_acs_absolute_url() -> str:
-    """
-    Returns the url to the SAML ACS page.
-
-    :return: The absolute url to the ACS page for SAML SSO.
-    """
-
-    return urljoin(settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:acs"))
-
-
-def get_saml_default_relay_state_url() -> str:
-    """
-    Returns the url to the SAML relay state page.
-
-    :return: The absolute url to the relay state page for SAML SSO.
+    :return: The absolute url to the Baserow dashboard.
     """
 
     return urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/dashboard")

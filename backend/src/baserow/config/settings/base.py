@@ -263,6 +263,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -316,7 +318,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.13.0",
+    "VERSION": "1.13.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -522,7 +524,7 @@ EXPORT_FILE_EXPIRE_MINUTES = 60
 
 USAGE_CALCULATION_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
-ROW_COUNT_INTERVAL = crontab(minute=0, hour=0)  # Midnight
+ROW_COUNT_INTERVAL = crontab(minute=0, hour=3)  # 3am
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 

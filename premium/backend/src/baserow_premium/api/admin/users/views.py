@@ -69,7 +69,7 @@ class UsersAdminView(AdminListingView):
     )
     def get(self, request):
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            request.user, PREMIUM
+            PREMIUM, request.user
         )
         return super().get(request)
 
@@ -208,7 +208,7 @@ class UserAdminImpersonateView(GenericAPIView):
     )
     def post(self, request):
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            request.user, PREMIUM
+            PREMIUM, request.user
         )
 
         serializer = self.get_serializer(data=request.data)

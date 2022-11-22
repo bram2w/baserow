@@ -43,7 +43,10 @@
             <SettingsModal ref="settingsModal"></SettingsModal>
           </li>
           <li>
-            <a @click="logoff()">
+            <a
+              :class="{ 'context__menu-item--loading': logoffLoading }"
+              @click="logoff()"
+            >
               <i class="context__menu-icon fas fa-fw fa-sign-out-alt"></i>
               {{ $t('sidebar.logoff') }}
             </a>
@@ -206,6 +209,12 @@
                 </div>
               </li>
             </nuxt-link>
+            <component
+              :is="component"
+              v-for="(component, index) in sidebarGroupComponents"
+              :key="index"
+              :group="selectedGroup"
+            ></component>
             <ul class="tree">
               <component
                 :is="getApplicationComponent(application)"
@@ -345,6 +354,7 @@ import editGroup from '@baserow/modules/core/mixins/editGroup'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 import GroupMemberInviteModal from '@baserow/modules/core/components/group/GroupMemberInviteModal'
+import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export default {
   name: 'Sidebar',
@@ -361,6 +371,11 @@ export default {
     GroupMemberInviteModal,
   },
   mixins: [editGroup, undoRedo],
+  data() {
+    return {
+      logoffLoading: false,
+    }
+  },
   computed: {
     /**
      * Because all the applications that belong to the user are in the store we will
@@ -389,6 +404,11 @@ export default {
         .map((plugin) => plugin.getSidebarMainMenuComponent())
         .filter((component) => component !== null)
     },
+    sidebarGroupComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getSidebarGroupComponent(this.selectedGroup))
+        .filter((component) => component !== null)
+    },
     pendingJobs() {
       return this.$store.getters['job/getAll'].filter((job) =>
         this.$registry
@@ -407,7 +427,6 @@ export default {
       })
     },
     ...mapState({
-      allApplications: (state) => state.application.items,
       groups: (state) => state.group.items,
       selectedGroup: (state) => state.group.selected,
     }),
@@ -429,8 +448,8 @@ export default {
       return this.$registry.get('job', job.type).getSidebarComponent()
     },
     logoff() {
-      this.$store.dispatch('auth/logoff')
-      this.$nuxt.$router.push({ name: 'login' })
+      this.logoffLoading = true
+      logoutAndRedirectToLogin(this.$nuxt.$router, this.$store)
     },
     /**
      * Called when the user clicks on the admin menu. Because there isn't an

@@ -2,7 +2,7 @@
   <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
     <div class="license-detail">
       <h1>
-        {{ $t('license.title', license) }}
+        {{ $t('license.title', { name: licenseType.getName() }) }}
       </h1>
       <div class="license-detail__users">
         <h2>{{ $t('license.users') }}</h2>
@@ -108,14 +108,24 @@
               {{ license.issued_to_name }} ({{ license.issued_to_email }})
             </div>
           </div>
-          <div v-if="licenseFeatureDescription" class="license-detail__item">
+          <div
+            v-for="(feature, index) in licenseFeatureDescription"
+            :key="index"
+            class="license-detail__item"
+          >
             <div class="license-detail__item-label">
               <div class="license-detail__item-name">
-                {{ licenseFeatureDescription }}
+                {{ feature.name }}
               </div>
             </div>
             <div class="license-detail__item-value">
-              <i class="fas fa-check license-yes"></i>
+              <i
+                class="fas fa-check"
+                :class="{
+                  'fa-check license-yes': feature.enabled,
+                  'fa-times license-no': !feature.enabled,
+                }"
+              ></i>
             </div>
           </div>
           <div class="license-detail__item">

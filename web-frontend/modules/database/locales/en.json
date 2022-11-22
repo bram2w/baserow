@@ -85,13 +85,13 @@
         "showDatabases": "show databases"
     },
     "apiTokenSettings": {
-        "title": "Personal API tokens",
+        "title": "Database tokens",
         "createToken": "Create token",
-        "noTokensMessage": "You have not yet created an API token. You can use API tokens to authenticate with the REST API endpoints where you can create, read, update and delete rows. It is possible to set permissions on table level.",
+        "noTokensMessage": "You have not yet created a database token. You can use database tokens to authenticate with the REST API endpoints where you can create, read, update and delete rows. It is possible to set permissions on table level.",
         "hasFullPermissions": "Has full permissions, also to all children.",
         "hasOnlySelectedPermissions": "Has only permissions to the selected children.",
         "noPermissions": "Doesn't have permissions.",
-        "createNewTitle": "Create new API token",
+        "createNewTitle": "Create new database token",
         "backToOverview": "Back to overview"
     },
     "apiTokenForm": {
@@ -120,7 +120,7 @@
         "description": "Description",
         "okDescription": "Request completed successfully.",
         "badRequestDescription": "The request contains invalid values or the JSON could not be parsed.",
-        "unauthorizedDescription": "When you try to access an endpoint without valid token.",
+        "unauthorizedDescription": "When you try to access an endpoint without a valid database token.",
         "notFoundDescription": "Row or table is not found.",
         "requestEntityTooLargeDescription": "The request exceeded the maximum allowed payload size.",
         "internalErrorDescription": "The server encountered an unexpected condition.",
@@ -158,7 +158,7 @@
         "pythonClient": "Python example API client:"
     },
     "apiDocsTableListFields": {
-        "description": "To list fields of the {name} table a `GET` request has to be made to the {name} fields endpoint. It's only possible to list the fields if the token has read, create or update permissions.",
+        "description": "To list fields of the {name} table a `GET` request has to be made to the {name} fields endpoint. It's only possible to list the fields if the database token has read, create or update permissions.",
         "resultFieldProperties": "Result field properties",
         "id": "Field primary key. Can be used to generate the database column name by adding `field_` prefix.",
         "name": "Field name.",
@@ -208,7 +208,7 @@
         "before": "If provided then the newly created rows will be positioned before the row with the provided id."
     },
     "apiDocsAuth": {
-        "description": "Baserow uses a simple token based authentication. You need to generate at least one API token in your {settingsLink} to use the endpoints described below. It is possible to give create, read, update and delete permissions up until table level per token. You can authenticate to the API by providing your API token in the HTTP authorization bearer token header. All API requests must be authenticated and made over HTTPS.",
+        "description": "Baserow uses a simple token based authentication. You need to generate at least one database token in your {settingsLink} to use the endpoints described below. It is possible to give create, read, update and delete permissions up until table level per token. You can authenticate to the API by providing your token in the HTTP authorization bearer token header. All API requests must be authenticated and made over HTTPS.",
         "settingsLink": "settings"
     },
     "apiDocsFilters": {
@@ -426,7 +426,9 @@
         "and": "And",
         "or": "Or",
         "relatedFieldNotFound": "The related field is not found.",
-        "filterTypeNotFound": "The filter type is not compatible."
+        "filterTypeNotFound": "The filter type is not compatible.",
+        "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
+        "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "image",

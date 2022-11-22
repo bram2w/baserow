@@ -33,7 +33,7 @@ class TokensView(APIView):
         tags=["Database tokens"],
         operation_id="list_database_tokens",
         description=(
-            "Lists all the API tokens that belong to the authorized user. An API token "
+            "Lists all the database tokens that belong to the authorized user. A token "
             "can be used to create, read, update and delete rows in the tables of the "
             "token's group. It only works on the tables if the token has the correct "
             "permissions. The **Database table rows** endpoints can be used for these "
@@ -56,7 +56,7 @@ class TokensView(APIView):
         tags=["Database tokens"],
         operation_id="create_database_token",
         description=(
-            "Creates a new API token for a given group and for the authorized user."
+            "Creates a new database token for a given group and for the authorized user."
         ),
         request=TokenCreateSerializer,
         responses={
@@ -70,7 +70,7 @@ class TokensView(APIView):
     @map_exceptions({UserNotInGroup: ERROR_USER_NOT_IN_GROUP})
     @validate_body(TokenCreateSerializer)
     def post(self, request, data):
-        """Creates a new token for the authorized user."""
+        """Creates a new database token for the authorized user."""
 
         data["group"] = CoreHandler().get_group(data.pop("group"))
         token = TokenHandler().create_token(request.user, **data)
@@ -87,13 +87,13 @@ class TokenView(APIView):
                 name="token_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="Returns the token related to the provided value.",
+                description="Returns the database token related to the provided value.",
             )
         ],
         tags=["Database tokens"],
         operation_id="get_database_token",
         description=(
-            "Returns the requested token if it is owned by the authorized user and"
+            "Returns the requested database token if it is owned by the authorized user and"
             "if the user has access to the related group."
         ),
         responses={
@@ -109,7 +109,7 @@ class TokenView(APIView):
         }
     )
     def get(self, request, token_id):
-        """Responds with a serialized token instance."""
+        """Responds with a serialized database token instance."""
 
         token = TokenHandler().get_token(request.user, token_id)
         serializer = TokenSerializer(token)
@@ -121,13 +121,13 @@ class TokenView(APIView):
                 name="token_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="Updates the token related to the provided value.",
+                description="Updates the database token related to the provided value.",
             )
         ],
         tags=["Database tokens"],
         operation_id="update_database_token",
         description=(
-            "Updates the existing token if it is owned by the authorized user and if"
+            "Updates the existing database token if it is owned by the authorized user and if"
             "the user has access to the related group."
         ),
         request=TokenUpdateSerializer,
@@ -155,7 +155,7 @@ class TokenView(APIView):
     )
     @validate_body(TokenUpdateSerializer)
     def patch(self, request, data, token_id):
-        """Updates the values of a token."""
+        """Updates the values of a database token."""
 
         token = TokenHandler().get_token(
             request.user,
@@ -183,13 +183,13 @@ class TokenView(APIView):
                 name="token_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="Deletes the token related to the provided value.",
+                description="Deletes the database token related to the provided value.",
             )
         ],
         tags=["Database tokens"],
         operation_id="delete_database_token",
         description=(
-            "Deletes the existing token if it is owned by the authorized user and if"
+            "Deletes the existing database token if it is owned by the authorized user and if"
             "the user has access to the related group."
         ),
         responses={
@@ -206,7 +206,7 @@ class TokenView(APIView):
         }
     )
     def delete(self, request, token_id):
-        """Deletes an existing token."""
+        """Deletes an existing database token."""
 
         token = TokenHandler().get_token(request.user, token_id)
         TokenHandler().delete_token(request.user, token)

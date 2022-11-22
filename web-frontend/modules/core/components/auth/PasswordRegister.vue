@@ -118,7 +118,9 @@
           {{ $t('action.signUp') }}
         </button>
       </div>
-      <slot></slot>
+      <div>
+        <slot></slot>
+      </div>
     </form>
   </div>
 </template>
@@ -137,7 +139,7 @@ import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInpu
 import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
-  name: 'AuthRegister',
+  name: 'PasswordRegister',
   components: { PasswordInput },
   mixins: [error],
   props: {
@@ -232,6 +234,10 @@ export default {
           ERROR_EMAIL_ALREADY_EXISTS: new ResponseErrorMessage(
             this.$t('error.alreadyExistsTitle'),
             this.$t('error.alreadyExistsMessage')
+          ),
+          ERROR_DEACTIVATED_USER: new ResponseErrorMessage(
+            this.$t('error.disabledAccountTitle'),
+            this.$t('error.disabledAccountMessage')
           ),
         })
       }

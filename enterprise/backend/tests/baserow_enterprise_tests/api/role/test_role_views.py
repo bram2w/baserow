@@ -8,6 +8,11 @@ from baserow_enterprise.role.handler import USER_TYPE, RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
 
 
+@pytest.fixture(autouse=True)
+def enable_enterprise_for_all_tests_here(enable_enterprise):
+    pass
+
+
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_role_assignment(

@@ -55,16 +55,6 @@
   }
 }
 
-.auth__login-buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  width: 100%;
-  margin-top: 48px;
-  padding-bottom: 20px;
-  margin-bottom: 40px;
-}
-
 .auth__control-label {
   display: block;
   font-size: 13px;
@@ -76,7 +66,7 @@
 .auth__control-error {
   height: 16px;
   margin-top: 6px;
-  font-weight: 500;
+  font-weight: 400;
 
   & div i.fas {
     color: $color-error-500;
@@ -91,7 +81,7 @@
 .auth__action-links {
   list-style: none;
   padding: 0;
-  margin-top: 40px 0 0;
+  margin-top: 40px;
 
   li {
     display: block;

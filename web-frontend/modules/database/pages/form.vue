@@ -38,7 +38,10 @@ import { clone, isPromise } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
 import FormService from '@baserow/modules/database/services/view/form'
-import { getPrefills } from '@baserow/modules/database/utils/form'
+import {
+  getHiddenFieldNames,
+  getPrefills,
+} from '@baserow/modules/database/utils/form'
 import { matchSearchFilters } from '@baserow/modules/database/utils/view'
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
 
@@ -77,9 +80,13 @@ export default {
     // object with the empty field value as initial form value.
     const values = {}
     const prefills = getPrefills(route.query)
+    const hiddenFields = getHiddenFieldNames(route.query)
     const promises = []
     data.fields.forEach((field) => {
-      field._ = { touched: false }
+      field._ = {
+        touched: false,
+        hiddenViaQueryParam: hiddenFields.includes(field.name),
+      }
       const fieldType = app.$registry.get('field', field.field.type)
       const setValue = (value) => {
         values[`field_${field.field.id}`] = value

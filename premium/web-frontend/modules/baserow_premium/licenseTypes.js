@@ -1,5 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import PremiumFeatures from '@baserow_premium/features'
+import PremiumFeaturesObject from '@baserow_premium/features'
+import PremiumFeatures from '@baserow_premium/components/PremiumFeatures'
 
 /**
  *
@@ -54,6 +55,10 @@ export class LicenseType extends Registerable {
   getLicenseSeatOverflowWarning(license) {
     throw new Error('Must be set by the implementing sub class.')
   }
+
+  getFeaturesComponent() {
+    return null
+  }
 }
 
 export class PremiumLicenseType extends LicenseType {
@@ -71,12 +76,25 @@ export class PremiumLicenseType extends LicenseType {
   }
 
   getFeatures() {
-    return [PremiumFeatures.PREMIUM]
+    return [PremiumFeaturesObject.PREMIUM]
   }
 
   getFeaturesDescription() {
     const { i18n } = this.app
-    return i18n.t('licenses.premiumFeatures')
+    return [
+      {
+        name: i18n.t('license.premiumFeatureName'),
+        enabled: true,
+      },
+      {
+        name: i18n.t('license.enterpriseFeatureName'),
+        enabled: false,
+      },
+      {
+        name: i18n.t('license.supportFeatureName'),
+        enabled: false,
+      },
+    ]
   }
 
   getTopSidebarTooltip() {
@@ -103,5 +121,9 @@ export class PremiumLicenseType extends LicenseType {
 
   getLicenseSeatOverflowWarning(license) {
     return ''
+  }
+
+  getFeaturesComponent() {
+    return PremiumFeatures
   }
 }

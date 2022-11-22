@@ -32,6 +32,14 @@ export class BaserowPlugin extends Registerable {
     return null
   }
 
+  /**
+   * Every registered plugin can display an additional item in the sidebar within
+   * the group context.
+   */
+  getSidebarGroupComponent(group) {
+    return null
+  }
+
   /*
    * Every registered plugin can display a component in the links section of the
    * dashboard sidebar.

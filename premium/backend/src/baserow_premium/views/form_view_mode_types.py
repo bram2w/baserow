@@ -9,7 +9,7 @@ class FormViewModeTypeSurvey(FormViewModeType):
 
     def before_form_create(self, values: dict, table, user):
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            user, table.database.group, PREMIUM
+            PREMIUM, user, table.database.group
         )
 
     def before_form_update(self, values: dict, view, user):
@@ -17,5 +17,5 @@ class FormViewModeTypeSurvey(FormViewModeType):
         # changing the name because it's not obvious to the user that's not possible.
         if "mode" in values:
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                user, view.table.database.group, PREMIUM
+                PREMIUM, user, view.table.database.group
             )

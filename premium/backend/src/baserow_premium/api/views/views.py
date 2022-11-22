@@ -83,7 +83,7 @@ class PremiumViewAttributesView(APIView):
         if group.has_template():
             raise CannotUpdatePremiumAttributesOnTemplate()
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(request.user, group, PREMIUM)
+        LicenseHandler.raise_if_user_doesnt_have_feature(PREMIUM, request.user, group)
 
         view_type = view_type_registry.get_by_model(view)
 

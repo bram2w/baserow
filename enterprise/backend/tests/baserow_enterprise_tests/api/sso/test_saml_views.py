@@ -21,7 +21,7 @@ from rest_framework.status import (
 from saml2 import saml, samlp, xmldsig
 from saml2.xml.schema import validate as validate_saml_xml
 
-from baserow.core.user.exceptions import UserAlreadyExist
+from baserow.core.user.exceptions import DeactivatedUserException
 from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
 from baserow_enterprise.auth_provider.handler import AuthProviderHandler, UserInfo
 
@@ -246,7 +246,7 @@ def test_get_or_create_user_and_sign_in_via_saml_identity(
     user.is_active = False
     user.save()
 
-    with pytest.raises(UserAlreadyExist):
+    with pytest.raises(DeactivatedUserException):
         AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
             user_info, auth_provider_2
         )

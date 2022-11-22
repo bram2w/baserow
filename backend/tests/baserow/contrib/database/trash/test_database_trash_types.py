@@ -1247,6 +1247,8 @@ def test_can_delete_tables_and_rows_in_the_same_perm_delete_batch(
     model = table.get_model()
     row_1 = handler.create_row(user=user, table=table)
     row_2 = handler.create_row(user=user, table=table)
+    row_3 = handler.create_row(user=user, table=table)
+    row_4 = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
         user, table.database.group, table.database, row_1, parent_id=table.id
@@ -1255,9 +1257,10 @@ def test_can_delete_tables_and_rows_in_the_same_perm_delete_batch(
     TrashHandler.trash(
         user, table.database.group, table.database, row_2, parent_id=table.id
     )
+    RowHandler().delete_rows(user, table, row_ids=[row_3.id, row_4.id])
     assert model.objects.all().count() == 0
-    assert model.trash.all().count() == 2
-    assert TrashEntry.objects.count() == 3
+    assert model.trash.all().count() == 4
+    assert TrashEntry.objects.count() == 4
     assert table.get_database_table_name() in connection.introspection.table_names()
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)

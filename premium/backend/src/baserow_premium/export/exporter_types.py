@@ -22,7 +22,7 @@ class PremiumTableExporter(TableExporter):
         """
 
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            user, table.database.group, PREMIUM
+            PREMIUM, user, table.database.group
         )
         super().before_job_create(user, table, view, export_options)
 

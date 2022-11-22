@@ -81,6 +81,12 @@
         {{ $t('formSidebar.modal.specialFieldTypes.dateField.codeSnippet') }}
       </code>
     </pre>
+
+    <h2>{{ $t('formSidebar.modal.howToHide.title') }}</h2>
+    <p>{{ $t('formSidebar.modal.howToHide.description') }}</p>
+    <pre><code>?hide_&lt;field_name&gt;
+?hide_Name
+?hide_Full+Name</code></pre>
   </Modal>
 </template>
 
@@ -88,7 +94,7 @@
 import modal from '@baserow/modules/core/mixins/modal'
 
 export default {
-  name: 'FormPrefillModal',
+  name: 'FormPrefillOrHideModal',
   mixins: [modal],
 }
 </script>

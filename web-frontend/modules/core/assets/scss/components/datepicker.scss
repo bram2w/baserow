@@ -59,6 +59,15 @@
     line-height: 36px;
   }
 
+  .cell.day.today {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .cell.day.weekend {
+    color: $color-primary-400;
+  }
+
   .cell:not(.blank):not(.disabled).day,
   .cell:not(.blank):not(.disabled).month,
   .cell:not(.blank):not(.disabled).year {

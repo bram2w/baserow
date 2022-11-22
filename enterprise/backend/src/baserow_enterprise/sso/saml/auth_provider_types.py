@@ -1,4 +1,8 @@
 from typing import Any, Dict, List, Optional
+from urllib.parse import urljoin
+
+from django.conf import settings
+from django.urls import reverse
 
 from rest_framework import serializers
 
@@ -12,10 +16,7 @@ from baserow_enterprise.api.sso.saml.validators import (
     validate_saml_metadata,
     validate_unique_saml_domain,
 )
-from baserow_enterprise.api.sso.utils import (
-    get_saml_acs_absolute_url,
-    get_saml_default_relay_state_url,
-)
+from baserow_enterprise.api.sso.utils import get_default_redirect_frontend_url
 from baserow_enterprise.sso.saml.exceptions import SamlProviderForDomainAlreadyExists
 from baserow_enterprise.sso.utils import is_sso_feature_active
 
@@ -92,8 +93,14 @@ class SamlAuthProviderType(AuthProviderType):
     def can_create_new_providers(self):
         return True
 
+    @classmethod
+    def get_acs_absolute_url(cls):
+        return urljoin(
+            settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:acs")
+        )
+
     def export_serialized(self) -> Dict[str, Any]:
         serialized_data = super().export_serialized()
-        serialized_data["relay_state_url"] = get_saml_default_relay_state_url()
-        serialized_data["acs_url"] = get_saml_acs_absolute_url()
+        serialized_data["relay_state_url"] = get_default_redirect_frontend_url()
+        serialized_data["acs_url"] = self.get_acs_absolute_url()
         return serialized_data

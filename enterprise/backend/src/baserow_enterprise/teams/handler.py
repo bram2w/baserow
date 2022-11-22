@@ -53,7 +53,7 @@ class TeamHandler:
         Returns a list of teams in a given group.
         """
 
-        LicenseHandler.user_has_feature(TEAMS, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, group)
 
         subj_count_sq = Subquery(
             TeamSubject.objects.annotate(count=Count("id"))
@@ -94,7 +94,7 @@ class TeamHandler:
         except Team.DoesNotExist:
             raise TeamDoesNotExist(f"The team with id {team_id} does not exist.")
 
-        LicenseHandler.user_has_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
 
         return team
 
@@ -113,7 +113,7 @@ class TeamHandler:
         Creates a new team for an existing group.
         """
 
-        LicenseHandler.user_has_feature(TEAMS, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, group)
 
         team = Team.objects.create(group=group, name=name)
 
@@ -126,7 +126,7 @@ class TeamHandler:
         Updates an existing team instance.
         """
 
-        LicenseHandler.user_has_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
 
         team.name = name
         team.save()
@@ -152,7 +152,7 @@ class TeamHandler:
         if not isinstance(team, Team):
             raise ValueError("The team is not an instance of Team.")
 
-        LicenseHandler.user_has_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
 
         TrashHandler.trash(user, team.group, None, team)
 
@@ -166,7 +166,7 @@ class TeamHandler:
         """
 
         team = self.get_team(user, team_id, base_queryset=Team.objects_and_trash)
-        LicenseHandler.user_has_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
         TrashHandler.restore_item(user, "team", team_id)
         team.refresh_from_db()
         team_restored.send(self, team_id=team.id, team=team, user=user)
@@ -223,7 +223,7 @@ class TeamHandler:
         redo to re-create a subject with the same PK.
         """
 
-        LicenseHandler.user_has_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
 
         # Determine if this `TeamSubject` content type natural key is supported.
         if not self.is_supported_subject_type(subject_natural_key):
@@ -297,7 +297,9 @@ class TeamHandler:
         if not isinstance(subject, TeamSubject):
             raise ValueError("The subject is not an instance of TeamSubject.")
 
-        LicenseHandler.user_has_feature(TEAMS, user, subject.team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            TEAMS, user, subject.team.group
+        )
 
         subject.delete()
 

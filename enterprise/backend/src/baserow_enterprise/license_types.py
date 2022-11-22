@@ -6,13 +6,13 @@ from baserow_premium.license.models import License
 from baserow_premium.license.registries import LicenseType
 
 from baserow.core.models import GroupUser
-from baserow_enterprise.features import RBAC, SSO, TEAMS
+from baserow_enterprise.features import RBAC, SSO, SUPPORT, TEAMS
 
 User = get_user_model()
 
 
-class EnterpriseLicenseType(LicenseType):
-    type = "enterprise"
+class EnterpriseWithoutSupportLicenseType(LicenseType):
+    type = "enterprise_without_support"
     order = 100
     features = [PREMIUM, RBAC, SSO, TEAMS]
     instance_wide = True
@@ -39,3 +39,8 @@ class EnterpriseLicenseType(LicenseType):
     def handle_seat_overflow(self, seats_taken: int, license_object: License):
         # We don't have to do anything because the seat limit is a soft limit.
         pass
+
+
+class EnterpriseLicenseType(EnterpriseWithoutSupportLicenseType):
+    type = "enterprise"
+    features = EnterpriseWithoutSupportLicenseType.features + [SUPPORT]

@@ -37,3 +37,10 @@ export const getTokenIfEnoughTimeLeft = (
     return token
   }
 }
+
+export const logoutAndRedirectToLogin = (router, store) => {
+  store.dispatch('auth/logoff')
+  router.push({ name: 'login' }, () => {
+    store.dispatch('auth/clearAllStoreUserData')
+  })
+}

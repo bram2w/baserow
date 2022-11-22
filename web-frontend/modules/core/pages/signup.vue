@@ -25,25 +25,32 @@
         >{{ $t('signup.disabledMessage') }}</Alert
       >
       <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
-        <i class="fas fa-arrow-left"></i>
         {{ $t('action.backToLogin') }}
       </nuxt-link>
     </template>
     <template v-else>
-      <AuthRegister
+      <PasswordRegister
         v-if="afterSignupStep < 0"
         :invitation="invitation"
         @success="next"
       >
-        <ul v-if="!shouldShowAdminSignupPage" class="auth__action-links">
+        <LoginButtons
+          show-border="top"
+          :hide-if-no-buttons="true"
+          :invitation="invitation"
+        />
+        <LoginActions
+          v-if="!shouldShowAdminSignupPage"
+          :invitation="invitation"
+        >
           <li>
             {{ $t('signup.loginText') }}
             <nuxt-link :to="{ name: 'login' }">
               {{ $t('action.login') }}
             </nuxt-link>
           </li>
-        </ul>
-      </AuthRegister>
+        </LoginActions>
+      </PasswordRegister>
       <component
         :is="afterSignupStepComponents[afterSignupStep]"
         v-else
@@ -55,15 +62,22 @@
 
 <script>
 import { mapGetters } from 'vuex'
-
-import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
-import AuthRegister from '@baserow/modules/core/components/auth/AuthRegister'
+import PasswordRegister from '@baserow/modules/core/components/auth/PasswordRegister'
 import LangPicker from '@baserow/modules/core/components/LangPicker'
+import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
+import LoginActions from '@baserow/modules/core/components/auth/LoginActions'
+import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 
 export default {
-  components: { AuthRegister, LangPicker },
-  mixins: [groupInvitationToken],
+  components: { PasswordRegister, LangPicker, LoginButtons, LoginActions },
   layout: 'login',
+  async asyncData({ app, route, store, redirect }) {
+    if (store.getters['auth/isAuthenticated']) {
+      return redirect('dashboard')
+    }
+    await store.dispatch('authProvider/fetchLoginOptions')
+    return await groupInvitationToken.asyncData({ route, app })
+  },
   data() {
     return {
       afterSignupStep: -1,
@@ -95,6 +109,7 @@ export default {
     },
     ...mapGetters({
       settings: 'settings/get',
+      loginActions: 'authProvider/getAllLoginActions',
     }),
   },
   methods: {

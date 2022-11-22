@@ -1,5 +1,8 @@
+from django.utils import timezone
+
 from baserow.core.models import Group
 from baserow.core.usage.registries import group_storage_usage_item_registry
+from baserow.core.utils import grouper
 
 
 class UsageHandler:
@@ -10,19 +13,30 @@ class UsageHandler:
         :return: The amount of groups that have been updated.
         """
 
-        i = 0
-        for group in Group.objects.filter(template__isnull=True):
-            usage_in_bytes = 0
-            for item in group_storage_usage_item_registry.get_all():
-                usage_in_bytes += item.calculate_storage_usage(group.id)
+        # Item types might need to register some plpgsql functions
+        # to speedup the calculations.
+        for item in group_storage_usage_item_registry.get_all():
+            if hasattr(item, "register_plpgsql_functions"):
+                item.register_plpgsql_functions()
 
-            # We want to convert to mega bytes here
-            # because otherwise we easily run out of
-            # the max integer range of postgres
-            usage_in_mega_bytes = usage_in_bytes / 1000000
+        count, chunk_size = 0, 256
+        groups_queryset = Group.objects.filter(template__isnull=True).iterator(
+            chunk_size=chunk_size
+        )
 
-            group.storage_usage = usage_in_mega_bytes
-            group.save()
-            i += 1
+        for groups in grouper(chunk_size, groups_queryset):
+            now = timezone.now()
+            for group in groups:
+                usage_in_bytes = 0
+                for item in group_storage_usage_item_registry.get_all():
+                    usage_in_bytes += item.calculate_storage_usage(group.id)
 
-        return i
+                group.storage_usage = usage_in_bytes / (1024 * 1024)  # in MB
+                group.storage_usage_updated_at = now
+
+            Group.objects.bulk_update(
+                groups, ["storage_usage", "storage_usage_updated_at"]
+            )
+            count += len(groups)
+
+        return count

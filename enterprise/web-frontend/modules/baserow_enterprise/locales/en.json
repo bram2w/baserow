@@ -2,7 +2,6 @@
     "enterprise": {
         "license": "Enterprise",
         "sidebarTooltip": "Your account has access to the enterprise features globally",
-        "enterpriseFeatures": "Premium and Enterprise Features",
         "rbac": "RBAC",
         "sso": "SSO",
         "deactivated": "Deactivated",
@@ -51,17 +50,19 @@
         "loginText": "Already have a password?"
     },
     "loginError": {
-        "title": "Something went wrong. ",
+        "title": "Something went wrong:",
         "loginText": "Already have an account?",
         "help": "Please contact your administrator for help.",
-        "defaultErrorMessage": "An error occurred while trying to log in.",
-        "errorSsoFeatureNotActive": "The SSO feature is not active. Please contact your administrator.",
-        "errorInvalidSamlRequest": "The SAML request is invalid.",
-        "errorInvalidSamlResponse": "The SAML response is invalid.",
-        "errorUserDeactivated": "The user has been disabled.",
-        "errorProviderDoesNotExist": "This authentication provider doesn't exist or is not available.",
-        "errorAuthFlowError": "An error occured during the authentication flow with the selected provider.",
-        "errorDifferentProvider": "Please use the provider that you originally signed up with."
+        "defaultErrorMessage": "it was not possible to complete the SSO login flow.",
+        "errorSsoFeatureNotActive": "SSO feature is not active. Please contact your administrator.",
+        "errorInvalidSamlRequest": "SAML request is invalid.",
+        "errorInvalidSamlResponse": "SAML response is invalid.",
+        "errorUserDeactivated": "user has been disabled.",
+        "errorProviderDoesNotExist": "this authentication provider doesn't exist or is not available.",
+        "errorAuthFlowError": "an error occurred during the authentication flow with the selected provider.",
+        "errorDifferentProvider": "please use the provider that you originally signed up with.",
+        "errorGroupInvitationEmailMismatch": "your email address does not match with the invitation.",
+        "errorSignupDisabled": "sign up has been disabled by the administrator."
     },
     "roles": {
         "admin": {
@@ -99,5 +100,12 @@
     },
     "loginButton": {
         "continueWith": "Continue with"
+    },
+    "enterpriseFeatures": {
+        "sso": "Single Sign On",
+        "rbac": "Role-based access control"
+    },
+    "chatwootSuportSidebarGroup": {
+        "directSupport": "Direct support"
     }
 }

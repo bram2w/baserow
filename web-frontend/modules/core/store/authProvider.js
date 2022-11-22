@@ -37,6 +37,9 @@ export const getters = {
   areLoginOptionsLoaded(state) {
     return state.loginOptionsLoaded
   },
+  getLoginOptionsForType: (state) => (type) => {
+    return state.loginOptions[type]
+  },
   getAllLoginButtons: (state) => {
     let optionsWithButton = []
     for (const loginOption of Object.values(state.loginOptions)) {
