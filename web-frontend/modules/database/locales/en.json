@@ -426,7 +426,9 @@
         "and": "And",
         "or": "Or",
         "relatedFieldNotFound": "The related field is not found.",
-        "filterTypeNotFound": "The filter type is not compatible."
+        "filterTypeNotFound": "The filter type is not compatible.",
+        "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
+        "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "image",

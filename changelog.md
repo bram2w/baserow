@@ -21,7 +21,7 @@ For example:
 * Raise an exception when a user doesn't have a required feature on an endpoint
 * Fixed authenticated state changing before redirected to the login page when logging off. [#1328](https://gitlab.com/bramw/baserow/-/issues/1328)
 * `permanently_delete_marked_trash` task no longer fails on permanently deleting a table before an associated rows batch.  [#1266](https://gitlab.com/bramw/baserow/-/issues/1266)
-
+* Fixed bug where "add filter" link was not clickable if the primary field has no compatible filter types. [#1302](https://gitlab.com/bramw/baserow/-/issues/1302)
 ### Refactors
 * Changed `TableGroupStorageUsageItemType.calculate_storage_usage` to use a PL/pgSQL function to speedup the storage usage calculation.
 * Replace the CSS classes for SSO settings forms. [#1336](https://gitlab.com/bramw/baserow/-/issues/1336)
