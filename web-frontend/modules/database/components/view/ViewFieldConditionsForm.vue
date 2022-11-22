@@ -57,7 +57,7 @@
             :key="'field-' + field.id"
             :name="field.name"
             :value="field.id"
-            :disabled="hasNoCompatibleFilterTypes(field, filterTypes)"
+            :disabled="!hasCompatibleFilterTypes(field, filterTypes)"
           ></DropdownItem>
         </Dropdown>
       </div>
@@ -107,6 +107,8 @@
 </template>
 
 <script>
+import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
+
 export default {
   name: 'ViewFieldConditionsForm',
   props: {
@@ -158,6 +160,7 @@ export default {
     },
   },
   methods: {
+    hasCompatibleFilterTypes,
     focusValue(position) {
       const ref = `filter-value-${position}`
       if (
@@ -168,17 +171,6 @@ export default {
       ) {
         this.$refs[ref][0].focus()
       }
-    },
-    /**
-     * Indicates if the field has any compatible filter types.
-     */
-    hasNoCompatibleFilterTypes(field, filterTypes) {
-      for (const type in filterTypes) {
-        if (filterTypes[type].fieldIsCompatible(field)) {
-          return false
-        }
-      }
-      return true
     },
     /**
      * Returns a list of filter types that are allowed for the given fieldId.

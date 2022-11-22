@@ -41,7 +41,7 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
-import { getPrimaryOrFirstField } from '@baserow/modules/database/utils/field'
+import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 
 export default {
   name: 'ViewFilterForm',
@@ -74,20 +74,37 @@ export default {
   methods: {
     async addFilter(values) {
       try {
-        const field = getPrimaryOrFirstField(this.fields)
-        await this.$store.dispatch('view/createFilter', {
-          field,
-          view: this.view,
-          values: {
-            field: field.id,
-          },
-          emitEvent: false,
-          readOnly: this.readOnly,
-        })
-        this.$emit('changed')
+        const field = this.getFirstCompatibleField(this.fields)
+        if (field === undefined) {
+          await this.$store.dispatch('notification/error', {
+            title: this.$t(
+              'viewFilterContext.noCompatibleFilterTypesErrorTitle'
+            ),
+            message: this.$t(
+              'viewFilterContext.noCompatibleFilterTypesErrorMessage'
+            ),
+          })
+        } else {
+          await this.$store.dispatch('view/createFilter', {
+            field,
+            view: this.view,
+            values: {
+              field: field.id,
+            },
+            emitEvent: false,
+            readOnly: this.readOnly,
+          })
+          this.$emit('changed')
+        }
       } catch (error) {
         notifyIf(error, 'view')
       }
+    },
+    getFirstCompatibleField(fields) {
+      return fields
+        .slice()
+        .sort((a, b) => b.primary - a.primary)
+        .find((field) => hasCompatibleFilterTypes(field, this.filterTypes))
     },
     async deleteFilter(filter) {
       try {
