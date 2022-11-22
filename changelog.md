@@ -27,6 +27,7 @@ For example:
 ### Refactors
 * Changed `TableGroupStorageUsageItemType.calculate_storage_usage` to use a PL/pgSQL function to speedup the storage usage calculation.
 * Replace the CSS classes for SSO settings forms. [#1336](https://gitlab.com/bramw/baserow/-/issues/1336)
+* Moved the Open Sans font to the static directory instead of a Google fonts dependency. [#1246](https://gitlab.com/bramw/baserow/-/issues/1246)
 
 ### Breaking Changes
 
