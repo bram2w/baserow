@@ -35,6 +35,7 @@
           :placeholder="searchText"
           tabindex="0"
           @keyup="search(query)"
+          @keydown.enter="createOptionViaSearch($event, query)"
         />
       </div>
       <ul
@@ -138,6 +139,12 @@ export default {
         }
       }
       this.$emit('create-option', { value, done })
+    },
+    createOptionViaSearch(event, query) {
+      if (this.canCreateOption) {
+        event.stopPropagation()
+        this.createOption(query)
+      }
     },
   },
 }

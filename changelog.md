@@ -11,6 +11,8 @@ For example:
 
 ### New Features
 
+* Allow creating a new option by pressing enter in the dropdown [#1169](https://gitlab.com/bramw/baserow/-/issues/1169)
+
 ### Bug Fixes
 
 ### Refactors
