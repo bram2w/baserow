@@ -29,6 +29,7 @@
         @refresh="$emit('refresh', $event)"
         @dragging="
           canOrderFields &&
+            !$event.field.primary &&
             $refs.fieldDragging.start($event.field, $event.event)
         "
       ></GridViewHead>
@@ -102,7 +103,8 @@
     <GridViewFieldDragging
       ref="fieldDragging"
       :view="view"
-      :fields="fields"
+      :fields="draggingFields"
+      :offset="draggingOffset"
       :container-width="width"
       :read-only="readOnly"
       :store-prefix="storePrefix"
@@ -216,6 +218,14 @@ export default {
       }
 
       return width
+    },
+    draggingFields() {
+      return this.fields.filter((f) => !f.primary)
+    },
+    draggingOffset() {
+      return this.fields
+        .filter((f) => f.primary)
+        .reduce((sum, f) => sum + this.getFieldWidth(f.id), 0)
     },
   },
   watch: {

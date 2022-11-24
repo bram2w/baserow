@@ -30,8 +30,20 @@ export function getRowSortFunction($registry, sortings, fields) {
 /**
  * Generates a sort function for fields based on order and id.
  */
-export function sortFieldsByOrderAndIdFunction(fieldOptions) {
+export function sortFieldsByOrderAndIdFunction(
+  fieldOptions,
+  primaryAlwaysFirst = false
+) {
   return (a, b) => {
+    if (primaryAlwaysFirst) {
+      // If primary must always be first, then first by primary.
+      if (a.primary > b.primary) {
+        return -1
+      } else if (a.primary < b.primary) {
+        return 1
+      }
+    }
+
     const orderA = fieldOptions[a.id]
       ? fieldOptions[a.id].order
       : maxPossibleOrderValue

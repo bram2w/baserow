@@ -59,6 +59,7 @@
       :style="{ left: leftWidth + 'px' }"
     ></div>
     <GridViewFieldWidthHandle
+      v-if="canFitInTwoColumns"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :database="database"
@@ -251,6 +252,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import ResizeObserver from 'resize-observer-polyfill'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
@@ -307,6 +309,10 @@ export default {
       selectedRow: null,
       deletingRow: false,
       showHiddenFieldsInRowModal: false,
+      // Indicates whether the first two columns have enough space to be usable. If
+      // not, the primary field is not sticky, so it's easier to view all data on for
+      // example a smartphone.
+      canFitInTwoColumns: true,
     }
   },
   computed: {
@@ -317,13 +323,14 @@ export default {
       return this.leftFields.concat(this.visibleFields)
     },
     /**
-     * Returns only the visible fields in the correct order.
+     * Returns only the visible fields in the correct order. Primary must always be
+     * first if in that list.
      */
     visibleFields() {
       const fieldOptions = this.fieldOptions
       return this.rightFields
         .filter(filterVisibleFieldsFunction(fieldOptions))
-        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions, true))
     },
     /**
      * Returns only the hidden fields in the correct order.
@@ -335,10 +342,18 @@ export default {
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     leftFields() {
-      return this.fields.filter((field) => field.primary)
+      if (this.canFitInTwoColumns) {
+        return this.fields.filter((field) => field.primary)
+      } else {
+        return []
+      }
     },
     rightFields() {
-      return this.fields.filter((field) => !field.primary)
+      if (this.canFitInTwoColumns) {
+        return this.fields.filter((field) => !field.primary)
+      } else {
+        return this.fields
+      }
     },
     leftFieldsWidth() {
       return this.leftFields.reduce(
@@ -396,15 +411,8 @@ export default {
     this.$bus.$on('field-deleted', this.fieldDeleted)
   },
   mounted() {
-    this.$el.resizeEvent = () => {
-      const height = this.$refs.left.$refs.body.clientHeight
-      this.$store.dispatch(
-        this.storePrefix + 'view/grid/setWindowHeight',
-        height
-      )
-    }
-    this.$el.resizeEvent()
-    window.addEventListener('resize', this.$el.resizeEvent)
+    this.$el.resizeObserver = new ResizeObserver(this.onWindowResize)
+    this.$el.resizeObserver.observe(this.$el)
     window.addEventListener('keydown', this.keyDownEvent)
     window.addEventListener('copy', this.copySelection)
     window.addEventListener('paste', this.pasteFromMultipleCellSelection)
@@ -418,13 +426,14 @@ export default {
       this.storePrefix + 'view/grid/fetchAllFieldAggregationData',
       { view: this.view }
     )
+    this.onWindowResize()
 
     if (this.row !== null) {
       this.populateAndEditRow(this.row)
     }
   },
   beforeDestroy() {
-    window.removeEventListener('resize', this.$el.resizeEvent)
+    this.$el.resizeObserver.unobserve(this.$el)
     window.removeEventListener('keydown', this.keyDownEvent)
     window.removeEventListener('copy', this.copySelection)
     window.removeEventListener('paste', this.pasteFromMultipleCellSelection)
@@ -464,6 +473,10 @@ export default {
       if (scrollbars && scrollbars.update) {
         scrollbars.update()
       }
+
+      // When anything related to the fields has been updated, it could be that it
+      // doesn't fit in two columns anymore. Calling this method checks that.
+      this.checkCanFitInTwoColumns()
     },
     /**
      * Called when a cell value has been updated. This can for example happen via the
@@ -752,12 +765,15 @@ export default {
         this.$refs.scrollbars.updateVertical()
       }
 
-      if (elementLeft < 0 && !field.primary) {
+      if (elementLeft < 0 && (!this.canFitInTwoColumns || !field.primary)) {
         // If the field isn't visible in the viewport we need to scroll left in order
         // to show it.
         this.horizontalScroll(elementLeft + horizontalContainer.scrollLeft - 20)
         this.$refs.scrollbars.updateHorizontal()
-      } else if (elementRight > horizontalContainerWidth && !field.primary) {
+      } else if (
+        elementRight > horizontalContainerWidth &&
+        (!this.canFitInTwoColumns || !field.primary)
+      ) {
         // If the field isn't visible in the viewport we need to scroll right in order
         // to show it.
         this.horizontalScroll(
@@ -812,35 +828,24 @@ export default {
      * direction and will select that one.
      */
     selectNextCell({ row, field, direction = 'next' }) {
-      const fields = this.visibleFields
-      const primary = this.leftFields[0]
+      const fields = this.allVisibleFields
       let nextFieldId = -1
       let nextRowId = -1
 
       if (direction === 'next' || direction === 'previous') {
         nextRowId = row.id
 
-        if (field.primary && fields.length > 0 && direction === 'next') {
-          // If the currently selected field is the primary we can just select the
-          // first field of the fields if there are any.
-          nextFieldId = fields[0].id
-        } else if (!field.primary) {
-          // First we need to know which index the currently selected field has in the
-          // fields list.
-          const index = fields.findIndex((f) => f.id === field.id)
-          if (direction === 'next' && fields.length > index + 1) {
-            // If we want to select the next field we can just check if the next index
-            // exists and read the id from there.
-            nextFieldId = fields[index + 1].id
-          } else if (direction === 'previous' && index > 0) {
-            // If we want to select the previous field we can just check if aren't
-            // already the first and read the id from the previous.
-            nextFieldId = fields[index - 1].id
-          } else if (direction === 'previous' && index === 0) {
-            // If we want to select the previous field and we already are the first
-            // index we just select the primary.
-            nextFieldId = primary.id
-          }
+        // First we need to know which index the currently selected field has in the
+        // fields list.
+        const index = fields.findIndex((f) => f.id === field.id)
+        if (direction === 'next' && fields.length > index + 1) {
+          // If we want to select the next field we can just check if the next index
+          // exists and read the id from there.
+          nextFieldId = fields[index + 1].id
+        } else if (direction === 'previous' && index > 0) {
+          // If we want to select the previous field we can just check if aren't
+          // already the first and read the id from the previous.
+          nextFieldId = fields[index - 1].id
         }
       }
 
@@ -1099,6 +1104,41 @@ export default {
       } finally {
         this.$store.dispatch('notification/setClearing', false)
       }
+    },
+    /**
+     * This method figures out whether the first two columns have enough space to be
+     * usable using the primary field width. It updates the `canFitInTwoColumns`
+     * property accordingly.
+     */
+    checkCanFitInTwoColumns() {
+      // In some cases this method is called when the component hasn't fully been
+      // loaded. This will make sure we don't change the state before that initial load.
+      if (!this.$el) {
+        return
+      }
+
+      // We're using `allVisibleFields` because it shouldn't matter if the primary
+      // field is in the left or right section.
+      const primary = this.allVisibleFields.find((f) => f.primary)
+      const maxWidth =
+        this.gridViewRowDetailsWidth +
+        (primary ? this.getFieldWidth(primary.id) : 0) +
+        300
+
+      this.canFitInTwoColumns = this.$el.clientWidth > maxWidth
+    },
+    /**
+     * Event called when the grid view element window resizes.
+     */
+    onWindowResize() {
+      this.checkCanFitInTwoColumns()
+
+      // Update the window height to dynamically show the right amount of rows.
+      const height = this.$refs.left.$refs.body.clientHeight
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/setWindowHeight',
+        height
+      )
     },
   },
 }
