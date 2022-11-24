@@ -10,7 +10,7 @@ import pytest
 from rest_framework.status import HTTP_302_FOUND
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from baserow.api.user.jwt import get_user_from_jwt_token
+from baserow.api.user.jwt import get_user_from_token
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser, Settings
 from baserow_enterprise.auth_provider.handler import UserInfo
@@ -176,7 +176,7 @@ def test_oauth2_callback_signup_success(api_client, enterprise_data_fixture):
 
         parsed_url = urlparse(response.headers["Location"])
         params = dict(parse_qsl(parsed_url.query))
-        user = get_user_from_jwt_token(params["token"], token_class=RefreshToken)
+        user = get_user_from_token(params["token"], token_class=RefreshToken)
         assert user.email == "testuser@example.com"
         assert user.first_name == "Test User"
 
@@ -220,7 +220,7 @@ def test_oauth2_callback_signup_set_language(api_client, enterprise_data_fixture
 
         parsed_url = urlparse(response.headers["Location"])
         params = dict(parse_qsl(parsed_url.query))
-        user = get_user_from_jwt_token(params["token"], token_class=RefreshToken)
+        user = get_user_from_token(params["token"], token_class=RefreshToken)
         assert user.email == "testuser@example.com"
         assert user.first_name == "Test User"
         assert user.profile.language == "es"
@@ -272,7 +272,7 @@ def test_oauth2_callback_signup_group_invitation(
 
         parsed_url = urlparse(response.headers["Location"])
         params = dict(parse_qsl(parsed_url.query))
-        user = get_user_from_jwt_token(params["token"], token_class=RefreshToken)
+        user = get_user_from_token(params["token"], token_class=RefreshToken)
         assert user.email == "testuser@example.com"
         assert user.first_name == "Test User"
 
@@ -417,7 +417,7 @@ def test_oauth2_callback_login_success(
 
         parsed_url = urlparse(response.headers["Location"])
         params = dict(parse_qsl(parsed_url.query))
-        user = get_user_from_jwt_token(params["token"], token_class=RefreshToken)
+        user = get_user_from_token(params["token"], token_class=RefreshToken)
         assert user.email == "testuser@example.com"
         assert user.first_name == "Test User"
 

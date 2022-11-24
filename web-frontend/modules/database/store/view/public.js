@@ -21,7 +21,7 @@ export const actions = {
     return token
   },
   setAuthToken({ commit }, { slug, token }) {
-    setToken(token, this.app, slug)
+    setToken(this.app, token, slug)
     commit('SET_AUTH_TOKEN', token)
   },
   setIsPublic({ commit }, value) {

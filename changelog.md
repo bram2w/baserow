@@ -16,6 +16,7 @@ For example:
 ### Bug Fixes
 
 ### Refactors
+* Refresh the JWT token when needed instead of periodically. [#1294](https://gitlab.com/bramw/baserow/-/issues/1294)
 
 ## Released (2022-11-22 1.13.1)
 

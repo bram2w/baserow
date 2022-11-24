@@ -799,7 +799,7 @@ def test_schedule_user_deletion(client, data_fixture):
 
 @pytest.mark.django_db
 def test_token_error_if_user_deleted_or_disabled(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token(
+    user, _ = data_fixture.create_user_and_token(
         email="test@localhost", password="test"
     )
     refresh_token = data_fixture.generate_refresh_token(user)
@@ -815,8 +815,8 @@ def test_token_error_if_user_deleted_or_disabled(api_client, data_fixture):
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json() == {
-        "error": "ERROR_INVALID_TOKEN",
-        "detail": "Token is expired or invalid.",
+        "error": "ERROR_INVALID_REFRESH_TOKEN",
+        "detail": "Refresh token is expired or invalid.",
     }
 
     # reactivate the user
@@ -841,8 +841,8 @@ def test_token_error_if_user_deleted_or_disabled(api_client, data_fixture):
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json() == {
-        "error": "ERROR_INVALID_TOKEN",
-        "detail": "Token is expired or invalid.",
+        "error": "ERROR_INVALID_REFRESH_TOKEN",
+        "detail": "Refresh token is expired or invalid.",
     }
 
     # remove the user_id from the token
@@ -855,6 +855,6 @@ def test_token_error_if_user_deleted_or_disabled(api_client, data_fixture):
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json() == {
-        "error": "ERROR_INVALID_TOKEN",
-        "detail": "Token is expired or invalid.",
+        "error": "ERROR_INVALID_REFRESH_TOKEN",
+        "detail": "Refresh token is expired or invalid.",
     }

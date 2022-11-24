@@ -11,6 +11,8 @@ export const state = () => ({
   refreshing: false,
   token: null,
   refreshToken: null,
+  tokenUpdatedAt: 0,
+  tokenPayload: null,
   user: null,
   authenticated: false,
   additional: {},
@@ -19,14 +21,19 @@ export const state = () => ({
   // `setToken` function.
   preventSetToken: false,
   untrustedClientSessionId: uuidv4(),
+  userSessionExpired: false,
 })
 
 export const mutations = {
   /* eslint-disable camelcase */
-  SET_USER_DATA(state, { access_token, refresh_token, user, ...additional }) {
+  SET_USER_DATA(
+    state,
+    { access_token, refresh_token, user, tokenUpdatedAt, ...additional }
+  ) {
     state.token = access_token
     state.refreshToken = refresh_token
-    state.token_data = jwtDecode(state.token)
+    state.tokenUpdatedAt = tokenUpdatedAt || new Date().getTime()
+    state.tokenPayload = jwtDecode(state.token)
     /* eslint-enable camelcase */
     state.user = user
     // Additional entries in the response payload could have been added via the
@@ -34,6 +41,7 @@ export const mutations = {
     // that it can be used by other modules.
     state.additional = additional
     state.authenticated = true
+    state.userSessionExpired = false
   },
   UPDATE_USER_DATA(state, { user, ...data }) {
     if (user !== undefined) {
@@ -49,11 +57,15 @@ export const mutations = {
   LOGOFF(state) {
     state.token = null
     state.refreshToken = null
+    state.tokenUpdatedAt = 0
+    state.tokenPayload = null
     state.authenticated = false
   },
   CLEAR_USER_DATA(state) {
     state.token = null
     state.refreshToken = null
+    state.tokenUpdatedAt = 0
+    state.tokenPayload = null
     state.user = null
     state.authenticated = false
   },
@@ -66,6 +78,9 @@ export const mutations = {
   SET_PREVENT_SET_TOKEN(state, value) {
     state.preventSetToken = value
   },
+  SET_USER_SESSION_EXPIRED(state, expired) {
+    state.userSessionExpired = expired
+  },
 }
 
 export const actions = {
@@ -73,14 +88,13 @@ export const actions = {
    * Authenticate a user by his email and password. If successful commit the
    * token to the state and start the refresh timeout to stay authenticated.
    */
-  async login({ commit, dispatch, getters }, { email, password }) {
+  async login({ commit, getters }, { email, password }) {
     const { data } = await AuthService(this.$client).login(email, password)
     commit('SET_USER_DATA', data)
 
     if (!getters.getPreventSetToken) {
-      setToken(getters.refreshToken, this.app)
+      setToken(this.app, getters.refreshToken)
     }
-    dispatch('startRefreshTimeout')
     return data.user
   },
   /**
@@ -107,9 +121,8 @@ export const actions = {
       groupInvitationToken,
       templateId
     )
-    setToken(data.refresh_token, this.app)
+    setToken(this.app, data.refresh_token)
     commit('SET_USER_DATA', data)
-    dispatch('startRefreshTimeout')
   },
   /**
    * Logs off the user by removing the token as a cookie and clearing the user
@@ -134,51 +147,28 @@ export const actions = {
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
    */
-  async refresh({ commit, dispatch, getters }, refreshToken) {
-    try {
-      const { data } = await AuthService(this.$client).refresh(refreshToken)
-      // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
-      // a new refresh token. In that case we keep using the old originally one stored in the cookie.
-      commit('SET_USER_DATA', { refresh_token: refreshToken, ...data })
-
-      if (!getters.getPreventSetToken) {
-        setToken(getters.refreshToken, this.app)
-      }
-      dispatch('startRefreshTimeout')
-    } catch (error) {
-      // If the server can't be reached because of a network error we want to
-      // fail hard so that the correct error message is shown.
-      if (error.response === undefined) {
-        throw error
-      }
-
-      // The token could not be refreshed, this means the token is no longer
-      // valid and the user not logged in anymore.
-      unsetToken(this.app)
-      commit('CLEAR_USER_DATA')
-
-      // @TODO we might want to do something here, trigger some event, show
-      //       show the user a login popup or redirect to the login page.
+  async refresh({ commit, getters }, token = null) {
+    const refreshToken = token || getters.refreshToken
+    if (!refreshToken) {
+      throw new Error('Invalid refresh token')
     }
-  },
-  /**
-   * Because the token expires within a configurable time, we need to keep
-   * refreshing the token before that happens. This process may only happen in
-   * the browser because that is where we measure if the user still has the
-   * application open.
-   */
-  startRefreshTimeout({ getters, commit, dispatch }) {
-    if (!process.browser) return
 
-    clearTimeout(this.refreshTimeout)
-    commit('SET_REFRESHING', true)
+    const tokenUpdatedAt = new Date().getTime()
+    const rsp = await AuthService(this.$client).refresh(refreshToken)
+    if (!rsp) {
+      return // invalid refresh token
+    }
 
-    // The token expires within a given time. When 80% of that time has expired we want
-    // to fetch a new token.
-    this.refreshTimeout = setTimeout(() => {
-      dispatch('refresh', getters.refreshToken)
-      commit('SET_REFRESHING', false)
-    }, Math.floor((getters.tokenExpireSeconds / 100) * 80) * 1000)
+    // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
+    // a new refresh token. In that case we keep the old originally one stored in the cookie.
+    commit('SET_USER_DATA', {
+      refresh_token: refreshToken,
+      tokenUpdatedAt,
+      ...rsp.data,
+    })
+    if (!getters.getPreventSetToken && rsp.data.refresh_token) {
+      setToken(this.app, getters.refreshToken)
+    }
   },
   /**
    * The web socket id is generated by the backend when connecting to the real time
@@ -217,6 +207,9 @@ export const actions = {
   preventSetToken({ commit }) {
     commit('SET_PREVENT_SET_TOKEN', true)
   },
+  setUserSessionExpired({ commit }, value) {
+    commit('SET_USER_SESSION_EXPIRED', value)
+  },
 }
 
 export const getters = {
@@ -253,20 +246,25 @@ export const getters = {
   getUntrustedClientSessionId(state) {
     return state.untrustedClientSessionId
   },
-  /**
-   * Returns the amount of seconds it will take before the tokes expires.
-   * @TODO figure out what happens if the browser and server time are not in
-   *       sync.
-   */
-  tokenExpireSeconds(state) {
-    const now = Math.ceil(new Date().getTime() / 1000)
-    return state.token_data.exp - now
+  shouldRefreshToken: (state) => () => {
+    // the user must be authenticated to refresh the token
+    if (!state.authenticated) {
+      return false
+    }
+
+    const data = state.tokenPayload
+    const now = new Date().getTime()
+    const tokenLifespan = (data.exp - data.iat) * 1000
+    return (now - state.tokenUpdatedAt) / tokenLifespan > 0.8
   },
   getAdditionalUserData(state) {
     return state.additional
   },
   getPreventSetToken(state) {
     return state.preventSetToken
+  },
+  isUserSessionExpired: (state) => {
+    return state.authenticated && state.userSessionExpired
   },
 }
 

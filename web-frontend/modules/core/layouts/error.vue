@@ -1,5 +1,5 @@
 <template>
-  <div class="placeholder">
+  <div v-if="!redirecting" class="placeholder">
     <div class="placeholder__logo">
       <nuxt-link :to="{ name: 'index' }">
         <img
@@ -16,13 +16,21 @@
     <p v-else class="placeholder__content">{{ content }}</p>
     <div v-if="showBackButton" class="placeholder__action">
       <nuxt-link
-        v-if="isAuthenticated"
+        v-if="isAuthenticated && currentRouteName !== 'dashboard'"
         :to="{ name: 'dashboard' }"
         class="button button--large"
       >
         <i class="fas fa-arrow-left"></i>
         {{ $t('errorLayout.backDashboard') }}
       </nuxt-link>
+      <button
+        v-else-if="isAuthenticated && currentRouteName === 'dashboard'"
+        class="button button--large"
+        @click="refresh"
+      >
+        <i class="fas fa-redo-alt"></i>
+        {{ $t('errorLayout.refresh') }}
+      </button>
       <nuxt-link v-else :to="{ name: 'login' }" class="button button--large">
         <i class="fas fa-arrow-left"></i>
         {{ $t('errorLayout.backLogin') }}
@@ -33,6 +41,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export default {
   props: {
@@ -40,6 +49,11 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      redirecting: false,
+    }
   },
   head() {
     return {
@@ -59,9 +73,29 @@ export default {
     showBackButton() {
       return !this.error.hideBackButton
     },
+    currentRouteName() {
+      return this.$route.name
+    },
     ...mapGetters({
       isAuthenticated: 'auth/isAuthenticated',
     }),
+  },
+  created() {
+    const showSessionExpiredNotification =
+      this.$store.getters['auth/isUserSessionExpired']
+    if (showSessionExpiredNotification) {
+      this.redirecting = true
+      logoutAndRedirectToLogin(
+        this.$router,
+        this.$store,
+        showSessionExpiredNotification
+      )
+    }
+  },
+  methods: {
+    refresh() {
+      location.reload()
+    },
   },
 }
 </script>
