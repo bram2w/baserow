@@ -264,7 +264,8 @@ class CreateTeamSubjectActionType(ActionType):
         params: Params,
         action_to_undo: Action,
     ):
-        TeamHandler().delete_subject_by_id(user, params.subject_id)
+        team = TeamHandler().get_team(user, params.team_id)
+        TeamHandler().delete_subject_by_id(user, params.subject_id, team)
 
     @classmethod
     def redo(
@@ -336,4 +337,5 @@ class DeleteTeamSubjectActionType(ActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
-        TeamHandler().delete_subject_by_id(user, params.subject_id)
+        team = TeamHandler().get_team(user, params.team_id)
+        TeamHandler().delete_subject_by_id(user, params.subject_id, team)

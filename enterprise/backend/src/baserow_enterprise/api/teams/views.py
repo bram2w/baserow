@@ -447,7 +447,8 @@ class TeamSubjectView(APIView):
         """Responds with a single subject."""
 
         team = TeamHandler().get_team(request.user, team_id)
-        subject = TeamHandler().get_subject(subject_id)
+        subject = TeamHandler().get_subject(subject_id, team)
+
         CoreHandler().check_permissions(
             request.user,
             ReadTeamSubjectOperationType.type,
@@ -499,7 +500,8 @@ class TeamSubjectView(APIView):
         """Deletes an existing team subject if the user belongs to the group."""
 
         team = TeamHandler().get_team(request.user, team_id)
-        subject = TeamHandler().get_subject_for_update(subject_id)
+        subject = TeamHandler().get_subject_for_update(subject_id, team)
+
         CoreHandler().check_permissions(
             request.user,
             DeleteTeamSubjectOperationType.type,
