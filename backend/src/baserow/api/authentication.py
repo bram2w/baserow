@@ -6,6 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 
+from baserow.api.user.errors import ERROR_INVALID_ACCESS_TOKEN
 from baserow.core.user.exceptions import DeactivatedUserException
 
 from .sessions import set_user_session_data_from_request
@@ -50,9 +51,10 @@ class JSONWebTokenAuthentication(JWTAuthentication):
                 raise DeactivatedUserException()
 
         except InvalidToken:
+            error_code, _, error_message = ERROR_INVALID_ACCESS_TOKEN
             raise exceptions.AuthenticationFailed(
-                {"detail": "Invalid token", "error": "ERROR_INVALID_TOKEN"},
-                code="ERROR_INVALID_TOKEN",
+                detail={"detail": error_message, "error": error_code},
+                code=error_code,
             )
 
         set_user_session_data_from_request(user, request)

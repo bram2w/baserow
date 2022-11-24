@@ -5,6 +5,7 @@ export const state = () => ({
   connecting: false,
   failedConnecting: false,
   authorizationError: false,
+  userSessionExpired: false,
   copying: false,
   pasting: false,
   clearing: false,
@@ -41,6 +42,9 @@ export const mutations = {
   },
   SET_UNDO_REDO_STATE(state, value) {
     state.undoRedoState = value
+  },
+  SET_USER_SESSION_EXPIRED(state, value) {
+    state.userSessionExpired = value
   },
 }
 
@@ -104,6 +108,9 @@ export const actions = {
   },
   setUndoRedoState({ commit }, value) {
     commit('SET_UNDO_REDO_STATE', value)
+  },
+  setUserSessionExpired({ commit }, value) {
+    commit('SET_USER_SESSION_EXPIRED', value)
   },
 }
 

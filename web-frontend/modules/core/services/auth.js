@@ -4,9 +4,11 @@ export default (client) => {
       return client.post('/user/token-auth/', { email, password })
     },
     refresh(refreshToken) {
-      return client.post('/user/token-refresh/', {
-        refresh_token: refreshToken,
-      })
+      return client.post(
+        '/user/token-refresh/',
+        { refresh_token: refreshToken },
+        { skipAuthRefresh: true }
+      )
     },
     register(
       email,

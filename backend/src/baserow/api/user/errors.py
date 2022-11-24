@@ -33,10 +33,16 @@ ERROR_INVALID_CREDENTIALS = (
     "No active account found with the given credentials.",
 )
 
-ERROR_INVALID_TOKEN = (
-    "ERROR_INVALID_TOKEN",
+ERROR_INVALID_ACCESS_TOKEN = (
+    "ERROR_INVALID_ACCESS_TOKEN",
     HTTP_401_UNAUTHORIZED,
-    "Token is expired or invalid.",
+    "Access token is expired or invalid.",
+)
+
+ERROR_INVALID_REFRESH_TOKEN = (
+    "ERROR_INVALID_REFRESH_TOKEN",
+    HTTP_401_UNAUTHORIZED,
+    "Refresh token is expired or invalid.",
 )
 
 ERROR_DEACTIVATED_USER = (

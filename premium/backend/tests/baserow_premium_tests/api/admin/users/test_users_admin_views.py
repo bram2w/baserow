@@ -145,7 +145,7 @@ def test_admin_with_invalid_token_cannot_see_admin_users(
         HTTP_AUTHORIZATION=f"JWT abc123",
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
-    assert response.json()["error"] == "ERROR_INVALID_TOKEN"
+    assert response.json()["error"] == "ERROR_INVALID_ACCESS_TOKEN"
 
 
 @pytest.mark.django_db

@@ -4,7 +4,10 @@ import {
   ResponseErrorMessage,
 } from '@baserow/modules/core/plugins/clientHandler'
 
-function errorInterceptorWithStubAppAndStore(storeDispatches = []) {
+function errorInterceptorWithStubAppAndStore(
+  storeDispatches = [],
+  errorPageData = {}
+) {
   const stubApp = {
     i18n: {
       t(t) {
@@ -22,7 +25,11 @@ function errorInterceptorWithStubAppAndStore(storeDispatches = []) {
       },
     },
     stubApp,
-    new ClientErrorMap(stubApp)
+    new ClientErrorMap(stubApp),
+    ({ statusCode, message }) => {
+      errorPageData.statusCode = statusCode
+      errorPageData.message = message
+    }
   )
 }
 
@@ -144,27 +151,22 @@ describe('test error handling', () => {
       }
     }
   )
-  test('test an 401 response returns a not authorized error', async () => {
+  test('test an 401 - ERROR_INVALID_REFRESH_TOKEN response redirect to the error page', async () => {
     const actualStoreDispatches = []
+    const errorPageData = {}
     try {
-      await errorInterceptorWithStubAppAndStore(actualStoreDispatches)({
+      await errorInterceptorWithStubAppAndStore(
+        actualStoreDispatches,
+        errorPageData
+      )({
         response: {
-          data: {},
+          data: { error: 'ERROR_INVALID_REFRESH_TOKEN' },
           status: 401,
         },
       })
     } catch (error) {
-      const message = error.handler.getMessage('name', {
-        matchesSomeOtherError: new ResponseErrorMessage('title', 'message'),
-      })
-      expect(message.title).toBe('clientHandler.notCompletedTitle')
-      expect(message.message).toBe('clientHandler.notCompletedDescription')
-      expect(actualStoreDispatches).toEqual([
-        {
-          action: 'notification/setAuthorizationError',
-          args: [true],
-        },
-      ])
+      expect(errorPageData.statusCode).toBe(401)
+      expect(errorPageData.message).toBe('User session expired')
     }
   })
   test('test an 404 response returns a not found error', async () => {

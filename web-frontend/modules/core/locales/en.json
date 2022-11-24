@@ -217,6 +217,10 @@
         "content": "It looks like you do not have the permissions to see this resource.",
         "action": "Refresh page"
     },
+    "UserSessionExpiredNotification": {
+        "title": "Session expired",
+        "content": "You were logged out because your authentication token has expired. Please login again."
+    },
     "restoreNotification": {
         "restore": "Restore deleted {type}"
     },
@@ -252,7 +256,8 @@
         "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",
         "backDashboard": "Back to dashboard",
         "backLogin": "Back to login",
-        "wrong": "Something went wrong"
+        "wrong": "Something went wrong",
+        "refresh": "Refresh page"
     },
     "dashboard": {
         "title": "Dashboard",

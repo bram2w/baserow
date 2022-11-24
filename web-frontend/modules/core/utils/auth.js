@@ -3,7 +3,7 @@ import jwtDecode from 'jwt-decode'
 
 const cookieTokenName = 'jwt_token'
 
-export const setToken = (token, { $cookies, $env }, key = cookieTokenName) => {
+export const setToken = ({ $cookies, $env }, token, key = cookieTokenName) => {
   if (process.SERVER_BUILD) return
   const secure = isSecureURL($env.PUBLIC_WEB_FRONTEND_URL)
   $cookies.set(key, token, {
@@ -28,19 +28,28 @@ export const getTokenIfEnoughTimeLeft = (
   key = cookieTokenName
 ) => {
   const token = getToken({ $cookies }, key)
-  if (!token) return null
-
-  const decodedToken = jwtDecode(token)
   const now = Math.ceil(new Date().getTime() / 1000)
-  // Return the token if it is still valid for more of the 10% of the lifespan.
-  if ((decodedToken.exp - now) / (decodedToken.exp - decodedToken.iat) > 0.1) {
-    return token
+
+  let data
+  try {
+    data = jwtDecode(token)
+  } catch (error) {
+    return null
   }
+  // Return the token if it is still valid for more of the 10% of the lifespan.
+  return data && (data.exp - now) / (data.exp - data.iat) > 0.1 ? token : null
 }
 
-export const logoutAndRedirectToLogin = (router, store) => {
+export const logoutAndRedirectToLogin = (
+  router,
+  store,
+  showSessionExpiredNotification = false
+) => {
   store.dispatch('auth/logoff')
   router.push({ name: 'login' }, () => {
+    if (showSessionExpiredNotification) {
+      store.dispatch('notification/setUserSessionExpired', true)
+    }
     store.dispatch('auth/clearAllStoreUserData')
   })
 }
