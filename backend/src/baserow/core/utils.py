@@ -13,8 +13,11 @@ from decimal import Decimal
 from itertools import islice
 from typing import Iterable, List, Optional, Tuple
 
+from django.db import transaction
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
+
+from baserow.contrib.database.db.schema import optional_atomic
 
 
 def extract_allowed(values, allowed_fields):
@@ -632,3 +635,13 @@ class MirrorDict(dict):
 
     def get(self, key, default=None):
         return key
+
+
+def atomic_if_not_already():
+    """
+    Returns the context manager in `optional_atomic`, passing in the `atomic`
+    arg using `get_autocommit` as its value. It allows us to only call
+    `transaction.atomic` if we're not already in one.
+    """
+
+    return optional_atomic(transaction.get_autocommit())

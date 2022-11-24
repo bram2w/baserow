@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -9,10 +9,12 @@ from baserow.core.models import Group, GroupUser
 from baserow.core.registries import object_scope_type_registry
 from baserow_enterprise.models import RoleAssignment
 from baserow_enterprise.role.models import Role
+from baserow_enterprise.teams.models import Team
 
 User = get_user_model()
 
 USER_TYPE = "auth.User"
+TEAM_TYPE = "baserow_enterprise.Team"
 
 
 class RoleAssignmentHandler:
@@ -21,7 +23,9 @@ class RoleAssignmentHandler:
 
     def get_role(self, role_uid: str = None) -> Role:
         """
-        Returns the role for the given uid. This method is memoized.
+        Returns the role for the given uid.
+
+        This method is memoized.
 
         :param role_uid: The uid we want the role for.
         :return: A role.
@@ -31,25 +35,39 @@ class RoleAssignmentHandler:
             role_uid = "BUILDER"
 
         if role_uid not in self._role_cache_by_uid:
-            try:
-                self._role_cache_by_uid[role_uid] = Role.objects.get(uid=role_uid)
-            except Role.DoesNotExist:
-                return self.get_role(self.role_fallback)
+            self._role_cache_by_uid[role_uid] = Role.objects.get(uid=role_uid)
 
         return self._role_cache_by_uid[role_uid]
 
+    def get_role_or_fallback(self, role_uid: str = None) -> Role:
+        """
+        Returns the role for the given uid.
+        If `role_uid` isn't found, we fall back to `role_fallback`.
+
+        :param role_uid: The uid we want the role for.
+        :return: A role.
+        """
+
+        try:
+            return self.get_role(role_uid)
+        except Role.DoesNotExist:
+            # If `role_fallback` doesn't exist, raise.
+            if role_uid == self.role_fallback:
+                raise
+            return self.get_role(self.role_fallback)
+
     def get_current_role_assignment(
         self,
-        subject: AbstractUser,
+        subject: Union[AbstractUser, Team],
         group: Group,
         scope: Optional[Any] = None,
-    ) -> RoleAssignment:
+    ) -> Union[RoleAssignment, None]:
         """
         Returns the current assigned role for the given Group/Subject/Scope.
 
         :param subject: The subject we want the role for.
-        :param group: The group in which you want the user role.
-        :param scope: Un optional scope on which the role applies.
+        :param group: The group in which you want the user or team role.
+        :param scope: An optional scope on which the role applies.
         :return: The current `RoleAssignment` or `None` if no role is defined for the
             given parameters.
         """
@@ -59,11 +77,11 @@ class RoleAssignmentHandler:
 
         content_types = ContentType.objects.get_for_models(scope, subject)
 
-        if scope == group:
+        if scope == group and isinstance(subject, User):
             try:
                 group_user = GroupUser.objects.get(user=subject, group=group)
                 role_uid = group_user.permissions
-                role = self.get_role(role_uid)
+                role = self.get_role_or_fallback(role_uid)
                 # We need to fake a RoleAssignment instance here to keep the same
                 # return interface
                 return RoleAssignment(
@@ -79,7 +97,7 @@ class RoleAssignmentHandler:
                 return None
 
         try:
-            role_assignment = RoleAssignment.objects.get(
+            role_assignment = RoleAssignment.objects.select_related("role").get(
                 scope_id=scope.id,
                 scope_type=content_types[scope],
                 group=group,
@@ -122,7 +140,7 @@ class RoleAssignmentHandler:
         content_types = ContentType.objects.get_for_models(scope, subject)
 
         # Group level permissions are not stored as RoleAssignment records
-        if scope == group:
+        if scope == group and isinstance(subject, User):
             group_user = GroupUser.objects.get(group=group, user=subject)
             new_permissions = "MEMBER" if role.uid == "BUILDER" else role.uid
             CoreHandler().force_update_group_user(
@@ -152,7 +170,7 @@ class RoleAssignmentHandler:
 
         return role_assignment
 
-    def remove_role(self, subject: AbstractUser, group: Group, scope=None):
+    def remove_role(self, subject: Union[AbstractUser, Team], group: Group, scope=None):
         """
         Remove the role of a subject in the context of the given group over a specified
         scope.
@@ -166,7 +184,7 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
-        if scope == group:
+        if scope == group and isinstance(subject, User):
             GroupUser.objects.filter(user=subject, group=group).update(
                 permissions="NO_ROLE"
             )
@@ -190,8 +208,13 @@ class RoleAssignmentHandler:
         :param subject_type: The subject type.
         """
 
+        content_type = None
         if subject_type == USER_TYPE:
             content_type = ContentType.objects.get_for_model(User)
+        elif subject_type == TEAM_TYPE:
+            content_type = ContentType.objects.get_for_model(Team)
+
+        if content_type:
             return content_type.get_object_for_this_type(id=subject_id)
 
         return None

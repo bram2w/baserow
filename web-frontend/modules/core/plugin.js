@@ -25,6 +25,11 @@ import {
   GroupMemberPermissionManagerType,
 } from '@baserow/modules/core/permissionManagerTypes'
 
+import {
+  MembersGroupSettingsPageType,
+  InvitesGroupSettingsPageType,
+} from '@baserow/modules/core/groupSettingsPageTypes'
+
 import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
 import authProviderStore from '@baserow/modules/core/store/authProvider'
@@ -107,4 +112,13 @@ export default (context, inject) => {
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
   registry.register('job', new InstallTemplateJobType(context))
+
+  registry.register(
+    'groupSettingsPage',
+    new MembersGroupSettingsPageType(context)
+  )
+  registry.register(
+    'groupSettingsPage',
+    new InvitesGroupSettingsPageType(context)
+  )
 }

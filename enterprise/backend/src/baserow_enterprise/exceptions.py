@@ -12,3 +12,7 @@ class TeamSubjectTypeUnsupported(Exception):
 
 class TeamSubjectBadRequest(Exception):
     """Raised when a subject is created with no ID or email address."""
+
+
+class RoleUnsupported(Exception):
+    """Raised when an API consumer tries to assign a role we do not support."""

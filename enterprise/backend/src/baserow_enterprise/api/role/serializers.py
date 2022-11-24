@@ -9,8 +9,8 @@ from rest_framework import serializers
 
 from baserow.api.serializers import NaturalKeyRelatedField
 from baserow.core.registries import object_scope_type_registry
-from baserow_enterprise.models import Role, RoleAssignment
-from baserow_enterprise.role.handler import USER_TYPE
+from baserow_enterprise.models import Role, RoleAssignment, Team
+from baserow_enterprise.role.handler import TEAM_TYPE, USER_TYPE
 
 User = get_user_model()
 
@@ -24,6 +24,8 @@ class SubjectTypeField(serializers.ChoiceField):
         # Value is a content_type
         if value.model_class() == User:
             return USER_TYPE
+        elif value.model_class() == Team:
+            return TEAM_TYPE
         else:
             raise ValidationError(f"This subject content type is not supported")
 
@@ -31,6 +33,8 @@ class SubjectTypeField(serializers.ChoiceField):
         # Data is a subject_type name
         if data == USER_TYPE:
             return ContentType.objects.get_by_natural_key("auth", "user")
+        elif data == TEAM_TYPE:
+            return ContentType.objects.get_by_natural_key("baserow_enterprise", "team")
         else:
             raise ValidationError(f"The subject type {data} is not supported")
 
@@ -67,7 +71,7 @@ class CreateRoleAssignmentSerializer(serializers.Serializer):
     )
     subject_type = SubjectTypeField(
         help_text="The subject type.",
-        choices=[USER_TYPE],
+        choices=[USER_TYPE, TEAM_TYPE],
     )
 
     role = RoleField(
@@ -75,7 +79,7 @@ class CreateRoleAssignmentSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
         help_text=(
-            "The uid of the role you want to assign to the user in given group. "
+            "The uid of the role you want to assign to the user or team in the given group. "
             "You can omit this property if you want to remove the role."
         ),
     )
@@ -84,7 +88,7 @@ class CreateRoleAssignmentSerializer(serializers.Serializer):
         min_value=1,
         help_text=(
             "The ID of the scope object. The scope object limit the role "
-            "assignment to this scope and all it's descendants."
+            "assignment to this scope and all its descendants."
         ),
     )
     scope_type = ScopeTypeField(
@@ -114,19 +118,21 @@ class RoleAssignmentSerializer(serializers.ModelSerializer):
     """
 
     subject_type = SubjectTypeField(
-        choices=[USER_TYPE],
+        choices=[USER_TYPE, TEAM_TYPE],
         help_text="The subject type.",
     )
     scope_type = ScopeTypeField(
         help_text=(
             "The ID of the scope object. The scope object limit the role "
-            "assignment to this scope and all it's descendants."
+            "assignment to this scope and all its descendants."
         ),
         choices=lazy(object_scope_type_registry.get_types, list)(),
     )
     role = RoleField(
         model=Role,
-        help_text=("The uid of the role assigned to the user in the given group."),
+        help_text=(
+            "The uid of the role assigned to the user or team in the given group."
+        ),
     )
 
     class Meta:

@@ -11,6 +11,7 @@ import {
   OpenIdConnectAuthProviderType,
 } from '@baserow_enterprise/authProviderTypes'
 
+import { TeamsGroupSettingsPageType } from '@baserow_enterprise/groupSettingsPageTypes'
 import { EnterpriseMembersPagePluginType } from '@baserow_enterprise/membersPagePluginTypes'
 import en from '@baserow_enterprise/locales/en.json'
 import fr from '@baserow_enterprise/locales/fr.json'
@@ -66,8 +67,14 @@ export default (context) => {
   )
 
   app.$registry.register(
+    'groupSettingsPage',
+    new TeamsGroupSettingsPageType(context)
+  )
+
+  app.$registry.register(
     'license',
     new EnterpriseWithoutSupportLicenseType(context)
   )
+
   app.$registry.register('license', new EnterpriseLicenseType(context))
 }
