@@ -478,38 +478,51 @@ class LicenseHandler:
             decoded_license_payload["product_code"]
         ).instance_wide
 
+        license_id = decoded_license_payload["id"]
+        license_object = cls.find_license_older_than(license_id, issued_on) or License()
+
+        license_object.license = license_payload_as_string
+        license_object.cached_untrusted_instance_wide = instance_wide
+        license_object.save()
+
+        if instance_wide:
+            transaction.on_commit(
+                lambda: broadcast_to_users.delay(
+                    send_to_all_users=True,
+                    user_ids=[],
+                    payload=user_data_registry.get_by_type(
+                        ActiveLicensesDataType
+                    ).realtime_message_to_enable_instancewide_license(
+                        license_object.license_type
+                    ),
+                )
+            )
+        return license_object
+
+    @classmethod
+    def find_license_older_than(cls, license_id, issued_on):
         # Loop over all licenses to check if a license with the same ID already
         # exists. We can't use `objects.filter` because we need to decode the license
         # with the public key before we can extract the id.
         for license_object in License.objects.all():
-            if license_object.license_id == decoded_license_payload["id"]:
+            if license_object.license_id == license_id:
                 # If the `issued_on` date of the existing license is lower then the new
                 # license, we want to update it because a new one has been issued later
                 # and is newer.
                 if license_object.issued_on < issued_on:
-                    license_object.license = license_payload_as_string
-                    license_object.cached_untrusted_instance_wide = instance_wide
-                    license_object.save()
                     return license_object
                 # If the `issued_on` date of the existing license is higher or equal to
                 # the new license, we want to raise the exception that the most license
                 # already exists.
                 else:
                     raise LicenseAlreadyExistsError("The license already exists.")
-
-        # If the license doesn't exist we want to create a new one.
-        return License.objects.create(
-            license=license_payload_as_string,
-            # Cache the instance wide property on the license row so we can look them
-            # up quickly later.
-            cached_untrusted_instance_wide=instance_wide,
-        )
+        return None
 
     @classmethod
     def remove_license(cls, requesting_user: User, license: License):
         """
         Removes an existing license. If the license is still active, all the users that
-        are on that license will lose access to the premium features.
+        are on that license will lose access to the licenses features.
 
         :param requesting_user: The user on whose behalf the license is removed.
         :param license: The license that must be removed.
@@ -518,6 +531,17 @@ class LicenseHandler:
         if not requesting_user.is_staff:
             raise IsNotAdminError()
 
+        license_type = license.license_type
+        if license_type.instance_wide:
+            transaction.on_commit(
+                lambda: broadcast_to_users.delay(
+                    send_to_all_users=True,
+                    user_ids=[],
+                    payload=user_data_registry.get_by_type(
+                        ActiveLicensesDataType
+                    ).realtime_message_to_disable_instancewide_license(license_type),
+                )
+            )
         license.delete()
 
     @classmethod
@@ -561,12 +585,9 @@ class LicenseHandler:
             transaction.on_commit(
                 lambda: broadcast_to_users.delay(
                     [user.id],
-                    {
-                        "type": "user_data_updated",
-                        "user_data": al.realtime_message_to_enable_instancewide_license(
-                            license_object.license_type
-                        ),
-                    },
+                    al.realtime_message_to_enable_instancewide_license(
+                        license_object.license_type
+                    ),
                 )
             )
 
@@ -599,12 +620,9 @@ class LicenseHandler:
             transaction.on_commit(
                 lambda: broadcast_to_users.delay(
                     [user.id],
-                    {
-                        "type": "user_data_updated",
-                        "user_data": al.realtime_message_to_disable_instancewide_license(
-                            license_object.license_type
-                        ),
-                    },
+                    al.realtime_message_to_disable_instancewide_license(
+                        license_object.license_type
+                    ),
                 )
             )
 
@@ -646,12 +664,9 @@ class LicenseHandler:
                 transaction.on_commit(
                     lambda: broadcast_to_users.delay(
                         [user_license.user_id for user_license in user_licenses],
-                        {
-                            "type": "user_data_updated",
-                            "user_data": al.realtime_message_to_enable_instancewide_license(
-                                license_object.license_type
-                            ),
-                        },
+                        al.realtime_message_to_enable_instancewide_license(
+                            license_object.license_type
+                        ),
                     )
                 )
 
@@ -686,11 +701,8 @@ class LicenseHandler:
             transaction.on_commit(
                 lambda: broadcast_to_users.delay(
                     license_user_ids,
-                    {
-                        "type": "user_data_updated",
-                        "user_data": al.realtime_message_to_disable_instancewide_license(
-                            license_object.license_type
-                        ),
-                    },
+                    al.realtime_message_to_disable_instancewide_license(
+                        license_object.license_type
+                    ),
                 )
             )
