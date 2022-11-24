@@ -321,3 +321,86 @@ async def test_broadcast_to_groups(data_fixture):
     await communicator_2.disconnect()
     await communicator_3.disconnect()
     await communicator_4.disconnect()
+
+
+@pytest.mark.run(order=7)
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_can_broadcast_to_every_single_user(data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+
+    communicator_1 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_1}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_1.connect()
+    response_1 = await communicator_1.receive_json_from()
+
+    communicator_2 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_2}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_2.connect()
+    response_2 = await communicator_2.receive_json_from()
+
+    await sync_to_async(broadcast_to_users)(
+        [], {"message": "test"}, send_to_all_users=True
+    )
+    response_1 = await communicator_1.receive_json_from(0.1)
+    await communicator_2.receive_nothing(0.1)
+    assert response_1["message"] == "test"
+
+    await communicator_1.receive_nothing(0.1)
+    response_2 = await communicator_2.receive_json_from(0.1)
+    assert response_2["message"] == "test"
+
+    assert communicator_1.output_queue.qsize() == 0
+    assert communicator_2.output_queue.qsize() == 0
+
+    await communicator_1.disconnect()
+    await communicator_2.disconnect()
+
+
+@pytest.mark.run(order=8)
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_can_still_ignore_when_sending_to_all_users(data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+
+    communicator_1 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_1}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_1.connect()
+    response_1 = await communicator_1.receive_json_from()
+    websocket_id_1 = response_1["web_socket_id"]
+
+    communicator_2 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_2}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_2.connect()
+    response_2 = await communicator_2.receive_json_from()
+
+    await sync_to_async(broadcast_to_users)(
+        [],
+        {"message": "test"},
+        ignore_web_socket_id=websocket_id_1,
+        send_to_all_users=True,
+    )
+    await communicator_1.receive_nothing(0.1)
+
+    response_2 = await communicator_2.receive_json_from(0.1)
+    assert response_2["message"] == "test"
+
+    assert communicator_1.output_queue.qsize() == 0
+    assert communicator_2.output_queue.qsize() == 0
+
+    await communicator_1.disconnect()
+    await communicator_2.disconnect()

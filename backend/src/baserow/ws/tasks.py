@@ -1,22 +1,28 @@
-from typing import Iterable
+from typing import Any, Dict, Iterable, List, Optional
 
 from baserow.config.celery import app
 
 
 @app.task(bind=True)
-def broadcast_to_users(self, user_ids, payload, ignore_web_socket_id=None):
+def broadcast_to_users(
+    self,
+    user_ids: List[int],
+    payload: Dict[Any, Any],
+    ignore_web_socket_id: Optional[int] = None,
+    send_to_all_users: bool = False,
+):
     """
     Broadcasts a JSON payload the provided users.
 
-    :param user_ids: A list containing the user ids that should receive the payload.
-    :type user_ids: list
-    :param payload: A dictionary object containing the payload that must be
-        broadcasted.
-    :type payload: dict
-    :param ignore_web_socket_id: The web socket id to which the message must not be
-        send. This is normally the web socket id that has originally made the change
-        request.
-    :type ignore_web_socket_id: str
+    :param user_ids: A list containing the user ids that will be sent the payload.
+    :param payload: A dictionary object containing the payload that will be
+        broadcast.
+    :param ignore_web_socket_id: An optional web socket id which will not be sent the
+        payload if provided. This is normally the web socket id that has originally
+        made the change request.
+    :param send_to_all_users: If set to True all users will be sent the payload and
+        the user_ids parameter will be ignored. ignore_web_socket_id however will still
+        be respected.
     """
 
     from asgiref.sync import async_to_sync
@@ -30,6 +36,7 @@ def broadcast_to_users(self, user_ids, payload, ignore_web_socket_id=None):
             "user_ids": user_ids,
             "payload": payload,
             "ignore_web_socket_id": ignore_web_socket_id,
+            "send_to_all_users": send_to_all_users,
         },
     )
 

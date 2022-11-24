@@ -281,7 +281,7 @@ class Registry(Generic[T]):
 
         return self.registry[type_name]
 
-    def get_by_type(self, instance_type: Type[T]) -> T:
+    def get_by_type(self, instance_type: Type[K]) -> K:
         return self.get(instance_type.type)
 
     def get_all(self) -> ValuesView[T]:

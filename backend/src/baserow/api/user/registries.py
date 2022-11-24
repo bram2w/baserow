@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
 from baserow.core.registry import Instance, Registry
 
@@ -51,6 +51,12 @@ class UserDataType(Instance):
         raise NotImplementedError(
             "The get_user_data must be implemented and should return a dict."
         )
+
+    @classmethod
+    def realtime_message_to_update_user_data(
+        cls, user_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        return {"type": "user_data_updated", "user_data": user_data}
 
 
 class UserDataRegistry(Registry[UserDataType]):

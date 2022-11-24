@@ -44,7 +44,9 @@ class ActiveLicensesDataType(UserDataType):
         disable a instance-wide license a user has.
         """
 
-        return {cls.type: {"instance_wide": {license_to_disable.type: False}}}
+        return cls.realtime_message_to_update_user_data(
+            {cls.type: {"instance_wide": {license_to_disable.type: False}}}
+        )
 
     @classmethod
     def realtime_message_to_enable_instancewide_license(
@@ -55,7 +57,9 @@ class ActiveLicensesDataType(UserDataType):
         enable a instance-wide license a user has.
         """
 
-        return {cls.type: {"instance_wide": {license_to_enable.type: True}}}
+        return cls.realtime_message_to_update_user_data(
+            {cls.type: {"instance_wide": {license_to_enable.type: True}}}
+        )
 
     @classmethod
     def realtime_message_to_disable_group_license(
@@ -66,7 +70,9 @@ class ActiveLicensesDataType(UserDataType):
         disable a group license a user has.
         """
 
-        return {cls.type: {"per_group": {group.id: {license_to_disable.type: False}}}}
+        return cls.realtime_message_to_update_user_data(
+            {cls.type: {"per_group": {group.id: {license_to_disable.type: False}}}}
+        )
 
     @classmethod
     def realtime_message_to_enable_group_license(
@@ -77,7 +83,9 @@ class ActiveLicensesDataType(UserDataType):
         enable a group license a user has.
         """
 
-        return {cls.type: {"per_group": {group.id: {license_to_enable.type: True}}}}
+        return cls.realtime_message_to_update_user_data(
+            {cls.type: {"per_group": {group.id: {license_to_enable.type: True}}}}
+        )
 
     @classmethod
     def realtime_message_to_disable_all_licenses_from_group(cls, group: Group):
@@ -86,7 +94,9 @@ class ActiveLicensesDataType(UserDataType):
         disable all licenses the user got directly for a group.
         """
 
-        return {cls.type: {"per_group": {group.id: False}}}
+        return cls.realtime_message_to_update_user_data(
+            {cls.type: {"per_group": {group.id: False}}}
+        )
 
     @classmethod
     def realtime_message_to_enable_multiple_group_licenses(
@@ -97,13 +107,15 @@ class ActiveLicensesDataType(UserDataType):
         grant multiple different licenses from a group.
         """
 
-        return {
-            cls.type: {
-                "per_group": {
-                    group.id: {
-                        active_license.type: True
-                        for active_license in licenses_to_enable
+        return cls.realtime_message_to_update_user_data(
+            {
+                cls.type: {
+                    "per_group": {
+                        group.id: {
+                            active_license.type: True
+                            for active_license in licenses_to_enable
+                        }
                     }
                 }
             }
-        }
+        )
