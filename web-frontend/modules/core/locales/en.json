@@ -437,7 +437,7 @@
             "columns": {
                 "name": "Name",
                 "email": "Email",
-                "role": "Role"
+                "role": "Default role"
             },
             "actions": {
                 "copyEmail": "Copy email",
@@ -449,7 +449,7 @@
             "columns": {
                 "email": "Email",
                 "message": "Message",
-                "role": "Role"
+                "role": "Default role"
             },
             "actions": {
                 "copyEmail": "Copy email",
@@ -466,5 +466,12 @@
                 }
             }
         }
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Find ...",
+        "selectedAmountLabel": "{count} selected"
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "Invite {count}"
     }
 }

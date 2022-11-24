@@ -1,9 +1,12 @@
+from typing import Union
+
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from baserow.core.mixins import CreatedAndUpdatedOnMixin, TrashableModelMixin
 from baserow.core.models import Group
+from baserow_enterprise.teams.mixins import ParentTeamTrashableModelMixin
 
 
 class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
@@ -37,8 +40,31 @@ class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     def __str__(self) -> str:
         return f"<Team id={self.id}, name={self.name}>"
 
+    @property
+    def default_role_uid(self) -> Union[str, None]:
+        """
+        Responsible for returning the team's default role `uid` for the workspace.
 
-class TeamSubject(CreatedAndUpdatedOnMixin):
+        If the team has been fetched with the `get_teams_queryset` queryset,
+        then `_annotated_default_role_uid` will be annotated, so we can use that
+        instead of querying for it.
+
+        If we haven't used `get_teams_queryset` then we query for it.
+        """
+
+        if hasattr(self, "_annotated_default_role_uid"):
+            return getattr(self, "_annotated_default_role_uid")
+
+        from baserow_enterprise.role.handler import RoleAssignmentHandler
+
+        role_assignment = RoleAssignmentHandler().get_current_role_assignment(
+            self, self.group
+        )
+        if role_assignment:
+            return role_assignment.role.uid
+
+
+class TeamSubject(ParentTeamTrashableModelMixin, CreatedAndUpdatedOnMixin):
     """
     Represents a single `Subject` (`User`, `Team`) in a `Team`.
     """
@@ -55,6 +81,16 @@ class TeamSubject(CreatedAndUpdatedOnMixin):
         help_text="The team this subject belongs to.",
     )
 
+    class Meta:
+        ordering = ("id",)
+        indexes = [
+            models.Index(
+                fields=[
+                    "-created_on",
+                ]
+            ),
+        ]
+
     def __str__(self) -> str:
         return (
             f"<TeamSubject id={self.id}, team={self.team.name}, subject={self.subject}>"
@@ -63,8 +99,8 @@ class TeamSubject(CreatedAndUpdatedOnMixin):
     @property
     def subject_type_natural_key(self) -> str:
         """
-        Responsible for returning the subject's `ContentType` natural key,
-        delimited by an underscore.
+        Responsible for returning the subject's `ContentType`
+        model class label (e.g. "auth.User").
         """
 
-        return "_".join(self.subject_type.natural_key())
+        return self.subject_type.model_class()._meta.label

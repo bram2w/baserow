@@ -1,6 +1,6 @@
 from collections import defaultdict
 from functools import cmp_to_key
-from typing import Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional, Tuple, TypedDict, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -17,6 +17,7 @@ from baserow.core.registries import (
     operation_type_registry,
 )
 from baserow_enterprise.features import RBAC
+from baserow_enterprise.models import Team
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 from .models import RoleAssignment
@@ -56,7 +57,10 @@ class RolePermissionManagerType(PermissionManagerType):
         return LicenseHandler.group_has_feature(RBAC, group)
 
     def get_user_role_assignments(
-        self, group: Group, actor: AbstractUser, operation: Optional[Operation] = None
+        self,
+        group: Group,
+        actor: Union[AbstractUser, Team],
+        operation: Optional[Operation] = None,
     ) -> List[Tuple[int, Any]]:
         """
         Returns the RoleAssignments for the given actor in the given group.
@@ -87,7 +91,7 @@ class RolePermissionManagerType(PermissionManagerType):
         result.sort(key=cmp_to_key(compare_scopes))
 
         # Get the group level role by reading the GroupUser permissions property
-        group_level_role = RoleAssignmentHandler().get_role(
+        group_level_role = RoleAssignmentHandler().get_role_or_fallback(
             GroupUser.objects.get(user__id=actor.id, group=group).permissions
         )
 

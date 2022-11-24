@@ -12,10 +12,12 @@ For example:
 ### New Features
 
 * Allow creating a new option by pressing enter in the dropdown [#1169](https://gitlab.com/bramw/baserow/-/issues/1169)
+* Added the teams functionality as an enterprise feature. [#1226](https://gitlab.com/bramw/baserow/-/issues/1226)
 
 ### Bug Fixes
 
 ### Refactors
+
 * Refresh the JWT token when needed instead of periodically. [#1294](https://gitlab.com/bramw/baserow/-/issues/1294)
 
 ## Released (2022-11-22 1.13.1)

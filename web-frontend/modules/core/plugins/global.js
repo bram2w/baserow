@@ -19,6 +19,7 @@ import FormElement from '@baserow/modules/core/components/FormElement'
 import Alert from '@baserow/modules/core/components/Alert'
 import Tabs from '@baserow/modules/core/components/Tabs'
 import Tab from '@baserow/modules/core/components/Tab'
+import List from '@baserow/modules/core/components/List'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -52,6 +53,7 @@ Vue.component('Picker', Picker)
 Vue.component('ProgressBar', ProgressBar)
 Vue.component('Tab', Tab)
 Vue.component('Tabs', Tabs)
+Vue.component('List', List)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)
