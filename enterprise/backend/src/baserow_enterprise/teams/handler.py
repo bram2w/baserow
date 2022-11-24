@@ -259,7 +259,7 @@ class TeamHandler:
                     set(existing_type_ids) - set(payload_subject_ids_for_type)
                 )
                 for removed_subject_id in removed_subjects:
-                    self.delete_subject_by_id(user, removed_subject_id)
+                    self.delete_subject_by_id(user, removed_subject_id, team)
 
             # If we've been given a `default_role`, assign it to the team.
             RoleAssignmentHandler().assign_role(team, team.group, default_role)
@@ -318,16 +318,21 @@ class TeamHandler:
             subject_type=ContentType.objects.get_for_model(subject),
         )
 
-    def get_subject(self, subject_id: int, base_queryset=None) -> TeamSubject:
+    def get_subject(
+        self, subject_id: int, team: Team, base_queryset=None
+    ) -> TeamSubject:
         """
-        Selects a subject with a given id from the database.
+        Selects a subject with a given `id` and `Team` from the database.
+
         """
 
         if base_queryset is None:
             base_queryset = TeamSubject.objects
 
         try:
-            subject = base_queryset.select_related("subject_type").get(id=subject_id)
+            subject = base_queryset.select_related("subject_type").get(
+                id=subject_id, team=team
+            )
         except TeamSubject.DoesNotExist:
             raise TeamSubjectDoesNotExist(
                 f"The subject with id {subject_id} does not exist."
@@ -494,22 +499,25 @@ class TeamHandler:
 
         return TeamSubject.objects.select_related("subject_type").filter(team=team_id)
 
-    def get_subject_for_update(self, subject_id: int) -> TeamSubjectForUpdate:
+    def get_subject_for_update(
+        self, subject_id: int, team: Team
+    ) -> TeamSubjectForUpdate:
         return cast(
             TeamSubjectForUpdate,
             self.get_subject(
                 subject_id,
+                team,
                 base_queryset=TeamSubject.objects.select_for_update(of=("self",)),
             ),
         )
 
-    def delete_subject_by_id(self, user: AbstractUser, subject_id: int):
+    def delete_subject_by_id(self, user: AbstractUser, subject_id: int, team: Team):
         """
         Deletes a subject by id, only if the user has admin permissions
         for the group.
         """
 
-        locked_subject = self.get_subject_for_update(subject_id)
+        locked_subject = self.get_subject_for_update(subject_id, team)
         self.delete_subject(user, locked_subject)
 
     def delete_subject(self, user: AbstractUser, subject: TeamSubjectForUpdate):
