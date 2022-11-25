@@ -51,7 +51,15 @@ class BaserowEnterpriseConfig(AppConfig):
 
         from .plugins import EnterprisePlugin
         from .role.member_data_types import EnterpriseRolesDataType
-        from .role.operations import AssignRoleGroupOperationType
+        from .role.operations import (
+            AssignRoleGroupOperationType,
+            ReadRoleDatabaseOperationType,
+            ReadRoleGroupOperationType,
+            ReadRoleTableOperationType,
+            UpdateRoleDatabaseOperationType,
+            UpdateRoleTableOperationType,
+        )
+        from .teams.subjects import TeamSubjectType
 
         plugin_registry.register(EnterprisePlugin())
 
@@ -82,7 +90,16 @@ class BaserowEnterpriseConfig(AppConfig):
         operation_type_registry.register(ListTeamSubjectsOperationType())
         operation_type_registry.register(DeleteTeamSubjectOperationType())
         operation_type_registry.register(AssignRoleGroupOperationType())
+        operation_type_registry.register(ReadRoleGroupOperationType())
         operation_type_registry.register(RestoreTeamOperationType())
+        operation_type_registry.register(ReadRoleDatabaseOperationType())
+        operation_type_registry.register(UpdateRoleDatabaseOperationType())
+        operation_type_registry.register(ReadRoleTableOperationType())
+        operation_type_registry.register(UpdateRoleTableOperationType())
+
+        from baserow.core.registries import subject_type_registry
+
+        subject_type_registry.register(TeamSubjectType())
 
         from baserow.core.registries import permission_manager_type_registry
 

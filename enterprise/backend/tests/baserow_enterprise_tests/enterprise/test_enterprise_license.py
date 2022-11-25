@@ -374,7 +374,7 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    user2 = data_fixture.create_user(is_active=False)
+    user2 = data_fixture.create_user()
     group1 = data_fixture.create_group(user=user, members=[user2])
     group2 = data_fixture.create_group(user=user, members=[user2])
 
@@ -388,6 +388,9 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
     role_assignment_handler.assign_role(user2, group1, builder_role)
     role_assignment_handler.assign_role(user, group2, admin_role)
     role_assignment_handler.assign_role(user2, group2, commenter_role)
+
+    user2.is_active = False
+    user2.save()
 
     assert len(RoleAssignment.objects.all()) == 0
     assert EnterpriseLicenseType().get_free_users_count(license_object) == 0

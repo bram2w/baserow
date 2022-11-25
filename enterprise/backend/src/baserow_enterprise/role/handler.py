@@ -6,15 +6,17 @@ from django.contrib.contenttypes.models import ContentType
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
-from baserow.core.registries import object_scope_type_registry
+from baserow.core.registries import (
+    object_scope_type_registry,
+    permission_manager_type_registry,
+    subject_type_registry,
+)
+from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
 from baserow_enterprise.models import RoleAssignment
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.teams.models import Team
 
 User = get_user_model()
-
-USER_TYPE = "auth.User"
-TEAM_TYPE = "baserow_enterprise.Team"
 
 
 class RoleAssignmentHandler:
@@ -77,7 +79,12 @@ class RoleAssignmentHandler:
 
         content_types = ContentType.objects.get_for_models(scope, subject)
 
-        if scope == group and isinstance(subject, User):
+        # TODO: a comment on why we short-circuit here.
+        if (
+            isinstance(scope, Group)
+            and scope.id == group.id
+            and isinstance(subject, User)
+        ):
             try:
                 group_user = GroupUser.objects.get(user=subject, group=group)
                 role_uid = group_user.permissions
@@ -137,10 +144,21 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
+        subject_type = subject_type_registry.get_by_model(subject)
+        if not subject_type.is_in_group(subject.id, group):
+            raise SubjectNotExist()
+
+        if not object_scope_type_registry.scope_includes_context(group, scope):
+            raise ScopeNotExist()
+
         content_types = ContentType.objects.get_for_models(scope, subject)
 
         # Group level permissions are not stored as RoleAssignment records
-        if scope == group and isinstance(subject, User):
+        if (
+            isinstance(scope, Group)
+            and scope.id == group.id
+            and isinstance(subject, User)
+        ):
             group_user = GroupUser.objects.get(group=group, user=subject)
             new_permissions = "MEMBER" if role.uid == "BUILDER" else role.uid
             CoreHandler().force_update_group_user(
@@ -184,7 +202,11 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
-        if scope == group and isinstance(subject, User):
+        if (
+            isinstance(scope, Group)
+            and scope.id == group.id
+            and isinstance(subject, User)
+        ):
             GroupUser.objects.filter(user=subject, group=group).update(
                 permissions="NO_ROLE"
             )
@@ -208,16 +230,8 @@ class RoleAssignmentHandler:
         :param subject_type: The subject type.
         """
 
-        content_type = None
-        if subject_type == USER_TYPE:
-            content_type = ContentType.objects.get_for_model(User)
-        elif subject_type == TEAM_TYPE:
-            content_type = ContentType.objects.get_for_model(Team)
-
-        if content_type:
-            return content_type.get_object_for_this_type(id=subject_id)
-
-        return None
+        content_type = subject_type_registry.get(subject_type).get_content_type()
+        return content_type.get_object_for_this_type(id=subject_id)
 
     def get_scope(self, scope_id: int, scope_type: str):
         """
@@ -232,3 +246,149 @@ class RoleAssignmentHandler:
         scope_type = object_scope_type_registry.get(scope_type)
         content_type = ContentType.objects.get_for_model(scope_type.model_class)
         return content_type.get_object_for_this_type(id=scope_id)
+
+    def assign_role_batch(
+        self, user: AbstractUser, group: Group, values: List[Dict[str, any]]
+    ):
+        """
+        Creates role assignments in batch, this should be used if many role assignments
+        are created at once, to be more efficient.
+
+        :return:
+        """
+
+        from baserow_enterprise.role.permission_manager import RolePermissionManagerType
+
+        role_assignments = []
+        role_assignments_to_create = []
+        group_users_to_update_values = []
+
+        no_role_role = Role.objects.get(uid="NO_ROLE")
+
+        role_permission_manager = permission_manager_type_registry.get_by_type(
+            RolePermissionManagerType
+        )
+
+        for value in values:
+            if value["scope"] is None:
+                value["scope"] = group
+
+            scope_type = object_scope_type_registry.get_by_model(value["scope"])
+            subject_type = subject_type_registry.get_by_model(value["subject"])
+
+            if not subject_type.is_in_group(value["subject_id"], group):
+                raise SubjectNotExist()
+
+            if not object_scope_type_registry.scope_includes_context(
+                group, value["scope"]
+            ):
+                raise ScopeNotExist()
+
+            # TODO performance bottleneck
+            CoreHandler().check_permissions(
+                user,
+                role_permission_manager.role_assignable_object_map[scope_type.type][
+                    "READ"
+                ].type,
+                group=group,
+                context=value["scope"],
+            )
+
+            role_assignment = RoleAssignment(
+                subject=value["subject"],
+                subject_id=value["subject_id"],
+                subject_type=value["subject_type"],
+                role=value["role"],
+                scope=value["scope"],
+                scope_id=value["scope_id"],
+                scope_type=value["scope_type"],
+                group=group,
+            )
+
+            if value["scope"] == group:  # Group level permissions
+                if value["role"] is None:
+                    value["role"] = no_role_role
+                group_users_to_update_values.append(value)
+            else:  # Not a group level assignment
+                if value["role"] is None:  # Delete role assignment
+                    self.remove_role(value["subject"], group, scope=value["scope"])
+                else:  # Create or update role assignments
+                    role_assignment_found = RoleAssignment.objects.filter(
+                        subject_id=value["subject_id"],
+                        subject_type=value["subject_type"],
+                        scope_id=value["scope_id"],
+                        scope_type=value["scope_type"],
+                        group=group,
+                    ).first()
+
+                    if role_assignment_found:
+                        role_assignment_found.role = value["role"]
+                        role_assignment_found.save()
+                    else:
+                        role_assignments_to_create.append(role_assignment)
+
+                    role_assignments.append(role_assignment)
+
+        group_users_to_update_instances = GroupUser.objects.filter(
+            group=group,
+            user__in=[value["subject"] for value in group_users_to_update_values],
+        )
+
+        group_users_to_update_instances_map = {
+            getattr(group_user.user, "id"): group_user
+            for group_user in group_users_to_update_instances
+        }
+
+        for value in group_users_to_update_values:
+            group_users_to_update_instances_map[
+                value["subject_id"]
+            ].permissions = value["role"].uid
+
+        GroupUser.objects.bulk_update(
+            group_users_to_update_instances_map.values(), ["permissions"]
+        )
+        RoleAssignment.objects.bulk_create(role_assignments_to_create)
+
+        return role_assignments
+
+    def get_role_assignments(self, group: Group, scope=None):
+        """
+        Helper method that returns all role assignments given a scope and group.
+
+        :param group: The group that the scope belongs to
+        :param scope: The scope used for filtering role assignments
+        """
+
+        if isinstance(scope, Group) and scope.id == group.id:
+            group_users = GroupUser.objects.filter(group=group)
+
+            role_assignments = []
+
+            for group_user in group_users:
+                role_uid = group_user.permissions
+                role = self.get_role(role_uid)
+                subject = group_user.user
+
+                # TODO we probably shouldn't do this in a loop (performance)
+                content_types = ContentType.objects.get_for_models(scope, subject)
+                # We need to fake a RoleAssignment instance here to keep the same
+                # return interface
+                role_assignments.append(
+                    RoleAssignment(
+                        subject=subject,
+                        subject_id=subject.id,
+                        subject_type=content_types[subject],
+                        role=role,
+                        group=group,
+                        scope=scope,
+                        scope_type=content_types[scope],
+                    )
+                )
+            return role_assignments
+        else:
+            role_assignments = RoleAssignment.objects.filter(
+                group=group,
+                scope_id=scope.id,
+                scope_type=ContentType.objects.get_for_model(scope),
+            )
+            return list(role_assignments)

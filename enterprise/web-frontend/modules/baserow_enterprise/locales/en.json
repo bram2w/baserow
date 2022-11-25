@@ -126,6 +126,64 @@
         "viewer": {
             "name": "Viewer",
             "description": "Can only read data."
+        },
+        "licence": "Enterprise"
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Database",
+        "memberRolesTableTabTitle": "Current Table",
+        "error":{
+            "title": "Could not fetch data",
+            "description": "An error occurred while fetching the member data."
+        }
+    },
+    "memberRolesTab": {
+        "database": {
+            "title": "{name} database",
+            "selectMembers": "Select members",
+            "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
+            "onlyYouHaveAccess": "Only you can access this database."
+        },
+        "table": {
+            "title": "{name} table",
+            "selectMembers": "Select members",
+            "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
+            "onlyYouHaveAccess": "Only you can access this table."
+        }
+    },
+    "memberRolesShareToggle": {
+        "label": "Share with everyone at {name}",
+        "subLabel": "{totalUserAmount} workspace members"
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Manage members"
+    },
+    "memberRolesTableContexItem": {
+        "label": "Manage members"
+    },
+    "memberRolesMembersList": {
+        "remove": "Remove",
+        "teamMembersCount": "{count} team members"
+    },
+    "roleAssignmentModal": {
+        "membersTab": "Members",
+        "teamsTab": "Teams",
+        "subjectTypeNameMembers": "members",
+        "subjectTypeNameTeams": "teams"
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Find members...",
+        "selectedAmountLabel": "{count} members selected"
+    },
+    "selectTeamsList": {
+        "searchPlaceholder": "Find teams...",
+        "selectedAmountLabel": "{count} teams selected"
+    },
+    "selectSubjectsListFooter": {
+        "invite": "Invite {count} {type}",
+        "types": {
+            "members": "members",
+            "teams": "teams"
         }
     },
     "oauthSettingsForm": {

@@ -12,6 +12,11 @@
   &:not(:last-child) {
     margin-right: 16px;
   }
+
+  &--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .tabs__link {
@@ -29,5 +34,9 @@
 
   .tabs__item--active & {
     background-color: $color-primary-100;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
   }
 }

@@ -1,9 +1,9 @@
 .select-members-list__items {
   max-height: 500px;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
-.select-members-list__member-initials {
+.select-members-list__user-initials {
   flex: 0 0 20px;
   font-weight: bold;
   color: $white;

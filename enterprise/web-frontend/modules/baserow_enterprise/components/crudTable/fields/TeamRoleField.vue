@@ -21,7 +21,7 @@
     </a>
     <EditRoleContext
       ref="editRoleContext"
-      :row="row"
+      :subject="row"
       :roles="roles"
       role-value-column="default_role"
       @update-role="roleUpdate($event)"
@@ -65,7 +65,7 @@ export default {
       const role = roles.find((r) => r.uid === row.default_role)
       return role?.name || ''
     },
-    async roleUpdate({ uid: permissionsNew, row: team }) {
+    async roleUpdate({ uid: permissionsNew, subject: team }) {
       const oldTeam = clone(team)
       const newTeam = clone(team)
       newTeam.default_role = permissionsNew

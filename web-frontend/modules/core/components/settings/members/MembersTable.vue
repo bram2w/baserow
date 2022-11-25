@@ -34,7 +34,7 @@
         ></EditMemberContext>
         <EditRoleContext
           ref="editRoleContext"
-          :row="editRoleMember"
+          :subject="editRoleMember"
           :roles="roles"
           @update-role="roleUpdate($event)"
         ></EditRoleContext>
@@ -171,7 +171,7 @@ export default {
     async refresh() {
       await this.$refs.crudTable.fetch()
     },
-    async roleUpdate({ uid: permissionsNew, row: member }) {
+    async roleUpdate({ uid: permissionsNew, subject: member }) {
       const oldMember = clone(member)
       const newMember = clone(member)
       newMember.permissions = permissionsNew

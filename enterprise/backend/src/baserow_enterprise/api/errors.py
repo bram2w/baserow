@@ -41,3 +41,33 @@ ERROR_ROLE_DOES_NOT_EXIST = (
     HTTP_404_NOT_FOUND,
     "The specified role does not exist.",
 )
+
+ERROR_SCOPE_DOES_NOT_EXIST = (
+    "ERROR_SCOPE_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The requested scope does not exist.",
+)
+
+ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST = (
+    "ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The requested scope type does not exist.",
+)
+
+ERROR_SUBJECT_TYPE_DOES_NOT_EXIST = (
+    "ERROR_SUBJECT_TYPE_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The requested subject type does not exist.",
+)
+
+ERROR_ROLE_DOES_NOT_EXIST = (
+    "ERROR_ROLE_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The requested role does not exist.",
+)
+
+ERROR_DUPLICATE_ROLE_ASSIGNMENTS = (
+    "ERROR_DUPLICATE_ROLE_ASSIGNMENTS",
+    HTTP_400_BAD_REQUEST,
+    "The list of role assignments includes duplicates at indexes: {e.indexes}",
+)

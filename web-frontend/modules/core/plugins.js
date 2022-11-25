@@ -107,4 +107,24 @@ export class BaserowPlugin extends Registerable {
   getAdditionalShareLinkOptions() {
     return []
   }
+
+  /**
+   * Every registered plugin can display multiple additional context items in the
+   * database context displayed by the sidebar when opening the context menu of a
+   * database.
+   * @returns {*[]}
+   */
+  getAdditionalDatabaseContextComponents(group, database) {
+    return []
+  }
+
+  /**
+   * Every registered plugin can display multiple additional context items in the
+   * table context displayed by the sidebar when opening the context menu of a
+   * table.
+   * @returns {*[]}
+   */
+  getAdditionalTableContextComponents(group, table) {
+    return []
+  }
 }

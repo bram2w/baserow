@@ -11,7 +11,7 @@ import string
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
-from typing import Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from django.db import transaction
 from django.db.models import ForeignKey
@@ -455,6 +455,50 @@ def grouper(n: int, iterable: Iterable):
         if not chunk:
             return
         yield chunk
+
+
+def unique_dicts_in_list(
+    list_of_dicts: List[Dict[str, any]], unique_fields: List["str"] = None
+) -> Tuple[List[Dict[str, any]], List[Dict[str, any]]]:
+    """
+    This function provides you with a list of unique dicts within a list, and also
+    tells you what dicts are duplicates.
+    If you don't provide a `unique_fields` param the function will check for uniqueness
+    of all the fields of the first dict.
+    Please make sure that the dicts all have any field specific in `unique_fields` and
+    are all the exact same structure if None is provided for `unique_fields`
+
+    :param list_of_dicts: The list of dicts being filtered for uniqueness
+    :param unique_fields: The fields which combined function as the unique constraint
+    :return: The list of unique dicts and the duplicate dicts which have been filtered
+        out.
+    """
+
+    if len(list_of_dicts) == 0:
+        return [], []
+
+    if unique_fields is None:
+        unique_fields = list_of_dicts[0].keys()
+
+    duplicates = []
+    unique_items_map = {}
+    for item in list_of_dicts:
+        unique_values = []
+
+        for unique_field in unique_fields:
+            if unique_field not in item:
+                raise ValueError(f"unique field {unique_field} does no exist on {item}")
+
+            unique_values.append(item[unique_field])
+
+        unique_values_tuple = tuple(unique_values)
+
+        if unique_values_tuple in unique_items_map:
+            duplicates.append(item)
+        else:
+            unique_items_map[unique_values_tuple] = item
+
+    return list(unique_items_map.values()), duplicates
 
 
 class Progress:
