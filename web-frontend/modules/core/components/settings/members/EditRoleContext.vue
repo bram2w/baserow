@@ -1,14 +1,14 @@
 <template>
   <Context>
-    <template v-if="Object.keys(row).length > 0">
+    <template v-if="Object.keys(subject).length > 0">
       <div class="context__menu-title">
         {{ $t('membersSettings.membersTable.columns.role') }}
       </div>
       <ul class="context__menu context__menu--can-be-active">
         <li v-for="role in roles" :key="role.uid">
           <a
-            :class="{ active: row[roleValueColumn] === role.uid }"
-            @click="roleUpdate(role.uid, row)"
+            :class="{ active: subject[roleValueColumn] === role.uid }"
+            @click="roleUpdate(role.uid, subject)"
           >
             {{ role.name }}
             <div v-if="role.description" class="context__menu-item-description">
@@ -16,20 +16,27 @@
             </div>
           </a>
         </li>
+        <li>
+          <a
+            v-if="allowRemovingRole"
+            class="context__menu-item--delete"
+            @click="$emit('delete')"
+            >{{ $t('action.remove') }}</a
+          >
+        </li>
       </ul>
     </template>
   </Context>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import context from '@baserow/modules/core/mixins/context'
 
 export default {
   name: 'EditRoleContext',
   mixins: [context],
   props: {
-    row: {
+    subject: {
       required: true,
       type: Object,
     },
@@ -42,19 +49,18 @@ export default {
       required: false,
       default: 'permissions',
     },
-  },
-  computed: {
-    ...mapGetters({
-      userId: 'auth/getUserId',
-    }),
+    allowRemovingRole: {
+      type: Boolean,
+      default: false,
+    },
   },
   methods: {
-    roleUpdate(permissionsNew, row) {
-      if (row[this.roleValueColumn] === permissionsNew) {
+    roleUpdate(roleNew, subject) {
+      if (subject[this.roleValueColumn] === roleNew) {
         return
       }
 
-      this.$emit('update-role', { uid: permissionsNew, row })
+      this.$emit('update-role', { uid: roleNew, subject })
       this.hide()
     },
   },

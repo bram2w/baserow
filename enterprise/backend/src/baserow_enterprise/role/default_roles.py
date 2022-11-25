@@ -120,7 +120,14 @@ from baserow.core.trash.operations import (
     ReadApplicationTrashOperationType,
     ReadGroupTrashOperationType,
 )
-from baserow_enterprise.role.operations import AssignRoleGroupOperationType
+from baserow_enterprise.role.operations import (
+    AssignRoleGroupOperationType,
+    ReadRoleDatabaseOperationType,
+    ReadRoleGroupOperationType,
+    ReadRoleTableOperationType,
+    UpdateRoleDatabaseOperationType,
+    UpdateRoleTableOperationType,
+)
 from baserow_enterprise.teams.operations import (
     CreateTeamOperationType,
     CreateTeamSubjectOperationType,
@@ -239,6 +246,7 @@ ADMIN_OPS = BUILDER_OPS + [
     DeleteDatabaseRowOperationType,
     ReadInvitationGroupOperationType,
     AssignRoleGroupOperationType,
+    ReadRoleGroupOperationType,
     DeleteGroupUserOperationType,
     DeleteGroupInvitationOperationType,
     UpdateGroupUserOperationType,
@@ -254,6 +262,10 @@ ADMIN_OPS = BUILDER_OPS + [
     RestoreGroupOperationType,
     EmptyApplicationTrashOperationType,
     EmptyGroupTrashOperationType,
+    ReadRoleDatabaseOperationType,
+    UpdateRoleDatabaseOperationType,
+    ReadRoleTableOperationType,
+    UpdateRoleTableOperationType,
 ]
 default_roles = {
     "ADMIN": ADMIN_OPS,

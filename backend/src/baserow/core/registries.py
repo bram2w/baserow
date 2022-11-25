@@ -8,6 +8,8 @@ from django.core.files.storage import Storage
 from django.db.models import QuerySet
 from django.db.transaction import Atomic
 
+from rest_framework.serializers import Serializer
+
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.utils import ChildProgressBuilder
 
@@ -590,6 +592,57 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
 
 
+class SubjectType(Instance, ModelInstanceMixin):
+    """
+    This type describes a subject that exists in Baserow. A subject is anything that
+    can execute an operation.
+    """
+
+    def is_in_group(self, subject_id: int, group: "Group") -> bool:
+        """
+        This function checks if a subject belongs to a group
+        :return: If the subject belongs to the group
+        """
+
+        raise NotImplementedError(
+            f"Must be implemented by the specific type <{self.type}>"
+        )
+
+    def get_serializer(self, model_instance, **kwargs) -> Serializer:
+        """
+        This function can be used to generate different serializers based on the type
+        of subject that is being serialized
+        :param model_instance: instance of a subject
+        :param kwargs: additional kwargs that are parsed to serializer
+        :return: the correct seralizer for the subject
+        """
+
+        raise NotImplementedError(
+            f"Must be implemented by the specific type <{self.type}>"
+        )
+
+
+class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin):
+    """
+    This registry holds all the different subject types used across Baserow.
+    """
+
+    name = "subject"
+
+    def get_serializer(self, model_instance, **kwargs) -> Serializer:
+        """
+        This function is used to get the correct serializer for a given subject model
+        instance. A SubjectType has to implement the `get_serializer` method in order
+        to be serialized.
+        :param model_instance: Instance of a subject
+        :param kwargs: Additional kwargs passed to the serializer
+        :return: The correct subject serializer
+        """
+
+        instance_type = self.get_by_model(model_instance)
+        return instance_type.get_serializer(model_instance, **kwargs)
+
+
 class OperationType(abc.ABC, Instance):
     """
     An `OperationType` represent an `Operation` an actor can do on a `ContextObject`.
@@ -672,4 +725,5 @@ permission_manager_type_registry: PermissionManagerTypeRegistry = (
     PermissionManagerTypeRegistry()
 )
 object_scope_type_registry: ObjectScopeTypeRegistry = ObjectScopeTypeRegistry()
+subject_type_registry: SubjectTypeRegistry = SubjectTypeRegistry()
 operation_type_registry: OperationTypeRegistry = OperationTypeRegistry()

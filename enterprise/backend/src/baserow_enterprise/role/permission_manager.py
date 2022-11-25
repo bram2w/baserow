@@ -9,8 +9,11 @@ from django.contrib.contenttypes.models import ContentType
 from baserow_premium.license.handler import LicenseHandler
 from rest_framework.exceptions import NotAuthenticated
 
+from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
+from baserow.contrib.database.table.object_scopes import DatabaseTableObjectScopeType
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.models import Group, GroupUser, Operation
+from baserow.core.object_scopes import GroupObjectScopeType
 from baserow.core.registries import (
     PermissionManagerType,
     object_scope_type_registry,
@@ -21,6 +24,14 @@ from baserow_enterprise.models import Team
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 from .models import RoleAssignment
+from .operations import (
+    AssignRoleGroupOperationType,
+    ReadRoleDatabaseOperationType,
+    ReadRoleGroupOperationType,
+    ReadRoleTableOperationType,
+    UpdateRoleDatabaseOperationType,
+    UpdateRoleTableOperationType,
+)
 
 User = get_user_model()
 
@@ -45,6 +56,20 @@ class OperationPermissionContent(TypedDict):
 class RolePermissionManagerType(PermissionManagerType):
     type = "role"
     _role_cache: Dict[int, List[str]] = {}
+    role_assignable_object_map = {
+        GroupObjectScopeType.type: {
+            "READ": ReadRoleGroupOperationType,
+            "UPDATE": AssignRoleGroupOperationType,
+        },
+        DatabaseObjectScopeType.type: {
+            "READ": ReadRoleDatabaseOperationType,
+            "UPDATE": UpdateRoleDatabaseOperationType,
+        },
+        DatabaseTableObjectScopeType.type: {
+            "READ": ReadRoleTableOperationType,
+            "UPDATE": UpdateRoleTableOperationType,
+        },
+    }
 
     def is_enabled(self, group: Group):
         """
@@ -79,6 +104,7 @@ class RolePermissionManagerType(PermissionManagerType):
             subject_type=ContentType.objects.get_for_model(User),
             subject_id=actor.id,
         )
+        # TODO: query for roles within teams.
 
         if operation:
             roles.filter(role__operations__name=operation.type)
@@ -90,6 +116,7 @@ class RolePermissionManagerType(PermissionManagerType):
         # in the list.
         result.sort(key=cmp_to_key(compare_scopes))
 
+        # TODO: bypass if it's not a User? Saves a query.
         # Get the group level role by reading the GroupUser permissions property
         group_level_role = RoleAssignmentHandler().get_role_or_fallback(
             GroupUser.objects.get(user__id=actor.id, group=group).permissions

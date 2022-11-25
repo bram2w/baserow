@@ -22,6 +22,7 @@ from baserow.core.utils import (
     to_pascal_case,
     to_snake_case,
     truncate_middle,
+    unique_dicts_in_list,
 )
 
 
@@ -372,3 +373,19 @@ def test_atomic_if_not_already_autocommit_false(*mocks):
     mock_get_autocommit, mock_atomic = mocks
     with atomic_if_not_already():
         mock_atomic.assert_not_called()
+
+
+def test_unique_dicts_in_list():
+    assert unique_dicts_in_list([{"a": "a"}]) == ([{"a": "a"}], [])
+    assert unique_dicts_in_list([{"a": "a"}, {"a": "a"}]) == (
+        [{"a": "a"}],
+        [{"a": "a"}],
+    )
+    assert unique_dicts_in_list(
+        [{"a": "b", "b": "a"}, {"a": "a", "b": "a"}], unique_fields=["b"]
+    ) == ([{"a": "b", "b": "a"}], [{"a": "a", "b": "a"}])
+
+    assert unique_dicts_in_list([]) == ([], [])
+
+    with pytest.raises(ValueError):
+        assert unique_dicts_in_list([{"a": "a"}, {"a": "a"}], unique_fields=["b"])

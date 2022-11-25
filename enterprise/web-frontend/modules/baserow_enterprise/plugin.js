@@ -23,6 +23,7 @@ import {
   EnterpriseWithoutSupportLicenseType,
   EnterpriseLicenseType,
 } from '@baserow_enterprise/licenseTypes'
+
 import { EnterprisePlugin } from '@baserow_enterprise/plugins'
 
 export default (context) => {
@@ -58,6 +59,7 @@ export default (context) => {
     'authProvider',
     new OpenIdConnectAuthProviderType(context)
   )
+  app.$registry.register('plugin', new EnterprisePlugin(context))
 
   registerRealtimeEvents(app.$realtime)
 

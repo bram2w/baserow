@@ -35,6 +35,13 @@
           {{ application.name }} ({{ application.id }})
         </div>
         <ul class="context__menu">
+          <li
+            v-for="(component, index) in additionalContextComponents"
+            :key="index"
+            @click="$refs.context.hide()"
+          >
+            <component :is="component" :application="application"></component>
+          </li>
           <slot name="context"></slot>
           <li
             v-if="
@@ -162,6 +169,22 @@ export default {
     return {
       deleting: false,
     }
+  },
+  computed: {
+    additionalContextComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .reduce(
+          (components, plugin) =>
+            components.concat(
+              plugin.getAdditionalDatabaseContextComponents(
+                this.group,
+                this.application
+              )
+            ),
+          []
+        )
+        .filter((component) => component !== null)
+    },
   },
   methods: {
     setLoading(application, value) {

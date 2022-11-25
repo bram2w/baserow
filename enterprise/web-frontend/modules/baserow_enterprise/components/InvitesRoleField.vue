@@ -9,7 +9,7 @@
     </a>
     <EditRoleContext
       ref="editRoleContext"
-      :row="rowSanitised"
+      :subject="rowSanitised"
       :roles="roles"
       role-value-column="permissions"
       @update-role="roleUpdate($event)"
@@ -61,7 +61,7 @@ export default {
       const role = roles.find((r) => r.uid === row.permissions)
       return role?.name || ''
     },
-    async roleUpdate({ uid: permissionsNew, row: invitation }) {
+    async roleUpdate({ uid: permissionsNew, subject: invitation }) {
       const oldInvitation = clone(invitation)
       const newInvitation = clone(invitation)
       newInvitation.permissions = permissionsNew
