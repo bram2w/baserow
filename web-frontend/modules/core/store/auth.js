@@ -183,7 +183,7 @@ export const actions = {
    */
   async update({ getters, commit, dispatch }, values) {
     const { data } = await AuthService(this.$client).update(values)
-    commit('UPDATE_USER_DATA', { user: data })
+    dispatch('forceUpdateUserData', { user: data })
     dispatch(
       'group/forceUpdateGroupUserAttributes',
       {
@@ -200,6 +200,7 @@ export const actions = {
   },
   forceUpdateUserData({ commit }, data) {
     commit('UPDATE_USER_DATA', data)
+    this.app.$bus.$emit('user-data-updated', data)
   },
   forceSetUserData({ commit }, data) {
     commit('SET_USER_DATA', data)
