@@ -33,6 +33,9 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   app.$hasFeature = function (feature, group) {
     return true
   }
+  app.$licenseHandler = {
+    async afterUserDataUpdate(data) {},
+  }
   // Nuxt seems to allow both access patterns to get at the store?
   app.store = store
   const setupContext = {
