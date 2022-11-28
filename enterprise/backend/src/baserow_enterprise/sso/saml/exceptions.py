@@ -21,9 +21,3 @@ class SamlProviderForDomainAlreadyExists(Exception):
     This exception is raised when a SAML provider is created or updated with a
     domain that already exists.
     """
-
-
-class InvalidSamlProviderMetadata(Exception):
-    """
-    This exception is raised when the metadata of a SAML provider is invalid.
-    """
