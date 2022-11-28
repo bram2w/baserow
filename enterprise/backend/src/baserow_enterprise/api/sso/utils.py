@@ -78,7 +78,7 @@ def redirect_to_sign_in_error_page(
         message encoded as query param.
     """
 
-    frontend_error_page_url = urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/login/error")
+    frontend_error_page_url = get_frontend_login_error_url()
     if error_code:
         frontend_error_page_url = urlencode_query_params(
             frontend_error_page_url, {"error": error_code.value}
@@ -103,7 +103,7 @@ def get_valid_frontend_url(
     """
 
     requested_url_parsed = urlparse(requested_original_url or "")
-    default_frontend_url_parsed = urlparse(get_default_redirect_frontend_url())
+    default_frontend_url_parsed = urlparse(get_frontend_default_redirect_url())
 
     if requested_url_parsed.path in ["", "/"]:
         # use the default frontend path if the requested one is empty
@@ -164,7 +164,7 @@ def redirect_user_on_success(
     return redirect(redirect_url)
 
 
-def get_default_redirect_frontend_url() -> str:
+def get_frontend_default_redirect_url() -> str:
     """
     Returns the url to the frontend dashboard.
 
@@ -172,3 +172,13 @@ def get_default_redirect_frontend_url() -> str:
     """
 
     return urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/dashboard")
+
+
+def get_frontend_login_error_url() -> str:
+    """
+    Returns the url to the frontend login error page.
+
+    :return: The absolute url to the Baserow login error page.
+    """
+
+    return urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/login/error")

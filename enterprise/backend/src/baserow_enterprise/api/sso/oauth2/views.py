@@ -150,7 +150,7 @@ class OAuth2CallbackView(APIView):
         user_info, original_url = provider_type.get_user_info(
             provider, code, request.session
         )
-        user = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
+        user, _ = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
             user_info, provider
         )
 
