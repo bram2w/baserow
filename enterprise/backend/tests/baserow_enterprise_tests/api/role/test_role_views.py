@@ -4,7 +4,12 @@ from django.shortcuts import reverse
 from django.test.utils import override_settings
 
 import pytest
-from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from baserow.core.subjects import UserSubjectType
 from baserow_enterprise.role.handler import RoleAssignmentHandler
@@ -137,6 +142,143 @@ def test_create_role_assignment(
     )
 
     assert role_assignment_user_2 is None
+
+
+def test_create_role_assignment_invalid_requests(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user_2])
+    group_2 = data_fixture.create_group()
+    role = Role.objects.get(uid="ADMIN")
+
+    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+
+    response = api_client.post(
+        url,
+        data=json.dumps(
+            {
+                "scope_id": 9999,
+                "scope_type": "group",
+                "subject_id": user_2.id,
+                "subject_type": UserSubjectType.type,
+                "role": role.uid,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_SCOPE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        url,
+        data=json.dumps(
+            {
+                "scope_id": group.id,
+                "scope_type": "nonsense",
+                "subject_id": user_2.id,
+                "subject_type": UserSubjectType.type,
+                "role": role.uid,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        url,
+        data=json.dumps(
+            {
+                "scope_id": group.id,
+                "scope_type": "group",
+                "subject_id": 99999,
+                "subject_type": UserSubjectType.type,
+                "role": role.uid,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_SUBJECT_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        url,
+        data=json.dumps(
+            {
+                "scope_id": group.id,
+                "scope_type": "group",
+                "subject_id": user_2.id,
+                "subject_type": "nonsense",
+                "role": role.uid,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_SUBJECT_TYPE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        url,
+        data=json.dumps(
+            {
+                "scope_id": group.id,
+                "scope_type": "group",
+                "subject_id": user_2.id,
+                "subject_type": UserSubjectType.type,
+                "role": 999999,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROLE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:enterprise:role:list", kwargs={"group_id": group_2.id}),
+        data=json.dumps(
+            {
+                "scope_id": group_2.id,
+                "scope_type": "group",
+                "subject_id": user_3.id,
+                "subject_type": UserSubjectType.type,
+                "role": role.uid,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse("api:enterprise:role:list", kwargs={"group_id": 999999}),
+        data=json.dumps(
+            {
+                "scope_id": group.id,
+                "scope_type": "group",
+                "subject_id": user_2.id,
+                "subject_type": UserSubjectType.type,
+                "role": role.uid,
+            }
+        ),
+        content_type="application/json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db
