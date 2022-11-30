@@ -84,12 +84,26 @@ class RoleAssignmentsView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
+            404: get_error_schema(
+                [
+                    "ERROR_SCOPE_DOES_NOT_EXIST",
+                    "ERROR_GROUP_DOES_NOT_EXIST",
+                    "ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST",
+                    "ERROR_SUBJECT_TYPE_DOES_NOT_EXIST",
+                    "ERROR_ROLE_DOES_NOT_EXIST",
+                ]
+            ),
         },
     )
     @map_exceptions(
         {
+            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ObjectScopeTypeDoesNotExist: ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
+            SubjectTypeNotExist: ERROR_SUBJECT_TYPE_DOES_NOT_EXIST,
+            SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
+            RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
         }
     )
     @validate_body(CreateRoleAssignmentSerializer, return_validated=True)

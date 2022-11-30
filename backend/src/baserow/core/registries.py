@@ -12,6 +12,7 @@ from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.utils import ChildProgressBuilder
+from baserow_enterprise.exceptions import SubjectTypeNotExist
 
 from .exceptions import (
     ApplicationTypeAlreadyRegistered,
@@ -628,6 +629,7 @@ class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin):
     """
 
     name = "subject"
+    does_not_exist_exception_class = SubjectTypeNotExist
 
     def get_serializer(self, model_instance, **kwargs) -> Serializer:
         """
