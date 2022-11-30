@@ -1,12 +1,15 @@
 from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import IntegrityError
 from django.db.models import Q
 
 import pytest
 from pyinstrument import Profiler
 
+from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.core.models import GroupUser
+from baserow.core.subjects import UserSubjectType
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
@@ -64,6 +67,33 @@ def test_create_role_assignment(data_fixture, enterprise_data_fixture):
 
     role_assignments = list(RoleAssignment.objects.all())
     assert len(role_assignments) == 0
+
+
+@pytest.mark.django_db
+def test_create_role_assignment_unique_constraint(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    role = Role.objects.get(uid="ADMIN")
+
+    RoleAssignment.objects.create(
+        subject_id=user.id,
+        subject_type=UserSubjectType().get_content_type(),
+        role=role,
+        group=group,
+        scope_id=database.id,
+        scope_type=DatabaseObjectScopeType().get_content_type(),
+    )
+
+    with pytest.raises(IntegrityError):
+        RoleAssignment.objects.create(
+            subject_id=user.id,
+            subject_type=UserSubjectType().get_content_type(),
+            role=role,
+            group=group,
+            scope_id=database.id,
+            scope_type=DatabaseObjectScopeType().get_content_type(),
+        )
 
 
 @pytest.mark.django_db
