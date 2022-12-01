@@ -65,7 +65,7 @@ export default {
       await navigator.clipboard.writeText(email)
       this.$refs.emailCopied.show()
     },
-    async remove(user) {
+    async remove(member) {
       if (this.removeLoading) {
         return
       }
@@ -73,11 +73,11 @@ export default {
       this.removeLoading = true
 
       try {
-        await GroupService(this.$client).deleteUser(user.id)
+        await GroupService(this.$client).deleteUser(member.id)
         await this.$store.dispatch('group/forceDeleteGroupUser', {
           groupId: this.group.id,
-          id: user.id,
-          values: { user_id: this.userId },
+          id: member.id,
+          values: { user_id: member.user_id },
         })
         this.$emit('refresh')
         this.hide()
