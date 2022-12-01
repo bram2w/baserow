@@ -743,38 +743,12 @@ def test_additional_user_data(api_client, data_fixture):
 @pytest.mark.django_db
 def test_schedule_user_deletion(client, data_fixture):
     valid_password = "aValidPassword"
-    invalid_password = "invalidPassword"
     user, token = data_fixture.create_user_and_token(
         email="test@localhost", password=valid_password, is_staff=True
     )
-    response = client.post(
-        reverse("api:user:schedule_account_deletion"),
-        {},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"] == {
-        "password": [{"error": "This field is required.", "code": "required"}]
-    }
 
     response = client.post(
         reverse("api:user:schedule_account_deletion"),
-        {"password": invalid_password},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_INVALID_PASSWORD"
-
-    response = client.post(
-        reverse("api:user:schedule_account_deletion"),
-        {"password": valid_password},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -787,7 +761,6 @@ def test_schedule_user_deletion(client, data_fixture):
 
     response = client.post(
         reverse("api:user:schedule_account_deletion"),
-        {"password": valid_password},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

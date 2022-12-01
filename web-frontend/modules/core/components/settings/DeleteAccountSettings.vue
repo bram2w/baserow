@@ -59,34 +59,6 @@
       class="delete-account-settings__form"
       @submit.prevent="deleteAccount"
     >
-      <div class="control">
-        <label class="control__label">{{
-          $t('deleteAccountSettings.password')
-        }}</label>
-        <div class="control__elements">
-          <PasswordInput
-            v-model="account.password"
-            :validation-state="$v.account.password"
-          />
-        </div>
-      </div>
-      <div class="control">
-        <label class="control__label">{{
-          $t('deleteAccountSettings.passwordConfirm')
-        }}</label>
-        <div class="control__elements">
-          <input
-            v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.passwordConfirm.$touch()"
-          />
-          <div v-if="$v.account.passwordConfirm.$error" class="error">
-            {{ $t('deleteAccountSettings.repeatPasswordMatchError') }}
-          </div>
-        </div>
-      </div>
       <div class="actions actions--right">
         <button
           :class="{ 'button--loading': loading }"
@@ -104,18 +76,14 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { mapGetters } from 'vuex'
-import { sameAs } from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
-import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
-import { passwordValidation } from '@baserow/modules/core/validators'
 import GroupService from '@baserow/modules/core/services/group'
 import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export default {
-  components: { PasswordInput },
   mixins: [error],
   data() {
     return {
@@ -194,25 +162,15 @@ export default {
       }
     },
     async deleteAccount() {
-      this.$v.$touch()
-
-      if (this.$v.$invalid) {
-        return
-      }
-
       this.loading = true
       this.hideError()
 
       try {
-        await AuthService(this.$client).deleteAccount(this.account.password)
+        await AuthService(this.$client).deleteAccount()
         this.success = true
         this.logoff()
       } catch (error) {
         this.handleError(error, 'deleteAccount', {
-          ERROR_INVALID_PASSWORD: new ResponseErrorMessage(
-            this.$t('deleteAccountSettings.errorInvalidPasswordTitle'),
-            this.$t('deleteAccountSettings.errorInvalidPasswordMessage')
-          ),
           ERROR_USER_IS_LAST_ADMIN: new ResponseErrorMessage(
             this.$t('deleteAccountSettings.errorUserIsLastAdminTitle'),
             this.$t('deleteAccountSettings.errorUserIsLastAdminMessage')
@@ -221,14 +179,6 @@ export default {
       } finally {
         this.loading = false
       }
-    },
-  },
-  validations: {
-    account: {
-      passwordConfirm: {
-        sameAsPassword: sameAs('password'),
-      },
-      password: passwordValidation,
     },
   },
 }

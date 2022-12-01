@@ -63,7 +63,6 @@ from .errors import (
     ERROR_DISABLED_SIGNUP,
     ERROR_INVALID_CREDENTIALS,
     ERROR_INVALID_OLD_PASSWORD,
-    ERROR_INVALID_PASSWORD,
     ERROR_INVALID_REFRESH_TOKEN,
     ERROR_UNDO_REDO_LOCK_CONFLICT,
     ERROR_USER_IS_LAST_ADMIN,
@@ -79,7 +78,6 @@ from .serializers import (
     AccountSerializer,
     ChangePasswordBodyValidationSerializer,
     DashboardSerializer,
-    DeleteUserBodyValidationSerializer,
     RegisterSerializer,
     ResetPasswordBodyValidationSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
@@ -407,7 +405,6 @@ class ScheduleAccountDeletionView(APIView):
 
     @extend_schema(
         tags=["User"],
-        request=DeleteUserBodyValidationSerializer,
         operation_id="schedule_account_deletion",
         description=(
             "Schedules the account deletion of the authenticated user. "
@@ -418,7 +415,6 @@ class ScheduleAccountDeletionView(APIView):
             204: None,
             400: get_error_schema(
                 [
-                    "ERROR_INVALID_PASSWORD",
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
@@ -427,18 +423,13 @@ class ScheduleAccountDeletionView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            InvalidPassword: ERROR_INVALID_PASSWORD,
             UserIsLastAdmin: ERROR_USER_IS_LAST_ADMIN,
         }
     )
-    @validate_body(DeleteUserBodyValidationSerializer)
-    def post(self, request, data):
+    def post(self, request):
         """Schedules user account deletion."""
 
-        UserHandler().schedule_user_deletion(
-            request.user,
-            **data,
-        )
+        UserHandler().schedule_user_deletion(request.user)
         return Response(status=204)
 
 

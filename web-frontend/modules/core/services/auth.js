@@ -61,8 +61,8 @@ export default (client) => {
     update(values) {
       return client.patch('/user/account/', values)
     },
-    deleteAccount(password) {
-      return client.post('/user/schedule-account-deletion/', { password })
+    deleteAccount() {
+      return client.post('/user/schedule-account-deletion/')
     },
   }
 }
