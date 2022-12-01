@@ -419,7 +419,11 @@ export function makeErrorResponseInterceptor(
     }
 
     error.handler = new ErrorHandler(store, app, clientErrorMap, error.response)
-    if (rspData?.error && rspData?.detail) {
+    if (
+      typeof rspData === 'object' &&
+      'error' in rspData &&
+      'detail' in rspData
+    ) {
       error.handler.setError(rspData.error, rspData.detail)
     }
 
