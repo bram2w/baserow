@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db import transaction
 from django.db.models.signals import post_migrate
 
 from tqdm import tqdm
@@ -142,6 +143,7 @@ class BaserowEnterpriseConfig(AppConfig):
         import baserow_enterprise.ws.signals  # noqa: F
 
 
+@transaction.atomic
 def sync_default_roles_after_migrate(sender, **kwargs):
     from .role.default_roles import default_roles
 
@@ -151,9 +153,16 @@ def sync_default_roles_after_migrate(sender, **kwargs):
         try:
             Operation = apps.get_model("core", "Operation")
             Role = apps.get_model("baserow_enterprise", "Role")
+            GroupUser = apps.get_model("core", "GroupUser")
         except LookupError:
             print("Skipping role creation as related models does not exist.")
         else:
+            # Migrate from NO_ROLE to NO_ACCESS
+            Role.objects.filter(uid="NO_ROLE").update(uid="NO_ACCESS")
+            GroupUser.objects.filter(permissions="NO_ROLE").update(
+                permissions="NO_ACCESS"
+            )
+
             for role_name, operations in tqdm(
                 default_roles.items(), desc="Syncing default roles"
             ):
@@ -163,8 +172,11 @@ def sync_default_roles_after_migrate(sender, **kwargs):
                 )
                 role.operations.all().delete()
 
+                to_add = []
                 for operation_type in operations:
                     operation, _ = Operation.objects.get_or_create(
                         name=operation_type.type
                     )
-                    role.operations.add(operation)
+                    to_add.append(operation)
+
+                role.operations.add(*to_add)

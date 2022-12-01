@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.test.utils import override_settings
 
@@ -622,8 +624,9 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
+@patch("baserow.core.handler.CoreHandler.check_permissions")
 def test_getting_row_comments_executes_fixed_number_of_queries(
-    premium_data_fixture, api_client, django_assert_num_queries
+    mock_check_permissions, premium_data_fixture, api_client, django_assert_num_queries
 ):
     user, token = premium_data_fixture.create_user_and_token(
         first_name="Test User", has_active_premium_license=True
@@ -649,7 +652,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     )
     assert response.status_code == HTTP_200_OK
 
-    expected_num_of_fixed_queries = 10
+    expected_num_of_fixed_queries = 6
     with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(

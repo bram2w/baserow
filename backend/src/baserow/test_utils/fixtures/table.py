@@ -22,8 +22,8 @@ class TableFixtures:
 
         return table
 
-    def build_table(self, columns, rows, user=None, **kwargs):
-        table = self.create_database_table(user=user, create_table=True, **kwargs)
+    def build_table(self, columns, rows, **kwargs):
+        table = self.create_database_table(**kwargs)
         fields = []
         for index, (name, field_type) in enumerate(columns):
             kwargs = {}

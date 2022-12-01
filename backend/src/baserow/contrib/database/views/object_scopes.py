@@ -8,7 +8,7 @@ from baserow.contrib.database.views.models import (
     ViewFilter,
     ViewSort,
 )
-from baserow.core.object_scopes import GroupObjectScopeType
+from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 from baserow.core.types import ScopeObject
 
@@ -19,18 +19,21 @@ class DatabaseViewObjectScopeType(ObjectScopeType):
     model_class = View
 
     def get_parent_scope(self):
-        return object_scope_type_registry.get("table")
+        return object_scope_type_registry.get("database_table")
 
     def get_parent(self, context):
         return context.table
 
     def get_all_context_objects_in_scope(self, scope: ScopeObject) -> Iterable:
         scope_type = object_scope_type_registry.get_by_model(scope)
-        if scope_type.type == "group":
+        if scope_type.type == GroupObjectScopeType.type:
             return View.objects.filter(table__database__group=scope.id)
-        if scope_type.type == "database":
+        if (
+            scope_type.type == DatabaseObjectScopeType.type
+            or scope_type.type == ApplicationObjectScopeType.type
+        ):
             return View.objects.filter(table__database=scope.id)
-        if scope_type.type == "database_table":
+        if scope_type.type == DatabaseTableObjectScopeType.type:
             return View.objects.filter(table=scope.id)
         if scope_type.type == self.type:
             return [scope]
@@ -43,7 +46,7 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
     model_class = ViewDecoration
 
     def get_parent_scope(self):
-        return object_scope_type_registry.get("view")
+        return object_scope_type_registry.get("database_view")
 
     def get_parent(self, context):
         return context.view
@@ -52,7 +55,10 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
         scope_type = object_scope_type_registry.get_by_model(scope)
         if scope_type.type == GroupObjectScopeType.type:
             return ViewDecoration.objects.filter(view__table__database__group=scope.id)
-        if scope_type.type == DatabaseObjectScopeType.type:
+        if (
+            scope_type.type == DatabaseObjectScopeType.type
+            or scope_type.type == ApplicationObjectScopeType.type
+        ):
             return ViewDecoration.objects.filter(view__table__database=scope.id)
         if scope_type.type == DatabaseTableObjectScopeType.type:
             return ViewDecoration.objects.filter(view__table=scope.id)
@@ -69,7 +75,7 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
     model_class = ViewSort
 
     def get_parent_scope(self):
-        return object_scope_type_registry.get("view")
+        return object_scope_type_registry.get("database_view")
 
     def get_parent(self, context):
         return context.view
@@ -78,7 +84,10 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
         scope_type = object_scope_type_registry.get_by_model(scope)
         if scope_type.type == GroupObjectScopeType.type:
             return ViewSort.objects.filter(view__table__database__group=scope.id)
-        if scope_type.type == DatabaseObjectScopeType.type:
+        if (
+            scope_type.type == DatabaseObjectScopeType.type
+            or scope_type.type == ApplicationObjectScopeType.type
+        ):
             return ViewSort.objects.filter(view__table__database=scope.id)
         if scope_type.type == DatabaseTableObjectScopeType.type:
             return ViewSort.objects.filter(view__table=scope.id)
@@ -95,7 +104,7 @@ class DatabaseViewFilterObjectScopeType(ObjectScopeType):
     model_class = ViewFilter
 
     def get_parent_scope(self):
-        return object_scope_type_registry.get("view")
+        return object_scope_type_registry.get("database_view")
 
     def get_parent(self, context):
         return context.view
@@ -104,7 +113,10 @@ class DatabaseViewFilterObjectScopeType(ObjectScopeType):
         scope_type = object_scope_type_registry.get_by_model(scope)
         if scope_type.type == GroupObjectScopeType.type:
             return ViewFilter.objects.filter(view__table__database__group=scope.id)
-        if scope_type.type == DatabaseObjectScopeType.type:
+        if (
+            scope_type.type == DatabaseObjectScopeType.type
+            or scope_type.type == ApplicationObjectScopeType.type
+        ):
             return ViewFilter.objects.filter(view__table__database=scope.id)
         if scope_type.type == DatabaseTableObjectScopeType.type:
             return ViewFilter.objects.filter(view__table=scope.id)

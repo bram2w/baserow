@@ -1,4 +1,5 @@
 from baserow.core.models import Snapshot
+from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
 
@@ -13,8 +14,11 @@ class SnapshotObjectScopeType(ObjectScopeType):
         return context.snapshot_from_application.specific
 
     def get_all_context_objects_in_scope(self, scope):
-        if object_scope_type_registry.get_by_model(scope).type == "group":
-            return Snapshot.objects.filter(group=scope)
-        if object_scope_type_registry.get_by_model(scope).type == "snapshot":
+        scope_type = object_scope_type_registry.get_by_model(scope)
+        if scope_type.type == GroupObjectScopeType.type:
+            return Snapshot.objects.filter(snapshot_from_application__group=scope)
+        if scope_type.type == ApplicationObjectScopeType.type:
+            return Snapshot.objects.filter(snapshot_from_application=scope)
+        if scope_type.type == self.type:
             return [scope]
         return []

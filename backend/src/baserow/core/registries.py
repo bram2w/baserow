@@ -1,6 +1,6 @@
 import abc
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
@@ -499,6 +499,26 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
 
         return None
 
+    def get_parents(self, context: ContextObject) -> List[ContextObject]:
+        """
+        Returns all ancestors of the given context which belongs to the current
+        scope.
+
+        :param context: The context object which we want the ancestors for. This object
+            must belong to the current scope.
+        :return: the list of parent objects if it's a root object.
+        """
+
+        parent = self.get_parent(context)
+
+        if parent is None:
+            return []
+
+        parents = self.get_parent_scope().get_parents(parent)
+        parents.append(parent)
+
+        return parents
+
     def get_all_context_objects_in_scope(self, scope: ScopeObject) -> Iterable:
         """
         Returns the list of context object belonging to the current scope that are
@@ -512,6 +532,17 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
             f"Must be implemented by the specific type <{self.type}>"
         )
 
+    def contains(self, context: ContextObject):
+        """
+        Return True if the context is one object of this context.
+
+        :param context: The context to test
+        :return: True if the ObjectScopeType of the context is the same as this one.
+        """
+
+        context_scope_type = object_scope_type_registry.get_by_model(context)
+        return context_scope_type.type == self.type
+
 
 class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     """
@@ -520,6 +551,30 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     """
 
     name = "object_scope"
+
+    def get_parent(self, context, at_scope_type=None):
+        """
+        Returns the parent object of the given context.
+
+        :param context: The context object we want the parent for.
+        :param at_scope_type: A parent scope at which you want the parent.
+        :return: if the `at_scope_type` is not set: the parent object or `None` if it's
+            a root object. If at_scope_type is set, the ancestor for which scope_type
+            matches at_scope_type or None if no parents match.
+        """
+
+        context_scope_type = self.get_by_model(context)
+        if at_scope_type:
+            if at_scope_type.type == context_scope_type.type:
+                return context
+            else:
+                parent_scope = context_scope_type.get_parent(context)
+                if parent_scope is None:
+                    return None
+                else:
+                    return self.get_parent(parent_scope, at_scope_type=at_scope_type)
+        else:
+            return context_scope_type.get_parent(context)
 
     def scope_includes_context(
         self,
@@ -551,10 +606,10 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
                 scope, context_scope_type.get_parent(context), scope_type=scope_type
             )
 
-    def scope_includes_scope(
+    def scope_type_includes_scope_type(
         self,
-        parent_scope: Union[ScopeObject, ObjectScopeType],
-        child_scope: Union[ScopeObject, ObjectScopeType],
+        parent_scope_type: ObjectScopeType,
+        child_scope_type: ObjectScopeType,
     ) -> Boolean:
         """
         Checks whether the parent_scope includes the child_scope.
@@ -566,29 +621,17 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
         :return: True if the parent_scope includes the children scope. False otherwise.
         """
 
-        if child_scope is None:
+        if child_scope_type is None:
             return False
-
-        parent_scope_type = (
-            object_scope_type_registry.get_by_model(parent_scope)
-            if not isinstance(parent_scope, ObjectScopeType)
-            else parent_scope
-        )
-        child_scope_type = (
-            object_scope_type_registry.get_by_model(child_scope)
-            if not isinstance(child_scope, ObjectScopeType)
-            else child_scope
-        )
 
         if parent_scope_type == child_scope_type:
             return True
         else:
-            return self.scope_includes_scope(
+            return self.scope_type_includes_scope_type(
                 parent_scope_type,
                 child_scope_type.get_parent_scope(),
             )
 
-    # TODO change
     does_not_exist_exception_class = ObjectScopeTypeDoesNotExist
     already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
 
@@ -711,7 +754,6 @@ class OperationTypeRegistry(Registry[OperationType]):
 
     name = "operation"
 
-    # TODO change
     does_not_exist_exception_class = OperationTypeDoesNotExist
     already_registered_exception_class = OperationTypeAlreadyRegistered
 

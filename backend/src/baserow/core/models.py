@@ -196,6 +196,22 @@ class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
 
             return queryset.exists()
 
+    def get_group_user(self, user: User, include_trash: bool = False) -> "GroupUser":
+        """
+        Return the GroupUser object for this group for the specified user.
+
+        :param user: The user we want the group user for.
+        :param include_trash: Do we want to check trashed group user also ?
+        :return: The related group user instance.
+        """
+
+        if include_trash:
+            manager = GroupUser.objects_and_trash
+        else:
+            manager = GroupUser.objects
+
+        return manager.get(user=user, group=self)
+
     def __str__(self):
         return f"<Group id={self.id}, name={self.name}>"
 
