@@ -143,6 +143,7 @@
     },
     "createGroupModal": {
         "createNew": "Create new group",
+        "defaultName": "Untitled Group",
         "add": "Add group"
     },
     "templateCategories": {

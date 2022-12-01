@@ -107,3 +107,16 @@ export const escapeRegExp = (string) => {
 export const isNumeric = (value) => {
   return /^-?\d+$/.test(value)
 }
+
+export const getNextAvailableNameInSequence = (baseName, excludeNames) => {
+  let name = baseName
+  let i = 0
+  while (i < excludeNames.length) {
+    if (!excludeNames.includes(name)) {
+      return name
+    }
+    i++
+    name = `${baseName} ${i + 1}`
+  }
+  return name
+}

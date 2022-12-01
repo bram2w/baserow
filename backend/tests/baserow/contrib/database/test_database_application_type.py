@@ -5,6 +5,8 @@ from freezegun import freeze_time
 from pytz import UTC
 
 from baserow.contrib.database.fields.models import FormulaField, TextField
+from baserow.contrib.database.table.models import Table
+from baserow.core.handler import CoreHandler
 from baserow.core.registries import application_type_registry
 
 
@@ -100,3 +102,17 @@ def test_import_export_database(data_fixture):
     # It must still be possible to create a new row in the imported table
     row_3 = imported_model.objects.create()
     assert row_3.id == 3
+
+
+@pytest.mark.django_db
+def test_create_application_and_init_with_data(data_fixture):
+    core_handler = CoreHandler()
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database_1 = core_handler.create_application(user, group, "database", "Database 1")
+    assert Table.objects.filter(database=database_1).count() == 0
+
+    database_2 = core_handler.create_application(
+        user, group, "database", "Database 2", init_with_data=True
+    )
+    assert Table.objects.filter(database=database_2).count() == 1

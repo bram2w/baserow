@@ -1042,7 +1042,12 @@ class CoreHandler:
         return base_queryset.filter(group_id=group_id, group__trashed=False)
 
     def create_application(
-        self, user: AbstractUser, group: Group, type_name: str, name: str
+        self,
+        user: AbstractUser,
+        group: Group,
+        type_name: str,
+        name: str,
+        init_with_data: bool = False,
     ) -> Application:
         """
         Creates a new application based on the provided type.
@@ -1052,6 +1057,8 @@ class CoreHandler:
         :param type_name: The type name of the application. ApplicationType can be
             registered via the ApplicationTypeRegistry.
         :param name: The name of the application.
+        :param init_with_data: Whether the application should be initialized with
+            some default data. Defaults to False.
         :return: The created application instance.
         """
 
@@ -1059,16 +1066,13 @@ class CoreHandler:
             user, CreateApplicationsGroupOperationType.type, group=group, context=group
         )
 
-        # Figure out which model is used for the given application type.
         application_type = application_type_registry.get(type_name)
-        model = application_type.model_class
-        last_order = model.get_last_order(group)
+        application = application_type.create_application(
+            user, group, name, init_with_data
+        )
 
-        instance = model.objects.create(group=group, order=last_order, name=name)
-
-        application_created.send(self, application=instance, user=user)
-
-        return instance
+        application_created.send(self, application=application, user=user)
+        return application
 
     def find_unused_application_name(self, group_id: int, proposed_name: str) -> str:
         """

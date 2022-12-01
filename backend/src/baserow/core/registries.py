@@ -222,6 +222,37 @@ class ApplicationType(
             "Must be implemented by the specific application type"
         )
 
+    def create_application(
+        self, user, group: "Group", name: str, init_with_data: bool = False
+    ) -> "Application":
+        """
+        Creates a new application instance of this type and returns it.
+
+        :param user: The user that is creating the application.
+        :param group: The group that the application will be created in.
+        :param name: The name of the application.
+        :param init_with_data: Whether the application should be created with some
+            initial data. Defaults to False.
+        :return: The newly created application instance.
+        """
+
+        model = self.model_class
+        last_order = model.get_last_order(group)
+
+        instance = model.objects.create(group=group, order=last_order, name=name)
+        if init_with_data:
+            self.init_application(user, instance)
+        return instance
+
+    def init_application(self, user, application: "Application") -> None:
+        """
+        This method can be called when the application is created to
+        initialize it with some default data.
+
+        :param user: The user that is creating the application.
+        :param application: The application to initialize with data.
+        """
+
     def export_serialized(
         self,
         application: "Application",
