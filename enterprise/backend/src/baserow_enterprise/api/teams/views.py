@@ -179,9 +179,9 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
             context=group,
         )
 
-        default_role = data.get("default_role", None)
+        default_role = data.get("default_role", RoleAssignmentHandler.FALLBACK_ROLE)
         if default_role:
-            default_role = RoleAssignmentHandler().get_role(default_role)
+            default_role = RoleAssignmentHandler().get_role_by_uid(default_role)
 
         team = action_type_registry.get_by_type(CreateTeamActionType).do(
             request.user, data["name"], group, data["subjects"], default_role
@@ -271,9 +271,9 @@ class TeamView(APIView):
             context=team,
         )
 
-        default_role = data.get("default_role", None)
+        default_role = data.get("default_role", RoleAssignmentHandler.FALLBACK_ROLE)
         if default_role:
-            default_role = RoleAssignmentHandler().get_role(default_role)
+            default_role = RoleAssignmentHandler().get_role_by_uid(default_role)
 
         team = action_type_registry.get_by_type(UpdateTeamActionType).do(
             request.user, team, data["name"], data["subjects"], default_role

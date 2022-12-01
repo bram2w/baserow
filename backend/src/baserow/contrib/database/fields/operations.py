@@ -5,7 +5,7 @@ from baserow.core.registries import OperationType
 
 
 class FieldOperationType(OperationType, abc.ABC):
-    context_scope_name = "field"
+    context_scope_name = "database_field"
 
 
 class CreateFieldOperationType(DatabaseTableOperationType):

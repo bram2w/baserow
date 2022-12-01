@@ -3,12 +3,13 @@ import os
 
 from django.apps import apps
 from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS
+from django.db import DEFAULT_DB_ALIAS, transaction
 
 import pytest
 
 from baserow.core.apps import sync_operations_after_migrate
 from baserow_enterprise.apps import sync_default_roles_after_migrate
+from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
@@ -25,6 +26,14 @@ def data_fixture():
 def synced_roles(db):
     sync_operations_after_migrate(None, apps=apps)
     sync_default_roles_after_migrate(None, apps=apps)
+
+    def resetRoleAssignmentHandlerCache():
+        # Reset the cache at the beginning of the tests to prevent invalid cache when
+        # a previous transaction has been rollbacked.
+
+        RoleAssignmentHandler._init = False
+
+    transaction.on_commit(resetRoleAssignmentHandlerCache)
 
 
 @pytest.fixture()

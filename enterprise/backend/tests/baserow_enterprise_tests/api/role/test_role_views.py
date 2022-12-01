@@ -28,12 +28,16 @@ def test_create_role_assignment(
 ):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
+    group = data_fixture.create_group(
+        user=user,
+        custom_permissions=[(user2, "VIEWER")],
+    )
     database = data_fixture.create_database_application(group=group)
 
-    table = data_fixture.create_database_table(user=user, database=database)
+    table = data_fixture.create_database_table(database=database, user=user)
 
     admin_role = Role.objects.get(uid="ADMIN")
+    editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
 
     assert len(RoleAssignment.objects.all()) == 0
@@ -53,8 +57,9 @@ def test_create_role_assignment(
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
 
-    assert response.status_code == HTTP_200_OK
     response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
 
     role_assignment_user_2 = RoleAssignmentHandler().get_current_role_assignment(
         user2, group, scope=table
@@ -88,7 +93,7 @@ def test_create_role_assignment(
             "scope_type": "group",
             "subject_id": user2.id,
             "subject_type": UserSubjectType.type,
-            "role": admin_role.uid,
+            "role": editor_role.uid,
         },
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
@@ -97,7 +102,7 @@ def test_create_role_assignment(
         user2, group
     )
 
-    assert role_assignment_user_2.role == admin_role
+    assert role_assignment_user_2.role == editor_role
     assert role_assignment_user_2.scope == group
 
     # Check that we don't create new RoleAssignment for the same scope/subject/group
@@ -108,7 +113,7 @@ def test_create_role_assignment(
             "scope_type": "database_table",
             "subject_id": user2.id,
             "subject_type": UserSubjectType.type,
-            "role": admin_role.uid,
+            "role": editor_role.uid,
         },
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
@@ -117,7 +122,7 @@ def test_create_role_assignment(
         user2, group, scope=table
     )
 
-    assert role_assignment_user_2.role == admin_role
+    assert role_assignment_user_2.role == editor_role
     assert role_assignment_user_2.scope == table
 
     # Can we remove a role
@@ -142,6 +147,54 @@ def test_create_role_assignment(
     )
 
     assert role_assignment_user_2 is None
+
+    # Put admin at database level and try to change a sub scope to another role
+    response = api_client.post(
+        url,
+        {
+            "scope_id": database.id,
+            "scope_type": "database",
+            "subject_id": user2.id,
+            "subject_type": UserSubjectType.type,
+            "role": admin_role.uid,
+        },
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        url,
+        {
+            "scope_id": table.id,
+            "scope_type": "database_table",
+            "subject_id": user2.id,
+            "subject_type": UserSubjectType.type,
+            "role": editor_role.uid,
+        },
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json == {
+        "error": "ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN",
+        "detail": "You can't assign a role exception to a scope with ADMIN role.",
+    }
+
+    # But we can still change the role at this level
+    response = api_client.post(
+        url,
+        {
+            "scope_id": database.id,
+            "scope_type": "database",
+            "subject_id": user2.id,
+            "subject_type": UserSubjectType.type,
+            "role": editor_role.uid,
+        },
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_200_OK
 
 
 def test_create_role_assignment_invalid_requests(api_client, data_fixture):
@@ -523,4 +576,47 @@ def test_batch_assign_role_duplicates(data_fixture, api_client):
     assert (
         response.json()["detail"]
         == "The list of role assignments includes duplicates at indexes: [0]"
+    )
+
+
+@pytest.mark.django_db
+def test_batch_role_assignments_table_level_for_already_admin(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    user2 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, custom_permissions=[(user2, "ADMIN")])
+    database = data_fixture.create_database_application(group=group)
+
+    table = data_fixture.create_database_table(user=user, database=database)
+
+    builder_role = Role.objects.get(uid="BUILDER")
+
+    assert len(RoleAssignment.objects.all()) == 0
+
+    url = reverse("api:enterprise:role:batch", kwargs={"group_id": group.id})
+
+    # Can add a first roleAssignment
+    response = api_client.post(
+        url,
+        {
+            "items": [
+                {
+                    "scope_id": table.id,
+                    "scope_type": "database_table",
+                    "subject_id": user2.id,
+                    "subject_type": UserSubjectType.type,
+                    "role": builder_role.uid,
+                },
+            ]
+        },
+        format="json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+    assert response_json["error"] == "ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN"
+    assert (
+        response_json["detail"]
+        == "You can't assign a role exception to a scope with ADMIN role."
     )

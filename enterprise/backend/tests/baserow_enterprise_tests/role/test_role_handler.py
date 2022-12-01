@@ -11,6 +11,7 @@ from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.core.models import GroupUser
 from baserow.core.subjects import UserSubjectType
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
+from baserow_enterprise.role.exceptions import CantLowerAdminsRoleOnChildException
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
 
@@ -144,7 +145,7 @@ def test_remove_role(data_fixture):
         user, group, scope=table
     )
 
-    assert role_assignment_group.role.uid == "NO_ROLE"
+    assert role_assignment_group.role.uid == "NO_ACCESS"
     assert role_assignment_table is None
 
 
@@ -416,7 +417,7 @@ def test_assign_role_batch_delete_group_user(data_fixture):
     user_type = ContentType.objects.get_for_model(user)
     group_type = ContentType.objects.get_for_model(group)
     admin_role = Role.objects.get(uid="ADMIN")
-    no_role_role = Role.objects.get(uid="NO_ROLE")
+    no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     values = [
         {
@@ -450,7 +451,7 @@ def test_assign_role_batch_delete_group_user(data_fixture):
     RoleAssignmentHandler().assign_role_batch(user, group, values)
 
     group_user_2 = GroupUser.objects.get(group=group, user=user_2)
-    assert group_user_2.permissions == no_role_role.uid
+    assert group_user_2.permissions == no_access_role.uid
 
 
 @pytest.mark.django_db
@@ -509,6 +510,56 @@ def test_assign_role_batch_subject_not_in_group(data_fixture):
 
 
 @pytest.mark.django_db
+def test_assign_role_batch_subject_with_admin_on_upper_scope(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    user_4 = data_fixture.create_user()
+    group = data_fixture.create_group(
+        user=user,
+        custom_permissions=[(user_2, "VIEWER"), (user_3, "ADMIN"), (user_4, "BUILDER")],
+    )
+    database = data_fixture.create_database_application(group=group, user=user)
+
+    user_type = ContentType.objects.get_for_model(user)
+    database_type = ContentType.objects.get_for_model(database)
+    editor_role = Role.objects.get(uid="EDITOR")
+
+    values = [
+        {
+            "subject": user_2,
+            "subject_id": user_2.id,
+            "subject_type": user_type,
+            "role": editor_role,
+            "scope": database,
+            "scope_id": database.id,
+            "scope_type": database_type,
+        },
+        {
+            "subject": user_3,
+            "subject_id": user_3.id,
+            "subject_type": user_type,
+            "role": editor_role,
+            "scope": database,
+            "scope_id": database.id,
+            "scope_type": database_type,
+        },
+        {
+            "subject": user_4,
+            "subject_id": user_3.id,
+            "subject_type": user_type,
+            "role": editor_role,
+            "scope": database,
+            "scope_id": database.id,
+            "scope_type": database_type,
+        },
+    ]
+
+    with pytest.raises(CantLowerAdminsRoleOnChildException):
+        RoleAssignmentHandler().assign_role_batch(user, group, values)
+
+
+@pytest.mark.django_db
 @pytest.mark.disabled_in_ci
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
@@ -520,7 +571,7 @@ def test_assign_role_batch_performance(data_fixture):
     database = data_fixture.create_database_application(group=group)
 
     admin_role = Role.objects.get(uid="ADMIN")
-    no_role_role = Role.objects.get(uid="NO_ROLE")
+    no_access_role = Role.objects.get(uid="NO_ACCESS")
     user_type = ContentType.objects.get_for_model(user)
     group_type = ContentType.objects.get_for_model(group)
     database_type = ContentType.objects.get_for_model(database)
@@ -574,7 +625,7 @@ def test_assign_role_batch_performance(data_fixture):
     assert len(group_users) == sample_size
 
     for group_user in group_users:
-        assert group_user.permissions == no_role_role.uid
+        assert group_user.permissions == no_access_role.uid
 
     print("----------GROUP LEVEL DELETIONS------------")
     print(profiler.output_text(unicode=True, color=True))

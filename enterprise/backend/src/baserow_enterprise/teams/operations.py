@@ -16,6 +16,7 @@ class ReadTeamOperationType(TeamOperationType):
 
 class ListTeamsOperationType(GroupCoreOperationType):
     type = "enterprise.teams.list_teams"
+    object_scope_name = "team"
 
 
 class UpdateTeamOperationType(TeamOperationType):
@@ -44,6 +45,7 @@ class ReadTeamSubjectOperationType(TeamSubjectOperationType):
 
 class ListTeamSubjectsOperationType(TeamOperationType):
     type = "enterprise.teams.list_subjects"
+    object_scope_name = "team_subject"
 
 
 class DeleteTeamSubjectOperationType(TeamSubjectOperationType):

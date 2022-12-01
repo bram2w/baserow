@@ -15,7 +15,7 @@
           scope-type="database"
           @invite-members="inviteDatabaseMembers"
           @invite-teams="inviteDatabaseTeams"
-          @role-updated="databaseRoleUpdated"
+          @role-updated="updateRole(databaseRoleAssignments, ...arguments)"
         />
       </Tab>
       <Tab
@@ -32,7 +32,7 @@
           scope-type="database_table"
           @invite-members="inviteTableMembers"
           @invite-teams="inviteTableTeams"
-          @role-updated="tableRoleUpdated"
+          @role-updated="updateRole(tableRoleAssignments, ...arguments)"
         />
       </Tab>
     </Tabs>
@@ -46,6 +46,7 @@ import TeamService from '@baserow_enterprise/services/team'
 import Modal from '@baserow/modules/core/mixins/modal'
 import MemberRolesTab from '@baserow_enterprise/components/member-roles/MemberRolesTab'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'MemberRolesModal',
@@ -199,35 +200,30 @@ export default {
         return []
       }
     },
-    databaseRoleUpdated(roleAssignment, newRole) {
-      this.databaseRoleAssignments = this.updateRole(
-        this.databaseRoleAssignments,
-        roleAssignment,
-        newRole
-      )
-    },
-    tableRoleUpdated(roleAssignment, newRole) {
-      this.tableRoleAssignments = this.updateRole(
-        this.tableRoleAssignments,
-        roleAssignment,
-        newRole
-      )
-    },
-    updateRole(roleAssignments, roleAssignment, newRole) {
-      const index = roleAssignments.findIndex(
+    async updateRole(roleAssignments, roleAssignment, newRole) {
+      const roleAssignmentIndex = roleAssignments.findIndex(
         ({ id }) => roleAssignment.id === id
       )
 
-      if (index !== -1) {
+      let previousRoleAssignement = null
+
+      if (roleAssignmentIndex !== -1) {
+        previousRoleAssignement = roleAssignments[roleAssignmentIndex]
         if (newRole === null) {
-          roleAssignments.splice(index, 1)
+          roleAssignments.splice(roleAssignmentIndex, 1)
         } else {
-          roleAssignments[index].role = newRole
+          // Updating the role
+          this.$set(
+            roleAssignments,
+            roleAssignmentIndex,
+            clone(previousRoleAssignement)
+          )
+          roleAssignments[roleAssignmentIndex].role = newRole
         }
       }
 
       try {
-        RoleAssignmentsService(this.$client).assignRole(
+        await RoleAssignmentsService(this.$client).assignRole(
           roleAssignment.subject.id,
           roleAssignment.subject_type,
           this.group.id,
@@ -236,10 +232,21 @@ export default {
           newRole
         )
       } catch (error) {
+        // Restore previous role
+        if (roleAssignmentIndex !== -1) {
+          if (newRole === null) {
+            roleAssignments.splice(
+              roleAssignmentIndex,
+              0,
+              previousRoleAssignement
+            )
+          } else {
+            roleAssignments[roleAssignmentIndex].role =
+              previousRoleAssignement.role
+          }
+        }
         notifyIf(error, 'application')
       }
-
-      return roleAssignments
     },
   },
 }

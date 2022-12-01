@@ -71,3 +71,9 @@ ERROR_DUPLICATE_ROLE_ASSIGNMENTS = (
     HTTP_400_BAD_REQUEST,
     "The list of role assignments includes duplicates at indexes: {e.indexes}",
 )
+
+ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN = (
+    "ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN",
+    HTTP_400_BAD_REQUEST,
+    "You can't assign a role exception to a scope with ADMIN role.",
+)

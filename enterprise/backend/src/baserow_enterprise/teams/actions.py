@@ -156,7 +156,7 @@ class UpdateTeamActionType(ActionType):
         team = TeamHandler().get_team(user, params.team_id)
         original_role = params.original_default_role_uid
         if original_role:
-            original_role = RoleAssignmentHandler().get_role(original_role)
+            original_role = RoleAssignmentHandler().get_role_by_uid(original_role)
         TeamHandler().update_team(
             user, team, params.original_name, default_role=original_role
         )
@@ -166,7 +166,7 @@ class UpdateTeamActionType(ActionType):
         team = TeamHandler().get_team(user, params.team_id)
         new_role = params.default_role_uid
         if new_role:
-            new_role = RoleAssignmentHandler().get_role(new_role)
+            new_role = RoleAssignmentHandler().get_role_by_uid(new_role)
         TeamHandler().update_team(user, team, params.name, default_role=new_role)
 
 

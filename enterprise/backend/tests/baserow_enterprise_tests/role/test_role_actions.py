@@ -28,10 +28,13 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture, synced_roles
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
+    group = data_fixture.create_group(
+        user=user,
+        custom_permissions=[(user2, "VIEWER")],
+    )
     database = data_fixture.create_database_application(group=group)
 
-    table = data_fixture.create_database_table(user=user, database=database)
+    table = data_fixture.create_database_table(database=database, user=user)
 
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -66,10 +69,13 @@ def test_can_undo_redo_assign_table(mock_check_permissions, data_fixture, synced
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
+    group = data_fixture.create_group(
+        user=user,
+        custom_permissions=[(user2, "VIEWER")],
+    )
     database = data_fixture.create_database_application(group=group)
 
-    table = data_fixture.create_database_table(user=user, database=database)
+    table = data_fixture.create_database_table(database=database, user=user)
 
     builder_role = Role.objects.get(uid="BUILDER")
 

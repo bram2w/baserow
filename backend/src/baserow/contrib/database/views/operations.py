@@ -60,7 +60,7 @@ class CreateViewOperationType(DatabaseTableOperationType):
 
 class ListViewsOperationType(DatabaseTableOperationType):
     type = "database.table.list_views"
-    object_scope_name = "database_views"
+    object_scope_name = "database_view"
 
 
 class ReadViewOperationType(ViewOperationType):

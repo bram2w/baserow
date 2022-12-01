@@ -127,12 +127,15 @@
             "name": "Viewer",
             "description": "Can only read data."
         },
-        "licence": "Enterprise"
+        "noRole": {
+            "name": "No access",
+            "description": "Can't access anything."
+        }
     },
     "memberRolesModal": {
         "memberRolesDatabaseTabTitle": "Database",
         "memberRolesTableTabTitle": "Current Table",
-        "error":{
+        "error": {
             "title": "Could not fetch data",
             "description": "An error occurred while fetching the member data."
         }
