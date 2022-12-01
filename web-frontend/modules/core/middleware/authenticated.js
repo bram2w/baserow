@@ -11,7 +11,6 @@ export default function ({ req, store, route, redirect }) {
     if (req) {
       query.original = encodeURI(req.originalUrl)
     }
-
     return redirect({ name: 'login', query })
   }
 
