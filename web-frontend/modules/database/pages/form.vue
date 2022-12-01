@@ -155,12 +155,16 @@ export default {
     }
   },
   head() {
-    return {
+    const head = {
       title: this.title || 'Form',
       bodyAttrs: {
         class: ['background-white'],
       },
     }
+    if (!this.showLogo) {
+      head.titleTemplate = '%s'
+    }
+    return head
   },
   computed: {
     isRedirect() {

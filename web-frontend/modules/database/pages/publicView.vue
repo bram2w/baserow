@@ -96,6 +96,13 @@ export default {
       }
     }
   },
+  head() {
+    const head = { title: this.view.name }
+    if (!this.view.show_logo) {
+      head.titleTemplate = '%s'
+    }
+    return head
+  },
   computed: {
     ...mapGetters({
       fields: 'field/getAll',
