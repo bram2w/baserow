@@ -20,7 +20,8 @@ export class EnterprisePlugin extends BaserowPlugin {
   getAdditionalDatabaseContextComponents(group, database) {
     if (
       this.app.$hasFeature(EnterpriseFeatures.RBAC, group.id) &&
-      this.app.$hasPermission('database.read_role', database, group.id)
+      this.app.$hasPermission('database.read_role', database, group.id) &&
+      this.app.$featureFlags.includes('WIP')
     ) {
       return [MemberRolesDatabaseContextItem]
     } else {
@@ -31,7 +32,8 @@ export class EnterprisePlugin extends BaserowPlugin {
   getAdditionalTableContextComponents(group, table) {
     if (
       this.app.$hasFeature(EnterpriseFeatures.RBAC, group.id) &&
-      this.app.$hasPermission('database.table.read_role', table, group.id)
+      this.app.$hasPermission('database.table.read_role', table, group.id) &&
+      this.app.$featureFlags.includes('WIP')
     ) {
       return [MemberRolesTableContextItem]
     } else {
