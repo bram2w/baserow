@@ -68,10 +68,12 @@ export default (context) => {
     new EnterpriseMembersPagePluginType(context)
   )
 
-  app.$registry.register(
-    'groupSettingsPage',
-    new TeamsGroupSettingsPageType(context)
-  )
+  if (app.$featureFlags.includes('WIP')) {
+    app.$registry.register(
+      'groupSettingsPage',
+      new TeamsGroupSettingsPageType(context)
+    )
+  }
 
   app.$registry.register(
     'license',
