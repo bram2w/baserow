@@ -41,6 +41,11 @@ export class DatabaseApplicationType extends ApplicationType {
     return i18n.t('applicationType.database')
   }
 
+  getDefaultName() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.databaseDefaultName')
+  }
+
   getSidebarComponent() {
     return Sidebar
   }
@@ -94,19 +99,22 @@ export class DatabaseApplicationType extends ApplicationType {
     }
   }
 
-  select(application, { $router, $store, $i18n }) {
+  select(application, { $router, $store, $i18n }, callback = null) {
     const tables = application.tables
       .map((t) => t)
       .sort((a, b) => a.order - b.order)
 
     if (tables.length > 0) {
-      $router.push({
-        name: 'database-table',
-        params: {
-          databaseId: application.id,
-          tableId: tables[0].id,
+      $router.push(
+        {
+          name: 'database-table',
+          params: {
+            databaseId: application.id,
+            tableId: tables[0].id,
+          },
         },
-      })
+        callback
+      )
       return true
     } else {
       $store.dispatch('notification/error', {

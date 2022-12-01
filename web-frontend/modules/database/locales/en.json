@@ -366,6 +366,7 @@
     },
     "importFileModal": {
         "title": "Create new table",
+        "defaultName": "Table",
         "changeImporterType": "Change import type",
         "additionalImportTitle": "Import into {table}",
         "importLabel": "Would you like to import existing data?",

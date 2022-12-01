@@ -11,6 +11,7 @@
     <component
       :is="viewType.getViewFormComponent()"
       ref="viewForm"
+      :default-name="getDefaultName()"
       @submitted="submitted"
     >
       <div class="actions">
@@ -35,6 +36,7 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
+import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'CreateViewModal',
@@ -55,6 +57,13 @@ export default {
     }
   },
   methods: {
+    getDefaultName() {
+      const excludeNames = this.$store.getters['view/getAll'].map(
+        (view) => view.name
+      )
+      const baseName = this.viewType.getName()
+      return getNextAvailableNameInSequence(baseName, excludeNames)
+    },
     async submitted(values) {
       this.loading = true
       this.hideError()

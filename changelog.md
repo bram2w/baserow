@@ -15,6 +15,7 @@ For example:
 * Allow creating a new option by pressing enter in the dropdown [#1169](https://gitlab.com/bramw/baserow/-/issues/1169)
 * Added the teams functionality as an enterprise feature. [#1226](https://gitlab.com/bramw/baserow/-/issues/1226)
 * Improved grid view on smaller screens by not making the primary field sticky. [#690](https://gitlab.com/bramw/baserow/-/issues/690)
+* New items automatically get a new name in the modal. [1166](https://gitlab.com/bramw/baserow/-/issues/1166)
 
 ### Bug Fixes
 * Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)

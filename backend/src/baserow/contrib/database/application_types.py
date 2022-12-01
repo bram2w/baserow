@@ -7,7 +7,8 @@ from django.core.management.color import no_style
 from django.db import connection
 from django.db.transaction import Atomic
 from django.urls import include, path
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
 from baserow.contrib.database.api.serializers import DatabaseSerializer
 from baserow.contrib.database.db.schema import safe_django_schema_editor
@@ -17,6 +18,7 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.models import Application, Group
 from baserow.core.registries import ApplicationType
@@ -171,6 +173,22 @@ class DatabaseApplicationType(ApplicationType):
                 ]
             )
             + len(external_table_fields_to_import or [])
+        )
+
+    def init_application(self, user, application: Database) -> None:
+        """
+        Creates a new minimal table instance and a grid view for the newly
+        created application.
+
+        :param user: The user that creates the application.
+        :param application: The application to initialize with data.
+        """
+
+        with translation.override(user.profile.language):
+            first_table_name = _("Table")
+
+        return TableHandler().create_table(
+            user, application, first_table_name, fill_example=True
         )
 
     def import_tables_serialized(

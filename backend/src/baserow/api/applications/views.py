@@ -241,7 +241,11 @@ class ApplicationsView(APIView):
         )
 
         application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-            request.user, group, data["type"], name=data["name"]
+            request.user,
+            group,
+            data["type"],
+            name=data["name"],
+            init_with_data=data["init_with_data"],
         )
 
         return Response(get_application_serializer(application).data)

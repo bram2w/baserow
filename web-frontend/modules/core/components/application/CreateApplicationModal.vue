@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal @show="loading = false">
     <h2 class="box__title">
       {{ $t('action.createNew') }} {{ applicationType.getName() | lowercase }}
     </h2>
@@ -7,6 +7,7 @@
     <component
       :is="applicationType.getApplicationFormComponent()"
       ref="applicationForm"
+      :default-name="getDefaultName()"
       @submitted="submitted"
       @hidden="hide()"
     >
@@ -28,6 +29,7 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
+import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'CreateApplicationModal',
@@ -48,21 +50,32 @@ export default {
     }
   },
   methods: {
+    getDefaultName() {
+      const excludeNames = this.$store.getters['application/getAllOfGroup'](
+        this.group
+      ).map((application) => application.name)
+      const baseName = this.applicationType.getDefaultName()
+      return getNextAvailableNameInSequence(baseName, excludeNames)
+    },
     async submitted(values) {
       this.loading = true
       this.hideError()
 
       try {
-        await this.$store.dispatch('application/create', {
+        const application = await this.$store.dispatch('application/create', {
           type: this.applicationType.type,
           group: this.group,
           values,
         })
-        this.loading = false
-        this.$emit('created')
-        this.hide()
+        this.$emit('created', application)
+        // select the application just created in the sidebar and open it
+        await this.$store.dispatch('application/select', application)
+        await this.$registry
+          .get('application', application.type)
+          .select(application, this, () => {
+            this.hide()
+          })
       } catch (error) {
-        this.loading = false
         this.handleError(error, 'application')
       }
     },

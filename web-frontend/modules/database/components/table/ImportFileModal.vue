@@ -59,6 +59,7 @@
 
       <TableForm
         ref="tableForm"
+        :default-name="getDefaultName()"
         :creation="isTableCreation"
         @submitted="submitted"
       >
@@ -210,7 +211,10 @@ import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import TableService from '@baserow/modules/database/services/table'
-import { uuid } from '@baserow/modules/core/utils/string'
+import {
+  uuid,
+  getNextAvailableNameInSequence,
+} from '@baserow/modules/core/utils/string'
 import SimpleGrid from '@baserow/modules/database/components/view/grid/SimpleGrid'
 import _ from 'lodash'
 
@@ -423,6 +427,11 @@ export default {
     this.stopPollIfRunning()
   },
   methods: {
+    getDefaultName() {
+      const excludeNames = this.database.tables.map((table) => table.name)
+      const baseName = this.$t('importFileModal.defaultName')
+      return getNextAvailableNameInSequence(baseName, excludeNames)
+    },
     reset(full = true) {
       this.job = null
       this.uploadProgressPercentage = 0
