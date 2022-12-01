@@ -18,6 +18,7 @@ For example:
 
 ### Bug Fixes
 * Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)
+* Fixed a problem of some specific error messages not being recognized by the web front-end.
 
 ### Refactors
 
