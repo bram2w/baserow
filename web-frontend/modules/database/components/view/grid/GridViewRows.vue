@@ -8,6 +8,7 @@
     <GridViewRow
       v-for="(row, index) in rows"
       :key="`row-${row.id}`"
+      :view="view"
       :group-id="groupId"
       :row="row"
       :fields="fields"
