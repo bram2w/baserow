@@ -3,18 +3,21 @@ import {
   setToken,
 } from '@baserow/modules/core/utils/auth'
 
-export default function ({ store, req, app, route }) {
+export default function ({ store, req, app, route, redirect }) {
   // If nuxt generate or already authenticated, pass this middleware
   if ((process.server && !req) || store.getters['auth/isAuthenticated']) return
 
-  // session token (if any) can be in the query param (if SSO) or in the cookies
+  // token can be in the query string (SSO) or in the cookies (previous session)
   let refreshToken = route.query.token
   if (refreshToken) {
     setToken(app, refreshToken)
   } else {
     refreshToken = getTokenIfEnoughTimeLeft(app)
   }
+
   if (refreshToken) {
-    return store.dispatch('auth/refresh', refreshToken)
+    return store.dispatch('auth/refresh', refreshToken).catch(() => {
+      return redirect({ name: 'login' })
+    })
   }
 }

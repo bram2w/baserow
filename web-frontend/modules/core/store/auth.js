@@ -147,27 +147,32 @@ export const actions = {
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
    */
-  async refresh({ commit, getters }, token = null) {
+  async refresh({ commit, getters, dispatch }, token = null) {
     const refreshToken = token || getters.refreshToken
     if (!refreshToken) {
       throw new Error('Invalid refresh token')
     }
 
-    const tokenUpdatedAt = new Date().getTime()
-    const rsp = await AuthService(this.$client).refresh(refreshToken)
-    if (!rsp) {
-      return // invalid refresh token
-    }
-
-    // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
-    // a new refresh token. In that case we keep the old originally one stored in the cookie.
-    commit('SET_USER_DATA', {
-      refresh_token: refreshToken,
-      tokenUpdatedAt,
-      ...rsp.data,
-    })
-    if (!getters.getPreventSetToken && rsp.data.refresh_token) {
-      setToken(this.app, getters.refreshToken)
+    try {
+      const tokenUpdatedAt = new Date().getTime()
+      const { data } = await AuthService(this.$client).refresh(refreshToken)
+      // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
+      // a new refresh token. In that case, we keep the one we just used.
+      commit('SET_USER_DATA', {
+        refresh_token: refreshToken,
+        tokenUpdatedAt,
+        ...data,
+      })
+      if (!getters.getPreventSetToken && data.refresh_token) {
+        setToken(this.app, getters.refreshToken)
+      }
+    } catch (error) {
+      unsetToken(this.app)
+      unsetGroupCookie(this.app)
+      if (getters.isAuthenticated) {
+        dispatch('setUserSessionExpired', true)
+      }
+      throw error
     }
   },
   /**
@@ -209,6 +214,8 @@ export const actions = {
     commit('SET_PREVENT_SET_TOKEN', true)
   },
   setUserSessionExpired({ commit }, value) {
+    unsetToken(this.app)
+    unsetGroupCookie(this.app)
     commit('SET_USER_SESSION_EXPIRED', value)
   },
 }
@@ -265,7 +272,7 @@ export const getters = {
     return state.preventSetToken
   },
   isUserSessionExpired: (state) => {
-    return state.authenticated && state.userSessionExpired
+    return state.userSessionExpired
   },
 }
 
