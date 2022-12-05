@@ -49,7 +49,11 @@ from .serializers import (
 
 class GroupUsersView(APIView, SearchableViewMixin, SortableViewMixin):
     search_fields = ["user__username", "user__email"]
-    sort_field_mapping = {"name": "user__username", "email": "user__email"}
+    sort_field_mapping = {
+        "name": "user__username",
+        "email": "user__email",
+        "role_uid": "permissions",
+    }
 
     @extend_schema(
         parameters=[
@@ -58,14 +62,26 @@ class GroupUsersView(APIView, SearchableViewMixin, SortableViewMixin):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the group user related to the provided value.",
-            )
+            ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Search for group users by username, or email.",
+            ),
+            OpenApiParameter(
+                name="sorts",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Sort group users by name, email or role.",
+            ),
         ],
         tags=["Groups"],
         operation_id="list_group_users",
         description=(
             "Lists all the users that are in a group if the authorized user has admin "
             "permissions to the related group. To add a user to a group an invitation "
-            "must be send first."
+            "must be sent first."
         ),
         responses={
             200: GroupUserSerializer(many=True),
