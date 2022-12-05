@@ -96,6 +96,7 @@ class TableWebhookCallSerializer(serializers.ModelSerializer):
         model = TableWebhookCall
         fields = [
             "id",
+            "event_id",
             "event_type",
             "called_time",
             "called_url",

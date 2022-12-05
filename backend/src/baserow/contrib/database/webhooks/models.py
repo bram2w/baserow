@@ -83,7 +83,11 @@ class TableWebhookHeader(models.Model):
 
 
 class TableWebhookCall(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event_id = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Event ID where the call originated from.",
+    )
     webhook = models.ForeignKey(
         TableWebhook, related_name="calls", on_delete=models.CASCADE
     )

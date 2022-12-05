@@ -22,6 +22,8 @@ For example:
 * Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)
 * Fixed a problem of some specific error messages not being recognized by the web front-end.
 
+* Fixed failing webhook call log creation when a table has more than one webhooks. [#1100](https://gitlab.com/bramw/baserow/-/merge_requests/1100)
+
 ### Refactors
 * Refresh the JWT token when needed instead of periodically. [#1294](https://gitlab.com/bramw/baserow/-/issues/1294)
 * Remove "// Baserow" from title on a publicly shared view if `show_logo` is set to false. [#1378](https://gitlab.com/bramw/baserow/-/issues/1378)
