@@ -28,10 +28,6 @@
       </template>
       <template #menus="slotProps">
         <EditTeamContext
-          v-if="
-            $hasPermission('enterprise.teams.team.update', group, group.id) ||
-            $hasPermission('enterprise.teams.team.delete', group, group.id)
-          "
           ref="editTeamContext"
           :group="group"
           :team="focusedTeam"
@@ -105,6 +101,20 @@ export default {
     roles() {
       return this.group._.roles
     },
+    canViewEditTeamContext() {
+      return (
+        this.$hasPermission(
+          'enterprise.teams.team.update',
+          this.group,
+          this.group.id
+        ) ||
+        this.$hasPermission(
+          'enterprise.teams.team.delete',
+          this.group,
+          this.group.id
+        )
+      )
+    },
     columns() {
       const columns = [
         new CrudTableColumn(
@@ -160,6 +170,12 @@ export default {
       this.$refs.updateModal.show()
     },
     onRowContext({ row, event, target }) {
+      if (!this.canViewEditTeamContext) {
+        // The user needs to have update or delete team
+        // permissions to launch the row context.
+        return
+      }
+      event.preventDefault()
       if (target === undefined) {
         target = {
           left: event.clientX,

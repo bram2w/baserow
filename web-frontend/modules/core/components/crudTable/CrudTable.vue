@@ -55,9 +55,7 @@
                 'data-table__table-cell--sticky-left': col.stickyLeft,
                 'data-table__table-cell--sticky-right': col.stickyRight,
               }"
-              @contextmenu.prevent="
-                $emit('row-context', { col, row, event: $event })
-              "
+              @contextmenu="$emit('row-context', { col, row, event: $event })"
             >
               <div class="data-table__table-cell-content">
                 <component
