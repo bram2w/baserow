@@ -152,6 +152,7 @@ export default {
   },
   methods: {
     onRowContext({ row, event, target }) {
+      event.preventDefault()
       if (target === undefined) {
         target = {
           left: event.clientX,
