@@ -11,7 +11,6 @@ from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.core.models import GroupUser
 from baserow.core.subjects import UserSubjectType
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
-from baserow_enterprise.role.exceptions import CantLowerAdminsRoleOnChildException
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, RoleAssignment
 
@@ -49,6 +48,12 @@ def test_create_role_assignment(data_fixture, enterprise_data_fixture):
     assert role_assignments[0].role == builder_role
     assert role_assignments[0].group == group
 
+    # Check that we don't create new RoleAssignment for the same scope/subject/group
+    role_assignment_handler.assign_role(user2, group, admin_role, scope=table)
+
+    role_assignments = list(RoleAssignment.objects.all())
+    assert len(role_assignments) == 1
+
     # Assign an other role
     role_assignment_handler.assign_role(user2, group, admin_role, scope=group)
     role_assignments = list(RoleAssignment.objects.all())
@@ -56,12 +61,6 @@ def test_create_role_assignment(data_fixture, enterprise_data_fixture):
 
     assert len(role_assignments) == 1
     assert group_user.permissions == admin_role.uid
-
-    # Check that we don't create new RoleAssignment for the same scope/subject/group
-    role_assignment_handler.assign_role(user2, group, admin_role, scope=table)
-
-    role_assignments = list(RoleAssignment.objects.all())
-    assert len(role_assignments) == 1
 
     # Can we remove a role
     role_assignment_handler.assign_role(user2, group, None, scope=table)
@@ -103,7 +102,7 @@ def test_get_current_role_assignment(data_fixture):
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, group=group)
     table = data_fixture.create_database_table(user=user, database=database)
-    role = Role.objects.get(uid="ADMIN")
+    role = Role.objects.get(uid="BUILDER")
 
     RoleAssignmentHandler().assign_role(user, group, role=role)
 
@@ -130,7 +129,7 @@ def test_remove_role(data_fixture):
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user, group=group)
     table = data_fixture.create_database_table(user=user, database=database)
-    role = Role.objects.get(uid="ADMIN")
+    role = Role.objects.get(uid="BUILDER")
 
     RoleAssignmentHandler().assign_role(user, group, role=role)
     RoleAssignmentHandler().assign_role(user, group, role=role, scope=table)
@@ -153,10 +152,10 @@ def test_remove_role(data_fixture):
 @patch("baserow.ws.signals.broadcast_to_group")
 def test_assign_role(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(user=user, group=group)
     table = data_fixture.create_database_table(user=user, database=database)
-    role = Role.objects.get(uid="ADMIN")
+    role = Role.objects.get(uid="BUILDER")
 
     role_assignment_group = RoleAssignmentHandler().assign_role(user, group, role=role)
 
@@ -168,7 +167,7 @@ def test_assign_role(mock_broadcast_to_group, data_fixture):
     assert args[0][1]["id"] == group_user.id
     assert args[0][1]["group_id"] == group.id
     assert args[0][1]["group_user"]["user_id"] == group_user.user_id
-    assert args[0][1]["group_user"]["permissions"] == role.uid
+    assert args[0][1]["group_user"]["permissions"] == "MEMBER"
 
     role_assignment_table = RoleAssignmentHandler().assign_role(
         user, group, role=role, scope=table
@@ -212,9 +211,9 @@ def test_get_role_assignments(data_fixture):
     group = data_fixture.create_group(user=user, members=[user_2])
     database = data_fixture.create_database_application(group=group)
 
-    admin_role = Role.objects.get(uid="ADMIN")
+    builder_role = Role.objects.get(uid="BUILDER")
 
-    RoleAssignmentHandler().assign_role(user_2, group, role=admin_role, scope=group)
+    RoleAssignmentHandler().assign_role(user_2, group, role=builder_role, scope=group)
 
     group_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
         group, scope=group
@@ -226,7 +225,9 @@ def test_get_role_assignments(data_fixture):
     assert len(group_level_role_assignments) == 2
     assert len(database_level_role_assignments) == 0
 
-    RoleAssignmentHandler().assign_role(user_2, group, role=admin_role, scope=database)
+    RoleAssignmentHandler().assign_role(
+        user_2, group, role=builder_role, scope=database
+    )
 
     group_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
         group, scope=group
@@ -464,14 +465,14 @@ def test_assign_role_batch_unrelated_group(data_fixture):
 
     user_type = ContentType.objects.get_for_model(user)
     database_type = ContentType.objects.get_for_model(database)
-    admin_role = Role.objects.get(uid="ADMIN")
+    builder_role = Role.objects.get(uid="BUILDER")
 
     values = [
         {
             "subject": user_2,
             "subject_id": user_2.id,
             "subject_type": user_type,
-            "role": admin_role,
+            "role": builder_role,
             "scope": database,
             "scope_id": database.id,
             "scope_type": database_type,
@@ -506,56 +507,6 @@ def test_assign_role_batch_subject_not_in_group(data_fixture):
     ]
 
     with pytest.raises(SubjectNotExist):
-        RoleAssignmentHandler().assign_role_batch(user, group, values)
-
-
-@pytest.mark.django_db
-def test_assign_role_batch_subject_with_admin_on_upper_scope(data_fixture):
-    user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
-    user_3 = data_fixture.create_user()
-    user_4 = data_fixture.create_user()
-    group = data_fixture.create_group(
-        user=user,
-        custom_permissions=[(user_2, "VIEWER"), (user_3, "ADMIN"), (user_4, "BUILDER")],
-    )
-    database = data_fixture.create_database_application(group=group, user=user)
-
-    user_type = ContentType.objects.get_for_model(user)
-    database_type = ContentType.objects.get_for_model(database)
-    editor_role = Role.objects.get(uid="EDITOR")
-
-    values = [
-        {
-            "subject": user_2,
-            "subject_id": user_2.id,
-            "subject_type": user_type,
-            "role": editor_role,
-            "scope": database,
-            "scope_id": database.id,
-            "scope_type": database_type,
-        },
-        {
-            "subject": user_3,
-            "subject_id": user_3.id,
-            "subject_type": user_type,
-            "role": editor_role,
-            "scope": database,
-            "scope_id": database.id,
-            "scope_type": database_type,
-        },
-        {
-            "subject": user_4,
-            "subject_id": user_3.id,
-            "subject_type": user_type,
-            "role": editor_role,
-            "scope": database,
-            "scope_id": database.id,
-            "scope_type": database_type,
-        },
-    ]
-
-    with pytest.raises(CantLowerAdminsRoleOnChildException):
         RoleAssignmentHandler().assign_role_batch(user, group, values)
 
 

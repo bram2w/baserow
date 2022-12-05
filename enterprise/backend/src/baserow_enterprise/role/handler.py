@@ -7,14 +7,9 @@ from django.contrib.contenttypes.models import ContentType
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
-from baserow.core.registries import (
-    object_scope_type_registry,
-    permission_manager_type_registry,
-    subject_type_registry,
-)
+from baserow.core.registries import object_scope_type_registry, subject_type_registry
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
 from baserow_enterprise.models import RoleAssignment
-from baserow_enterprise.role.exceptions import CantLowerAdminsRoleOnChildException
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.teams.models import Team
 
@@ -267,13 +262,13 @@ class RoleAssignmentHandler:
         :return: The created RoleAssignment if role is not `None` else `None`.
         """
 
+        if scope is None:
+            scope = group
+
         if role is None:
             # Early return, we are removing the current role.
             self.remove_role(subject, group, scope=scope)
             return
-
-        if scope is None:
-            scope = group
 
         subject_type = subject_type_registry.get_by_model(subject)
         if not subject_type.is_in_group(subject.id, group):
@@ -380,129 +375,23 @@ class RoleAssignmentHandler:
         new_role_assignments: List[RoleAssignmentDict],
     ):
         """
+        TODO: this function is orphaned until we have implemented it properly
+
         Creates role assignments in batch, this should be used if many role assignments
         are created at once, to be more efficient.
 
         :return:
         """
 
-        from baserow_enterprise.role.permission_manager import RolePermissionManagerType
-
-        role_assignments = []
-        role_assignments_to_create = []
-        group_users_to_update_values = []
-
-        no_access_role = self.get_role_by_uid(self.NO_ACCESS_ROLE)
-
-        role_permission_manager = permission_manager_type_registry.get_by_type(
-            RolePermissionManagerType
-        )
-
-        # TODO Optimize by grouping by new assignment scope
-        for new_role_assignment in new_role_assignments:
-
-            new_assignment_scope = new_role_assignment["scope"] or group
-            new_assignment_subject = new_role_assignment["subject"]
-            new_role = new_role_assignment["role"]
-
-            scope_type = object_scope_type_registry.get_by_model(new_assignment_scope)
-            subject_type = subject_type_registry.get_by_model(new_assignment_subject)
-
-            if not subject_type.is_in_group(new_role_assignment["subject_id"], group):
-                raise SubjectNotExist()
-
-            if not object_scope_type_registry.scope_includes_context(
-                group, new_assignment_scope
-            ):
-                raise ScopeNotExist()
-
-            # TODO performance bottleneck
-            CoreHandler().check_permissions(
-                user,
-                role_permission_manager.role_assignable_object_map[scope_type.type][
-                    "READ"
-                ].type,
-                group=group,
-                context=new_assignment_scope,
+        return [
+            self.assign_role(
+                role_assignment["subject"],
+                group,
+                role=role_assignment["role"],
+                scope=role_assignment["scope"],
             )
-
-            def has_parent_with_admin_role():
-                parent = object_scope_type_registry.get_parent(new_assignment_scope)
-                return (
-                    parent is not None
-                    and self.get_computed_role(
-                        group, new_assignment_subject, parent
-                    ).uid
-                    == self.ADMIN_ROLE
-                )
-
-            # Check if the role assignment is not an exception for a scope under another
-            # scope targeted by an ADMIN role.
-            # TODO consider moving this in the dedicated action.
-            # TODO Might also be another bottleneck.
-            if new_role is not None and has_parent_with_admin_role():
-                raise CantLowerAdminsRoleOnChildException()
-
-            role_assignment = RoleAssignment(
-                subject=new_assignment_subject,
-                subject_id=new_role_assignment["subject_id"],
-                subject_type=new_role_assignment["subject_type"],
-                role=new_role,
-                scope=new_assignment_scope,
-                scope_id=new_role_assignment["scope_id"],
-                scope_type=new_role_assignment["scope_type"],
-                group=group,
-            )
-
-            if new_assignment_scope == group:  # Group level permissions
-                if new_role is None:
-                    new_role = no_access_role
-                group_users_to_update_values.append(new_role_assignment)
-            else:  # Not a group level assignment
-                if new_role is None:  # Delete role assignment
-                    self.remove_role(
-                        new_assignment_subject,
-                        group,
-                        scope=new_assignment_scope,
-                    )
-                else:  # Create or update role assignments
-                    role_assignment_found = RoleAssignment.objects.filter(
-                        subject_id=new_role_assignment["subject_id"],
-                        subject_type=new_role_assignment["subject_type"],
-                        scope_id=new_role_assignment["scope_id"],
-                        scope_type=new_role_assignment["scope_type"],
-                        group=group,
-                    ).first()
-
-                    if role_assignment_found:
-                        role_assignment_found.role = new_role
-                        role_assignment_found.save()
-                    else:
-                        role_assignments_to_create.append(role_assignment)
-
-                    role_assignments.append(role_assignment)
-
-        group_users_to_update_instances = GroupUser.objects.filter(
-            group=group,
-            user__in=[value["subject"] for value in group_users_to_update_values],
-        )
-
-        group_users_to_update_instances_map = {
-            getattr(group_user.user, "id"): group_user
-            for group_user in group_users_to_update_instances
-        }
-
-        for new_role_assignment in group_users_to_update_values:
-            group_users_to_update_instances_map[
-                new_role_assignment["subject_id"]
-            ].permissions = new_role.uid
-
-        GroupUser.objects.bulk_update(
-            group_users_to_update_instances_map.values(), ["permissions"]
-        )
-        RoleAssignment.objects.bulk_create(role_assignments_to_create)
-
-        return role_assignments
+            for role_assignment in new_role_assignments
+        ]
 
     def get_role_assignments(self, group: Group, scope=None):
         """

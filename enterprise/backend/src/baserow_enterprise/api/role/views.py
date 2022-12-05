@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Dict
 from urllib.request import Request
 
@@ -14,6 +15,7 @@ from baserow.api.decorators import (
 )
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.api.sessions import set_client_undo_redo_action_group_id
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     GroupDoesNotExist,
@@ -305,6 +307,7 @@ class BatchRoleAssignmentsView(APIView):
         """Assign or remove a role to the user."""
 
         data = data.get("items", [])
+        user = request.user
         group = CoreHandler().get_group(group_id)
 
         _, duplicates = unique_dicts_in_list(
@@ -316,8 +319,17 @@ class BatchRoleAssignmentsView(APIView):
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, request.user, group)
 
-        role_assignments = RoleAssignmentHandler().assign_role_batch(
-            request.user, group, data
-        )
+        set_client_undo_redo_action_group_id(user, uuid.uuid4())
+
+        role_assignments = [
+            action_type_registry.get_by_type(AssignRoleActionType).do(
+                user,
+                role_assignment["subject"],
+                group,
+                role_assignment["role"],
+                scope=role_assignment["scope"],
+            )
+            for role_assignment in data
+        ]
 
         return Response(RoleAssignmentSerializer(role_assignments, many=True).data)

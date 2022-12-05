@@ -580,43 +580,71 @@ def test_batch_assign_role_duplicates(data_fixture, api_client):
 
 
 @pytest.mark.django_db
-def test_batch_role_assignments_table_level_for_already_admin(data_fixture, api_client):
+def test_batch_assign_role_is_undoable(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, custom_permissions=[(user2, "ADMIN")])
-    database = data_fixture.create_database_application(group=group)
-
-    table = data_fixture.create_database_table(user=user, database=database)
-
-    builder_role = Role.objects.get(uid="BUILDER")
-
-    assert len(RoleAssignment.objects.all()) == 0
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user_2, user_3])
+    role = Role.objects.get(uid="ADMIN")
+    session_id = "TEST"
 
     url = reverse("api:enterprise:role:batch", kwargs={"group_id": group.id})
 
-    # Can add a first roleAssignment
-    response = api_client.post(
-        url,
-        {
-            "items": [
-                {
-                    "scope_id": table.id,
-                    "scope_type": "database_table",
-                    "subject_id": user2.id,
-                    "subject_type": UserSubjectType.type,
-                    "role": builder_role.uid,
-                },
-            ]
-        },
-        format="json",
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    initial_role_user_2 = (
+        RoleAssignmentHandler().get_current_role_assignment(user_2, group=group).role
+    )
+    initial_role_user_3 = (
+        RoleAssignmentHandler().get_current_role_assignment(user_3, group=group).role
     )
 
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
+    role_assignments = [
+        {
+            "scope_id": group.id,
+            "scope_type": "group",
+            "subject_id": user_2.id,
+            "subject_type": UserSubjectType.type,
+            "role": role.uid,
+        },
+        {
+            "scope_id": group.id,
+            "scope_type": "group",
+            "subject_id": user_3.id,
+            "subject_type": UserSubjectType.type,
+            "role": role.uid,
+        },
+    ]
 
-    assert response_json["error"] == "ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN"
+    api_client.post(
+        url,
+        {"items": role_assignments},
+        format="json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        HTTP_CLIENTSESSIONID=session_id,
+    )
+
     assert (
-        response_json["detail"]
-        == "You can't assign a role exception to a scope with ADMIN role."
+        RoleAssignmentHandler().get_current_role_assignment(user_2, group=group).role
+        == role
+    )
+    assert (
+        RoleAssignmentHandler().get_current_role_assignment(user_3, group=group).role
+        == role
+    )
+
+    api_client.patch(
+        reverse("api:user:undo"),
+        {"scopes": {"root": True, "group": group.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_CLIENTSESSIONID=session_id,
+    )
+
+    assert (
+        RoleAssignmentHandler().get_current_role_assignment(user_2, group=group).role
+        == initial_role_user_2
+    )
+
+    assert (
+        RoleAssignmentHandler().get_current_role_assignment(user_3, group=group).role
+        == initial_role_user_3
     )
