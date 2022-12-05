@@ -606,11 +606,11 @@ class FormViewType(ViewType):
         """
 
         field_ids = [field.id for field in fields]
-        updated_field_options_by_id = {
+        updated_field_options_by_field_id = {
             o.field_id: o for o in update_field_option_instances
         }
-        updated_field_ids = [
-            field_id
+        updated_field_options = [
+            updated_field_options_by_field_id[field_id]
             for field_id, options in field_options.items()
             if "conditions" in options
         ]
@@ -619,7 +619,7 @@ class FormViewType(ViewType):
         existing_conditions = {
             c.id: c
             for c in FormViewFieldOptionsCondition.objects.filter(
-                field_option__field_id__in=updated_field_ids
+                field_option__in=updated_field_options,
             ).select_related("field_option")
         }
 
@@ -632,7 +632,7 @@ class FormViewType(ViewType):
                 continue
 
             numeric_field_id = int(field_id)
-            updated_field_option_instance = updated_field_options_by_id[
+            updated_field_option_instance = updated_field_options_by_field_id[
                 numeric_field_id
             ]
 

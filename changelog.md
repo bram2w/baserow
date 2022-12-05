@@ -18,6 +18,7 @@ For example:
 * New items automatically get a new name in the modal. [1166](https://gitlab.com/bramw/baserow/-/issues/1166)
 
 ### Bug Fixes
+* Fixed bug where only one condition per field was working in form's views. [#1400](https://gitlab.com/bramw/baserow/-/issues/1400)
 * Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)
 * Fixed a problem of some specific error messages not being recognized by the web front-end.
 
