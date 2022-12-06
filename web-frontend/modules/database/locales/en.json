@@ -736,5 +736,9 @@
             }
         },
         "chooseView": "Choose view"
+    },
+    "fileField": {
+        "errorEmptyFileNameTitle": "Invalid file name",
+        "errorEmptyFileNameMessage": "You can't set an empty name for a file."
     }
 }

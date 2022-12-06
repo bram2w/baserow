@@ -1,3 +1,15 @@
+.upload-files__file-in-progress {
+  display: contents;
+}
+
+.upload-files__file-failed {
+  display: contents;
+}
+
+.upload-files__file-uploaded {
+  display: contents;
+}
+
 .upload-files__dropzone {
   display: flex;
   align-items: center;
@@ -34,6 +46,12 @@
   margin-top: 8px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.upload-files__file-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 90%;
 }
 
 .upload-files__list {
