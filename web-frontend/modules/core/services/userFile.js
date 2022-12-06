@@ -1,10 +1,11 @@
 export default (client) => {
   return {
-    uploadFile(file, onUploadProgress = function () {}) {
+    uploadFile(file, onUploadProgress = function () {}, cancelToken = null) {
       const formData = new FormData()
       formData.append('file', file)
 
       const config = {
+        cancelToken,
         onUploadProgress,
         headers: {
           'Content-Type': 'multipart/form-data',

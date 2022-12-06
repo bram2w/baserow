@@ -29,7 +29,8 @@
         "copy": "Copy",
         "paste": "Paste",
         "activate": "Activate",
-        "deactivate": "Deactivate"
+        "deactivate": "Deactivate",
+        "download": "Download"
     },
     "adminType": {
         "settings": "Settings"

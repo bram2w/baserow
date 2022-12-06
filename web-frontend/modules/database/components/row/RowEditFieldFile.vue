@@ -2,68 +2,41 @@
   <div class="control__elements">
     <ul class="field-file__list">
       <li
-        v-for="(file, index) in value"
+        v-for="(file, index) in files"
         :key="file.name + '-' + index"
         class="field-file__item"
       >
-        <div class="field-file__preview">
-          <a class="field-file__icon" @click="$refs.fileModal.show(index)">
-            <img v-if="file.is_image" :src="file.thumbnails.small.url" />
-            <i
-              v-else
-              class="fas"
-              :class="'fa-' + getIconClass(file.mime_type)"
-            ></i>
-          </a>
-        </div>
-        <div class="field-file__description">
-          <div class="field-file__name">
-            <Editable
-              :ref="'rename-' + index"
-              :value="file.visible_name"
-              @change="renameFile(value, index, $event.value)"
-            ></Editable>
-          </div>
-          <div class="field-file__info">
-            {{ getDate(file.uploaded_at) }} -
-            {{ formatSize(file.size) }}
-          </div>
-        </div>
-        <div class="field-file__actions">
-          <a
-            v-if="!readOnly"
-            v-tooltip="'rename'"
-            class="field-file__action"
-            @click="$refs['rename-' + index][0].edit()"
-          >
-            <i class="fas fa-pen"></i>
-          </a>
-          <a
-            v-tooltip="'download'"
-            target="_blank"
-            :href="file.url"
-            class="field-file__action"
-          >
-            <i class="fas fa-download"></i>
-          </a>
-          <a
-            v-if="!readOnly"
-            v-tooltip="'delete'"
-            class="field-file__action"
-            @click="removeFile(value, index)"
-          >
-            <i class="fas fa-trash"></i>
-          </a>
-        </div>
+        <FileInProgress
+          v-if="file.state === 'loading'"
+          :file="file"
+          :read-only="readOnly"
+          :icon-class="getIconClass(file.mime_type)"
+          @delete="forceRemoveFile(getFileInProgressIndex(file.id))"
+        />
+        <FileFailed
+          v-else-if="file.state === 'failed'"
+          :file="file"
+          :read-only="readOnly"
+          :icon-class="getIconClass(file.mime_type)"
+          @delete="forceRemoveFile(getFileInProgressIndex(file.id))"
+        />
+        <FileUploaded
+          v-else
+          :ref="`file-uploaded-${index}`"
+          :file="file"
+          :read-only="readOnly"
+          :icon-class="getIconClass(file.mime_type)"
+          @delete="removeFile(value, index)"
+          @rename="(name) => renameFile(value, index, name)"
+          @click="$refs.fileModal.show(index)"
+        />
       </li>
     </ul>
+    <UploadFileDropzone v-if="!readOnly" @input="filesAdded($event)" />
     <a v-if="!readOnly" class="add" @click.prevent="showModal()">
       <i class="fas fa-plus add__icon"></i>
       {{ $t('rowEditFieldFile.addFile') }}
     </a>
-    <div v-show="touched && !valid" class="error">
-      {{ error }}
-    </div>
     <UserFilesModal
       v-if="!readOnly"
       ref="uploadModal"
@@ -71,6 +44,9 @@
       :user-file-upload-types="userFileUploadTypes"
       @uploaded="addFiles(value, $event)"
     ></UserFilesModal>
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
+    </div>
     <FileFieldModal
       v-if="Boolean(value)"
       ref="fileModal"
@@ -83,15 +59,28 @@
 </template>
 
 <script>
-import moment from '@baserow/modules/core/moment'
-import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
-import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
+import { uuid } from '@baserow/modules/core/utils/string'
 import FileFieldModal from '@baserow/modules/database/components/field/FileFieldModal'
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 import fileField from '@baserow/modules/database/mixins/fileField'
+import UploadFileDropzone from '@baserow/modules/core/components/files/UploadFileDropzone'
+import UserFileService from '@baserow/modules/core/services/userFile'
+import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
+import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
+import Axios from 'axios'
+import FileInProgress from '@baserow/modules/core/components/files/FileInProgress'
+import FileFailed from '@baserow/modules/core/components/files/FileFailed'
+import FileUploaded from '@baserow/modules/core/components/files/FileUploaded'
 
 export default {
-  components: { UserFilesModal, FileFieldModal },
+  components: {
+    FileUploaded,
+    FileFailed,
+    FileInProgress,
+    UploadFileDropzone,
+    FileFieldModal,
+    UserFilesModal,
+  },
   mixins: [rowEditField, fileField],
   props: {
     uploadFile: {
@@ -105,12 +94,114 @@ export default {
       default: null,
     },
   },
+  data() {
+    return {
+      filesInProgress: [],
+      currentFileUploading: null,
+      cancelToken: null,
+    }
+  },
+  computed: {
+    files() {
+      return this.value.concat(this.filesInProgress)
+    },
+    uploadFileFunction() {
+      return this.uploadFile || UserFileService(this.$client).uploadFile
+    },
+  },
   methods: {
     showModal() {
       this.$refs.uploadModal.show(UploadFileUserFileUploadType.getType())
     },
-    getDate(value) {
-      return moment.utc(value).format('MMM Do YYYY [at] H:mm')
+    async filesAdded(event) {
+      const files = event.target.files || event.dataTransfer?.files
+
+      if (!files) {
+        return
+      }
+
+      let successfulUploads = []
+      const filesWithData = Array.from(files).map((file) => ({
+        file,
+        fileData: this.forceAddFile(file, { state: 'loading' }),
+      }))
+
+      for (const { file, fileData } of filesWithData) {
+        // File has been removed in the meantime
+        if (this.getFileInProgressIndex(fileData.id) === -1) {
+          continue
+        }
+
+        const progress = (event) => {
+          fileData.percentage = Math.round((event.loaded * 100) / event.total)
+        }
+
+        try {
+          this.currentFileUploading = fileData
+          this.cancelToken = Axios.CancelToken.source()
+          const { data } = await this.uploadFileFunction(
+            file,
+            progress,
+            this.cancelToken.token
+          )
+          successfulUploads.push({
+            id: fileData.id,
+            order: this.getFileInProgressIndex(fileData.id),
+            data,
+          })
+        } catch (error) {
+          const message = error.handler.getMessage('userFile')
+          error.handler.handled()
+          this.forceUpdateFile(fileData.id, {
+            state: 'failed',
+            error: message.message,
+          })
+        }
+      }
+
+      // Make sure a file has not been removed after it has been uploaded
+      successfulUploads = successfulUploads.filter(
+        ({ id }) => this.getFileInProgressIndex(id) !== -1
+      )
+
+      // Make sure to re-establish the order in which the files have been submitted
+      successfulUploads.sort((a, b) => a.order - b.order)
+
+      successfulUploads.forEach(({ id }) =>
+        this.forceRemoveFile(this.getFileInProgressIndex(id))
+      )
+      this.addFiles(
+        this.value,
+        successfulUploads.map(({ data }) => data)
+      )
+    },
+    forceUpdateFile(id, values) {
+      const fileIndex = this.getFileInProgressIndex(id)
+      this.$set(this.filesInProgress, fileIndex, {
+        ...this.files[fileIndex],
+        ...values,
+      })
+    },
+    forceRemoveFile(index) {
+      if (this.getFileInProgressIndex(this.currentFileUploading.id) === index) {
+        this.cancelToken.cancel()
+      }
+      this.filesInProgress.splice(index, 1)
+    },
+    forceAddFile(file, additionalData = {}) {
+      const imageTypes = ['image/jpeg', 'image/jpg', 'image/png']
+      const id = uuid()
+      const fileData = {
+        id,
+        visible_name: file.name,
+        isImage: imageTypes.includes(file.type),
+        percentage: 0,
+        ...additionalData,
+      }
+
+      this.filesInProgress.push(fileData)
+
+      return fileData
     },
     removeFile(...args) {
       fileField.methods.removeFile.call(this, ...args)
@@ -120,25 +211,22 @@ export default {
       fileField.methods.addFiles.call(this, ...args)
       this.touch()
     },
-    renameFile(...args) {
-      fileField.methods.renameFile.call(this, ...args)
+    renameFile(value, index, newName) {
+      const success = fileField.methods.renameFile.call(
+        this,
+        value,
+        index,
+        newName
+      )
+
+      if (!success) {
+        this.$refs[`file-uploaded-${index}`][0].resetName()
+      }
+
       this.touch()
     },
-    /**
-     * Originally from
-     * https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
-     *
-     * Converts an integer representing the amount of bytes to a human readable format.
-     * Where for example 1024 will end up in 1KB.
-     */
-    formatSize(bytes) {
-      if (bytes === 0) return '0 ' + this.$i18n.t(`rowEditFieldFile.sizes.0`)
-      const k = 1024
-      const i = Math.floor(Math.log(bytes) / Math.log(k))
-      const float = parseFloat((bytes / k ** i).toFixed(2)).toLocaleString(
-        this.$i18n.locale
-      )
-      return float + ' ' + this.$i18n.t(`rowEditFieldFile.sizes.${i}`)
+    getFileInProgressIndex(id) {
+      return this.filesInProgress.findIndex((file) => file.id === id)
     },
   },
 }

@@ -33,9 +33,18 @@ export default {
      * Updates the visible name of the file with the given index.
      */
     renameFile(value, index, newName) {
+      if (newName === '' || newName === null) {
+        this.$store.dispatch('notification/error', {
+          title: this.$t('fileField.errorEmptyFileNameTitle'),
+          message: this.$t('fileField.errorEmptyFileNameMessage'),
+        })
+        return false
+      }
+
       const newValue = JSON.parse(JSON.stringify(value))
       newValue[index].visible_name = newName
       this.$emit('update', newValue, value)
+      return true
     },
     getIconClass(mimeType) {
       return mimetype2fa(mimeType)
