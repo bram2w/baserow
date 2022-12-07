@@ -439,23 +439,19 @@ def test_change_password_invalid_new_password(data_fixture, invalid_password):
 @pytest.mark.django_db(transaction=True)
 def test_schedule_user_deletion(data_fixture, mailoutbox):
     valid_password = "aValidPassword"
-    invalid_password = "invalidPassword"
     user = data_fixture.create_user(
         email="test@localhost", password=valid_password, is_staff=True
     )
     handler = UserHandler()
 
     with pytest.raises(UserIsLastAdmin):
-        handler.schedule_user_deletion(user, valid_password)
+        handler.schedule_user_deletion(user)
 
     data_fixture.create_user(email="test_admin@localhost", is_staff=True)
 
-    with pytest.raises(InvalidPassword):
-        handler.schedule_user_deletion(user, invalid_password)
-
     assert len(mailoutbox) == 0
 
-    handler.schedule_user_deletion(user, valid_password)
+    handler.schedule_user_deletion(user)
 
     user.refresh_from_db()
     assert user.profile.to_be_deleted is True

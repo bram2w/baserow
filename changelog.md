@@ -17,6 +17,7 @@ For example:
 * Added the teams functionality as an enterprise feature. [#1226](https://gitlab.com/bramw/baserow/-/issues/1226)
 * Improved grid view on smaller screens by not making the primary field sticky. [#690](https://gitlab.com/bramw/baserow/-/issues/690)
 * New items automatically get a new name in the modal. [1166](https://gitlab.com/bramw/baserow/-/issues/1166)
+* Don't require password verification when deleting user account. [#1401](https://gitlab.com/bramw/baserow/-/issues/1401)
 
 ### Bug Fixes
 * Fixed bug where only one condition per field was working in form's views. [#1400](https://gitlab.com/bramw/baserow/-/issues/1400)

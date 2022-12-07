@@ -390,21 +390,17 @@ class UserHandler:
         for plugin in plugin_registry.registry.values():
             plugin.user_signed_in(user)
 
-    def schedule_user_deletion(self, user: AbstractUser, password: str):
+    def schedule_user_deletion(self, user: AbstractUser):
         """
         Schedules the user account deletion. The user is flagged as `to_be_deleted` and
         will be deleted after a predefined grace delay unless the user
         cancel his account deletion by log in again.
-        To be valid, the current user password must be provided.
         This action sends an email to the user to explain the process.
 
         :param user: The user to flag as `to_be_deleted`.
-        :param password: The current user password.
-        :raises InvalidPassword: When a provided password is incorrect.
+        :raises UserIsLastAdmin: When the user cannot be deleted as he is the last
+            admin.
         """
-
-        if not user.check_password(password):
-            raise InvalidPassword("The provided password is incorrect.")
 
         if (
             user.is_staff
