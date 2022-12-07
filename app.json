@@ -6,14 +6,14 @@
   "logo": "https://baserow.io/img/favicon_192.png",
   "success_url": "/",
   "addons": [
-    "heroku-postgresql:hobby-dev",
-    "heroku-redis:hobby-dev",
+    "heroku-postgresql:mini",
+    "heroku-redis:mini",
     "mailgun:starter"
   ],
   "formation": {
     "web": {
       "quantity": 1,
-      "size": "free"
+      "size": "basic"
     }
   },
   "stack": "container",

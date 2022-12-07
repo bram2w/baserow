@@ -17,8 +17,8 @@ $ heroku apps:create baserow-test-app
 $ heroku stack:set -a baserow-test-app container
 
 # We need to add all the addons listed in the app.json file.
-$ heroku addons:create -a baserow-test-app heroku-postgresql:hobby-dev
-$ heroku addons:create -a baserow-test-app heroku-redis:hobby-dev
+$ heroku addons:create -a baserow-test-app heroku-postgresql:mini
+$ heroku addons:create -a baserow-test-app heroku-redis:mini
 $ heroku addons:create -a baserow-test-app mailgun:starter
 
 # We need to add all the labs listed in the app.json file.

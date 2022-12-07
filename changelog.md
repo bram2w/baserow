@@ -20,6 +20,7 @@ For example:
 * Don't require password verification when deleting user account. [#1401](https://gitlab.com/bramw/baserow/-/issues/1401)
 
 ### Bug Fixes
+* Fixed the Heroku deployment template. [#1420](https://gitlab.com/bramw/baserow/-/issues/1420)
 * Fixed bug where only one condition per field was working in form's views. [#1400](https://gitlab.com/bramw/baserow/-/issues/1400)
 * Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)
 * Fixed a problem of some specific error messages not being recognized by the web front-end.
