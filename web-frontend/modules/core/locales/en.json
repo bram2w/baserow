@@ -474,5 +474,10 @@
     },
     "memberAssignmentModalFooter": {
         "invite": "Invite {count}"
+    },
+    "removeFromGroupModal": {
+        "title": "Confirm removal from group",
+        "confirmation": "Are you sure you want to remove {name} from {group_name}? This action cannot be undone.",
+        "remove": "Remove"
     }
 }
