@@ -15,7 +15,31 @@ For example:
 
 ### Refactors
 
-## Released (2022-11-22 1.13.1)
+## Released (2022-12-8 1.13.2)
+
+### New Features
+* Add drag and drop zone for files to the row edit modal [#1161](https://gitlab.com/bramw/baserow/-/issues/1161)
+
+* Automatically enable/disable enterprise features upon activation/deactivation without needing a page refresh first. [#1306](https://gitlab.com/bramw/baserow/-/issues/1306)
+* Allow creating a new option by pressing enter in the dropdown [#1169](https://gitlab.com/bramw/baserow/-/issues/1169)
+* Added the teams functionality as an enterprise feature. [#1226](https://gitlab.com/bramw/baserow/-/issues/1226)
+* Improved grid view on smaller screens by not making the primary field sticky. [#690](https://gitlab.com/bramw/baserow/-/issues/690)
+* New items automatically get a new name in the modal. [1166](https://gitlab.com/bramw/baserow/-/issues/1166)
+* Don't require password verification when deleting user account. [#1401](https://gitlab.com/bramw/baserow/-/issues/1401)
+
+### Bug Fixes
+* Fixed the Heroku deployment template. [#1420](https://gitlab.com/bramw/baserow/-/issues/1420)
+* Fixed bug where only one condition per field was working in form's views. [#1400](https://gitlab.com/bramw/baserow/-/issues/1400)
+* Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)
+* Fixed a problem of some specific error messages not being recognized by the web front-end.
+
+* Fixed failing webhook call log creation when a table has more than one webhooks. [#1100](https://gitlab.com/bramw/baserow/-/merge_requests/1100)
+
+### Refactors
+* Refresh the JWT token when needed instead of periodically. [#1294](https://gitlab.com/bramw/baserow/-/issues/1294)
+* Remove "// Baserow" from title on a publicly shared view if `show_logo` is set to false. [#1378](https://gitlab.com/bramw/baserow/-/issues/1378)
+
+## Released (2022-11-22 1.13.2)
 
 ### New Features
 
@@ -32,6 +56,8 @@ For example:
 * Fixed authenticated state changing before redirected to the login page when logging off. [#1328](https://gitlab.com/bramw/baserow/-/issues/1328)
 * `permanently_delete_marked_trash` task no longer fails on permanently deleting a table before an associated rows batch.  [#1266](https://gitlab.com/bramw/baserow/-/issues/1266)
 * Fixed bug where "add filter" link was not clickable if the primary field has no compatible filter types. [#1302](https://gitlab.com/bramw/baserow/-/issues/1302)
+* Fixed OAuth 2 flows for providers that don't provide user's name. Email will be used as a temporary placeholder so that an account can be created.  [#1371](https://gitlab.com/bramw/baserow/-/issues/1371)
+
 ### Refactors
 
 * Changed `TableGroupStorageUsageItemType.calculate_storage_usage` to use a PL/pgSQL function to speedup the storage usage calculation.

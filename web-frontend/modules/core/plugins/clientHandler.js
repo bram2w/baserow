@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import { upperCaseFirst } from '@baserow/modules/core/utils/string'
+import { makeRefreshAuthInterceptor } from '@baserow/modules/core/plugins/clientAuthRefresh'
 
 export class ResponseErrorMessage {
   constructor(title, message) {
@@ -402,24 +403,23 @@ export class ErrorHandler {
   }
 }
 
-export function makeErrorResponseInterceptor(store, app, clientErrorMap) {
+export function makeErrorResponseInterceptor(
+  store,
+  app,
+  clientErrorMap,
+  nuxtErrorHandler
+) {
   return (error) => {
-    error.handler = new ErrorHandler(store, app, clientErrorMap, error.response)
-
-    // Add the error message in the response to the error object.
-    const rspStatus = error.response?.status
     const rspData = error.response?.data
-    // disabled in the login page because the error is handled by the login form
-    const showAuthorizationPopupError =
-      rspStatus === 401 &&
-      !['ERROR_INVALID_CREDENTIALS', 'ERROR_DEACTIVATED_USER'].includes(
-        rspData?.error
-      )
 
-    if (showAuthorizationPopupError) {
-      store.dispatch('notification/setAuthorizationError', true)
-      error.handler.handled()
-    } else if (
+    // user session expired. Redirect to login page to start a new session.
+    if (rspData?.error === 'ERROR_INVALID_REFRESH_TOKEN') {
+      nuxtErrorHandler({ statusCode: 401, message: 'User session expired' })
+      return Promise.reject(error)
+    }
+
+    error.handler = new ErrorHandler(store, app, clientErrorMap, error.response)
+    if (
       typeof rspData === 'object' &&
       'error' in rspData &&
       'detail' in rspData
@@ -431,17 +431,26 @@ export function makeErrorResponseInterceptor(store, app, clientErrorMap) {
   }
 }
 
-export default function ({ store, app }, inject) {
-  // Create and inject the client error map, so that other modules can also register
-  // default error messages.
-  const clientErrorMap = new ClientErrorMap(app)
-  inject('clientErrorMap', clientErrorMap)
+const prepareRequestHeaders = (store) => (config) => {
+  if (store.getters['auth/isAuthenticated']) {
+    const token = store.getters['auth/token']
+    config.headers.Authorization = `JWT ${token}`
+    config.headers.ClientSessionId =
+      store.getters['auth/getUntrustedClientSessionId']
+  }
+  if (store.getters['auth/webSocketId'] !== null) {
+    const webSocketId = store.getters['auth/webSocketId']
+    config.headers.WebSocketId = webSocketId
+  }
+  return config
+}
 
+const createAxiosInstance = (app) => {
   const url =
     (process.client
       ? app.$env.PUBLIC_BACKEND_URL
       : app.$env.PRIVATE_BACKEND_URL) + '/api'
-  const client = axios.create({
+  return axios.create({
     baseURL: url,
     withCredentials: false,
     headers: {
@@ -449,28 +458,39 @@ export default function ({ store, app }, inject) {
       'Content-Type': 'application/json',
     },
   })
+}
 
-  // Create a request interceptor to add the authorization token to every
-  // request if the user is authenticated.
-  client.interceptors.request.use((config) => {
-    if (store.getters['auth/isAuthenticated']) {
-      const token = store.getters['auth/token']
-      config.headers.Authorization = `JWT ${token}`
-      config.headers.ClientSessionId =
-        store.getters['auth/getUntrustedClientSessionId']
-    }
-    if (store.getters['auth/webSocketId'] !== null) {
-      const webSocketId = store.getters['auth/webSocketId']
-      config.headers.WebSocketId = webSocketId
-    }
-    return config
-  })
+export default function ({ app, store, error }, inject) {
+  const client = createAxiosInstance(app)
+  // Create and inject the client error map, so that other modules can also register
+  // default error messages.
+  const clientErrorMap = new ClientErrorMap(app)
+  inject('clientErrorMap', clientErrorMap)
+
+  client.interceptors.request.use(prepareRequestHeaders(store))
 
   // Create a response interceptor to add more detail to the error message
   // and to create a notification when there is a network error.
-  client.interceptors.response.use((response) => {
-    return response
-  }, makeErrorResponseInterceptor(store, app, clientErrorMap))
+  client.interceptors.response.use(
+    null,
+    makeErrorResponseInterceptor(store, app, clientErrorMap, error)
+  )
+
+  const shouldInterceptRequest = () =>
+    store.getters['auth/shouldRefreshToken']()
+
+  const shouldInterceptResponse = (error) =>
+    error.response?.data?.error === 'ERROR_INVALID_ACCESS_TOKEN'
+
+  const refreshToken = async () => await store.dispatch('auth/refresh')
+
+  const refreshAuthInterceptor = makeRefreshAuthInterceptor(
+    client,
+    refreshToken,
+    shouldInterceptRequest,
+    shouldInterceptResponse
+  )
+  client.interceptors.response.use(null, refreshAuthInterceptor)
 
   inject('client', client)
 }

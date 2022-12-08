@@ -30,10 +30,6 @@ export default async function ({ store, req, app, route }) {
   // the admin one to persist.
   store.dispatch('auth/preventSetToken')
 
-  // Restart the refresh timeout because we only want to have only one refresh loop
-  // running.
-  store.dispatch('auth/startRefreshTimeout')
-
   // Set the impersonating state to true so that the warning in the top left corner
   // is visible.
   store.dispatch('impersonating/setImpersonating', true)

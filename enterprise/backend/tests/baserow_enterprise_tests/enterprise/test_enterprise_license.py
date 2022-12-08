@@ -1,3 +1,5 @@
+from unittest.mock import call, patch
+
 from django.contrib.auth.models import AnonymousUser
 from django.test.utils import override_settings
 
@@ -372,7 +374,7 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    user2 = data_fixture.create_user(is_active=False)
+    user2 = data_fixture.create_user()
     group1 = data_fixture.create_group(user=user, members=[user2])
     group2 = data_fixture.create_group(user=user, members=[user2])
 
@@ -386,6 +388,9 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
     role_assignment_handler.assign_role(user2, group1, builder_role)
     role_assignment_handler.assign_role(user, group2, admin_role)
     role_assignment_handler.assign_role(user2, group2, commenter_role)
+
+    user2.is_active = False
+    user2.save()
 
     assert len(RoleAssignment.objects.all()) == 0
     assert EnterpriseLicenseType().get_free_users_count(license_object) == 0
@@ -442,3 +447,52 @@ def test_cant_manually_remove_all_users_from_seats_in_enterprise_version(
     data_fixture.create_group(user=user, members=[user2])
     with pytest.raises(CantManuallyChangeSeatsError):
         LicenseHandler.remove_all_users_from_license(user, license_object)
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@patch("baserow_premium.license.handler.broadcast_to_users")
+def test_enterprise_license_being_registered_sends_signal_to_all(
+    mock_broadcast_to_users, data_fixture, django_capture_on_commit_callbacks
+):
+
+    Settings.objects.update_or_create(defaults={"instance_id": "1"})
+    user = data_fixture.create_user(is_staff=True)
+    with django_capture_on_commit_callbacks(execute=True):
+        LicenseHandler.register_license(user, VALID_ONE_SEAT_ENTERPRISE_LICENSE)
+    mock_broadcast_to_users.delay.assert_called_once()
+    args = mock_broadcast_to_users.delay.call_args
+    assert args == call(
+        send_to_all_users=True,
+        user_ids=[],
+        payload={
+            "type": "user_data_updated",
+            "user_data": {"active_licenses": {"instance_wide": {"enterprise": True}}},
+        },
+    )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@patch("baserow_premium.license.handler.broadcast_to_users")
+def test_enterprise_license_being_unregistered_sends_signal_to_all(
+    mock_broadcast_to_users, data_fixture, django_capture_on_commit_callbacks
+):
+
+    Settings.objects.update_or_create(defaults={"instance_id": "1"})
+    user = data_fixture.create_user(is_staff=True)
+    with django_capture_on_commit_callbacks(execute=True):
+        license_obj = LicenseHandler.register_license(
+            user, VALID_ONE_SEAT_ENTERPRISE_LICENSE
+        )
+        LicenseHandler.remove_license(user, license_obj)
+    args = mock_broadcast_to_users.delay.call_args
+    assert mock_broadcast_to_users.delay.call_count == 2
+    assert args == call(
+        send_to_all_users=True,
+        user_ids=[],
+        payload={
+            "type": "user_data_updated",
+            "user_data": {"active_licenses": {"instance_wide": {"enterprise": False}}},
+        },
+    )

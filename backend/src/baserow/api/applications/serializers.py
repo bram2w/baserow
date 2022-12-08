@@ -33,10 +33,11 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(
         choices=lazy(application_type_registry.get_types, list)()
     )
+    init_with_data = serializers.BooleanField(default=False)
 
     class Meta:
         model = Application
-        fields = ("name", "type")
+        fields = ("name", "type", "init_with_data")
 
 
 class ApplicationUpdateSerializer(serializers.ModelSerializer):

@@ -63,8 +63,7 @@ from .errors import (
     ERROR_DISABLED_SIGNUP,
     ERROR_INVALID_CREDENTIALS,
     ERROR_INVALID_OLD_PASSWORD,
-    ERROR_INVALID_PASSWORD,
-    ERROR_INVALID_TOKEN,
+    ERROR_INVALID_REFRESH_TOKEN,
     ERROR_UNDO_REDO_LOCK_CONFLICT,
     ERROR_USER_IS_LAST_ADMIN,
     ERROR_USER_NOT_FOUND,
@@ -79,7 +78,6 @@ from .serializers import (
     AccountSerializer,
     ChangePasswordBodyValidationSerializer,
     DashboardSerializer,
-    DeleteUserBodyValidationSerializer,
     RegisterSerializer,
     ResetPasswordBodyValidationSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
@@ -106,13 +104,13 @@ class ObtainJSONWebToken(TokenObtainPairView):
         operation_id="token_auth",
         description=(
             "Authenticates an existing user based on their email and their password. "
-            "If successful an access token and a refresh token will be returned."
+            "If successful, an access token and a refresh token will be returned."
         ),
         responses={
             200: create_user_response_schema,
             401: {
-                "description": "A user with the provided username and password is "
-                "not found."
+                "description": "An active user with the provided email and password "
+                "could not be found."
             },
         },
         auth=[],
@@ -143,7 +141,7 @@ class RefreshJSONWebToken(TokenRefreshView):
         },
         auth=[],
     )
-    @map_exceptions({InvalidToken: ERROR_INVALID_TOKEN})
+    @map_exceptions({InvalidToken: ERROR_INVALID_REFRESH_TOKEN})
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
@@ -164,7 +162,7 @@ class VerifyJSONWebToken(TokenVerifyView):
         },
         auth=[],
     )
-    @map_exceptions({InvalidToken: ERROR_INVALID_TOKEN})
+    @map_exceptions({InvalidToken: ERROR_INVALID_REFRESH_TOKEN})
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
@@ -407,7 +405,6 @@ class ScheduleAccountDeletionView(APIView):
 
     @extend_schema(
         tags=["User"],
-        request=DeleteUserBodyValidationSerializer,
         operation_id="schedule_account_deletion",
         description=(
             "Schedules the account deletion of the authenticated user. "
@@ -418,7 +415,6 @@ class ScheduleAccountDeletionView(APIView):
             204: None,
             400: get_error_schema(
                 [
-                    "ERROR_INVALID_PASSWORD",
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
@@ -427,18 +423,13 @@ class ScheduleAccountDeletionView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            InvalidPassword: ERROR_INVALID_PASSWORD,
             UserIsLastAdmin: ERROR_USER_IS_LAST_ADMIN,
         }
     )
-    @validate_body(DeleteUserBodyValidationSerializer)
-    def post(self, request, data):
+    def post(self, request):
         """Schedules user account deletion."""
 
-        UserHandler().schedule_user_deletion(
-            request.user,
-            **data,
-        )
+        UserHandler().schedule_user_deletion(request.user)
         return Response(status=204)
 
 

@@ -7,7 +7,7 @@ from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.tokens import AccessToken, Token
 
 
-def get_user_from_jwt_token(
+def get_user_from_token(
     token: str,
     token_class: Optional[Type[Token]] = None,
 ) -> AbstractUser:

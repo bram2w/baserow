@@ -307,7 +307,12 @@ class CreateApplicationActionType(ActionType):
 
     @classmethod
     def do(
-        cls, user: AbstractUser, group: Group, application_type: str, name: str
+        cls,
+        user: AbstractUser,
+        group: Group,
+        application_type: str,
+        name: str,
+        init_with_data: bool = False,
     ) -> Any:
         """
         Creates a new application based on the provided type. See
@@ -318,11 +323,13 @@ class CreateApplicationActionType(ActionType):
         :param group: The group to create the application in.
         :param application_type: The type of application to create.
         :param name: The name of the new application.
+        :param init_with_data: Whether the application should be initialized with
+            some default data. Defaults to False.
         :return: The created Application model instance.
         """
 
         application = CoreHandler().create_application(
-            user, group, application_type, name=name
+            user, group, application_type, name=name, init_with_data=init_with_data
         )
 
         params = cls.Params(application.id)

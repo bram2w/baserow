@@ -27,6 +27,11 @@ export default {
       type: Array,
       required: true,
     },
+    offset: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
     containerWidth: {
       type: Number,
       required: true,
@@ -143,14 +148,16 @@ export default {
 
       // Calculate the left position of the dragging animation. This is the transparent
       // overlay that has the same width as the field.
-      this.draggingLeft = Math.min(
-        this.getFieldLeft(this.field.id) +
-          event.clientX -
-          this.mouseStartX +
-          this.$parent.$el.scrollLeft -
-          this.scrollStart,
-        this.containerWidth - this.draggingWidth
-      )
+      this.draggingLeft =
+        this.offset +
+        Math.min(
+          this.getFieldLeft(this.field.id) +
+            event.clientX -
+            this.mouseStartX +
+            this.$parent.$el.scrollLeft -
+            this.scrollStart,
+          this.containerWidth - this.draggingWidth
+        )
 
       // Calculate which after which field we want to place the field that is currently
       // being dragged. This is named the target. We also calculate what position the
@@ -159,7 +166,7 @@ export default {
         event.clientX -
         element.getBoundingClientRect().left +
         element.scrollLeft
-      let left = 0
+      let left = this.offset
       for (let i = 0; i < this.fields.length; i++) {
         const width = this.getFieldWidth(this.fields[i].id)
         const nextWidth =
@@ -172,7 +179,7 @@ export default {
           this.targetFieldId = 0
           // The value 1 makes sure it is visible instead of falling outside of the
           // view port.
-          this.targetLeft = 1
+          this.targetLeft = Math.max(this.offset, 1)
           break
         }
         if (mouseLeft > leftHalf && mouseLeft < rightHalf) {

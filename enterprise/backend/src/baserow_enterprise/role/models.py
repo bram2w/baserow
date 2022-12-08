@@ -110,4 +110,10 @@ class RoleAssignment(CreatedAndUpdatedOnMixin):
         return f"<RoleAssignment {self.subject} - {self.role.name} - {self.group} - {self.scope}>"
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scope_id", "scope_type", "subject_id", "subject_type"],
+                name="subject_and_scope_uniqueness",
+            )
+        ]
         ordering = ("id",)

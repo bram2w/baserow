@@ -169,7 +169,8 @@ def test_token_auth(api_client, data_fixture):
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
     response_json = response.json()
-    assert response_json["detail"] == "Token is expired or invalid."
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+    assert response_json["detail"] == "Refresh token is expired or invalid."
 
     response = api_client.post(
         reverse("api:user:token_auth"),
@@ -213,8 +214,8 @@ def test_token_refresh(api_client, data_fixture):
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
     response_json = response.json()
-    assert response_json["error"] == "ERROR_INVALID_TOKEN"
-    assert response_json["detail"] == "Token is expired or invalid."
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+    assert response_json["detail"] == "Refresh token is expired or invalid."
 
     # DEPRECATED: "token" as body param is deprecated, use "refresh_token" instead
     with patch.dict(plugin_registry.registry, {"tmp": plugin_mock}):
@@ -256,8 +257,8 @@ def test_token_refresh(api_client, data_fixture):
         )
         assert response.status_code == HTTP_401_UNAUTHORIZED
         response_json = response.json()
-        assert response_json["error"] == "ERROR_INVALID_TOKEN"
-        assert response_json["detail"] == "Token is expired or invalid."
+        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+        assert response_json["detail"] == "Refresh token is expired or invalid."
 
 
 @pytest.mark.django_db

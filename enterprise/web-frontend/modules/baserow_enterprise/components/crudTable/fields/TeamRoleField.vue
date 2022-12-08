@@ -1,0 +1,90 @@
+<template>
+  <div>
+    <span
+      v-if="
+        !$hasPermission(
+          'enterprise.teams.team.update',
+          row,
+          column.additionalProps.groupId
+        )
+      "
+    >
+      {{ roleName(roles, row) }}
+    </span>
+    <a
+      v-else
+      ref="editRoleContextLink"
+      @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
+    >
+      {{ roleName(roles, row) }}
+      <i class="fas fa-chevron-down"></i>
+    </a>
+    <EditRoleContext
+      ref="editRoleContext"
+      :subject="row"
+      :roles="roles"
+      role-value-column="default_role"
+      @update-role="roleUpdate($event)"
+    ></EditRoleContext>
+  </div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import { clone } from '@baserow/modules/core/utils/object'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
+import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
+
+export default {
+  name: 'TeamRoleField',
+  components: { EditRoleContext },
+  props: {
+    row: {
+      type: Object,
+      required: true,
+    },
+    column: {
+      type: Object,
+      required: true,
+    },
+  },
+  computed: {
+    group() {
+      return this.$store.getters['group/get'](
+        this.column.additionalProps.groupId
+      )
+    },
+    roles() {
+      return this.group ? this.group._.roles : []
+    },
+    ...mapGetters({ userId: 'auth/getUserId' }),
+  },
+  methods: {
+    roleName(roles, row) {
+      const role = roles.find((r) => r.uid === row.default_role)
+      return role?.name || ''
+    },
+    async roleUpdate({ uid: permissionsNew, subject: team }) {
+      const oldTeam = clone(team)
+      const newTeam = clone(team)
+      newTeam.default_role = permissionsNew
+      this.$emit('row-update', newTeam)
+
+      try {
+        await RoleAssignmentsService(this.$client).assignRole(
+          newTeam.id,
+          'baserow_enterprise.Team',
+          this.column.additionalProps.groupId,
+          this.column.additionalProps.groupId,
+          'group',
+          permissionsNew
+        )
+      } catch (error) {
+        this.$emit('row-update', oldTeam)
+        notifyIf(error, 'team')
+      }
+    },
+  },
+}
+</script>

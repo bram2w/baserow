@@ -308,12 +308,12 @@ export const actions = {
       commit('SET_ITEM_ADDITIONAL_LOADING', { group, value: false })
     }
   },
-  async fetchRoles({ commit, getters }, group) {
-    // The roles only have to be loaded once.
-    if (group._.rolesLoaded) {
-      return
+  async fetchRoles({ dispatch }, group) {
+    if (!group._.rolesLoaded) {
+      await dispatch('forceRefreshRoles', group)
     }
-
+  },
+  async forceRefreshRoles({ commit, getters }, group) {
     commit('SET_ITEM_ADDITIONAL_LOADING', { group, value: true })
 
     try {
@@ -453,6 +453,9 @@ export const getters = {
   },
   getAllSorted(state) {
     return state.items.map((g) => g).sort((a, b) => a.order - b.order)
+  },
+  getSelected(state) {
+    return state.selected
   },
   hasSelected(state) {
     return Object.prototype.hasOwnProperty.call(state.selected, 'id')

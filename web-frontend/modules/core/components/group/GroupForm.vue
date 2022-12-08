@@ -12,6 +12,7 @@
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input input--large"
+          @focus.once="$event.target.select()"
           @blur="$v.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
@@ -31,10 +32,17 @@ import form from '@baserow/modules/core/mixins/form'
 export default {
   name: 'GroupForm',
   mixins: [form],
+  props: {
+    defaultName: {
+      type: String,
+      required: false,
+      default: '',
+    },
+  },
   data() {
     return {
       values: {
-        name: '',
+        name: this.defaultName,
       },
     }
   },

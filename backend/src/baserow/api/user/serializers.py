@@ -15,7 +15,7 @@ from rest_framework_simplejwt.serializers import (
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
-from baserow.api.user.jwt import get_user_from_jwt_token
+from baserow.api.user.jwt import get_user_from_token
 from baserow.api.user.registries import user_data_registry
 from baserow.api.user.validators import language_validation, password_validation
 from baserow.core.models import Template
@@ -24,7 +24,6 @@ from baserow.core.user.handler import UserHandler
 from baserow.core.user.utils import (
     generate_session_tokens_for_user,
     normalize_email_address,
-    prepare_user_tokens_payload,
 )
 
 User = get_user_model()
@@ -146,10 +145,6 @@ class ChangePasswordBodyValidationSerializer(serializers.Serializer):
     new_password = serializers.CharField(validators=[password_validation])
 
 
-class DeleteUserBodyValidationSerializer(serializers.Serializer):
-    password = serializers.CharField()
-
-
 class NormalizedEmailField(serializers.EmailField):
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -230,11 +225,10 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
 
     def validate(self, attrs):
         attrs["refresh"] = attrs.pop("refresh_token", attrs.get("token"))
-        validated_data = super().validate(attrs)
-        access_token = validated_data["access"]
+        super().validate(attrs)
 
-        user = get_user_from_jwt_token(access_token)
-        data = prepare_user_tokens_payload(access_token, validated_data.get("refresh"))
+        user = get_user_from_token(attrs["refresh"], RefreshToken)
+        data = generate_session_tokens_for_user(user)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
         return data
 
@@ -253,7 +247,7 @@ class TokenVerifyWithUserSerializer(TokenVerifySerializer):
         refresh_token = attrs["token"] = attrs.pop("refresh_token", attrs.get("token"))
         super().validate(attrs)
 
-        user = get_user_from_jwt_token(refresh_token, token_class=RefreshToken)
+        user = get_user_from_token(refresh_token, token_class=RefreshToken)
         return get_all_user_data_serialized(user, self.context["request"])
 
 

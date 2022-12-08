@@ -24,7 +24,7 @@ def get_user(token):
     :rtype: User or None
     """
 
-    from baserow.api.user.jwt import get_user_from_jwt_token
+    from baserow.api.user.jwt import get_user_from_token
 
     anonymous = token == ANONYMOUS_USER_TOKEN
     if anonymous:
@@ -36,7 +36,7 @@ def get_user(token):
             return AnonymousUser()
     else:
         try:
-            return get_user_from_jwt_token(token)
+            return get_user_from_token(token)
         except TokenError:
             return
 

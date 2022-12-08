@@ -1,6 +1,6 @@
 {
     "webhookModal": {
-        "title": "{name} webhooks",
+        "title": "Webhooks de {name}",
         "createWebhook": "Crear webhook",
         "backToList": "volver a la lista"
     },
@@ -81,13 +81,13 @@
         "showDatabases": "mostrar bases de datos"
     },
     "apiTokenSettings": {
-        "title": "Tokens de API personales",
+        "title": "Tokens de bases de datos",
         "createToken": "Crear token",
-        "noTokensMessage": "Aún no ha creado un token de API. Puede usar tokens de API para autenticarse con los puntos finales de la API REST donde puede crear, leer, actualizar y eliminar filas. Es posible establecer permisos a nivel de tabla.",
+        "noTokensMessage": "Aún no ha creado un token de base de datos. Puede usar tokens de base de datos para autenticarse con los puntos finales de la API REST donde puede crear, leer, actualizar y eliminar filas. Es posible establecer permisos a nivel de tabla.",
         "hasFullPermissions": "Tiene permisos completos, también para todos los niños.",
         "hasOnlySelectedPermissions": "Solo tiene permisos para los niños seleccionados.",
         "noPermissions": "No tiene permisos.",
-        "createNewTitle": "Crear nuevo token de API",
+        "createNewTitle": "Crear nuevo token de la base de datos",
         "backToOverview": "De regreso a la visión general"
     },
     "apiTokenForm": {
@@ -116,7 +116,7 @@
         "description": "Descripción",
         "okDescription": "Solicitud completada con éxito.",
         "badRequestDescription": "La solicitud contiene valores no válidos o no se pudo analizar el JSON.",
-        "unauthorizedDescription": "Cuando intenta acceder a un punto final sin un token válido.",
+        "unauthorizedDescription": "Cuando intenta acceder a un punto final sin un token de la base de datos válido.",
         "notFoundDescription": "No se encuentra la fila o la tabla.",
         "requestEntityTooLargeDescription": "La solicitud superó el tamaño de carga útil máximo permitido.",
         "internalErrorDescription": "El servidor encontró una condición inesperada.",
@@ -154,7 +154,7 @@
         "pythonClient": "Cliente API de ejemplo de Python:"
     },
     "apiDocsTableListFields": {
-        "description": "Para enumerar los campos de la tabla {name}, se debe realizar una solicitud `GET` al extremo de los campos {name}. Solo es posible listar los campos si el token tiene permisos de lectura, creación o actualización.",
+        "description": "Para enumerar los campos de la tabla {name}, se debe realizar una solicitud `GET` al extremo de los campos {name}. Solo es posible enumerar los campos si el token de la base de datos tiene permisos de lectura, creación o actualización.",
         "resultFieldProperties": "Propiedades del campo de resultado",
         "id": "Clave principal del campo. Se puede usar para generar el nombre de la columna de la base de datos agregando el prefijo `field_`.",
         "name": "Nombre del campo.",
@@ -184,7 +184,7 @@
         "before": "Si se proporciona, la fila recién creada se colocará antes de la fila con la identificación proporcionada."
     },
     "apiDocsAuth": {
-        "description": "Baserow utiliza una autenticación basada en token simple. Debe generar al menos un token de API en su {settingsLink} para usar los puntos finales que se describen a continuación. Es posible otorgar permisos de creación, lectura, actualización y eliminación hasta el nivel de la tabla por token. Puede autenticarse en la API proporcionando su token de API en el encabezado del token del portador de autorización HTTP. Todas las solicitudes de API deben autenticarse y realizarse a través de HTTPS.",
+        "description": "Baserow utiliza una autenticación simple basada en tokens. Es necesario generar al menos un token de base de datos en su {settingsLink} para utilizar los endpoints descritos a continuación. Es posible dar permisos de creación, lectura, actualización y eliminación hasta el nivel de tabla por token. Puede autenticarse en la API proporcionando su token en la cabecera HTTP authorization bearer token. Todas las solicitudes de la API deben ser autenticadas y realizadas a través de HTTPS.",
         "settingsLink": "ajustes"
     },
     "apiDocsFilters": {
@@ -223,7 +223,7 @@
     "fieldNumberSubForm": {
         "typeLabel": "Tipo de número",
         "integer": "Entero",
-        "decimal": "Decimal",
+        "decimal": "Décimal",
         "decimalPlacesLabel": "Lugares decimales",
         "allowNegative": "Permitir negativo"
     },
@@ -247,7 +247,7 @@
     "fieldFormulaNumberSubForm": {
         "typeLabel": "Tipo de número",
         "integer": "Entero",
-        "decimal": "Decimal",
+        "decimal": "Décimal",
         "decimalPlacesLabel": "Lugares decimales",
         "allowNegative": "Permitir negativo"
     },
@@ -268,7 +268,7 @@
         "hideHiddenFields": "Ocultar campos ocultos"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Añadir otra opción"
+        "addOption": "Escoge una opción"
     },
     "rowEditFieldFile": {
         "addFile": "Agregar un archivo",
@@ -282,7 +282,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Añadir otro enlace"
+        "addLink": "Elige un enlace"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "Elija el archivo CSV",
@@ -350,7 +350,8 @@
         "selectImportMessage": "Selecciona los datos que quieras importar.",
         "filePreview": "Vista previa del contenido del archivo",
         "importPreview": "Vista previa de la importación",
-        "changeImporterType": "Cambiar el tipo de importación"
+        "changeImporterType": "Cambiar el tipo de importación",
+        "defaultName": "Tabla"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Haga clic para editar la fórmula",
@@ -382,13 +383,15 @@
     "viewFilterContext": {
         "addFilter": "Añadir filtro",
         "disableAllFilters": "Todo impedido",
-        "noFilterTitle": "Aún no has creado un filtro.",
+        "noFilterTitle": "Aún no creaste ningún filtro",
         "noFilterText": "Los filtros le permiten mostrar filas que se aplican a sus condiciones.",
         "where": "Donde",
         "and": "Y",
         "or": "O",
         "relatedFieldNotFound": "El campo relacionado no se encuentra.",
-        "filterTypeNotFound": "El tipo de filtro no es compatible."
+        "filterTypeNotFound": "El tipo de filtro no es compatible.",
+        "noCompatibleFilterTypesErrorTitle": "No hay tipos de filtro compatibles",
+        "noCompatibleFilterTypesErrorMessage": "Ninguno de sus campos tiene ningún tipo de filtro compatible"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "imagen",
@@ -554,7 +557,7 @@
         "average": "Promedio",
         "median": "Median",
         "stdDev": "Desviación Estándar",
-        "stdDevShort": "Std dev",
+        "stdDevShort": "Desviación Estándar",
         "variance": "Diferencia"
     },
     "databaseForm": {
@@ -721,7 +724,7 @@
         }
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Agregar un colaborador"
+        "addCollaborator": "Elige un colaborador"
     },
     "duplicateTableJobType": {
         "duplicatedTitle": "Tabla duplicada",

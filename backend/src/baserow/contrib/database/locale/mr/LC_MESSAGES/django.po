@@ -1,0 +1,84 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-07-04 11:06+0000\n"
+"PO-Revision-Date: 2022-11-28 18:47+0000\n"
+"Last-Translator: Prachi Joshi <josprachi@yahoo.com>\n"
+"Language-Team: Marathi <https://hosted.weblate.org/projects/baserow/"
+"backend-database/mr/>\n"
+"Language: mr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.15-dev\n"
+
+#: src/baserow/contrib/database/plugins.py:41
+#, python-format
+msgid "%(first_name)s's company"
+msgstr "%(first_name)s ची कंपनी"
+
+#: src/baserow/contrib/database/plugins.py:48
+msgid "Customers"
+msgstr "ग्राहक"
+
+#: src/baserow/contrib/database/plugins.py:50
+#: src/baserow/contrib/database/plugins.py:72
+#: src/baserow/contrib/database/table/handler.py:409
+#: src/baserow/contrib/database/table/handler.py:422
+msgid "Name"
+msgstr "नाव"
+
+#: src/baserow/contrib/database/plugins.py:51
+msgid "Last name"
+msgstr "आडनाव"
+
+#: src/baserow/contrib/database/plugins.py:52
+#: src/baserow/contrib/database/table/handler.py:410
+msgid "Notes"
+msgstr "टीपा"
+
+#: src/baserow/contrib/database/plugins.py:53
+#: src/baserow/contrib/database/plugins.py:74
+#: src/baserow/contrib/database/table/handler.py:411
+msgid "Active"
+msgstr "सक्रिय"
+
+#: src/baserow/contrib/database/plugins.py:70
+msgid "Projects"
+msgstr "प्रकल्प"
+
+#: src/baserow/contrib/database/plugins.py:73
+msgid "Started"
+msgstr "सुरु झाले"
+
+#: src/baserow/contrib/database/plugins.py:79
+msgid "Calculator"
+msgstr "कॅल्क्युलेटर"
+
+#: src/baserow/contrib/database/plugins.py:80
+msgid "Turing machine"
+msgstr "ट्युरिंग मशीन"
+
+#: src/baserow/contrib/database/plugins.py:81
+msgid "Computer architecture"
+msgstr "संगणक आर्किटेक्चर"
+
+#: src/baserow/contrib/database/plugins.py:82
+msgid "Cellular Automata"
+msgstr "सेल्युलर ऑटोमेटा"
+
+#: src/baserow/contrib/database/table/handler.py:251
+msgid "Grid"
+msgstr "ग्रिड"
+
+#: src/baserow/contrib/database/table/handler.py:313
+#, python-format
+msgid "Field %d"
+msgstr "फील्ड %d"

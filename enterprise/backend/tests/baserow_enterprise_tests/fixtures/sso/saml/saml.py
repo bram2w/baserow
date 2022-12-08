@@ -1,25 +1,32 @@
 import os
-from xml.etree import ElementTree
 
 from baserow_enterprise.sso.saml.models import SamlAuthProviderModel
 
 
-def load_test_idp_metadata():
+def read_xml_data_from_file(filename):
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    idp_test_metadata = ElementTree.parse(
-        os.path.join(dir_path, "idp_test_metadata.xml")
-    )
-    return ElementTree.tostring(idp_test_metadata.getroot()).decode("utf-8")
+    return open(os.path.join(dir_path, filename)).read().replace("\n", " ")
+
+
+def load_test_idp_metadata():
+    return read_xml_data_from_file("idp_test_metadata.xml")
+
+
+def load_valid_idp_metadata_and_response():
+    idp_valid_metadata = read_xml_data_from_file("idp_valid_metadata.xml")
+    valid_response = read_xml_data_from_file("idp_valid_response.bin")
+    return idp_valid_metadata, valid_response
 
 
 class SamlFixture:
-    test_idp_metadata = load_test_idp_metadata()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def get_test_saml_idp_metadata(self):
-        return self.test_idp_metadata
+        return load_test_idp_metadata()
+
+    def get_valid_saml_idp_metadata_and_response(self):
+        return load_valid_idp_metadata_and_response()
 
     def create_saml_auth_provider(self, **kwargs):
         if "domain" not in kwargs:

@@ -26,6 +26,17 @@
       <div class="context__menu-title">{{ table.name }} ({{ table.id }})</div>
       <ul class="context__menu">
         <li
+          v-for="(component, index) in additionalContextComponents"
+          :key="index"
+          @click="$refs.context.hide()"
+        >
+          <component
+            :is="component"
+            :table="table"
+            :database="database"
+          ></component>
+        </li>
+        <li
           v-if="
             $hasPermission(
               'database.table.run_export',
@@ -151,6 +162,20 @@ export default {
           this.database.group.id
         )
       )
+    },
+    additionalContextComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .reduce(
+          (components, plugin) =>
+            components.concat(
+              plugin.getAdditionalTableContextComponents(
+                this.database.group,
+                this.table
+              )
+            ),
+          []
+        )
+        .filter((component) => component !== null)
     },
   },
   methods: {

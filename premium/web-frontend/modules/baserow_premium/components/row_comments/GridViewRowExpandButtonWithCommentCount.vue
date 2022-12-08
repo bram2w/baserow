@@ -1,6 +1,14 @@
 <template functional>
   <GridViewRowExpandButton
-    v-if="!props.row || !props.row._.metadata.row_comment_count"
+    v-if="
+      !props.row ||
+      !props.row._.metadata.row_comment_count ||
+      !injections.$hasPermission(
+        'database.table.list_comments',
+        props.table,
+        props.groupId
+      )
+    "
     :row="props.row"
     v-on="listeners"
   >
@@ -24,5 +32,6 @@ export default {
   name: 'GridViewRowExpandButtonWithCommentCount',
   functional: true,
   components: { GridViewRowExpandButton },
+  inject: { $hasPermission: '$hasPermission' },
 }
 </script>

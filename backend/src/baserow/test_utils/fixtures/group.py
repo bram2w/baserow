@@ -24,9 +24,9 @@ class GroupFixtures:
                 group=group, user=user, permissions="MEMBER", order=0
             )
 
-        for user, permissions in custom_permissions:
+        for index, (user, permissions) in enumerate(custom_permissions):
             self.create_user_group(
-                group=group, user=user, permissions=permissions, order=0
+                group=group, user=user, permissions=permissions, order=index
             )
 
         return group

@@ -150,8 +150,8 @@
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
         "autoDocDescription": "Cette documentation est générée automatiquement à partir des table et des champs disponibles dans votre basse de données. Si vous effectuez des modifications sur la base, les tables ou bien sur les champs des tables, cela peut également modifier l'API. Par conséquent, assurez-vous de mettre à jour les clients de votre API dans ce cas.",
         "databaseId": "L´identifiant de la base est :",
-        "jsClient": "Exemple  JavaScript de la requete API:",
-        "pythonClient": "Example  en Python de la requete API  :"
+        "jsClient": "Exemple JavaScript de la requête d'API :",
+        "pythonClient": "Exemple en Python de la requête d'API :"
     },
     "apiDocsTableListFields": {
         "description": "Afin de lister les champs de la table {name} une requête de type {get} doit être envoyé auprès du point d'accès des champs de celle-ci. Le jeton d'authentification doit avoir les droits de création, modification et suppression afin de pouvoir lister les champs de la table.",
@@ -268,7 +268,7 @@
         "hideHiddenFields": "Masquer les champs cachés"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Ajouter une option"
+        "addOption": "Choisir une option"
     },
     "rowEditFieldFile": {
         "addFile": "Ajouter un fichier",
@@ -282,7 +282,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Ajouter un lien"
+        "addLink": "Choisir un lien"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "Choisissez un fichier CSV",
@@ -530,7 +530,7 @@
         "title": "API REST",
         "intro": "Après avoir créé votre base de données et une clé d'API dans votre {settingsLink} Baserow fourni ses propres API REST pour créer, lire, mettre à jour et supprimer des lignes.",
         "settings": "compte",
-        "selectApplicationTitle": "Choisissez une base de donnée :",
+        "selectApplicationTitle": "Choisissez une base de donnée :",
         "signIn": "S'identifier",
         "back": "Retourner à l'accueil"
     },
@@ -677,7 +677,7 @@
         "created": "créée"
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Ajouter un collaborateur"
+        "addCollaborator": "Choisir un collaborateur"
     },
     "gridViewFieldFile": {
         "dropHere": "Déposer ici",

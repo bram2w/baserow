@@ -11,11 +11,16 @@ from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import GroupActionScopeType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group
-from baserow.core.registries import object_scope_type_registry
+from baserow.core.registries import (
+    object_scope_type_registry,
+    permission_manager_type_registry,
+    subject_type_registry,
+)
 from baserow_enterprise.features import RBAC
-from baserow_enterprise.role.handler import USER_TYPE, RoleAssignmentHandler
+from baserow_enterprise.role.exceptions import CantLowerAdminsRoleOnChildException
+from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
-from baserow_enterprise.role.operations import AssignRoleGroupOperationType
+from baserow_enterprise.role.permission_manager import RolePermissionManagerType
 
 
 class AssignRoleActionType(ActionType):
@@ -35,7 +40,7 @@ class AssignRoleActionType(ActionType):
     def do(
         cls,
         user,
-        subject: AbstractUser,
+        subject,
         group: Group,
         role: Optional[Role] = None,
         scope: Optional[Any] = None,
@@ -52,9 +57,23 @@ class AssignRoleActionType(ActionType):
         :return: The created RoleAssignment if role is not `None` else `None`.
         """
 
+        if scope is None:
+            scope = group
+
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
+
+        role_permission_manager = permission_manager_type_registry.get_by_type(
+            RolePermissionManagerType
+        )
+
+        scope_type = object_scope_type_registry.get_by_model(scope)
         CoreHandler().check_permissions(
-            user, AssignRoleGroupOperationType.type, group=group, context=group
+            user,
+            role_permission_manager.role_assignable_object_map[scope_type.type][
+                "UPDATE"
+            ].type,
+            group=group,
+            context=scope,
         )
 
         role_assignment_handler = RoleAssignmentHandler()
@@ -62,6 +81,21 @@ class AssignRoleActionType(ActionType):
         previous_role = role_assignment_handler.get_current_role_assignment(
             subject, group, scope=scope
         )
+
+        def has_parent_with_admin_role():
+            parent = object_scope_type_registry.get_parent(scope)
+            return (
+                parent is not None
+                and role_assignment_handler.get_computed_role(
+                    group, subject, parent
+                ).uid
+                == role_assignment_handler.ADMIN_ROLE
+            )
+
+        # Check if the role assignment is not an exception for a scope under another
+        # scope targeted by an ADMIN role.
+        if role is not None and has_parent_with_admin_role():
+            raise CantLowerAdminsRoleOnChildException()
 
         role_assignment = role_assignment_handler.assign_role(
             subject,
@@ -71,12 +105,13 @@ class AssignRoleActionType(ActionType):
         )
 
         scope_type = object_scope_type_registry.get_by_model(scope).type
+        subject_type = subject_type_registry.get_by_model(subject).type
 
         cls.register_action(
             user=user,
             params=cls.Params(
                 subject.id,
-                USER_TYPE,
+                subject_type,
                 group.id,
                 role.uid if role else None,
                 previous_role.role.uid if previous_role else None,
@@ -94,21 +129,31 @@ class AssignRoleActionType(ActionType):
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
 
+        role_assignment_handler = RoleAssignmentHandler()
         group = Group.objects.get(id=params.group_id)
+        scope = role_assignment_handler.get_scope(params.scope_id, params.scope_type)
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
-        CoreHandler().check_permissions(
-            user, AssignRoleGroupOperationType.type, group=group, context=group
+        role_permission_manager = permission_manager_type_registry.get_by_type(
+            RolePermissionManagerType
         )
 
-        role_assignment_handler = RoleAssignmentHandler()
+        scope_type = object_scope_type_registry.get_by_model(scope)
+        CoreHandler().check_permissions(
+            user,
+            role_permission_manager.role_assignable_object_map[scope_type.type][
+                "UPDATE"
+            ].type,
+            group=group,
+            context=scope,
+        )
+
         subject = role_assignment_handler.get_subject(
             params.subject_id, params.subject_type
         )
-        scope = role_assignment_handler.get_scope(params.scope_id, params.scope_type)
 
         role = (
-            Role.objects.get(uid=params.original_role_uid)
+            role_assignment_handler.get_role_by_uid(params.original_role_uid)
             if params.original_role_uid
             else None
         )
@@ -123,21 +168,35 @@ class AssignRoleActionType(ActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
 
+        role_assignment_handler = RoleAssignmentHandler()
+
         group = Group.objects.get(id=params.group_id)
+        scope = role_assignment_handler.get_scope(params.scope_id, params.scope_type)
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
-        CoreHandler().check_permissions(
-            user, AssignRoleGroupOperationType.type, group=group, context=group
+        scope_type = object_scope_type_registry.get_by_model(scope)
+        role_permission_manager = permission_manager_type_registry.get_by_type(
+            RolePermissionManagerType
         )
 
-        role_assignment_handler = RoleAssignmentHandler()
+        CoreHandler().check_permissions(
+            user,
+            role_permission_manager.role_assignable_object_map[scope_type.type][
+                "UPDATE"
+            ].type,
+            group=group,
+            context=scope,
+        )
 
         subject = role_assignment_handler.get_subject(
             params.subject_id, params.subject_type
         )
-        scope = role_assignment_handler.get_scope(params.scope_id, params.scope_type)
 
-        role = Role.objects.get(uid=params.role_uid) if params.role_uid else None
+        role = (
+            role_assignment_handler.get_role_by_uid(params.role_uid)
+            if params.role_uid
+            else None
+        )
 
         role_assignment_handler.assign_role(
             subject,

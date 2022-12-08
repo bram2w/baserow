@@ -1,5 +1,5 @@
 from io import BytesIO
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -7,6 +7,7 @@ from baserow.core.utils import (
     ChildProgressBuilder,
     MirrorDict,
     Progress,
+    atomic_if_not_already,
     dict_to_object,
     extract_allowed,
     find_unused_name,
@@ -21,6 +22,7 @@ from baserow.core.utils import (
     to_pascal_case,
     to_snake_case,
     truncate_middle,
+    unique_dicts_in_list,
 )
 
 
@@ -355,3 +357,35 @@ def test_mirror_dict():
     assert mirror_dict.get("test") == "test"
     assert mirror_dict.get(1) == 1
     assert mirror_dict.get("test", default="abc") == "test"
+
+
+@patch("django.db.transaction.atomic")
+@patch("django.db.transaction.get_autocommit", return_value=True)
+def test_atomic_if_not_already_autocommit_true(*mocks):
+    mock_get_autocommit, mock_atomic = mocks
+    with atomic_if_not_already():
+        mock_atomic.assert_called_once()
+
+
+@patch("django.db.transaction.atomic")
+@patch("django.db.transaction.get_autocommit", return_value=False)
+def test_atomic_if_not_already_autocommit_false(*mocks):
+    mock_get_autocommit, mock_atomic = mocks
+    with atomic_if_not_already():
+        mock_atomic.assert_not_called()
+
+
+def test_unique_dicts_in_list():
+    assert unique_dicts_in_list([{"a": "a"}]) == ([{"a": "a"}], [])
+    assert unique_dicts_in_list([{"a": "a"}, {"a": "a"}]) == (
+        [{"a": "a"}],
+        [{"a": "a"}],
+    )
+    assert unique_dicts_in_list(
+        [{"a": "b", "b": "a"}, {"a": "a", "b": "a"}], unique_fields=["b"]
+    ) == ([{"a": "b", "b": "a"}], [{"a": "a", "b": "a"}])
+
+    assert unique_dicts_in_list([]) == ([], [])
+
+    with pytest.raises(ValueError):
+        assert unique_dicts_in_list([{"a": "a"}, {"a": "a"}], unique_fields=["b"])

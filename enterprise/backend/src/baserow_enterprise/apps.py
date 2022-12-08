@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db import transaction
 from django.db.models.signals import post_migrate
 
 from tqdm import tqdm
@@ -9,7 +10,10 @@ class BaserowEnterpriseConfig(AppConfig):
 
     def ready(self):
         from baserow.api.user.registries import member_data_registry
-        from baserow.core.action.registries import action_type_registry
+        from baserow.core.action.registries import (
+            action_scope_registry,
+            action_type_registry,
+        )
         from baserow.core.registries import (
             object_scope_type_registry,
             operation_type_registry,
@@ -20,6 +24,7 @@ class BaserowEnterpriseConfig(AppConfig):
             EnterpriseMemberTeamsDataType,
         )
         from baserow_enterprise.role.actions import AssignRoleActionType
+        from baserow_enterprise.scopes import TeamsActionScopeType
         from baserow_enterprise.teams.actions import (
             CreateTeamActionType,
             CreateTeamSubjectActionType,
@@ -47,7 +52,15 @@ class BaserowEnterpriseConfig(AppConfig):
 
         from .plugins import EnterprisePlugin
         from .role.member_data_types import EnterpriseRolesDataType
-        from .role.operations import AssignRoleGroupOperationType
+        from .role.operations import (
+            AssignRoleGroupOperationType,
+            ReadRoleDatabaseOperationType,
+            ReadRoleGroupOperationType,
+            ReadRoleTableOperationType,
+            UpdateRoleDatabaseOperationType,
+            UpdateRoleTableOperationType,
+        )
+        from .teams.subjects import TeamSubjectType
 
         plugin_registry.register(EnterprisePlugin())
 
@@ -66,6 +79,8 @@ class BaserowEnterpriseConfig(AppConfig):
         object_scope_type_registry.register(TeamObjectScopeType())
         object_scope_type_registry.register(TeamSubjectObjectScopeType())
 
+        action_scope_registry.register(TeamsActionScopeType())
+
         operation_type_registry.register(CreateTeamOperationType())
         operation_type_registry.register(ReadTeamOperationType())
         operation_type_registry.register(ListTeamsOperationType())
@@ -76,7 +91,16 @@ class BaserowEnterpriseConfig(AppConfig):
         operation_type_registry.register(ListTeamSubjectsOperationType())
         operation_type_registry.register(DeleteTeamSubjectOperationType())
         operation_type_registry.register(AssignRoleGroupOperationType())
+        operation_type_registry.register(ReadRoleGroupOperationType())
         operation_type_registry.register(RestoreTeamOperationType())
+        operation_type_registry.register(ReadRoleDatabaseOperationType())
+        operation_type_registry.register(UpdateRoleDatabaseOperationType())
+        operation_type_registry.register(ReadRoleTableOperationType())
+        operation_type_registry.register(UpdateRoleTableOperationType())
+
+        from baserow.core.registries import subject_type_registry
+
+        subject_type_registry.register(TeamSubjectType())
 
         from baserow.core.registries import permission_manager_type_registry
 
@@ -119,6 +143,7 @@ class BaserowEnterpriseConfig(AppConfig):
         import baserow_enterprise.ws.signals  # noqa: F
 
 
+@transaction.atomic
 def sync_default_roles_after_migrate(sender, **kwargs):
     from .role.default_roles import default_roles
 
@@ -128,9 +153,16 @@ def sync_default_roles_after_migrate(sender, **kwargs):
         try:
             Operation = apps.get_model("core", "Operation")
             Role = apps.get_model("baserow_enterprise", "Role")
+            GroupUser = apps.get_model("core", "GroupUser")
         except LookupError:
             print("Skipping role creation as related models does not exist.")
         else:
+            # Migrate from NO_ROLE to NO_ACCESS
+            Role.objects.filter(uid="NO_ROLE").update(uid="NO_ACCESS")
+            GroupUser.objects.filter(permissions="NO_ROLE").update(
+                permissions="NO_ACCESS"
+            )
+
             for role_name, operations in tqdm(
                 default_roles.items(), desc="Syncing default roles"
             ):
@@ -140,8 +172,11 @@ def sync_default_roles_after_migrate(sender, **kwargs):
                 )
                 role.operations.all().delete()
 
+                to_add = []
                 for operation_type in operations:
                     operation, _ = Operation.objects.get_or_create(
                         name=operation_type.type
                     )
-                    role.operations.add(operation)
+                    to_add.append(operation)
+
+                role.operations.add(*to_add)

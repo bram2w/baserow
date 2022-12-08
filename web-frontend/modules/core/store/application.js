@@ -144,10 +144,7 @@ export const actions = {
    * Creates a new application with the given type and values for the currently
    * selected group.
    */
-  async create(
-    { commit, getters, rootGetters, dispatch },
-    { type, group, values }
-  ) {
+  async create({ dispatch }, { type, group, values, initWithData = true }) {
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -163,29 +160,31 @@ export const actions = {
 
     const postData = clone(values)
     postData.type = type
+    postData.init_with_data = initWithData
 
     const { data } = await ApplicationService(this.$client).create(
       group.id,
       postData
     )
-    dispatch('forceCreate', data)
+    return dispatch('forceCreate', data)
   },
   /**
    * Forcefully create an item in the store without making a call to the server.
    */
   forceCreate({ commit, state }, data) {
-    populateApplication(data, this.$registry)
+    const application = populateApplication(data, this.$registry)
     const index = state.items.findIndex((item) => item.id === data.id)
     if (index === -1) {
       commit('ADD_ITEM', data)
     } else {
       commit('UPDATE_ITEM', { id: data.id, values: data })
     }
+    return application
   },
   /**
    * Updates the values of an existing application.
    */
-  async update({ commit, dispatch, getters }, { application, values }) {
+  async update({ dispatch }, { application, values }) {
     const { data } = await ApplicationService(this.$client).update(
       application.id,
       values

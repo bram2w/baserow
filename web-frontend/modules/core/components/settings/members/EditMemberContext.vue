@@ -14,19 +14,19 @@
             $hasPermission('group_user.delete', member, group.id)
           "
         >
-          <a
-            :class="{
-              'context__menu-item--loading': removeLoading,
-            }"
-            class="color-error"
-            @click.prevent="remove(member)"
-          >
+          <a class="color-error" @click.prevent="showRemoveModal">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             {{ $t('membersSettings.membersTable.actions.remove') }}
           </a>
         </li>
       </ul>
     </template>
+    <RemoveFromGroupModal
+      ref="removeFromGroupModal"
+      :group="group"
+      :member="member"
+      @remove-user="$emit('remove-user', $event)"
+    ></RemoveFromGroupModal>
   </Context>
 </template>
 
@@ -34,11 +34,13 @@
 import { mapGetters } from 'vuex'
 
 import context from '@baserow/modules/core/mixins/context'
-import { notifyIf } from '@baserow/modules/core/utils/error'
-import GroupService from '@baserow/modules/core/services/group'
+import RemoveFromGroupModal from '@baserow/modules/core/components/group/RemoveFromGroupModal'
 
 export default {
   name: 'EditMemberContext',
+  components: {
+    RemoveFromGroupModal,
+  },
   mixins: [context],
   props: {
     group: {
@@ -50,42 +52,19 @@ export default {
       type: Object,
     },
   },
-  data() {
-    return {
-      removeLoading: false,
-    }
-  },
   computed: {
     ...mapGetters({
       userId: 'auth/getUserId',
     }),
   },
   methods: {
+    showRemoveModal() {
+      this.hide()
+      this.$refs.removeFromGroupModal.show()
+    },
     async copyEmail({ email }) {
       await navigator.clipboard.writeText(email)
       this.$refs.emailCopied.show()
-    },
-    async remove(user) {
-      if (this.removeLoading) {
-        return
-      }
-
-      this.removeLoading = true
-
-      try {
-        await GroupService(this.$client).deleteUser(user.id)
-        await this.$store.dispatch('group/forceDeleteGroupUser', {
-          groupId: this.group.id,
-          id: user.id,
-          values: { user_id: this.userId },
-        })
-        this.$emit('refresh')
-        this.hide()
-      } catch (error) {
-        notifyIf(error)
-      } finally {
-        this.removeLoading = false
-      }
     },
   },
 }

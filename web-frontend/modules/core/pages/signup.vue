@@ -73,7 +73,7 @@ export default {
   layout: 'login',
   async asyncData({ app, route, store, redirect }) {
     if (store.getters['auth/isAuthenticated']) {
-      return redirect('dashboard')
+      return redirect({ name: 'dashboard' })
     }
     await store.dispatch('authProvider/fetchLoginOptions')
     return await groupInvitationToken.asyncData({ route, app })

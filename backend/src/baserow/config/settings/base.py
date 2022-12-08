@@ -281,7 +281,7 @@ CLIENT_SESSION_ID_HEADER = "ClientSessionId"
 MAX_CLIENT_SESSION_ID_LENGTH = 256
 
 CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER = "ClientUndoRedoActionGroupId"
-MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP = 2
+MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP = 20
 WEBSOCKET_ID_HEADER = "WebsocketId"
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
@@ -318,7 +318,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.13.1",
+    "VERSION": "1.13.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},

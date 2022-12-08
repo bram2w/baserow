@@ -64,6 +64,8 @@
             <component
               :is="rowExpandButton"
               :row="row"
+              :group-id="groupId"
+              :table="view.table"
               @edit-modal="$emit('edit-modal', row)"
             ></component>
             <component
@@ -120,7 +122,16 @@ export default {
   name: 'GridViewRow',
   components: { GridViewRowExpandButton, GridViewCell, RecursiveWrapper },
   mixins: [gridViewHelpers],
+  provide() {
+    return {
+      $hasPermission: this.$hasPermission,
+    }
+  },
   props: {
+    view: {
+      type: Object,
+      required: true,
+    },
     groupId: {
       type: Number,
       required: true,

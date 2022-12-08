@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Tuple, Type
 
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
@@ -99,7 +99,7 @@ class AuthProviderHandler:
     @classmethod
     def get_or_create_user_and_sign_in_via_auth_provider(
         cls, user_info: UserInfo, auth_provider: Type[AuthProviderModel]
-    ) -> AbstractUser:
+    ) -> Tuple[AbstractUser, bool]:
         """
         Gets from the database if present or creates a user if not, based on the
         user info that was received from the identity provider.
@@ -108,9 +108,10 @@ class AuthProviderHandler:
             to the UserHandler().create_user() method.
         :param auth_provider: The authentication provider that was used to
             authenticate the user.
-        :raises UserAlreadyExists: When the user already exists but has been
+        :raises DeactivatedUserException: If the user exists but has been
             disabled from an admin.
-        :return: The user that was created or updated.
+        :return: The user that was created or retrieved and a boolean flag set
+            to True if the user has been created, False otherwise.
         """
 
         user_handler = UserHandler()
@@ -127,6 +128,7 @@ class AuthProviderHandler:
                     user_info.group_invitation_token
                 )
                 core_handler.accept_group_invitation(user, invitation)
+            created = False
         except UserNotFound:
             user = user_handler.create_user(
                 name=user_info.name,
@@ -136,8 +138,9 @@ class AuthProviderHandler:
                 group_invitation_token=user_info.group_invitation_token,
                 auth_provider=auth_provider,
             )
+            created = True
 
-        return user
+        return user, created
 
     @staticmethod
     def get_next_provider_id() -> int:

@@ -36,16 +36,20 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
       (column) => column.key === 'permissions'
     )
     if (existingRoleColumnIndex !== -1) {
-      columns[existingRoleColumnIndex] = new CrudTableColumn(
-        key,
-        this.app.i18n.t('membersSettings.membersTable.columns.role'),
-        FieldComponent,
-        true,
-        false,
-        false,
-        {
-          groupId: group.id,
-        }
+      columns.splice(
+        existingRoleColumnIndex,
+        1,
+        new CrudTableColumn(
+          key,
+          this.app.i18n.t('membersSettings.membersTable.columns.role'),
+          FieldComponent,
+          true,
+          false,
+          false,
+          {
+            groupId: group.id,
+          }
+        )
       )
     }
     return columns

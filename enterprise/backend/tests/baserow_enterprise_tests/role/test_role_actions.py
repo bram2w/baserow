@@ -10,7 +10,7 @@ from baserow.core.action.scopes import GroupActionScopeType
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 from baserow_enterprise.role.actions import AssignRoleActionType
 from baserow_enterprise.role.models import Role, RoleAssignment
-from baserow_enterprise.role.operations import AssignRoleGroupOperationType
+from baserow_enterprise.role.operations import UpdateRoleTableOperationType
 
 
 @pytest.fixture(autouse=True)
@@ -28,9 +28,13 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture, synced_roles
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(
+        user=user,
+        custom_permissions=[(user2, "VIEWER")],
+    )
+    database = data_fixture.create_database_application(group=group)
 
-    table = data_fixture.create_database_table(user=user)
+    table = data_fixture.create_database_table(database=database, user=user)
 
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -39,7 +43,7 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture, synced_roles
     )
 
     mock_check_permissions.assert_called_with(
-        user, AssignRoleGroupOperationType.type, group=group, context=group
+        user, UpdateRoleTableOperationType.type, group=group, context=table
     )
 
     assert RoleAssignment.objects.count() == 1
@@ -51,7 +55,7 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture, synced_roles
     )
 
     mock_check_permissions.assert_called_with(
-        user, AssignRoleGroupOperationType.type, group=group, context=group
+        user, UpdateRoleTableOperationType.type, group=group, context=table
     )
 
     assert_undo_redo_actions_are_valid(actions_undone, [AssignRoleActionType])
@@ -65,9 +69,13 @@ def test_can_undo_redo_assign_table(mock_check_permissions, data_fixture, synced
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(
+        user=user,
+        custom_permissions=[(user2, "VIEWER")],
+    )
+    database = data_fixture.create_database_application(group=group)
 
-    table = data_fixture.create_database_table(user=user)
+    table = data_fixture.create_database_table(database=database, user=user)
 
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -91,7 +99,7 @@ def test_can_undo_redo_assign_table(mock_check_permissions, data_fixture, synced
     assert_undo_redo_actions_are_valid(actions_redone, [AssignRoleActionType])
 
     mock_check_permissions.assert_called_with(
-        user, AssignRoleGroupOperationType.type, group=group, context=group
+        user, UpdateRoleTableOperationType.type, group=group, context=table
     )
 
     assert RoleAssignment.objects.count() == 1

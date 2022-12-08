@@ -119,7 +119,8 @@
     },
     "createGroupModal": {
         "createNew": "Crear grupo nuevo",
-        "add": "Añadir grupo"
+        "add": "Añadir grupo",
+        "defaultName": "Grupo sin titulo"
     },
     "templateCategories": {
         "search": "Buscar plantillas",
@@ -196,19 +197,20 @@
         "error": "Algo salió mal al cargar la página. Nuestros desarrolladores han sido notificados del problema. Intente actualizar o volver al panel de control.",
         "backDashboard": "Volver al tablero",
         "backLogin": "Atrás para iniciar sesión",
-        "wrong": "Algo salió mal"
+        "wrong": "Algo salió mal",
+        "refresh": "Actualizar la página"
     },
     "dashboard": {
         "title": "Tablero",
         "alertTitle": "¡Necesitamos tu ayuda!",
-        "alertText": "Si considera que Baserow es útil, le agradecemos enormemente que nos patrocine, protagonice o comparta. ¡Al patrocinarnos en GitHub, obtendrá acceso temprano a las funciones premium!",
+        "alertText": "Si considera que Baserow es útil, le agradeceríamos que nos haga participes o compartiera. Al compartir Baserow, nos ayuda a mejorar el producto y hacerlo más útil para usted.",
         "tweetContent": "¡Eche un vistazo a @baserow, una herramienta de base de datos sin código de código abierto y una alternativa a Airtable!",
         "redditTitle": "'Baserow: una base de datos sin código de código abierto",
         "noGroupTitle": "No se encontraron grupos",
         "noGroupText": "No eres miembro de ningún grupo. Las aplicaciones, como las bases de datos, pertenecen a un grupo, por lo que, para crearlas, debe crear un grupo.",
         "createGroup": "Crea un grupo",
         "becomeGithubSponsor": "Conviértase en un patrocinador de GitHub",
-        "starOnGitlab": "Destacarnos en Gitlab",
+        "starOnGitlab": "Márcanos con una estrella en GitLab",
         "shareOnTwitter": "Tuitea sobre Baserow",
         "shareOnReddit": "Compartir en Reddit",
         "shareOnFacebook": "Compartir en Facebook",
@@ -216,7 +218,7 @@
     },
     "login": {
         "title": "Acceso",
-        "forgotPassword": "Olvidó contraseña",
+        "forgotPassword": "¿Se te olvidó tu contraseña?",
         "passwordPlaceholder": "Introduce tu contraseña...",
         "signUpText": "¿No tienes cuenta?",
         "signUp": "Inscribirse",
@@ -309,9 +311,9 @@
         "fieldsDescription": "Todos los campos están en la forma.",
         "prefillInfoLink": "Rellenar los valores dinámicamente",
         "modal": {
-            "title": "Rellenar los valores dinámicamente",
+            "title": "Rellenar u ocultar campos de forma dinámica",
             "descriptionPartOne": "Las formas pueden ser pre-rellenadas para ayudar al usuario rellenar la forma más rápido.",
-            "descriptionPartTwo": "Todos los campos disponibles en la forma se pueden pre-llenar.",
+            "descriptionPartTwo": "Todos los campos disponibles en el formulario se pueden rellenar previamente.",
             "howToPrefill": {
                 "title": "Cómo pre-llenar una forma",
                 "description": "Si quieres pre-llenar una forma con datos, puedes hacerlo a través de parámetros de consulta añadidos a la dirección pública de la forma. Estos parámetros de consulta tienen el prefijo `pre-llenar` para evitar cualquier colisión con posibles parámetros de consulta futuros."
@@ -359,8 +361,13 @@
                     "description": "Un campo de fecha puede aceptar una fecha en los siguientes formatos y utilizará el formato de fecha del campo para analizar la fecha.",
                     "codeSnippet": "\n// Normas\nISO_8601\n\n// Formatos generales\n'AAAA-MM-DD',\n'AAAA-MM-DD hh:mm A',\n'AAAA-MM-DD HH:mm',\n\n// UE\n'DD/MM/AAAA',\n'DD/MM/AAAA hh:mm A',\n\"DD/MM/AAAA HH:mm\"\n\n// US\n'MM/DD/AAAA',\n'MM/DD/AAAA hh:mm A',\n'MM/DD/AAAA HH:mm'"
                 }
+            },
+            "howToHide": {
+                "title": "Cómo ocultar un campo",
+                "description": "Si desea ocultar el campo dinámicamente, puede hacerlo a través de los parámetros de consulta agregados a la URL pública. Estos parámetros de consulta tienen el prefijo `hide_` para evitar errores con posibles parámetros de consulta futuros."
             }
-        }
+        },
+        "prefillOrHideInfoLink": "Rellenar u ocultar dinámicamente"
     },
     "deleteAccountSettings": {
         "title": "Borrar cuenta",
@@ -427,7 +434,7 @@
         "membersTable": {
             "columns": {
                 "email": "Correo electrónico",
-                "role": "Función",
+                "role": "Rol predeterminado",
                 "name": "Nombre"
             },
             "actions": {
@@ -439,7 +446,7 @@
         },
         "invitesTable": {
             "columns": {
-                "role": "Función",
+                "role": "Papel por defecto",
                 "message": "Mensaje",
                 "email": "Correo electrónico"
             },
@@ -461,5 +468,16 @@
         },
         "membersTabTitle": "Miembros",
         "invitesTabTitle": "Invitaciones"
+    },
+    "UserSessionExpiredNotification": {
+        "title": "La sesión ha caducado",
+        "content": "Se ha cerrado la sesión porque el token de autenticación ha caducado. Por favor, inicie sesión de nuevo."
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "Invita a {count}"
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Encuentra...",
+        "selectedAmountLabel": "{count} seleccionado"
     }
 }

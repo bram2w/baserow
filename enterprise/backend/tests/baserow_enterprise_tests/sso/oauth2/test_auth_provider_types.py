@@ -299,6 +299,27 @@ def test_get_user_info_from_oauth_json_response(
     assert user_info.language == query_params["language"]
     assert original == query_params["original"]
 
+    # missing name
+    oauth_response_data = {
+        "email": "testuser@example.com",
+    }
+
+    user_info, original = provider_type_instance.get_user_info_from_oauth_json_response(
+        oauth_response_data, session
+    )
+    assert user_info.name == oauth_response_data["email"]
+
+    # empty name
+    oauth_response_data = {
+        "email": "testuser@example.com",
+        "name": "   ",
+    }
+
+    user_info, original = provider_type_instance.get_user_info_from_oauth_json_response(
+        oauth_response_data, session
+    )
+    assert user_info.name == oauth_response_data["email"]
+
 
 def test_push_pop_request_data_to_session():
     session = SessionBase()

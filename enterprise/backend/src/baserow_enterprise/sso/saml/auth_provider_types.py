@@ -16,7 +16,7 @@ from baserow_enterprise.api.sso.saml.validators import (
     validate_saml_metadata,
     validate_unique_saml_domain,
 )
-from baserow_enterprise.api.sso.utils import get_default_redirect_frontend_url
+from baserow_enterprise.api.sso.utils import get_frontend_default_redirect_url
 from baserow_enterprise.sso.saml.exceptions import SamlProviderForDomainAlreadyExists
 from baserow_enterprise.sso.utils import is_sso_feature_active
 
@@ -101,6 +101,6 @@ class SamlAuthProviderType(AuthProviderType):
 
     def export_serialized(self) -> Dict[str, Any]:
         serialized_data = super().export_serialized()
-        serialized_data["relay_state_url"] = get_default_redirect_frontend_url()
+        serialized_data["relay_state_url"] = get_frontend_default_redirect_url()
         serialized_data["acs_url"] = self.get_acs_absolute_url()
         return serialized_data

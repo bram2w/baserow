@@ -4,9 +4,51 @@
         "sidebarTooltip": "Your account has access to the enterprise features globally",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Deactivated",
+        "deactivated": "Available in enterprise version",
         "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any group then they will use a paid seat automatically.",
         "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each groups members page."
+    },
+    "trashType": {
+        "team": "team"
+    },
+    "createTeamModal": {
+        "title": "Create team",
+        "invalidNameTitle": "Please use a different name",
+        "invalidNameMessage": "This team name is already in use in the specified group."
+    },
+    "updateTeamModal": {
+        "title": "Update {teamName}",
+        "invalidNameTitle": "Please use a different name",
+        "invalidNameMessage": "This team name is already in use in the specified group."
+    },
+    "manageTeamModals": {
+        "subheading": "Teams allow you to give or restrict permissions in bulk to multiple people."
+    },
+    "manageTeamForm": {
+        "submit": "Save",
+        "nameTitle": "Name",
+        "roleTitle": "Default role",
+        "inviteMembers": "Add members",
+        "membersTitle": "Members",
+        "noSubjectsSelected": "Click '{buttonLabel}' to optionally add team users."
+    },
+    "editTeamContext": {
+        "edit": "Edit team",
+        "remove": "Delete team"
+    },
+    "teamsTable": {
+        "title": "{teamCount} teams in {groupName}",
+        "createNew": "Create team",
+        "nameColumn": "Name",
+        "createdColumn": "Created on",
+        "subjectsColumn": "Members",
+        "roleColumn": "Default role"
+    },
+    "subjectSampleField": {
+        "titleAttr": "{subjectCount} members in this team."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Teams"
     },
     "adminType": {
         "Authentication": "Authentication"
@@ -84,6 +126,67 @@
         "viewer": {
             "name": "Viewer",
             "description": "Can only read data."
+        },
+        "noRole": {
+            "name": "No access",
+            "description": "Can't access anything."
+        }
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Database",
+        "memberRolesTableTabTitle": "Current Table",
+        "error": {
+            "title": "Could not fetch data",
+            "description": "An error occurred while fetching the member data."
+        }
+    },
+    "memberRolesTab": {
+        "database": {
+            "title": "{name} database",
+            "selectMembers": "Select members",
+            "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
+            "onlyYouHaveAccess": "Only you can access this database."
+        },
+        "table": {
+            "title": "{name} table",
+            "selectMembers": "Select members",
+            "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
+            "onlyYouHaveAccess": "Only you can access this table."
+        }
+    },
+    "memberRolesShareToggle": {
+        "label": "Share with everyone at {name}",
+        "subLabel": "{totalUserAmount} workspace members"
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Manage members"
+    },
+    "memberRolesTableContexItem": {
+        "label": "Manage members"
+    },
+    "memberRolesMembersList": {
+        "remove": "Remove",
+        "teamMembersCount": "{count} team members"
+    },
+    "roleAssignmentModal": {
+        "membersTab": "Members",
+        "teamsTab": "Teams",
+        "subjectTypeNameMembers": "members",
+        "subjectTypeNameTeams": "teams"
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Find members...",
+        "selectedAmountLabel": "{count} members selected"
+    },
+    "selectTeamsList": {
+        "searchPlaceholder": "Find teams...",
+        "selectedAmountLabel": "{count} teams selected"
+    },
+    "selectSubjectsListFooter": {
+        "invite": "Invite {count} {type}",
+        "types": {
+            "members": "members",
+            "teams": "teams"
         }
     },
     "oauthSettingsForm": {

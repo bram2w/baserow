@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Dict, Union
+from typing import Dict, List, Optional, Union
 
 from django.contrib.auth.models import AbstractUser
 
@@ -8,6 +8,8 @@ from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.models import Group
 from baserow.core.trash.handler import TrashHandler
 from baserow_enterprise.models import Team, TeamSubject
+from baserow_enterprise.role.handler import RoleAssignmentHandler
+from baserow_enterprise.role.models import Role
 from baserow_enterprise.scopes import TeamsActionScopeType
 from baserow_enterprise.teams.handler import TeamHandler
 
@@ -20,25 +22,38 @@ class CreateTeamActionType(ActionType):
         name: str
         team_id: int
         group_id: int
+        subjects: List[Dict]
 
     @classmethod
-    def do(cls, user: AbstractUser, name: str, group: Group) -> Team:
+    def do(
+        cls,
+        user: AbstractUser,
+        name: str,
+        group: Group,
+        subjects: Optional[List[Dict]] = None,
+        default_role: Optional[Role] = None,
+    ) -> Team:
         """
         Creates a new team for an existing user. See
-        baserow_enterprise.teams.handler.TeamHandler.create_group
+        baserow_enterprise.teams.handler.TeamHandler.create_team
         for more details. Undoing this action deletes the created team,
         redoing it restores it from the trash.
 
         :param user: The user creating the team.
         :param name: The name to give the team.
         :param group: The group to create the team in.
+        :param subjects: An array of subject ID/type objects.
+        :param default_role: The default role to apply to the workspace.
         """
 
-        team = TeamHandler().create_team(user, name, group)
+        if subjects is None:
+            subjects = []
+
+        team = TeamHandler().create_team(user, name, group, subjects, default_role)
 
         cls.register_action(
             user=user,
-            params=cls.Params(team.name, team.id, group.id),
+            params=cls.Params(team.name, team.id, group.id, subjects),
             scope=cls.scope(team.group_id),
         )
         return team
@@ -77,9 +92,19 @@ class UpdateTeamActionType(ActionType):
         original_name: str
         name: str
         group_id: int
+        subjects: List[Dict]
+        original_default_role_uid: Union[str, None]
+        default_role_uid: Union[str, None]
 
     @classmethod
-    def do(cls, user: AbstractUser, team: Team, name: str) -> Team:
+    def do(
+        cls,
+        user: AbstractUser,
+        team: Team,
+        name: str,
+        subjects: Optional[List[Dict]] = None,
+        default_role: Optional[Role] = None,
+    ) -> Team:
         """
         Updates an existing team instance.
         See baserow_enterprise.teams.handler.TeamHandler.update_team
@@ -89,17 +114,34 @@ class UpdateTeamActionType(ActionType):
         :param user: The user on whose behalf the team is updated.
         :param team: The team instance that needs to be updated.
         :param name: The new name of the team.
+        :param subjects: An array of subject ID/type objects.
+        :param default_role: The default role to apply to the workspace.
         :raises ValueError: If one of the provided parameters is invalid.
         :return: The updated team instance.
         """
 
-        original_name = team.name
+        if subjects is None:
+            subjects = []
 
-        team = TeamHandler().update_team(user, team, name)
+        # Stash the original name and default role.
+        original_name = team.name
+        original_default_role_uid = team.default_role_uid
+
+        default_role_uid = getattr(default_role, "uid", None)
+
+        team = TeamHandler().update_team(user, team, name, subjects, default_role)
 
         cls.register_action(
             user=user,
-            params=cls.Params(team.id, original_name, name, team.group_id),
+            params=cls.Params(
+                team.id,
+                original_name,
+                name,
+                team.group_id,
+                subjects,
+                original_default_role_uid,
+                default_role_uid,
+            ),
             scope=cls.scope(team.group_id),
         )
 
@@ -112,12 +154,20 @@ class UpdateTeamActionType(ActionType):
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
         team = TeamHandler().get_team(user, params.team_id)
-        TeamHandler().update_team(user, team, params.original_name)
+        original_role = params.original_default_role_uid
+        if original_role:
+            original_role = RoleAssignmentHandler().get_role_by_uid(original_role)
+        TeamHandler().update_team(
+            user, team, params.original_name, default_role=original_role
+        )
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         team = TeamHandler().get_team(user, params.team_id)
-        TeamHandler().update_team(user, team, params.new_name)
+        new_role = params.default_role_uid
+        if new_role:
+            new_role = RoleAssignmentHandler().get_role_by_uid(new_role)
+        TeamHandler().update_team(user, team, params.name, default_role=new_role)
 
 
 class DeleteTeamActionType(ActionType):
@@ -214,7 +264,8 @@ class CreateTeamSubjectActionType(ActionType):
         params: Params,
         action_to_undo: Action,
     ):
-        TeamHandler().delete_subject_by_id(user, params.subject_id)
+        team = TeamHandler().get_team(user, params.team_id)
+        TeamHandler().delete_subject_by_id(user, params.subject_id, team)
 
     @classmethod
     def redo(
@@ -286,4 +337,5 @@ class DeleteTeamSubjectActionType(ActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
-        TeamHandler().delete_subject_by_id(user, params.subject_id)
+        team = TeamHandler().get_team(user, params.team_id)
+        TeamHandler().delete_subject_by_id(user, params.subject_id, team)

@@ -196,7 +196,7 @@
         "premiumFeatures": "Premium-Funktionen"
     },
     "license": {
-        "title": "{product_code} Plan",
+        "title": "{name} Plan",
         "users": "Benutzer",
         "description": "Wählen Sie die Benutzer, die den Plan {product_code} verwenden können. Diese Lizenz erlaubt es Ihnen, {product_code} für maximal {seats} Benutzer zu gewähren.",
         "seatLeft": "Sie haben keine Plätze mehr frei|Sie haben noch einen Platz frei|Sie haben noch {count} Plätze frei",
@@ -224,7 +224,10 @@
         "disconnectDescription": "Wenn Sie diese Lizenz trennen, während sie aktiv ist, haben die zugehörigen Benutzer keinen Zugriff mehr auf den Plan. Damit wird die Lizenz effektiv entfernt. Bitte kontaktieren Sie unser Support-Team unter {contact}, wenn Sie diese Lizenz in einer anderen selbst gehosteten Instanz verwenden möchten.",
         "contactSalesMoreSeats": "Kontaktieren Sie den Vertrieb für weitere Plätze",
         "moreSeatsNeededTitle": "Mehr Sitze erforderlich",
-        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} bezahlte Plätze und {free_users_count} freie Plätze in Benutzung"
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} bezahlte Plätze und {free_users_count} freie Plätze in Benutzung",
+        "premiumFeatureName": "Premium",
+        "enterpriseFeatureName": "Enterprise",
+        "supportFeatureName": "Support"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Linker Rand",

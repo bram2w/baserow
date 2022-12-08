@@ -25,16 +25,16 @@
           {{ $t('membersSettings.membersTable.inviteMember') }}
         </div>
       </template>
-      <template #menus>
+      <template #menus="slotProps">
         <EditMemberContext
           ref="editMemberContext"
           :group="group"
           :member="editMember"
-          @refresh="refresh"
+          @remove-user="slotProps.deleteRow"
         ></EditMemberContext>
         <EditRoleContext
           ref="editRoleContext"
-          :row="editRoleMember"
+          :subject="editRoleMember"
           :roles="roles"
           @update-role="roleUpdate($event)"
         ></EditRoleContext>
@@ -152,6 +152,7 @@ export default {
   },
   methods: {
     onRowContext({ row, event, target }) {
+      event.preventDefault()
       if (target === undefined) {
         target = {
           left: event.clientX,
@@ -168,10 +169,7 @@ export default {
       this.editRoleMember = row
       this.$refs.editRoleContext[action](target, 'bottom', 'left', 4)
     },
-    async refresh() {
-      await this.$refs.crudTable.fetch()
-    },
-    async roleUpdate({ uid: permissionsNew, row: member }) {
+    async roleUpdate({ uid: permissionsNew, subject: member }) {
       const oldMember = clone(member)
       const newMember = clone(member)
       newMember.permissions = permissionsNew

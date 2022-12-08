@@ -159,7 +159,11 @@ def validate_query_parameters(
     return validate_decorator
 
 
-def validate_body(serializer_class, partial=False, return_validated=False):
+def validate_body(
+    serializer_class,
+    partial: bool = False,
+    return_validated: bool = False,
+):
     """
     This decorator can validate the request body using a serializer. If the body is
     valid it will add the data to the kwargs. If not it will raise an APIException with
@@ -189,7 +193,7 @@ def validate_body(serializer_class, partial=False, return_validated=False):
 
     :param serializer_class: The serializer that must be used for validating.
     :param partial: Whether partial data passed to the serializer is considered valid.
-    :type serializer_class: Serializer
+    :param return_validated: Whether to inject the validated data after validation.
     :raises ValueError: When the `data` attribute is already in the kwargs. This
         decorator tries to add the `data` attribute, but cannot do that if it is
         already present.

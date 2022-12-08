@@ -63,7 +63,8 @@ def test_list_webhooks(api_client, data_fixture):
     assert response_json[0]["active"] is True
     del response_json[0]["calls"][0]["called_time"]
     assert response_json[0]["calls"][0] == {
-        "id": str(call_1.id),
+        "id": call_1.id,
+        "event_id": str(call_1.event_id),
         "event_type": call_1.event_type,
         "called_url": call_1.called_url,
         "request": call_1.request,

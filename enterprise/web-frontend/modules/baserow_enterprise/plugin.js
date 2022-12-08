@@ -11,6 +11,7 @@ import {
   OpenIdConnectAuthProviderType,
 } from '@baserow_enterprise/authProviderTypes'
 
+import { TeamsGroupSettingsPageType } from '@baserow_enterprise/groupSettingsPageTypes'
 import { EnterpriseMembersPagePluginType } from '@baserow_enterprise/membersPagePluginTypes'
 import en from '@baserow_enterprise/locales/en.json'
 import fr from '@baserow_enterprise/locales/fr.json'
@@ -22,6 +23,7 @@ import {
   EnterpriseWithoutSupportLicenseType,
   EnterpriseLicenseType,
 } from '@baserow_enterprise/licenseTypes'
+
 import { EnterprisePlugin } from '@baserow_enterprise/plugins'
 
 export default (context) => {
@@ -57,6 +59,7 @@ export default (context) => {
     'authProvider',
     new OpenIdConnectAuthProviderType(context)
   )
+  app.$registry.register('plugin', new EnterprisePlugin(context))
 
   registerRealtimeEvents(app.$realtime)
 
@@ -65,9 +68,17 @@ export default (context) => {
     new EnterpriseMembersPagePluginType(context)
   )
 
+  if (app.$featureFlags.includes('WIP')) {
+    app.$registry.register(
+      'groupSettingsPage',
+      new TeamsGroupSettingsPageType(context)
+    )
+  }
+
   app.$registry.register(
     'license',
     new EnterpriseWithoutSupportLicenseType(context)
   )
+
   app.$registry.register('license', new EnterpriseLicenseType(context))
 }

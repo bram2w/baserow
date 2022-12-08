@@ -16,6 +16,7 @@
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input input--large"
+          @focus.once="$event.target.select()"
           @blur="$v.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
@@ -36,6 +37,11 @@ export default {
   name: 'TableForm',
   mixins: [form],
   props: {
+    defaultName: {
+      type: String,
+      required: false,
+      default: '',
+    },
     creation: {
       type: Boolean,
       required: false,
@@ -45,8 +51,13 @@ export default {
   data() {
     return {
       values: {
-        name: '',
+        name: this.defaultName,
       },
+    }
+  },
+  mounted() {
+    if (this.creation) {
+      this.$refs.name.focus()
     }
   },
   validations: {
@@ -62,11 +73,6 @@ export default {
         },
       },
     },
-  },
-  mounted() {
-    if (this.creation) {
-      this.$refs.name.focus()
-    }
   },
 }
 </script>

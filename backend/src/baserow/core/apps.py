@@ -55,6 +55,12 @@ class CoreConfig(AppConfig):
         object_scope_type_registry.register(SnapshotObjectScopeType())
         object_scope_type_registry.register(GroupUserObjectScopeType())
 
+        from baserow.core.registries import subject_type_registry
+
+        from .subjects import UserSubjectType
+
+        subject_type_registry.register(UserSubjectType())
+
         from .operations import (
             CreateApplicationsGroupOperationType,
             CreateGroupOperationType,

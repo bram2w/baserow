@@ -366,6 +366,7 @@
     },
     "importFileModal": {
         "title": "Create new table",
+        "defaultName": "Table",
         "changeImporterType": "Change import type",
         "additionalImportTitle": "Import into {table}",
         "importLabel": "Would you like to import existing data?",
@@ -735,5 +736,9 @@
             }
         },
         "chooseView": "Choose view"
+    },
+    "fileField": {
+        "errorEmptyFileNameTitle": "Invalid file name",
+        "errorEmptyFileNameMessage": "You can't set an empty name for a file."
     }
 }

@@ -89,7 +89,7 @@ import galleryStore from '@baserow/modules/database/store/view/gallery'
 import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
 import publicStore from '@baserow/modules/database/store/view/public'
-import rowModalNavigation from '@baserow/modules/database/store/rowModalNavigation'
+import rowModalNavigationStore from '@baserow/modules/database/store/rowModalNavigation'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -221,7 +221,7 @@ export default (context) => {
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
   store.registerModule('rowModal', rowModal)
-  store.registerModule('rowModalNavigation', rowModalNavigation)
+  store.registerModule('rowModalNavigation', rowModalNavigationStore)
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)

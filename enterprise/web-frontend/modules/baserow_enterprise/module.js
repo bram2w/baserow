@@ -15,6 +15,15 @@ export default function () {
 
   // Remove the existing index route and add our own routes.
   this.extendRoutes((configRoutes) => {
+    const settingsRoute = configRoutes.find(
+      (route) => route.name === 'settings'
+    )
+    settingsRoute.children.push({
+      name: 'settings-teams',
+      path: 'teams',
+      component: path.resolve(__dirname, 'pages/settings/teams.vue'),
+    })
+
     configRoutes.push(...routes)
   })
 

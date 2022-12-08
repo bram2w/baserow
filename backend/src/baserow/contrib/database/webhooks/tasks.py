@@ -72,7 +72,7 @@ def call_webhook(
             error = f"UnacceptableAddressException: {exception}"
 
         TableWebhookCall.objects.update_or_create(
-            id=event_id,
+            event_id=event_id,
             event_type=event_type,
             webhook=webhook,
             defaults={

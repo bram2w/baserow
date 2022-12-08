@@ -20,6 +20,7 @@ from rest_framework.status import (
 
 from baserow.contrib.database.views.models import (
     FormView,
+    FormViewFieldOptions,
     FormViewFieldOptionsCondition,
 )
 from baserow.core.user_files.models import UserFile
@@ -1941,3 +1942,93 @@ def test_upload_file_view_form_is_password_protected(api_client, data_fixture, t
             )
 
     assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_patch_multiple_form_view_field_options_conditions_update(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+
+    form_view = data_fixture.create_form_view(table=table)
+    text_field_2_field_options = FormViewFieldOptions.objects.get(
+        form_view=form_view, field=text_field_2
+    )
+
+    condition = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_2_field_options, field=text_field
+    )
+
+    form_view_2 = data_fixture.create_form_view(table=table)
+    text_field_2_field_options_2 = FormViewFieldOptions.objects.get(
+        form_view=form_view_2, field=text_field_2
+    )
+    condition_2 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_2_field_options_2, field=text_field
+    )
+
+    assert FormViewFieldOptions.objects.count() == 4
+    assert FormViewFieldOptionsCondition.objects.count() == 2
+    assert list(
+        FormViewFieldOptionsCondition.objects.order_by("id").values(
+            "field_option_id", "field_id", "type"
+        )
+    ) == [
+        {
+            "field_option_id": text_field_2_field_options.id,
+            "field_id": text_field.id,
+            "type": "equal",
+        },
+        {
+            "field_option_id": text_field_2_field_options_2.id,
+            "field_id": text_field.id,
+            "type": "equal",
+        },
+    ]
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field_2.id): {
+                    "show_when_matching_conditions": True,
+                    "conditions": [
+                        {
+                            "id": condition.id,
+                            "field": text_field.id,
+                            "type": "not_equal",
+                            "value": "test",
+                        }
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    assert FormViewFieldOptionsCondition.objects.count() == 2, list(
+        FormViewFieldOptionsCondition.objects.values()
+    )
+
+    assert list(
+        FormViewFieldOptionsCondition.objects.order_by("id").values(
+            "field_option_id", "field_id", "type"
+        )
+    ) == [
+        {
+            "field_option_id": text_field_2_field_options.id,
+            "field_id": text_field.id,
+            "type": "not_equal",
+        },
+        {
+            "field_option_id": text_field_2_field_options_2.id,
+            "field_id": text_field.id,
+            "type": "equal",
+        },
+    ]

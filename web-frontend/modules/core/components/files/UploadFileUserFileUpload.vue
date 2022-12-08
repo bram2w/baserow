@@ -1,34 +1,7 @@
 <template>
   <div>
     <h2 class="box__title">{{ $t('uploadFileUserFileUpload.title') }}</h2>
-    <input
-      v-show="false"
-      ref="file"
-      type="file"
-      multiple
-      @change="addFile($event)"
-    />
-    <div
-      class="upload-files__dropzone"
-      :class="{ 'upload-files__dropzone--dragging': dragging }"
-      @click.prevent="$refs.file.click($event)"
-      @drop.prevent="addFile($event)"
-      @dragover.prevent
-      @dragenter.prevent="dragging = true"
-      @dragleave.prevent="dragging = false"
-    >
-      <div class="upload-files__dropzone-content">
-        <i class="upload-files__dropzone-icon fas fa-cloud-upload-alt"></i>
-        <div class="upload-files__dropzone-text">
-          <template v-if="dragging"
-            >{{ $t('uploadFileUserFileUpload.drop') }}
-          </template>
-          <template v-else>{{
-            $t('uploadFileUserFileUpload.clickOrDrop')
-          }}</template>
-        </div>
-      </div>
-    </div>
+    <UploadFileDropzone @input="addFile($event)" />
     <ul v-show="files.length > 0" class="upload-files__list">
       <li v-for="file in files" :key="file.id" class="upload-files__item">
         <div class="upload-files__preview">
@@ -97,8 +70,10 @@ import { uuid } from '@baserow/modules/core/utils/string'
 import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
 import { generateThumbnail } from '@baserow/modules/core/utils/image'
 import UserFileService from '@baserow/modules/core/services/userFile'
+import UploadFileDropzone from '@baserow/modules/core/components/files/UploadFileDropzone'
 export default {
   name: 'UploadFileUserFileUpload',
+  components: { UploadFileDropzone },
   props: {
     uploadFile: {
       type: Function,
@@ -109,7 +84,6 @@ export default {
   data() {
     return {
       uploading: false,
-      dragging: false,
       files: [],
       responses: [],
     }
@@ -136,8 +110,6 @@ export default {
      * drop event, but also via a file upload input event.
      */
     addFile(event) {
-      this.dragging = false
-
       let files = null
 
       if (event.target.files) {

@@ -24,7 +24,8 @@
         "admin": "Admin",
         "dashboard": "Pulpit",
         "trash": "Śmieci",
-        "settings": "Ustawienia"
+        "settings": "Ustawienia",
+        "members": "Członkowie"
     },
     "accountForm": {
         "nameLabel": "Twoje imię",
@@ -138,7 +139,8 @@
     },
     "createGroupModal": {
         "createNew": "Utwórz nową grupę",
-        "add": "Dodaj grupę"
+        "add": "Dodaj grupę",
+        "defaultName": "Grupa bez nazwy"
     },
     "templateCategories": {
         "search": "Wyszukaj szablony",
@@ -247,7 +249,8 @@
         "error": "Coś poszło nie tak podczas ładowania strony. Nasi programiści zostali powiadomieni o problemie. Proszę spróbować odświeżyć stronę lub powrócić do pulpitu.",
         "backDashboard": "Powrót do pulpitu",
         "backLogin": "Powrót do logowania",
-        "wrong": "Coś poszło nie tak"
+        "wrong": "Coś poszło nie tak",
+        "refresh": "Odśwież stronę"
     },
     "dashboard": {
         "title": "Pulpit",
@@ -276,7 +279,11 @@
     },
     "login": {
         "title": "Zaloguj sie",
-        "forgotPassword": "Zapomniałem hasła"
+        "forgotPassword": "Zapomniałeś hasła?",
+        "emailPlaceholder": "Wpisz swój adres e-mail..",
+        "passwordPlaceholder": "Wprowadź swoje hasło.",
+        "signUpText": "Nie masz konta?",
+        "signUp": "Zarejestruj się"
     },
     "resetPassword": {
         "title": "Zresetuj hasło",
@@ -297,7 +304,13 @@
         "disabled": "Rejestracja jest wyłączona",
         "disabledMessage": "Nie ma możliwości założenia konta, ponieważ zostało ono wyłączone.",
         "requireFirstUser": "Witamy w Baserow!",
-        "requireFirstUserMessage": "Proszę wypełnić poniższy formularz, aby utworzyć użytkownika admin."
+        "requireFirstUserMessage": "Proszę wypełnić poniższy formularz, aby utworzyć użytkownika admin.",
+        "emailPlaceholder": "Wpisz swój adres e-mail..",
+        "namePlaceholder": "Wpisz swoje imię..",
+        "passwordPlaceholder": "Wprowadź swoje hasło.",
+        "passwordRepeatPlaceholder": "Potwierdź swoje hasło...",
+        "loginText": "Posiadasz już konto?",
+        "login": "Zaloguj sie"
     },
     "forgotPassword": {
         "title": "Nie pamiętam hasła",
@@ -305,7 +318,8 @@
         "submit": "Wyślij link",
         "confirmation": "Jeśli Twój adres e-mail istnieje w naszej bazie danych, w ciągu kilku minut otrzymasz na swój adres e-mail link do zresetowania hasła.",
         "disabled": "Zapomniane hasło jest wyłączone",
-        "disabledMessage": "Nie ma możliwości zresetowania hasła, ponieważ zostało ono wyłączone."
+        "disabledMessage": "Nie ma możliwości zresetowania hasła, ponieważ zostało ono wyłączone.",
+        "loginText": "Masz już konto i hasło?"
     },
     "settings": {
         "settingsTitle": "Ustawienia administratora",
@@ -334,7 +348,7 @@
         "fieldsDescription": "Wszystkie pola są w formularzu.",
         "prefillInfoLink": "Wstępnie wypełniaj wartości dynamicznie",
         "modal": {
-            "title": "Wstępnie wypełniaj wartości dynamicznie",
+            "title": "Dynamicznie wypełniaj lub ukrywaj pola",
             "descriptionPartOne": "Formularze mogą być wstępnie wypełnione, aby pomóc użytkownikowi szybciej wypełnić formularz.",
             "descriptionPartTwo": "Wszystkie pola, które są dostępne w formularzu mogą być wstępnie wypełnione.",
             "howToPrefill": {
@@ -384,8 +398,13 @@
                     "description": "Pole daty może przyjąć datę w następujących formatach i użyje formatu daty pola do parsowania daty.",
                     "codeSnippet": "\n// Normy\nISO_8601\n\n// Formaty ogólne\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
+            },
+            "howToHide": {
+                "description": "Jeśli chcesz ukryć pole dynamicznie, możesz to zrobić poprzez parametry zapytania dodane do publicznego adresu url. Te parametry zapytania są poprzedzone `hide_`, aby uniknąć kolizji z potencjalnymi przyszłymi parametrami zapytania.",
+                "title": "Jak ukryć pole"
             }
-        }
+        },
+        "prefillOrHideInfoLink": "Dynamiczne wypełnianie lub ukrywanie"
     },
     "job": {
         "statePending": "Czekam na start...",
@@ -407,5 +426,58 @@
     "InstallTemplateJobType": {
         "installedTitle": "Zainstalowano szablon",
         "installing": "Instalowanie"
+    },
+    "membersSettings": {
+        "membersTable": {
+            "actions": {
+                "remove": "Usuń z grupy",
+                "copyEmail": "Skopiuj e-mail"
+            },
+            "title": "{userAmount} Członkowie w grupie {groupName}",
+            "inviteMember": "Zaproś członka",
+            "columns": {
+                "email": "Email",
+                "name": "Nazwa",
+                "role": "Domyślna rola"
+            }
+        },
+        "invitesTable": {
+            "title": "{invitesAmount} Oczekujące zaproszenia w grupie {groupName}",
+            "columns": {
+                "email": "Email",
+                "message": "Wiadomość",
+                "role": "Domyślna rola"
+            },
+            "actions": {
+                "remove": "Anuluj zaproszenie",
+                "copyEmail": "Skopiuj e-mail"
+            }
+        },
+        "invitesTabTitle": "Zaprasza",
+        "membersInviteModal": {
+            "submit": "Wyślij zaproszenie",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "text": "Nie można wysłać zaproszenia, gdy użytkownik jest już członkiem grupy.",
+                    "title": "Użytkownik jest już w grupie."
+                }
+            },
+            "title": "Zaproś członków grupy"
+        },
+        "membersTabTitle": "Członkowie"
+    },
+    "crudTableSearch": {
+        "search": "Szukaj"
+    },
+    "UserSessionExpiredNotification": {
+        "title": "Sesja wygasła",
+        "content": "Zostałeś wylogowany, ponieważ Twój token uwierzytelniający wygasł. Proszę, zaloguj się ponownie."
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Znajdź ...",
+        "selectedAmountLabel": "{count} zaznaczone"
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "Zaproś {count}"
     }
 }

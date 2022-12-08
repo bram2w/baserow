@@ -39,7 +39,7 @@ def test_schedule_user_deletion(mock_broadcast_to_groups, data_fixture):
     group_user = CoreHandler().create_group(user=user, name="Test")
     group_user_2 = CoreHandler().create_group(user=user, name="Test 2")
 
-    UserHandler().schedule_user_deletion(user, password="albert")
+    UserHandler().schedule_user_deletion(user)
 
     mock_broadcast_to_groups.delay.assert_called_once()
     args = mock_broadcast_to_groups.delay.call_args

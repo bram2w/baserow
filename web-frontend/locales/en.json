@@ -29,13 +29,15 @@
         "copy": "Copy",
         "paste": "Paste",
         "activate": "Activate",
-        "deactivate": "Deactivate"
+        "deactivate": "Deactivate",
+        "download": "Download"
     },
     "adminType": {
         "settings": "Settings"
     },
     "applicationType": {
         "database": "Database",
+        "databaseDefaultName": "Untitled Database",
         "cantSelectTableTitle": "Couldn't select the database.",
         "cantSelectTableDescription": "The database couldn't be selected because it doesn't have any tables. Use the sidebar to create one."
     },
@@ -323,7 +325,7 @@
         "toDateDescription": "Returns the first argument converted into a date given a date format string as the second argument.",
         "dayDescription": "Returns the day of the month as a number between 1 to 31 from the argument.",
         "dateDiffDescription": "Given a date unit to measure in as the first argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns the number of units from the second argument to the third.",
-        "andDescription": "Returns the logical and of the first and second argument, so if they are bothtrue then the result is true, otherwise it is false.",
+        "andDescription": "Returns the logical and of the first and second argument, so if they are both true then the result is true, otherwise it is false.",
         "orDescription": "Returns the logical or of the first and second argument, so if either are true then the result is true, otherwise it is false.",
         "dateIntervalDescription": "Returns the date interval corresponding to the provided argument.",
         "replaceDescription": "Replaces all instances of the second argument in the first argument with the third argument.",

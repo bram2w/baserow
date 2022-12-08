@@ -28,7 +28,8 @@
         "paste": "Wklej",
         "activate": "Aktywuj",
         "deactivate": "Dezaktywuj",
-        "remove": "Usuń"
+        "remove": "Usuń",
+        "login": "Zaloguj sie"
     },
     "adminType": {
         "settings": "Ustawienia"
@@ -36,12 +37,13 @@
     "applicationType": {
         "database": "Baza danych",
         "cantSelectTableTitle": "Nie można wybrać bazy danych.",
-        "cantSelectTableDescription": "Baza danych nie mogła zostać wybrana, ponieważ nie posiada żadnych tabel. Użyj paska bocznego, aby je utworzyć."
+        "cantSelectTableDescription": "Baza danych nie mogła zostać wybrana, ponieważ nie posiada żadnych tabel. Użyj paska bocznego, aby je utworzyć.",
+        "databaseDefaultName": "Baza danych bez tytułu"
     },
     "settingType": {
         "account": "Konto",
         "password": "Password",
-        "tokens": "Tokeny API",
+        "tokens": "Tokeny bazy danych",
         "deleteAccount": "Usuń konto"
     },
     "userFileUploadType": {

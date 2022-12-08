@@ -120,7 +120,14 @@ from baserow.core.trash.operations import (
     ReadApplicationTrashOperationType,
     ReadGroupTrashOperationType,
 )
-from baserow_enterprise.role.operations import AssignRoleGroupOperationType
+from baserow_enterprise.role.operations import (
+    AssignRoleGroupOperationType,
+    ReadRoleDatabaseOperationType,
+    ReadRoleGroupOperationType,
+    ReadRoleTableOperationType,
+    UpdateRoleDatabaseOperationType,
+    UpdateRoleTableOperationType,
+)
 from baserow_enterprise.teams.operations import (
     CreateTeamOperationType,
     CreateTeamSubjectOperationType,
@@ -134,8 +141,8 @@ from baserow_enterprise.teams.operations import (
     UpdateTeamOperationType,
 )
 
-NO_ROLE_OPS = []
-VIEWER_OPS = NO_ROLE_OPS + [
+NO_ACCESS_OPS = []
+VIEWER_OPS = NO_ACCESS_OPS + [
     ReadGroupOperationType,
     ListApplicationsGroupOperationType,
     ListTablesDatabaseTableOperationType,
@@ -197,8 +204,6 @@ BUILDER_OPS = EDITOR_OPS + [
     UpdateFieldOperationType,
     TypeFormulaOperationType,
     RunAirtableImportJobOperationType,
-    OrderTablesDatabaseTableOperationType,
-    OrderApplicationsOperationType,
     UpdateViewOperationType,
     DeleteViewOperationType,
     RestoreViewOperationType,
@@ -239,6 +244,7 @@ ADMIN_OPS = BUILDER_OPS + [
     DeleteDatabaseRowOperationType,
     ReadInvitationGroupOperationType,
     AssignRoleGroupOperationType,
+    ReadRoleGroupOperationType,
     DeleteGroupUserOperationType,
     DeleteGroupInvitationOperationType,
     UpdateGroupUserOperationType,
@@ -254,6 +260,12 @@ ADMIN_OPS = BUILDER_OPS + [
     RestoreGroupOperationType,
     EmptyApplicationTrashOperationType,
     EmptyGroupTrashOperationType,
+    ReadRoleDatabaseOperationType,
+    UpdateRoleDatabaseOperationType,
+    ReadRoleTableOperationType,
+    UpdateRoleTableOperationType,
+    OrderTablesDatabaseTableOperationType,
+    OrderApplicationsOperationType,
 ]
 default_roles = {
     "ADMIN": ADMIN_OPS,
@@ -261,5 +273,5 @@ default_roles = {
     "EDITOR": EDITOR_OPS,
     "COMMENTER": COMMENTER_OPS,
     "VIEWER": VIEWER_OPS,
-    "NO_ROLE": NO_ROLE_OPS,
+    "NO_ACCESS": NO_ACCESS_OPS,
 }

@@ -1,21 +1,23 @@
-import { getTokenIfEnoughTimeLeft } from '@baserow/modules/core/utils/auth'
+import {
+  getTokenIfEnoughTimeLeft,
+  setToken,
+} from '@baserow/modules/core/utils/auth'
 
-export default function ({ store, req, app, route }) {
-  // If nuxt generate, pass this middleware
-  if (process.server && !req) return
+export default function ({ store, req, app, route, redirect }) {
+  // If nuxt generate or already authenticated, pass this middleware
+  if ((process.server && !req) || store.getters['auth/isAuthenticated']) return
 
-  // If token is available as query param (e.g. SSO logins) use it.
-  // Otherwise try to get the token from the cookie if there is enough time left.
-  // for a new session
+  // token can be in the query string (SSO) or in the cookies (previous session)
   let refreshToken = route.query.token
-  if (!refreshToken) {
+  if (refreshToken) {
+    setToken(app, refreshToken)
+  } else {
     refreshToken = getTokenIfEnoughTimeLeft(app)
   }
 
-  // If there already is a token we will refresh it to check if it is valid and
-  // to get fresh user information. This will probably happen on the server
-  // side.
-  if (refreshToken && !store.getters['auth/isAuthenticated']) {
-    return store.dispatch('auth/refresh', refreshToken)
+  if (refreshToken) {
+    return store.dispatch('auth/refresh', refreshToken).catch(() => {
+      return redirect({ name: 'login' })
+    })
   }
 }

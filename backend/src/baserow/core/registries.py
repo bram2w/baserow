@@ -1,6 +1,6 @@
 import abc
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
@@ -8,8 +8,11 @@ from django.core.files.storage import Storage
 from django.db.models import QuerySet
 from django.db.transaction import Atomic
 
+from rest_framework.serializers import Serializer
+
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.utils import ChildProgressBuilder
+from baserow_enterprise.exceptions import SubjectTypeNotExist
 
 from .exceptions import (
     ApplicationTypeAlreadyRegistered,
@@ -218,6 +221,37 @@ class ApplicationType(
         raise NotImplementedError(
             "Must be implemented by the specific application type"
         )
+
+    def create_application(
+        self, user, group: "Group", name: str, init_with_data: bool = False
+    ) -> "Application":
+        """
+        Creates a new application instance of this type and returns it.
+
+        :param user: The user that is creating the application.
+        :param group: The group that the application will be created in.
+        :param name: The name of the application.
+        :param init_with_data: Whether the application should be created with some
+            initial data. Defaults to False.
+        :return: The newly created application instance.
+        """
+
+        model = self.model_class
+        last_order = model.get_last_order(group)
+
+        instance = model.objects.create(group=group, order=last_order, name=name)
+        if init_with_data:
+            self.init_application(user, instance)
+        return instance
+
+    def init_application(self, user, application: "Application") -> None:
+        """
+        This method can be called when the application is created to
+        initialize it with some default data.
+
+        :param user: The user that is creating the application.
+        :param application: The application to initialize with data.
+        """
 
     def export_serialized(
         self,
@@ -496,6 +530,26 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
 
         return None
 
+    def get_parents(self, context: ContextObject) -> List[ContextObject]:
+        """
+        Returns all ancestors of the given context which belongs to the current
+        scope.
+
+        :param context: The context object which we want the ancestors for. This object
+            must belong to the current scope.
+        :return: the list of parent objects if it's a root object.
+        """
+
+        parent = self.get_parent(context)
+
+        if parent is None:
+            return []
+
+        parents = self.get_parent_scope().get_parents(parent)
+        parents.append(parent)
+
+        return parents
+
     def get_all_context_objects_in_scope(self, scope: ScopeObject) -> Iterable:
         """
         Returns the list of context object belonging to the current scope that are
@@ -509,6 +563,17 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
             f"Must be implemented by the specific type <{self.type}>"
         )
 
+    def contains(self, context: ContextObject):
+        """
+        Return True if the context is one object of this context.
+
+        :param context: The context to test
+        :return: True if the ObjectScopeType of the context is the same as this one.
+        """
+
+        context_scope_type = object_scope_type_registry.get_by_model(context)
+        return context_scope_type.type == self.type
+
 
 class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     """
@@ -517,6 +582,30 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     """
 
     name = "object_scope"
+
+    def get_parent(self, context, at_scope_type=None):
+        """
+        Returns the parent object of the given context.
+
+        :param context: The context object we want the parent for.
+        :param at_scope_type: A parent scope at which you want the parent.
+        :return: if the `at_scope_type` is not set: the parent object or `None` if it's
+            a root object. If at_scope_type is set, the ancestor for which scope_type
+            matches at_scope_type or None if no parents match.
+        """
+
+        context_scope_type = self.get_by_model(context)
+        if at_scope_type:
+            if at_scope_type.type == context_scope_type.type:
+                return context
+            else:
+                parent_scope = context_scope_type.get_parent(context)
+                if parent_scope is None:
+                    return None
+                else:
+                    return self.get_parent(parent_scope, at_scope_type=at_scope_type)
+        else:
+            return context_scope_type.get_parent(context)
 
     def scope_includes_context(
         self,
@@ -548,10 +637,10 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
                 scope, context_scope_type.get_parent(context), scope_type=scope_type
             )
 
-    def scope_includes_scope(
+    def scope_type_includes_scope_type(
         self,
-        parent_scope: Union[ScopeObject, ObjectScopeType],
-        child_scope: Union[ScopeObject, ObjectScopeType],
+        parent_scope_type: ObjectScopeType,
+        child_scope_type: ObjectScopeType,
     ) -> Boolean:
         """
         Checks whether the parent_scope includes the child_scope.
@@ -563,31 +652,71 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
         :return: True if the parent_scope includes the children scope. False otherwise.
         """
 
-        if child_scope is None:
+        if child_scope_type is None:
             return False
-
-        parent_scope_type = (
-            object_scope_type_registry.get_by_model(parent_scope)
-            if not isinstance(parent_scope, ObjectScopeType)
-            else parent_scope
-        )
-        child_scope_type = (
-            object_scope_type_registry.get_by_model(child_scope)
-            if not isinstance(child_scope, ObjectScopeType)
-            else child_scope
-        )
 
         if parent_scope_type == child_scope_type:
             return True
         else:
-            return self.scope_includes_scope(
+            return self.scope_type_includes_scope_type(
                 parent_scope_type,
                 child_scope_type.get_parent_scope(),
             )
 
-    # TODO change
     does_not_exist_exception_class = ObjectScopeTypeDoesNotExist
     already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
+
+
+class SubjectType(Instance, ModelInstanceMixin):
+    """
+    This type describes a subject that exists in Baserow. A subject is anything that
+    can execute an operation.
+    """
+
+    def is_in_group(self, subject_id: int, group: "Group") -> bool:
+        """
+        This function checks if a subject belongs to a group
+        :return: If the subject belongs to the group
+        """
+
+        raise NotImplementedError(
+            f"Must be implemented by the specific type <{self.type}>"
+        )
+
+    def get_serializer(self, model_instance, **kwargs) -> Serializer:
+        """
+        This function can be used to generate different serializers based on the type
+        of subject that is being serialized
+        :param model_instance: instance of a subject
+        :param kwargs: additional kwargs that are parsed to serializer
+        :return: the correct seralizer for the subject
+        """
+
+        raise NotImplementedError(
+            f"Must be implemented by the specific type <{self.type}>"
+        )
+
+
+class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin):
+    """
+    This registry holds all the different subject types used across Baserow.
+    """
+
+    name = "subject"
+    does_not_exist_exception_class = SubjectTypeNotExist
+
+    def get_serializer(self, model_instance, **kwargs) -> Serializer:
+        """
+        This function is used to get the correct serializer for a given subject model
+        instance. A SubjectType has to implement the `get_serializer` method in order
+        to be serialized.
+        :param model_instance: Instance of a subject
+        :param kwargs: Additional kwargs passed to the serializer
+        :return: The correct subject serializer
+        """
+
+        instance_type = self.get_by_model(model_instance)
+        return instance_type.get_serializer(model_instance, **kwargs)
 
 
 class OperationType(abc.ABC, Instance):
@@ -656,7 +785,6 @@ class OperationTypeRegistry(Registry[OperationType]):
 
     name = "operation"
 
-    # TODO change
     does_not_exist_exception_class = OperationTypeDoesNotExist
     already_registered_exception_class = OperationTypeAlreadyRegistered
 
@@ -672,4 +800,5 @@ permission_manager_type_registry: PermissionManagerTypeRegistry = (
     PermissionManagerTypeRegistry()
 )
 object_scope_type_registry: ObjectScopeTypeRegistry = ObjectScopeTypeRegistry()
+subject_type_registry: SubjectTypeRegistry = SubjectTypeRegistry()
 operation_type_registry: OperationTypeRegistry = OperationTypeRegistry()

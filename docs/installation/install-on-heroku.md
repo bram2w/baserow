@@ -8,8 +8,8 @@
 
 Heroku is a platform as a service that enables developer to build, run and operate
 applications entirely in the cloud. We have created a template that allows you to
-easily install Baserow on the free plan of Heroku. You can also scale up by tweaking
-some settings
+easily install Baserow on [the basic dyno of Heroku](https://devcenter.heroku.com/articles/dyno-types).
+You can also scale up by tweaking some settings.
 
 ## The template
 
@@ -19,13 +19,25 @@ some settings
 The button above can be used to install Baserow on Heroku with one click. Click on it
 and follow the steps on heroku.com to proceed. After the installation, you can reach
 Baserow on the URL provided by Heroku. Everything installed via the template runs on
-the free plan of Heroku by default.
+[the basic dyno of Heroku](https://devcenter.heroku.com/articles/dyno-types) by default.
+
+## Budgeting
+
+On November Nov 28 2022 the `hobby-dev` (free) Heroku plans were retired.
+
+This means that to deploy Baserow to Heroku, it will require a small cost. We have chosen the cheapest and most secure dynos and addons to deploy with.
+You can always upgrade your dynos should your installation require more resources (see Scaling below).
+
+- `web` ($7/mo): the web formation creates a Basic always-on dyno.
+- `heroku-redis:mini` ($3/mo): the Redis addon.
+- `heroku-postgresql:mini` ($5/mo): the Postgresql addon.
+
 
 ## Built-in Baserow templates disabled by default
 
-By default, we are using the `heroku-postgresql:hobby-dev` addon because that supports
-10k rows for free. The Baserow templates require more than 10k rows, so we do not
-load them by default. If you upgrade your heroku database to support more data and 
+By default, we are using the [`heroku-postgresql:mini` addon](https://elements.heroku.com/addons/heroku-postgresql)
+because it's the cheapest ($5/mo, up-to 10k rows) Postgres addon. The Baserow templates require more than 10k rows,
+so we do not  load them by default. If you upgrade your heroku database to support more data and 
 want to load the templates run the following:
 
 1. Login to Heroku and open your Baserow app
@@ -76,10 +88,10 @@ you will find example settings if you want to connect to Digital Ocean Spaces.
 
 ## Scaling
 
-Even though the template runs on the free plan of Heroku by default, it can easily be
+Even though the template runs on the basic dyno of Heroku by default, it can easily be
 scaled up to fit your needs. We recommend scaling up if you are going to use Baserow
 with more than one user simultaneously. You can scale up by changing the dyno type
-and increase the amount of dyno's.
+and increase the amount of dynos.
 
 ### Workers per dyno
 
@@ -94,13 +106,13 @@ worker, a standard x2 can have 2 workers and a performance M can have 4.
 
 ### Postgres
 
-By default, we are using the `heroku-postgresql:hobby-dev` addon because that supports
-10k rows for free. If you need more rows, you need to upgrade that addon.
+By default, we are using the [`heroku-postgresql:mini` addon](https://elements.heroku.com/addons/heroku-postgresql)
+because that supports 10k rows for $5/mo. If you need more rows, you need to upgrade that addon.
 
 ### Redis
 
-By default, we are using the `heroku-redis:hobby` addon because that addon supports
-20 connections for free. If you are scaling up, you need more connections which means
+By default, we are using the [`heroku-redis:mini` addon](https://elements.heroku.com/addons/heroku-redis)
+because that addon supports 20 connections for $3/mo. If you are scaling up, you need more connections which means
 you need to upgrade that addon. In order to roughly estimate how many connections you
 would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
 

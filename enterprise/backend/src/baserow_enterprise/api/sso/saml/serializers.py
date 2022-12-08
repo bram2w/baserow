@@ -30,7 +30,6 @@ class SAMLResponseSerializer(serializers.Serializer):
                 data["saml_request_data"] = request_data_serializer.validated_data
             else:
                 raise InvalidSamlResponse("Invalid RelayState query parameters.")
-        parsed_relay_state._replace(query="")
-        data["RelayState"] = parsed_relay_state.geturl()
+        data["RelayState"] = parsed_relay_state._replace(query="").geturl()
 
         return data

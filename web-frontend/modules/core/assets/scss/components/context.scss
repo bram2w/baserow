@@ -102,6 +102,10 @@
         @include absolute(8px, auto, auto, 8px);
       }
     }
+
+    &.context__menu-item--delete {
+      color: $color-error-600;
+    }
   }
 
   &.context__menu--can-be-active a {

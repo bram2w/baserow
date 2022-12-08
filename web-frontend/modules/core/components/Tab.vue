@@ -1,5 +1,5 @@
 <template lang="html">
-  <div v-show="isActive" class="tabs__item">
+  <div v-show="isActive">
     <slot></slot>
   </div>
 </template>
@@ -11,6 +11,10 @@ export default {
     title: {
       type: String,
       default: 'Tab',
+    },
+    disabled: {
+      type: Boolean,
+      default: () => false,
     },
   },
   data() {

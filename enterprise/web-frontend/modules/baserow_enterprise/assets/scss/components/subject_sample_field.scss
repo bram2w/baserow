@@ -1,0 +1,18 @@
+.subject_sample_field-list__user-initials {
+  font-weight: bold;
+  color: $white;
+  border: 2px solid $white;
+  background-color: $color-primary-500;
+  border-radius: 100%;
+  float: left;
+  margin-left: -10px;
+  width: 30px;
+  text-align: center;
+  height: 30px;
+  line-height: 26px;
+  font-size: 12px;
+
+  &.extras {
+    background-color: $color-neutral-200;
+  }
+}

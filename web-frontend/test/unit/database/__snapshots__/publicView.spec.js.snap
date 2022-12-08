@@ -14,6 +14,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
        
       <!---->
        
+      <!---->
+       
     </div>
      
     <div
@@ -190,7 +192,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
         >
           <div
             class="scrollbars"
-            style="left: 270px;"
+            style="left: 70px;"
           >
             <!---->
              
@@ -199,11 +201,11 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__left"
-            style="width: 270px;"
+            style="width: 70px;"
           >
             <div
               class="grid-view__inner"
-              style="min-width: 270px;"
+              style="min-width: 70px;"
             >
               <div
                 class="grid-view__head"
@@ -214,43 +216,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <!---->
                 </div>
-                 
-                <div
-                  class="grid-view__column"
-                  filters=""
-                  style="width: 200px;"
-                >
-                  <div
-                    class="grid-view__description"
-                  >
-                    <div
-                      class="grid-view__description-icon"
-                    >
-                      <i
-                        class="fas fa-font"
-                      />
-                    </div>
-                     
-                    <div
-                      class="grid-view__description-name"
-                    >
-                      <span>
-                        
-        Name
-      
-                      </span>
-                    </div>
-                     
-                    <!---->
-                     
-                    <!---->
-                     
-                    <!---->
-                     
-                    <!---->
-                  </div>
-                </div>
-                 
+                  
                 <!---->
               </div>
                
@@ -262,17 +228,12 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <div
                     class="grid-view__placeholder"
-                    style="height: 33px; width: 270px;"
-                  >
-                    <div
-                      class="grid-view__placeholder-column"
-                      style="left: 199px;"
-                    />
-                  </div>
+                    style="height: 33px; width: 70px;"
+                  />
                    
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(0px);"
+                    style="transform: translateY(0px) translateX(nullpx);"
                   >
                     <div
                       class="grid-view__row"
@@ -308,20 +269,6 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                         </div>
                       </div>
                        
-                      <div
-                        class="grid-view__column"
-                        style="width: 200px;"
-                      >
-                        <div
-                          class="grid-view__cell"
-                        >
-                          <div
-                            class="grid-field-text"
-                          >
-                            
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                    
@@ -361,21 +308,18 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__divider"
-            style="left: 270px;"
+            style="left: 70px;"
           />
            
-          <div
-            class="grid-view__divider-width"
-            style="left: 270px;"
-          />
+          <!---->
            
           <div
             class="grid-view__right"
-            style="left: 270px;"
+            style="left: 70px;"
           >
             <div
               class="grid-view__inner"
-              style="min-width: 800px;"
+              style="min-width: 1000px;"
             >
               <div
                 class="grid-view__head"
@@ -493,6 +437,43 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     />
                   </div>
                 </div>
+                <div
+                  class="grid-view__column"
+                  filters=""
+                  style="width: 200px;"
+                >
+                  <div
+                    class="grid-view__description"
+                  >
+                    <div
+                      class="grid-view__description-icon"
+                    >
+                      <i
+                        class="fas fa-font"
+                      />
+                    </div>
+                     
+                    <div
+                      class="grid-view__description-name"
+                    >
+                      <span>
+                        
+        Name
+      
+                      </span>
+                    </div>
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <!---->
+                     
+                    <div
+                      class="grid-view__description-width"
+                    />
+                  </div>
+                </div>
                  
                 <!---->
               </div>
@@ -505,8 +486,12 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <div
                     class="grid-view__placeholder"
-                    style="height: 33px; width: 600px;"
+                    style="height: 33px; width: 800px;"
                   >
+                    <div
+                      class="grid-view__placeholder-column"
+                      style="left: 799px;"
+                    />
                     <div
                       class="grid-view__placeholder-column"
                       style="left: 199px;"

@@ -107,7 +107,9 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         """
         Broadcasts a message to all the users that are in the provided user_ids list.
         Optionally the ignore_web_socket_id is ignored because that is often the
-        sender.
+        sender. Also, if `send_to_all_users` is set to True then all users will be sent
+        the payload regardless of `user_ids`, but `ignore_web_socket_id` will still
+        be respected.
 
         :param event: The event containing the payload, user ids and the web socket
             id that must be ignored.
@@ -118,10 +120,12 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         payload = event["payload"]
         user_ids = event["user_ids"]
         ignore_web_socket_id = event["ignore_web_socket_id"]
+        send_to_all_users = event["send_to_all_users"]
 
-        if (
+        shouldnt_ignore = (
             not ignore_web_socket_id or ignore_web_socket_id != web_socket_id
-        ) and self.scope["user"].id in user_ids:
+        )
+        if shouldnt_ignore and (self.scope["user"].id in user_ids or send_to_all_users):
             await self.send_json(payload)
 
     async def broadcast_to_group(self, event):

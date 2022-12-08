@@ -37,7 +37,7 @@
         {{ $t('groupsContext.createGroup') }}
       </a>
     </div>
-    <CreateGroupModal ref="createGroupModal"></CreateGroupModal>
+    <CreateGroupModal ref="createGroupModal" @created="hide"></CreateGroupModal>
   </Context>
 </template>
 

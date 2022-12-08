@@ -6,7 +6,7 @@ exports[`GridView component with decoration Default component with first_cell de
 >
   <div
     class="scrollbars"
-    style="left: 270px;"
+    style="left: 70px;"
   >
     <!---->
      
@@ -15,11 +15,11 @@ exports[`GridView component with decoration Default component with first_cell de
    
   <div
     class="grid-view__left"
-    style="width: 270px;"
+    style="width: 70px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 270px;"
+      style="min-width: 70px;"
     >
       <div
         class="grid-view__head"
@@ -39,48 +39,7 @@ exports[`GridView component with decoration Default component with first_cell de
              
           </div>
         </div>
-         
-        <div
-          class="grid-view__column"
-          filters=""
-          style="width: 200px;"
-        >
-          <div
-            class="grid-view__description"
-          >
-            <div
-              class="grid-view__description-icon"
-            >
-              <i
-                class="fas fa-font"
-              />
-            </div>
-             
-            <div
-              class="grid-view__description-name"
-            >
-              <span>
-                
-        Name
-      
-              </span>
-            </div>
-             
-            <!---->
-             
-            <a
-              class="grid-view__description-options"
-            >
-              <i
-                class="fas fa-caret-down"
-              />
-            </a>
-             
-             
-            <!---->
-          </div>
-        </div>
-         
+          
         <!---->
       </div>
        
@@ -92,17 +51,12 @@ exports[`GridView component with decoration Default component with first_cell de
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 270px;"
-          >
-            <div
-              class="grid-view__placeholder-column"
-              style="left: 199px;"
-            />
-          </div>
+            style="height: 66px; width: 70px;"
+          />
            
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(nullpx);"
           >
             <div
               class="grid-view__row"
@@ -146,30 +100,16 @@ exports[`GridView component with decoration Default component with first_cell de
                 </div>
               </div>
                
-              <div
-                class="grid-view__column"
-                style="width: 200px;"
-              >
-                <div
-                  class="grid-view__cell"
-                >
-                  <div
-                    class="grid-field-text"
-                  >
-                    first
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
            
           <div
             class="grid-view__row"
-            style="width: 270px;"
+            style="width: 70px;"
           >
             <div
               class="grid-view__column"
-              style="width: 270px;"
+              style="width: 70px;"
             >
               <a
                 class="grid-view__add-row"
@@ -194,16 +134,6 @@ exports[`GridView component with decoration Default component with first_cell de
       
         </div>
          
-        <div
-          style="width: 200px;"
-        >
-          <div
-            class="grid-view-aggregation"
-          >
-            <!---->
-             
-          </div>
-        </div>
       </div>
     </div>
      
@@ -224,27 +154,66 @@ exports[`GridView component with decoration Default component with first_cell de
    
   <div
     class="grid-view__divider"
-    style="left: 270px;"
+    style="left: 70px;"
   />
    
-  <div
-    class="grid-view__divider-width"
-    style="left: 270px;"
-  />
+  <!---->
    
   <div
     class="grid-view__right"
-    style="left: 270px;"
+    style="left: 70px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 600px;"
+      style="min-width: 800px;"
     >
       <div
         class="grid-view__head"
       >
         <!---->
          
+        <div
+          class="grid-view__column"
+          filters=""
+          style="width: 200px;"
+        >
+          <div
+            class="grid-view__description"
+          >
+            <div
+              class="grid-view__description-icon"
+            >
+              <i
+                class="fas fa-font"
+              />
+            </div>
+             
+            <div
+              class="grid-view__description-name"
+            >
+              <span>
+                
+        Name
+      
+              </span>
+            </div>
+             
+            <!---->
+             
+            <a
+              class="grid-view__description-options"
+            >
+              <i
+                class="fas fa-caret-down"
+              />
+            </a>
+             
+             
+            <div
+              class="grid-view__description-width"
+            />
+          </div>
+        </div>
         <div
           class="grid-view__column"
           filters=""
@@ -353,7 +322,7 @@ exports[`GridView component with decoration Default component with first_cell de
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 400px;"
+            style="height: 66px; width: 600px;"
           >
             <div
               class="grid-view__placeholder-column"
@@ -362,6 +331,10 @@ exports[`GridView component with decoration Default component with first_cell de
             <div
               class="grid-view__placeholder-column"
               style="left: 399px;"
+            />
+            <div
+              class="grid-view__placeholder-column"
+              style="left: 599px;"
             />
           </div>
            
@@ -384,7 +357,7 @@ exports[`GridView component with decoration Default component with first_cell de
                   <div
                     class="grid-field-text"
                   >
-                    Bram
+                    first
                   </div>
                 </div>
               </div>
@@ -398,7 +371,7 @@ exports[`GridView component with decoration Default component with first_cell de
                   <div
                     class="grid-field-text"
                   >
-                    
+                    Bram
                   </div>
                 </div>
               </div>
@@ -407,11 +380,11 @@ exports[`GridView component with decoration Default component with first_cell de
            
           <div
             class="grid-view__row"
-            style="width: 400px;"
+            style="width: 600px;"
           >
             <div
               class="grid-view__column"
-              style="width: 400px;"
+              style="width: 600px;"
             >
               <a
                 class="grid-view__add-row"
@@ -427,6 +400,16 @@ exports[`GridView component with decoration Default component with first_cell de
         class="grid-view__foot"
       >
          
+        <div
+          style="width: 200px;"
+        >
+          <div
+            class="grid-view-aggregation"
+          >
+            <!---->
+             
+          </div>
+        </div>
         <div
           style="width: 200px;"
         >
@@ -490,7 +473,7 @@ exports[`GridView component with decoration Default component with row wrapper d
 >
   <div
     class="scrollbars"
-    style="left: 270px;"
+    style="left: 70px;"
   >
     <!---->
      
@@ -499,11 +482,11 @@ exports[`GridView component with decoration Default component with row wrapper d
    
   <div
     class="grid-view__left"
-    style="width: 270px;"
+    style="width: 70px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 270px;"
+      style="min-width: 70px;"
     >
       <div
         class="grid-view__head"
@@ -523,6 +506,98 @@ exports[`GridView component with decoration Default component with row wrapper d
              
           </div>
         </div>
+          
+        <!---->
+      </div>
+       
+      <div
+        class="grid-view__body"
+      >
+        <div
+          class="grid-view__body-inner"
+        >
+          <div
+            class="grid-view__placeholder"
+            style="height: 66px; width: 70px;"
+          />
+           
+          <div
+            class="grid-view__rows"
+            style="transform: translateY(0px) translateX(nullpx);"
+          >
+            <div
+              class="test-wrapper"
+            />
+          </div>
+           
+          <div
+            class="grid-view__row"
+            style="width: 70px;"
+          >
+            <div
+              class="grid-view__column"
+              style="width: 70px;"
+            >
+              <a
+                class="grid-view__add-row"
+              >
+                <i
+                  class="fas fa-plus"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+      <div
+        class="grid-view__foot"
+      >
+        <div
+          class="grid-view__foot-info"
+        >
+          
+        gridView.rowCount - 2
+      
+        </div>
+         
+      </div>
+    </div>
+     
+    <div
+      style="display: none;"
+    >
+      <div
+        class="grid-view__field-dragging"
+        style="width: 0px; left: 0px;"
+      />
+       
+      <div
+        class="grid-view__field-target"
+        style="left: 0px;"
+      />
+    </div>
+  </div>
+   
+  <div
+    class="grid-view__divider"
+    style="left: 70px;"
+  />
+   
+  <!---->
+   
+  <div
+    class="grid-view__right"
+    style="left: 70px;"
+  >
+    <div
+      class="grid-view__inner"
+      style="min-width: 800px;"
+    >
+      <div
+        class="grid-view__head"
+      >
+        <!---->
          
         <div
           class="grid-view__column"
@@ -561,120 +636,11 @@ exports[`GridView component with decoration Default component with row wrapper d
             </a>
              
              
-            <!---->
-          </div>
-        </div>
-         
-        <!---->
-      </div>
-       
-      <div
-        class="grid-view__body"
-      >
-        <div
-          class="grid-view__body-inner"
-        >
-          <div
-            class="grid-view__placeholder"
-            style="height: 66px; width: 270px;"
-          >
             <div
-              class="grid-view__placeholder-column"
-              style="left: 199px;"
+              class="grid-view__description-width"
             />
           </div>
-           
-          <div
-            class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
-          >
-            <div
-              class="test-wrapper"
-            />
-          </div>
-           
-          <div
-            class="grid-view__row"
-            style="width: 270px;"
-          >
-            <div
-              class="grid-view__column"
-              style="width: 270px;"
-            >
-              <a
-                class="grid-view__add-row"
-              >
-                <i
-                  class="fas fa-plus"
-                />
-              </a>
-            </div>
-          </div>
         </div>
-      </div>
-       
-      <div
-        class="grid-view__foot"
-      >
-        <div
-          class="grid-view__foot-info"
-        >
-          
-        gridView.rowCount - 2
-      
-        </div>
-         
-        <div
-          style="width: 200px;"
-        >
-          <div
-            class="grid-view-aggregation"
-          >
-            <!---->
-             
-          </div>
-        </div>
-      </div>
-    </div>
-     
-    <div
-      style="display: none;"
-    >
-      <div
-        class="grid-view__field-dragging"
-        style="width: 0px; left: 0px;"
-      />
-       
-      <div
-        class="grid-view__field-target"
-        style="left: 0px;"
-      />
-    </div>
-  </div>
-   
-  <div
-    class="grid-view__divider"
-    style="left: 270px;"
-  />
-   
-  <div
-    class="grid-view__divider-width"
-    style="left: 270px;"
-  />
-   
-  <div
-    class="grid-view__right"
-    style="left: 270px;"
-  >
-    <div
-      class="grid-view__inner"
-      style="min-width: 600px;"
-    >
-      <div
-        class="grid-view__head"
-      >
-        <!---->
-         
         <div
           class="grid-view__column"
           filters=""
@@ -783,7 +749,7 @@ exports[`GridView component with decoration Default component with row wrapper d
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 400px;"
+            style="height: 66px; width: 600px;"
           >
             <div
               class="grid-view__placeholder-column"
@@ -792,6 +758,10 @@ exports[`GridView component with decoration Default component with row wrapper d
             <div
               class="grid-view__placeholder-column"
               style="left: 399px;"
+            />
+            <div
+              class="grid-view__placeholder-column"
+              style="left: 599px;"
             />
           </div>
            
@@ -806,11 +776,11 @@ exports[`GridView component with decoration Default component with row wrapper d
            
           <div
             class="grid-view__row"
-            style="width: 400px;"
+            style="width: 600px;"
           >
             <div
               class="grid-view__column"
-              style="width: 400px;"
+              style="width: 600px;"
             >
               <a
                 class="grid-view__add-row"
@@ -826,6 +796,16 @@ exports[`GridView component with decoration Default component with row wrapper d
         class="grid-view__foot"
       >
          
+        <div
+          style="width: 200px;"
+        >
+          <div
+            class="grid-view-aggregation"
+          >
+            <!---->
+             
+          </div>
+        </div>
         <div
           style="width: 200px;"
         >
@@ -889,7 +869,7 @@ exports[`GridView component with decoration Default component with unavailable d
 >
   <div
     class="scrollbars"
-    style="left: 270px;"
+    style="left: 70px;"
   >
     <!---->
      
@@ -898,11 +878,11 @@ exports[`GridView component with decoration Default component with unavailable d
    
   <div
     class="grid-view__left"
-    style="width: 270px;"
+    style="width: 70px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 270px;"
+      style="min-width: 70px;"
     >
       <div
         class="grid-view__head"
@@ -922,6 +902,132 @@ exports[`GridView component with decoration Default component with unavailable d
              
           </div>
         </div>
+          
+        <!---->
+      </div>
+       
+      <div
+        class="grid-view__body"
+      >
+        <div
+          class="grid-view__body-inner"
+        >
+          <div
+            class="grid-view__placeholder"
+            style="height: 66px; width: 70px;"
+          />
+           
+          <div
+            class="grid-view__rows"
+            style="transform: translateY(0px) translateX(nullpx);"
+          >
+            <div
+              class="grid-view__row"
+            >
+              <!---->
+               
+              <div
+                class="grid-view__column"
+                style="width: 70px;"
+              >
+                <div
+                  class="grid-view__row-info"
+                >
+                  <div
+                    class="grid-view__row-count"
+                    title="2"
+                  >
+                    
+            2
+          
+                  </div>
+                   
+                  <div
+                    class="grid-view__row-drag"
+                  />
+                   
+                  <a
+                    class="grid-view__row-more"
+                  >
+                    <i
+                      class="fas fa-expand"
+                    />
+                  </a>
+                   
+                </div>
+              </div>
+               
+            </div>
+          </div>
+           
+          <div
+            class="grid-view__row"
+            style="width: 70px;"
+          >
+            <div
+              class="grid-view__column"
+              style="width: 70px;"
+            >
+              <a
+                class="grid-view__add-row"
+              >
+                <i
+                  class="fas fa-plus"
+                />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+      <div
+        class="grid-view__foot"
+      >
+        <div
+          class="grid-view__foot-info"
+        >
+          
+        gridView.rowCount - 2
+      
+        </div>
+         
+      </div>
+    </div>
+     
+    <div
+      style="display: none;"
+    >
+      <div
+        class="grid-view__field-dragging"
+        style="width: 0px; left: 0px;"
+      />
+       
+      <div
+        class="grid-view__field-target"
+        style="left: 0px;"
+      />
+    </div>
+  </div>
+   
+  <div
+    class="grid-view__divider"
+    style="left: 70px;"
+  />
+   
+  <!---->
+   
+  <div
+    class="grid-view__right"
+    style="left: 70px;"
+  >
+    <div
+      class="grid-view__inner"
+      style="min-width: 800px;"
+    >
+      <div
+        class="grid-view__head"
+      >
+        <!---->
          
         <div
           class="grid-view__column"
@@ -960,168 +1066,11 @@ exports[`GridView component with decoration Default component with unavailable d
             </a>
              
              
-            <!---->
-          </div>
-        </div>
-         
-        <!---->
-      </div>
-       
-      <div
-        class="grid-view__body"
-      >
-        <div
-          class="grid-view__body-inner"
-        >
-          <div
-            class="grid-view__placeholder"
-            style="height: 66px; width: 270px;"
-          >
             <div
-              class="grid-view__placeholder-column"
-              style="left: 199px;"
+              class="grid-view__description-width"
             />
           </div>
-           
-          <div
-            class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
-          >
-            <div
-              class="grid-view__row"
-            >
-              <!---->
-               
-              <div
-                class="grid-view__column"
-                style="width: 70px;"
-              >
-                <div
-                  class="grid-view__row-info"
-                >
-                  <div
-                    class="grid-view__row-count"
-                    title="2"
-                  >
-                    
-            2
-          
-                  </div>
-                   
-                  <div
-                    class="grid-view__row-drag"
-                  />
-                   
-                  <a
-                    class="grid-view__row-more"
-                  >
-                    <i
-                      class="fas fa-expand"
-                    />
-                  </a>
-                   
-                </div>
-              </div>
-               
-              <div
-                class="grid-view__column"
-                style="width: 200px;"
-              >
-                <div
-                  class="grid-view__cell"
-                >
-                  <div
-                    class="grid-field-text"
-                  >
-                    first
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-           
-          <div
-            class="grid-view__row"
-            style="width: 270px;"
-          >
-            <div
-              class="grid-view__column"
-              style="width: 270px;"
-            >
-              <a
-                class="grid-view__add-row"
-              >
-                <i
-                  class="fas fa-plus"
-                />
-              </a>
-            </div>
-          </div>
         </div>
-      </div>
-       
-      <div
-        class="grid-view__foot"
-      >
-        <div
-          class="grid-view__foot-info"
-        >
-          
-        gridView.rowCount - 2
-      
-        </div>
-         
-        <div
-          style="width: 200px;"
-        >
-          <div
-            class="grid-view-aggregation"
-          >
-            <!---->
-             
-          </div>
-        </div>
-      </div>
-    </div>
-     
-    <div
-      style="display: none;"
-    >
-      <div
-        class="grid-view__field-dragging"
-        style="width: 0px; left: 0px;"
-      />
-       
-      <div
-        class="grid-view__field-target"
-        style="left: 0px;"
-      />
-    </div>
-  </div>
-   
-  <div
-    class="grid-view__divider"
-    style="left: 270px;"
-  />
-   
-  <div
-    class="grid-view__divider-width"
-    style="left: 270px;"
-  />
-   
-  <div
-    class="grid-view__right"
-    style="left: 270px;"
-  >
-    <div
-      class="grid-view__inner"
-      style="min-width: 600px;"
-    >
-      <div
-        class="grid-view__head"
-      >
-        <!---->
-         
         <div
           class="grid-view__column"
           filters=""
@@ -1230,7 +1179,7 @@ exports[`GridView component with decoration Default component with unavailable d
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 400px;"
+            style="height: 66px; width: 600px;"
           >
             <div
               class="grid-view__placeholder-column"
@@ -1239,6 +1188,10 @@ exports[`GridView component with decoration Default component with unavailable d
             <div
               class="grid-view__placeholder-column"
               style="left: 399px;"
+            />
+            <div
+              class="grid-view__placeholder-column"
+              style="left: 599px;"
             />
           </div>
            
@@ -1261,7 +1214,7 @@ exports[`GridView component with decoration Default component with unavailable d
                   <div
                     class="grid-field-text"
                   >
-                    Bram
+                    first
                   </div>
                 </div>
               </div>
@@ -1275,7 +1228,7 @@ exports[`GridView component with decoration Default component with unavailable d
                   <div
                     class="grid-field-text"
                   >
-                    
+                    Bram
                   </div>
                 </div>
               </div>
@@ -1284,11 +1237,11 @@ exports[`GridView component with decoration Default component with unavailable d
            
           <div
             class="grid-view__row"
-            style="width: 400px;"
+            style="width: 600px;"
           >
             <div
               class="grid-view__column"
-              style="width: 400px;"
+              style="width: 600px;"
             >
               <a
                 class="grid-view__add-row"
@@ -1304,6 +1257,16 @@ exports[`GridView component with decoration Default component with unavailable d
         class="grid-view__foot"
       >
          
+        <div
+          style="width: 200px;"
+        >
+          <div
+            class="grid-view-aggregation"
+          >
+            <!---->
+             
+          </div>
+        </div>
         <div
           style="width: 200px;"
         >

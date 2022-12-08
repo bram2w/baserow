@@ -1,4 +1,5 @@
 import contextlib
+import typing
 from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, ValuesView
 
 from django.core.exceptions import ImproperlyConfigured
@@ -9,6 +10,9 @@ from rest_framework import serializers
 from baserow.api.utils import ExceptionMappingType, get_serializer_class, map_exceptions
 
 from .exceptions import InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
+
+if typing.TYPE_CHECKING:
+    from django.contrib.contenttypes.models import ContentType
 
 
 class Instance(object):
@@ -36,6 +40,11 @@ class ModelInstanceMixin:
     def __init__(self):
         if not self.model_class:
             raise ImproperlyConfigured("The model_class of an instance must be set.")
+
+    def get_content_type(self) -> "ContentType":
+        from django.contrib.contenttypes.models import ContentType
+
+        return ContentType.objects.get_for_model(self.model_class)
 
 
 class CustomFieldsInstanceMixin:
@@ -281,7 +290,7 @@ class Registry(Generic[T]):
 
         return self.registry[type_name]
 
-    def get_by_type(self, instance_type: Type[T]) -> T:
+    def get_by_type(self, instance_type: Type[K]) -> K:
         return self.get(instance_type.type)
 
     def get_all(self) -> ValuesView[T]:

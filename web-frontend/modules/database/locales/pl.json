@@ -81,13 +81,13 @@
         "showDatabases": "pokaż bazy danych"
     },
     "apiTokenSettings": {
-        "title": "Osobiste tokeny API",
+        "title": "Tokeny bazy danych",
         "createToken": "Utwórz token",
-        "noTokensMessage": "Nie utworzyłeś jeszcze tokena API. Możesz użyć tokenów API, aby uwierzytelnić się w punktach końcowych REST API, gdzie możesz tworzyć, czytać, aktualizować i usuwać wiersze. Możliwe jest ustawienie uprawnień na poziomie tabeli.",
+        "noTokensMessage": "Nie utworzyłeś jeszcze tokena bazy danych. Możesz użyć tokena bazy danych, aby uwierzytelnić się w punktach końcowych REST API, gdzie możesz tworzyć, czytać, aktualizować i usuwać wiersze. Możliwe jest ustawienie uprawnień na poziomie tabeli.",
         "hasFullPermissions": "Posiada pełne uprawnienia, również dla wszystkich dzieci.",
         "hasOnlySelectedPermissions": "Ma uprawnienia tylko do wybranych dzieci.",
         "noPermissions": "Nie ma uprawnień.",
-        "createNewTitle": "Utwórz nowy token API",
+        "createNewTitle": "Tworzenie nowego tokena bazy danych",
         "backToOverview": "Powrót do przeglądu"
     },
     "apiTokenForm": {
@@ -116,7 +116,7 @@
         "description": "Opis",
         "okDescription": "Żądanie zakończone pomyślnie.",
         "badRequestDescription": "Żądanie zawiera nieprawidłowe wartości lub nie można przeanalizować JSON.",
-        "unauthorizedDescription": "Kiedy próbujesz uzyskać dostęp do punktu końcowego bez ważnego tokena.",
+        "unauthorizedDescription": "Gdy próbujesz uzyskać dostęp do punktu końcowego bez ważnego tokena bazy danych.",
         "notFoundDescription": "Nie znaleziono wiersza lub tabeli.",
         "requestEntityTooLargeDescription": "Żądanie przekroczyło maksymalny dozwolony rozmiar ładunku.",
         "internalErrorDescription": "Serwer napotkał nieoczekiwany stan.",
@@ -154,7 +154,7 @@
         "pythonClient": "Przykładowy klient API w języku Python:"
     },
     "apiDocsTableListFields": {
-        "description": "Aby wylistować pola tabeli {name} należy wykonać żądanie `GET` do punktu końcowego {name} fields. Lista pól jest możliwa tylko wtedy, gdy token ma uprawnienia do odczytu, tworzenia lub aktualizacji.",
+        "description": "Aby wylistować pola tabeli {name} należy wykonać żądanie `GET` do punktu końcowego {name}. Lista pól jest możliwa tylko wtedy, gdy token ma uprawnienia do odczytu, tworzenia lub aktualizacji.",
         "resultFieldProperties": "Właściwości pola wynikowego",
         "id": "Klucz główny pola. Może zostać użyte do wygenerowania nazwy kolumny w bazie danych poprzez dodanie prefiksu `field_`.",
         "name": "Nazwa pola.",
@@ -280,7 +280,7 @@
         "hideHiddenFields": "Ukryj ukryte pola"
     },
     "rowEditFieldMultipleSelect": {
-        "addOption": "Dodaj kolejną opcję"
+        "addOption": "Wybierz opcję"
     },
     "rowEditFieldFile": {
         "addFile": "Dodaj plik",
@@ -294,7 +294,7 @@
         }
     },
     "rowEditFieldLinkRow": {
-        "addLink": "Dodaj kolejny link"
+        "addLink": "Wybierz link"
     },
     "tableCSVImporter": {
         "chooseFileLabel": "Wybierz plik CSV",
@@ -370,7 +370,8 @@
         "selectImportMessage": "Proszę wybrać dane do importu.",
         "filePreview": "Podgląd zawartości pliku",
         "changeImporterType": "Zmień typ importu",
-        "importPreview": "Podgląd importu"
+        "importPreview": "Podgląd importu",
+        "defaultName": "Tabela"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Kliknij, aby edytować formułę",
@@ -408,7 +409,9 @@
         "and": "I",
         "or": "Lub",
         "relatedFieldNotFound": "Powiązane pole nie zostało znalezione.",
-        "filterTypeNotFound": "Niezgodny typ filtra."
+        "filterTypeNotFound": "Niezgodny typ filtra.",
+        "noCompatibleFilterTypesErrorTitle": "Brak kompatybilnych typów filtrów",
+        "noCompatibleFilterTypesErrorMessage": "Żadne z twoich pól nie ma kompatybilnych typów filtrów"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "zdjęcie",
@@ -711,7 +714,7 @@
         "form": "Formularz"
     },
     "rowEditFieldMultipleCollaborators": {
-        "addCollaborator": "Dodaj współpracownika"
+        "addCollaborator": "Wybierz współpracownika"
     },
     "apiDocsUploadFile": {
         "file": "\"Plik\" wieloczęściowy zawierający zawartość pliku.",

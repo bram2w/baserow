@@ -2,6 +2,9 @@
   <div class="notifications">
     <div class="top-right-notifications">
       <ConnectingNotification v-if="connecting"></ConnectingNotification>
+      <UserSessionExpiredNotification
+        v-if="isUserSessionExpired"
+      ></UserSessionExpiredNotification>
       <FailedConnectingNotification
         v-if="failedConnecting"
       ></FailedConnectingNotification>
@@ -42,6 +45,7 @@ import CopyingNotification from '@baserow/modules/core/components/notifications/
 import PastingNotification from '@baserow/modules/core/components/notifications/PastingNotification'
 import ClearingNotification from '@baserow/modules/core/components/notifications/ClearingNotification'
 import AuthorizationErrorNotification from '@baserow/modules/core/components/notifications/AuthorizationErrorNotification'
+import UserSessionExpiredNotification from '@baserow/modules/core/components/notifications/UserSessionExpiredNotification'
 import UndoRedoNotification from '@baserow/modules/core/components/notifications/UndoRedoNotification'
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 
@@ -57,6 +61,7 @@ export default {
     ClearingNotification,
     AuthorizationErrorNotification,
     UndoRedoNotification,
+    UserSessionExpiredNotification,
   },
   computed: {
     undoRedoIsNotHidden() {
@@ -77,6 +82,7 @@ export default {
       clearing: (state) => state.notification.clearing,
       notifications: (state) => state.notification.items,
       undoRedoState: (state) => state.notification.undoRedoState,
+      isUserSessionExpired: (state) => state.notification.userSessionExpired,
     }),
   },
 }

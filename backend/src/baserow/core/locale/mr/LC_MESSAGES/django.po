@@ -1,0 +1,150 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-06-30 13:52+0000\n"
+"PO-Revision-Date: 2022-11-28 18:47+0000\n"
+"Last-Translator: Prachi Joshi <josprachi@yahoo.com>\n"
+"Language-Team: Marathi <https://hosted.weblate.org/projects/baserow/"
+"backend-core/mr/>\n"
+"Language: mr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.15-dev\n"
+
+#: src/baserow/core/emails.py:96
+#, python-format
+msgid "%(by)s invited you to %(group_name)s - Baserow"
+msgstr "%(by)s ने तुम्हाला %(group_name)s - Baserow वर आमंत्रित केले आहे"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:146
+msgid "Invitation"
+msgstr "आमंत्रण"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:151
+#, python-format
+msgid ""
+"<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
+"%(group_name)s</strong>."
+msgstr ""
+"<strong>%(first_name)s</strong> ने तुम्हाला <strong>%(group_name)s</strong> "
+"वर सहयोग करण्यासाठी आमंत्रित केले आहे."
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:165
+msgid "Accept invitation"
+msgstr "आमंत्रण स्वीकारा"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:179
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:156
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:156
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:161
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:179
+msgid ""
+"Baserow is an open source no-code database tool which allows you to "
+"collaborate on projects, customers and more. It gives you the powers of a "
+"developer without leaving your browser."
+msgstr ""
+"Baserow हे ओपन सोर्स नो-कोड डेटाबेस टूल आहे जे तुम्हाला प्रकल्प(प्रोजेक्ट), "
+"ग्राहक आणि इतर बऱ्याच बाबतींत सहयोग करण्यास अनुमती देते. हे तुम्हाला तुमचा "
+"ब्राउझर न सोडता विकसकाचे अधिकार देते."
+
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:146
+msgid "Account permanently deleted"
+msgstr "खाते कायमचे हटवले"
+
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:151
+#, python-format
+msgid ""
+"Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
+"has been permanently deleted."
+msgstr ""
+"Baserow (%(public_web_frontend_hostname)s) वरील तुमचे खाते (%(username)s) "
+"कायमचे हटवले गेले आहे."
+
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:146
+msgid "Account deletion cancelled"
+msgstr "खाते हटवणे रद्द केले"
+
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:151
+#, python-format
+msgid ""
+"Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
+"was pending deletion, but you've logged in so this operation has been "
+"cancelled."
+msgstr ""
+"Baserow (%(public_web_frontend_hostname)s) वरील आपले खाते (%(username)s) "
+"हटविण्यासाठी प्रलंबित होते, परंतु आपण लॉग इन केले आहे म्हणून हे ऑपरेशन रद्द "
+"केले गेले आहे."
+
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:146
+msgid "Account pending deletion"
+msgstr "खाते हटविणे प्रलंबित आहे"
+
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:151
+#, python-format
+msgid ""
+"Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
+"will be permanently deleted in %(days_left)s days."
+msgstr ""
+"Baserow (%(public_web_frontend_hostname)s) वरील तुमचे खाते (%(username)s) "
+"%(days_left)s दिवसांत कायमचे हटवले जाईल."
+
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:156
+msgid ""
+"If you've changed your mind and want to cancel your account deletion, you "
+"just have to login again."
+msgstr ""
+"जर तुम्ही तुमचा विचार बदलला असेल आणि तुमचे खाते हटवणे रद्द करायचे असेल, तर "
+"तुम्हाला फक्त पुन्हा लॉग इन करावे लागेल."
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:146
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:165
+msgid "Reset password"
+msgstr "पासवर्ड रीसेट करा"
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:151
+#, python-format
+msgid ""
+"A password reset was requested for your account (%(username)s) on Baserow "
+"(%(public_web_frontend_hostname)s). If you did not authorize this, you may "
+"simply ignore this email."
+msgstr ""
+"बेसरोवर (%(public_web_frontend_hostname)s) तुमच्या खात्यासाठी (%(username)s) "
+"पासवर्ड रीसेट करण्याची विनंती केली गेली होती. तुम्ही हे अधिकृत केले नसल्यास, "
+"तुम्ही या ईमेलकडे दुर्लक्ष करू शकता."
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:156
+#, python-format
+msgid ""
+"To continue with your password reset, simply click the button below, and you "
+"will be able to change your password. This link will expire in %(hours)s "
+"hours."
+msgstr ""
+"तुमचा पासवर्ड रीसेट सुरू ठेवण्यासाठी, फक्त खालील बटणावर क्लिक करा आणि तुम्ही "
+"तुमचा पासवर्ड बदलण्यास सक्षम असाल. ही लिंक %(hours)s तासांत कालबाह्य होईल."
+
+#: src/baserow/core/user/emails.py:16
+msgid "Reset password - Baserow"
+msgstr "पासवर्ड रीसेट करा - Baserow"
+
+#: src/baserow/core/user/emails.py:37
+msgid "Account deletion scheduled - Baserow"
+msgstr "खाते हटविणे निर्धारित केले - Baserow"
+
+#: src/baserow/core/user/emails.py:56
+msgid "Account permanently deleted - Baserow"
+msgstr "खाते कायमचे हटवले - Baserow"
+
+#: src/baserow/core/user/emails.py:74
+msgid "Account deletion cancelled - Baserow"
+msgstr "खाते हटविणे रद्द केले - Baserow"
+
+#: src/baserow/core/user/handler.py:169
+#, python-format
+msgid "%(name)s's group"
+msgstr "%(name)s चा गट"
+
+#~ msgid "Group invitation"
+#~ msgstr "Invitation à un groupe"

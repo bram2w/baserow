@@ -350,7 +350,8 @@
         "selectImportMessage": "Selecteer gegevens om te importeren.",
         "filePreview": "Voorbeeld van bestandsinhoud",
         "importPreview": "Importvoorbeeld",
-        "changeImporterType": "Importtype wijzigen"
+        "changeImporterType": "Importtype wijzigen",
+        "defaultName": "Tabel"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klik om de formule te bewerken",
@@ -388,7 +389,9 @@
         "and": "En",
         "or": "Of",
         "relatedFieldNotFound": "Het gerelateerde veld is niet gevonden.",
-        "filterTypeNotFound": "Het filtertype is niet compatibel."
+        "filterTypeNotFound": "Het filtertype is niet compatibel.",
+        "noCompatibleFilterTypesErrorTitle": "Geen compatibele filtertypes",
+        "noCompatibleFilterTypesErrorMessage": "Geen van uw velden heeft een compatibel filtertype"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "afbeelding",
@@ -734,5 +737,9 @@
     "duplicateTableJobType": {
         "duplicatedTitle": "Tabel dupliceerd",
         "duplicating": "Dupliceren"
+    },
+    "fileField": {
+        "errorEmptyFileNameMessage": "U kunt geen lege naam voor een bestand instellen.",
+        "errorEmptyFileNameTitle": "Ongeldige bestandsnaam"
     }
 }
