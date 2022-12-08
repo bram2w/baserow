@@ -10,6 +10,14 @@ For example:
 ## Unreleased
 
 ### New Features
+
+### Bug Fixes
+
+### Refactors
+
+## Released (2022-12-8 1.13.2)
+
+### New Features
 * Add drag and drop zone for files to the row edit modal [#1161](https://gitlab.com/bramw/baserow/-/issues/1161)
 
 * Automatically enable/disable enterprise features upon activation/deactivation without needing a page refresh first. [#1306](https://gitlab.com/bramw/baserow/-/issues/1306)
@@ -31,7 +39,7 @@ For example:
 * Refresh the JWT token when needed instead of periodically. [#1294](https://gitlab.com/bramw/baserow/-/issues/1294)
 * Remove "// Baserow" from title on a publicly shared view if `show_logo` is set to false. [#1378](https://gitlab.com/bramw/baserow/-/issues/1378)
 
-## Released (2022-11-22 1.13.1)
+## Released (2022-11-22 1.13.2)
 
 ### New Features
 
