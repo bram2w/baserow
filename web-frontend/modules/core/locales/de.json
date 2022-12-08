@@ -119,7 +119,8 @@
     },
     "createGroupModal": {
         "createNew": "Neue Gruppe erstellen",
-        "add": "Gruppe hinzufügen"
+        "add": "Gruppe hinzufügen",
+        "defaultName": "Unbenannte Gruppe"
     },
     "templateCategories": {
         "search": "Vorlagen suchen",
@@ -204,7 +205,8 @@
         "error": "Beim Laden der Seite ist ein Fehler aufgetreten. Unsere Entwickler wurden über das Problem informiert. Bitte versuchen Sie, die Seite zu aktualisieren oder zum Dashboard zurückzukehren.",
         "backDashboard": "Zurück zum Dashboard",
         "backLogin": "Zurück zur Anmeldung",
-        "wrong": "Etwas ist fehlgeschlagen"
+        "wrong": "Etwas ist fehlgeschlagen",
+        "refresh": "Seite neu laden"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -313,7 +315,7 @@
         "fieldsDescription": "Alle Felder sind im Formular.",
         "prefillInfoLink": "Werte dynamisch vorausfüllen",
         "modal": {
-            "title": "Werte dynamisch vorausfüllen",
+            "title": "Felder dynamisch ausfüllen oder ausblenden",
             "descriptionPartOne": "Formular können vorausgefüllt werden, um dem Benutzer zu helfen das Formular schneller auszufüllen.",
             "descriptionPartTwo": "Alle Felder die im Formular verfügbar sind, können vorausgefüllt werden.",
             "howToPrefill": {
@@ -363,8 +365,13 @@
                     "description": "Ein Datumsfeld kann ein Datum in den folgenden Formaten akzeptieren und wir das Datenformat des Feldes benutzen um den Wert richtig darzustellen.",
                     "codeSnippet": "\n// Standards\nISO_8601\n\n// Generelle Formate\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
+            },
+            "howToHide": {
+                "description": "Wenn Sie ein Feld dynamisch ausblenden möchten, können Sie dies mit Abfrageparametern tun, die Sie der öffentlichen von-URL hinzufügen. Diesen Abfrageparametern wird das Präfix `hide_` vorangestellt, um Kollisionen mit potenziellen künftigen Abfrageparametern zu vermeiden.",
+                "title": "Wie man ein Feld ausblendet"
             }
-        }
+        },
+        "prefillOrHideInfoLink": "Dynamisches Vorfüllen oder Ausblenden"
     },
     "deleteAccountSettings": {
         "groupNotice": "Verwaiste Gruppen werden gelöscht",
@@ -436,14 +443,14 @@
             "columns": {
                 "name": "Name",
                 "email": "E-Mail",
-                "role": "Rolle"
+                "role": "Standard-Rolle"
             }
         },
         "invitesTable": {
             "columns": {
                 "email": "E-Mail",
                 "message": "Nachricht",
-                "role": "Rolle"
+                "role": "Standardrolle"
             },
             "actions": {
                 "copyEmail": "E-Mail kopieren",
@@ -461,5 +468,21 @@
                 }
             }
         }
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "{count} einladen"
+    },
+    "removeFromGroupModal": {
+        "title": "Entfernen aus Gruppe bestätigen",
+        "confirmation": "Sind Sie sicher, dass Sie {name} aus {group_name} entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "remove": "Entfernen"
+    },
+    "UserSessionExpiredNotification": {
+        "title": "Sitzung abgelaufen",
+        "content": "Sie wurden abgemeldet, weil Ihr Authentifizierungstoken abgelaufen ist. Bitte loggen Sie sich erneut ein."
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Finden...",
+        "selectedAmountLabel": "{count} ausgewählt"
     }
 }

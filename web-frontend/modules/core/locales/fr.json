@@ -216,7 +216,7 @@
     },
     "login": {
         "title": "Identification",
-        "forgotPassword": "Mot de passe oublié",
+        "forgotPassword": "Mot de passe oublié ?",
         "signUp": "S'inscrire",
         "emailPlaceholder": "Entrez votre adresse e-mail..",
         "passwordPlaceholder": "Entrez votre mot de passe..",
@@ -247,7 +247,7 @@
         "namePlaceholder": "Entrez votre nom..",
         "passwordPlaceholder": "Entrez votre mot de passe..",
         "passwordRepeatPlaceholder": "Confirmez votre mot de passe..",
-        "loginText": "Vous avez déjà un compte?"
+        "loginText": "Vous avez déjà un compte ?"
     },
     "forgotPassword": {
         "title": "Mot de passe oublié",

@@ -205,7 +205,7 @@
         "premiumFeatures": "Funkcje premium"
     },
     "license": {
-        "title": "Abonament {product_code}",
+        "title": "Abonament {name}",
         "users": "Użytkownicy",
         "description": "Wybierz użytkowników, którzy mogą korzystać z abonamentu {product_code}. Ta licencja umożliwia przyznanie {product_code} maksymalnie {seats} użytkownikom.",
         "seatLeft": "Nie masz wolnych miejsc|Masz jedno miejsce|Masz jeszcze {count} miejsc/a",
@@ -230,7 +230,13 @@
         "rowUsage": "Wykorzystanie wierszy",
         "storeUsage": "Wykorzystanie pamięci masowej",
         "disconnectLicense": "Odłączenie licencji",
-        "disconnectDescription": "Jeśli odłączysz tę licencję, gdy jest aktywna, powiązani użytkownicy nie będą już mieli dostępu do planu. To skutecznie usunie licencję. Skontaktuj się z naszym zespołem pomocy technicznej pod adresem {contact}, jeśli chcesz użyć tej licencji w innej instancji hostowanej samodzielnie."
+        "disconnectDescription": "Jeśli odłączysz tę licencję, gdy jest aktywna, powiązani użytkownicy nie będą już mieli dostępu do planu. To skutecznie usunie licencję. Skontaktuj się z naszym zespołem pomocy technicznej pod adresem {contact}, jeśli chcesz użyć tej licencji w innej instancji hostowanej samodzielnie.",
+        "premiumFeatureName": "Premium",
+        "supportFeatureName": "Wsparcie",
+        "moreSeatsNeededTitle": "Potrzeba więcej miejsc",
+        "enterpriseFeatureName": "Wersja Enterprise",
+        "contactSalesMoreSeats": "Skontaktuj się z działem sprzedaży, aby uzyskać więcej miejsc",
+        "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} płatnych miejsc i {free_users_count} wolnych miejsc w użyciu"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Lewa granica",

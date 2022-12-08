@@ -37,12 +37,13 @@
     "applicationType": {
         "database": "Base de datos",
         "cantSelectTableTitle": "No se pudo seleccionar la base de datos.",
-        "cantSelectTableDescription": "No se pudo seleccionar la base de datos porque no tiene tablas. Usa la barra lateral para crear uno."
+        "cantSelectTableDescription": "No se pudo seleccionar la base de datos porque no tiene tablas. Usa la barra lateral para crear uno.",
+        "databaseDefaultName": "Base de datos sin título"
     },
     "settingType": {
         "account": "Cuenta",
         "password": "Contraseña",
-        "tokens": "Fichas de API",
+        "tokens": "Fichas de la base de datos",
         "deleteAccount": "Borrar cuenta"
     },
     "userFileUploadType": {
@@ -210,7 +211,7 @@
         "tableDoesNotExistDescription": "No se pudo completar la acción porque la tabla relacionada ya no existe.",
         "rowDoesNotExistTitle": "La fila no existe.",
         "rowDoesNotExistDescription": "No se pudo completar la acción porque la fila relacionada ya no existe.",
-        "fileSizeTooLargeTitle": "Archivo demasiado grande",
+        "fileSizeTooLargeTitle": "Fichero demasiado grande",
         "fileSizeTooLargeDescription": "El archivo proporcionado es demasiado grande.",
         "invalidFileTitle": "Archivo inválido",
         "invalidFileDescription": "El archivo proporcionado no es un archivo válido.",
@@ -326,7 +327,7 @@
         "toDateDescription": "Devuelve el primer argumento convertido en una fecha dada una cadena de formato de fecha como segundo argumento.",
         "dayDescription": "Devuelve el día del mes como un número entre 1 y 31 del argumento.",
         "dateDiffDescription": "Dada una unidad de fecha para medir como primer argumento ('año', 'mes', 'semana', 'día', 'hora', 'minuto', 'segundos') calcula y devuelve el número de unidades del segundo argumento al tercero.",
-        "andDescription": "Devuelve el lógico del primer y segundo argumento, por lo que si ambos son verdaderos, el resultado es verdadero; de lo contrario, es falso.",
+        "andDescription": "Devuelve el lógico del primer y segundo argumento, por lo que si ambos son verdaderos entonces el resultado es verdadero, de lo contrario es falso.",
         "orDescription": "Devuelve el lógico del primer y segundo argumento, por lo que si cualquiera de los dos es verdadero, el resultado es verdadero; de lo contrario, es falso.",
         "dateIntervalDescription": "Devuelve el intervalo de fechas correspondiente al argumento proporcionado.",
         "replaceDescription": "Reemplaza todas las instancias del segundo argumento en el primer argumento con el tercer argumento.",
@@ -355,7 +356,7 @@
         "stddevPopDescription": "Calcula la desviación estándar de la población de los valores y devuelve el resultado. La desviación estándar de la población se debe utilizar cuando los valores proporcionados contienen un valor para cada dato de la población.",
         "stddevSampleDescription": "Calcula la desviación estándar de la muestra de los valores y devuelve el resultado. La desviación de la muestra debe usarse cuando los valores proporcionados son solo para una muestra o subconjunto de valores para una población subyacente.",
         "varianceSampleDescription": "Calcula la varianza muestral de los valores y devuelve el resultado. La varianza de la muestra debe usarse cuando los valores proporcionados son solo para una muestra o subconjunto de valores para una población subyacente.",
-        "variancePopDescription": "Calcula la varianza de población de los valores y devuelve el resultado. La varianza de la población se debe utilizar cuando los valores proporcionados contienen una",
+        "variancePopDescription": "Calcula la varianza poblacional de los valores y devuelve el resultado. La varianza de la población debe utilizarse cuando los valores proporcionados contienen un  valor para cada uno de los datos de la población.",
         "avgDescription": "Promedia todos los valores y devuelve el resultado.",
         "sumDescription": "Suma todos los valores y devuelve el resultado.",
         "filterDescription": "Filtra una expresión que involucra una referencia de campo de búsqueda/vínculo o una llamada de función de búsqueda.",

@@ -29,7 +29,8 @@
         "deactivate": "Deaktivieren",
         "duplicate": "Duplizieren",
         "remove": "Entfernen",
-        "login": "Anmelden"
+        "login": "Anmelden",
+        "download": "Download"
     },
     "adminType": {
         "settings": "Einstellungen"
@@ -37,12 +38,13 @@
     "applicationType": {
         "database": "Datenbank",
         "cantSelectTableTitle": "Es konnte keine Datenbank ausgewählt werden.",
-        "cantSelectTableDescription": "Diese Datenbank konnte nicht ausgewählt werden weil sie keine Tabelle enthält. Nutzen Sie die Seitenleiste um eine Tabelle zu erstellen."
+        "cantSelectTableDescription": "Diese Datenbank konnte nicht ausgewählt werden weil sie keine Tabelle enthält. Nutzen Sie die Seitenleiste um eine Tabelle zu erstellen.",
+        "databaseDefaultName": "Unbenannte Datenbank"
     },
     "settingType": {
         "account": "Konto",
         "password": "Passwort",
-        "tokens": "API Token",
+        "tokens": "Datenbank-Token",
         "deleteAccount": "Konto löschen"
     },
     "userFileUploadType": {

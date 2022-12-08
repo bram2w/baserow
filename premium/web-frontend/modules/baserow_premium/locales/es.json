@@ -13,7 +13,7 @@
             "licenses": "Licencias"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "tabla kanban"
         },
         "exporterType": {
             "json": "Exportar a JSON",
@@ -197,7 +197,7 @@
         "premiumFeatures": "Características premium"
     },
     "license": {
-        "title": "{product_code} plan",
+        "title": "{name} plan",
         "users": "Usuarios",
         "description": "Elija los usuarios que pueden usar el plan {product_code}. Esta licencia le permite otorgar {product_code} a un máximo de {seats} usuarios.",
         "seatLeft": "No te quedan asientos| Te queda un asiento| Te quedan {count} asientos",
@@ -225,7 +225,10 @@
         "disconnectDescription": "Si desconecta esta licencia mientras está activa, los usuarios relacionados ya no tendrán acceso al plan. Eliminará efectivamente la licencia. Comuníquese con nuestro equipo de soporte en {contacto} si desea utilizar esta licencia en otra instancia autohospedada.",
         "moreSeatsNeededTitle": "Se necesitan más asientos",
         "contactSalesMoreSeats": "Contacta el departamento de ventas para obtener más asientos",
-        "automaticSeatsProgressBarStatus": "{asientos_ocupados} / {asientos} asientos pagados y {recuento_de_usuarios_libres} asientos libres en uso"
+        "automaticSeatsProgressBarStatus": "{asientos_ocupados} / {asientos} asientos pagados y {recuento_de_usuarios_libres} asientos libres en uso",
+        "premiumFeatureName": "De primera calidad",
+        "enterpriseFeatureName": "Empresa",
+        "supportFeatureName": "Soporte"
     },
     "conditionalColorValueProviderForm": {
         "addCondition": "Añadir condición",

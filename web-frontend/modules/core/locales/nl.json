@@ -119,7 +119,8 @@
     },
     "createGroupModal": {
         "createNew": "Nieuwe groep aanmaken",
-        "add": "Groep toevoegen"
+        "add": "Groep toevoegen",
+        "defaultName": "Naamloze groep"
     },
     "templateCategories": {
         "search": "Zoek sjablonen",
@@ -196,7 +197,8 @@
         "error": "Er is iets misgegaan tijdens het laden van de pagina. Onze ontwikkelaars zijn op de hoogte gebracht van het probleem. Probeer Vernieuwen of ga terug naar het dashboard.",
         "backDashboard": "Terug naar dashboard",
         "backLogin": "Terug naar inloggen",
-        "wrong": "Er is iets misgegaan"
+        "wrong": "Er is iets misgegaan",
+        "refresh": "Pagina vernieuwen"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -359,8 +361,13 @@
                     "description": "Een datumveld kan een datum in de volgende notaties accepteren en gebruikt de datumnotatie van het veld om de datum te parseren.",
                     "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
+            },
+            "howToHide": {
+                "title": "Hoe een veld verbergen",
+                "description": "Als u een veld dynamisch wilt verbergen, kunt u dat doen via query parameters die worden toegevoegd aan de public from url. Deze query parameters worden voorafgegaan door `hide_` om botsing met mogelijke toekomstige query parameters te voorkomen."
             }
-        }
+        },
+        "prefillOrHideInfoLink": "Dynamisch invullen of verbergen"
     },
     "deleteAccountSettings": {
         "orphanGroups": "Zal ook permanent worden verwijderd na de respijtperiode",
@@ -461,5 +468,21 @@
     },
     "crudTableSearch": {
         "search": "Zoeken"
+    },
+    "removeFromGroupModal": {
+        "title": "Bevestig verwijdering uit de groep",
+        "remove": "Verwijderen",
+        "confirmation": "Weet u zeker dat u {naam} wilt verwijderen uit {group_name}? Deze actie kan niet ongedaan worden gemaakt."
+    },
+    "UserSessionExpiredNotification": {
+        "title": "Sessie verlopen",
+        "content": "U bent uitgelogd omdat uw authenticatietoken is verlopen. Log opnieuw in."
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Zoek ...",
+        "selectedAmountLabel": "{count} geselecteerd"
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "Uitnodigen {count}"
     }
 }
