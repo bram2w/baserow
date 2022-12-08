@@ -81,13 +81,13 @@
         "showDatabases": "Datenbanken anzeigen"
     },
     "apiTokenSettings": {
-        "title": "Persönliche API-Tokens",
+        "title": "Datenbank-Token",
         "createToken": "Token erstellen",
-        "noTokensMessage": "Sie haben noch kein API-Token erstellt. Sie können API-Tokens verwenden, um sich bei den REST-API-Endpunkten zu authentifizieren, wo Sie Zeilen erstellen, lesen, aktualisieren und löschen können. Es ist möglich, Berechtigungen auf Tabellenebene festzulegen.",
+        "noTokensMessage": "Sie haben noch kein Datenbank-Token erstellt. Sie können Datenbank-Tokens verwenden, um sich bei den REST-API-Endpunkten zu authentifizieren, wo Sie Zeilen erstellen, lesen, aktualisieren und löschen können. Es ist möglich, Berechtigungen auf Tabellenebene festzulegen.",
         "hasFullPermissions": "Hat volle Berechtigung, auch für alle Kinder.",
         "hasOnlySelectedPermissions": "Hat nur Berechtigungen für die ausgewählten Kinder.",
         "noPermissions": "Hat keine Berechtigungen.",
-        "createNewTitle": "Neues API-Token erstellen",
+        "createNewTitle": "Neues Datenbank-Token erstellen",
         "backToOverview": "Zurück zur Übersicht"
     },
     "apiTokenForm": {
@@ -116,7 +116,7 @@
         "description": "Beschreibung",
         "okDescription": "Anfrage erfolgreich abgeschlossen.",
         "badRequestDescription": "Die Anfrage enthält ungültige Werte oder das JSON konnte nicht interpretiert werden.",
-        "unauthorizedDescription": "Wenn Sie versuchen, auf einen Endpunkt ohne gültiges Token zuzugreifen.",
+        "unauthorizedDescription": "Wenn Sie versuchen, auf einen Endpunkt ohne ein gültiges Datenbank-Token zuzugreifen.",
         "notFoundDescription": "Zeile oder Tabelle wird nicht gefunden.",
         "requestEntityTooLargeDescription": "Die Anfrage hat die maximal zulässige Größe der Nutzdaten überschritten.",
         "internalErrorDescription": "Der Server ist auf eine unerwartete Bedingung gestoßen.",
@@ -154,7 +154,7 @@
         "pythonClient": "Python-Beispiel API-Client:"
     },
     "apiDocsTableListFields": {
-        "description": "Um Felder der Tabelle {name} aufzulisten, muss eine `GET`-Anfrage an den Endpunkt {name} fields gestellt werden. Die Felder können nur aufgelistet werden, wenn das Token Lese-, Erstellungs- oder Aktualisierungsberechtigungen hat.",
+        "description": "Um Felder der Tabelle {name} aufzulisten, muss eine `GET`-Anfrage an den Endpunkt {name} fields gestellt werden. Es ist nur möglich, die Felder aufzulisten, wenn das Datenbank-Token Lese-, Erstellungs- oder Aktualisierungsberechtigungen hat.",
         "resultFieldProperties": "Eigenschaften des Ergebnisfeldes",
         "id": "Primärschlüssel des Feldes. Kann verwendet werden, um den Namen der Datenbankspalte durch Hinzufügen des Präfixes `field_` zu generieren.",
         "name": "Name des Feldes.",
@@ -184,7 +184,7 @@
         "before": "Wenn angegeben, wird die neu erstellte Zeile vor der Zeile mit der angegebenen id positioniert."
     },
     "apiDocsAuth": {
-        "description": "Baserow verwendet eine einfache tokenbasierte Authentifizierung. Sie müssen mindestens ein API-Token in Ihrem {settingsLink} erzeugen, um die unten beschriebenen Endpunkte zu verwenden. Es ist möglich, per Token Berechtigungen zum Erstellen, Lesen, Aktualisieren und Löschen bis zur Tabellenebene zu vergeben. Sie können sich bei der API authentifizieren, indem Sie Ihr API-Token im HTTP-Authorization Bearer Token Header angeben. Alle API-Anfragen müssen authentifiziert sein und über HTTPS erfolgen.",
+        "description": "Baserow verwendet eine einfache tokenbasierte Authentifizierung. Sie müssen mindestens ein Datenbank-Token in Ihrem {settingsLink} erzeugen, um die unten beschriebenen Endpunkte zu verwenden. Es ist möglich, per Token Berechtigungen zum Erstellen, Lesen, Aktualisieren und Löschen bis zur Tabellenebene zu vergeben. Sie können sich bei der API authentifizieren, indem Sie Ihren Token im HTTP-Authorization Bearer Token Header angeben. Alle API-Anfragen müssen authentifiziert sein und über HTTPS erfolgen.",
         "settingsLink": "Einstellungen"
     },
     "apiDocsFilters": {
@@ -350,7 +350,8 @@
         "reportTitleFailure": "Fehlerhafte Zeilen",
         "filePreview": "Vorschau des Dateiinhalts",
         "importPreview": "Importvorschau",
-        "changeImporterType": "Importtyp ändern"
+        "changeImporterType": "Importtyp ändern",
+        "defaultName": "Tabelle"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Klicken Sie zum Bearbeiten der Formel",
@@ -388,7 +389,9 @@
         "and": "Und",
         "or": "Oder",
         "relatedFieldNotFound": "Das zugehörige Feld wurde nicht gefunden.",
-        "filterTypeNotFound": "Der Filtertyp ist nicht kompatibel."
+        "filterTypeNotFound": "Der Filtertyp ist nicht kompatibel.",
+        "noCompatibleFilterTypesErrorTitle": "Keine kompatiblen Filtertypen",
+        "noCompatibleFilterTypesErrorMessage": "Keines Ihrer Felder hat einen kompatiblen Filtertyp"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "Bild",
@@ -734,5 +737,9 @@
     "formViewModeType": {
         "form": "Formular",
         "formDescription": "Alle Felder sind sichtbar und vertikal gestapelt."
+    },
+    "fileField": {
+        "errorEmptyFileNameMessage": "Sie können keinen leeren Namen für eine Datei angeben.",
+        "errorEmptyFileNameTitle": "Ungültiger Dateiname"
     }
 }

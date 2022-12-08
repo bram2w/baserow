@@ -224,7 +224,10 @@
         "disconnectDescription": "Als je deze licentie ontkoppelt terwijl deze actief is, hebben de toegewezen gebruikers geen toegang meer tot het relevante plan. Deze handeling zal de licentie effectief verwijderen. Neem contact op met ons support team via {contact} als je deze licentie wilt gebruiken in een andere zelf-gehoste installatie.",
         "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} betaalde stoelen en {free_users_count} vrije stoelen in gebruik",
         "moreSeatsNeededTitle": "Meer seats nodig",
-        "contactSalesMoreSeats": "Neem contact op met sales voor meer seats"
+        "contactSalesMoreSeats": "Neem contact op met sales voor meer seats",
+        "supportFeatureName": "Support",
+        "premiumFeatureName": "Premium",
+        "enterpriseFeatureName": "Enterprise"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Linkerrand",

@@ -29,7 +29,8 @@
         "paste": "Plakken",
         "duplicate": "Dupliceer",
         "remove": "Verwijder",
-        "login": "Inloggen"
+        "login": "Inloggen",
+        "download": "Downloaden"
     },
     "adminType": {
         "settings": "Instellingen"
@@ -37,7 +38,8 @@
     "applicationType": {
         "database": "Database",
         "cantSelectTableTitle": "Kan de database niet selecteren.",
-        "cantSelectTableDescription": "De database kan niet worden geselecteerd omdat deze geen tabellen bevat. Gebruik de zijbalk om een tabel aan te maken."
+        "cantSelectTableDescription": "De database kan niet worden geselecteerd omdat deze geen tabellen bevat. Gebruik de zijbalk om een tabel aan te maken.",
+        "databaseDefaultName": "Naamloze databank"
     },
     "settingType": {
         "account": "Account",
