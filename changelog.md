@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 ### Bug Fixes
+* Use the correct `OperationType` to restore rows [#1389](https://gitlab.com/bramw/baserow/-/issues/1389)
 
 ### Refactors
 
