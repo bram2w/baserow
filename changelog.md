@@ -14,6 +14,7 @@ For example:
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
 
 ### Bug Fixes
+* Use the correct `OperationType` to restore rows [#1389](https://gitlab.com/bramw/baserow/-/issues/1389)
 
 ### Refactors
 

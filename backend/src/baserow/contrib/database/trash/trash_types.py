@@ -24,6 +24,7 @@ from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
 
 from ..fields.operations import RestoreFieldOperationType
+from ..rows.operations import RestoreDatabaseRowOperationType
 from ..table.operations import RestoreDatabaseTableOperationType
 from ..views.operations import RestoreViewOperationType
 from .models import TrashedRows
@@ -355,7 +356,7 @@ class RowTrashableItemType(TrashableItemType):
         return table.get_model()
 
     def get_restore_operation_type(self) -> str:
-        return RestoreDatabaseTableOperationType.type
+        return RestoreDatabaseRowOperationType.type
 
     def get_restore_operation_context(self, trashed_entry, trashed_item) -> str:
         return self._get_table(trashed_entry.parent_trash_item_id)
@@ -471,7 +472,7 @@ class RowsTrashableItemType(TrashableItemType):
         return table.get_model()
 
     def get_restore_operation_type(self) -> str:
-        return RestoreDatabaseTableOperationType.type
+        return RestoreDatabaseRowOperationType.type
 
     def get_restore_operation_context(self, trashed_entry, trashed_item) -> str:
         return trashed_item.table
