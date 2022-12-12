@@ -13,7 +13,12 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registries import auth_provider_type_registry
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user.handler import UserHandler
-from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
+from baserow_enterprise.auth_provider.exceptions import (
+    CannotCreateAuthProvider,
+    CannotDeleteAuthProvider,
+    CannotDisableLastAuthProvider,
+    DifferentAuthProvider,
+)
 
 SpecificAuthProviderModel = Type[AuthProviderModel]
 
@@ -59,6 +64,8 @@ class AuthProviderHandler:
         :return: The created authentication provider.
         """
 
+        if not auth_provider_type.can_create_new_providers():
+            raise CannotCreateAuthProvider()
         auth_provider_type.before_create(user, **values)
         return auth_provider_type.create(**values)
 
@@ -79,6 +86,17 @@ class AuthProviderHandler:
         """
 
         auth_provider_type = auth_provider_type_registry.get_by_model(auth_provider)
+
+        enabled_next = values.get("enabled", None)
+        if enabled_next is False:
+            another_enabled = (
+                AuthProviderModel.objects.filter(enabled=True)
+                .exclude(id=auth_provider.id)
+                .exists()
+            )
+            if not another_enabled:
+                raise CannotDisableLastAuthProvider()
+
         auth_provider_type.before_update(user, auth_provider, **values)
         return auth_provider_type.update(auth_provider, **values)
 
@@ -93,6 +111,15 @@ class AuthProviderHandler:
         """
 
         auth_provider_type = auth_provider_type_registry.get_by_model(auth_provider)
+        if not auth_provider_type.can_delete_existing_providers():
+            raise CannotDeleteAuthProvider()
+        another_enabled = (
+            AuthProviderModel.objects.filter(enabled=True)
+            .exclude(id=auth_provider.id)
+            .exists()
+        )
+        if not another_enabled:
+            raise CannotDisableLastAuthProvider()
         auth_provider_type.before_delete(user, auth_provider)
         auth_provider_type.delete(auth_provider)
 

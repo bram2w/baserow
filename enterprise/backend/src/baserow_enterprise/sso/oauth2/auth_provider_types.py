@@ -53,32 +53,35 @@ class OAuth2AuthProviderMixin:
     - self.SCOPE
     """
 
-    def can_create_new_providers(self):
-        return True
-
     def get_login_options(self, **kwargs) -> Optional[Dict[str, Any]]:
         if not is_sso_feature_active():
-            return {}
+            return None
 
-        instances = self.model_class.objects.all()
+        instances = self.model_class.objects.filter(enabled=True)
+        if not instances:
+            return None
+
         items = []
         for instance in instances:
-            if instance.enabled:
-                items.append(
-                    {
-                        "redirect_url": urllib.parse.urljoin(
-                            OAUTH_BACKEND_URL,
-                            reverse(
-                                "api:enterprise:sso:oauth2:login", args=(instance.id,)
-                            ),
-                        ),
-                        "name": instance.name,
-                        "type": self.type,
-                    }
-                )
+            items.append(
+                {
+                    "redirect_url": urllib.parse.urljoin(
+                        OAUTH_BACKEND_URL,
+                        reverse("api:enterprise:sso:oauth2:login", args=(instance.id,)),
+                    ),
+                    "name": instance.name,
+                    "type": self.type,
+                }
+            )
+
+        default_redirect_url = None
+        if len(items) == 1:
+            default_redirect_url = items[0]["redirect_url"]
+
         return {
             "type": self.type,
             "items": items,
+            "default_redirect_url": default_redirect_url,
         }
 
     def get_base_url(self, instance: AuthProviderModel) -> str:

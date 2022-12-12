@@ -9,7 +9,8 @@ from baserow_enterprise.sso.saml.exceptions import SamlProviderForDomainAlreadyE
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_get_login_options(enterprise_data_fixture):
+def test_get_login_options(data_fixture, enterprise_data_fixture):
+    data_fixture.create_password_provider()
     enterprise_data_fixture.create_saml_auth_provider(domain="test.com")
     login_options = auth_provider_type_registry.get_all_available_login_options()
     assert "saml" not in login_options
@@ -19,6 +20,7 @@ def test_get_login_options(enterprise_data_fixture):
     assert login_options["saml"] == {
         "type": "saml",
         "domain_required": False,
+        "default_redirect_url": "http://localhost:8000/api/sso/saml/login/",
     }
 
     enterprise_data_fixture.create_saml_auth_provider(domain="acme.com")
@@ -26,6 +28,7 @@ def test_get_login_options(enterprise_data_fixture):
     assert login_options["saml"] == {
         "type": "saml",
         "domain_required": True,
+        "default_redirect_url": "http://localhost:3000/login/saml",
     }
 
 

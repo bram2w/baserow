@@ -62,6 +62,22 @@ export const getters = {
     }
     return loginActions
   },
+  getPasswordLoginEnabled: (state) => {
+    return state.loginOptions.password
+  },
+  getDefaultRedirectUrl: (state) => {
+    const loginOptionsArr = Object.values(state.loginOptions)
+    const possibleRedirectLoginOptions = loginOptionsArr.filter(
+      (loginOption) => loginOption.default_redirect_url
+    )
+    if (
+      loginOptionsArr.length === 1 &&
+      possibleRedirectLoginOptions.length === 1
+    ) {
+      return possibleRedirectLoginOptions[0].default_redirect_url
+    }
+    return null
+  },
 }
 
 export default {

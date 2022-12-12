@@ -10,6 +10,8 @@ from rest_framework.status import HTTP_200_OK
 def test_saml_not_available_without_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
+    data_fixture.create_password_provider()
+
     # create a valid SAML provider
     enterprise_data_fixture.create_saml_auth_provider(domain="test1.com")
 
@@ -24,6 +26,8 @@ def test_saml_not_available_without_an_enterprise_license(
 def test_saml_available_with_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
+    data_fixture.create_password_provider()
+
     # create a valid SAML provider
     enterprise_data_fixture.create_saml_auth_provider(domain="test1.com")
     enterprise_data_fixture.create_enterprise_admin_user_and_token()

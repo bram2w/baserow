@@ -356,17 +356,6 @@ class AuthenticationProviderTypeRegistry(
         super().__init__(*args, **kwargs)
         self._default = None
 
-    def register_default(self, instance):
-        super().register(instance)
-        self._default = instance
-
-    def get_default_provider(self):
-        provider, _ = self._default.model_class.objects.get_or_create()
-        return provider
-
-    def get_default(self):
-        return self._default
-
     def get_all_available_login_options(self):
         login_options = {}
         for provider in self.get_all():

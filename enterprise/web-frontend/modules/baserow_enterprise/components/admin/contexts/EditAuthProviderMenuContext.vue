@@ -1,13 +1,13 @@
 <template>
   <Context ref="context">
     <ul class="context__menu">
-      <li>
+      <li v-if="canBeEdited(authProvider.type)">
         <a @click="$emit('edit', authProvider.id)">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('editAuthProviderMenuContext.edit') }}
         </a>
       </li>
-      <li>
+      <li v-if="canBeDeleted(authProvider.type)">
         <a @click="$emit('delete', authProvider.id)">
           <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
           {{ $t('editAuthProviderMenuContext.delete') }}
@@ -20,11 +20,12 @@
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
+import authProviderItemMixin from '@baserow_enterprise/mixins/authProviderItemMixin'
 
 export default {
   name: 'EditAuthProviderMenuContext',
   components: {},
-  mixins: [context],
+  mixins: [context, authProviderItemMixin],
   props: {
     authProvider: {
       type: Object,

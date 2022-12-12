@@ -32,7 +32,10 @@ def test_get_settings(api_client):
 
 
 @pytest.mark.django_db
-def test_require_first_admin_user_is_false_after_admin_creation(api_client):
+def test_require_first_admin_user_is_false_after_admin_creation(
+    api_client, data_fixture
+):
+    data_fixture.create_password_provider()
     response = api_client.get(reverse("api:settings:get"))
     assert response.status_code == HTTP_200_OK
     response_json = response.json()

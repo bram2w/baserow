@@ -28,9 +28,12 @@ describe('index redirect', () => {
       },
     })
 
-    mock
-      .onGet('http://localhost/api/auth-provider/login-options/')
-      .reply(200, {})
+    mock.onGet('http://localhost/api/auth-provider/login-options/').reply(200, {
+      password: {
+        type: 'password',
+        enabled: true,
+      },
+    })
 
     nuxt = await createNuxt(true)
     done()

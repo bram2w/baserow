@@ -36,6 +36,8 @@ from baserow.api.sessions import get_untrusted_client_session_id
 from baserow.api.user.registries import user_data_registry
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import ActionScopeStr
+from baserow.core.auth_provider.exceptions import AuthProviderDisabled
+from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     GroupInvitationDoesNotExist,
@@ -57,6 +59,7 @@ from baserow.core.user.utils import generate_session_tokens_for_user
 
 from .errors import (
     ERROR_ALREADY_EXISTS,
+    ERROR_AUTH_PROVIDER_DISABLED,
     ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
     ERROR_DEACTIVATED_USER,
     ERROR_DISABLED_RESET_PASSWORD,
@@ -119,6 +122,7 @@ class ObtainJSONWebToken(TokenObtainPairView):
         {
             AuthenticationFailed: ERROR_INVALID_CREDENTIALS,
             DeactivatedUserException: ERROR_DEACTIVATED_USER,
+            AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
         }
     )
     def post(self, *args, **kwargs):
@@ -202,11 +206,15 @@ class UserView(APIView):
             GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
             GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
             DisabledSignupError: ERROR_DISABLED_SIGNUP,
+            AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
         }
     )
     @validate_body(RegisterSerializer)
     def post(self, request, data):
         """Registers a new user."""
+
+        if not PasswordProviderHandler.get().enabled:
+            raise AuthProviderDisabled()
 
         template = (
             Template.objects.get(pk=data["template_id"])
@@ -267,6 +275,7 @@ class SendResetPasswordEmailView(APIView):
         {
             BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED,
             ResetPasswordDisabledError: ERROR_DISABLED_RESET_PASSWORD,
+            AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
         }
     )
     def post(self, request, data):
@@ -279,6 +288,8 @@ class SendResetPasswordEmailView(APIView):
 
         try:
             user = handler.get_active_user(email=data["email"])
+            if not PasswordProviderHandler.get().enabled and user.is_staff is False:
+                raise AuthProviderDisabled()
             handler.send_reset_password_email(user, data["base_url"])
         except UserNotFound:
             pass
@@ -357,12 +368,15 @@ class ChangePasswordView(APIView):
     @map_exceptions(
         {
             InvalidPassword: ERROR_INVALID_OLD_PASSWORD,
+            AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
         }
     )
     @validate_body(ChangePasswordBodyValidationSerializer)
     def post(self, request, data):
         """Changes the authenticated user's password if the old password is correct."""
 
+        if not PasswordProviderHandler.get().enabled and request.user.is_staff is False:
+            raise AuthProviderDisabled()
         handler = UserHandler()
         handler.change_password(
             request.user, data["old_password"], data["new_password"]

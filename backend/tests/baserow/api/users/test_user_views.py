@@ -28,6 +28,7 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_create_user(client, data_fixture):
+    data_fixture.create_password_provider()
     valid_password = "thisIsAValidPassword"
     short_password = "short"
     response = client.post(
@@ -255,6 +256,7 @@ def test_user_account(data_fixture, api_client):
 
 @pytest.mark.django_db
 def test_create_user_with_invitation(data_fixture, client):
+    data_fixture.create_password_provider()
     core_handler = CoreHandler()
     valid_password = "thisIsAValidPassword"
     invitation = data_fixture.create_group_invitation(email="test0@test.nl")
@@ -335,6 +337,7 @@ def test_create_user_with_invitation(data_fixture, client):
 
 @pytest.mark.django_db
 def test_create_user_with_template(data_fixture, client):
+    data_fixture.create_password_provider()
     old_templates = settings.APPLICATION_TEMPLATES_DIR
     valid_password = "thisIsAValidPassword"
     settings.APPLICATION_TEMPLATES_DIR = os.path.join(
@@ -395,6 +398,7 @@ def test_create_user_with_template(data_fixture, client):
 
 @pytest.mark.django_db(transaction=True)
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
+    data_fixture.create_password_provider()
     data_fixture.create_user(email="test@localhost.nl")
 
     response = client.post(
@@ -452,6 +456,44 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_send_reset_password_email_password_auth_disabled(
+    api_client, data_fixture, mailoutbox
+):
+    data_fixture.create_password_provider(enabled=False)
+    data_fixture.create_user(email="test@localhost.nl")
+
+    response = api_client.post(
+        reverse("api:user:send_reset_password_email"),
+        {"email": "test@localhost.nl", "base_url": "http://localhost:3000"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "error": "ERROR_AUTH_PROVIDER_DISABLED",
+        "detail": "Authentication provider is disabled.",
+    }
+    assert len(mailoutbox) == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_send_reset_password_email_password_auth_disabled_staff(
+    api_client, data_fixture, mailoutbox
+):
+    data_fixture.create_password_provider(enabled=False)
+    data_fixture.create_user(email="test@localhost.nl", is_staff=True)
+
+    response = api_client.post(
+        reverse("api:user:send_reset_password_email"),
+        {"email": "test@localhost.nl", "base_url": "http://localhost:3000"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert len(mailoutbox) == 1
 
 
 @pytest.mark.django_db
@@ -581,6 +623,7 @@ def test_password_reset(data_fixture, client):
 
 @pytest.mark.django_db
 def test_change_password(data_fixture, client):
+    data_fixture.create_password_provider()
     valid_old_password = "thisIsAValidPassword"
     valid_new_password = "thisIsAValidNewPassword"
     short_password = "short"
@@ -672,6 +715,50 @@ def test_change_password(data_fixture, client):
 
 
 @pytest.mark.django_db
+def test_change_password_auth_disabled(api_client, data_fixture):
+    data_fixture.create_password_provider(enabled=False)
+    valid_old_password = "thisIsAValidPassword"
+    valid_new_password = "thisIsAValidNewPassword"
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost", password=valid_old_password
+    )
+
+    response = api_client.post(
+        reverse("api:user:change_password"),
+        {"old_password": valid_old_password, "new_password": valid_new_password},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "error": "ERROR_AUTH_PROVIDER_DISABLED",
+        "detail": "Authentication provider is disabled.",
+    }
+
+
+@pytest.mark.django_db
+def test_change_password_auth_disabled_staff(api_client, data_fixture):
+    data_fixture.create_password_provider(enabled=False)
+    valid_old_password = "thisIsAValidPassword"
+    valid_new_password = "thisIsAValidNewPassword"
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost", password=valid_old_password, is_staff=True
+    )
+
+    response = api_client.post(
+        reverse("api:user:change_password"),
+        {"old_password": valid_old_password, "new_password": valid_new_password},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    user.refresh_from_db()
+    assert user.check_password(valid_new_password)
+
+
+@pytest.mark.django_db
 def test_dashboard(data_fixture, client):
     user, token = data_fixture.create_user_and_token(email="test@localhost")
     group_1 = data_fixture.create_group(name="Test1")
@@ -699,6 +786,8 @@ def test_dashboard(data_fixture, client):
 
 @pytest.mark.django_db
 def test_additional_user_data(api_client, data_fixture):
+    data_fixture.create_password_provider()
+
     class TmpUserDataType(UserDataType):
         type = "type"
 
@@ -830,4 +919,24 @@ def test_token_error_if_user_deleted_or_disabled(api_client, data_fixture):
     assert response.json() == {
         "error": "ERROR_INVALID_REFRESH_TOKEN",
         "detail": "Refresh token is expired or invalid.",
+    }
+
+
+@pytest.mark.django_db
+def test_create_user_password_auth_disabled(api_client, data_fixture):
+    data_fixture.create_password_provider(enabled=False)
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost", password="test"
+    )
+
+    response = api_client.post(
+        reverse("api:user:index"),
+        {"name": "Test1", "email": "test@test.nl", "password": "thisIsAValidPassword"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "error": "ERROR_AUTH_PROVIDER_DISABLED",
+        "detail": "Authentication provider is disabled.",
     }

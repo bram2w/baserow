@@ -8,6 +8,7 @@ import GitLabSettingsForm from '@baserow_enterprise/components/admin/forms/GitLa
 import OpenIdConnectSettingsForm from '@baserow_enterprise/components/admin/forms/OpenIdConnectSettingsForm.vue'
 import LoginButton from '@baserow_enterprise/components/admin/login/LoginButton.vue'
 
+import PasswordAuthIcon from '@baserow/modules/core/assets/images/providers/Key.svg'
 import SAMLIcon from '@baserow_enterprise/assets/images/providers/LockKey.svg'
 import GoogleIcon from '@baserow_enterprise/assets/images/providers/Google.svg'
 import FacebookIcon from '@baserow_enterprise/assets/images/providers/Facebook.svg'
@@ -15,6 +16,36 @@ import GitHubIcon from '@baserow_enterprise/assets/images/providers/GitHub.svg'
 import GitLabIcon from '@baserow_enterprise/assets/images/providers/GitLab.svg'
 import OpenIdIcon from '@baserow_enterprise/assets/images/providers/OpenID.svg'
 import VerifiedProviderIcon from '@baserow_enterprise/assets/images/providers/VerifiedProviderIcon.svg'
+
+export class PasswordAuthProviderType extends AuthProviderType {
+  getType() {
+    return 'password'
+  }
+
+  getIcon() {
+    return PasswordAuthIcon
+  }
+
+  getName() {
+    return this.app.i18n.t('authProviderTypes.password')
+  }
+
+  getProviderName(provider) {
+    return this.getName()
+  }
+
+  getAdminListComponent() {
+    return AuthProviderItem
+  }
+
+  getAdminSettingsFormComponent() {
+    return null
+  }
+
+  getOrder() {
+    return 1
+  }
+}
 
 export class SamlAuthProviderType extends AuthProviderType {
   getType() {

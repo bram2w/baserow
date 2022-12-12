@@ -14,6 +14,7 @@ from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeTimedSerializer
 
+from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
@@ -21,7 +22,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser, Template, UserLogEntry, UserProfile
-from baserow.core.registries import auth_provider_type_registry, plugin_registry
+from baserow.core.registries import plugin_registry
 from baserow.core.signals import (
     before_user_deleted,
     user_deleted,
@@ -209,7 +210,7 @@ class UserHandler:
 
         # register the authentication provider used to create the user
         if auth_provider is None:
-            auth_provider = auth_provider_type_registry.get_default_provider()
+            auth_provider = PasswordProviderHandler.get()
         auth_provider.user_signed_in(user)
 
         return user
@@ -346,16 +347,6 @@ class UserHandler:
         user.save()
 
         return user
-
-    def user_signed_in_via_default_provider(self, user: AbstractUser):
-        """
-        Registers that a user has signed in via the default authentication provider.
-
-        :param user: The user that has signed in.
-        """
-
-        default_provider = auth_provider_type_registry.get_default_provider()
-        self.user_signed_in_via_provider(user, default_provider)
 
     def user_signed_in_via_provider(
         self, user: AbstractUser, authentication_provider: AuthProviderModel

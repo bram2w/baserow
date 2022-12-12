@@ -17,7 +17,7 @@
       <ul class="auth__action-links">
         <li>
           {{ $t('loginError.loginText') }}
-          <nuxt-link :to="{ name: 'login' }">
+          <nuxt-link :to="{ name: 'login', query: { noredirect: null } }">
             {{ $t('action.login') }}
           </nuxt-link>
         </li>

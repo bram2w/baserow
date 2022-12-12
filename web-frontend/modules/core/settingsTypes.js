@@ -33,6 +33,10 @@ export class SettingsType extends Registerable {
     throw new Error('The component of a settings type must be set.')
   }
 
+  isEnabled() {
+    return true
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -96,6 +100,13 @@ export class PasswordSettingsType extends SettingsType {
   getName() {
     const { i18n } = this.app
     return i18n.t('settingType.password')
+  }
+
+  isEnabled() {
+    return (
+      this.app.store.getters['authProvider/getPasswordLoginEnabled'] ||
+      this.app.store.getters['auth/isStaff']
+    )
   }
 
   getComponent() {

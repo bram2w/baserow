@@ -54,7 +54,7 @@
       </div>
       <div>
         <ul class="auth__action-links">
-          <li>
+          <li v-if="passwordLoginEnabled">
             {{ $t('loginWithSaml.loginText') }}
             <nuxt-link :to="{ name: 'login' }">
               {{ $t('action.login') }}
@@ -72,6 +72,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import decamelize from 'decamelize'
 import { required, email } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
@@ -130,6 +131,11 @@ export default {
         email: '',
       },
     }
+  },
+  computed: {
+    ...mapGetters({
+      passwordLoginEnabled: 'authProvider/getPasswordLoginEnabled',
+    }),
   },
   mounted() {
     if (this.redirectImmediately) {

@@ -39,9 +39,4 @@ class AuthProviderModel(
 
 
 class PasswordAuthProviderModel(AuthProviderModel):
-    def save(self, *args, **kwargs):
-        if not self.enabled:
-            raise ValueError(
-                "The password authentication provider cannot be disabled. "
-            )
-        super().save(*args, **kwargs)
+    ...

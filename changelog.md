@@ -11,6 +11,8 @@ For example:
 
 ### New Features
 
+* Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
+
 ### Bug Fixes
 
 ### Refactors
@@ -18,6 +20,7 @@ For example:
 ## Released (2022-12-8 1.13.2)
 
 ### New Features
+
 * Add drag and drop zone for files to the row edit modal [#1161](https://gitlab.com/bramw/baserow/-/issues/1161)
 
 * Automatically enable/disable enterprise features upon activation/deactivation without needing a page refresh first. [#1306](https://gitlab.com/bramw/baserow/-/issues/1306)
