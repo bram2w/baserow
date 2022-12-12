@@ -118,6 +118,15 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.snapshotOperationLimitExceededTitle'),
         app.i18n.t('clientHandler.snapshotOperationLimitExceededDescription')
       ),
+      ERROR_AUTH_PROVIDER_DISABLED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.disabledPasswordProviderTitle'),
+        app.i18n.t('clientHandler.disabledPasswordProviderMessage')
+      ),
+      // TODO: Move to enterprise module if possible
+      ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.cannotDisableAllAuthProvidersTitle'),
+        app.i18n.t('clientHandler.cannotDisableAllAuthProvidersDescription')
+      ),
     }
   }
 

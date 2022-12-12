@@ -28,7 +28,10 @@ from baserow_enterprise.sso.oauth2.auth_provider_types import (
 )
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_get_login_options(provider_type, extra_params, enterprise_data_fixture):
+def test_get_login_options(
+    provider_type, extra_params, data_fixture, enterprise_data_fixture
+):
+    data_fixture.create_password_provider()
     provider = enterprise_data_fixture.create_oauth_provider(
         type=provider_type,
         client_id="test_client_id",
@@ -59,6 +62,9 @@ def test_get_login_options(provider_type, extra_params, enterprise_data_fixture)
                 "type": provider_type,
             }
         ],
+        "default_redirect_url": (
+            f"{settings.PUBLIC_BACKEND_URL}" f"/api/sso/oauth2/login/{provider.id}/"
+        ),
     }
 
 

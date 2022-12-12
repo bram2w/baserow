@@ -18,6 +18,8 @@ from baserow.api.groups.invitations.serializers import UserGroupInvitationSerial
 from baserow.api.user.jwt import get_user_from_token
 from baserow.api.user.registries import user_data_registry
 from baserow.api.user.validators import language_validation, password_validation
+from baserow.core.auth_provider.exceptions import AuthProviderDisabled
+from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.models import Template
 from baserow.core.user.exceptions import DeactivatedUserException
 from baserow.core.user.handler import UserHandler
@@ -201,13 +203,16 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
         super().validate(attrs)
 
         user = self.user
+        password_provider = PasswordProviderHandler.get()
+        if not password_provider.enabled and user.is_staff is False:
+            raise AuthProviderDisabled()
         if not user.is_active:
             raise DeactivatedUserException()
 
         data = generate_session_tokens_for_user(user, include_refresh_token=True)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
 
-        UserHandler().user_signed_in_via_default_provider(user)
+        UserHandler().user_signed_in_via_provider(user, password_provider)
 
         return data
 

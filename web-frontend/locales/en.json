@@ -248,7 +248,9 @@
         "snapshotNameNotUniqueTitle": "The snapshot name has to be unique.",
         "snapshotNameNotUniqueDescription": "All snapshot names have to be unique per application.",
         "snapshotOperationLimitExceededTitle": "Limit reached",
-        "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes."
+        "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes.",
+        "disabledPasswordProviderTitle": "Password authentication is disabled.",
+        "disabledPasswordProviderMessage": "Please use another authentication provider."
     },
     "importerType": {
         "csv": "Import a CSV file",

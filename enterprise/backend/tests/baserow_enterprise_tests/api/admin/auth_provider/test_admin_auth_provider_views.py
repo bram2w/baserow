@@ -41,6 +41,7 @@ def test_admin_cannot_list_saml_provider_without_an_enterprise_license(
 def test_admin_can_list_saml_provider_with_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
+    data_fixture.create_password_provider()
     auth_prov_1 = enterprise_data_fixture.create_saml_auth_provider(domain="test.com")
     auth_prov_2 = enterprise_data_fixture.create_saml_auth_provider(domain="acme.com")
 
@@ -115,6 +116,7 @@ def test_admin_cannot_create_saml_provider_without_an_enterprise_license(
 def test_admin_can_create_saml_provider_with_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
+    data_fixture.create_password_provider()
 
     # create a valid SAML provider
     domain = "test.it"
@@ -429,6 +431,7 @@ def test_admin_cannot_delete_saml_provider_without_an_enterprise_license(
 def test_admin_can_delete_saml_provider_with_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
+    unrelated_provider = enterprise_data_fixture.create_saml_auth_provider()
     saml_provider_1 = enterprise_data_fixture.create_saml_auth_provider()
 
     _, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
@@ -463,7 +466,7 @@ def test_admin_can_delete_saml_provider_with_an_enterprise_license(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
-    assert SamlAuthProviderModel.objects.count() == 0
+    assert SamlAuthProviderModel.objects.count() == 1
 
 
 @pytest.mark.django_db
@@ -555,6 +558,7 @@ def test_create_and_get_oauth2_provider(
     endpoint will output correct information for the created provider.
     """
 
+    data_fixture.create_password_provider()
     admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     # create provider
@@ -667,6 +671,7 @@ def test_update_oauth2_provider(
 
     admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
+    unrelated_provider = enterprise_data_fixture.create_saml_auth_provider()
     provider = enterprise_data_fixture.create_oauth_provider(
         type=provider_type, **extra_params
     )
@@ -741,3 +746,120 @@ def test_update_oauth_provider_invalid_url(
             ]
         }
     )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_cannot_create_password_provider(
+    api_client, data_fixture, enterprise_data_fixture
+):
+    """
+    Password provider cannot be created as to keep only one instance.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    auth_provider_1_url = reverse("api:enterprise:admin:auth_provider:list")
+
+    response = api_client.post(
+        auth_provider_1_url,
+        {"type": "password", "enabled": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_AUTH_PROVIDER_CANNOT_BE_CREATED"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_cannot_delete_password_provider(
+    api_client, data_fixture, enterprise_data_fixture
+):
+    """
+    Password provider cannot be deleted, only enabled and disabled.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    password_provider = data_fixture.create_password_provider()
+    auth_provider_1_url = reverse(
+        "api:enterprise:admin:auth_provider:item",
+        kwargs={"auth_provider_id": password_provider.id},
+    )
+
+    response = api_client.delete(
+        auth_provider_1_url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_AUTH_PROVIDER_CANNOT_BE_DELETED"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_cannot_delete_last_provider(
+    api_client, data_fixture, enterprise_data_fixture
+):
+    """
+    At least one auth provider needs to be always enabled.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    last_provider = enterprise_data_fixture.create_oauth_provider(type="github")
+
+    # but not he last one
+    last_provider_url = reverse(
+        "api:enterprise:admin:auth_provider:item",
+        kwargs={"auth_provider_id": last_provider.id},
+    )
+    response = api_client.delete(
+        last_provider_url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_cannot_disable_last_provider(
+    api_client, data_fixture, enterprise_data_fixture
+):
+    """
+    At least one auth provider needs to be always enabled.
+    """
+
+    admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    password_provider = data_fixture.create_password_provider()
+    github_provider = enterprise_data_fixture.create_oauth_provider(type="github")
+
+    # it is possible to disable second provider
+    github_provider_url = reverse(
+        "api:enterprise:admin:auth_provider:item",
+        kwargs={"auth_provider_id": github_provider.id},
+    )
+    response = api_client.patch(
+        github_provider_url,
+        {"enabled": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    # but not he last one
+    password_provider_url = reverse(
+        "api:enterprise:admin:auth_provider:item",
+        kwargs={"auth_provider_id": password_provider.id},
+    )
+    response = api_client.patch(
+        password_provider_url,
+        {"enabled": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS"

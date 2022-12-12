@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 
 from rest_framework import serializers
 
+from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.validators import validate_domain
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
@@ -32,12 +33,19 @@ class AuthProviderType(
 
         raise NotImplementedError()
 
-    def can_create_new_providers(self):
+    def can_create_new_providers(self) -> bool:
         """
         Returns True if it's possible to create an authentication provider of this type.
         """
 
-        raise NotImplementedError()
+        return True
+
+    def can_delete_existing_providers(self) -> bool:
+        """
+        Returns True if it's possible to delete an authentication provider of this type.
+        """
+
+        return True
 
     def before_create(self, user, **values):
         """
@@ -126,6 +134,7 @@ class AuthProviderType(
         return {
             "type": self.type,
             "can_create_new": self.can_create_new_providers(),
+            "can_delete_existing": self.can_delete_existing_providers(),
             "auth_providers": [
                 self.get_serializer(provider, AuthProviderSerializer).data
                 for provider in self.list_providers()
@@ -142,6 +151,8 @@ class PasswordAuthProviderType(AuthProviderType):
 
     type = "password"
     model_class = PasswordAuthProviderModel
+    allowed_fields = ["id", "enabled"]
+    serializer_field_names = ["enabled"]
     serializer_field_overrides = {
         "domain": serializers.CharField(
             validators=[validate_domain],
@@ -155,7 +166,12 @@ class PasswordAuthProviderType(AuthProviderType):
     }
 
     def get_login_options(self, **kwargs) -> Optional[Dict[str, Any]]:
-        return {}
+        if not PasswordProviderHandler.get().enabled:
+            return None
+        return {"type": self.type}
 
     def can_create_new_providers(self):
+        return False
+
+    def can_delete_existing_providers(self):
         return False

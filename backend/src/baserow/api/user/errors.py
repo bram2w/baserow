@@ -50,3 +50,9 @@ ERROR_DEACTIVATED_USER = (
     HTTP_401_UNAUTHORIZED,
     "User account has been disabled.",
 )
+
+ERROR_AUTH_PROVIDER_DISABLED = (
+    "ERROR_AUTH_PROVIDER_DISABLED",
+    HTTP_401_UNAUTHORIZED,
+    "Authentication provider is disabled.",
+)

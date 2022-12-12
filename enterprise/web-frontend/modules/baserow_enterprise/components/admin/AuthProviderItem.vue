@@ -5,22 +5,29 @@
       {{ getName() }}
     </div>
     <div class="auth-provider-admin__item-menu">
-      <a ref="editMenuContextLink" @click="openContext()">
+      <a
+        v-if="hasContextMenu(authProvider.type)"
+        ref="editMenuContextLink"
+        @click="openContext()"
+      >
         <i class="fas fa-ellipsis-v"></i>
       </a>
       <EditAuthProviderMenuContext
+        v-if="hasContextMenu(authProvider.type)"
         ref="editMenuContext"
         :auth-provider="authProvider"
         @edit="showUpdateSettingsModal"
         @delete="showDeleteModal"
       />
       <UpdateSettingsAuthProviderModal
+        v-if="canBeEdited(authProvider.type)"
         ref="updateSettingsModal"
         :auth-provider="authProvider"
         @settings-updated="onSettingsUpdated"
         @cancel="$refs.updateSettingsModal.hide()"
       />
       <DeleteAuthProviderModal
+        v-if="canBeDeleted(authProvider.type)"
         ref="deleteModal"
         :auth-provider="authProvider"
         @deleteConfirmed="onDeleteConfirmed"
@@ -31,6 +38,7 @@
       class="auth-provider-admin__item-toggle"
       :value="authProvider.enabled"
       :large="true"
+      :disabled="isOneProviderEnabled && authProvider.enabled"
       @input="setEnabled($event)"
     ></SwitchInput>
   </div>
@@ -42,6 +50,7 @@ import EditAuthProviderMenuContext from '@baserow_enterprise/components/admin/co
 import UpdateSettingsAuthProviderModal from '@baserow_enterprise/components/admin/modals/UpdateSettingsAuthProviderModal.vue'
 import DeleteAuthProviderModal from '@baserow_enterprise/components/admin/modals/DeleteAuthProviderModal.vue'
 import AuthProviderIcon from '@baserow_enterprise/components/AuthProviderIcon.vue'
+import authProviderItemMixin from '@baserow_enterprise/mixins/authProviderItemMixin'
 
 export default {
   name: 'AuthProviderItem',
@@ -52,10 +61,16 @@ export default {
     UpdateSettingsAuthProviderModal,
     AuthProviderIcon,
   },
+  mixins: [authProviderItemMixin],
   props: {
     authProvider: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    isOneProviderEnabled() {
+      return this.$store.getters['authProviderAdmin/isOneProviderEnabled']
     },
   },
   methods: {

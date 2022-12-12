@@ -182,3 +182,13 @@ def get_frontend_login_error_url() -> str:
     """
 
     return urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/login/error")
+
+
+def get_frontend_login_saml_url() -> str:
+    """
+    Returns the url to the frontend SAML login page.
+
+    :return: The absolute url to the Baserow SAML login page.
+    """
+
+    return urljoin(settings.PUBLIC_WEB_FRONTEND_URL, "/login/saml")

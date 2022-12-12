@@ -2,6 +2,7 @@ from faker import Faker
 
 from .airtable import AirtableFixtures
 from .application import ApplicationFixtures
+from .auth_provider import AuthProviderFixtures
 from .field import FieldFixtures
 from .file_import import FileImportFixtures
 from .group import GroupFixtures
@@ -35,5 +36,6 @@ class Fixtures(
     JobFixtures,
     FileImportFixtures,
     SnapshotFixtures,
+    AuthProviderFixtures,
 ):
     fake = Faker()

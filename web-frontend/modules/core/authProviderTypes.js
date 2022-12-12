@@ -76,6 +76,7 @@ export class AuthProviderType extends Registerable {
       order: this.getOrder(),
       hasAdminSettings: this.getAdminListComponent() !== null,
       canCreateNewProviders: authProviderType.can_create_new,
+      canDeleteExistingProviders: authProviderType.can_delete_existing,
       authProviders: authProviderType.auth_providers,
     }
   }
@@ -123,14 +124,22 @@ export class PasswordAuthProviderType extends AuthProviderType {
   }
 
   getName() {
-    return 'Password'
+    return this.app.i18n.t('authProviderTypes.password')
   }
 
   getProviderName(provider) {
+    return this.getName()
+  }
+
+  getAdminListComponent() {
+    return null
+  }
+
+  getAdminSettingsFormComponent() {
     return null
   }
 
   getOrder() {
-    return 100
+    return 1
   }
 }

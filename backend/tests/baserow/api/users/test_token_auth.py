@@ -22,6 +22,8 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_token_auth(api_client, data_fixture):
+    data_fixture.create_password_provider()
+
     class TmpPlugin(Plugin):
         type = "tmp_plugin"
         called = False
@@ -191,6 +193,48 @@ def test_token_auth(api_client, data_fixture):
     response_json = response.json()
     assert "access_token" in response_json
     assert "user" in response_json
+
+
+@pytest.mark.django_db
+def test_token_password_auth_disabled(api_client, data_fixture):
+    data_fixture.create_password_provider(enabled=False)
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost", password="test"
+    )
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@localhost", "password": "test"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "error": "ERROR_AUTH_PROVIDER_DISABLED",
+        "detail": "Authentication provider is disabled.",
+    }
+
+
+@pytest.mark.django_db
+def test_token_password_auth_disabled_superadmin(api_client, data_fixture):
+    data_fixture.create_password_provider(enabled=False)
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost", password="test", is_staff=True
+    )
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@localhost", "password": "test"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert "access_token" in response_json
+    assert "refresh_token" in response_json
+    assert "user" in response_json
+    assert response_json["user"]["id"] == user.id
+    assert response_json["user"]["is_staff"] is True
 
 
 @pytest.mark.django_db
