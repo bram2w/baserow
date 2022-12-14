@@ -144,6 +144,8 @@ from baserow_enterprise.teams.operations import (
 NO_ACCESS_OPS = []
 VIEWER_OPS = NO_ACCESS_OPS + [
     ReadGroupOperationType,
+    ReadTeamOperationType,
+    ListTeamsOperationType,
     ListApplicationsGroupOperationType,
     ListTablesDatabaseTableOperationType,
     ReadApplicationOperationType,
@@ -181,9 +183,7 @@ EDITOR_OPS = COMMENTER_OPS + [
     ImportRowsDatabaseTableOperationType,
     ListGroupUsersGroupOperationType,
     RestoreDatabaseRowOperationType,
-    ListTeamsOperationType,
     ListTeamSubjectsOperationType,
-    ReadTeamOperationType,
     ReadTeamSubjectOperationType,
 ]
 BUILDER_OPS = EDITOR_OPS + [

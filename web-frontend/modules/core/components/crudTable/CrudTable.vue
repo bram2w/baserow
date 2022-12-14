@@ -16,6 +16,7 @@
             <th
               v-for="col in columns"
               :key="'head-' + col.key"
+              :style="col.widthPerc ? `--width: ${col.widthPerc}%` : ''"
               class="data-table__table-cell data-table__table-cell--header"
               :class="{
                 'data-table__table-cell--sticky-left': col.stickyLeft,

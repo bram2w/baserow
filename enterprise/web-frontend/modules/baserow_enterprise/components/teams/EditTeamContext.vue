@@ -66,7 +66,7 @@ export default {
 
       try {
         await TeamService(this.$client).delete(team.id)
-        this.$emit('deleted', team)
+        this.$emit('deleted', team.id)
         this.hide()
       } catch (error) {
         notifyIf(error)

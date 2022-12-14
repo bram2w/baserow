@@ -3,7 +3,6 @@
     :columns="columns"
     :service="service"
     row-id-key="id"
-    @show-hidden-groups="displayHiddenGroups"
     @row-context="onRowContext"
   >
     <template #title>
@@ -17,10 +16,6 @@
         @update="slotProps.updateRow"
       >
       </EditUserContext>
-      <HiddenGroupsContext
-        ref="hiddenGroupsContext"
-        :hidden-values="hiddenGroups"
-      ></HiddenGroupsContext>
     </template>
   </CrudTable>
 </template>
@@ -35,13 +30,11 @@ import LocalDateField from '@baserow/modules/core/components/crudTable/fields/Lo
 import ActiveField from '@baserow_premium/components/admin/users/fields/ActiveField'
 import MoreField from '@baserow/modules/core/components/crudTable/fields/MoreField'
 import EditUserContext from '@baserow_premium/components/admin/users/contexts/EditUserContext'
-import HiddenGroupsContext from '@baserow_premium/components/admin/users/contexts/HiddenGroupsContext'
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 
 export default {
   name: 'UsersAdminTable',
   components: {
-    HiddenGroupsContext,
     CrudTable,
     EditUserContext,
   },
@@ -104,12 +97,6 @@ export default {
       const action = row.id === this.editUser.id ? 'toggle' : 'show'
       this.editUser = row
       this.$refs.editUserContext[action](target, 'bottom', 'left', 4)
-    },
-    displayHiddenGroups(event) {
-      const action =
-        this.hiddenGroups === event.hiddenValues ? 'toggle' : 'show'
-      this.hiddenGroups = event.hiddenValues
-      this.$refs.hiddenGroupsContext[action](event.target, 'bottom', 'left', 4)
     },
   },
 }

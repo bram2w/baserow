@@ -23,11 +23,12 @@ class EnterpriseMemberTeamsDataType(MemberDataType):
         subject_team_data = defaultdict(list)
         user_ct = ContentType.objects.get_for_model(User)
         subject_ids = [member["user_id"] for member in serialized_data]
-        all_team_data = (
-            TeamSubject.objects.select_related("team")
-            .filter(subject_id__in=subject_ids, subject_type=user_ct)
-            .values("team_id", "team__name", "subject_id")
-        )
+        all_team_data = TeamSubject.objects.filter(
+            subject_id__in=subject_ids,
+            subject_type=user_ct,
+            team__group_id=group.id,
+            team__trashed=False,
+        ).values("team_id", "team__name", "subject_id")
         for team_data in all_team_data:
             subject_team_data[team_data["subject_id"]].append(
                 {"id": team_data["team_id"], "name": team_data["team__name"]}
