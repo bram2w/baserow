@@ -16,6 +16,7 @@ For example:
 ### Bug Fixes
 
 ### Refactors
+* Set a fixed width for `card_cover` thumbnails to have better-quality images. [#1278](https://gitlab.com/bramw/baserow/-/issues/#1278)
 
 ## Released (2022-12-8 1.13.2)
 
