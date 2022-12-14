@@ -207,5 +207,8 @@
     },
     "chatwootSuportSidebarGroup": {
         "directSupport": "Direct support"
+    },
+    "userTeamsField": {
+        "no_records": "No teams"
     }
 }

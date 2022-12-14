@@ -437,7 +437,8 @@
             "columns": {
                 "name": "Name",
                 "email": "Email",
-                "role": "Default role"
+                "role": "Default role",
+                "teams": "Teams"
             },
             "actions": {
                 "copyEmail": "Copy email",
