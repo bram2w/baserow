@@ -1351,6 +1351,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'file',
       'single_select',
       'multiple_select',
+      'multiple_collaborators',
       'phone_number',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
@@ -1405,6 +1406,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'file',
       'single_select',
       'multiple_select',
+      'multiple_collaborators',
       'phone_number',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
