@@ -17,15 +17,13 @@ from baserow_enterprise.role.models import Role, RoleAssignment
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_role_assignment(
-    api_client, data_fixture, enterprise_data_fixture, synced_roles
-):
+def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
     group = data_fixture.create_group(

@@ -5,6 +5,11 @@ from django.db.migrations.executor import MigrationExecutor
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
+    pass
+
+
 def migrate(target):
     executor = MigrationExecutor(connection)
     executor.loader.build_graph()  # reload.
@@ -14,7 +19,7 @@ def migrate(target):
 
 
 @pytest.mark.django_db
-def test_delete_all_role_assignments_migration():
+def test_delete_all_role_assignments_migration(synced_roles):
     migrate_from = [
         ("baserow_enterprise", "0007_teamsubject_baserow_ent_created_01fb9f_idx"),
         ("database", "0092_alter_token_name"),

@@ -43,7 +43,7 @@ from baserow_enterprise.role.permission_manager import RolePermissionManagerType
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise, synced_roles):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 
@@ -153,7 +153,7 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
 @override_settings(
     PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
 )
-def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
+def test_check_permissions(data_fixture, enterprise_data_fixture):
 
     (
         admin,
@@ -624,7 +624,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
 @override_settings(
     PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
 )
-def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_roles):
+def test_get_permissions_object(data_fixture, enterprise_data_fixture):
     (
         admin,
         builder,
@@ -665,8 +665,8 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
     assert perms[ListApplicationsGroupOperationType.type]["exceptions"] == [group_2.id]
 
     assert perms[ReadFieldOperationType.type]["default"] is False
-    assert perms[ReadFieldOperationType.type]["exceptions"] == list(
-        table_2_1.field_set.all().values_list("id", flat=True)
+    assert sorted(perms[ReadFieldOperationType.type]["exceptions"]) == sorted(
+        list(table_2_1.field_set.all().values_list("id", flat=True))
     )
 
     perms = perm_manager.get_permissions_object(viewer_plus, group=group_1)
@@ -675,8 +675,8 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
     assert perms[UpdateDatabaseRowOperationType.type]["exceptions"] == [table_1_1.id]
 
     assert perms[UpdateFieldOperationType.type]["default"] is False
-    assert perms[UpdateFieldOperationType.type]["exceptions"] == list(
-        table_1_1.field_set.all().values_list("id", flat=True)
+    assert sorted(perms[UpdateFieldOperationType.type]["exceptions"]) == sorted(
+        list(table_1_1.field_set.all().values_list("id", flat=True))
     )
 
     perms = perm_manager.get_permissions_object(builder_less, group=group_1)
