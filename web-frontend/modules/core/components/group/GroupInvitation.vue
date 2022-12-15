@@ -74,20 +74,25 @@ export default {
         const { data: group } = await GroupService(
           this.$client
         ).acceptInvitation(invitation.id)
-        // After the invitation is accepted and group is received we can immediately
-        // fetch the applications that belong to the group.
-        const { data: applications } = await ApplicationService(
-          this.$client
-        ).fetchAll(group.id)
 
         // The accept endpoint returns a group user object that we can add to the
         // store. Also the applications that we just fetched can be added to the
         // store.
-        this.$store.dispatch('group/forceCreate', group)
-        applications.forEach((application) => {
-          this.$store.dispatch('application/forceCreate', application)
-        })
+        await this.$store.dispatch('group/forceCreate', group)
+        await this.$store.dispatch('group/fetchPermissions', group)
+        await this.$store.dispatch('group/fetchRoles', group)
 
+        if (this.$hasPermission('group.list_applications', group, group.id)) {
+          // After the invitation is accepted and group is received we can immediately
+          // fetch the applications that belong to the group.
+          const { data: applications } = await ApplicationService(
+            this.$client
+          ).fetchAll(group.id)
+
+          applications.forEach((application) => {
+            this.$store.dispatch('application/forceCreate', application)
+          })
+        }
         this.$emit('remove', invitation)
       } catch (error) {
         this.acceptLoading = false
