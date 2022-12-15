@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
+* Add support for "Empty" and "Not Empty" filters for Collaborator field. [#1205](https://gitlab.com/bramw/baserow/-/issues/1205)
 
 ### Bug Fixes
 * Use the correct `OperationType` to restore rows [#1389](https://gitlab.com/bramw/baserow/-/issues/1389)
