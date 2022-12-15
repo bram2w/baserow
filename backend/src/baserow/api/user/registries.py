@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict
 
+from rest_framework import serializers
+
 from baserow.core.registry import Instance, Registry
 
 if TYPE_CHECKING:
@@ -87,6 +89,16 @@ class MemberDataType(Instance):
     group user list responses. The returned dict of the `annotate_serialized_data`
     method is added to the payload under the key containing the type name.
     """
+
+    def get_request_serializer_field(self) -> serializers.Field:
+        """
+        Should be given a `serializers.Field` object, which the `MemberDataType`
+        will annotate on `GroupUserSerializer`.
+        """
+
+        raise NotImplementedError(
+            "The get_request_serializer_field must be implemented and should return a Field."
+        )
 
     def annotate_serialized_data(self, group: "Group", serialized_data: dict) -> dict:
         """

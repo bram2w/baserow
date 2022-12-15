@@ -4,6 +4,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
+from baserow.api.user.registries import member_data_registry
 from baserow.core.models import GroupUser
 
 User = get_user_model()
@@ -37,6 +39,54 @@ class GroupUserSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_email(self, object):
         return object.user.email
+
+
+def get_member_data_types_request_serializer():
+    """
+    Responsible for iterating over all data types registered to `MemberDataRegistry`,
+    building a dictionary of `data_type.type` and the data type's serializer field,
+    and creating a new serializer with those attributes.
+
+    The resulting serializer will be inherited by
+    `ListGroupUsersWithMemberDataSerializer`.
+    """
+
+    attrs = {}
+
+    for data_type in member_data_registry.get_all():
+        attrs[data_type.type] = data_type.get_request_serializer_field()
+
+    class Meta:
+        fields = tuple(attrs.keys())
+
+    attrs["Meta"] = Meta
+
+    return type(
+        "MemberDataTypeSerializer",
+        (UnknownFieldRaisesExceptionSerializerMixin, serializers.Serializer),
+        attrs,
+    )
+
+
+def get_list_group_user_serializer():
+    """
+    Returns a list serializer for the `GroupUser` model.
+
+    It's dynamically generated so that we can include fields via the
+    `MemberDataRegistry`.
+    """
+
+    MemberDataTypeSerializer = get_member_data_types_request_serializer()
+
+    class ListGroupUsersWithMemberDataSerializer(
+        MemberDataTypeSerializer, GroupUserSerializer
+    ):
+        class Meta(GroupUserSerializer.Meta):
+            fields = (
+                GroupUserSerializer.Meta.fields + MemberDataTypeSerializer.Meta.fields
+            )
+
+    return ListGroupUsersWithMemberDataSerializer
 
 
 class GroupUserGroupSerializer(serializers.Serializer):
