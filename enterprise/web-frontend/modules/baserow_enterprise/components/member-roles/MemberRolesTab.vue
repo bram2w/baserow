@@ -31,6 +31,7 @@
       :scope-type="scopeType"
       :scope-id="scopeId"
       :group-id="group.id"
+      :teams="teams"
       @role-updated="
         (roleAssignment, newRole) =>
           $emit('role-updated', roleAssignment, newRole)
