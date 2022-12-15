@@ -16,7 +16,7 @@ from baserow_enterprise.role.models import Role, RoleAssignment
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise, synced_roles):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 

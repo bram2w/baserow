@@ -14,7 +14,7 @@ from baserow_enterprise.role.operations import UpdateRoleTableOperationType
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 
@@ -24,7 +24,7 @@ def enable_enterprise_for_all_tests_here(enable_enterprise):
     PERMISSION_MANAGERS=["core", "staff", "member", "basic", "role"],
 )
 @patch("baserow.core.handler.CoreHandler.check_permissions")
-def test_can_undo_assign_role(mock_check_permissions, data_fixture, synced_roles):
+def test_can_undo_assign_role(mock_check_permissions, data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
@@ -65,7 +65,7 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture, synced_roles
 @pytest.mark.django_db
 @pytest.mark.undo_redo
 @patch("baserow.core.handler.CoreHandler.check_permissions")
-def test_can_undo_redo_assign_table(mock_check_permissions, data_fixture, synced_roles):
+def test_can_undo_redo_assign_table(mock_check_permissions, data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()

@@ -12,7 +12,7 @@ from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 

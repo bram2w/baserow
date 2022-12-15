@@ -22,6 +22,11 @@ GET_USER_INFO = (
 )
 
 
+@pytest.fixture(autouse=True)
+def enable_roles_for_all_tests_here(synced_roles):
+    pass
+
+
 def create_get_user_info_stub(provider):
     def get_user_info_stub(self, instance, code, session):
         assert instance == provider

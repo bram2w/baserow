@@ -25,6 +25,11 @@ VALID_ONE_SEAT_ENTERPRISE_LICENSE = (
 )
 
 
+@pytest.fixture(autouse=True)
+def enable_roles_for_all_tests_here(synced_roles):
+    pass
+
+
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_enterprise_features_will_be_active_instance_wide_when_enterprise_active(
@@ -241,7 +246,7 @@ def test_user_data_no_enterprise_features_instance_wide_not_active(
 @override_settings(DEBUG=True)
 @responses.activate
 def test_check_licenses_with_enterprise_license_sends_seat_data(
-    enterprise_data_fixture, synced_roles
+    enterprise_data_fixture,
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
 
@@ -283,7 +288,7 @@ def test_check_licenses_with_enterprise_license_sends_seat_data(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_enterprise_license_counts_viewers_as_free(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
@@ -311,7 +316,7 @@ def test_enterprise_license_counts_viewers_as_free(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_user_who_is_commenter_in_one_group_and_viewer_in_another_is_not_free(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
@@ -339,7 +344,7 @@ def test_user_who_is_commenter_in_one_group_and_viewer_in_another_is_not_free(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_user_marked_for_deletion_is_not_counted_as_a_paid_user(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
@@ -370,7 +375,7 @@ def test_user_marked_for_deletion_is_not_counted_as_a_paid_user(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_user_deactivated_user_is_not_counted_as_a_paid_user(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
@@ -400,7 +405,7 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_cant_manually_add_seats_to_enterprise_version(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
@@ -413,7 +418,7 @@ def test_cant_manually_add_seats_to_enterprise_version(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_cant_manually_remove_seats_from_enterprise_version(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
@@ -426,7 +431,7 @@ def test_cant_manually_remove_seats_from_enterprise_version(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_cant_manually_add_all_users_to_seats_in_enterprise_version(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
@@ -439,7 +444,7 @@ def test_cant_manually_add_all_users_to_seats_in_enterprise_version(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_cant_manually_remove_all_users_from_seats_in_enterprise_version(
-    enterprise_data_fixture, data_fixture, synced_roles
+    enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
