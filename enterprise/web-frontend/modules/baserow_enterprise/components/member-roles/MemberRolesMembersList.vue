@@ -34,7 +34,7 @@
           <div class="member-roles-members-list__team-member-count">
             {{
               $t('memberRolesMembersList.teamMembersCount', {
-                count: roleAssignment.subject.subject_count,
+                count: getCount(roleAssignment.subject.id),
               })
             }}
           </div>
@@ -80,6 +80,11 @@ export default {
       type: Number,
       required: true,
     },
+    teams: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
   },
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
@@ -98,6 +103,9 @@ export default {
   methods: {
     getRole(roleAssignment) {
       return this.roles.find((role) => role.uid === roleAssignment.role)
+    },
+    getCount(teamId) {
+      return this.teams.find(({ id }) => id === teamId).subject_count
     },
   },
 }
