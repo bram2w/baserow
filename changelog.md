@@ -9,6 +9,9 @@ For example:
 
 ## Unreleased
 
+## Deploy steps
+* (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
+
 ### New Features
 
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
