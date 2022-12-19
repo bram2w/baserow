@@ -152,13 +152,17 @@
             "title": "{name} database",
             "selectMembers": "Select members",
             "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
-            "onlyYouHaveAccess": "Only you can access this database."
+            "onlyYouHaveAccess": "Only you can access this database.",
+            "warningTitle": "Other users might inherit access!",
+            "warningMessage": "Other users might inherit access via their respective roles on the parent group."
         },
         "table": {
             "title": "{name} table",
             "selectMembers": "Select members",
             "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
-            "onlyYouHaveAccess": "Only you can access this table."
+            "onlyYouHaveAccess": "Only you can access this table.",
+            "warningTitle": "Other users might inherit access!",
+            "warningMessage": "Other users might inherit access via their respective roles on the parent database or group."
         }
     },
     "memberRolesShareToggle": {
