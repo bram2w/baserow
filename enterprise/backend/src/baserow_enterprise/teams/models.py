@@ -1,6 +1,6 @@
 from typing import Union
 
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
@@ -23,11 +23,6 @@ class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         related_name="teams",
         on_delete=models.CASCADE,
         help_text="The group that this team belongs to.",
-    )
-    subjects = GenericRelation(
-        "TeamSubject",
-        content_type_field="subject_id",
-        object_id_field="subject_type",
     )
 
     class Meta:
