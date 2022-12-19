@@ -1,11 +1,12 @@
 from typing import Union
 
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from baserow.core.mixins import CreatedAndUpdatedOnMixin, TrashableModelMixin
 from baserow.core.models import Group
+from baserow_enterprise.role.models import RoleAssignment
 from baserow_enterprise.teams.mixins import ParentTeamTrashableModelMixin
 
 
@@ -23,6 +24,12 @@ class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         related_name="teams",
         on_delete=models.CASCADE,
         help_text="The group that this team belongs to.",
+    )
+    role_assignments = GenericRelation(
+        RoleAssignment,
+        related_query_name="team",
+        content_type_field="subject_type",
+        object_id_field="subject_id",
     )
 
     class Meta:

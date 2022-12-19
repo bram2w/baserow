@@ -4,6 +4,7 @@ from baserow_enterprise.api.role.serializers import SubjectUserSerializer
 
 
 class UserSubjectType(SubjectType):
+
     type = "auth.User"
     model_class = User
 

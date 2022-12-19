@@ -253,12 +253,12 @@ class LicenseHandler:
 
             try:
                 license_type = license_object.license_type
+                usage = license_type.get_seat_usage_summary(license_object)
                 extra_info = {
                     "id": license_object.license_id,
-                    "seats_taken": license_type.get_seats_taken(license_object),
-                    "free_users_count": license_type.get_free_users_count(
-                        license_object
-                    ),
+                    "seats_taken": usage.seats_taken,
+                    "free_users_count": usage.free_users_count,
+                    "num_users_with_highest_role": usage.num_users_with_highest_role,
                 }
                 extra_license_info.append(extra_info)
             except (InvalidLicenseError, UnsupportedLicenseError, DatabaseError):
@@ -293,7 +293,7 @@ class LicenseHandler:
             headers = {}
 
             if settings.DEBUG:
-                base_url = "http://host.docker.internal:8001"
+                base_url = "http://baserow-saas-backend:8000"
                 headers["Host"] = "localhost"
 
             authority_url = f"{base_url}/api/saas/licenses/check/"
@@ -382,7 +382,9 @@ class LicenseHandler:
                 license_object.delete()
                 continue
 
-            seats_taken = license_object.license_type.get_seats_taken(license_object)
+            seats_taken = license_object.license_type.get_seat_usage_summary(
+                license_object
+            ).seats_taken
             if seats_taken > license_object.seats:
                 license_object.license_type.handle_seat_overflow(
                     seats_taken, license_object

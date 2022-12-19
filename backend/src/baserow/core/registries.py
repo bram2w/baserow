@@ -673,22 +673,22 @@ class ObjectScopeTypeRegistry(
     already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
 
 
-class SubjectType(Instance, ModelInstanceMixin):
+class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
     """
     This type describes a subject that exists in Baserow. A subject is anything that
     can execute an operation.
     """
 
+    @abc.abstractmethod
     def is_in_group(self, subject_id: int, group: "Group") -> bool:
         """
         This function checks if a subject belongs to a group
         :return: If the subject belongs to the group
         """
 
-        raise NotImplementedError(
-            f"Must be implemented by the specific type <{self.type}>"
-        )
+        pass
 
+    @abc.abstractmethod
     def get_serializer(self, model_instance, **kwargs) -> Serializer:
         """
         This function can be used to generate different serializers based on the type
@@ -698,9 +698,7 @@ class SubjectType(Instance, ModelInstanceMixin):
         :return: the correct seralizer for the subject
         """
 
-        raise NotImplementedError(
-            f"Must be implemented by the specific type <{self.type}>"
-        )
+        pass
 
 
 class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin[Any, SubjectType]):
