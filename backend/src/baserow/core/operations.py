@@ -51,6 +51,7 @@ class CreateApplicationsGroupOperationType(GroupCoreOperationType):
 
 class OrderApplicationsOperationType(GroupCoreOperationType):
     type = "group.order_applications"
+    object_scope_name = "application"
 
 
 class CreateInvitationsGroupOperationType(GroupCoreOperationType):

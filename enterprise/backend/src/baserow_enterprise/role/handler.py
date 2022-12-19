@@ -1,17 +1,20 @@
-from functools import cmp_to_key
 from typing import Any, List, Optional, Tuple, TypedDict, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Case, IntegerField, Q, Value, When
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
+from baserow.core.object_scopes import CoreObjectScopeType
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
 from baserow_enterprise.models import RoleAssignment
 from baserow_enterprise.role.models import Role
-from baserow_enterprise.teams.models import Team
+from baserow_enterprise.teams.models import Team, TeamSubject
+
+from .constants import NO_ACCESS_ROLE, NO_ROLE_LOW_PRIORITY_ROLE, SUBJECT_PRIORITY
 
 User = get_user_model()
 
@@ -26,29 +29,7 @@ class RoleAssignmentDict(TypedDict):
     role: Role
 
 
-def compare_scopes(a, b):
-    a_scope_type = object_scope_type_registry.get_by_model(a[0])
-    b_scope_type = object_scope_type_registry.get_by_model(b[0])
-    a_includes_b = object_scope_type_registry.scope_type_includes_scope_type(
-        a_scope_type, b_scope_type
-    )
-    b_includes_a = object_scope_type_registry.scope_type_includes_scope_type(
-        b_scope_type, a_scope_type
-    )
-
-    if a_includes_b and b_includes_a:
-        return 0
-    if a_includes_b:
-        return -1
-    if b_includes_a:
-        return 1
-
-
 class RoleAssignmentHandler:
-    FALLBACK_ROLE = "NO_ACCESS"
-    ADMIN_ROLE = "ADMIN"
-    NO_ACCESS_ROLE = "NO_ACCESS"
-
     @classmethod
     def _get_role_caches(cls):
         if not getattr(cls, "_init", False):
@@ -83,7 +64,7 @@ class RoleAssignmentHandler:
             return self._get_role_caches()[0][role_uid]
         except Role.DoesNotExist:
             if use_fallback:
-                return self.get_role_by_uid(self.FALLBACK_ROLE)
+                return self.get_role_by_uid(NO_ACCESS_ROLE)
             else:
                 raise
 
@@ -160,9 +141,9 @@ class RoleAssignmentHandler:
         except RoleAssignment.DoesNotExist:
             return None
 
-    def get_sorted_subject_scope_roles(
+    def get_roles_per_scope(
         self, group: Group, actor: AbstractUser
-    ) -> List[Tuple[Any, Role]]:
+    ) -> List[Tuple[Any, List[Role]]]:
         """
         Returns the RoleAssignments for the given actor in the given group. The roles
         are ordered by position of the role scope in the object hierarchy: the highest
@@ -177,56 +158,133 @@ class RoleAssignmentHandler:
             the list.
         """
 
-        role_assignment_handler = RoleAssignmentHandler()
+        actor_subject_type = subject_type_registry.get_by_model(actor)
 
-        roles = RoleAssignment.objects.filter(
-            group=group,
-            subject_type=ContentType.objects.get_for_model(type(actor)),
+        content_types = ContentType.objects.get_for_models(
+            actor_subject_type.model_class, Team, Group
+        )
+
+        subjects_q = Q(
+            subject_type=content_types[actor_subject_type.model_class],
             subject_id=actor.id,
-        ).exclude(scope_type=ContentType.objects.get_for_model(Group))
+        )
 
-        # TODO potentially n-queries here with r.scope
-        available_operations_per_scope = [
-            (r.scope, role_assignment_handler.get_role_by_id(r.role_id)) for r in roles
+        # Add team roles
+        user_teams_qs = TeamSubject.objects.filter(
+            subject_type=content_types[actor_subject_type.model_class],
+            subject_id=actor.id,
+        )
+
+        user_teams_ids = user_teams_qs.values_list("team_id", flat=True)
+
+        subjects_q |= Q(
+            subject_type=content_types[Team],
+            subject_id__in=user_teams_ids,
+        )
+
+        scope_cases = [
+            When(
+                scope_type=ContentType.objects.get_for_model(scope_type.model_class),
+                then=Value(scope_type.level),
+            )
+            for scope_type in object_scope_type_registry.get_all()
+            if scope_type.type != CoreObjectScopeType.type
         ]
 
+        role_priority_cases = [
+            When(
+                subject_type=content_types[subject_type.model_class],
+                then=Value(order),
+            )
+            for order, subject_type in enumerate(
+                [
+                    subject_type_registry.get(subject_name)
+                    for subject_name in SUBJECT_PRIORITY
+                ]
+            )
+        ]
+
+        role_assignments = (
+            RoleAssignment.objects.filter(
+                group=group,
+            )
+            .filter(subjects_q, ~Q(role__uid=NO_ROLE_LOW_PRIORITY_ROLE))
+            .annotate(
+                scope_type_order=Case(
+                    *scope_cases,
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                role_priority=Case(
+                    *role_priority_cases,
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+            )
+            .order_by(
+                "scope_type_order", "scope_id", "role_priority", "subject_id", "id"
+            )
+            .select_related("subject_type")
+        )
+
+        roles_by_scope = {group: []}
+        priorities_by_scope = {}
+
+        for role_assignment in role_assignments:
+            scope = role_assignment.scope
+            role = self.get_role_by_id(role_assignment.role_id)
+            priority = role_assignment.role_priority
+
+            # We don't use defaultdict here to be sure we have the right key order
+            if scope not in roles_by_scope:
+                roles_by_scope[scope] = []
+
+            existing_priority = priorities_by_scope.setdefault(scope, priority)
+            if priority < existing_priority:
+                roles_by_scope[scope] = [role]
+            elif existing_priority == priority:
+                roles_by_scope[scope].append(role)
+
+        # Get the group level role by reading the GroupUser permissions property for
+        # User actors.
         if isinstance(actor, User):
-            # Get the group level role by reading the GroupUser permissions property
-            group_level_role = role_assignment_handler.get_role_by_uid(
+            group_level_role = self.get_role_by_uid(
                 group.get_group_user(actor).permissions, use_fallback=True
             )
+            if group_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE:
+                # Low priority role -> Use team role or NO_ACCESS if no team role
+                if not roles_by_scope.get(group):
+                    roles_by_scope[group] = [self.get_role_by_uid(NO_ACCESS_ROLE)]
+            else:
+                # Otherwise user role wins
+                roles_by_scope[group] = [group_level_role]
 
-            available_operations_per_scope = [
-                (
-                    group,
-                    group_level_role,
-                )
-            ] + available_operations_per_scope
+        return list(roles_by_scope.items())
 
-        # Roles are ordered by scope size. The higher in the hierarchy, the higher
-        # in the list.
-        available_operations_per_scope.sort(key=cmp_to_key(compare_scopes))
+    def get_computed_roles(
+        self, group: Group, actor: AbstractUser, context: Any
+    ) -> List[Role]:
+        """
+        Returns the computed roles for the given actor on the given context.
 
-        return available_operations_per_scope
+        :param group: The group in which we want the roles.
+        :param actor: The actor for whom we want the roles.
+        :param context: The context on which we want to now the role.
+        :return: A list of roles that applies on this context.
+        """
 
-    def get_computed_role(self, group, actor, context):
-        role_assignments = self.get_sorted_subject_scope_roles(group, actor)
-        most_precise_role = RoleAssignmentHandler().get_role_by_uid(self.NO_ACCESS_ROLE)
+        roles_by_scopes = self.get_roles_per_scope(group, actor)
+        most_precise_roles = [RoleAssignmentHandler().get_role_by_uid(NO_ACCESS_ROLE)]
 
-        for (scope, role) in role_assignments:
+        for (scope, roles) in roles_by_scopes:
             if object_scope_type_registry.scope_includes_context(scope, context):
-                # If any role of a scope parent of the context is ADMIN then the
-                # operation is allowed even if a child creates exception.
-                if role.uid == self.ADMIN_ROLE:
-                    return role
                 # Check if this scope includes the context. As the role assignments
-                # are Sorted, the new scope is more precise than the previous one.
+                # are sorted, the new scope is more precise than the previous one.
                 # So we keep this new role.
-                most_precise_role = role
-            elif (
-                object_scope_type_registry.scope_includes_context(context, scope)
-                and role.uid != self.NO_ACCESS_ROLE
-            ):
+                most_precise_roles = roles
+            elif object_scope_type_registry.scope_includes_context(
+                context, scope
+            ) and any([r.uid != NO_ACCESS_ROLE for r in roles]):
                 # Here the user has a permission on a scope that is a child of the
                 # context, then we grant the user permission on all read operations
                 # for all parents of that scope and hence this context should be
@@ -235,12 +293,9 @@ class RoleAssignmentHandler:
                 # and the context here is the parent database of this table the
                 # user should be able to read this database object so they can
                 # actually have access to lower down.
-                if most_precise_role.uid == self.NO_ACCESS_ROLE:
-                    most_precise_role = RoleAssignmentHandler().get_role_by_uid(
-                        "VIEWER"
-                    )
+                most_precise_roles.append(self.get_role_by_uid("VIEWER"))
 
-        return most_precise_role
+        return most_precise_roles
 
     def assign_role(
         self,
@@ -326,7 +381,7 @@ class RoleAssignmentHandler:
 
         if scope == group and scope.id == group.id and isinstance(subject, User):
             group_user = group.get_group_user(subject)
-            new_permissions = self.NO_ACCESS_ROLE
+            new_permissions = NO_ACCESS_ROLE
             CoreHandler().force_update_group_user(
                 None, group_user, permissions=new_permissions
             )

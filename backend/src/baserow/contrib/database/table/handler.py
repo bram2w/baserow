@@ -409,15 +409,24 @@ class TableHandler:
             context=database,
         )
 
-        queryset = Table.objects.filter(database_id=database.id)
-        table_ids = [table["id"] for table in queryset.values("id")]
+        all_tables = Table.objects.filter(database_id=database.id)
+
+        user_tables = CoreHandler().filter_queryset(
+            user,
+            OrderTablesDatabaseTableOperationType.type,
+            all_tables,
+            group=database.group,
+            context=database,
+        )
+
+        table_ids = user_tables.values_list("id", flat=True)
 
         for table_id in order:
             if table_id not in table_ids:
                 raise TableNotInDatabase(table_id)
 
-        Table.order_objects(queryset, order)
-        tables_reordered.send(self, database=database, order=order, user=user)
+        full_order = Table.order_objects(all_tables, order)
+        tables_reordered.send(self, database=database, order=full_order, user=user)
 
     def find_unused_table_name(self, database: Database, proposed_name: str) -> str:
         """

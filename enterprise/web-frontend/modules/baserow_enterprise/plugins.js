@@ -20,7 +20,7 @@ export class EnterprisePlugin extends BaserowPlugin {
   getAdditionalDatabaseContextComponents(group, database) {
     if (
       this.app.$hasFeature(EnterpriseFeatures.RBAC, group.id) &&
-      this.app.$hasPermission('database.read_role', database, group.id) &&
+      this.app.$hasPermission('application.read_role', database, group.id) &&
       this.app.$featureFlags.includes('WIP')
     ) {
       return [MemberRolesDatabaseContextItem]

@@ -1195,18 +1195,30 @@ class CoreHandler:
             user, OrderApplicationsOperationType.type, group=group, context=group
         )
 
-        # TODO add filter_queryset
-        queryset = Application.objects.filter(group_id=group.id).order_by("order")
-        application_ids = queryset.values_list("id", flat=True)
+        all_applications = Application.objects.filter(group_id=group.id).order_by(
+            "order"
+        )
 
+        users_applications = CoreHandler().filter_queryset(
+            user,
+            OrderApplicationsOperationType.type,
+            all_applications,
+            group=group,
+            context=group,
+        )
+
+        users_application_ids = users_applications.values_list("id", flat=True)
+
+        # Check that all ordered ids can be ordered by the user
         for application_id in order:
-            if application_id not in application_ids:
+            if application_id not in users_application_ids:
                 raise ApplicationNotInGroup(application_id)
 
-        Application.order_objects(queryset, order)
-        applications_reordered.send(self, group=group, order=order, user=user)
+        new_order = Application.order_objects(all_applications, order)
 
-        return application_ids
+        applications_reordered.send(self, group=group, order=new_order, user=user)
+
+        return users_application_ids
 
     def delete_application(self, user: AbstractUser, application: Application):
         """

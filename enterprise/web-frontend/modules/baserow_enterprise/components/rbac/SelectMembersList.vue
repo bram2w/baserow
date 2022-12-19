@@ -35,7 +35,8 @@
     </List>
     <SelectSubjectsListFooter
       class="margin-top-1"
-      type="members"
+      subject-type="auth.User"
+      :scope-type="scopeType"
       :count="usersSelected.length"
       :show-role-selector="showRoleSelector"
       @invite="$emit('invite', usersSelected, $event)"
@@ -58,6 +59,10 @@ export default {
     showRoleSelector: {
       type: Boolean,
       default: false,
+    },
+    scopeType: {
+      type: String,
+      required: true,
     },
   },
   data() {

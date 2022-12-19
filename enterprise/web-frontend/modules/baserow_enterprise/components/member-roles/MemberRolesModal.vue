@@ -12,7 +12,7 @@
           :scope="database"
           :role-assignments="databaseRoleAssignments"
           :teams="teams"
-          scope-type="database"
+          scope-type="application"
           @invite-members="inviteDatabaseMembers"
           @invite-teams="inviteDatabaseTeams"
           @role-updated="updateRole(databaseRoleAssignments, ...arguments)"
@@ -94,7 +94,7 @@ export default {
       try {
         const { data: databaseRoleAssignments } = await RoleAssignmentsService(
           this.$client
-        ).getRoleAssignments(this.group.id, this.database.id, 'database')
+        ).getRoleAssignments(this.group.id, this.database.id, 'application')
         this.databaseRoleAssignments = databaseRoleAssignments
 
         if (this.table) {
@@ -131,7 +131,7 @@ export default {
         members,
         'auth.User',
         role,
-        'database',
+        'application',
         this.database.id
       )
       this.databaseRoleAssignments =
@@ -142,7 +142,7 @@ export default {
         teams,
         'baserow_enterprise.Team',
         role,
-        'database',
+        'application',
         this.database.id
       )
       this.databaseRoleAssignments =

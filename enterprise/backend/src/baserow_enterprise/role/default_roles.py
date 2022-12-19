@@ -47,6 +47,7 @@ from baserow.contrib.database.table.operations import (
 from baserow.contrib.database.tokens.operations import (
     CreateTokenOperationType,
     ReadTokenOperationType,
+    UpdateTokenOperationType,
     UseTokenOperationType,
 )
 from baserow.contrib.database.views.operations import (
@@ -122,10 +123,10 @@ from baserow.core.trash.operations import (
 )
 from baserow_enterprise.role.operations import (
     AssignRoleGroupOperationType,
-    ReadRoleDatabaseOperationType,
+    ReadRoleApplicationOperationType,
     ReadRoleGroupOperationType,
     ReadRoleTableOperationType,
-    UpdateRoleDatabaseOperationType,
+    UpdateRoleApplicationOperationType,
     UpdateRoleTableOperationType,
 )
 from baserow_enterprise.teams.operations import (
@@ -236,7 +237,10 @@ BUILDER_OPS = EDITOR_OPS + [
     ReadGroupTrashOperationType,
     CreateTokenOperationType,
     ReadTokenOperationType,
+    UpdateTokenOperationType,
     UseTokenOperationType,
+    OrderTablesDatabaseTableOperationType,
+    OrderApplicationsOperationType,
 ]
 ADMIN_OPS = BUILDER_OPS + [
     UpdateGroupOperationType,
@@ -260,12 +264,10 @@ ADMIN_OPS = BUILDER_OPS + [
     RestoreGroupOperationType,
     EmptyApplicationTrashOperationType,
     EmptyGroupTrashOperationType,
-    ReadRoleDatabaseOperationType,
-    UpdateRoleDatabaseOperationType,
     ReadRoleTableOperationType,
     UpdateRoleTableOperationType,
-    OrderTablesDatabaseTableOperationType,
-    OrderApplicationsOperationType,
+    ReadRoleApplicationOperationType,
+    UpdateRoleApplicationOperationType,
 ]
 default_roles = {
     "ADMIN": ADMIN_OPS,
@@ -274,4 +276,5 @@ default_roles = {
     "COMMENTER": COMMENTER_OPS,
     "VIEWER": VIEWER_OPS,
     "NO_ACCESS": NO_ACCESS_OPS,
+    "NO_ROLE_LOW_PRIORITY": NO_ACCESS_OPS,
 }

@@ -23,13 +23,9 @@ from baserow.core.exceptions import (
     UserNotInGroup,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.registries import (
-    object_scope_type_registry,
-    permission_manager_type_registry,
-)
+from baserow.core.registries import object_scope_type_registry
 from baserow.core.utils import unique_dicts_in_list
 from baserow_enterprise.api.errors import (
-    ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN,
     ERROR_DUPLICATE_ROLE_ASSIGNMENTS,
     ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
     ERROR_ROLE_DOES_NOT_EXIST,
@@ -45,9 +41,8 @@ from baserow_enterprise.exceptions import (
 )
 from baserow_enterprise.features import RBAC
 from baserow_enterprise.role.actions import AssignRoleActionType
-from baserow_enterprise.role.exceptions import CantLowerAdminsRoleOnChildException
+from baserow_enterprise.role.constants import ROLE_ASSIGNABLE_OBJECT_MAP
 from baserow_enterprise.role.handler import RoleAssignmentHandler
-from baserow_enterprise.role.permission_manager import RolePermissionManagerType
 
 from .exceptions import DuplicateRoleAssignments
 from .serializers import (
@@ -109,7 +104,6 @@ class RoleAssignmentsView(APIView):
             SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
-            CantLowerAdminsRoleOnChildException: ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN,
         }
     )
     @validate_body(CreateRoleAssignmentSerializer, return_validated=True)
@@ -219,16 +213,11 @@ class RoleAssignmentsView(APIView):
         scope = query_params.get("scope", group)
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, request.user, group)
-        role_permission_manager = permission_manager_type_registry.get_by_type(
-            RolePermissionManagerType
-        )
 
         scope_type = object_scope_type_registry.get_by_model(scope)
         CoreHandler().check_permissions(
             request.user,
-            role_permission_manager.role_assignable_object_map[scope_type.type][
-                "READ"
-            ].type,
+            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["READ"],
             group=group,
             context=scope,
         )
@@ -291,7 +280,6 @@ class BatchRoleAssignmentsView(APIView):
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
             DuplicateRoleAssignments: ERROR_DUPLICATE_ROLE_ASSIGNMENTS,
-            CantLowerAdminsRoleOnChildException: ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN,
         }
     )
     @validate_body(

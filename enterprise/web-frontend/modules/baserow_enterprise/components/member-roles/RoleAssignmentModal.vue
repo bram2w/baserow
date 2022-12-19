@@ -5,6 +5,7 @@
         <SelectMembersList
           class="margin-top-2"
           :users="users"
+          :scope-type="scopeType"
           show-role-selector
           @invite="(...params) => onInvite('invite-members', ...params)"
         />
@@ -13,6 +14,7 @@
         <SelectTeamsList
           class="margin-top-2"
           :teams="teams"
+          :scope-type="scopeType"
           show-role-selector
           @invite="(...params) => onInvite('invite-teams', ...params)"
         />
@@ -40,6 +42,10 @@ export default {
       type: Array,
       required: false,
       default: () => [],
+    },
+    scopeType: {
+      type: String,
+      required: true,
     },
   },
   methods: {

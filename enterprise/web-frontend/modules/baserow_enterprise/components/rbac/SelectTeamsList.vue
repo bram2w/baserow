@@ -32,7 +32,8 @@
     </List>
     <SelectSubjectsListFooter
       class="margin-top-1"
-      type="teams"
+      subject-type="baserow_enterprise.Team"
+      :scope-type="scopeType"
       :count="teamsSelected.length"
       :show-role-selector="showRoleSelector"
       @invite="$emit('invite', teamsSelected, $event)"
@@ -54,6 +55,10 @@ export default {
     showRoleSelector: {
       type: Boolean,
       default: false,
+    },
+    scopeType: {
+      type: String,
+      required: true,
     },
   },
   data() {

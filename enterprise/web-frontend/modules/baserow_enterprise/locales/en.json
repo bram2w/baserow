@@ -134,9 +134,13 @@
             "name": "Viewer",
             "description": "Can only read data."
         },
-        "noRole": {
+        "noAccess": {
             "name": "No access",
             "description": "Can't access anything."
+        },
+        "noRoleLowPriority": {
+            "name": "No role",
+            "description": "Get default group role from their teams."
         }
     },
     "memberRolesModal": {

@@ -505,6 +505,7 @@ class DatabaseConfig(AppConfig):
         from .tokens.operations import (
             CreateTokenOperationType,
             ReadTokenOperationType,
+            UpdateTokenOperationType,
             UseTokenOperationType,
         )
         from .views.operations import (
@@ -611,6 +612,13 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ReadTokenOperationType())
         operation_type_registry.register(ListenToAllDatabaseTableEventsOperationType())
         operation_type_registry.register(UseTokenOperationType())
+        operation_type_registry.register(UpdateTokenOperationType())
+
+        from baserow.core.registries import permission_manager_type_registry
+
+        from .tokens.permission_manager import TokenPermissionManagerType
+
+        permission_manager_type_registry.register(TokenPermissionManagerType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

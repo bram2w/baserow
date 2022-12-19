@@ -17,5 +17,9 @@ class ReadTokenOperationType(TokenOperationType):
     type = "group.token.read"
 
 
+class UpdateTokenOperationType(TokenOperationType):
+    type = "group.token.update"
+
+
 class UseTokenOperationType(TokenOperationType):
     type = "group.token.use"

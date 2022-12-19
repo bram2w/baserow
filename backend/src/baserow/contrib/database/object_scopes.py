@@ -1,5 +1,4 @@
 from baserow.contrib.database.models import Database
-from baserow.core.models import Application
 from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
@@ -14,7 +13,7 @@ class DatabaseObjectScopeType(ObjectScopeType):
     def get_parent(self, context):
         # Parent is the Application here even if it's at the "same" level
         # but it's a more generic type
-        return Application.objects.get(id=context.id)
+        return context.application_ptr
 
     def get_all_context_objects_in_scope(self, scope):
         scope_type = object_scope_type_registry.get_by_model(scope)

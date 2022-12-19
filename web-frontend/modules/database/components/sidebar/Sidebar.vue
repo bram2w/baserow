@@ -30,6 +30,11 @@
             marginLeft: 34,
             marginRight: 10,
             marginTop: -1.5,
+            enabled: $hasPermission(
+              'database.order_tables',
+              application,
+              application.group.id
+            ),
           }"
           :database="application"
           :table="table"

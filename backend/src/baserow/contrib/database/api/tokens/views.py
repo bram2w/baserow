@@ -18,6 +18,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.models import Token
+from baserow.contrib.database.tokens.operations import UpdateTokenOperationType
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 
@@ -162,6 +163,14 @@ class TokenView(APIView):
             token_id,
             base_queryset=Token.objects.select_for_update(of=("self",)),
         )
+
+        CoreHandler().check_permissions(
+            request.user,
+            UpdateTokenOperationType.type,
+            group=token.group,
+            context=token,
+        )
+
         permissions = data.pop("permissions", None)
         rotate_key = data.pop("rotate_key", False)
 

@@ -1,4 +1,5 @@
-from django.db.models import Q
+from typing import List, Union
+
 from django.utils import timezone
 
 from rest_framework.request import Request
@@ -6,7 +7,12 @@ from rest_framework.request import Request
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
+from baserow.contrib.database.tokens.constants import (
+    TOKEN_OPERATION_TYPES,
+    TOKEN_TO_OPERATION_MAP,
+)
 from baserow.core.handler import CoreHandler
+from baserow.core.registries import object_scope_type_registry
 from baserow.core.utils import random_string
 
 from .exceptions import (
@@ -242,16 +248,42 @@ class TokenHandler:
 
         if not user.id == token.user_id:
             raise TokenDoesNotBelongToUser(
-                "The user is not authorized to delete the " "token."
+                "The user is not authorized to delete the token."
             )
+
+        table_scope_type = object_scope_type_registry.get("database_table")
+
+        # Does the user have the permissions to perform these operations?
+        for object_list, token_action in [
+            (create, "create"),
+            (read, "read"),
+            (update, "update"),
+            (delete, "delete"),
+        ]:
+            # Only check permission for tables so ignoring non list type (True or False)
+            # and select only database_table objects
+            # We can't check the permission at group and database level because it
+            # just means that all underlying tables are affected but only those
+            # already visible by the user. It's not a security check. The security
+            # check is done in the corresponding API endpoint.
+            if isinstance(object_list, list):
+                all_tables = [
+                    obj for obj in object_list if table_scope_type.contains(obj)
+                ]
+                for table in all_tables:
+                    CoreHandler().check_permissions(
+                        user,
+                        TOKEN_TO_OPERATION_MAP[token_action],
+                        group=token.group,
+                        context=table,
+                    )
 
         existing_permissions = token.tokenpermission_set.all()
         desired_permissions = []
-        types = ["create", "read", "update", "delete"]
 
         # Create a list of desired tokens based on the provided create, read, update
         # and delete parameters.
-        for type_name in types:
+        for type_name in TOKEN_OPERATION_TYPES:
             value = locals()[type_name]
 
             if value is True:
@@ -319,22 +351,20 @@ class TokenHandler:
         if len(to_create) > 0:
             TokenPermission.objects.bulk_create(to_create)
 
-    def has_table_permission(self, token, type_name, table):
+    def has_table_permission(
+        self, token: Token, type_name: Union[str, List[str]], table: Table
+    ) -> bool:
         """
         Checks if the provided token has access to perform an operation on the provided
         table.
 
         :param token: The token instance.
-        :type token: Token
         :param type_name: The CRUD operation, create, read, update or delete to check
             the permissions for. Can be a list if you want to check at least one of the
             listed operation.
-        :type type_name: str | list
         :param table: The table object to check the permissions for.
-        :type table: Table
         :return: Indicates if the token has permissions to perform the operation on
             the provided table.
-        :rtype: bool
         """
 
         if token.group_id != table.database.group_id:
@@ -350,13 +380,19 @@ class TokenHandler:
         else:
             type_names = type_name
 
-        return TokenPermission.objects.filter(
-            Q(database__table=table)
-            | Q(table_id=table.id)
-            | Q(table__isnull=True, database__isnull=True),
-            token=token,
-            type__in=type_names,
-        ).exists()
+        return any(
+            (
+                token_operation in TOKEN_TO_OPERATION_MAP
+                and CoreHandler().check_permissions(
+                    token,
+                    TOKEN_TO_OPERATION_MAP[token_operation],
+                    group=token.group,
+                    context=table,
+                    raise_error=False,
+                )
+                for token_operation in type_names
+            )
+        )
 
     def check_table_permissions(
         self, request_or_token, type_name, table, force_check=False
