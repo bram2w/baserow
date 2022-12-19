@@ -138,6 +138,12 @@ class BaserowEnterpriseConfig(AppConfig):
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 
+        from baserow_enterprise.role.receivers import (
+            connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments,
+        )
+
+        connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments()
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow_enterprise.ws.signals  # noqa: F
