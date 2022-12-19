@@ -28,7 +28,6 @@ else:
 
 BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
     SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -308,7 +307,6 @@ SIMPLE_JWT = {
     "SIGNING_KEY": os.getenv("BASEROW_JWT_SIGNING_KEY", os.getenv("SECRET_KEY")),
     "USER_AUTHENTICATION_RULE": lambda user: user is not None,
 }
-
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Baserow API spec",
@@ -635,7 +633,6 @@ BASEROW_BACKEND_LOG_LEVEL = os.getenv("BASEROW_BACKEND_LOG_LEVEL", "INFO")
 BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
     "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
 )
-
 
 BASEROW_JOB_EXPIRATION_TIME_LIMIT = int(
     os.getenv("BASEROW_JOB_EXPIRATION_TIME_LIMIT", 30 * 24 * 60)  # 30 days

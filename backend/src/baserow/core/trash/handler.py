@@ -39,16 +39,16 @@ class TrashHandler:
     def trash(
         requesting_user: User,
         group: Group,
-        application: Application,
+        application: Optional[Application],
         trash_item,
         parent_id=None,
         existing_trash_entry: Optional[TrashEntry] = None,
     ) -> TrashEntry:
         """
         Marks the provided trashable item as trashed meaning it will no longer be
-        visible or usable in Baserow. However any user with access to its group can
+        visible or usable in Baserow. However, any user with access to its group can
         restore the item after it is trashed to make it visible and usable again. After
-        a configurable timeout period or when the a user explicitly empties the
+        a configurable timeout period or when the user explicitly empties the
         trash trashed items will be permanently deleted.
 
         :param parent_id: The id of the parent object if known

@@ -1,6 +1,9 @@
+from functools import lru_cache
+
 from django.contrib.auth import get_user_model
 
 from baserow_premium.license.models import License
+from baserow_premium.license.registries import SeatUsageSummary
 from drf_spectacular.openapi import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -61,13 +64,17 @@ class LicenseSerializer(serializers.ModelSerializer):
             "issued_to_name",
         )
 
+    @lru_cache(maxsize=128)
+    def get_cached_seat_usage_summary(self, obj) -> SeatUsageSummary:
+        return obj.license_type.get_seat_usage_summary(obj)
+
     @extend_schema_field(OpenApiTypes.INT)
     def get_seats_taken(self, obj):
-        return obj.license_type.get_seats_taken(obj)
+        return self.get_cached_seat_usage_summary(obj).seats_taken
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_free_users_count(self, obj):
-        return obj.license_type.get_free_users_count(obj)
+        return self.get_cached_seat_usage_summary(obj).free_users_count
 
 
 class RegisterLicenseSerializer(serializers.Serializer):

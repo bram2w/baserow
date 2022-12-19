@@ -1,9 +1,17 @@
 import abc
-from typing import List
+import dataclasses
+from typing import Dict, List
 
 from baserow_premium.license.models import License
 
 from baserow.core.registry import Instance, Registry
+
+
+@dataclasses.dataclass
+class SeatUsageSummary:
+    seats_taken: int
+    free_users_count: int
+    num_users_with_highest_role: Dict[str, int]
 
 
 class LicenseType(abc.ABC, Instance):
@@ -34,14 +42,21 @@ class LicenseType(abc.ABC, Instance):
     def has_feature(self, feature: str):
         return feature in self.features
 
+    @abc.abstractmethod
+    def get_seat_usage_summary(
+        self, license_object_of_this_type: License
+    ) -> SeatUsageSummary:
+        pass
+
+    @abc.abstractmethod
+    def handle_seat_overflow(self, seats_taken: int, license_object: License):
+        pass
+
     def get_seats_taken(self, license_object_of_this_type: License) -> int:
-        raise NotImplementedError()
+        return self.get_seat_usage_summary(license_object_of_this_type).seats_taken
 
     def get_free_users_count(self, license_object_of_this_type: License) -> int:
-        raise NotImplementedError()
-
-    def handle_seat_overflow(self, seats_taken: int, license_object: License):
-        raise NotImplementedError()
+        return self.get_seat_usage_summary(license_object_of_this_type).free_users_count
 
 
 class LicenseTypeRegistry(Registry[LicenseType]):
