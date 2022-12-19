@@ -656,7 +656,18 @@ BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
 
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.
-FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
+FEATURE_FLAGS = [
+    flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
+]
+
+
+class Everything(object):
+    def __contains__(self, other):
+        return True
+
+
+if "*" in FEATURE_FLAGS:
+    FEATURE_FLAGS = Everything()
 
 PERMISSION_MANAGERS = os.getenv(
     "BASEROW_PERMISSION_MANAGERS", "core,staff,member,token,role,basic"

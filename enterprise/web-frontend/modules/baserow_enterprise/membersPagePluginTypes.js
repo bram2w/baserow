@@ -18,7 +18,7 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
       context
     )
 
-    if (this.app.$featureFlags.includes('WIP')) {
+    if (this.app.$featureFlagIsEnabled('RBAC')) {
       const roleColumnIndex = columns.findIndex(
         (column) => column.key === 'permissions'
       )

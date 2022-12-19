@@ -38,14 +38,3 @@ CACHES = {
         "VERSION": None,
     },
 }
-
-
-class Everything(object):
-    def __contains__(self, other):
-        return True
-
-
-# Overriding the FEATURE_FLAGS object in the tests because if we do `feature` in
-# settings.FEATURE_FLAGS, we always want it to be enabled, otherwise the tests might
-# fail.
-# FEATURE_FLAGS = Everything()

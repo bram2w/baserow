@@ -13,17 +13,6 @@
         >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</a
       >
     </div>
-    <span
-      v-if="$featureFlags.includes('rbacNoRole')"
-      class="member-roles-tab__everyone_access_label"
-    >
-      {{ descriptionText }}
-    </span>
-    <MemberRolesShareToggle
-      v-if="$featureFlags.includes('rbacNoRole')"
-      :name="scope.name"
-      :toggled.sync="isSharedWithEveryone"
-    />
     <div v-if="loading" class="loading"></div>
     <div v-else>
       <Alert
