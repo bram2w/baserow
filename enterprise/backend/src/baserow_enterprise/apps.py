@@ -138,6 +138,12 @@ class BaserowEnterpriseConfig(AppConfig):
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 
+        from baserow_enterprise.teams.receivers import (
+            connect_to_post_delete_signals_to_cascade_deletion_to_team_subjects,
+        )
+
+        connect_to_post_delete_signals_to_cascade_deletion_to_team_subjects()
+
         from baserow_enterprise.role.receivers import (
             connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments,
         )
