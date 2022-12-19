@@ -13,7 +13,7 @@
       >{{
         $t('selectSubjectsListFooter.invite', {
           count,
-          type: $t(`selectSubjectsListFooter.types.${type}`),
+          type: subjectTypeLabel,
         })
       }}
     </a>
@@ -23,6 +23,8 @@
 <script>
 import { mapGetters } from 'vuex'
 import RoleSelector from '@baserow_enterprise/components/member-roles/RoleSelector'
+import { filterRoles } from '@baserow_enterprise/utils/roles'
+
 export default {
   name: 'SelectSubjectsListFooter',
   components: { RoleSelector },
@@ -35,10 +37,13 @@ export default {
       type: Number,
       required: true,
     },
-    type: {
+    subjectType: {
       type: String,
-      validator: (type) => type === 'teams' || 'members',
-      default: 'members',
+      required: true,
+    },
+    scopeType: {
+      type: String,
+      required: true,
     },
   },
   data() {
@@ -48,8 +53,23 @@ export default {
   },
   computed: {
     ...mapGetters({ group: 'group/getSelected' }),
+    subjectTypeLabel() {
+      switch (this.subjectType) {
+        case 'auth.User':
+          return this.$t('selectSubjectsListFooter.types.members')
+        case 'baserow_enterprise.Team':
+          return this.$t('selectSubjectsListFooter.types.teams')
+        default:
+          return ''
+      }
+    },
     roles() {
-      return this.group ? this.group._.roles : []
+      return this.group
+        ? filterRoles(this.group._.roles, {
+            scopeType: this.scopeType,
+            subjectType: this.subjectType,
+          })
+        : []
     },
     inviteEnabled() {
       return this.count !== 0

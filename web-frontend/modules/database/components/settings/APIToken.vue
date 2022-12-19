@@ -157,6 +157,13 @@
               class="api-token__permission"
             >
               <Checkbox
+                v-if="
+                  $hasPermission(
+                    `database.table.${operation}_row`,
+                    table,
+                    group.id
+                  )
+                "
                 :value="isTableActive(table, database, operation)"
                 @input="
                   toggleTable(table, database, databases, operation, $event)

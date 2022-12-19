@@ -52,6 +52,7 @@ class ReadViewsOrderOperationType(DatabaseTableOperationType):
 
 class OrderViewsOperationType(DatabaseTableOperationType):
     type = "database.table.order_views"
+    object_scope_name = DatabaseViewObjectScopeType.type
 
 
 class CreateViewOperationType(DatabaseTableOperationType):
@@ -60,7 +61,7 @@ class CreateViewOperationType(DatabaseTableOperationType):
 
 class ListViewsOperationType(DatabaseTableOperationType):
     type = "database.table.list_views"
-    object_scope_name = "database_view"
+    object_scope_name = DatabaseViewObjectScopeType.type
 
 
 class ReadViewOperationType(ViewOperationType):
@@ -97,6 +98,7 @@ class CreateViewFilterOperationType(ViewOperationType):
 
 class ListViewFilterOperationType(ViewOperationType):
     type = "database.table.view.list_filter"
+    object_scope_name = DatabaseViewFilterObjectScopeType.type
 
 
 class ReadViewFilterOperationType(ViewFilterOperationType):
@@ -117,6 +119,7 @@ class CreateViewDecorationOperationType(ViewOperationType):
 
 class ListViewDecorationOperationType(ViewOperationType):
     type = "database.table.view.list_decoration"
+    object_scope_name = DatabaseViewDecorationObjectScopeType.type
 
 
 class ViewDecorationOperationType(ViewOperationType, abc.ABC):

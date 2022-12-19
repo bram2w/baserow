@@ -33,10 +33,12 @@ const appendRoleTranslations = (roles, registry) => {
   )
   return roles.map((role) => {
     if (translationMap[role.uid]) {
+      const { uid, ...rest } = role
       return {
-        uid: role.uid,
+        uid,
         description: translationMap[role.uid].description,
         name: translationMap[role.uid].name,
+        ...rest,
       }
     }
     return role

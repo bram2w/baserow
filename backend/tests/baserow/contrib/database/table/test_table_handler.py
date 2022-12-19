@@ -345,8 +345,8 @@ def test_order_tables(send_mock, data_fixture):
     table_2.refresh_from_db()
     table_3.refresh_from_db()
     assert table_1.order == 1
-    assert table_2.order == 0
-    assert table_3.order == 0
+    assert table_2.order == 3
+    assert table_3.order == 2
 
 
 @pytest.mark.django_db

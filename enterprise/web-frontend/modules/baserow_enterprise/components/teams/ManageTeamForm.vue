@@ -110,6 +110,7 @@
 import { required, maxLength, minLength } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import { filterRoles } from '@baserow_enterprise/utils/roles'
 
 export default {
   name: 'ManageTeamForm',
@@ -144,7 +145,10 @@ export default {
   },
   computed: {
     roles() {
-      return this.group._.roles
+      return filterRoles(this.group._.roles, {
+        scopeType: 'group',
+        subjectType: 'baserow_enterprise.Team',
+      })
     },
     defaultRole() {
       return this.roles.length > 0 ? this.roles[this.roles.length - 1] : null

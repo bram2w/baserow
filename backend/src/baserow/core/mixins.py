@@ -1,6 +1,8 @@
+from typing import List
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Case, Manager, Value, When
+from django.db.models import Case, Manager, QuerySet, Value, When
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.mixins import FieldCacheMixin
 from django.utils.functional import cached_property
@@ -29,38 +31,68 @@ class OrderableMixin:
         return queryset.aggregate(models.Max(field)).get(f"{field}__max", 0) or 0
 
     @classmethod
-    def order_objects(cls, queryset, order, field="order"):
+    def order_objects(
+        cls, queryset: QuerySet, new_order: List[int], field: str = "order"
+    ) -> List[int]:
         """
         Changes the order of the objects in the given queryset to the desired order
-        provided in the order parameter.
+        provided in the new_order parameter. The new_order list can be a subset
+        of all object ids to order. In this case, this function applies the best effort
+        to respect the new order while keeping the rest of the ordered objects as
+        close as they were before.
 
         :param queryset: The queryset of the objects that need to be updated.
-        :type queryset: QuerySet
-        :param order: A list containing the object ids in the desired order.
-        :type order: list
+        :param new_order: A list containing the object ids in the desired order. This
+            list can be partial.
         :param field: The name of the order column/field.
-        :type field: str
-        :return: The amount of objects updated.
-        :rtype: int
+        :return: The full ordered list of ids.
         """
 
-        return queryset.update(
+        new_order = list(new_order)
+        previous_full_id_order = list(queryset.values_list("id", flat=True))
+
+        new_full_order = []
+        current = 0
+
+        # Support order with partial input list
+        while previous_full_id_order:
+            obj_id = previous_full_id_order[current]
+
+            # obj_id not in new order, let's append it
+            if obj_id not in new_order:
+                previous_full_id_order.pop(current)
+                new_full_order.append(obj_id)
+                current = 0
+            # obj_id is equal to first element of new_order, let's append it
+            elif obj_id == new_order[0]:
+                previous_full_id_order.pop(current)
+                new_full_order.append(obj_id)
+                new_order.pop(0)
+                current = 0
+            # obj_id is in the list but it's not the first element. Then skip it for
+            # now but let's take a look at the next id
+            else:
+                current += 1
+
+        queryset.update(
             **{
                 field: Case(
                     *[
-                        When(id=id, then=Value(index + 1))
-                        for index, id in enumerate(order)
+                        When(id=id, then=Value(order + 1))
+                        for order, id in enumerate(new_full_order)
                     ],
-                    default=Value(0),
+                    default=Value(len(new_full_order) + 1),
                 )
             }
         )
+
+        return new_full_order
 
 
 class PolymorphicContentTypeMixin:
     """
     This mixin introduces a set of helpers for a model that has a polymorphic
-    relationship with django's content type. Note that a foreignkey to the ContentType
+    relationship with django's content type. Note that a foreignKey to the ContentType
     model must exist.
 
     Example:

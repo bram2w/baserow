@@ -46,6 +46,7 @@
       />
       <RoleAssignmentModal
         ref="roleAssignmentModal"
+        :scope-type="scopeType"
         :users="groupUsersNotInvited"
         :teams="teamsNotInvited"
         @invite-teams="(teams, role) => $emit('invite-teams', teams, role)"

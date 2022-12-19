@@ -42,7 +42,7 @@ from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
-from baserow.core.models import Application
+from baserow.core.models import Application, Group
 from baserow.core.operations import (
     CreateApplicationsGroupOperationType,
     ListApplicationsGroupOperationType,
@@ -97,10 +97,26 @@ class AllApplicationsView(APIView):
         returned.
         """
 
-        applications = specific_iterator(
-            Application.objects.select_related("content_type", "group").filter(
-                group__users__in=[request.user], group__trashed=False
+        groups = Group.objects.filter(users=request.user)
+
+        # Compute list of readable application ids
+        applications_ids = []
+        for group in groups:
+            applications = Application.objects.filter(group=group, group__trashed=False)
+            applications = CoreHandler().filter_queryset(
+                request.user,
+                ListApplicationsGroupOperationType.type,
+                applications,
+                group=group,
+                context=group,
             )
+            applications_ids += applications.values_list("id", flat=True)
+
+        # Then filter with these ids
+        applications = specific_iterator(
+            Application.objects.select_related("content_type", "group")
+            .filter(id__in=applications_ids)
+            .order_by("group_id", "order")
         )
 
         data = [
@@ -185,7 +201,8 @@ class ApplicationsView(APIView):
         )
 
         data = [
-            get_application_serializer(application).data for application in applications
+            get_application_serializer(application, context={"request": request}).data
+            for application in applications
         ]
         return Response(data)
 
@@ -248,7 +265,9 @@ class ApplicationsView(APIView):
             init_with_data=data["init_with_data"],
         )
 
-        return Response(get_application_serializer(application).data)
+        return Response(
+            get_application_serializer(application, context={"request": request}).data
+        )
 
 
 class ApplicationView(APIView):
@@ -292,7 +311,9 @@ class ApplicationView(APIView):
 
         application = CoreHandler().get_user_application(request.user, application_id)
 
-        return Response(get_application_serializer(application).data)
+        return Response(
+            get_application_serializer(application, context={"request": request}).data
+        )
 
     @extend_schema(
         parameters=[
@@ -344,7 +365,9 @@ class ApplicationView(APIView):
             request.user, application, name=data["name"]
         )
 
-        return Response(get_application_serializer(application).data)
+        return Response(
+            get_application_serializer(application, context={"request": request}).data
+        )
 
     @extend_schema(
         parameters=[

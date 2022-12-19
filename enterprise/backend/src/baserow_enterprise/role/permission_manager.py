@@ -8,11 +8,8 @@ from django.contrib.auth.models import AbstractUser
 from baserow_premium.license.handler import LicenseHandler
 from rest_framework.exceptions import NotAuthenticated
 
-from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
-from baserow.contrib.database.table.object_scopes import DatabaseTableObjectScopeType
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.models import Group
-from baserow.core.object_scopes import GroupObjectScopeType
 from baserow.core.registries import (
     OperationType,
     PermissionManagerType,
@@ -23,14 +20,6 @@ from baserow_enterprise.features import RBAC
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 from .models import Role
-from .operations import (
-    AssignRoleGroupOperationType,
-    ReadRoleDatabaseOperationType,
-    ReadRoleGroupOperationType,
-    ReadRoleTableOperationType,
-    UpdateRoleDatabaseOperationType,
-    UpdateRoleTableOperationType,
-)
 
 User = get_user_model()
 
@@ -42,20 +31,6 @@ class OperationPermissionContent(TypedDict):
 
 class RolePermissionManagerType(PermissionManagerType):
     type = "role"
-    role_assignable_object_map = {
-        GroupObjectScopeType.type: {
-            "READ": ReadRoleGroupOperationType,
-            "UPDATE": AssignRoleGroupOperationType,
-        },
-        DatabaseObjectScopeType.type: {
-            "READ": ReadRoleDatabaseOperationType,
-            "UPDATE": UpdateRoleDatabaseOperationType,
-        },
-        DatabaseTableObjectScopeType.type: {
-            "READ": ReadRoleTableOperationType,
-            "UPDATE": UpdateRoleTableOperationType,
-        },
-    }
 
     def is_enabled(self, group: Group):
         """
@@ -111,13 +86,15 @@ class RolePermissionManagerType(PermissionManagerType):
 
             operation_type = operation_type_registry.get(operation_name)
 
-            computed_role = RoleAssignmentHandler().get_computed_role(
+            computed_roles = RoleAssignmentHandler().get_computed_roles(
                 group, actor, context
             )
 
-            if (
-                computed_role.uid == RoleAssignmentHandler.ADMIN_ROLE
-                or operation_type.type in self.get_role_operations(computed_role)
+            if any(
+                [
+                    operation_type.type in self.get_role_operations(r)
+                    for r in computed_roles
+                ]
             ):
                 return True
 
@@ -125,7 +102,7 @@ class RolePermissionManagerType(PermissionManagerType):
 
     def get_operation_policy(
         self,
-        role_assignments: List[Tuple[Any, List[str]]],
+        roles_by_scope: List[Tuple[Any, List[Role]]],
         operation_type: OperationType,
         use_object_scope: bool = False,
     ) -> Tuple[bool, Set[Any]]:
@@ -148,32 +125,29 @@ class RolePermissionManagerType(PermissionManagerType):
         )
 
         # Default permissions at the group level
-        _, default_group_role = role_assignments[0]
-        default = operation_type.type in self.get_role_operations(default_group_role)
-        exceptions = set([])
+        _, default_group_roles = roles_by_scope[0]
+        default = any(
+            [
+                operation_type.type in self.get_role_operations(r)
+                for r in default_group_roles
+            ]
+        )
+        exceptions = set()
 
-        scope_with_admin_role = set()
+        for (scope, roles) in roles_by_scope[1:]:
 
-        for (scope, role) in role_assignments[1:]:
-            allowed_operations = self.get_role_operations(role)
+            allowed_operations = set()
+            [
+                allowed_operations.update(self.get_role_operations(role))
+                for role in roles
+            ]
 
             scope_type = object_scope_type_registry.get_by_model(scope)
 
             # First case
-            # The scope is a children of an admin context. We just ignore it.
-            if any(
-                [
-                    object_scope_type_registry.scope_includes_context(
-                        admin_scope, scope
-                    )
-                    for admin_scope in scope_with_admin_role
-                ]
-            ):
-                continue
-            # Second case
             # The scope of the role assignment includes the scope of the operation
             # So it has an influence on the result
-            elif object_scope_type_registry.scope_type_includes_scope_type(
+            if object_scope_type_registry.scope_type_includes_scope_type(
                 scope_type, base_scope_type
             ):
 
@@ -181,15 +155,9 @@ class RolePermissionManagerType(PermissionManagerType):
                     base_scope_type.get_all_context_objects_in_scope(scope)
                 )
 
-                if role.uid == RoleAssignmentHandler.ADMIN_ROLE:
-                    scope_with_admin_role.add(scope)
-
                 # Remove or add exceptions to the exception list according to the
                 # default policy for the group
-                if (
-                    role.uid != RoleAssignmentHandler.ADMIN_ROLE
-                    and operation_type.type not in allowed_operations
-                ):
+                if operation_type.type not in allowed_operations:
                     if default:
                         exceptions |= set(context_exceptions)
                     else:
@@ -199,7 +167,7 @@ class RolePermissionManagerType(PermissionManagerType):
                         exceptions = exceptions.difference(context_exceptions)
                     else:
                         exceptions |= set(context_exceptions)
-            # Third case
+            # Second case
             # The scope of the role assignment is included by the role of the operation
             # And we are doing a read operation
             # So we must enable the read operation for the parent
@@ -248,23 +216,15 @@ class RolePermissionManagerType(PermissionManagerType):
         if group is None or not self.is_enabled(group):
             return None
 
-        if group.get_group_user(actor).permissions == RoleAssignmentHandler.ADMIN_ROLE:
-            return {
-                op.type: {"default": True, "exceptions": []}
-                for op in operation_type_registry.get_all()
-            }
-
         # Get all role assignments for this actor into this group
-        role_assignments = RoleAssignmentHandler().get_sorted_subject_scope_roles(
-            group, actor
-        )
+        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(group, actor)
 
         result = defaultdict(lambda: {"default": False, "exceptions": []})
 
         for operation_type in operation_type_registry.get_all():
 
             default, exceptions = self.get_operation_policy(
-                role_assignments, operation_type
+                roles_by_scope, operation_type
             )
 
             if default or exceptions:
@@ -284,22 +244,19 @@ class RolePermissionManagerType(PermissionManagerType):
         if group is None or not self.is_enabled(group):
             return queryset
 
-        # Admin bypass
-        if group.get_group_user(actor).permissions == RoleAssignmentHandler.ADMIN_ROLE:
-            return queryset
-
         # Get all role assignments for this user into this group
-        role_assignments = RoleAssignmentHandler().get_sorted_subject_scope_roles(
-            group, actor
-        )
+        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(group, actor)
+        print(roles_by_scope)
 
         operation_type = operation_type_registry.get(operation_name)
 
         default, exceptions = self.get_operation_policy(
-            role_assignments, operation_type, True
+            roles_by_scope, operation_type, True
         )
 
         exceptions = [e.id for e in exceptions]
+
+        print(default, exceptions)
 
         # Finally filter the queryset with the exception list.
         if default:

@@ -507,8 +507,8 @@ def test_order_views(send_mock, data_fixture):
     grid_2.refresh_from_db()
     grid_3.refresh_from_db()
     assert grid_1.order == 1
-    assert grid_2.order == 0
-    assert grid_3.order == 0
+    assert grid_2.order == 3
+    assert grid_3.order == 2
 
 
 @pytest.mark.django_db

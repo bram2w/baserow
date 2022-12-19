@@ -11,16 +11,12 @@ from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import GroupActionScopeType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group
-from baserow.core.registries import (
-    object_scope_type_registry,
-    permission_manager_type_registry,
-    subject_type_registry,
-)
+from baserow.core.registries import object_scope_type_registry, subject_type_registry
 from baserow_enterprise.features import RBAC
-from baserow_enterprise.role.exceptions import CantLowerAdminsRoleOnChildException
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
-from baserow_enterprise.role.permission_manager import RolePermissionManagerType
+
+from .constants import ROLE_ASSIGNABLE_OBJECT_MAP
 
 
 class AssignRoleActionType(ActionType):
@@ -62,16 +58,10 @@ class AssignRoleActionType(ActionType):
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
 
-        role_permission_manager = permission_manager_type_registry.get_by_type(
-            RolePermissionManagerType
-        )
-
         scope_type = object_scope_type_registry.get_by_model(scope)
         CoreHandler().check_permissions(
             user,
-            role_permission_manager.role_assignable_object_map[scope_type.type][
-                "UPDATE"
-            ].type,
+            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
             group=group,
             context=scope,
         )
@@ -81,21 +71,6 @@ class AssignRoleActionType(ActionType):
         previous_role = role_assignment_handler.get_current_role_assignment(
             subject, group, scope=scope
         )
-
-        def has_parent_with_admin_role():
-            parent = object_scope_type_registry.get_parent(scope)
-            return (
-                parent is not None
-                and role_assignment_handler.get_computed_role(
-                    group, subject, parent
-                ).uid
-                == role_assignment_handler.ADMIN_ROLE
-            )
-
-        # Check if the role assignment is not an exception for a scope under another
-        # scope targeted by an ADMIN role.
-        if role is not None and has_parent_with_admin_role():
-            raise CantLowerAdminsRoleOnChildException()
 
         role_assignment = role_assignment_handler.assign_role(
             subject,
@@ -134,16 +109,11 @@ class AssignRoleActionType(ActionType):
         scope = role_assignment_handler.get_scope(params.scope_id, params.scope_type)
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
-        role_permission_manager = permission_manager_type_registry.get_by_type(
-            RolePermissionManagerType
-        )
 
         scope_type = object_scope_type_registry.get_by_model(scope)
         CoreHandler().check_permissions(
             user,
-            role_permission_manager.role_assignable_object_map[scope_type.type][
-                "UPDATE"
-            ].type,
+            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
             group=group,
             context=scope,
         )
@@ -175,15 +145,10 @@ class AssignRoleActionType(ActionType):
 
         LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
         scope_type = object_scope_type_registry.get_by_model(scope)
-        role_permission_manager = permission_manager_type_registry.get_by_type(
-            RolePermissionManagerType
-        )
 
         CoreHandler().check_permissions(
             user,
-            role_permission_manager.role_assignable_object_map[scope_type.type][
-                "UPDATE"
-            ].type,
+            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
             group=group,
             context=scope,
         )

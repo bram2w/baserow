@@ -225,6 +225,11 @@
                   update: orderApplications,
                   handle: '[data-sortable-handle]',
                   marginTop: -1.5,
+                  enabled: $hasPermission(
+                    'group.order_applications',
+                    selectedGroup,
+                    selectedGroup.id
+                  ),
                 }"
                 :application="application"
                 :group="selectedGroup"
