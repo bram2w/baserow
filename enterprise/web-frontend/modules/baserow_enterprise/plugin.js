@@ -75,7 +75,7 @@ export default (context) => {
     new EnterpriseMembersPagePluginType(context)
   )
 
-  if (app.$featureFlags.includes('WIP')) {
+  if (app.$featureFlagIsEnabled('RBAC')) {
     app.$registry.register(
       'groupSettingsPage',
       new TeamsGroupSettingsPageType(context)

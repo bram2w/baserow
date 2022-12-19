@@ -19,6 +19,15 @@ FEATURE_FLAGS=feature1,feature2,feature3 ./dev.sh xyz
 You could also use a docker-compose `.env` file and set the FEATURE_FLAGS variable in 
 there.
 
+## Enabling all feature flags
+
+Use the `*` feature flag to enable every single feature flag without having to specify 
+each one.
+
+```bash
+FEATURE_FLAGS=* ./dev.sh xyz
+```
+
 ## Naming convention
 
 Feature flags should be:
@@ -46,7 +55,7 @@ if "feature1" in settings.FEATURE_FLAGS:
 methods: {
     someComponentMethod()
     {
-        if (this.$featureFlags.includes("feature1"){
+        if (this.$featureFlagIsEnabled("feature1")){
             // do the feature
         }
     }

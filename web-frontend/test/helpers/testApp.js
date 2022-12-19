@@ -123,7 +123,7 @@ export class TestApp {
         params: {},
         matched: [],
       },
-      $featureFlags: { includes: () => true },
+      $featureFlagIsEnabled: (flag) => true,
       $hasPermission: () => true,
     }
     this._app.$clientErrorMap = new ClientErrorMap(this._app)

@@ -14,9 +14,11 @@ For example:
 
 ### New Features
 
+* (Enterprise Preview Feature) Database and Table level RBAC with Teams are now available as a preview feature for enterprise users, Add 'RBAC' to the FEATURE_FLAG env and restart var to enable.
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
 * Add support for "Empty" and "Not Empty" filters for Collaborator field. [#1205](https://gitlab.com/bramw/baserow/-/issues/1205)
 * The ordering APIs can now accept a partial list of ids to order only these ids.
+* Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
 
 ### Bug Fixes
 * Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)
