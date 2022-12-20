@@ -22,6 +22,7 @@ For example:
 * Add support for "Empty" and "Not Empty" filters for Collaborator field. [#1205](https://gitlab.com/bramw/baserow/-/issues/1205)
 * The ordering APIs can now accept a partial list of ids to order only these ids.
 * Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
+* Added more Maths formula functions. [#1183](https://gitlab.com/bramw/baserow/-/issues/1183)
 
 ### Bug Fixes
 * Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)
@@ -49,6 +50,7 @@ For example:
 * Fixed bug where only one condition per field was working in form's views. [#1400](https://gitlab.com/bramw/baserow/-/issues/1400)
 * Fix "ERR_REDIRECT" for authenticated users redirected to the dashboard from the signup page. [1125](https://gitlab.com/bramw/baserow/-/issues/1125)
 * Fixed a problem of some specific error messages not being recognized by the web front-end.
+
 * Fixed failing webhook call log creation when a table has more than one webhooks. [#1100](https://gitlab.com/bramw/baserow/-/merge_requests/1100)
 
 ### Refactors
