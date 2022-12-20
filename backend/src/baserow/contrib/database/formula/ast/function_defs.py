@@ -23,19 +23,29 @@ from django.db.models import (
     fields,
 )
 from django.db.models.functions import (
+    Abs,
     Cast,
+    Ceil,
     Coalesce,
     Concat,
+    Exp,
     Extract,
+    Floor,
     Greatest,
     JSONObject,
     Least,
     Left,
     Length,
+    Ln,
+    Log,
     Lower,
+    Mod,
+    Power,
     Replace,
     Reverse,
     Right,
+    Sign,
+    Sqrt,
     StrIndex,
     Upper,
 )
@@ -122,9 +132,21 @@ def register_formula_functions(registry):
     registry.register(BaserowErrorToNan())
     registry.register(BaserowGreatest())
     registry.register(BaserowLeast())
+    registry.register(BaserowMod())
     registry.register(BaserowRound())
     registry.register(BaserowInt())
+    registry.register(BaserowEven())
+    registry.register(BaserowOdd())
     registry.register(BaserowTrunc())
+    registry.register(BaserowLn())
+    registry.register(BaserowExp())
+    registry.register(BaserowLog())
+    registry.register(BaserowSqrt())
+    registry.register(BaserowPower())
+    registry.register(BaserowAbs())
+    registry.register(BaserowCeil())
+    registry.register(BaserowFloor())
+    registry.register(BaserowSign())
     # Boolean functions
     registry.register(BaserowIf())
     registry.register(BaserowEqual())
@@ -468,6 +490,262 @@ class BaserowRound(TwoArgumentBaserowFunction):
         )
 
 
+class BaserowMod(TwoArgumentBaserowFunction):
+    type = "mod"
+    arg1_type = [BaserowFormulaNumberType]
+    arg2_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaNumberType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            calculate_number_type([arg1.expression_type, arg2.expression_type])
+        )
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Case(
+            When(
+                condition=(
+                    EqualsExpr(arg2, Value(0), output_field=fields.BooleanField())
+                ),
+                then=Value(Decimal("NaN")),
+            ),
+            default=Mod(arg1, arg2, output_field=arg1.output_field),
+            output_field=arg1.output_field,
+        )
+
+
+class BaserowPower(TwoArgumentBaserowFunction):
+    type = "power"
+    arg1_type = [BaserowFormulaNumberType]
+    arg2_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaNumberType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            calculate_number_type([arg1.expression_type, arg2.expression_type])
+        )
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Power(arg1, arg2, output_field=arg1.output_field)
+
+
+class BaserowLog(TwoArgumentBaserowFunction):
+    type = "log"
+    arg1_type = [BaserowFormulaNumberType]
+    arg2_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaNumberType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            calculate_number_type([arg1.expression_type, arg2.expression_type])
+        )
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Case(
+            When(
+                condition=(
+                    LessThanEqualOrExpr(
+                        arg1, Value(0), output_field=fields.BooleanField()
+                    )
+                ),
+                then=Value(Decimal("NaN")),
+            ),
+            When(
+                condition=(
+                    LessThanEqualOrExpr(
+                        arg2, Value(0), output_field=fields.BooleanField()
+                    )
+                ),
+                then=Value(Decimal("NaN")),
+            ),
+            default=Log(arg1, arg2, output_field=arg1.output_field),
+            output_field=arg1.output_field,
+        )
+
+
+class BaserowAbs(OneArgumentBaserowFunction):
+    type = "abs"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Abs(arg, output_field=arg.output_field)
+
+
+class BaserowExp(OneArgumentBaserowFunction):
+    type = "exp"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Exp(arg, output_field=arg.output_field)
+
+
+class BaserowEven(OneArgumentBaserowFunction):
+    type = "even"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaBooleanType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return EqualsExpr(
+            Mod(arg, Value(2), output_field=arg.output_field),
+            Value(0),
+            output_field=fields.BooleanField(),
+        )
+
+
+class BaserowOdd(OneArgumentBaserowFunction):
+    type = "odd"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaBooleanType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return EqualsExpr(
+            Mod(arg, Value(2), output_field=arg.output_field),
+            Value(1),
+            output_field=fields.BooleanField(),
+        )
+
+
+class BaserowLn(OneArgumentBaserowFunction):
+    type = "ln"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        # If we get given a negative number ln will crash, instead just return NaN.
+        return Case(
+            When(
+                condition=(
+                    LessThanEqualOrExpr(
+                        arg, Value(0), output_field=fields.BooleanField()
+                    )
+                ),
+                then=Value(Decimal("NaN")),
+            ),
+            default=Ln(arg, output_field=arg.output_field),
+            output_field=arg.output_field,
+        )
+
+
+class BaserowSqrt(OneArgumentBaserowFunction):
+    type = "sqrt"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        # If we get given a negative number sqrt will crash, instead just return NaN.
+        return Case(
+            When(
+                condition=(
+                    LessThanExpr(arg, Value(0), output_field=fields.BooleanField())
+                ),
+                then=Value(Decimal("NaN")),
+            ),
+            default=Sqrt(arg, output_field=arg.output_field),
+            output_field=arg.output_field,
+        )
+
+
+class BaserowSign(OneArgumentBaserowFunction):
+    type = "sign"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Sign(arg, output_field=int_like_numeric_output_field())
+
+
+class BaserowCeil(OneArgumentBaserowFunction):
+    type = "ceil"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Ceil(arg, output_field=int_like_numeric_output_field())
+
+
+class BaserowFloor(OneArgumentBaserowFunction):
+    type = "floor"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Floor(arg, output_field=int_like_numeric_output_field())
+
+
 class BaserowTrunc(OneArgumentBaserowFunction):
     type = "trunc"
     arg_type = [BaserowFormulaNumberType]
@@ -482,17 +760,7 @@ class BaserowTrunc(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        # If we get given a NaN trunc will crash, instead just return NaN if given NaN.
-        return handle_arg_being_nan(
-            arg_to_check_if_nan=arg,
-            when_nan=Cast(
-                Value("NaN"),
-                output_field=int_like_numeric_output_field(),
-            ),
-            when_not_nan=Func(
-                arg, function="trunc", output_field=int_like_numeric_output_field()
-            ),
-        )
+        return Func(arg, function="trunc", output_field=int_like_numeric_output_field())
 
 
 def int_like_numeric_output_field() -> fields.DecimalField:
@@ -569,7 +837,9 @@ class BaserowDivide(TwoArgumentBaserowFunction):
             arg1
             / Case(
                 When(
-                    condition=(EqualsExpr(arg2, 0, output_field=fields.BooleanField())),
+                    condition=(
+                        EqualsExpr(arg2, Value(0), output_field=fields.BooleanField())
+                    ),
                     then=Value(Decimal("NaN")),
                 ),
                 default=arg2,
@@ -1767,7 +2037,7 @@ class BaserowBcToNull(OneArgumentBaserowFunction):
         return Case(
             When(
                 condition=LessThanExpr(
-                    expr_to_get_year, 0, output_field=fields.BooleanField()
+                    expr_to_get_year, Value(0), output_field=fields.BooleanField()
                 ),
                 then=Value(None, output_field=arg.output_field),
             ),
