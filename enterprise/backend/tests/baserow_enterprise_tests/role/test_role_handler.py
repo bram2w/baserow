@@ -204,7 +204,7 @@ def test_assign_role_subject_not_in_group(data_fixture):
         RoleAssignmentHandler().assign_role(user_2, group, admin_role, database)
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_get_role_assignments(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
@@ -240,7 +240,35 @@ def test_get_role_assignments(data_fixture):
     assert len(database_level_role_assignments) == 1
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
+def test_get_role_assignments_trashed_teams(data_fixture, enterprise_data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    team = enterprise_data_fixture.create_team(group=group)
+    enterprise_data_fixture.create_subject(team, user)
+
+    role = Role.objects.get(uid="ADMIN")
+
+    RoleAssignmentHandler().assign_role(team, group, role, scope=database)
+
+    role_assignments = RoleAssignmentHandler().get_role_assignments(
+        group, scope=database
+    )
+
+    assert len(role_assignments) == 1
+
+    team.trashed = True
+    team.save()
+
+    role_assignments = RoleAssignmentHandler().get_role_assignments(
+        group, scope=database
+    )
+
+    assert len(role_assignments) == 0
+
+
+@pytest.mark.django_db
 def test_get_role_assignments_invalid_group_and_scope_combination(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
@@ -725,4 +753,28 @@ def test_get_sorted_subject_scope_roles(data_fixture, enterprise_data_fixture):
         (table11, [viewer_role]),
         (table12, [editor_role, builder_role, no_role_role]),
         (table22, [builder_role]),
+    ]
+
+
+@pytest.mark.django_db
+def test_get_roles_per_scope_trashed_teams(data_fixture, enterprise_data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    team = enterprise_data_fixture.create_team(group=group)
+    admin_role = Role.objects.get(uid="ADMIN")
+
+    enterprise_data_fixture.create_subject(team, user)
+    RoleAssignmentHandler().assign_role(team, group, admin_role, scope=database)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
+        (group, [admin_role]),
+        (database, [admin_role]),
+    ]
+
+    team.trashed = True
+    team.save()
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
+        (group, [admin_role]),
     ]
