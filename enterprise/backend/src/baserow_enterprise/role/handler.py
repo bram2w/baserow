@@ -3,9 +3,10 @@ from typing import Any, List, Optional, Tuple, TypedDict, Union
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.db.models import Case, IntegerField, Q, QuerySet, Value, When
 
 from baserow.core.handler import CoreHandler
+from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Group, GroupUser
 from baserow.core.object_scopes import CoreObjectScopeType
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
@@ -30,6 +31,27 @@ class RoleAssignmentDict(TypedDict):
 
 
 class RoleAssignmentHandler:
+    def _get_role_assignments_for_valid_subjects_qs(self) -> QuerySet:
+        """
+        Constructs base queryset for role_assignments in order to filter out any
+        role assignment related to a trashed subject.
+        """
+
+        id_filters = Q()
+        for subject_type in subject_type_registry.get_all():
+            if issubclass(subject_type.model_class, TrashableModelMixin):
+                id_filters.add(
+                    ~Q(
+                        subject_id__in=subject_type.model_class.trash.all().values_list(
+                            "id", flat=True
+                        ),
+                        subject_type=subject_type.get_content_type(),
+                    ),
+                    Q.AND,
+                )
+
+        return RoleAssignment.objects.filter(id_filters)
+
     @classmethod
     def _get_role_caches(cls):
         if not getattr(cls, "_init", False):
@@ -129,12 +151,16 @@ class RoleAssignmentHandler:
                 return None
 
         try:
-            role_assignment = RoleAssignment.objects.select_related("role").get(
-                scope_id=scope.id,
-                scope_type=content_types[scope],
-                group=group,
-                subject_id=subject.id,
-                subject_type=content_types[subject],
+            role_assignment = (
+                self._get_role_assignments_for_valid_subjects_qs()
+                .select_related("role")
+                .get(
+                    scope_id=scope.id,
+                    scope_type=content_types[scope],
+                    group=group,
+                    subject_id=subject.id,
+                    subject_type=content_types[subject],
+                )
             )
 
             return role_assignment
@@ -483,7 +509,8 @@ class RoleAssignmentHandler:
                 )
             return role_assignments
         else:
-            role_assignments = RoleAssignment.objects.filter(
+            qs = self._get_role_assignments_for_valid_subjects_qs()
+            role_assignments = qs.filter(
                 group=group,
                 scope_id=scope.id,
                 scope_type=ContentType.objects.get_for_model(scope),
