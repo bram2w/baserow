@@ -28,6 +28,7 @@ For example:
 * Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)
 * Use the correct `OperationType` to restore rows [#1389](https://gitlab.com/bramw/baserow/-/issues/1389)
 * Prevent zooming in when clicking on an input on mobile. [#722](https://gitlab.com/bramw/baserow/-/issues/722)
+* Link/Lookup/Formula fields work again when restricting a users access to the related table [#1439](https://gitlab.com/bramw/baserow/-/issues/1439)
 
 ### Refactors
 * Set a fixed width for `card_cover` thumbnails to have better-quality images. [#1278](https://gitlab.com/bramw/baserow/-/issues/#1278)

@@ -137,6 +137,11 @@ export default {
     GridViewFieldFooter,
   },
   mixins: [gridViewHelpers],
+  provide() {
+    return {
+      group: this.database.group,
+    }
+  },
   props: {
     fields: {
       type: Array,
