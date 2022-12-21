@@ -146,6 +146,8 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     assert role_assignment_user_2 is None
 
 
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()

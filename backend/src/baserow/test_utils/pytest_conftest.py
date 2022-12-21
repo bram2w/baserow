@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import os
 
@@ -13,6 +14,16 @@ from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
+
+
+# We need to manually deal with the event loop since we are using asyncio in the
+# tests in this directory and they have some issues when it comes to pytest.
+# This solution is taken from: https://bit.ly/3UJ90co
+@pytest.fixture(scope="session")
+def async_event_loop():
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture

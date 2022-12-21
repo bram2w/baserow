@@ -700,6 +700,18 @@ class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
 
         pass
 
+    @abc.abstractmethod
+    def get_associated_users(self, subject) -> List["AbstractUser"]:
+        """
+        Returns a list of Users which are associated with this subject.
+        And associated user is any user that receives permissions in Baserow based
+        on their link to this subject.
+        :param subject: The subject we are trying to find the associated users for
+        :return: All the associated users
+        """
+
+        pass
+
 
 class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin[Any, SubjectType]):
     """
