@@ -50,7 +50,6 @@
       </LoginActions>
       <component
         :is="afterSignupStepComponents[afterSignupStep]"
-        v-else
         @success="next"
       ></component>
     </template>
