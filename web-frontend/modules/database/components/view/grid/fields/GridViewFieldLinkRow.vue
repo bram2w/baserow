@@ -2,7 +2,7 @@
   <div class="grid-view__cell grid-field-many-to-many__cell active">
     <div class="grid-field-many-to-many__list">
       <component
-        :is="publicGrid || readOnly ? 'span' : 'a'"
+        :is="publicGrid || !canAccessLinkedTable ? 'span' : 'a'"
         v-for="item in value"
         :key="item.id"
         class="grid-field-many-to-many__item"
@@ -24,7 +24,7 @@
           class="grid-field-many-to-many__loading"
         ></span>
         <a
-          v-else-if="!readOnly"
+          v-else-if="canAccessLinkedTable"
           class="grid-field-many-to-many__remove"
           @click.prevent.stop="removeValue($event, value, item.id)"
         >
@@ -32,7 +32,7 @@
         </a>
       </component>
       <a
-        v-if="!readOnly"
+        v-if="canAccessLinkedTable"
         class="
           grid-field-many-to-many__item grid-field-many-to-many__item--link
         "
@@ -42,7 +42,7 @@
       </a>
     </div>
     <SelectRowModal
-      v-if="!readOnly"
+      v-if="canAccessLinkedTable"
       ref="selectModal"
       :table-id="field.link_row_table_id"
       :value="value"
@@ -50,7 +50,7 @@
       @hidden="hideModal"
     ></SelectRowModal>
     <ForeignRowEditModal
-      v-if="!readOnly"
+      v-if="canAccessLinkedTable"
       ref="rowEditModal"
       :table-id="field.link_row_table_id"
       @hidden="hideModal"
@@ -67,16 +67,51 @@ import linkRowField from '@baserow/modules/database/mixins/linkRowField'
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
 import ForeignRowEditModal from '@baserow/modules/database/components/row/ForeignRowEditModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export default {
   name: 'GridViewFieldLinkRow',
   components: { ForeignRowEditModal, SelectRowModal },
   mixins: [gridField, linkRowField],
+  inject: {
+    group: { default: null },
+  },
   data() {
     return {
       modalOpen: false,
       itemLoadingId: -1,
     }
+  },
+  computed: {
+    canAccessLinkedTable() {
+      const linkedTable = this.allTables.find(
+        ({ id }) => id === this.field.link_row_table_id
+      )
+
+      if (!linkedTable) {
+        return false
+      }
+
+      return (
+        this.$hasPermission(
+          'database.table.read',
+          linkedTable,
+          this.group.id
+        ) && !this.readOnly
+      )
+    },
+    allTables() {
+      const databaseType = DatabaseApplicationType.getType()
+      return this.$store.getters['application/getAll'].reduce(
+        (tables, application) => {
+          if (application.type === databaseType) {
+            return tables.concat(application.tables || [])
+          }
+          return tables
+        },
+        []
+      )
+    },
   },
   beforeCreate() {
     this.$options.computed = {
@@ -107,7 +142,7 @@ export default {
      * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
-      if (this.readOnly) {
+      if (!this.canAccessLinkedTable) {
         return true
       }
 
@@ -133,7 +168,7 @@ export default {
       return linkRowField.methods.removeValue.call(this, event, value, id)
     },
     showModal() {
-      if (this.readOnly) {
+      if (!this.canAccessLinkedTable) {
         return
       }
 
@@ -162,7 +197,7 @@ export default {
     async showForeignRowModal(item) {
       // It's not possible to open the related row when the view is shared publicly
       // because the visitor doesn't have the right permissions.
-      if (this.publicGrid || this.readOnly) {
+      if (this.publicGrid || !this.canAccessLinkedTable) {
         return
       }
 

@@ -19,6 +19,7 @@
               <DropdownItem
                 v-for="field in linkRowFieldsInThisTable"
                 :key="field.id"
+                :disabled="field.disabled"
                 :name="field.name"
                 :value="field.id"
                 :icon="field.icon"
@@ -80,6 +81,7 @@ import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldService from '@baserow/modules/database/services/field'
 import FormulaTypeSubForms from '@baserow/modules/database/components/formula/FormulaTypeSubForms'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export default {
   name: 'FieldLookupSubForm',
@@ -101,14 +103,28 @@ export default {
   },
   computed: {
     linkRowFieldsInThisTable() {
+      const tableIdsAccessible = this.allTables.map((table) => table.id)
       const fields = this.$store.getters['field/getAll']
       return fields
         .filter((f) => f.type === 'link_row')
         .map((f) => {
           const fieldType = this.$registry.get('field', f.type)
           f.icon = fieldType.getIconClass()
+          f.disabled = !tableIdsAccessible.includes(f.link_row_table_id)
           return f
         })
+    },
+    allTables() {
+      const databaseType = DatabaseApplicationType.getType()
+      return this.$store.getters['application/getAll'].reduce(
+        (tables, application) => {
+          if (application.type === databaseType) {
+            return tables.concat(application.tables || [])
+          }
+          return tables
+        },
+        []
+      )
     },
     targetFieldFormulaType() {
       if (this.values.target_field_id) {
