@@ -16,3 +16,9 @@ def test_user_subject_type_is_in_group(data_fixture):
     assert UserSubjectType().is_in_group(9999, group) is False
     assert UserSubjectType().is_in_group(inactive_user.id, group) is False
     assert UserSubjectType().is_in_group(to_be_deleted_user.id, group) is False
+
+
+@pytest.mark.django_db
+def test_user_subject_get_associated_users(data_fixture):
+    user = data_fixture.create_user()
+    assert UserSubjectType().get_associated_users(user) == [user]

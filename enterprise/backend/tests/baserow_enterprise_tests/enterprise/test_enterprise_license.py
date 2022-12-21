@@ -30,7 +30,7 @@ from baserow_enterprise.role.models import Role, RoleAssignment
 from baserow_enterprise.role.seat_usage_calculator import (
     RoleBasedSeatUsageSummaryCalculator,
 )
-from baserow_enterprise.teams.models import TeamSubject
+from baserow_enterprise.teams.models import Team, TeamSubject
 
 PAID_COMMENTER_ROLE = "COMMENTER"
 
@@ -40,6 +40,8 @@ VALID_ONE_SEAT_ENTERPRISE_LICENSE = (
     # id: "1", instance_id: "1"
     b"eyJ2ZXJzaW9uIjogMSwgImlkIjogIjUzODczYmVkLWJlNTQtNDEwZS04N2EzLTE2OTM2ODY2YjBiNiIsICJ2YWxpZF9mcm9tIjogIjIwMjItMTAtMDFUMDA6MDA6MDAiLCAidmFsaWRfdGhyb3VnaCI6ICIyMDY5LTA4LTA5VDIzOjU5OjU5IiwgInByb2R1Y3RfY29kZSI6ICJlbnRlcnByaXNlIiwgInNlYXRzIjogMSwgImlzc3VlZF9vbiI6ICIyMDIyLTEwLTI2VDE0OjQ4OjU0LjI1OTQyMyIsICJpc3N1ZWRfdG9fZW1haWwiOiAidGVzdEB0ZXN0LmNvbSIsICJpc3N1ZWRfdG9fbmFtZSI6ICJ0ZXN0QHRlc3QuY29tIiwgImluc3RhbmNlX2lkIjogIjEifQ==.B7aPXR0R4Fxr28AL7B5oopa2Yiz_MmEBZGdzSEHHLt4wECpnzjd_SF440KNLEZYA6WL1rhNkZ5znbjYIp6KdCqLdcm1XqNYOIKQvNTOtl9tUAYj_Qvhq1jhqSja-n3HFBjIh9Ve7a6T1PuaPLF1DoxSRGFZFXliMeJRBSzfTsiHiO22xRQ4GwafscYfUIWvIJJHGHtYEd9rk0tG6mfGEaQGB4e6KOsN-zw-bgLDBOKmKTGrVOkZnaGHBVVhUdpBn25r3CFWqHIApzUCo81zAA96fECHPlx_fBHhvIJXLsN5i3LdeJlwysg5SBO15Vt-tsdPmdcsec-fOzik-k3ib0A== "
 )
+
+User = get_user_model()
 
 
 @pytest.fixture(autouse=True)
@@ -1485,7 +1487,7 @@ def test_user_summary_calculation_for_enterprise_doesnt_do_n_plus_one_queries(
 
     # Make sure the content type cached properties contain these models so we don't
     # count that query in the get_seat_usage_summary below
-    ContentType.objects.get_for_models(Database, Application)
+    ContentType.objects.get_for_models(Database, Application, Team, User, Table, Group)
 
     with CaptureQueriesContext(connection) as first_query:
         assert EnterpriseLicenseType().get_seat_usage_summary(

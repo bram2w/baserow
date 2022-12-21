@@ -5,3 +5,6 @@ ScopeObject = Any
 
 # A context object can be any object
 ContextObject = Any
+
+# A subject needs to have a related registered SubjectType
+Subject = Any

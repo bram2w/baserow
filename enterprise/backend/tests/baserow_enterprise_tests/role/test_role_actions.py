@@ -42,7 +42,7 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture):
         user, user2, group, builder_role, scope=table
     )
 
-    mock_check_permissions.assert_called_with(
+    mock_check_permissions.assert_any_call(
         user, UpdateRoleTableOperationType.type, group=group, context=table
     )
 
@@ -54,7 +54,7 @@ def test_can_undo_assign_role(mock_check_permissions, data_fixture):
         user, [GroupActionScopeType.value(group_id=group.id)], session_id
     )
 
-    mock_check_permissions.assert_called_with(
+    mock_check_permissions.assert_any_call(
         user, UpdateRoleTableOperationType.type, group=group, context=table
     )
 

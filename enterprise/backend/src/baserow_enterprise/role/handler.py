@@ -13,6 +13,11 @@ from baserow.core.registries import object_scope_type_registry, subject_type_reg
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
 from baserow_enterprise.models import RoleAssignment
 from baserow_enterprise.role.models import Role
+from baserow_enterprise.signals import (
+    role_assignment_created,
+    role_assignment_deleted,
+    role_assignment_updated,
+)
 from baserow_enterprise.teams.models import Team, TeamSubject
 
 from .constants import NO_ACCESS_ROLE, NO_ROLE_LOW_PRIORITY_ROLE, SUBJECT_PRIORITY
@@ -380,7 +385,7 @@ class RoleAssignmentHandler:
                 scope_type=content_types[scope],
             )
 
-        role_assignment, _ = RoleAssignment.objects.update_or_create(
+        role_assignment, created = RoleAssignment.objects.update_or_create(
             subject_id=subject.id,
             subject_type=content_types[subject],
             group=group,
@@ -388,6 +393,15 @@ class RoleAssignmentHandler:
             scope_type=content_types[scope],
             defaults={"role": role},
         )
+
+        if created:
+            role_assignment_created.send(
+                self, subject=subject, group=group, scope=scope, role=role
+            )
+        else:
+            role_assignment_updated.send(
+                self, subject=subject, group=group, scope=scope, role=role
+            )
 
         return role_assignment
 
@@ -422,6 +436,7 @@ class RoleAssignmentHandler:
             scope_id=scope.id,
             scope_type=content_types[scope],
         ).delete()
+        role_assignment_deleted.send(self, subject=subject, group=group, scope=scope)
 
     def get_subject(self, subject_id: int, subject_type: str):
         """
