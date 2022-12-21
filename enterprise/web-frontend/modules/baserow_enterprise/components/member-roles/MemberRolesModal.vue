@@ -79,7 +79,7 @@ export default {
     },
     canManageDatabase() {
       return this.$hasPermission(
-        'database.read_role',
+        'application.read_role',
         this.database,
         this.group.id
       )
