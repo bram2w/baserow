@@ -29,7 +29,8 @@
         "activate": "Aktywuj",
         "deactivate": "Dezaktywuj",
         "remove": "Usuń",
-        "login": "Zaloguj sie"
+        "login": "Zaloguj sie",
+        "download": "Pobierz"
     },
     "adminType": {
         "settings": "Ustawienia"

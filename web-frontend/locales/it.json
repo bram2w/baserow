@@ -29,7 +29,8 @@
         "paste": "Incolla",
         "duplicate": "Duplica",
         "remove": "Rimuovi",
-        "login": "Login"
+        "login": "Login",
+        "download": "Download"
     },
     "adminType": {
         "settings": "Impostazioni"
@@ -37,12 +38,13 @@
     "applicationType": {
         "database": "Database",
         "cantSelectTableTitle": "Non è stato possibile selezionare il database.",
-        "cantSelectTableDescription": "Il database non può essere selezionato perché non ha tabelle. Usa la barra laterale per crearne una."
+        "cantSelectTableDescription": "Il database non può essere selezionato perché non ha tabelle. Usa la barra laterale per crearne una.",
+        "databaseDefaultName": "Nuovo Database"
     },
     "settingType": {
         "account": "Account",
         "password": "Password",
-        "tokens": "Token API",
+        "tokens": "Database Token",
         "deleteAccount": "Elimina account"
     },
     "userFileUploadType": {
@@ -249,7 +251,9 @@
         "snapshotNameNotUniqueTitle": "Il nome dello snapshot deve essere unico.",
         "snapshotOperationLimitExceededTitle": "Limite raggiunto",
         "snapshotNameNotUniqueDescription": "Tutti i nomi devono essere unici per applicazione.",
-        "snapshotOperationLimitExceededDescription": "Hai raggiunto il limite delle operazioni contemporanee possibili. Attenti finché le operazioni precedenti sono concluse."
+        "snapshotOperationLimitExceededDescription": "Hai raggiunto il limite delle operazioni contemporanee possibili. Attenti finché le operazioni precedenti sono concluse.",
+        "disabledPasswordProviderTitle": "Autenticazione tramite password disabilitata.",
+        "disabledPasswordProviderMessage": "Per favore, utilizza un altro provider per l'autenticazione."
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -326,7 +330,7 @@
         "toDateDescription": "Restituisce il primo argomento convertito in una data, se fornita una stringa di formato data come secondo argomento.",
         "dayDescription": "Restituisce il giorno del mese come numero tra 1 e 31 dall'argomento.",
         "dateDiffDescription": "Data un'unità di data da misurare come primo argomento ('anno', 'mese', 'settimana', 'giorno', 'ora', 'minuto', 'secondi') calcola e restituisce il numero di unità dal secondo argomento al terzo.",
-        "andDescription": "Restituisce l'and logico del primo e del secondo argomento, quindi se sono entrambi true allora il risultato è true, altrimenti è false.",
+        "andDescription": "Restituisce l'and logico del primo e del secondo argomento, quindi se sono entrambi veri allora il risultato è vero, altrimenti è falso.",
         "orDescription": "Restituisce l'or logico del primo e del secondo argomento, quindi se entrambi sono true allora il risultato è true, altrimenti è false.",
         "dateIntervalDescription": "Restituisce l'intervallo di date corrispondente all'argomento fornito.",
         "replaceDescription": "Sostituisce tutte le istanze del secondo argomento nel primo argomento con il terzo argomento.",
@@ -365,7 +369,19 @@
         "linkDescription": "Crea un link usando l'URI fornito come primo argomento.",
         "buttonDescription": "Crea un bottone usando l'URI (primo argomento) e un'etichetta (secondo argomento).",
         "getLinkLabelDescription": "Crea l'etichetta da una formula usando il link o la funzione 'button'.",
-        "getLinkUrlDescription": "Crea l'URL da una formula usando il link o la funzione 'button'."
+        "getLinkUrlDescription": "Crea l'URL da una formula usando il link o la funzione 'button'.",
+        "powerDescription": "Ritorna il risultato del primo valore elevato al secondo valore come esponente.",
+        "expDescription": "Ritorna la potenza di e ≈ 2.718 elevato al valore fornito come esponente.",
+        "sqrtDescription": "Ritorna la radice quadrata del valore fornito.",
+        "absDescription": "Ritorna il valore assoluto del numero fornito come argomento.",
+        "floorDescription": "Ritorna il più grande numero intero più piccolo del numero fornito come argomento.",
+        "oddDescription": "Ritorna vero se il valore fornito è dispari, altrimenti ritorna falso.",
+        "modDescription": "Ritorna il resto della divisione intera tra il primo valore e il secondo valore.",
+        "evenDescription": "Ritorna vero se il valore fornito è pari, altrimenti ritorna falso.",
+        "lnDescription": "Logaritmo natuale: ritorna l'esponente da dare alla costante e ≈ 2.718 per ottenere il valore fornito.",
+        "logDescription": "Funziona logaritmo: ritorna l'esponente da dare al primo valore per ottenere il secondo valore.",
+        "signDescription": "Ritorna 1 se il valore fornito è positivo, -1 se negativo, 0 altrimenti.",
+        "ceilDescription": "Ritorna il più piccolo numero intero più grande del numero fornito come argomento."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

@@ -62,7 +62,9 @@
         "disabledAccountMessage": "Esta cuenta de usuario ha sido deshabilitada.",
         "incorrectCredentialTitle": "credenciales incorrectas",
         "incorrectCredentialMessage": "La dirección de correo electrónico o la contraseña proporcionadas son incorrectas.",
-        "inputRequired": "Se requiere entrada."
+        "inputRequired": "Se requiere entrada.",
+        "disabledPasswordProviderTitle": "La autentificación por contraseña está deshabilitada.",
+        "disabledPasswordProviderMessage": "Utilice otro proveedor de autentificación."
     },
     "field": {
         "language": "Idioma",
@@ -222,7 +224,9 @@
         "passwordPlaceholder": "Introduce tu contraseña...",
         "signUpText": "¿No tienes cuenta?",
         "signUp": "Inscribirse",
-        "emailPlaceholder": "Introduce tu correo electrónico..."
+        "emailPlaceholder": "Introduce tu correo electrónico...",
+        "displayPasswordLogin": "Iniciar sesión con correo electrónico y contraseña",
+        "redirecting": "Redireccionando al proveedor de autentificación..."
     },
     "resetPassword": {
         "title": "Restablecer la contraseña",
@@ -435,7 +439,8 @@
             "columns": {
                 "email": "Correo electrónico",
                 "role": "Rol predeterminado",
-                "name": "Nombre"
+                "name": "Nombre",
+                "teams": "Equipos"
             },
             "actions": {
                 "remove": "Eliminar del grupo",
@@ -479,5 +484,10 @@
     "memberSelectionList": {
         "searchPlaceholder": "Encuentra...",
         "selectedAmountLabel": "{count} seleccionado"
+    },
+    "removeFromGroupModal": {
+        "confirmation": "¿Estás seguro de que quieres eliminar a {name} de {group_name}? Esta acción no se puede deshacer.",
+        "title": "Confirmar la eliminación del grupo",
+        "remove": "Quitar"
     }
 }

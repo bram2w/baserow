@@ -251,7 +251,9 @@
         "snapshotBeingDeletedDescription": "Het is niet mogelijk om snapshots te gebruiken die op dat moment worden verwijderd.",
         "snapshotBeingCreatedTitle": "Er wordt al een snapshot gemaakt",
         "snapshotNameNotUniqueTitle": "De naam van de snapshot moet uniek zijn.",
-        "snapshotNameNotUniqueDescription": "Alle snapshotnamen moeten uniek zijn per toepassing."
+        "snapshotNameNotUniqueDescription": "Alle snapshotnamen moeten uniek zijn per toepassing.",
+        "disabledPasswordProviderMessage": "Gebruik een andere authenticatieprovider.",
+        "disabledPasswordProviderTitle": "Wachtwoordverificatie is uitgeschakeld."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",
@@ -367,7 +369,19 @@
         "linkDescription": "Creëert een hyperlink met de URI van het eerste argument.",
         "buttonDescription": "Maakt een knop aan met behulp van de URI (eerste argument) en het label (tweede argument).",
         "getLinkLabelDescription": "Haalt het label uit een formule met behulp van de link of button functies.",
-        "getLinkUrlDescription": "Haalt de url uit een formule met behulp van de link of button functies."
+        "getLinkUrlDescription": "Haalt de url uit een formule met behulp van de link of button functies.",
+        "evenDescription": "Retourneert waar als het opgegeven argument een even getal is, anders onwaar.",
+        "oddDescription": "Retourneert waar als het opgegeven argument een oneven getal is, anders onwaar.",
+        "logDescription": "Logaritmefunctie: geeft als resultaat de exponent waaraan het eerste argument moet worden voorgelegd om het tweede argument te produceren.",
+        "expDescription": "Geeft het resultaat van de constante e ≈ 2,718 verheven tot het opgegeven argumentnummer.",
+        "sqrtDescription": "Geeft de vierkantswortel van het opgegeven argument.",
+        "ceilDescription": "Geeft het kleinste gehele getal dat groter of gelijk is aan het opgegeven argumentnummer.",
+        "modDescription": "Retourneert de rest van de verdeling tussen het eerste argument en het tweede argument.",
+        "lnDescription": "Natuurlijke logaritmefunctie: geeft de exponent waartoe de constante e ≈ 2,718 moet worden verhoogd om het argument te produceren.",
+        "powerDescription": "Retourneert het resultaat van het eerste argument dat is verheven tot de exponent van het tweede argument.",
+        "signDescription": "Geeft 1 als het argument een positief getal is, -1 als het argument een negatief getal is, 0 anders.",
+        "absDescription": "Geeft de absolute waarde voor het opgegeven argumentnummer.",
+        "floorDescription": "Geeft het grootste gehele getal dat kleiner of gelijk is aan het opgegeven argumentnummer."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

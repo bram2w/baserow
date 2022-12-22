@@ -251,7 +251,9 @@
         "snapshotBeingDeletedTitle": "Der Snapshot wird gelöscht",
         "snapshotOperationLimitExceededTitle": "Limit erreicht",
         "snapshotNameNotUniqueTitle": "Der Name des Snapshots muss eindeutig sein.",
-        "snapshotOperationLimitExceededDescription": "Sie haben ein Limit für die Anzahl der laufenden Snapshot-Vorgänge erreicht. Bitte warten Sie, bis der vorherige Vorgang abgeschlossen ist."
+        "snapshotOperationLimitExceededDescription": "Sie haben ein Limit für die Anzahl der laufenden Snapshot-Vorgänge erreicht. Bitte warten Sie, bis der vorherige Vorgang abgeschlossen ist.",
+        "disabledPasswordProviderMessage": "Bitte verwenden Sie einen anderen Authentifizierungsanbieter.",
+        "disabledPasswordProviderTitle": "Die Passwortauthentifizierung ist deaktiviert."
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",
@@ -367,7 +369,19 @@
         "linkDescription": "Erstellt einen Hyperlink unter Verwendung der im ersten Argument angegebenen URI.",
         "buttonDescription": "Erstellt einen Knopf unter Verwendung der URI (erstes Argument) und der Bezeichnung (zweites Argument).",
         "getLinkLabelDescription": "Ruft die Beschriftung aus einer Formel ab, via eines Links oder Knopfes.",
-        "getLinkUrlDescription": "Ruft die URL aus einer Formel ab, via eines Links oder Knopfes."
+        "getLinkUrlDescription": "Ruft die URL aus einer Formel ab, via eines Links oder Knopfes.",
+        "modDescription": "Gibt den Rest der Division zwischen dem ersten Argument und dem zweiten Argument zurück.",
+        "logDescription": "Logarithmusfunktion: gibt den Exponenten zurück, auf den das erste Argument erhöht werden muss, um das zweite Argument zu erhalten.",
+        "expDescription": "Gibt das Ergebnis der Konstante e ≈ 2,718 hochgerechnet auf die angegebene Argumentnummer zurück.",
+        "signDescription": "Gibt 1 zurück, wenn das Argument eine positive Zahl ist, -1, wenn das Argument eine negative Zahl ist, ansonsten 0.",
+        "absDescription": "Gibt den absoluten Wert für das angegebene Argument Nummer zurück.",
+        "lnDescription": "Funktion des natürlichen Logarithmus: gibt den Exponenten zurück, auf den die Konstante e ≈ 2,718 erhöht werden muss, um das Argument zu erzeugen.",
+        "evenDescription": "Gibt true zurück, wenn das angegebene Argument eine gerade Zahl ist, andernfalls false.",
+        "oddDescription": "Gibt true zurück, wenn das angegebene Argument eine ungerade Zahl ist, andernfalls false.",
+        "powerDescription": "Gibt das Ergebnis des ersten Arguments zum Exponenten des zweiten Arguments zurück.",
+        "sqrtDescription": "Gibt die Quadratwurzel aus dem angegebenen Argument zurück.",
+        "ceilDescription": "Gibt die kleinste ganze Zahl zurück, die größer oder gleich der angegebenen Argumentnummer ist.",
+        "floorDescription": "Gibt die größte ganze Zahl zurück, die kleiner oder gleich der angegebenen Argumentnummer ist."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
