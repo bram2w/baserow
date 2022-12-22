@@ -9,6 +9,14 @@ For example:
 
 ## Unreleased
 
+### New Features
+
+### Bug Fixes
+
+### Refactors
+
+## Released (2022-12-21 1.13.3)
+
 ## Deploy steps
 * (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
 
