@@ -60,7 +60,7 @@ export default class UserAdminUserHelpers {
   }
 
   getGroups(groupsCell) {
-    return groupsCell.findAll('.user-admin-group__item')
+    return groupsCell.findAll('.expand-overflow-list__item')
   }
 
   groupCellShowsThisUserIsGroupAdmin(groupCell) {

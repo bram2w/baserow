@@ -15,7 +15,7 @@ class GroupObjectScopeType(ObjectScopeType):
     model_class = Group
 
     def get_all_context_objects_in_scope(self, scope):
-        if object_scope_type_registry.get_by_model(scope).type == "group":
+        if object_scope_type_registry.get_by_model(scope).type == self.type:
             return [scope]
         return []
 
@@ -25,9 +25,10 @@ class ApplicationObjectScopeType(ObjectScopeType):
     model_class = Application
 
     def get_all_context_objects_in_scope(self, scope):
-        if object_scope_type_registry.get_by_model(scope).type == "group":
+        scope_type = object_scope_type_registry.get_by_model(scope)
+        if scope_type.type == GroupObjectScopeType.type:
             return Application.objects.filter(group=scope)
-        if object_scope_type_registry.get_by_model(scope).type == "application":
+        if scope_type.type == self.type:
             return [scope]
         return []
 
@@ -50,9 +51,9 @@ class GroupInvitationObjectScopeType(ObjectScopeType):
 
     def get_all_context_objects_in_scope(self, scope):
         scope_type = object_scope_type_registry.get_by_model(scope)
-        if scope_type.type == "group":
+        if scope_type.type == GroupObjectScopeType.type:
             return GroupInvitation.objects.filter(group=scope)
-        if scope_type.type == "group_invitation":
+        if scope_type.type == self.type:
             return [scope]
         return []
 
@@ -69,8 +70,8 @@ class GroupUserObjectScopeType(ObjectScopeType):
 
     def get_all_context_objects_in_scope(self, scope):
         scope_type = object_scope_type_registry.get_by_model(scope)
-        if scope_type.type == "group":
+        if scope_type.type == GroupObjectScopeType.type:
             return GroupUser.objects.filter(group=scope)
-        if scope_type.type == "group_user":
+        if scope_type.type == self.type:
             return [scope]
         return []

@@ -291,14 +291,14 @@ class ViewHandler:
             if view_id == original_view.id:
                 ordered_ids.append(duplicated_view.id)
 
-        View.order_objects(queryset, ordered_ids)
+        full_order = View.order_objects(queryset, ordered_ids)
         duplicated_view.refresh_from_db()
 
         view_created.send(
             self, view=duplicated_view, user=user, type_name=view_type.type
         )
         views_reordered.send(
-            self, table=original_view.table, order=ordered_ids, user=None
+            self, table=original_view.table, order=full_order, user=None
         )
 
         return duplicated_view
@@ -362,15 +362,24 @@ class ViewHandler:
             user, OrderViewsOperationType.type, group=group, context=table
         )
 
-        queryset = View.objects.filter(table_id=table.id)
-        view_ids = queryset.values_list("id", flat=True)
+        all_views = View.objects.filter(table_id=table.id)
+
+        user_views = CoreHandler().filter_queryset(
+            user,
+            OrderViewsOperationType.type,
+            all_views,
+            group=group,
+            context=table,
+        )
+
+        view_ids = user_views.values_list("id", flat=True)
 
         for view_id in order:
             if view_id not in view_ids:
                 raise ViewNotInTable(view_id)
 
-        View.order_objects(queryset, order)
-        views_reordered.send(self, table=table, order=order, user=user)
+        full_order = View.order_objects(all_views, order)
+        views_reordered.send(self, table=table, order=full_order, user=user)
 
     def get_views_order(self, user: AbstractUser, table: Table):
         """

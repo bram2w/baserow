@@ -2,7 +2,9 @@ import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
 import { RolePermissionManagerType } from '@baserow_enterprise/permissionManagerTypes'
 import { AuthProvidersType } from '@baserow_enterprise/adminTypes'
 import authProviderAdminStore from '@baserow_enterprise/store/authProviderAdmin'
+import { PasswordAuthProviderType as CorePasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
 import {
+  PasswordAuthProviderType,
   SamlAuthProviderType,
   GitHubAuthProviderType,
   GoogleAuthProviderType,
@@ -50,6 +52,11 @@ export default (context) => {
   store.registerModule('authProviderAdmin', authProviderAdminStore)
 
   app.$registry.register('admin', new AuthProvidersType(context))
+  app.$registry.unregister(
+    'authProvider',
+    new CorePasswordAuthProviderType(context)
+  )
+  app.$registry.register('authProvider', new PasswordAuthProviderType(context))
   app.$registry.register('authProvider', new SamlAuthProviderType(context))
   app.$registry.register('authProvider', new GoogleAuthProviderType(context))
   app.$registry.register('authProvider', new FacebookAuthProviderType(context))
@@ -68,7 +75,7 @@ export default (context) => {
     new EnterpriseMembersPagePluginType(context)
   )
 
-  if (app.$featureFlags.includes('WIP')) {
+  if (app.$featureFlagIsEnabled('RBAC')) {
     app.$registry.register(
       'groupSettingsPage',
       new TeamsGroupSettingsPageType(context)

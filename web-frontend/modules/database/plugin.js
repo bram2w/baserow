@@ -153,7 +153,19 @@ import {
   BaserowContains,
   BaserowFilter,
   BaserowTrunc,
+  BaserowEven,
+  BaserowOdd,
+  BaserowCeil,
+  BaserowFloor,
+  BaserowAbs,
+  BaserowExp,
+  BaserowLn,
+  BaserowSign,
+  BaserowSqrt,
   BaserowRound,
+  BaserowLog,
+  BaserowPower,
+  BaserowMod,
   BaserowButton,
   BaserowGetLinkUrl,
   BaserowGetLinkLabel,
@@ -429,7 +441,19 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
   app.$registry.register('formula_function', new BaserowTrunc(context))
+  app.$registry.register('formula_function', new BaserowEven(context))
+  app.$registry.register('formula_function', new BaserowOdd(context))
+  app.$registry.register('formula_function', new BaserowAbs(context))
+  app.$registry.register('formula_function', new BaserowCeil(context))
+  app.$registry.register('formula_function', new BaserowFloor(context))
+  app.$registry.register('formula_function', new BaserowSign(context))
+  app.$registry.register('formula_function', new BaserowLog(context))
+  app.$registry.register('formula_function', new BaserowExp(context))
+  app.$registry.register('formula_function', new BaserowLn(context))
+  app.$registry.register('formula_function', new BaserowPower(context))
+  app.$registry.register('formula_function', new BaserowSqrt(context))
   app.$registry.register('formula_function', new BaserowRound(context))
+  app.$registry.register('formula_function', new BaserowMod(context))
   // Link functions
   app.$registry.register('formula_function', new BaserowLink(context))
   app.$registry.register('formula_function', new BaserowButton(context))

@@ -49,7 +49,9 @@ export default {
   },
   computed: {
     registeredSettings() {
-      return this.$registry.getOrderedList('settings')
+      return this.$registry
+        .getOrderedList('settings')
+        .filter((settings) => settings.isEnabled() === true)
     },
     settingPageComponent() {
       const active = Object.values(this.$registry.getAll('settings')).find(
@@ -60,6 +62,9 @@ export default {
     ...mapGetters({
       name: 'auth/getName',
     }),
+  },
+  async mounted() {
+    await this.$store.dispatch('authProvider/fetchLoginOptions')
   },
   methods: {
     setPage(page) {

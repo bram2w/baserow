@@ -1207,6 +1207,363 @@ export class BaserowRound extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowPower extends BaserowFunctionDefinition {
+  static getType() {
+    return 'power'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.powerDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['power(number, number)']
+  }
+
+  getExamples() {
+    return [
+      'power(3, 2) = 9',
+      'power(25, 0.5) = 5.0',
+      'power(-2.001, 3) = -8.012',
+      'power(1/0, 2) = NaN',
+      'power(1234.11111, 1/0) = NaN',
+      'power(1234.11111, tonumber("invalid number")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowLog extends BaserowFunctionDefinition {
+  static getType() {
+    return 'log'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.logDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['log(number, number)']
+  }
+
+  getExamples() {
+    return [
+      'log(3, 9) = 2',
+      'log(125.000, 5) = 0.333',
+      'log(-8.000, 3) = NaN',
+      'log(1/0, -2) = NaN',
+      'log(1234.11111, 1/0) = NaN',
+      'log(1234.11111, tonumber("invalid number")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowMod extends BaserowFunctionDefinition {
+  static getType() {
+    return 'mod'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.modDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['mod(number, number)']
+  }
+
+  getExamples() {
+    return [
+      'mod(5, 2) = 1',
+      'mod(5, 1.5) = 0.5',
+      'mod(-5.001, 1.5) = -0.501',
+      'mod(-3, 2) = -1',
+      'mod(3, -2) = 1',
+      'mod(-3, -2) = -1',
+      'mod(1, 0) = NaN',
+      'mod(4, tonumber("invalid number")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowAbs extends BaserowFunctionDefinition {
+  static getType() {
+    return 'abs'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.absDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['abs(number)']
+  }
+
+  getExamples() {
+    return [
+      'abs(1.49) = 1.49',
+      'abs(1.51) = 1.51',
+      'abs(-1.51) = 1.51',
+      'abs(-1.49) = 1.49',
+      'abs(1/0) = NaN',
+      'abs(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowExp extends BaserowFunctionDefinition {
+  static getType() {
+    return 'exp'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.expDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['exp(number)']
+  }
+
+  getExamples() {
+    return [
+      'exp(1.000) = 2.718',
+      'exp(0) = 1',
+      'exp(-1.00) = 0.37',
+      'exp(1/0) = NaN',
+      'exp(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowEven extends BaserowFunctionDefinition {
+  static getType() {
+    return 'even'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.evenDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['even(number)']
+  }
+
+  getExamples() {
+    return [
+      'even(2) = true',
+      'even(2.5) = false',
+      'even(5) = false',
+      'even(1/0) = false',
+      'even(tonumber("invalid")) = false',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowOdd extends BaserowFunctionDefinition {
+  static getType() {
+    return 'odd'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.oddDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['odd(number)']
+  }
+
+  getExamples() {
+    return [
+      'odd(2) = false',
+      'odd(2.5) = false',
+      'odd(5) = true',
+      'odd(1/0) = false',
+      'odd(tonumber("invalid")) = false',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowLn extends BaserowFunctionDefinition {
+  static getType() {
+    return 'ln'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.lnDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['ln(number)']
+  }
+
+  getExamples() {
+    return [
+      'ln(2.718) = 1.000',
+      'ln(9.0) = 2.2',
+      'ln(2.00) = 0.69',
+      'ln(-1) = NaN',
+      'ln(1/0) = NaN',
+      'ln(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowSign extends BaserowFunctionDefinition {
+  static getType() {
+    return 'sign'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.signDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['sign(number)']
+  }
+
+  getExamples() {
+    return [
+      'sign(2.1234) = 1',
+      'sign(-9.0) = -1',
+      'sign(0) = 0',
+      'sign(1/0) = NaN',
+      'sign(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowSqrt extends BaserowFunctionDefinition {
+  static getType() {
+    return 'sqrt'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.sqrtDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['sqrt(number)']
+  }
+
+  getExamples() {
+    return [
+      'sqrt(9) = 3',
+      'sqrt(2.00) = 1.41',
+      'sqrt(-4) = NaN',
+      'sqrt(1/0) = NaN',
+      'sqrt(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowFloor extends BaserowFunctionDefinition {
+  static getType() {
+    return 'floor'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.floorDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['floor(number)']
+  }
+
+  getExamples() {
+    return [
+      'floor(1.49) = 1',
+      'floor(1.51) = 1',
+      'floor(-1.51) = -2',
+      'floor(-1.49) = -2',
+      'floor(1/0) = NaN',
+      'floor(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowCeil extends BaserowFunctionDefinition {
+  static getType() {
+    return 'ceil'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.ceilDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['ceil(number)']
+  }
+
+  getExamples() {
+    return [
+      'ceil(1.49) = 2',
+      'ceil(1.51) = 2',
+      'ceil(-1.51) = -1',
+      'ceil(-1.49) = -1',
+      'ceil(1/0) = NaN',
+      'ceil(tonumber("invalid")) = NaN',
+    ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
 export class BaserowTrunc extends BaserowFunctionDefinition {
   static getType() {
     return 'trunc'

@@ -180,7 +180,7 @@ class CoreConfig(AppConfig):
         )
         from baserow.core.registries import auth_provider_type_registry
 
-        auth_provider_type_registry.register_default(PasswordAuthProviderType())
+        auth_provider_type_registry.register(PasswordAuthProviderType())
 
         # Clear the key after migration so we will trigger a new template sync.
         post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)

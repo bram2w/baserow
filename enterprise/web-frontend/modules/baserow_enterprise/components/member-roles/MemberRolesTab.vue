@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="member-roles-tab__header">
-      <h2>
+      <h2 class="member-roles-tab__header-title">
         {{
           $t(`memberRolesTab.${translationPrefix}.title`, { name: scope.name })
         }}
@@ -13,38 +13,37 @@
         >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</a
       >
     </div>
-    <span
-      v-if="$featureFlags.includes('rbacNoRole')"
-      class="member-roles-tab__everyone_access_label"
-    >
-      {{ descriptionText }}
-    </span>
-    <MemberRolesShareToggle
-      v-if="$featureFlags.includes('rbacNoRole')"
-      :name="scope.name"
-      :toggled.sync="isSharedWithEveryone"
-    />
     <div v-if="loading" class="loading"></div>
-    <MemberRolesMembersList
-      v-else
-      :role-assignments="roleAssignments"
-      :scope-type="scopeType"
-      :scope-id="scopeId"
-      :group-id="group.id"
-      @role-updated="
-        (roleAssignment, newRole) =>
-          $emit('role-updated', roleAssignment, newRole)
-      "
-    />
-    <RoleAssignmentModal
-      ref="roleAssignmentModal"
-      :users="groupUsersNotInvited"
-      :teams="teamsNotInvited"
-      @invite-teams="(teams, role) => $emit('invite-teams', teams, role)"
-      @invite-members="
-        (members, role) => $emit('invite-members', members, role)
-      "
-    />
+    <div v-else>
+      <Alert
+        type="warning"
+        icon="exclamation"
+        simple
+        :title="$t(`memberRolesTab.${translationPrefix}.warningTitle`)"
+        >{{ $t(`memberRolesTab.${translationPrefix}.warningMessage`) }}
+      </Alert>
+      <MemberRolesMembersList
+        :role-assignments="roleAssignments"
+        :scope-type="scopeType"
+        :scope-id="scopeId"
+        :group-id="group.id"
+        :teams="teams"
+        @role-updated="
+          (roleAssignment, newRole) =>
+            $emit('role-updated', roleAssignment, newRole)
+        "
+      />
+      <RoleAssignmentModal
+        ref="roleAssignmentModal"
+        :scope-type="scopeType"
+        :users="groupUsersNotInvited"
+        :teams="teamsNotInvited"
+        @invite-teams="(teams, role) => $emit('invite-teams', teams, role)"
+        @invite-members="
+          (members, role) => $emit('invite-members', members, role)
+        "
+      />
+    </div>
   </div>
 </template>
 

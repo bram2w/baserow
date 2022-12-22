@@ -16,7 +16,10 @@ from baserow_enterprise.api.sso.saml.validators import (
     validate_saml_metadata,
     validate_unique_saml_domain,
 )
-from baserow_enterprise.api.sso.utils import get_frontend_default_redirect_url
+from baserow_enterprise.api.sso.utils import (
+    get_frontend_default_redirect_url,
+    get_frontend_login_saml_url,
+)
 from baserow_enterprise.sso.saml.exceptions import SamlProviderForDomainAlreadyExists
 from baserow_enterprise.sso.utils import is_sso_feature_active
 
@@ -83,20 +86,30 @@ class SamlAuthProviderType(AuthProviderType):
         if not configured_domains:
             return None
 
+        default_redirect_url = None
+        if configured_domains == 1:
+            default_redirect_url = self.get_login_absolute_url()
+        if configured_domains > 1:
+            default_redirect_url = get_frontend_login_saml_url()
+
         return {
             "type": self.type,
             # if configure_domains = 1, we can redirect directly the user to the
             # IdP login page without asking for the email
             "domain_required": configured_domains > 1,
+            "default_redirect_url": default_redirect_url,
         }
-
-    def can_create_new_providers(self):
-        return True
 
     @classmethod
     def get_acs_absolute_url(cls):
         return urljoin(
             settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:acs")
+        )
+
+    @classmethod
+    def get_login_absolute_url(cls):
+        return urljoin(
+            settings.PUBLIC_BACKEND_URL, reverse("api:enterprise:sso:saml:login")
         )
 
     def export_serialized(self) -> Dict[str, Any]:

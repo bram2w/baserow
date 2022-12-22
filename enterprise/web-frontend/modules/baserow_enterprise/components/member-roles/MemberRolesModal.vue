@@ -3,6 +3,7 @@
     <Error v-if="error.visible" :error="error"></Error>
     <Tabs v-else :selected-index.sync="selectedTabIndex">
       <Tab
+        v-if="canManageDatabase"
         :title="$t('memberRolesModal.memberRolesDatabaseTabTitle')"
         class="margin-top-3"
       >
@@ -12,14 +13,14 @@
           :scope="database"
           :role-assignments="databaseRoleAssignments"
           :teams="teams"
-          scope-type="database"
+          scope-type="application"
           @invite-members="inviteDatabaseMembers"
           @invite-teams="inviteDatabaseTeams"
           @role-updated="updateRole(databaseRoleAssignments, ...arguments)"
         />
       </Tab>
       <Tab
-        v-if="table"
+        v-if="table && canManageTable"
         class="margin-top-3"
         :title="$t('memberRolesModal.memberRolesTableTabTitle')"
       >
@@ -76,11 +77,28 @@ export default {
     group() {
       return this.$store.getters['group/get'](this.database.group.id)
     },
+    canManageDatabase() {
+      return this.$hasPermission(
+        'application.read_role',
+        this.database,
+        this.group.id
+      )
+    },
+    canManageTable() {
+      return (
+        this.table &&
+        this.$hasPermission(
+          'database.table.read_role',
+          this.table,
+          this.group.id
+        )
+      )
+    },
   },
   methods: {
     async onShow() {
-      if (this.table) {
-        this.selectedTabIndex = 1
+      if (this.table && this.canManageTable) {
+        this.selectedTabIndex = this.canManageDatabase ? 1 : 0
       }
 
       this.loading = true
@@ -92,12 +110,17 @@ export default {
     },
     async fetchMembers() {
       try {
-        const { data: databaseRoleAssignments } = await RoleAssignmentsService(
-          this.$client
-        ).getRoleAssignments(this.group.id, this.database.id, 'database')
-        this.databaseRoleAssignments = databaseRoleAssignments
+        if (this.canManageDatabase) {
+          const { data: databaseRoleAssignments } =
+            await RoleAssignmentsService(this.$client).getRoleAssignments(
+              this.group.id,
+              this.database.id,
+              'application'
+            )
+          this.databaseRoleAssignments = databaseRoleAssignments
+        }
 
-        if (this.table) {
+        if (this.canManageTable) {
           const { data: tableRoleAssignments } = await RoleAssignmentsService(
             this.$client
           ).getRoleAssignments(this.group.id, this.table.id, 'database_table')
@@ -131,7 +154,7 @@ export default {
         members,
         'auth.User',
         role,
-        'database',
+        'application',
         this.database.id
       )
       this.databaseRoleAssignments =
@@ -142,7 +165,7 @@ export default {
         teams,
         'baserow_enterprise.Team',
         role,
-        'database',
+        'application',
         this.database.id
       )
       this.databaseRoleAssignments =

@@ -3,7 +3,6 @@
     :columns="columns"
     :service="service"
     row-id-key="id"
-    @show-hidden-groups="displayHiddenUsers"
     @row-context="onRowContext"
   >
     <template #title>
@@ -16,10 +15,6 @@
         @group-deleted="slotProps.deleteRow"
       >
       </EditGroupContext>
-      <HiddenUsersContext
-        ref="hiddenUsersContext"
-        :hidden-values="hiddenUsers"
-      ></HiddenUsersContext>
     </template>
   </CrudTable>
 </template>
@@ -33,14 +28,12 @@ import MoreField from '@baserow/modules/core/components/crudTable/fields/MoreFie
 import GroupUsersField from '@baserow_premium/components/admin/groups/fields/GroupUsersField'
 import GroupNameField from '@baserow_premium/components/admin/groups/fields/GroupNameField'
 import EditGroupContext from '@baserow_premium/components/admin/groups/contexts/EditGroupContext'
-import HiddenUsersContext from '@baserow_premium/components/admin/groups/contexts/HiddenUsersContext'
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 
 export default {
   name: 'GroupsAdminTable',
   components: {
     CrudTable,
-    HiddenUsersContext,
     EditGroupContext,
   },
   data() {
@@ -90,11 +83,6 @@ export default {
       const action = row.id === this.editGroup.id ? 'toggle' : 'show'
       this.editGroup = row
       this.$refs.editGroupContext[action](target, 'bottom', 'left', 4)
-    },
-    displayHiddenUsers(event) {
-      const action = this.hiddenUsers === event.hiddenValues ? 'toggle' : 'show'
-      this.hiddenUsers = event.hiddenValues
-      this.$refs.hiddenUsersContext[action](event.target, 'bottom', 'left', 4)
     },
   },
 }

@@ -35,6 +35,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
+import { filterRoles } from '@baserow_enterprise/utils/roles'
 
 export default {
   name: 'TeamRoleField',
@@ -56,7 +57,13 @@ export default {
       )
     },
     roles() {
-      return this.group ? this.group._.roles : []
+      // filters out role not for Team subject and not for group level
+      return this.group
+        ? filterRoles(this.group._.roles, {
+            scopeType: this.scopeType,
+            subjectType: 'baserow_enterprise.Team',
+          })
+        : []
     },
     ...mapGetters({ userId: 'auth/getUserId' }),
   },

@@ -17,15 +17,13 @@ from baserow_enterprise.role.models import Role, RoleAssignment
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_role_assignment(
-    api_client, data_fixture, enterprise_data_fixture, synced_roles
-):
+def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
     group = data_fixture.create_group(
@@ -36,7 +34,6 @@ def test_create_role_assignment(
 
     table = data_fixture.create_database_table(database=database, user=user)
 
-    admin_role = Role.objects.get(uid="ADMIN")
     editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -148,55 +145,9 @@ def test_create_role_assignment(
 
     assert role_assignment_user_2 is None
 
-    # Put admin at database level and try to change a sub scope to another role
-    response = api_client.post(
-        url,
-        {
-            "scope_id": database.id,
-            "scope_type": "database",
-            "subject_id": user2.id,
-            "subject_type": UserSubjectType.type,
-            "role": admin_role.uid,
-        },
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
-    )
-    assert response.status_code == HTTP_200_OK
 
-    response = api_client.post(
-        url,
-        {
-            "scope_id": table.id,
-            "scope_type": "database_table",
-            "subject_id": user2.id,
-            "subject_type": UserSubjectType.type,
-            "role": editor_role.uid,
-        },
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
-    )
-    response_json = response.json()
-
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json == {
-        "error": "ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN",
-        "detail": "You can't assign a role exception to a scope with ADMIN role.",
-    }
-
-    # But we can still change the role at this level
-    response = api_client.post(
-        url,
-        {
-            "scope_id": database.id,
-            "scope_type": "database",
-            "subject_id": user2.id,
-            "subject_type": UserSubjectType.type,
-            "role": editor_role.uid,
-        },
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
-    )
-
-    assert response.status_code == HTTP_200_OK
-
-
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()
@@ -398,16 +349,17 @@ def test_get_role_assignments_application_level(data_fixture, api_client):
     admin_role = Role.objects.get(uid="ADMIN")
 
     role_assignment = RoleAssignmentHandler().assign_role(
-        user_2, group, role=admin_role, scope=database
+        user_2, group, role=admin_role, scope=database.application_ptr
     )
 
     url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
 
+    # TODO test with crap scope_type
     response = api_client.get(
         url,
         {
             "scope_id": database.id,
-            "scope_type": "database",
+            "scope_type": "application",
         },
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
@@ -420,7 +372,7 @@ def test_get_role_assignments_application_level(data_fixture, api_client):
             "id": role_assignment.id,
             "role": admin_role.uid,
             "scope_id": database.id,
-            "scope_type": "database",
+            "scope_type": "application",
             "subject_id": user_2.id,
             "subject_type": "auth.User",
             "subject": {

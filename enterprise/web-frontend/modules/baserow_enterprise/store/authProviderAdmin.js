@@ -1,4 +1,5 @@
 import authProviderAdmin from '@baserow_enterprise/services/authProviderAdmin'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 function populateProviderType(authProviderType, registry) {
   const type = registry.get('authProvider', authProviderType.type)
@@ -75,8 +76,12 @@ export const actions = {
     return item
   },
   async delete({ commit }, item) {
-    await authProviderAdmin(this.$client).delete(item.id)
-    commit('DELETE_ITEM', item)
+    try {
+      await authProviderAdmin(this.$client).delete(item.id)
+      commit('DELETE_ITEM', item)
+    } catch (error) {
+      notifyIf(error, 'authProvider')
+    }
   },
   async fetchNextProviderId({ commit }) {
     const { data } = await authProviderAdmin(this.$client).fetchNextProviderId()
@@ -84,7 +89,7 @@ export const actions = {
     commit('SET_NEXT_PROVIDER_ID', providerId)
     return providerId
   },
-  async setEnabled({ commit }, { authProvider, enabled }) {
+  async setEnabled({ commit, dispatch }, { authProvider, enabled }) {
     // use optimistic update to enable/disable the auth provider
     const wasEnabled = authProvider.enabled
     commit('UPDATE_ITEM', { ...authProvider, enabled })
@@ -92,6 +97,7 @@ export const actions = {
       await authProviderAdmin(this.$client).update(authProvider.id, { enabled })
     } catch (error) {
       commit('UPDATE_ITEM', { ...authProvider, enabled: wasEnabled })
+      notifyIf(error, 'authProvider')
     }
   },
 }
@@ -126,6 +132,17 @@ export const getters = {
   },
   getType: (state) => (type) => {
     return state.items[type]
+  },
+  isOneProviderEnabled: (state) => {
+    let nEnabled = 0
+    for (const authProviderType of Object.values(state.items)) {
+      for (const authProvider of authProviderType.authProviders) {
+        if (authProvider.enabled) {
+          nEnabled += 1
+        }
+      }
+    }
+    return nEnabled === 1
   },
 }
 

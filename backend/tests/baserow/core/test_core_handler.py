@@ -876,8 +876,126 @@ def test_order_applications(send_mock, data_fixture):
     application_2.refresh_from_db()
     application_3.refresh_from_db()
     assert application_1.order == 1
-    assert application_2.order == 0
-    assert application_3.order == 0
+    assert application_2.order == 3
+    assert application_3.order == 2
+
+    application_4 = data_fixture.create_database_application(group=group, order=4)
+    application_5 = data_fixture.create_database_application(group=group, order=5)
+    application_6 = data_fixture.create_database_application(group=group, order=6)
+
+    handler.order_applications(
+        user=user,
+        group=group,
+        order=[
+            application_1.id,
+            application_2.id,
+            application_3.id,
+            application_4.id,
+            application_5.id,
+            application_6.id,
+        ],
+    )
+
+    assert list(Application.objects.order_by("order").values_list("id", flat=True)) == [
+        application_1.id,
+        application_2.id,
+        application_3.id,
+        application_4.id,
+        application_5.id,
+        application_6.id,
+    ]
+
+    tests = [
+        (
+            [
+                application_2.id,
+                application_4.id,
+                application_3.id,
+                application_5.id,
+            ],
+            [
+                application_1.id,
+                application_2.id,
+                application_4.id,
+                application_3.id,
+                application_5.id,
+                application_6.id,
+            ],
+        ),
+        (
+            [
+                application_6.id,
+                application_5.id,
+                application_4.id,
+            ],
+            [
+                application_1.id,
+                application_2.id,
+                application_3.id,
+                application_6.id,
+                application_5.id,
+                application_4.id,
+            ],
+        ),
+        (
+            [
+                application_3.id,
+                application_2.id,
+                application_1.id,
+            ],
+            [
+                application_3.id,
+                application_2.id,
+                application_1.id,
+                application_4.id,
+                application_5.id,
+                application_6.id,
+            ],
+        ),
+        (
+            [
+                application_3.id,
+                application_6.id,
+                application_2.id,
+                application_5.id,
+                application_1.id,
+            ],
+            [
+                application_3.id,
+                application_4.id,
+                application_6.id,
+                application_2.id,
+                application_5.id,
+                application_1.id,
+            ],
+        ),
+    ]
+
+    for index, (input, result) in enumerate(tests):
+        # Reset order
+        handler.order_applications(
+            user=user,
+            group=group,
+            order=[
+                application_1.id,
+                application_2.id,
+                application_3.id,
+                application_4.id,
+                application_5.id,
+                application_6.id,
+            ],
+        )
+
+        handler.order_applications(
+            user=user,
+            group=group,
+            order=input,
+        )
+
+        assert (
+            list(Application.objects.order_by("order").values_list("id", flat=True))
+            == result
+        ), f"Test {index + 1} is not ordered as expected"
 
 
 @pytest.mark.django_db

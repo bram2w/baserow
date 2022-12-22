@@ -248,7 +248,9 @@
         "snapshotNameNotUniqueTitle": "The snapshot name has to be unique.",
         "snapshotNameNotUniqueDescription": "All snapshot names have to be unique per application.",
         "snapshotOperationLimitExceededTitle": "Limit reached",
-        "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes."
+        "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes.",
+        "disabledPasswordProviderTitle": "Password authentication is disabled.",
+        "disabledPasswordProviderMessage": "Please use another authentication provider."
     },
     "importerType": {
         "csv": "Import a CSV file",
@@ -362,8 +364,20 @@
         "buttonDescription": "Creates a button using the URI (first argument) and label (second argument).",
         "getLinkLabelDescription": "Gets the label from a formula using the link or button functions.",
         "getLinkUrlDescription": "Gets the url from a formula using the link or button functions.",
+        "evenDescription": "Returns true if the argument provided is an even number, false otherwise.",
+        "oddDescription": "Returns true if the argument provided is an odd number, false otherwise.",
+        "modDescription": "Returns the remainder of the division between the first argument and the second argument.",
+        "powerDescription": "Returns the result of the first argument raised to the second argument exponent.",
+        "logDescription": "Logarithm function: returns the exponent to which the first argument must be raised to produce the second argument.",
+        "expDescription": "Returns the result of the constant e ≈ 2.718 raised to the argument number provided.",
+        "lnDescription": "Natural logarithm function: returns the exponent to which the constant e ≈ 2.718 must be raised to produce the argument.",
+        "signDescription": "Returns 1 if the argument is a positive number, -1 if the argument is a negative one, 0 otherwise.",
+        "sqrtDescription": "Returns the square root of the argument provided.",
         "roundDescription": "Returns first argument rounded to the number of digits specified by the second argument.",
-        "truncDescription": "Returns only the first argument converted into an integer by truncating any decimal places."
+        "truncDescription": "Returns only the first argument converted into an integer by truncating any decimal places.",
+        "absDescription": "Returns the absolute value for the argument number provided.",
+        "ceilDescription": "Returns the smallest integer that is greater than or equal the argument number provided.",
+        "floorDescription": "Returns the largest integer that is less than or equal the argument number provided."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"

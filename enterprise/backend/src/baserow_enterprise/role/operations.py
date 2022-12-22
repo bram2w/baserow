@@ -1,6 +1,5 @@
-from baserow.contrib.database.operations import DatabaseOperationType
 from baserow.contrib.database.table.operations import DatabaseTableOperationType
-from baserow.core.operations import GroupCoreOperationType
+from baserow.core.operations import ApplicationOperationType, GroupCoreOperationType
 
 
 class AssignRoleGroupOperationType(GroupCoreOperationType):
@@ -11,12 +10,12 @@ class ReadRoleGroupOperationType(GroupCoreOperationType):
     type = "group.read_role"
 
 
-class ReadRoleDatabaseOperationType(DatabaseOperationType):
-    type = "database.read_role"
+class ReadRoleApplicationOperationType(ApplicationOperationType):
+    type = "application.read_role"
 
 
-class UpdateRoleDatabaseOperationType(DatabaseOperationType):
-    type = "database.update_role"
+class UpdateRoleApplicationOperationType(ApplicationOperationType):
+    type = "application.update_role"
 
 
 class ReadRoleTableOperationType(DatabaseTableOperationType):

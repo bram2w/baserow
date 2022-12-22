@@ -33,13 +33,24 @@ class EnterpriseFixtures:
             kwargs["name"] = self.fake.name()
         if "group" not in kwargs:
             kwargs["group"] = self.create_group()
+        members = kwargs.pop("members", [])
+
         team = Team.objects.create(**kwargs)
+
+        for member in members:
+            self.create_subject(team=team, subject=member)
+
         return team
 
-    def create_subject(self, **kwargs):
-        if "subject" not in kwargs:
-            kwargs["subject"] = self.create_user()
-        subject = TeamSubject.objects.create(**kwargs)
+    def create_subject(self, team=None, subject=None, **kwargs):
+
+        if subject is None:
+            subject = self.create_user()
+        if team is None:
+            team = self.create_team()
+
+        subject = TeamSubject.objects.create(team=team, subject=subject, **kwargs)
+
         return subject
 
     def create_role_assignment(self, **kwargs):

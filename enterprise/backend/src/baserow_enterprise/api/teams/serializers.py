@@ -130,3 +130,16 @@ class TeamSubjectResponseSerializer(serializers.ModelSerializer):
         """
 
         return obj.subject_type_natural_key
+
+
+class GroupUserEnterpriseTeamSerializer(serializers.Serializer):
+    """
+    A serializer for the `GroupUserSerializer.teams` field.
+    """
+
+    id = serializers.IntegerField(
+        read_only=True, help_text="The unique identifier for this team."
+    )
+    name = serializers.CharField(
+        read_only=True, help_text="The team name that this group user belongs to."
+    )

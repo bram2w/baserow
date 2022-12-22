@@ -144,6 +144,17 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         if not ignore_web_socket_id or ignore_web_socket_id != web_socket_id:
             await self.send_json(payload)
 
+    async def remove_user_from_group(self, event):
+        user_ids_to_remove = event["user_ids_to_remove"]
+        user_id = self.scope["user"].id
+
+        page = self.scope.get("page")
+        if not page:
+            return
+
+        if user_id in user_ids_to_remove:
+            return await self.discard_current_page(True)
+
     async def disconnect(self, message):
         await self.discard_current_page(send_confirmation=False)
         await self.channel_layer.group_discard("users", self.channel_name)

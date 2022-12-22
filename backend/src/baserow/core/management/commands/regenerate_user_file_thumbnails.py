@@ -18,8 +18,7 @@ class Command(BaseCommand):
             "name",
             type=str,
             nargs="?",
-            help="The id of the group where the newly created applications must be "
-            "added to.",
+            help="The name of the thumbnails to regenerate (tiny, small or card_cover).",
             default=None,
         )
 

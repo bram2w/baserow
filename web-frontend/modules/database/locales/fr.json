@@ -81,9 +81,9 @@
         "showDatabases": "Afficher le détail"
     },
     "apiTokenSettings": {
-        "title": "Jetons d'API personnels",
+        "title": "Jetons d'accès à la base",
         "createToken": "Créer un jeton",
-        "noTokensMessage": "Vous n'avez pas encore créé de jeton. Vous pouvez utiliser les jetons d'API pour vous authentifier auprès de l'API REST qui vous permet de créer, lire, modifier et supprimer des lignes. Il est possible de définir des permissions différentes pour chaque table.",
+        "noTokensMessage": "Vous n'avez pas encore créé de jeton d'accès. Vous pouvez utiliser les jetons d'accès à la base pour vous authentifier auprès de l'API REST qui vous permet de créer, lire, modifier et supprimer des lignes. Il est possible de définir des permissions différentes pour chaque table.",
         "hasFullPermissions": "Toutes les permissions, pour les enfants également.",
         "hasOnlySelectedPermissions": "Uniquement les permissions sélectionnées pour les enfants.",
         "noPermissions": "Aucune permission.",
@@ -184,7 +184,7 @@
         "before": "Si ce paramètre est fourni, la nouvelle ligne sera positionnée avant la ligne portant l'identifiant fourni."
     },
     "apiDocsAuth": {
-        "description": "Baserow utilise un système d'authentification simple par jeton. Vous devez générer au moins un jeton d'API dans votre {settingsLink} afin d'utiliser les API suivantes. Il est possible de définir des droits de création, lecture, modification et suppression par table et ce pour chaque jeton. Pour vous authentifier à l'API, fournissez le jeton via l'entête HTTP « Authorization » de la requête. Tous les appels à l'API doivent être authentifiés et réalisés via le protocole sécurisé HTTPS.",
+        "description": "Baserow utilise un système d'authentification simple par jeton. Vous devez générer au moins un jeton d'authentification dans votre {settingsLink} afin d'utiliser les API suivantes. Il est possible de définir des droits de création, lecture, modification et suppression par table et ce pour chaque jeton. Pour vous authentifier, fournissez le jeton via l'entête HTTP « Authorization » de la requête. Tous les appels à l'API doivent être authentifiés et réalisés via le protocole sécurisé HTTPS.",
         "settingsLink": "compte"
     },
     "apiDocsFilters": {
@@ -350,7 +350,8 @@
         "selectImportMessage": "Veuillez sélectionner les données à importer.",
         "filePreview": "Aperçu du contenu du fichier",
         "importPreview": "Aperçu de l'import",
-        "changeImporterType": "Modifier le type d'importation"
+        "changeImporterType": "Modifier le type d'importation",
+        "defaultName": "Table"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
@@ -388,7 +389,9 @@
         "and": "Et",
         "or": "Ou",
         "filterTypeNotFound": "Le filtre n'est pas compatible.",
-        "relatedFieldNotFound": "Le champ associé n'a pas était trouvé."
+        "relatedFieldNotFound": "Le champ associé n'a pas était trouvé.",
+        "noCompatibleFilterTypesErrorTitle": "Aucun filtre compatible",
+        "noCompatibleFilterTypesErrorMessage": "Aucun de vos champs n'a de filtre compatible"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "Image",
@@ -734,5 +737,9 @@
     "apiDocsUploadFileViaURL": {
         "description": "Envoi un fichier sur Baserow en le téléchargeant depuis l'URL fournie. La réponse peut ensuite être utilisée pour [associer un fichier à une ligne]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
         "url": "L'URL que vous souhaitez que Baserow télécharge et enregistre en votre nom."
+    },
+    "fileField": {
+        "errorEmptyFileNameTitle": "Nom du fichier invalide",
+        "errorEmptyFileNameMessage": "Vous ne pouvez pas définir un nom de fichier vide."
     }
 }

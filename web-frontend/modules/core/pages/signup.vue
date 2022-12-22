@@ -30,30 +30,26 @@
     </template>
     <template v-else>
       <PasswordRegister
-        v-if="afterSignupStep < 0"
+        v-if="afterSignupStep < 0 && passwordLoginEnabled"
         :invitation="invitation"
         @success="next"
       >
-        <LoginButtons
-          show-border="top"
-          :hide-if-no-buttons="true"
-          :invitation="invitation"
-        />
-        <LoginActions
-          v-if="!shouldShowAdminSignupPage"
-          :invitation="invitation"
-        >
-          <li>
-            {{ $t('signup.loginText') }}
-            <nuxt-link :to="{ name: 'login' }">
-              {{ $t('action.login') }}
-            </nuxt-link>
-          </li>
-        </LoginActions>
       </PasswordRegister>
+      <LoginButtons
+        show-border="top"
+        :hide-if-no-buttons="true"
+        :invitation="invitation"
+      />
+      <LoginActions v-if="!shouldShowAdminSignupPage" :invitation="invitation">
+        <li>
+          {{ $t('signup.loginText') }}
+          <nuxt-link :to="{ name: 'login' }">
+            {{ $t('action.login') }}
+          </nuxt-link>
+        </li>
+      </LoginActions>
       <component
         :is="afterSignupStepComponents[afterSignupStep]"
-        v-else
         @success="next"
       ></component>
     </template>
@@ -110,6 +106,7 @@ export default {
     ...mapGetters({
       settings: 'settings/get',
       loginActions: 'authProvider/getAllLoginActions',
+      passwordLoginEnabled: 'authProvider/getPasswordLoginEnabled',
     }),
   },
   methods: {

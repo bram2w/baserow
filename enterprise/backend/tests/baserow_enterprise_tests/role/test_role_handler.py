@@ -16,7 +16,7 @@ from baserow_enterprise.role.models import Role, RoleAssignment
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise, synced_roles):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 
@@ -204,7 +204,7 @@ def test_assign_role_subject_not_in_group(data_fixture):
         RoleAssignmentHandler().assign_role(user_2, group, admin_role, database)
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_get_role_assignments(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
@@ -240,7 +240,35 @@ def test_get_role_assignments(data_fixture):
     assert len(database_level_role_assignments) == 1
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
+def test_get_role_assignments_trashed_teams(data_fixture, enterprise_data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    team = enterprise_data_fixture.create_team(group=group)
+    enterprise_data_fixture.create_subject(team, user)
+
+    role = Role.objects.get(uid="ADMIN")
+
+    RoleAssignmentHandler().assign_role(team, group, role, scope=database)
+
+    role_assignments = RoleAssignmentHandler().get_role_assignments(
+        group, scope=database
+    )
+
+    assert len(role_assignments) == 1
+
+    team.trashed = True
+    team.save()
+
+    role_assignments = RoleAssignmentHandler().get_role_assignments(
+        group, scope=database
+    )
+
+    assert len(role_assignments) == 0
+
+
+@pytest.mark.django_db
 def test_get_role_assignments_invalid_group_and_scope_combination(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
@@ -617,3 +645,136 @@ def test_assign_role_batch_performance(data_fixture):
 
     print("----------Database Level Deletions------------")
     print(profiler.output_text(unicode=True, color=True))
+
+
+@pytest.mark.django_db(transaction=True)
+def test_get_sorted_subject_scope_roles(data_fixture, enterprise_data_fixture):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, group=group)
+    table11 = data_fixture.create_database_table(user=user, database=database1)
+    table12 = data_fixture.create_database_table(user=user, database=database1)
+    database2 = data_fixture.create_database_application(user=user, group=group)
+    table21 = data_fixture.create_database_table(user=user, database=database2)
+    table22 = data_fixture.create_database_table(user=user, database=database2)
+
+    team1 = enterprise_data_fixture.create_team(group=group, members=[user2])
+    team2 = enterprise_data_fixture.create_team(group=group, members=[user2])
+    team3 = enterprise_data_fixture.create_team(group=group, members=[user2])
+
+    admin_role = Role.objects.get(uid="ADMIN")
+    editor_role = Role.objects.get(uid="EDITOR")
+    builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=group)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role])
+    ]
+
+    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role, scope=table11)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role]),
+        (table11, [viewer_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(
+        user2, group, role=builder_role, scope=database1
+    )
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role]),
+        (database1, [builder_role]),
+        (table11, [viewer_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=database2)
+    RoleAssignmentHandler().assign_role(user2, group, role=builder_role, scope=table22)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role]),
+        (database1, [builder_role]),
+        (database2, [editor_role]),
+        (table11, [viewer_role]),
+        (table22, [builder_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(team1, group, role=editor_role, scope=group)
+    RoleAssignmentHandler().assign_role(team2, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team3, group, role=no_role_role, scope=group)
+
+    RoleAssignmentHandler().assign_role(team1, group, role=editor_role, scope=database1)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role]),
+        (database1, [builder_role]),
+        (database2, [editor_role]),
+        (table11, [viewer_role]),
+        (table22, [builder_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(
+        team2, group, role=builder_role, scope=database1
+    )
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role]),
+        (database1, [builder_role]),
+        (database2, [editor_role]),
+        (table11, [viewer_role]),
+        (table22, [builder_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(
+        user2, group, role=low_priority_role, scope=group
+    )
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role, builder_role, no_role_role]),
+        (database1, [builder_role]),
+        (database2, [editor_role]),
+        (table11, [viewer_role]),
+        (table22, [builder_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(team1, group, role=editor_role, scope=table12)
+    RoleAssignmentHandler().assign_role(team2, group, role=builder_role, scope=table12)
+    RoleAssignmentHandler().assign_role(team3, group, role=no_role_role, scope=table12)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
+        (group, [editor_role, builder_role, no_role_role]),
+        (database1, [builder_role]),
+        (database2, [editor_role]),
+        (table11, [viewer_role]),
+        (table12, [editor_role, builder_role, no_role_role]),
+        (table22, [builder_role]),
+    ]
+
+
+@pytest.mark.django_db
+def test_get_roles_per_scope_trashed_teams(data_fixture, enterprise_data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    team = enterprise_data_fixture.create_team(group=group)
+    admin_role = Role.objects.get(uid="ADMIN")
+
+    enterprise_data_fixture.create_subject(team, user)
+    RoleAssignmentHandler().assign_role(team, group, admin_role, scope=database)
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
+        (group, [admin_role]),
+        (database, [admin_role]),
+    ]
+
+    team.trashed = True
+    team.save()
+
+    assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
+        (group, [admin_role]),
+    ]

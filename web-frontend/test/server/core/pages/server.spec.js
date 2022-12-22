@@ -14,7 +14,7 @@ const token =
   'CJpYXQiOjE1NjI3NzM0MTR9.8kNGEaddqqitRdL4iiwzoBSdMKdo92610dU7ReZxU1E'
 
 describe('index redirect', () => {
-  beforeAll(async (done) => {
+  beforeAll(async () => {
     mock = new MockAdapter(axios)
 
     // Because the token 'test1' exists it will be refreshed immediately, the
@@ -28,13 +28,20 @@ describe('index redirect', () => {
       },
     })
 
-    mock
-      .onGet('http://localhost/api/auth-provider/login-options/')
-      .reply(200, {})
+    mock.onGet('http://localhost/api/auth-provider/login-options/').reply(200, {
+      password: {
+        type: 'password',
+        enabled: true,
+      },
+    })
 
     nuxt = await createNuxt(true)
-    done()
   }, 300000)
+
+  afterAll(async () => {
+    // Close the server to prevent open handles
+    await nuxt.server.close()
+  })
 
   test('if not authenticated', async () => {
     const { redirected } = await nuxt.server.renderRoute('/')

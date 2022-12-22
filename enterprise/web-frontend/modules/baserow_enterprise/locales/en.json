@@ -1,4 +1,8 @@
 {
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Last enabled provider",
+        "cannotDisableAllAuthProvidersDescription": "It is not possible to disable or delete last enabled provider."
+    },
     "enterprise": {
         "license": "Enterprise",
         "sidebarTooltip": "Your account has access to the enterprise features globally",
@@ -57,6 +61,9 @@
         "title": "Authentication Providers",
         "noProviders": "No authentication providers configured yet.",
         "addProvider": "Add provider"
+    },
+    "authProviderTypes": {
+        "password": "Email and password authentication"
     },
     "editAuthProviderMenuContext": {
         "edit": "Edit",
@@ -127,9 +134,13 @@
             "name": "Viewer",
             "description": "Can only read data."
         },
-        "noRole": {
+        "noAccess": {
             "name": "No access",
             "description": "Can't access anything."
+        },
+        "noRoleLowPriority": {
+            "name": "No role",
+            "description": "Get default group role from their teams."
         }
     },
     "memberRolesModal": {
@@ -145,13 +156,17 @@
             "title": "{name} database",
             "selectMembers": "Select members",
             "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
-            "onlyYouHaveAccess": "Only you can access this database."
+            "onlyYouHaveAccess": "Only you can access this database.",
+            "warningTitle": "Other users might inherit access!",
+            "warningMessage": "Other users might inherit access via their respective roles on the parent group."
         },
         "table": {
             "title": "{name} table",
             "selectMembers": "Select members",
             "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
-            "onlyYouHaveAccess": "Only you can access this table."
+            "onlyYouHaveAccess": "Only you can access this table.",
+            "warningTitle": "Other users might inherit access!",
+            "warningMessage": "Other users might inherit access via their respective roles on the parent database or group."
         }
     },
     "memberRolesShareToggle": {
@@ -210,5 +225,8 @@
     },
     "chatwootSuportSidebarGroup": {
         "directSupport": "Direct support"
+    },
+    "userTeamsField": {
+        "no_records": "No teams"
     }
 }

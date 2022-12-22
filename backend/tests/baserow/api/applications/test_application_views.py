@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.db import connection
+from django.db.models import QuerySet
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
 
@@ -18,6 +19,11 @@ from baserow.contrib.database.models import Database
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.models import Template
+from baserow.core.operations import ListApplicationsGroupOperationType
+
+
+def stub_filter_queryset(u, o, q, **kwargs):
+    return q
 
 
 @pytest.mark.django_db
@@ -33,15 +39,33 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     application_3 = data_fixture.create_database_application(group=group_1, order=2)
     data_fixture.create_database_application(group=group_2, order=1)
     application_4 = data_fixture.create_database_application(group=group_3, order=1)
+    with patch(
+        "baserow.core.handler.CoreHandler.filter_queryset",
+        side_effect=stub_filter_queryset,
+    ) as mock_filter_queryset:
+        response = api_client.get(
+            reverse("api:applications:list", kwargs={"group_id": group_1.id}),
+            **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        )
+        assert len(mock_filter_queryset.mock_calls) == 1 + 3, (
+            "Should trigger 1 call for all the applications then one call by "
+            "applications"
+        )
 
-    response = api_client.get(
-        reverse("api:applications:list", kwargs={"group_id": group_1.id}),
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
-    )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     assert len(response_json) == 3
+
+    _, args, kwargs = mock_filter_queryset.mock_calls[0]
+
+    # Check that we call filter queryset with the right args
+    assert args[0] == user
+    assert args[1] == ListApplicationsGroupOperationType.type
+    assert isinstance(args[2], QuerySet)
+    assert kwargs["group"] == group_1
+    assert kwargs["context"] == group_1
+    assert kwargs["allow_if_template"] is True
 
     assert response_json[0]["id"] == application_1.id
     assert response_json[0]["type"] == "database"
@@ -52,17 +76,27 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     assert response_json[2]["id"] == application_2.id
     assert response_json[2]["type"] == "database"
 
-    response = api_client.get(
-        reverse("api:applications:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
-    )
+    with patch(
+        "baserow.core.handler.CoreHandler.filter_queryset",
+        side_effect=stub_filter_queryset,
+    ) as mock_filter_queryset:
+
+        response = api_client.get(
+            reverse("api:applications:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+        )
+
+        assert (
+            len(mock_filter_queryset.mock_calls) == 2 + 4
+        ), "Should trigger 1 call by group + 1 by applications"
+
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     assert len(response_json) == 4
     assert response_json[0]["id"] == application_1.id
-    assert response_json[1]["id"] == application_4.id
-    assert response_json[2]["id"] == application_3.id
-    assert response_json[3]["id"] == application_2.id
+    assert response_json[1]["id"] == application_3.id
+    assert response_json[2]["id"] == application_2.id
+    assert response_json[3]["id"] == application_4.id
 
     response = api_client.get(
         reverse("api:applications:list", kwargs={"group_id": group_2.id}),

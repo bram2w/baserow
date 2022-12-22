@@ -178,6 +178,13 @@ export default {
                 this.$t('error.disabledAccountTitle'),
                 this.$t('error.disabledAccountMessage')
               )
+            } else if (
+              response.data?.error === 'ERROR_AUTH_PROVIDER_DISABLED'
+            ) {
+              this.showError(
+                this.$t('clientHandler.disabledPasswordProviderTitle'),
+                this.$t('clientHandler.disabledPasswordProviderMessage')
+              )
             } else {
               this.showError(
                 this.$t('error.incorrectCredentialTitle'),

@@ -196,7 +196,7 @@
         "premiumFeatures": "Fonctionalités premium"
     },
     "license": {
-        "title": "Plan {product_code}",
+        "title": "Plan {name}",
         "users": "Utilisateurs",
         "description": "Choisissez les utilisateurs qui peuvent utiliser les fonctionalités du plan {product_code}. Cette licence vous permet de distribuer le plan {product_code} à un maximum de {seats} utilisateurs.",
         "seatLeft": "Vous n'avez plus de place disponible|Il reste une seule place|Il reste {count} places",
@@ -224,7 +224,10 @@
         "disconnectDescription": "Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée.",
         "moreSeatsNeededTitle": "Besoin de plus d´utilisateurs",
         "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} utilisateurs payants et {free_users_count} utilisateurs gratuits",
-        "contactSalesMoreSeats": "Contacter un Vendeur pour plus d´utilisateurs"
+        "contactSalesMoreSeats": "Contacter un Vendeur pour plus d´utilisateurs",
+        "premiumFeatureName": "Premium",
+        "supportFeatureName": "Support",
+        "enterpriseFeatureName": "Enterprise"
     },
     "viewDecoratorType": {
         "onlyOneDecoratorPerView": "Vous ne pouvez utiliser qu'une seule décoration de ce type par vue",

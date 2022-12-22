@@ -5074,3 +5074,128 @@ def test_link_row_contains_filter_type_performance(data_fixture):
     view_handler.apply_filters(grid_view, model.objects.all()).all()
     profiler.stop()
     print(profiler.output_text(unicode=True, color=True))
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+def test_multiple_collaborators_empty_filter_type(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+
+    database = data_fixture.create_database_application(user=user, group=group)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    multiple_collaborators_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multi Collaborators",
+    )
+    row_handler = RowHandler()
+    model = table.get_model()
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+            ],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+            ],
+        },
+    )
+    empty_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [],
+        },
+    )
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_collaborators_field,
+        type="empty",
+    )
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+
+    assert len(ids) == 1
+    assert empty_row.id in ids
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+def test_multiple_collaborators_not_empty_filter_type(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+
+    database = data_fixture.create_database_application(user=user, group=group)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    multiple_collaborators_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multi Collaborators",
+    )
+    row_handler = RowHandler()
+    model = table.get_model()
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+            ],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+            ],
+        },
+    )
+    empty_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [],
+        },
+    )
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_collaborators_field,
+        type="not_empty",
+    )
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_2.id in ids

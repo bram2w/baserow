@@ -197,7 +197,7 @@
         "premiumFeatures": "Funzionalità premium"
     },
     "license": {
-        "title": "Piano {product_code}",
+        "title": "Piano {name}",
         "users": "Utenti",
         "description": "Scegli gli utenti che possono usare il piano {product_code}. Questa licenza ti permette di concedere {product_code} a un massimo di {seats} utenti.",
         "seatLeft": "Non hai più posti disponibili|Ti è rimasto un posto|Ti sono rimasti {count} posti",
@@ -225,7 +225,10 @@
         "disconnectDescription": "Sei sicuro di voler disconnettere questa licenza? Se la disconnetti mentre è attiva, tutti gli utenti collegati non avranno più accesso alle funzionalità del piano. La licenza verrà quindi rimossa. Se vuoi usare questa licenza in un'altra istanza self-hosted, contatta il nostro team di supporto tramite {contact}.",
         "contactSalesMoreSeats": "Contatta il nostro team di vendita per avere più postazioni",
         "automaticSeatsProgressBarStatus": "{seats_taken} / {seats} postazioni paganti e {free_users_count} postazioni libere in uso",
-        "moreSeatsNeededTitle": "È necessario aumentare il numero di postazioni"
+        "moreSeatsNeededTitle": "È necessario aumentare il numero di postazioni",
+        "premiumFeatureName": "Premium",
+        "enterpriseFeatureName": "Enterprise",
+        "supportFeatureName": "Assistenza"
     },
     "viewDecoratorType": {
         "leftBorderColor": "Bordo sinistro",

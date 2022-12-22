@@ -281,7 +281,7 @@ def test_fetch_license_status_with_authority_unavailable(data_fixture):
 
     responses.add(
         responses.POST,
-        "http://host.docker.internal:8001/api/saas/licenses/check/",
+        "http://baserow-saas-backend:8000/api/saas/licenses/check/",
         json={"error": "error"},
         status=400,
     )
@@ -291,7 +291,7 @@ def test_fetch_license_status_with_authority_unavailable(data_fixture):
 
     responses.add(
         responses.POST,
-        "http://host.docker.internal:8001/api/saas/licenses/check/",
+        "http://baserow-saas-backend:8000/api/saas/licenses/check/",
         body="not_json",
         status=200,
     )
@@ -308,7 +308,7 @@ def test_fetch_license_status_with_authority_invalid_response(data_fixture):
 
     responses.add(
         responses.POST,
-        "http://host.docker.internal:8001/api/saas/licenses/check/",
+        "http://baserow-saas-backend:8000/api/saas/licenses/check/",
         body="not_json",
         status=200,
     )
@@ -342,7 +342,7 @@ def test_fetch_license_status_with_authority(data_fixture):
 
     responses.add(
         responses.POST,
-        "http://host.docker.internal:8001/api/saas/licenses/check/",
+        "http://baserow-saas-backend:8000/api/saas/licenses/check/",
         json={"test": {"type": "ok", "detail": ""}},
         status=200,
     )
@@ -372,7 +372,7 @@ def test_check_licenses_with_authority_check(premium_data_fixture):
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={
                 "invalid": {"type": "invalid", "detail": ""},
                 "does_not_exist": {"type": "does_not_exist", "detail": ""},
@@ -529,7 +529,7 @@ def test_register_license_with_authority_check_ok(data_fixture):
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={VALID_ONE_SEAT_LICENSE.decode(): {"type": "ok", "detail": ""}},
             status=200,
         )
@@ -548,7 +548,7 @@ def test_register_license_with_authority_check_updated(data_fixture):
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={
                 VALID_ONE_SEAT_LICENSE.decode(): {
                     "type": "update",
@@ -574,7 +574,7 @@ def test_register_license_with_authority_check_does_not_exist(data_fixture):
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={
                 VALID_ONE_SEAT_LICENSE.decode(): {
                     "type": "does_not_exist",
@@ -598,7 +598,7 @@ def test_register_license_with_authority_check_instance_id_mismatch(data_fixture
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={
                 VALID_ONE_SEAT_LICENSE.decode(): {
                     "type": "instance_id_mismatch",
@@ -622,7 +622,7 @@ def test_register_license_with_authority_check_invalid(data_fixture):
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={
                 VALID_ONE_SEAT_LICENSE.decode(): {
                     "type": "invalid",

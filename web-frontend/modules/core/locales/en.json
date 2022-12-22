@@ -87,7 +87,9 @@
         "disabledAccountMessage": "This user account has been disabled.",
         "incorrectCredentialTitle": "Incorrect credentials",
         "incorrectCredentialMessage": "The provided e-mail address or password is incorrect.",
-        "inputRequired": "Input is required."
+        "inputRequired": "Input is required.",
+        "disabledPasswordProviderTitle": "Password authentication is disabled.",
+        "disabledPasswordProviderMessage": "Please use another authentication provider."
     },
     "field": {
         "language": "Language",
@@ -291,7 +293,9 @@
         "passwordPlaceholder": "Enter your password..",
         "forgotPassword": "Forgot password?",
         "signUpText": "Don't have an account?",
-        "signUp": "Sign Up"
+        "signUp": "Sign Up",
+        "displayPasswordLogin": "Log in using email and password",
+        "redirecting": "Redirecting to authentication provider..."
     },
     "resetPassword": {
         "title": "Reset password",
@@ -438,7 +442,8 @@
             "columns": {
                 "name": "Name",
                 "email": "Email",
-                "role": "Default role"
+                "role": "Default role",
+                "teams": "Teams"
             },
             "actions": {
                 "copyEmail": "Copy email",

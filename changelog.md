@@ -15,9 +15,36 @@ For example:
 
 ### Refactors
 
+## Released (2022-12-21 1.13.3)
+
+## Deploy steps
+* (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
+
+### New Features
+
+* (Enterprise Preview Feature) Database and Table level RBAC with Teams are now available as a preview feature for enterprise users, Add 'RBAC' to the FEATURE_FLAG env and restart var to enable.
+* Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
+* Users with roles higher than viewer on tables and databases now counted as paid users
+  on the enterprise plan including users who get those roles from a team.
+  [#1322](https://gitlab.com/bramw/baserow/-/issues/1322)
+* Add support for "Empty" and "Not Empty" filters for Collaborator field. [#1205](https://gitlab.com/bramw/baserow/-/issues/1205)
+* The ordering APIs can now accept a partial list of ids to order only these ids.
+* Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
+* Added more Maths formula functions. [#1183](https://gitlab.com/bramw/baserow/-/issues/1183)
+
+### Bug Fixes
+* Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)
+* Use the correct `OperationType` to restore rows [#1389](https://gitlab.com/bramw/baserow/-/issues/1389)
+* Prevent zooming in when clicking on an input on mobile. [#722](https://gitlab.com/bramw/baserow/-/issues/722)
+* Link/Lookup/Formula fields work again when restricting a users access to the related table [#1439](https://gitlab.com/bramw/baserow/-/issues/1439)
+
+### Refactors
+* Set a fixed width for `card_cover` thumbnails to have better-quality images. [#1278](https://gitlab.com/bramw/baserow/-/issues/#1278)
+
 ## Released (2022-12-8 1.13.2)
 
 ### New Features
+
 * Add drag and drop zone for files to the row edit modal [#1161](https://gitlab.com/bramw/baserow/-/issues/1161)
 
 * Automatically enable/disable enterprise features upon activation/deactivation without needing a page refresh first. [#1306](https://gitlab.com/bramw/baserow/-/issues/1306)
@@ -39,7 +66,7 @@ For example:
 * Refresh the JWT token when needed instead of periodically. [#1294](https://gitlab.com/bramw/baserow/-/issues/1294)
 * Remove "// Baserow" from title on a publicly shared view if `show_logo` is set to false. [#1378](https://gitlab.com/bramw/baserow/-/issues/1378)
 
-## Released (2022-11-22 1.13.2)
+## Released (2022-11-22 1.13.1)
 
 ### New Features
 

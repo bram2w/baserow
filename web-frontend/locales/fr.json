@@ -29,7 +29,8 @@
         "paste": "Coller",
         "duplicate": "Dupliquer",
         "remove": "Supprimer",
-        "login": "S'identifier"
+        "login": "S'identifier",
+        "download": "Télécharger"
     },
     "adminType": {
         "settings": "Paramètres"
@@ -37,12 +38,13 @@
     "applicationType": {
         "database": "Base de données",
         "cantSelectTableTitle": "Impossible de sélectionner la base de données.",
-        "cantSelectTableDescription": "La base de données ne peut pas être sélectionnée car elle ne contient aucune table. Utilisez la bare latérale afin d'en créer une."
+        "cantSelectTableDescription": "La base de données ne peut pas être sélectionnée car elle ne contient aucune table. Utilisez la bare latérale afin d'en créer une.",
+        "databaseDefaultName": "Base de données sans titre"
     },
     "settingType": {
         "account": "Informations personnelles",
         "password": "Mot de passe",
-        "tokens": "Jetons d'API",
+        "tokens": "Jetons d'accès à la base",
         "deleteAccount": "Supprimer le compte"
     },
     "userFileUploadType": {
@@ -249,7 +251,9 @@
         "snapshotNameNotUniqueTitle": "Le nom de la sauvegarde doit être unique.",
         "snapshotBeingCreatedTitle": "Une sauvegarde est déjà en cours de création",
         "snapshotBeingRestoredTitle": "La sauvegarde est en cours de restauration",
-        "maximumSnapshotsReachedDescription": "Le nombre maximum de sauvegardes d'un groupe a été atteint."
+        "maximumSnapshotsReachedDescription": "Le nombre maximum de sauvegardes d'un groupe a été atteint.",
+        "disabledPasswordProviderMessage": "Veuillez utiliser un autre service d'authentification.",
+        "disabledPasswordProviderTitle": "L'authentification par mot de passe est désactivée."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -365,7 +369,19 @@
         "linkDescription": "Crée un lien hypertexte à l’aide de l’URI fourni dans le premier argument.",
         "buttonDescription": "Crée un bouton en utilisant l'URI (premier argument) et le label (deuxième argument).",
         "getLinkLabelDescription": "Obtient l'étiquette d'une formule à l'aide des fonctions de lien ou de bouton.",
-        "getLinkUrlDescription": "Obtient l'url à partir d'une formule utilisant les fonctions de lien ou de bouton."
+        "getLinkUrlDescription": "Obtient l'url à partir d'une formule utilisant les fonctions de lien ou de bouton.",
+        "powerDescription": "Renvoie le résultat du premier argument élevé à l'exposant du second argument.",
+        "absDescription": "Renvoie la valeur absolue pour la valeur de l'argument fourni.",
+        "ceilDescription": "Renvoie le plus petit nombre entier qui est supérieur ou égal à la valeur fournie en argument.",
+        "evenDescription": "Renvoie vrai si l'argument fourni est un nombre pair, faux sinon.",
+        "oddDescription": "Renvoie vrai si l'argument fourni est un nombre impair, faux sinon.",
+        "logDescription": "Fonction logarithme : renvoie l'exposant auquel le premier argument doit être élevé pour produire le second.",
+        "expDescription": "Renvoie le résultat de la constante e ≈ 2,718 élevée à la valeur de l'argument fourni.",
+        "modDescription": "Renvoie le reste de la division entre le premier argument et le deuxième argument.",
+        "sqrtDescription": "Renvoie la racine carrée de l’argument fourni.",
+        "floorDescription": "Renvoie le plus grand nombre entier qui est inférieur ou égal à la valeur de l'argument fourni.",
+        "lnDescription": "Fonction logarithme naturel : renvoie l'exposant auquel la constante e ≈ 2,718 doit être élevée pour produire l'argument.",
+        "signDescription": "Renvoie 1 si l'argument est un nombre positif, -1 si l'argument est un nombre négatif, 0 sinon."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

@@ -25,6 +25,7 @@ from baserow.contrib.database.table.operations import (
     UpdateDatabaseTableOperationType,
 )
 from baserow.core.exceptions import PermissionException
+from baserow.core.models import Application
 from baserow.core.operations import (
     CreateGroupOperationType,
     DeleteGroupOperationType,
@@ -32,6 +33,7 @@ from baserow.core.operations import (
     ListGroupsOperationType,
     ReadApplicationOperationType,
     ReadGroupOperationType,
+    UpdateApplicationOperationType,
     UpdateGroupOperationType,
     UpdateSettingsOperationType,
 )
@@ -43,7 +45,7 @@ from baserow_enterprise.role.permission_manager import RolePermissionManagerType
 
 
 @pytest.fixture(autouse=True)
-def enable_enterprise_for_all_tests_here(enable_enterprise, synced_roles):
+def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
     pass
 
 
@@ -153,7 +155,7 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
 @override_settings(
     PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
 )
-def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
+def test_check_permissions(data_fixture, enterprise_data_fixture):
 
     (
         admin,
@@ -195,6 +197,13 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
                         f"User {user} should have permission {permission.type} on context {context}"
                     )
                     raise
+                except Exception:
+                    print(
+                        f"Fails to check permission {permission.type} for user {user} "
+                        f"on context {context}"
+                    )
+                    raise
+
             else:
                 with pytest.raises(PermissionException):
                     perm_manager.check_permissions(
@@ -212,7 +221,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         # Group 2
         (ReadGroupOperationType, group_2, False),
         # database1
-        (ReadApplicationOperationType, database_1, False),
+        (ReadApplicationOperationType, group_1, False),
         (ReadDatabaseTableOperationType, table_1_1, False),
         (UpdateDatabaseTableOperationType, table_1_1, False),
         (DeleteDatabaseTableOperationType, table_1_1, False),
@@ -251,7 +260,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (UpdateGroupOperationType, group_2, False),
         (DeleteGroupOperationType, group_2, False),
         # Database_1
-        (ReadApplicationOperationType, database_1, True),
+        (ReadApplicationOperationType, group_1, True),
         (CreateTableDatabaseTableOperationType, database_1, True),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -267,7 +276,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, database_2, False),
+        (ReadApplicationOperationType, group_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -316,7 +325,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (DeleteGroupOperationType, group_2, False),
         (ListApplicationsGroupOperationType, group_2, True),
         # Database_1
-        (ReadApplicationOperationType, database_1, True),
+        (ReadApplicationOperationType, group_1, True),
         (CreateTableDatabaseTableOperationType, database_1, True),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -332,7 +341,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, database_2, True),
+        (ReadApplicationOperationType, group_2, True),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, True),
         # Table_2_1
@@ -379,7 +388,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (UpdateGroupOperationType, group_2, False),
         (DeleteGroupOperationType, group_2, False),
         # Database_1
-        (ReadApplicationOperationType, database_1, True),
+        (ReadApplicationOperationType, group_1, True),
         (CreateTableDatabaseTableOperationType, database_1, False),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -395,7 +404,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, database_2, False),
+        (ReadApplicationOperationType, group_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -442,7 +451,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (UpdateGroupOperationType, group_2, False),
         (DeleteGroupOperationType, group_2, False),
         # Database_1
-        (ReadApplicationOperationType, database_1, True),
+        (ReadApplicationOperationType, group_1, True),
         (CreateTableDatabaseTableOperationType, database_1, False),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -458,7 +467,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, False),
         # Database_2
-        (ReadApplicationOperationType, database_2, False),
+        (ReadApplicationOperationType, group_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -505,7 +514,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (UpdateGroupOperationType, group_2, False),
         (DeleteGroupOperationType, group_2, False),
         # Database_1
-        (ReadApplicationOperationType, database_1, True),
+        (ReadApplicationOperationType, group_1, True),
         (CreateTableDatabaseTableOperationType, database_1, False),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -521,7 +530,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, False),
         # Database_2
-        (ReadApplicationOperationType, database_2, False),
+        (ReadApplicationOperationType, group_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -568,7 +577,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (UpdateGroupOperationType, group_2, False),
         (DeleteGroupOperationType, group_2, False),
         # Database_1
-        (ReadApplicationOperationType, database_1, True),
+        (ReadApplicationOperationType, group_1, True),
         (CreateTableDatabaseTableOperationType, database_1, True),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -584,7 +593,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, database_2, False),
+        (ReadApplicationOperationType, group_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -618,6 +627,157 @@ def test_check_permissions(data_fixture, enterprise_data_fixture, synced_roles):
     ]
 
     check_perms(builder_less, builder_less_tests)
+
+
+def test_check_permissions_with_teams(
+    data_fixture, enterprise_data_fixture, synced_roles
+):
+    enterprise_data_fixture.enable_enterprise()
+    user = data_fixture.create_user()
+
+    group_1 = data_fixture.create_group(
+        user=user,
+    )
+    database_1 = data_fixture.create_database_application(group=group_1, order=1)
+
+    table_1_1, _, _ = data_fixture.build_table(
+        columns=[("number", "number"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_1,
+        order=1,
+    )
+
+    table_1_2, _, _ = data_fixture.build_table(
+        columns=[("number", "number"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_1,
+        order=2,
+    )
+
+    team1 = enterprise_data_fixture.create_team(group=group_1, members=[user])
+
+    role_builder = Role.objects.get(uid="BUILDER")
+    role_viewer = Role.objects.get(uid="VIEWER")
+    role_no_access = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    perm_manager = RolePermissionManagerType()
+
+    # The low priority role gives no permissions
+    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+
+    with pytest.raises(PermissionException):
+        perm_manager.check_permissions(
+            user,
+            ReadApplicationOperationType.type,
+            group=group_1,
+            context=database_1,
+        )
+
+    # The user role should take the precedence
+    RoleAssignmentHandler().assign_role(user, group_1, role=role_builder)
+    RoleAssignmentHandler().assign_role(team1, group_1, role=role_viewer)
+
+    assert (
+        perm_manager.check_permissions(
+            user,
+            UpdateApplicationOperationType.type,
+            group=group_1,
+            context=database_1,
+        )
+        is True
+    )
+
+    # Now the user role is low_priority the team role should work
+    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+
+    assert (
+        perm_manager.check_permissions(
+            user,
+            ReadApplicationOperationType.type,
+            group=group_1,
+            context=database_1.application_ptr,
+        )
+        is True
+    )
+
+    with pytest.raises(PermissionException):
+        perm_manager.check_permissions(
+            user,
+            UpdateApplicationOperationType.type,
+            group=group_1,
+            context=database_1.application_ptr,
+        )
+
+    # Prevent from accessing the table at team level
+    RoleAssignmentHandler().assign_role(
+        team1, group_1, role=role_no_access, scope=table_1_1
+    )
+
+    with pytest.raises(PermissionException):
+        perm_manager.check_permissions(
+            user,
+            ReadDatabaseTableOperationType.type,
+            group=group_1,
+            context=table_1_1,
+        )
+
+    assert (
+        perm_manager.check_permissions(
+            user,
+            ReadDatabaseTableOperationType.type,
+            group=group_1,
+            context=table_1_2,
+        )
+        is True
+    )
+
+    # And now user level table role should override the team role
+    RoleAssignmentHandler().assign_role(
+        user, group_1, role=role_builder, scope=table_1_1
+    )
+
+    assert (
+        perm_manager.check_permissions(
+            user,
+            UpdateDatabaseTableOperationType.type,
+            group=group_1,
+            context=table_1_1,
+        )
+        is True
+    )
+
+    with pytest.raises(PermissionException):
+        perm_manager.check_permissions(
+            user,
+            UpdateDatabaseTableOperationType.type,
+            group=group_1,
+            context=table_1_2,
+        )
+
+    # User is now BUILDER at database level. Team most precise role should be used
+    RoleAssignmentHandler().assign_role(user, group_1, role=None, scope=table_1_1)
+    RoleAssignmentHandler().assign_role(
+        user, group_1, role=role_builder, scope=database_1
+    )
+
+    with pytest.raises(PermissionException):
+        perm_manager.check_permissions(
+            user,
+            ReadDatabaseTableOperationType.type,
+            group=group_1,
+            context=table_1_1,
+        )
+
+    assert (
+        perm_manager.check_permissions(
+            user,
+            ReadDatabaseTableOperationType.type,
+            group=group_1,
+            context=table_1_2,
+        )
+        is True
+    )
 
 
 @pytest.mark.django_db(transaction=True)
@@ -659,14 +819,16 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
     perms = perm_manager.get_permissions_object(builder, group=group_2)
 
     assert perms[ReadApplicationOperationType.type]["default"] is False
-    assert perms[ReadApplicationOperationType.type]["exceptions"] == [database_2.id]
+    assert perms[ReadApplicationOperationType.type]["exceptions"] == [
+        database_2.application_ptr_id
+    ]
 
     assert perms[ListApplicationsGroupOperationType.type]["default"] is False
     assert perms[ListApplicationsGroupOperationType.type]["exceptions"] == [group_2.id]
 
     assert perms[ReadFieldOperationType.type]["default"] is False
-    assert perms[ReadFieldOperationType.type]["exceptions"] == list(
-        table_2_1.field_set.all().values_list("id", flat=True)
+    assert sorted(perms[ReadFieldOperationType.type]["exceptions"]) == sorted(
+        list(table_2_1.field_set.all().values_list("id", flat=True))
     )
 
     perms = perm_manager.get_permissions_object(viewer_plus, group=group_1)
@@ -675,8 +837,8 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
     assert perms[UpdateDatabaseRowOperationType.type]["exceptions"] == [table_1_1.id]
 
     assert perms[UpdateFieldOperationType.type]["default"] is False
-    assert perms[UpdateFieldOperationType.type]["exceptions"] == list(
-        table_1_1.field_set.all().values_list("id", flat=True)
+    assert sorted(perms[UpdateFieldOperationType.type]["exceptions"]) == sorted(
+        list(table_1_1.field_set.all().values_list("id", flat=True))
     )
 
     perms = perm_manager.get_permissions_object(builder_less, group=group_1)
@@ -684,17 +846,101 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
     assert perms[UpdateDatabaseRowOperationType.type]["default"] is True
     assert perms[UpdateDatabaseRowOperationType.type]["exceptions"] == [table_1_1.id]
 
-    role_admin = Role.objects.get(uid="ADMIN")
 
-    # Add admin to database 1 for builder_less user
-    RoleAssignmentHandler().assign_role(
-        builder_less, group_1, role=role_admin, scope=database_1
+@pytest.mark.django_db(transaction=True)
+def test_get_permissions_object_with_teams(
+    data_fixture, enterprise_data_fixture, synced_roles
+):
+    enterprise_data_fixture.enable_enterprise()
+    user = data_fixture.create_user()
+
+    group_1 = data_fixture.create_group(
+        user=user,
+    )
+    database_1 = data_fixture.create_database_application(group=group_1, order=1)
+
+    table_1_1, _, _ = data_fixture.build_table(
+        columns=[("number", "number"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_1,
+        order=1,
     )
 
-    perms = perm_manager.get_permissions_object(builder_less, group=group_1)
+    table_1_2, _, _ = data_fixture.build_table(
+        columns=[("number", "number"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_1,
+        order=2,
+    )
 
-    assert perms[UpdateDatabaseRowOperationType.type]["default"] is True
-    assert perms[UpdateDatabaseRowOperationType.type]["exceptions"] == []
+    team1 = enterprise_data_fixture.create_team(group=group_1, members=[user])
+    team2 = enterprise_data_fixture.create_team(group=group_1, members=[user])
+
+    role_builder = Role.objects.get(uid="BUILDER")
+    role_viewer = Role.objects.get(uid="VIEWER")
+    role_no_access = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    perm_manager = RolePermissionManagerType()
+
+    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert all([not perm["default"] for perm in perms])
+    assert all([not perm["exceptions"] for perm in perms])
+
+    # The user role should take the precedence
+    RoleAssignmentHandler().assign_role(user, group_1, role=role_builder)
+    RoleAssignmentHandler().assign_role(team1, group_1, role=role_viewer)
+    RoleAssignmentHandler().assign_role(team2, group_1, role=role_viewer)
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert perms[UpdateApplicationOperationType.type]["default"] is True
+    assert perms[UpdateApplicationOperationType.type]["exceptions"] == []
+
+    # Now the user role is low_priority the team role should work
+    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert perms[UpdateApplicationOperationType.type]["default"] is False
+    assert perms[UpdateApplicationOperationType.type]["exceptions"] == []
+
+    # Prevent from accessing the table at team level
+    RoleAssignmentHandler().assign_role(
+        team1, group_1, role=role_no_access, scope=table_1_1
+    )
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert perms[ReadDatabaseTableOperationType.type]["default"] is True
+    assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == [table_1_1.id]
+
+    # And now user level table role should override the team role
+    RoleAssignmentHandler().assign_role(
+        user, group_1, role=role_builder, scope=table_1_1
+    )
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert perms[ReadDatabaseTableOperationType.type]["default"] is True
+    assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == []
+
+    # User is now BUILDER at database level. Team most precise role should be used
+    RoleAssignmentHandler().assign_role(user, group_1, role=None, scope=table_1_1)
+    RoleAssignmentHandler().assign_role(
+        user, group_1, role=role_builder, scope=database_1.application_ptr
+    )
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert perms[ReadDatabaseTableOperationType.type]["default"] is True
+    assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == [table_1_1.id]
+
+    RoleAssignmentHandler().assign_role(
+        team2, group_1, role=role_builder, scope=table_1_1
+    )
+    perms = perm_manager.get_permissions_object(user, group=group_1)
+
+    assert perms[ReadDatabaseTableOperationType.type]["default"] is True
+    assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == []
 
 
 @pytest.mark.django_db(transaction=True)
@@ -725,7 +971,7 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
 
     table_1_queryset = Table.objects.filter(database__group=group_1)
     table_2_queryset = Table.objects.filter(database__group=group_2)
-    database_2_queryset = Database.objects.filter(group=group_2)
+    application_2_queryset = Application.objects.filter(group=group_2)
 
     admin_table_queryset = perm_manager.filter_queryset(
         admin,
@@ -773,51 +1019,75 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     # In this scenario the user is:
     # - no_access at group_2 level
     # - Builder at table_2_1 level
-    # -> should be able to see database_2 because it's parent of table_2_1
-    builder_database_queryset = perm_manager.filter_queryset(
+    # -> should be able to see application_2 because it's parent of table_2_1
+    builder_application_queryset = perm_manager.filter_queryset(
         builder,
         ListApplicationsGroupOperationType.type,
-        database_2_queryset,
+        application_2_queryset,
         group=group_2,
         context=group_2,
     )
 
-    assert list(builder_database_queryset) == [database_2]
+    assert list(builder_application_queryset) == [database_2.application_ptr]
 
     # In this scenario the user is:
     # - Viewer at group_2 level
     # - builder at at table_2_1 level
-    # -> should be able to see database_2 and database_3
+    # -> should be able to see application_2 and application_3
     RoleAssignmentHandler().assign_role(builder, group_2, role=viewer_role)
 
-    builder_database_queryset = perm_manager.filter_queryset(
+    builder_application_queryset = perm_manager.filter_queryset(
         builder,
         ListApplicationsGroupOperationType.type,
-        database_2_queryset,
+        application_2_queryset,
         group=group_2,
         context=group_2,
     )
 
-    assert list(builder_database_queryset) == [database_2, database_3]
+    assert list(builder_application_queryset) == [
+        database_2.application_ptr,
+        database_3.application_ptr,
+    ]
 
     # In this scenario the user is:
     # - Viewer at group_2 level
-    # - no_access at database_2 level
+    # - no_access at application_2 level
     # - builder at at table_2_1 level
-    # -> should still be able to see database_2 and database_3
+    # -> should still be able to see application_2 and application_3
     RoleAssignmentHandler().assign_role(
-        builder, group_2, role=role_no_access, scope=database_2
+        builder, group_2, role=role_no_access, scope=database_2.application_ptr
     )
 
-    builder_database_queryset = perm_manager.filter_queryset(
+    builder_application_queryset = perm_manager.filter_queryset(
         builder,
         ListApplicationsGroupOperationType.type,
-        database_2_queryset,
+        application_2_queryset,
         group=group_2,
         context=group_2,
     )
 
-    assert list(builder_database_queryset) == [database_2, database_3]
+    assert list(builder_application_queryset) == [
+        database_2.application_ptr,
+        database_3.application_ptr,
+    ]
+
+    # In this scenario the user is:
+    # - Viewer at group_2 level
+    # - no_access at application_2 level
+    # -> should be able to see application_3 only
+    RoleAssignmentHandler().assign_role(builder, group_2, scope=table_2_1)
+
+    builder_application_queryset = perm_manager.filter_queryset(
+        builder,
+        ListApplicationsGroupOperationType.type,
+        application_2_queryset,
+        group=group_2,
+        context=group_2,
+    )
+
+    assert list(builder_application_queryset) == [
+        database_3.application_ptr,
+    ]
 
 
 @pytest.mark.django_db

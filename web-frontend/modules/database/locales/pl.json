@@ -737,5 +737,9 @@
     "duplicateTableJobType": {
         "duplicating": "Powielanie",
         "duplicatedTitle": "Tabela zduplikowana"
+    },
+    "fileField": {
+        "errorEmptyFileNameTitle": "Nieprawidłowa nazwa pliku",
+        "errorEmptyFileNameMessage": "Nie można ustawić pustej nazwy pliku."
     }
 }

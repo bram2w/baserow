@@ -3,6 +3,7 @@ import MembersRoleField from '@baserow_enterprise/components/MembersRoleField'
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import InvitesRoleField from '@baserow_enterprise/components/InvitesRoleField'
 import EnterpriseFeatures from '@baserow_enterprise/features'
+import UserTeamsField from '@baserow_enterprise/components/crudTable/fields/UserTeamsField'
 
 export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   static getType() {
@@ -10,12 +11,31 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   }
 
   mutateMembersTableColumns(columns, context) {
-    return this._replaceRoleColumn(
+    columns = this._replaceRoleColumn(
       columns,
       MembersRoleField,
       'role_uid',
       context
     )
+
+    if (this.app.$featureFlagIsEnabled('RBAC')) {
+      const roleColumnIndex = columns.findIndex(
+        (column) => column.key === 'permissions'
+      )
+      const teamsColumn = new CrudTableColumn(
+        'teams',
+        this.app.i18n.t('membersSettings.membersTable.columns.teams'),
+        UserTeamsField,
+        false,
+        false,
+        false,
+        {},
+        20
+      )
+      columns.splice(roleColumnIndex, 0, teamsColumn)
+    }
+
+    return columns
   }
 
   mutateMembersInvitesTableColumns(columns, context) {

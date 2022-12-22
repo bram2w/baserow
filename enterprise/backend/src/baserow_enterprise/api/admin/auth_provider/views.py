@@ -18,10 +18,20 @@ from baserow.api.utils import (
 )
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
 from baserow.core.registries import auth_provider_type_registry
+from baserow_enterprise.auth_provider.exceptions import (
+    CannotCreateAuthProvider,
+    CannotDeleteAuthProvider,
+    CannotDisableLastAuthProvider,
+)
 from baserow_enterprise.auth_provider.handler import AuthProviderHandler
 from baserow_enterprise.sso.utils import check_sso_feature_is_active_or_raise
 
-from .errors import ERROR_AUTH_PROVIDER_DOES_NOT_EXIST
+from .errors import (
+    ERROR_AUTH_PROVIDER_CANNOT_BE_CREATED,
+    ERROR_AUTH_PROVIDER_CANNOT_BE_DELETED,
+    ERROR_AUTH_PROVIDER_DOES_NOT_EXIST,
+    ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS,
+)
 from .serializers import (
     CreateAuthProviderSerializer,
     NextAuthProviderIdSerializer,
@@ -51,6 +61,11 @@ class AdminAuthProvidersView(APIView):
     @validate_body_custom_fields(
         auth_provider_type_registry,
         base_serializer_class=CreateAuthProviderSerializer,
+    )
+    @map_exceptions(
+        {
+            CannotCreateAuthProvider: ERROR_AUTH_PROVIDER_CANNOT_BE_CREATED,
+        }
     )
     def post(self, request: Request, data: Dict[str, Any]) -> Response:
         """Create a new authentication provider."""
@@ -121,6 +136,7 @@ class AdminAuthProviderView(APIView):
     @map_exceptions(
         {
             AuthProviderModelNotFound: ERROR_AUTH_PROVIDER_DOES_NOT_EXIST,
+            CannotDisableLastAuthProvider: ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS,
         }
     )
     def patch(self, request, auth_provider_id: int):
@@ -203,6 +219,8 @@ class AdminAuthProviderView(APIView):
     @map_exceptions(
         {
             AuthProviderModelNotFound: ERROR_AUTH_PROVIDER_DOES_NOT_EXIST,
+            CannotDeleteAuthProvider: ERROR_AUTH_PROVIDER_CANNOT_BE_DELETED,
+            CannotDisableLastAuthProvider: ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS,
         }
     )
     def delete(self, request: Request, auth_provider_id: int) -> Response:

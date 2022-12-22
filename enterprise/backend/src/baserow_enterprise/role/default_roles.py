@@ -47,6 +47,7 @@ from baserow.contrib.database.table.operations import (
 from baserow.contrib.database.tokens.operations import (
     CreateTokenOperationType,
     ReadTokenOperationType,
+    UpdateTokenOperationType,
     UseTokenOperationType,
 )
 from baserow.contrib.database.views.operations import (
@@ -122,10 +123,10 @@ from baserow.core.trash.operations import (
 )
 from baserow_enterprise.role.operations import (
     AssignRoleGroupOperationType,
-    ReadRoleDatabaseOperationType,
+    ReadRoleApplicationOperationType,
     ReadRoleGroupOperationType,
     ReadRoleTableOperationType,
-    UpdateRoleDatabaseOperationType,
+    UpdateRoleApplicationOperationType,
     UpdateRoleTableOperationType,
 )
 from baserow_enterprise.teams.operations import (
@@ -144,6 +145,8 @@ from baserow_enterprise.teams.operations import (
 NO_ACCESS_OPS = []
 VIEWER_OPS = NO_ACCESS_OPS + [
     ReadGroupOperationType,
+    ReadTeamOperationType,
+    ListTeamsOperationType,
     ListApplicationsGroupOperationType,
     ListTablesDatabaseTableOperationType,
     ReadApplicationOperationType,
@@ -181,9 +184,7 @@ EDITOR_OPS = COMMENTER_OPS + [
     ImportRowsDatabaseTableOperationType,
     ListGroupUsersGroupOperationType,
     RestoreDatabaseRowOperationType,
-    ListTeamsOperationType,
     ListTeamSubjectsOperationType,
-    ReadTeamOperationType,
     ReadTeamSubjectOperationType,
 ]
 BUILDER_OPS = EDITOR_OPS + [
@@ -236,7 +237,10 @@ BUILDER_OPS = EDITOR_OPS + [
     ReadGroupTrashOperationType,
     CreateTokenOperationType,
     ReadTokenOperationType,
+    UpdateTokenOperationType,
     UseTokenOperationType,
+    OrderTablesDatabaseTableOperationType,
+    OrderApplicationsOperationType,
 ]
 ADMIN_OPS = BUILDER_OPS + [
     UpdateGroupOperationType,
@@ -260,18 +264,26 @@ ADMIN_OPS = BUILDER_OPS + [
     RestoreGroupOperationType,
     EmptyApplicationTrashOperationType,
     EmptyGroupTrashOperationType,
-    ReadRoleDatabaseOperationType,
-    UpdateRoleDatabaseOperationType,
     ReadRoleTableOperationType,
     UpdateRoleTableOperationType,
-    OrderTablesDatabaseTableOperationType,
-    OrderApplicationsOperationType,
+    ReadRoleApplicationOperationType,
+    UpdateRoleApplicationOperationType,
 ]
+
+ADMIN_ROLE_UID = "ADMIN"
+BUILDER_ROLE_UID = "BUILDER"
+EDITOR_ROLE_UID = "EDITOR"
+COMMENTER_ROLE_UID = "COMMENTER"
+VIEWER_ROLE_UID = "VIEWER"
+NO_ACCESS_ROLE_UID = "NO_ACCESS"
+NO_ROLE_LOW_PRIORITY = "NO_ROLE_LOW_PRIORITY"
+
 default_roles = {
-    "ADMIN": ADMIN_OPS,
-    "BUILDER": BUILDER_OPS,
-    "EDITOR": EDITOR_OPS,
-    "COMMENTER": COMMENTER_OPS,
-    "VIEWER": VIEWER_OPS,
-    "NO_ACCESS": NO_ACCESS_OPS,
+    ADMIN_ROLE_UID: ADMIN_OPS,
+    BUILDER_ROLE_UID: BUILDER_OPS,
+    EDITOR_ROLE_UID: EDITOR_OPS,
+    COMMENTER_ROLE_UID: COMMENTER_OPS,
+    VIEWER_ROLE_UID: VIEWER_OPS,
+    NO_ACCESS_ROLE_UID: NO_ACCESS_OPS,
+    NO_ROLE_LOW_PRIORITY: NO_ACCESS_OPS,
 }

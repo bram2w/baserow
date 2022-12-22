@@ -62,7 +62,9 @@
         "disabledAccountMessage": "Questo account utente è stato disabilitato.",
         "incorrectCredentialTitle": "Credenziali non corrette",
         "incorrectCredentialMessage": "L'indirizzo e-mail o la password forniti non sono corretti.",
-        "inputRequired": "Inserimento obbligatorio."
+        "inputRequired": "Inserimento obbligatorio.",
+        "disabledPasswordProviderMessage": "Per favore, utilizza un altro provider per l'autenticazione.",
+        "disabledPasswordProviderTitle": "Autenticazione tramite password disabilitata."
     },
     "field": {
         "language": "Lingua",
@@ -119,7 +121,8 @@
     },
     "createGroupModal": {
         "createNew": "Crea nuovo gruppo",
-        "add": "Aggiungi gruppo"
+        "add": "Aggiungi gruppo",
+        "defaultName": "Nuovo Gruppo"
     },
     "templateCategories": {
         "search": "Cerca modelli",
@@ -200,7 +203,8 @@
         "error": "Qualcosa è andato storto durante il caricamento della pagina. I nostri sviluppatori sono stati informati del problema. Prova ad aggiornare o a tornare alla dashboard.",
         "backDashboard": "Torna alla dashboard",
         "backLogin": "Torna all'accesso",
-        "wrong": "Qualcosa è andato storto"
+        "wrong": "Qualcosa è andato storto",
+        "refresh": "Aggiorna la pagina"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -224,7 +228,9 @@
         "emailPlaceholder": "Inserisci la tua email...",
         "passwordPlaceholder": "Inserisci la tua password...",
         "signUpText": "Non hai un account?",
-        "signUp": "Registrati"
+        "signUp": "Registrati",
+        "redirecting": "Reindirizzando alla pagina di login del provider...",
+        "displayPasswordLogin": "Effettua il login tramite email e password"
     },
     "resetPassword": {
         "title": "Reimposta password",
@@ -309,7 +315,7 @@
         "fieldsDescription": "Tutti i campi sono nel form.",
         "prefillInfoLink": "Riempi i campi automaticamente",
         "modal": {
-            "title": "Riempi i campi automaticamente",
+            "title": "Precompila o nascondi i campi automaticamente",
             "descriptionPartOne": "I form possono essere riempiti automaticamente per velocizzare la compilazione.",
             "descriptionPartTwo": "Tutti i campi nel form possono essere riempiti automaticamente.",
             "howToPrefill": {
@@ -359,8 +365,13 @@
                     "description": "Una campo data può accettare una data come testo nel formato impostato per il campo.",
                     "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
+            },
+            "howToHide": {
+                "description": "Se vuoi nascondere un campo in modo dinamico, puoi farlo utilizzando i parametri query dell'URL pubblico. Ogni campo deve essere preceduto dalla stringa `hide_` per evitare possibili collisioni con altri parametri.",
+                "title": "Come nascondere un campo"
             }
-        }
+        },
+        "prefillOrHideInfoLink": "Precompila o nascondi automaticamente"
     },
     "deleteAccountSettings": {
         "title": "Elimina account",
@@ -432,7 +443,8 @@
             "columns": {
                 "name": "Nome",
                 "email": "Email",
-                "role": "Ruolo"
+                "role": "Ruolo di default",
+                "teams": "Team"
             },
             "actions": {
                 "remove": "Rimuovi dal gruppo",
@@ -444,7 +456,7 @@
             "columns": {
                 "email": "Email",
                 "message": "Messaggio",
-                "role": "Ruolo"
+                "role": "Ruolo di default"
             },
             "actions": {
                 "remove": "Cancella invito",
@@ -461,5 +473,21 @@
             },
             "submit": "Manda invito"
         }
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Trova...",
+        "selectedAmountLabel": "{count} selezionati"
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "Inviti {count}"
+    },
+    "UserSessionExpiredNotification": {
+        "title": "Sessione scaduta",
+        "content": "Sessione scaduta. Per favore, esegui nuovamente il login."
+    },
+    "removeFromGroupModal": {
+        "title": "Conferma la rimozione dal gruppo",
+        "confirmation": "Sei sicuro di voler rimuovere {name} dal {group_name}? Questa azione non potrà essere annullata.",
+        "remove": "Rimuovi"
     }
 }

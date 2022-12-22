@@ -1,9 +1,10 @@
+import asyncio
 import contextlib
 import os
 
 from django.apps import apps
 from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS, transaction
+from django.db import DEFAULT_DB_ALIAS
 
 import pytest
 
@@ -13,6 +14,16 @@ from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
+
+
+# We need to manually deal with the event loop since we are using asyncio in the
+# tests in this directory and they have some issues when it comes to pytest.
+# This solution is taken from: https://bit.ly/3UJ90co
+@pytest.fixture(scope="session")
+def async_event_loop():
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture
@@ -26,14 +37,7 @@ def data_fixture():
 def synced_roles(db):
     sync_operations_after_migrate(None, apps=apps)
     sync_default_roles_after_migrate(None, apps=apps)
-
-    def resetRoleAssignmentHandlerCache():
-        # Reset the cache at the beginning of the tests to prevent invalid cache when
-        # a previous transaction has been rollbacked.
-
-        RoleAssignmentHandler._init = False
-
-    transaction.on_commit(resetRoleAssignmentHandlerCache)
+    RoleAssignmentHandler._init = False
 
 
 @pytest.fixture()

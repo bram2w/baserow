@@ -29,6 +29,7 @@ from baserow.contrib.database.fields.field_types import (
     LastModifiedFieldType,
     LinkRowFieldType,
     LongTextFieldType,
+    MultipleCollaboratorsFieldType,
     MultipleSelectFieldType,
     NumberFieldType,
     PhoneNumberFieldType,
@@ -994,6 +995,7 @@ class EmptyViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         PhoneNumberFieldType.type,
         MultipleSelectFieldType.type,
+        MultipleCollaboratorsFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,

@@ -62,7 +62,9 @@
         "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
         "incorrectCredentialTitle": "Identifiants incorrects",
         "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects.",
-        "inputRequired": "Ce champ est obligatoire."
+        "inputRequired": "Ce champ est obligatoire.",
+        "disabledPasswordProviderTitle": "L'authentification par mot de passe est désactivée.",
+        "disabledPasswordProviderMessage": "Veuillez utiliser un autre fournisseur d'authentification."
     },
     "field": {
         "language": "Langue",
@@ -119,7 +121,8 @@
     },
     "createGroupModal": {
         "createNew": "Nouveau groupe",
-        "add": "Ajouter le groupe"
+        "add": "Ajouter le groupe",
+        "defaultName": "Groupe sans nom"
     },
     "templateCategories": {
         "search": "Chercher des modèles",
@@ -196,7 +199,8 @@
         "error": "Une erreur est survenue lors du chargement de la page. Nos developpeurs ont été notifiés de ce problème. Veuillez essayer de recharger la page ou retournez à l'accueil.",
         "backDashboard": "Retourner à l'accueil",
         "backLogin": "Retourner à l'identification",
-        "wrong": "Une erreur est survenue"
+        "wrong": "Une erreur est survenue",
+        "refresh": "Actualiser la page"
     },
     "dashboard": {
         "title": "Statistiques",
@@ -220,7 +224,9 @@
         "signUp": "S'inscrire",
         "emailPlaceholder": "Entrez votre adresse e-mail..",
         "passwordPlaceholder": "Entrez votre mot de passe..",
-        "signUpText": "Vous n'avez pas de compte ?"
+        "signUpText": "Vous n'avez pas de compte ?",
+        "displayPasswordLogin": "Connectez-vous en utilisant votre e-mail et votre mot de passe",
+        "redirecting": "Redirection vers le service d'authentification..."
     },
     "resetPassword": {
         "title": "Nouveau mot de passe",
@@ -309,7 +315,7 @@
         "fieldsDescription": "Tous les champs sont dans le formulaire.",
         "prefillInfoLink": "Pré-remplir les valeurs dynamiquement",
         "modal": {
-            "title": "Pré-remplir les valeurs dynamiquement",
+            "title": "Pré-remplir ou masquer les champs dynamiquement",
             "descriptionPartOne": "Les formulaires peuvent être préremplis afin d'aider l'utilisateur à remplir le formulaire plus rapidement.",
             "descriptionPartTwo": "Tous les champs qui sont disponibles dans le formulaire peuvent être pré-remplis.",
             "howToPrefill": {
@@ -359,8 +365,13 @@
                     "description": "Un champ de date peut accepter une date dans les formats suivants et utilisera le format de date du champ pour analyser la date.",
                     "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
+            },
+            "howToHide": {
+                "title": "Comment masquer un champ",
+                "description": "Si vous souhaitez masquer un champ dynamiquement, vous pouvez le faire via des paramètres de requête ajouté à l'URL publique du formulaire. Ces paramètres de requête doivent être préfixés par `hide_` pour éviter une collision avec d'autres paramètres."
             }
-        }
+        },
+        "prefillOrHideInfoLink": "Pré-remplir ou masquer dynamiquement"
     },
     "deleteAccountSettings": {
         "groupNotice": "Les groupes sans propriétaires seront être supprimés",
@@ -423,7 +434,7 @@
     "membersSettings": {
         "invitesTable": {
             "columns": {
-                "role": "Rôle",
+                "role": "Rôle par défaut",
                 "email": "Courriel",
                 "message": "Message"
             },
@@ -450,8 +461,9 @@
             },
             "columns": {
                 "name": "Nom",
-                "role": "Rôle",
-                "email": "Courriel"
+                "role": "Rôle par défaut",
+                "email": "Courriel",
+                "teams": "Équipes"
             },
             "title": "{userAmount} Membres dans {nom du groupe}",
             "inviteMember": "Inviter un membre"
@@ -461,5 +473,21 @@
     },
     "crudTableSearch": {
         "search": "Recherche"
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "Inviter {count}"
+    },
+    "removeFromGroupModal": {
+        "title": "Confirmer le retrait du groupe",
+        "remove": "Supprimer",
+        "confirmation": "Voulez-vous vraiment supprimer {name} de {group_name} ? Cette action ne peut pas être annulée."
+    },
+    "UserSessionExpiredNotification": {
+        "title": "Session expirée",
+        "content": "Vous avez été déconnecté·e car votre jeton d'authentification a expiré. Veuillez vous reconnecter."
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "Rechercher …",
+        "selectedAmountLabel": "{count} sélectionné(s)"
     }
 }

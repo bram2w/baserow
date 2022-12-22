@@ -1,3 +1,5 @@
+from unittest.mock import call, patch
+
 from django.shortcuts import reverse
 
 import pytest
@@ -11,8 +13,13 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.rows.operations import DeleteDatabaseRowOperationType
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.models import Token, TokenPermission
+from baserow.contrib.database.tokens.operations import (
+    ReadTokenOperationType,
+    UpdateTokenOperationType,
+)
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -244,13 +251,14 @@ def test_update_token(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     group_1 = data_fixture.create_group(user=user)
     group_2 = data_fixture.create_group()
+    group_3 = data_fixture.create_group(user=user)
     token_1 = data_fixture.create_token(user=user, group=group_1)
     token_2 = data_fixture.create_token(user=user, group=group_2)
     token_3 = data_fixture.create_token()
 
     database_1 = data_fixture.create_database_application(group=group_1)
     database_2 = data_fixture.create_database_application(group=group_1)
-    database_3 = data_fixture.create_database_application()
+    database_3 = data_fixture.create_database_application(group=group_3)
     table_1 = data_fixture.create_database_table(
         database=database_1, create_table=False
     )
@@ -427,20 +435,51 @@ def test_update_token(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP"
 
     url = reverse("api:database:tokens:item", kwargs={"token_id": token_1.id})
-    response = api_client.patch(
-        url,
-        {
-            "name": "New name 2",
-            "permissions": {
-                "create": True,
-                "read": [["database", database_1.id]],
-                "update": False,
-                "delete": [["table", table_1.id], ["table", table_3.id]],
+    with patch(
+        "baserow.core.handler.CoreHandler.check_permissions"
+    ) as mock_check_permissions:
+        response = api_client.patch(
+            url,
+            {
+                "name": "New name 2",
+                "permissions": {
+                    "create": True,
+                    "read": [["database", database_1.id]],
+                    "update": False,
+                    "delete": [["table", table_1.id], ["table", table_3.id]],
+                },
             },
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        expected_calls = [
+            call(
+                user,
+                ReadTokenOperationType.type,
+                group=token_1.group,
+                context=token_1,
+            ),
+            call(
+                user,
+                UpdateTokenOperationType.type,
+                group=token_1.group,
+                context=token_1,
+            ),
+            call(
+                user,
+                DeleteDatabaseRowOperationType.type,
+                group=token_1.group,
+                context=table_1,
+            ),
+            call(
+                user,
+                DeleteDatabaseRowOperationType.type,
+                group=token_1.group,
+                context=table_3,
+            ),
+        ]
+        assert mock_check_permissions.mock_calls == expected_calls
+
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     token_1.refresh_from_db()

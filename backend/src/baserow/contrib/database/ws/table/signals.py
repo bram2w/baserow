@@ -3,6 +3,10 @@ from django.dispatch import receiver
 
 from baserow.contrib.database.api.tables.serializers import TableSerializer
 from baserow.contrib.database.table import signals as table_signals
+from baserow.contrib.database.table.tasks import (
+    unsubscribe_user_from_table_currently_subscribed_to,
+)
+from baserow.core import signals as core_signals
 from baserow.ws.tasks import broadcast_to_group
 
 
@@ -59,5 +63,16 @@ def tables_reordered(sender, database, order, user, **kwargs):
                 "order": order,
             },
             getattr(user, "web_socket_id", None),
+        )
+    )
+
+
+@receiver(core_signals.group_user_deleted)
+def user_deleted_unsubscribe_from_page(
+    sender, group_user_id, group_user, user, **kwargs
+):
+    transaction.on_commit(
+        lambda: unsubscribe_user_from_table_currently_subscribed_to.delay(
+            group_user.user_id, group_user.group_id
         )
     )

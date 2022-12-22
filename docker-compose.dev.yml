@@ -42,8 +42,6 @@ services:
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   web-frontend:
     image: baserow_web-frontend_dev:latest
@@ -108,8 +106,6 @@ services:
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   celery-beat-worker:
     image: baserow_backend_dev:latest
@@ -130,8 +126,6 @@ services:
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   mjml-email-compiler:
     build:

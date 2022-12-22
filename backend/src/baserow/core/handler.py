@@ -42,6 +42,7 @@ from .exceptions import (
 )
 from .models import (
     GROUP_USER_PERMISSION_ADMIN,
+    GROUP_USER_PERMISSION_MEMBER,
     Application,
     Group,
     GroupInvitation,
@@ -919,7 +920,41 @@ class CoreHandler:
 
         invitation.delete()
 
-    def accept_group_invitation(self, user, invitation):
+    def add_user_to_group(
+        self,
+        group: Group,
+        user: AbstractUser,
+        permissions: str = GROUP_USER_PERMISSION_MEMBER,
+    ) -> GroupUser:
+        """
+        Adds a user to the group by creating the appropriate `GroupUser`. If the user
+        is already in the group, the permissions field is updated.
+
+        :param group: the group in which we want to add the user.
+        :param user: the user we want to add.
+        :param permissions: the permissions of the user in this group. 'member' by
+            default if not specified.
+        :return: The created `GroupUser` object.
+        """
+
+        group_user, _ = GroupUser.objects.update_or_create(
+            user=user,
+            group=group,
+            defaults={
+                "order": GroupUser.get_last_order(user),
+                "permissions": permissions,
+            },
+        )
+
+        group_user_added.send(
+            self, group_user_id=group_user.id, group_user=group_user, user=user
+        )
+
+        return group_user
+
+    def accept_group_invitation(
+        self, user: User, invitation: GroupInvitation
+    ) -> GroupUser:
         """
         Accepts a group invitation by adding the user to the correct group with the
         right permissions. It can only be accepted if the invitation was addressed to
@@ -928,13 +963,10 @@ class CoreHandler:
         permissions are updated.
 
         :param user: The user who has accepted the invitation.
-        :type: user: User
         :param invitation: The invitation that must be accepted.
-        :type invitation: GroupInvitation
         :raises GroupInvitationEmailMismatch: If the invitation email does not match
             the one of the user.
         :return: The group user relationship related to the invite.
-        :rtype: GroupUser
         """
 
         if user.username != invitation.email:
@@ -943,21 +975,8 @@ class CoreHandler:
                 "user."
             )
 
-        group_user, created = GroupUser.objects.update_or_create(
-            user=user,
-            group=invitation.group,
-            defaults={
-                "order": GroupUser.get_last_order(user),
-                "permissions": invitation.permissions,
-            },
-        )
-
-        group_user_added.send(
-            self,
-            group_user_id=group_user.id,
-            group_user=group_user,
-            user=user,
-            invitation=invitation,
+        group_user = self.add_user_to_group(
+            invitation.group, user, permissions=invitation.permissions
         )
 
         invitation.delete()
@@ -1195,18 +1214,30 @@ class CoreHandler:
             user, OrderApplicationsOperationType.type, group=group, context=group
         )
 
-        # TODO add filter_queryset
-        queryset = Application.objects.filter(group_id=group.id).order_by("order")
-        application_ids = queryset.values_list("id", flat=True)
+        all_applications = Application.objects.filter(group_id=group.id).order_by(
+            "order"
+        )
 
+        users_applications = CoreHandler().filter_queryset(
+            user,
+            OrderApplicationsOperationType.type,
+            all_applications,
+            group=group,
+            context=group,
+        )
+
+        users_application_ids = users_applications.values_list("id", flat=True)
+
+        # Check that all ordered ids can be ordered by the user
         for application_id in order:
-            if application_id not in application_ids:
+            if application_id not in users_application_ids:
                 raise ApplicationNotInGroup(application_id)
 
-        Application.order_objects(queryset, order)
-        applications_reordered.send(self, group=group, order=order, user=user)
+        new_order = Application.order_objects(all_applications, order)
 
-        return application_ids
+        applications_reordered.send(self, group=group, order=new_order, user=user)
+
+        return users_application_ids
 
     def delete_application(self, user: AbstractUser, application: Application):
         """

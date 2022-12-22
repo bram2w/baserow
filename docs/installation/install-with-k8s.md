@@ -1,12 +1,12 @@
-# Install with K8S 
+# Install with K8S
 
 See below for a starting point for a K8S configuration file which deploys a production
-ready Baserow. 
+ready Baserow.
 
 It assumes you want the most performant version of Baserow possible and
 so deploys separate wsgi and asgi backend services, separate async task workers etc.
 
-You will need to also provide a redis and postgres instance configured using the 
+You will need to also provide a redis and postgres instance configured using the
 environment variables below. See [Configuring Baserow](./configuration.md) for more
 details on these variables.
 
@@ -35,6 +35,11 @@ stringData:
   REDIS_PASSWORD: "TODO"
   REDIS_PROTOCOL: "TODO rediss or redis"
   BASEROW_AMOUNT_OF_GUNICORN_WORKERS: "5"
+  # S3 Compatible storage is recommended with K8S to get the exports and file storage working
+  # See the docs for more info https://baserow.io/docs/installation%2Fconfiguration#user-file-upload-configuration
+  AWS_ACCESS_KEY_ID: "TODO"
+  AWS_SECRET_ACCESS_KEY: "TODO"
+  AWS_STORAGE_BUCKET_NAME: "TODO"
 
 # An example ingress controller routing to the correct services
 ---
@@ -123,7 +128,7 @@ spec:
       targetPort: 3000
   selector:
     app: web-frontend
-    
+
 # The backend ASGI worker handling websockets
 ---
 apiVersion: apps/v1
@@ -156,7 +161,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-asgi
-          image: baserow/backend:1.13.2 
+          image: baserow/backend:1.13.3
           workingDir: /baserow
           args:
             - "gunicorn"
@@ -180,7 +185,7 @@ spec:
                 name: YOUR_ENV_SECRET_REF
       imagePullSecrets:
         - name: YOUR_PULL_SECRETS
-          
+
 # The backend WSGI worker handling normal http api requests 
 ---
 apiVersion: apps/v1
@@ -213,7 +218,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-wsgi
-          image: baserow/backend:1.13.2
+          image: baserow/backend:1.13.3
           workingDir: /baserow
           args:
             - "gunicorn-wsgi"
@@ -236,9 +241,9 @@ spec:
             successThreshold: 1
           envFrom:
             - secretRef:
-                name: YOUR_ENV_SECRET_REF 
+                name: YOUR_ENV_SECRET_REF
       imagePullSecrets:
-        - name: YOUR_PULL_SECRETS 
+        - name: YOUR_PULL_SECRETS
 # A set of celery workers handling realtime events, cleanup, async tasks etc. 
 ---
 apiVersion: apps/v1
@@ -272,7 +277,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-worker
-          image: baserow/backend:1.13.2
+          image: baserow/backend:1.13.3
           args:
             - "celery-worker"
           imagePullPolicy: Always
@@ -289,7 +294,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-export-worker
-          image: baserow/backend:1.13.2
+          image: baserow/backend:1.13.3
           args:
             - "celery-exportworker"
           imagePullPolicy: Always
@@ -306,7 +311,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-beat-worker
-          image: baserow/backend:1.13.2
+          image: baserow/backend:1.13.3
           args:
             - "celery-beat"
           imagePullPolicy: Always
@@ -347,7 +352,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: web-frontend
-          image: baserow/web-frontend:1.13.2
+          image: baserow/web-frontend:1.13.3
           args:
             - nuxt
           ports:
@@ -367,4 +372,3 @@ spec:
       imagePullSecrets:
         - name: YOUR_PULL_SECRETS
 ```
-

@@ -19,7 +19,7 @@ class RoleManager(models.Manager):
 
 class Role(CreatedAndUpdatedOnMixin):
     """
-    A role represent a set of allowed operation granted to those whom are associated to.
+    A Role is a set of allowed operation granted to those whom are associated to.
     """
 
     uid = models.CharField(
@@ -67,7 +67,7 @@ class Role(CreatedAndUpdatedOnMixin):
 
 class RoleAssignment(CreatedAndUpdatedOnMixin):
     """
-    A RoleAssignment represents the association between a `Role` and a `Subject` for a
+    A RoleAssignment is the association between a `Role` and a `Subject` for a
     particular `Group` over a given `Scope`. A Subject can be a user or anything else
     that can operate with the Baserow data.
     """

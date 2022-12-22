@@ -90,6 +90,7 @@
     z-index: 3;
     top: 0;
     background-color: $white;
+    width: var(--width, auto);
   }
 
   &--header#{&}--sticky-left,

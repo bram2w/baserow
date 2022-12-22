@@ -4,6 +4,7 @@
       :display-header="true"
       :redirect-on-success="true"
       :invitation="invitation"
+      :redirect-by-default="redirectByDefault"
     ></Login>
   </div>
 </template>
@@ -34,6 +35,14 @@ export default {
         },
       ],
     }
+  },
+  computed: {
+    redirectByDefault() {
+      if (this.$route.query.noredirect === null) {
+        return false
+      }
+      return true
+    },
   },
 }
 </script>

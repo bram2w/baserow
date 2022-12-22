@@ -28,7 +28,6 @@ else:
 
 BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
     SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -309,7 +308,6 @@ SIMPLE_JWT = {
     "USER_AUTHENTICATION_RULE": lambda user: user is not None,
 }
 
-
 SPECTACULAR_SETTINGS = {
     "TITLE": "Baserow API spec",
     "DESCRIPTION": "",
@@ -318,7 +316,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.13.2",
+    "VERSION": "1.13.3",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -544,7 +542,7 @@ else:
 
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
-USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [None, 160]}
+USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 160]}
 
 # The directory that contains the all the templates in JSON format. When for example
 # the `sync_templates` management command is called, then the templates in the
@@ -636,7 +634,6 @@ BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
     "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
 )
 
-
 BASEROW_JOB_EXPIRATION_TIME_LIMIT = int(
     os.getenv("BASEROW_JOB_EXPIRATION_TIME_LIMIT", 30 * 24 * 60)  # 30 days
 )
@@ -656,10 +653,21 @@ BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
 
 # A comma separated list of feature flags used to enable in-progress or not ready
 # features for developers. See docs/development/feature-flags.md for more info.
-FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
+FEATURE_FLAGS = [
+    flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
+]
+
+
+class Everything(object):
+    def __contains__(self, other):
+        return True
+
+
+if "*" in FEATURE_FLAGS:
+    FEATURE_FLAGS = Everything()
 
 PERMISSION_MANAGERS = os.getenv(
-    "BASEROW_PERMISSION_MANAGERS", "core,staff,member,role,basic"
+    "BASEROW_PERMISSION_MANAGERS", "core,staff,member,token,role,basic"
 ).split(",")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(

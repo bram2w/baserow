@@ -737,5 +737,9 @@
     "apiDocsUploadFileViaURL": {
         "url": "La URL que desea que Baserow descargue y cargue en tu nombre.",
         "description": "Sube un archivo a Baserow descargándolo de la URL proporcionada. La respuesta puede utilizarse para [cargar un archivo en una fila]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row)."
+    },
+    "fileField": {
+        "errorEmptyFileNameTitle": "Nombre de archivo inválido",
+        "errorEmptyFileNameMessage": "No puede establecer un nombre vacío para un archivo."
     }
 }

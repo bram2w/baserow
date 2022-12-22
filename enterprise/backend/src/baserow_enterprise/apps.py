@@ -54,10 +54,10 @@ class BaserowEnterpriseConfig(AppConfig):
         from .role.member_data_types import EnterpriseRolesDataType
         from .role.operations import (
             AssignRoleGroupOperationType,
-            ReadRoleDatabaseOperationType,
+            ReadRoleApplicationOperationType,
             ReadRoleGroupOperationType,
             ReadRoleTableOperationType,
-            UpdateRoleDatabaseOperationType,
+            UpdateRoleApplicationOperationType,
             UpdateRoleTableOperationType,
         )
         from .teams.subjects import TeamSubjectType
@@ -93,8 +93,8 @@ class BaserowEnterpriseConfig(AppConfig):
         operation_type_registry.register(AssignRoleGroupOperationType())
         operation_type_registry.register(ReadRoleGroupOperationType())
         operation_type_registry.register(RestoreTeamOperationType())
-        operation_type_registry.register(ReadRoleDatabaseOperationType())
-        operation_type_registry.register(UpdateRoleDatabaseOperationType())
+        operation_type_registry.register(ReadRoleApplicationOperationType())
+        operation_type_registry.register(UpdateRoleApplicationOperationType())
         operation_type_registry.register(ReadRoleTableOperationType())
         operation_type_registry.register(UpdateRoleTableOperationType())
 
@@ -137,6 +137,18 @@ class BaserowEnterpriseConfig(AppConfig):
 
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
+
+        from baserow_enterprise.teams.receivers import (
+            connect_to_post_delete_signals_to_cascade_deletion_to_team_subjects,
+        )
+
+        connect_to_post_delete_signals_to_cascade_deletion_to_team_subjects()
+
+        from baserow_enterprise.role.receivers import (
+            connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments,
+        )
+
+        connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments()
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

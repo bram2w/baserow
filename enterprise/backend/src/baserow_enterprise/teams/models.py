@@ -6,6 +6,7 @@ from django.db import models
 
 from baserow.core.mixins import CreatedAndUpdatedOnMixin, TrashableModelMixin
 from baserow.core.models import Group
+from baserow_enterprise.role.models import RoleAssignment
 from baserow_enterprise.teams.mixins import ParentTeamTrashableModelMixin
 
 
@@ -24,10 +25,11 @@ class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         on_delete=models.CASCADE,
         help_text="The group that this team belongs to.",
     )
-    subjects = GenericRelation(
-        "TeamSubject",
-        content_type_field="subject_id",
-        object_id_field="subject_type",
+    role_assignments = GenericRelation(
+        RoleAssignment,
+        related_query_name="team",
+        content_type_field="subject_type",
+        object_id_field="subject_id",
     )
 
     class Meta:

@@ -356,17 +356,6 @@ class AuthenticationProviderTypeRegistry(
         super().__init__(*args, **kwargs)
         self._default = None
 
-    def register_default(self, instance):
-        super().register(instance)
-        self._default = instance
-
-    def get_default_provider(self):
-        provider, _ = self._default.model_class.objects.get_or_create()
-        return provider
-
-    def get_default(self):
-        return self._default
-
     def get_all_available_login_options(self):
         login_options = {}
         for provider in self.get_all():
@@ -565,7 +554,7 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
 
     def contains(self, context: ContextObject):
         """
-        Return True if the context is one object of this context.
+        Returns True if the context is one object of this context.
 
         :param context: The context to test
         :return: True if the ObjectScopeType of the context is the same as this one.
@@ -574,8 +563,25 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         context_scope_type = object_scope_type_registry.get_by_model(context)
         return context_scope_type.type == self.type
 
+    @cached_property
+    def level(self) -> int:
+        """
+        Returns the level of this scope in the full object hierarchy. The level is the
+        number of ancestor to get to the root object.
 
-class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
+        :return: The level of the scope.
+        """
+
+        parent = self.get_parent_scope()
+        if parent is None:
+            return 0
+        else:
+            return parent.level + 1
+
+
+class ObjectScopeTypeRegistry(
+    Registry[ObjectScopeType], ModelRegistryMixin[Any, ObjectScopeType]
+):
     """
     This registry contains all `ObjectScopeType`. It also proposes a set of methods
     useful to go through the full object/scope hierarchy.
@@ -655,7 +661,7 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
         if child_scope_type is None:
             return False
 
-        if parent_scope_type == child_scope_type:
+        if parent_scope_type.type == child_scope_type.type:
             return True
         else:
             return self.scope_type_includes_scope_type(
@@ -667,22 +673,22 @@ class ObjectScopeTypeRegistry(Registry[ObjectScopeType], ModelRegistryMixin):
     already_registered_exception_class = ObjectScopeTypeAlreadyRegistered
 
 
-class SubjectType(Instance, ModelInstanceMixin):
+class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
     """
     This type describes a subject that exists in Baserow. A subject is anything that
     can execute an operation.
     """
 
+    @abc.abstractmethod
     def is_in_group(self, subject_id: int, group: "Group") -> bool:
         """
         This function checks if a subject belongs to a group
         :return: If the subject belongs to the group
         """
 
-        raise NotImplementedError(
-            f"Must be implemented by the specific type <{self.type}>"
-        )
+        pass
 
+    @abc.abstractmethod
     def get_serializer(self, model_instance, **kwargs) -> Serializer:
         """
         This function can be used to generate different serializers based on the type
@@ -692,12 +698,22 @@ class SubjectType(Instance, ModelInstanceMixin):
         :return: the correct seralizer for the subject
         """
 
-        raise NotImplementedError(
-            f"Must be implemented by the specific type <{self.type}>"
-        )
+        pass
+
+    @abc.abstractmethod
+    def get_associated_users(self, subject) -> List["AbstractUser"]:
+        """
+        Returns a list of Users which are associated with this subject.
+        And associated user is any user that receives permissions in Baserow based
+        on their link to this subject.
+        :param subject: The subject we are trying to find the associated users for
+        :return: All the associated users
+        """
+
+        pass
 
 
-class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin):
+class SubjectTypeRegistry(Registry[SubjectType], ModelRegistryMixin[Any, SubjectType]):
     """
     This registry holds all the different subject types used across Baserow.
     """

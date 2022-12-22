@@ -732,7 +732,7 @@ def test_admin_check_license(api_client, data_fixture):
     with freeze_time("2021-07-01 12:00"):
         responses.add(
             responses.POST,
-            "http://host.docker.internal:8001/api/saas/licenses/check/",
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
             json={
                 VALID_ONE_SEAT_LICENSE.decode(): {
                     "type": "invalid",
