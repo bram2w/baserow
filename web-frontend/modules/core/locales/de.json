@@ -62,7 +62,9 @@
         "disabledAccountMessage": "Dieses Benutzerkonto wurde deaktiviert.",
         "incorrectCredentialTitle": "Inkorrekte Zugangsdaten",
         "incorrectCredentialMessage": "Die angegebene E-Mail-Adresse oder das Passwort ist falsch.",
-        "inputRequired": "Eine Eingabe ist erforderlich."
+        "inputRequired": "Eine Eingabe ist erforderlich.",
+        "disabledPasswordProviderTitle": "Die Passwort-Authentifizierung ist deaktiviert.",
+        "disabledPasswordProviderMessage": "Bitte verwenden Sie einen anderen Authentifizierungsanbieter."
     },
     "field": {
         "language": "Sprache",
@@ -230,7 +232,9 @@
         "signUpText": "Sie haben noch kein Konto?",
         "emailPlaceholder": "Geben Sie Ihre E-Mail Adresse ein.",
         "passwordPlaceholder": "Geben Sie Ihr Passwort ein..",
-        "signUp": "Anmelden"
+        "signUp": "Anmelden",
+        "displayPasswordLogin": "Anmelden mit E-Mail und Passwort",
+        "redirecting": "Weiterleiten an Authentifizierungsanbieter..."
     },
     "resetPassword": {
         "title": "Passwort zurücksetzen",
@@ -443,7 +447,8 @@
             "columns": {
                 "name": "Name",
                 "email": "E-Mail",
-                "role": "Standard-Rolle"
+                "role": "Standard-Rolle",
+                "teams": "Teams"
             }
         },
         "invitesTable": {

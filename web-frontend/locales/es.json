@@ -29,7 +29,8 @@
         "paste": "Pegar",
         "duplicate": "Duplicar",
         "remove": "Eliminar",
-        "login": "Iniciar sesión"
+        "login": "Iniciar sesión",
+        "download": "Descargar"
     },
     "adminType": {
         "settings": "Ajustes"
@@ -250,7 +251,9 @@
         "snapshotBeingDeletedDescription": "No es posible utilizar las imágenes que se están borrando.",
         "snapshotNameNotUniqueDescription": "Todos los nombres de las imágenes tienen que ser únicos por aplicación.",
         "snapshotOperationLimitExceededTitle": "Límite alcanzado",
-        "snapshotOperationLimitExceededDescription": "Se ha alcanzado el límite del número de operaciones de imagenes instantáneas en ejecución. Favor de esperar hasta que termine la operación anterior."
+        "snapshotOperationLimitExceededDescription": "Se ha alcanzado el límite del número de operaciones de imagenes instantáneas en ejecución. Favor de esperar hasta que termine la operación anterior.",
+        "disabledPasswordProviderTitle": "La autentificación por contraseña está deshabilitada.",
+        "disabledPasswordProviderMessage": "Utiliza otro proveedor de autentificación."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -366,7 +369,19 @@
         "linkDescription": "Crea un hipervínculo utilizando la URL proporcionada en el primer argumento.",
         "buttonDescription": "Crea un botón utilizando la URL (primer argumento) y la etiqueta (segundo argumento).",
         "getLinkLabelDescription": "Obtiene la etiqueta de una fórmula utilizando las funciones de enlace o botón.",
-        "getLinkUrlDescription": "Obtiene la URL de una fórmula utilizando las funciones de enlace o botón."
+        "getLinkUrlDescription": "Obtiene la URL de una fórmula utilizando las funciones de enlace o botón.",
+        "oddDescription": "Devuelve true si el argumento proporcionado es un número impar, false en caso contrario.",
+        "logDescription": "Función logaritmo: devuelve el exponente al que debe elevarse el primer argumento para obtener el segundo.",
+        "absDescription": "Devuelve el valor absoluto para el número de argumento proporcionado.",
+        "evenDescription": "Devuelve true si el argumento proporcionado es un número par, false en caso contrario.",
+        "modDescription": "Devuelve el resto de la división entre el primer argumento y el segundo argumento.",
+        "powerDescription": "Devuelve el resultado del primer argumento elevado al exponente del segundo argumento.",
+        "expDescription": "Devuelve el resultado de la constante e ≈ 2,718 elevado al número de argumento proporcionado.",
+        "lnDescription": "Función logaritmo natural: devuelve el exponente al que hay que elevar la constante e ≈ 2,718 para obtener el argumento.",
+        "signDescription": "Devuelve 1 si el argumento es un número positivo, -1 si el argumento es negativo, 0 en caso contrario.",
+        "sqrtDescription": "Devuelve la raíz cuadrada del argumento proporcionado.",
+        "ceilDescription": "Devuelve el número entero más pequeño que sea mayor o igual que el número de argumento proporcionado.",
+        "floorDescription": "Devuelve el entero más grande que es menor o igual que el número de argumento proporcionado."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"

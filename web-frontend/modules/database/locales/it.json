@@ -81,13 +81,13 @@
         "showDatabases": "mostra database"
     },
     "apiTokenSettings": {
-        "title": "Token API personali",
+        "title": "Database Token",
         "createToken": "Crea token",
-        "noTokensMessage": "Non hai ancora creato un token API. Puoi usare i token API per autenticarti con gli endpoint REST API dove puoi creare, leggere, aggiornare ed eliminare le righe. È possibile impostare i permessi a livello di tabella.",
+        "noTokensMessage": "Non hai ancora creato un Database token. Puoi usare i Database token per autenticarti con gli endpoint REST per creare, leggere, aggiornare ed eliminare le righe. È possibile impostare i permessi a livello di tabella.",
         "hasFullPermissions": "Ha autorizzazioni complete, anche per tutti i bambini.",
         "hasOnlySelectedPermissions": "Ha solo le autorizzazioni per i bambini selezionati.",
         "noPermissions": "Non ha autorizzazioni.",
-        "createNewTitle": "Crea nuovo token API",
+        "createNewTitle": "Crea nuovo Database token",
         "backToOverview": "Torna alla panoramica"
     },
     "apiTokenForm": {
@@ -116,7 +116,7 @@
         "description": "Descrizione",
         "okDescription": "Richiesta eseguita.",
         "badRequestDescription": "La richiesta contiene valori non validi o il JSON non può essere analizzato.",
-        "unauthorizedDescription": "Quando si cerca di accedere a un endpoint senza token valido.",
+        "unauthorizedDescription": "Quando si cerca di accedere a un endpoint senza un Database token valido.",
         "notFoundDescription": "Riga o tabella non trovate.",
         "requestEntityTooLargeDescription": "La richiesta ha superato la dimensione massima consentita del carico utile.",
         "internalErrorDescription": "Il server ha incontrato una condizione inaspettata.",
@@ -154,7 +154,7 @@
         "pythonClient": "Client API di esempio in Python:"
     },
     "apiDocsTableListFields": {
-        "description": "Per elencare i campi della tabella {name} si deve fare una richiesta `GET` ai campi endpoint {name}. È possibile elencare i campi solo se il token ha le autorizzazioni di lettura, creazione o aggiornamento.",
+        "description": "Per elencare i campi della tabella {name} si deve fare una richiesta `GET` ai campi endpoint {name}. È possibile elencare i campi solo se il Database token ha le autorizzazioni di lettura, creazione o aggiornamento.",
         "resultFieldProperties": "Proprietà del campo risultati",
         "id": "Chiave primaria del campo. Può essere usato per generare il nome della colonna del database aggiungendo il prefisso `field_`.",
         "name": "Nome campo.",
@@ -184,7 +184,7 @@
         "before": "Se fornito, la riga appena creata sarà posizionata prima della riga con l'id fornito."
     },
     "apiDocsAuth": {
-        "description": "Baserow usa una semplice autenticazione basata su token. È necessario generare almeno un token API nel tuo {settingsLink} per utilizzare gli endpoint descritti di seguito. È possibile dare autorizzazioni di creazione, lettura, aggiornamento ed eliminazione per token fino al livello di tabella. Puoi autenticarti all'API fornendo il tuo token API nell'header del token del portatore di autorizzazione HTTP. Tutte le richieste API devono essere autenticate e fatte su HTTPS.",
+        "description": "Baserow usa una semplice autenticazione basata su token. È necessario generare almeno un Database token nel tuo {settingsLink} per utilizzare gli endpoint descritti di seguito. È possibile dare autorizzazioni di creazione, lettura, aggiornamento ed eliminazione per token fino al livello di tabella. Puoi autenticarti all'API fornendo il tuo token API nell'header del token del portatore di autorizzazione HTTP. Tutte le richieste alle API devono essere autenticate e fatte su HTTPS.",
         "settingsLink": "impostazioni"
     },
     "apiDocsFilters": {
@@ -215,7 +215,7 @@
     "fieldLinkRowSubForm": {
         "noTable": "Serve almeno un'altra tabella nello stesso database a cui collegarsi.",
         "selectTableLabel": "Seleziona una tabella a cui collegarsi",
-        "hasRelatedFieldLabel": "Create related field in linked table"
+        "hasRelatedFieldLabel": "Crea relazione nella tabella collegata"
     },
     "fieldSelectOptions": {
         "add": "Aggiungi un'opzione"
@@ -350,7 +350,8 @@
         "selectImportMessage": "Per favore scegli i dati da importare.",
         "filePreview": "Anteprima contenuto file",
         "importPreview": "Anteprima dei dati che verranno importati",
-        "changeImporterType": "Cambia tipo di importazione"
+        "changeImporterType": "Cambia tipo di importazione",
+        "defaultName": "Tabella"
     },
     "formulaAdvancedEditContext": {
         "textAreaFormulaInputPlaceholder": "Clicca per modificare la formula",
@@ -388,7 +389,9 @@
         "and": "E",
         "or": "O",
         "relatedFieldNotFound": "Il campo relativo non è stato trovato.",
-        "filterTypeNotFound": "Il tipo di filtro è incompatibile."
+        "filterTypeNotFound": "Il tipo di filtro è incompatibile.",
+        "noCompatibleFilterTypesErrorMessage": "Nessuno dei campi ha filtri compatibili",
+        "noCompatibleFilterTypesErrorTitle": "Nessun filtro compatibile"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "immagine",
@@ -734,5 +737,9 @@
     "apiDocsUploadFileViaURL": {
         "description": "Carica un file su Baserow fornendo un URL da cui scaricarlo. La risposta può essere usata per [caricare un file in una riga]({PUBLIC_BACKEND_URL}/api/redoc/#tag/Database-table-rows/operation/update_database_table_row).",
         "url": "L'URL ad cui Baserow scaricherà il file per salvarlo tra i tuoi file."
+    },
+    "fileField": {
+        "errorEmptyFileNameMessage": "Non puoi impostare un nome vuoto.",
+        "errorEmptyFileNameTitle": "Nome file invalido"
     }
 }

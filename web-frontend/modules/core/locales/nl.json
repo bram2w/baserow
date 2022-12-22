@@ -62,7 +62,9 @@
         "disabledAccountMessage": "Dit gebruikersaccount is uitgeschakeld.",
         "incorrectCredentialTitle": "Inloggegevens zijn niet correct",
         "incorrectCredentialMessage": "Het opgegeven e-mailadres of wachtwoord is niet correct.",
-        "inputRequired": "Dit is een verplicht veld."
+        "inputRequired": "Dit is een verplicht veld.",
+        "disabledPasswordProviderTitle": "Wachtwoordverificatie is uitgeschakeld.",
+        "disabledPasswordProviderMessage": "Gebruik een andere authenticatie provider."
     },
     "field": {
         "language": "Taal",
@@ -222,7 +224,9 @@
         "emailPlaceholder": "Voer je e-mailadres in..",
         "passwordPlaceholder": "Voer je wachtwoord in.",
         "signUpText": "Heb je geen account?",
-        "signUp": "Aanmelden"
+        "signUp": "Aanmelden",
+        "displayPasswordLogin": "Inloggen met e-mail en wachtwoord",
+        "redirecting": "Doorsturen naar authenticatie provider..."
     },
     "resetPassword": {
         "title": "Wachtwoord resetten",
@@ -432,7 +436,8 @@
             "columns": {
                 "email": "E-mail",
                 "role": "Rol",
-                "name": "Naam"
+                "name": "Naam",
+                "teams": "Teams"
             },
             "actions": {
                 "copyEmail": "E-mail kopiëren",

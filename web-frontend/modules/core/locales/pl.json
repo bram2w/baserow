@@ -479,5 +479,10 @@
     },
     "memberAssignmentModalFooter": {
         "invite": "Zaproś {count}"
+    },
+    "removeFromGroupModal": {
+        "title": "Potwierdź usunięcie z grupy",
+        "confirmation": "Czy na pewno chcesz usunąć {name} z {group_name}? Tej czynności nie można cofnąć.",
+        "remove": "Usuń"
     }
 }
