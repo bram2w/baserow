@@ -22,15 +22,22 @@
       <div class="col col-5">
         <FormElement class="control">
           <div class="control__elements">
-            <Dropdown v-model="values.permissions" :show-search="false">
-              <DropdownItem
-                v-for="role in roles"
-                :key="role.uid"
-                :name="role.name"
-                :value="role.uid"
-                :description="role.description"
-              ></DropdownItem>
-            </Dropdown>
+            <div class="group-invite-form__role-selector">
+              <slot name="roleSelectorLabel"></slot>
+              <Dropdown
+                v-model="values.permissions"
+                class="group-invite-form__role-selector-dropdown"
+                :show-search="false"
+              >
+                <DropdownItem
+                  v-for="role in roles"
+                  :key="role.uid"
+                  :name="role.name"
+                  :value="role.uid"
+                  :description="role.description"
+                ></DropdownItem>
+              </Dropdown>
+            </div>
           </div>
         </FormElement>
       </div>
