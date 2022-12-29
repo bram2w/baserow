@@ -7,7 +7,7 @@
   such as CTRL+C/CTRL+V.
 */
 export function isPrintableUnicodeCharacterKeyPress(event) {
-  if (event == null || event.ctrlKey || event.metaKey) {
+  if (event == null || isOsSpecificModifierPressed(event)) {
     return false
   }
   const { key } = event
@@ -17,4 +17,13 @@ export function isPrintableUnicodeCharacterKeyPress(event) {
     return true
   }
   return false
+}
+
+/**
+ * This function is a helper which determines whether the pressed key
+ * is the CMD key on Mac or the CTRL key on Windows/Linux.
+ */
+export const isOsSpecificModifierPressed = (event) => {
+  const isMac = navigator.platform.toUpperCase().includes('MAC')
+  return isMac ? event.metaKey : event.ctrlKey
 }

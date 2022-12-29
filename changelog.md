@@ -15,6 +15,7 @@ For example:
 ### Bug Fixes
 
 ### Refactors
+* Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
 
 ## Released (2022-12-21 1.13.3)
 
