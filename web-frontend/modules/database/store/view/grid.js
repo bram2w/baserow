@@ -1218,13 +1218,7 @@ export const actions = {
    * It only contains the rows and fields selected by the multiple select.
    * If one or more rows are not in the buffer, they are fetched from the backend.
    */
-  async getCurrentSelection(
-    { dispatch, getters, commit },
-    { fields, type = 'text/plain' }
-  ) {
-    if (!getters.isMultiSelectActive) {
-      return
-    }
+  async getCurrentSelection({ dispatch, getters }, { fields }) {
     const [minFieldIndex, maxFieldIndex] =
       getters.getMultiSelectFieldIndexSorted
 
@@ -1710,7 +1704,7 @@ export const actions = {
         const fieldId = `field_${field.id}`
         const textValue = textData[rowIndex][fieldIndex]
         const jsonValue =
-          jsonData !== null ? jsonData[rowIndex][fieldIndex] : undefined
+          jsonData != null ? jsonData[rowIndex][fieldIndex] : undefined
 
         const fieldType = this.$registry.get('field', field.type)
         const preparedValue = fieldType.prepareValueForPaste(

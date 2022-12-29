@@ -969,20 +969,23 @@ export default {
      * formatted as TSV
      */
     async copySelection(event) {
+      const gridStore = this.storePrefix + 'view/grid'
+      if (!this.$store.getters[`${gridStore}/isMultiSelectActive`]) {
+        return
+      }
       try {
         this.$store.dispatch('notification/setCopying', true)
-        const selection = await this.$store.dispatch(
-          this.storePrefix + 'view/grid/getCurrentSelection',
-          { fields: this.allVisibleFields }
+        await this.copySelectionToClipboard(
+          this.$store.dispatch(`${gridStore}/getCurrentSelection`, {
+            fields: this.allVisibleFields,
+          })
         )
-        if (selection !== undefined) {
-          const [fields, rows] = selection
-          this.copySelectionToClipboard(fields, rows)
-        }
       } catch (error) {
         notifyIf(error, 'view')
       } finally {
         this.$store.dispatch('notification/setCopying', false)
+        // prevent Safari from beeping since window.getSelection() is empty
+        event.preventDefault()
       }
     },
     /**

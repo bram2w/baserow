@@ -24,6 +24,7 @@ import Notifications from '@baserow/modules/core/components/notifications/Notifi
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstants'
+import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
 
 export default {
   components: {
@@ -68,9 +69,10 @@ export default {
   },
   methods: {
     keyDown(event) {
-      const isMac = navigator.platform.toUpperCase().includes('MAC')
-      const osSpecificModifierPressed = isMac ? event.metaKey : event.ctrlKey
-      if (osSpecificModifierPressed && event.key.toLowerCase() === 'z') {
+      if (
+        isOsSpecificModifierPressed(event) &&
+        event.key.toLowerCase() === 'z'
+      ) {
         // input/textareas/selects/editable dom elements have their own browser
         // controlled undo/redo functionality so don't use our own if they have the
         // focus.
