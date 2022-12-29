@@ -9,15 +9,23 @@
       :group="group"
       @submitted="inviteSubmitted"
     >
-      <div class="col col-12 align-right">
-        <button
-          :class="{ 'button--loading': inviteLoading }"
-          class="button"
-          :disabled="inviteLoading"
-        >
-          {{ $t('membersSettings.membersInviteModal.submit') }}
-        </button>
-      </div>
+      <template #default>
+        <div class="col col-12 align-right">
+          <button
+            :class="{ 'button--loading': inviteLoading }"
+            class="button"
+            :disabled="inviteLoading"
+          >
+            {{ $t('membersSettings.membersInviteModal.submit') }}
+          </button>
+        </div>
+      </template>
+      <template #roleSelectorLabel>
+        <HelpIcon
+          class="margin-right-1"
+          :tooltip="$t('membersSettings.membersInviteModal.helpIconText')"
+        />
+      </template>
     </GroupInviteForm>
   </Modal>
 </template>

@@ -68,7 +68,8 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
           false,
           {
             groupId: group.id,
-          }
+          },
+          this.app.i18n.t('membersPagePlugin.roleHelpText')
         )
       )
     }

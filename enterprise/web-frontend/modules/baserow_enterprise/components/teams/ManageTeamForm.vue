@@ -31,7 +31,15 @@
         </FormElement>
       </div>
       <div class="col col-5">
-        <h3>{{ $t('manageTeamForm.roleTitle') }}</h3>
+        <div class="manage-team-form__role-title">
+          <h3>
+            {{ $t('manageTeamForm.roleTitle') }}
+            <HelpIcon
+              class="margin-left-1"
+              :tooltip="$t('manageTeamForm.roleHelpText')"
+            />
+          </h3>
+        </div>
         <FormElement class="control">
           <div class="control__elements">
             <Dropdown v-model="values.default_role" :show-search="false">

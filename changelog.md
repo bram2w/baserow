@@ -10,6 +10,7 @@ For example:
 ## Unreleased
 
 ### New Features
+* Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
 
 ### Bug Fixes
 
@@ -21,7 +22,6 @@ For example:
 * (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
 
 ### New Features
-
 * (Enterprise Preview Feature) Database and Table level RBAC with Teams are now available as a preview feature for enterprise users, Add 'RBAC' to the FEATURE_FLAG env and restart var to enable.
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
 * Users with roles higher than viewer on tables and databases now counted as paid users

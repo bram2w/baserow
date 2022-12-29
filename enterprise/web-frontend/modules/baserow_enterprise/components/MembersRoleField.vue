@@ -27,6 +27,17 @@
       role-value-column="role_uid"
       @update-role="roleUpdate($event)"
     ></EditRoleContext>
+    <HelpIcon
+      v-if="roleUidSelected === 'NO_ACCESS'"
+      :tooltip="$t('membersRoleField.noAccessHelpText')"
+      class="margin-left-1"
+    />
+    <HelpIcon
+      v-if="roleUidSelected === 'ADMIN'"
+      :tooltip="$t('membersRoleField.adminHelpText')"
+      class="margin-left-1"
+      is-warning
+    />
   </div>
 </template>
 
@@ -64,6 +75,9 @@ export default {
             subjectType: 'auth.User',
           })
         : []
+    },
+    roleUidSelected() {
+      return this.row[this.column.key]
     },
     ...mapGetters({ userId: 'auth/getUserId' }),
   },

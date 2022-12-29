@@ -465,6 +465,7 @@
         "membersInviteModal": {
             "title": "Invite group members",
             "submit": "Send invite",
+            "helpIconText": "The selected role will be the users default role in this group.",
             "errors": {
                 "userAlreadyInGroup": {
                     "title": "User is already in the group.",

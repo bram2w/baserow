@@ -6,17 +6,23 @@
     <div v-if="showRoleSelector">
       <RoleSelector v-model="roleSelected" :roles="roles" />
     </div>
-    <a
-      class="button"
-      :class="{ disabled: !inviteEnabled }"
-      @click="inviteEnabled ? $emit('invite', roleSelected) : null"
-      >{{
-        $t('selectSubjectsListFooter.invite', {
-          count,
-          type: subjectTypeLabel,
-        })
-      }}
-    </a>
+    <div>
+      <HelpIcon
+        :tooltip="$t('selectSubjectsListFooter.helpTooltip')"
+        class="margin-right-1"
+      ></HelpIcon>
+      <a
+        class="button"
+        :class="{ disabled: !inviteEnabled }"
+        @click="inviteEnabled ? $emit('invite', roleSelected) : null"
+        >{{
+          $t('selectSubjectsListFooter.invite', {
+            count,
+            type: subjectTypeLabel,
+          })
+        }}
+      </a>
+    </div>
   </div>
 </template>
 

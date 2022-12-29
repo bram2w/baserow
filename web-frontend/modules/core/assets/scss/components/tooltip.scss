@@ -42,6 +42,7 @@
   color: $white;
   padding: 0 8px;
   text-align: center;
+  white-space: nowrap;
 
   @include fixed-height(26px, 12px);
 }
