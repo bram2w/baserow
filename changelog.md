@@ -12,6 +12,7 @@ For example:
 ### New Features
 
 ### Bug Fixes
+- Form validator shows the correct message when a field is required. [#1475](https://gitlab.com/bramw/baserow/-/issues/1475)
 
 ### Refactors
 
