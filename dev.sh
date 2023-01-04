@@ -18,6 +18,12 @@ print_manual_instructions(){
   echo "    $COMMAND"
 }
 
+DOCKER_COMPOSE="docker-compose"
+
+if docker compose version &> /dev/null; then
+  DOCKER_COMPOSE="docker compose"
+fi
+
 PRINT_WARNING=true
 new_tab() {
   TAB_NAME=$1
@@ -60,7 +66,7 @@ new_tab() {
 launch_tab_and_attach(){
   tab_name=$1
   service_name=$2
-  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" ps -q "$service_name")" | cut -c2-)
+  container_name=$(docker inspect -f '{{.Name}}' "$($DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" ps -q "$service_name")" | cut -c2-)
   command="docker logs $container_name && docker attach $container_name"
   if [[ $(docker inspect "$container_name" --format='{{.State.ExitCode}}') -eq 0 ]]; then
     new_tab "$tab_name" "$command"
@@ -75,7 +81,7 @@ launch_tab_and_exec(){
   tab_name=$1
   service_name=$2
   exec_command=$3
-  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" ps -q "$service_name")" | cut -c2-)
+  container_name=$(docker inspect -f '{{.Name}}' "$($DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" ps -q "$service_name")" | cut -c2-)
   command="docker exec -it $container_name $exec_command"
   new_tab "$tab_name" "$command"
 }
@@ -381,12 +387,12 @@ set -x
 
 if [ "$down" = true ] ; then
 # Remove the containers and remove the anonymous volumes for cleanliness sake.
-docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" rm -s -v -f
-docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" down --remove-orphans
+$DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" rm -s -v -f
+$DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" down --remove-orphans
 fi
 
 if [ "$kill" = true ] ; then
-docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" kill
+$DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" kill
 fi
 
 if [ "$build" = true ] ; then
@@ -397,19 +403,19 @@ if [ "$build" = true ] ; then
     done
   fi
 
-  docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" build "$@"
+  $DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" build "$@"
 fi
 
 if [ "$delete_volumes" = true ] ; then
-  docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" down -v
+  $DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" down -v
 fi
 
 if [ "$up" = true ] ; then
-docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" up -d "$@"
+$DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" up -d "$@"
 fi
 
 if [ "$run" = true ] ; then
-docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" run "$@"
+$DOCKER_COMPOSE -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" run "$@"
 fi
 
 set +x
