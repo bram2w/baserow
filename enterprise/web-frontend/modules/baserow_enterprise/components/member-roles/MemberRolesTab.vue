@@ -56,14 +56,12 @@
 <script>
 import { mapGetters } from 'vuex'
 import MemberRolesMembersList from '@baserow_enterprise/components/member-roles/MemberRolesMembersList'
-import MemberRolesShareToggle from '@baserow_enterprise/components/member-roles/MemberRolesShareToggle'
 import RoleAssignmentModal from '@baserow_enterprise/components/member-roles/RoleAssignmentModal'
 
 export default {
   name: 'MemberRolesTab',
   components: {
     RoleAssignmentModal,
-    MemberRolesShareToggle,
     MemberRolesMembersList,
   },
   props: {
