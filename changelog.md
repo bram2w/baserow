@@ -11,6 +11,10 @@ For example:
 
 ### New Features
 
+* Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
+* Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
+* Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
+
 ### Bug Fixes
 
 ### Refactors
