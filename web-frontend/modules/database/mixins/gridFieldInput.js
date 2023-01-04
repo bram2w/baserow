@@ -80,8 +80,10 @@ export default {
             this.isValid() &&
             this.canSaveByPressingEnter(event)
           ) {
-            // While editing we want to save the changes.
+            // While editing we want to save the changes and select the cell below
+            // to improve the spreadsheet like experience.
             this.save()
+            this.$emit('selectBelow')
           } else if (!this.editing) {
             // If only selected we will start the editing mode.
             this.edit(null, event)

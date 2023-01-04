@@ -12,6 +12,10 @@ For example:
 ### New Features
 * Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
 
+* Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
+* Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
+* Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
+
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
 

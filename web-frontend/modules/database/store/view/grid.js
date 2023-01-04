@@ -21,6 +21,7 @@ import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 export function populateRow(row, metadata = {}) {
   row._ = {
     metadata,
+    persistentId: uuid(),
     loading: false,
     hover: false,
     selectedBy: [],
@@ -1307,7 +1308,14 @@ export const actions = {
    */
   async createNewRow(
     { commit, getters, dispatch },
-    { view, table, fields, values = {}, before = null }
+    {
+      view,
+      table,
+      fields,
+      values = {},
+      before = null,
+      selectPrimaryCell = false,
+    }
   ) {
     // Fill values with empty values of field if they are not provided
     fields.forEach((field) => {
@@ -1350,6 +1358,14 @@ export const actions = {
     commit('INSERT_NEW_ROW_IN_BUFFER_AT_INDEX', { row, index })
     dispatch('visibleByScrollTop')
 
+    const primaryField = fields.find((f) => f.primary)
+    if (selectPrimaryCell && primaryField) {
+      await dispatch('setSelectedCell', {
+        rowId: row.id,
+        fieldId: primaryField.id,
+      })
+    }
+
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
@@ -1362,8 +1378,8 @@ export const actions = {
         order: data.order,
         values: data,
       })
-      dispatch('onRowChange', { view, row, fields })
-      dispatch('fetchAllFieldAggregationData', {
+      await dispatch('onRowChange', { view, row, fields })
+      await dispatch('fetchAllFieldAggregationData', {
         view,
       })
     } catch (error) {

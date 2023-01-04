@@ -129,9 +129,12 @@ export default {
           } else if (key === 'Tab') {
             event.preventDefault()
             this.$emit(shiftKey ? 'selectPrevious' : 'selectNext')
-          } else if (key === 'Enter' && shiftKey) {
+          } else if (key === 'Enter' && shiftKey && !this.readOnly) {
             event.preventDefault()
+            event.preventFieldCellUnselect = true
+            this.$emit('add-row-after')
             this.$emit('selectBelow')
+            return
           }
         }
 
