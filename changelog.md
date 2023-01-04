@@ -37,6 +37,7 @@ For example:
 * The ordering APIs can now accept a partial list of ids to order only these ids.
 * Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
 * Added more Maths formula functions. [#1183](https://gitlab.com/bramw/baserow/-/issues/1183)
+* Supports now "docker compose" command in dev.
 
 ### Bug Fixes
 * Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)
