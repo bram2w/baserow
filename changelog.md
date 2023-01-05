@@ -18,6 +18,7 @@ For example:
 
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
+* Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
