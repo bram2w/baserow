@@ -1918,3 +1918,17 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
             "NO_ROLE_LOW_PRIORITY": 0,
         },
     )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_can_restore_a_group_with_rbac_enabled(
+    enterprise_data_fixture, data_fixture, synced_roles
+):
+    license_object = enterprise_data_fixture.enable_enterprise()
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    TrashHandler.trash(user, group, None, group)
+
+    TrashHandler.restore_item(user, "group", group.id)

@@ -87,7 +87,7 @@ class RolePermissionManagerType(PermissionManagerType):
             operation_type = operation_type_registry.get(operation_name)
 
             computed_roles = RoleAssignmentHandler().get_computed_roles(
-                group, actor, context
+                group, actor, context, include_trash=include_trash
             )
 
             if any(
