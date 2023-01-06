@@ -13,9 +13,11 @@ For example:
 
 ### Bug Fixes
 
+* Fixed a typo in the docker-compose.no-caddy.yml so it works out of the box. [#1317](https://gitlab.com/bramw/baserow/-/issues/1469)
+
 ### Refactors
 
-## Released (2022-12-21 1.13.3)
+## Released (2022-12-22 1.13.3)
 
 ## Deploy steps
 * (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
