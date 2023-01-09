@@ -16,8 +16,10 @@ export default function ({ store, req, app, route, redirect }) {
   }
 
   if (refreshToken) {
-    return store.dispatch('auth/refresh', refreshToken).catch(() => {
-      return redirect({ name: 'login' })
+    return store.dispatch('auth/refresh', refreshToken).catch((error) => {
+      if (error.response?.status === 401) {
+        return redirect({ name: 'login' })
+      }
     })
   }
 }
