@@ -167,10 +167,12 @@ export const actions = {
         setToken(this.app, getters.refreshToken)
       }
     } catch (error) {
-      unsetToken(this.app)
-      unsetGroupCookie(this.app)
-      if (getters.isAuthenticated) {
-        dispatch('setUserSessionExpired', true)
+      if (error.response?.status === 401) {
+        unsetToken(this.app)
+        unsetGroupCookie(this.app)
+        if (getters.isAuthenticated) {
+          dispatch('setUserSessionExpired', true)
+        }
       }
       throw error
     }
