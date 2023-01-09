@@ -19,8 +19,8 @@ For example:
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
 * Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
-
 * Fixed a typo in the docker-compose.no-caddy.yml so it works out of the box. [#1317](https://gitlab.com/bramw/baserow/-/issues/1469)
+* Form validator shows the correct message when a field is required. [#1475](https://gitlab.com/bramw/baserow/-/issues/1475)
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
