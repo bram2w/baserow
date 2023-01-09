@@ -10,19 +10,27 @@ For example:
 ## Unreleased
 
 ### New Features
+* Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
+
+* Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
+* Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
+* Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
 
 ### Bug Fixes
-- Form validator shows the correct message when a field is required. [#1475](https://gitlab.com/bramw/baserow/-/issues/1475)
+* Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
+* Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
+* Fixed a typo in the docker-compose.no-caddy.yml so it works out of the box. [#1317](https://gitlab.com/bramw/baserow/-/issues/1469)
+* Form validator shows the correct message when a field is required. [#1475](https://gitlab.com/bramw/baserow/-/issues/1475)
 
 ### Refactors
+* Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
 
-## Released (2022-12-21 1.13.3)
+## Released (2022-12-22 1.13.3)
 
 ## Deploy steps
 * (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
 
 ### New Features
-
 * (Enterprise Preview Feature) Database and Table level RBAC with Teams are now available as a preview feature for enterprise users, Add 'RBAC' to the FEATURE_FLAG env and restart var to enable.
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
 * Users with roles higher than viewer on tables and databases now counted as paid users
@@ -32,6 +40,7 @@ For example:
 * The ordering APIs can now accept a partial list of ids to order only these ids.
 * Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
 * Added more Maths formula functions. [#1183](https://gitlab.com/bramw/baserow/-/issues/1183)
+* Supports now "docker compose" command in dev.
 
 ### Bug Fixes
 * Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)

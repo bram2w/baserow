@@ -134,7 +134,8 @@ export default {
           {
             roles: this.roles,
             groupId: this.group.id,
-          }
+          },
+          this.$t('teamsTable.roleHelpText')
         ),
         new CrudTableColumn(
           'subject_sample',

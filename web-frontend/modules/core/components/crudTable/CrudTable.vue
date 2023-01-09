@@ -25,11 +25,14 @@
             >
               <div class="data-table__table-cell-head">
                 <template v-if="col.sortable">
-                  <a
-                    class="data-table__table-cell-head-link"
-                    @click="toggleSort(col)"
-                    >{{ col.header }}</a
-                  >
+                  <div>
+                    <a
+                      class="data-table__table-cell-head-link"
+                      @click="toggleSort(col)"
+                      >{{ col.header }}</a
+                    >
+                    <HelpIcon v-if="col.helpText" :tooltip="col.helpText" />
+                  </div>
                   <div>
                     <template v-if="sorted(col)">
                       <i class="fas" :class="sortIcon(col)"></i>
@@ -37,7 +40,14 @@
                     </template>
                   </div>
                 </template>
-                <template v-else>{{ col.header }}</template>
+                <template v-else>
+                  <div>
+                    {{ col.header }}
+                    <HelpIcon
+                      v-if="col.helpText"
+                      :tooltip="col.helpText"
+                    /></div
+                ></template>
               </div>
             </th>
           </tr>

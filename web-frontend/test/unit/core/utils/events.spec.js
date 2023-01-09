@@ -217,6 +217,12 @@ describe('test key press event helper', () => {
     ...separatorCharacters,
   ]
 
+  let platformGetter
+
+  beforeEach(() => {
+    platformGetter = jest.spyOn(window.navigator, 'platform', 'get')
+  })
+
   test.each(allCharacters)('non control keys should return true', (value) => {
     const event = {
       key: value,
@@ -242,6 +248,7 @@ describe('test key press event helper', () => {
         key: value,
         metaKey: true,
       }
+      platformGetter.mockReturnValue('MAC')
       expect(isPrintableUnicodeCharacterKeyPress(event)).toBeFalsy()
     }
   )

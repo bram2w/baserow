@@ -173,7 +173,7 @@ class RoleAssignmentHandler:
             return None
 
     def get_roles_per_scope(
-        self, group: Group, actor: AbstractUser
+        self, group: Group, actor: AbstractUser, include_trash=False
     ) -> List[Tuple[Any, List[Role]]]:
         """
         Returns the RoleAssignments for the given actor in the given group. The roles
@@ -182,8 +182,8 @@ class RoleAssignmentHandler:
 
         :param group: The group the RoleAssignments belong to.
         :param actor: The actor for whom we want the RoleAssignments for.
-        :param operation: An optional Operation to select only roles containing this
-            operation.
+        :param include_trash: If true then also checks even if given group has been
+            trashed instead of raising a DoesNotExist exception.
         :return: A list of tuple containing the scope and the role ordered by scope.
             The higher a scope is high in the object hierarchy, the higher the tuple in
             the list.
@@ -279,8 +279,14 @@ class RoleAssignmentHandler:
         # Get the group level role by reading the GroupUser permissions property for
         # User actors.
         if isinstance(actor, User):
+
+            # We want to get the group user even if the group is trashed as we still
+            # want to support checking permissions on a trashed scope (the group).
+            group_user = group.get_group_user(actor, include_trash=include_trash)
+
             group_level_role = self.get_role_by_uid(
-                group.get_group_user(actor).permissions, use_fallback=True
+                group_user.permissions,
+                use_fallback=True,
             )
             if group_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE:
                 # Low priority role -> Use team role or NO_ACCESS if no team role
@@ -293,7 +299,7 @@ class RoleAssignmentHandler:
         return list(roles_by_scope.items())
 
     def get_computed_roles(
-        self, group: Group, actor: AbstractUser, context: Any
+        self, group: Group, actor: AbstractUser, context: Any, include_trash=False
     ) -> List[Role]:
         """
         Returns the computed roles for the given actor on the given context.
@@ -301,10 +307,14 @@ class RoleAssignmentHandler:
         :param group: The group in which we want the roles.
         :param actor: The actor for whom we want the roles.
         :param context: The context on which we want to now the role.
+        :param include_trash: If true then also checks even if given group has been
+            trashed instead of raising a DoesNotExist exception.
         :return: A list of roles that applies on this context.
         """
 
-        roles_by_scopes = self.get_roles_per_scope(group, actor)
+        roles_by_scopes = self.get_roles_per_scope(
+            group, actor, include_trash=include_trash
+        )
         most_precise_roles = [RoleAssignmentHandler().get_role_by_uid(NO_ACCESS_ROLE)]
 
         for (scope, roles) in roles_by_scopes:

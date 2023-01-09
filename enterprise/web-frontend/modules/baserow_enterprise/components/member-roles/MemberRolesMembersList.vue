@@ -40,17 +40,24 @@
           </div>
         </div>
       </div>
-      <RoleSelector
-        :disabled="
-          roleAssignment.subject.id === userId &&
-          roleAssignment.subject_type === 'auth.User'
-        "
-        :roles="getAvailableRoles(roles)"
-        :value="getRole(roleAssignment)"
-        :allow-removing-role="true"
-        @delete="$emit('role-updated', roleAssignment, null)"
-        @input="({ uid }) => $emit('role-updated', roleAssignment, uid)"
-      />
+      <div class="member-roles-members-list__role-selector">
+        <HelpIcon
+          v-if="getRole(roleAssignment).uid === 'ADMIN'"
+          class="margin-right-1"
+          :tooltip="$t('memberRolesMembersList.adminHelpText')"
+        />
+        <RoleSelector
+          :disabled="
+            roleAssignment.subject.id === userId &&
+            roleAssignment.subject_type === 'auth.User'
+          "
+          :roles="getAvailableRoles(roles)"
+          :value="getRole(roleAssignment)"
+          :allow-removing-role="true"
+          @delete="$emit('role-updated', roleAssignment, null)"
+          @input="({ uid }) => $emit('role-updated', roleAssignment, uid)"
+        />
+      </div>
     </li>
   </ul>
 </template>

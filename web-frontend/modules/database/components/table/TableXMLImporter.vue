@@ -131,7 +131,7 @@ export default {
           this.fileLoadingProgress = 100
           this.reload()
         })
-        reader.readAsBinaryString(event.target.files[0])
+        reader.readAsText(event.target.files[0], 'utf-8')
       }
     },
     async reload() {

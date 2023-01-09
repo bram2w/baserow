@@ -36,7 +36,7 @@ x-backend-variables: &backend-variables
   REDIS_PASSWORD: ${REDIS_PASSWORD:?}
 
   PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:8000}
-  PUBLIC_WEB_FRONTEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:3000}
+  PUBLIC_WEB_FRONTEND_URL: ${PUBLIC_WEB_FRONTEND_URL-http://localhost:3000}
 
   # Set these if you want to use an external postgres instead of the db service below.
   DATABASE_USER: ${DATABASE_USER:-baserow}
@@ -149,7 +149,7 @@ services:
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
     environment:
-      BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
+      BASEROW_PUBLIC_URL: 
       PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
       PUBLIC_BACKEND_URL:
       PUBLIC_WEB_FRONTEND_URL:

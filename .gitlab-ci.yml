@@ -248,7 +248,7 @@ variables:
   CLOUDRON_DOCKERFILE_PATH: $CI_PROJECT_DIR/deploy/cloudron/Dockerfile
   HEROKU_DOCKERFILE_PATH: $CI_PROJECT_DIR/heroku.Dockerfile
   # The image path for the helper CI util image that will be built and pushed to.
-  CI_UTIL_IMAGE: registry.gitlab.com/bramw/baserow/ci/ci_util_image:latest
+  CI_UTIL_IMAGE: $CI_REGISTRY/bramw/baserow/ci/ci_util_image:latest
 
 # ==================================== CI UTIL ====================================
 
@@ -264,9 +264,7 @@ build-ci-util-image:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
-    - |
-      echo "$CI_REGISTRY_PASSWORD" | \
-        docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - cd .gitlab/ci_util_image
     - docker build -t $CI_UTIL_IMAGE .
