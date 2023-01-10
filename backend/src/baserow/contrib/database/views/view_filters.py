@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from math import ceil, floor
@@ -47,6 +48,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaTextType,
 )
 from baserow.core.expressions import Timezone
+from baserow.core.models import GroupUser
 
 from .registries import ViewFilterType
 
@@ -970,6 +972,64 @@ class MultipleSelectHasNotViewFilterType(
     """
 
     type = "multiple_select_has_not"
+
+
+class MultipleCollaboratorsHasViewFilterType(ManyToManyHasBaseViewFilter):
+    """
+    The multiple collaborators has filter accepts the ID of the user to filter for
+    and filters the rows where the multiple collaborators field has the provided user.
+    """
+
+    type = "multiple_collaborators_has"
+    compatible_field_types = [MultipleCollaboratorsFieldType.type]
+
+    COLLABORATORS_KEY = f"available_collaborators"
+
+    def get_export_serialized_value(self, value, id_mapping):
+        if self.COLLABORATORS_KEY not in id_mapping:
+            group_id = id_mapping.get("group_id", None)
+            if group_id is None:
+                return value
+
+            id_mapping[self.COLLABORATORS_KEY] = defaultdict(list)
+
+            groupusers_from_group = GroupUser.objects.filter(
+                group_id=group_id
+            ).select_related("user")
+
+            for groupuser in groupusers_from_group:
+                id_mapping[self.COLLABORATORS_KEY][
+                    str(groupuser.user.id)
+                ] = groupuser.user.email
+
+        return id_mapping[self.COLLABORATORS_KEY].get(value, "")
+
+    def set_import_serialized_value(self, value, id_mapping):
+        group_id = id_mapping.get("group_id", None)
+        if group_id is None:
+            return ""
+
+        if self.COLLABORATORS_KEY not in id_mapping:
+            id_mapping[self.COLLABORATORS_KEY] = defaultdict(list)
+            groupusers_from_group = GroupUser.objects.filter(
+                group_id=group_id
+            ).select_related("user")
+            for groupuser in groupusers_from_group:
+                id_mapping[self.COLLABORATORS_KEY][str(groupuser.user.email)] = str(
+                    groupuser.user.id
+                )
+        return id_mapping[self.COLLABORATORS_KEY].get(value, "")
+
+
+class MultipleCollaboratorsHasNotViewFilterType(
+    NotViewFilterTypeMixin, MultipleCollaboratorsHasViewFilterType
+):
+    """
+    The multiple collaborators has not filter accepts the ID of the user to filter for
+    and filters the rows where the field does not have the provided user.
+    """
+
+    type = "multiple_collaborators_has_not"
 
 
 class EmptyViewFilterType(ViewFilterType):

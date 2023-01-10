@@ -41,7 +41,7 @@ def test_import_export_grid_view_w_decorator(data_fixture):
     id_mapping = {"database_fields": {field.id: imported_field.id}}
 
     grid_view_type = view_type_registry.get("grid")
-    serialized = grid_view_type.export_serialized(grid_view, None, None)
+    serialized = grid_view_type.export_serialized(grid_view, None, None, None)
     imported_grid_view = grid_view_type.import_serialized(
         grid_view.table, serialized, id_mapping, None, None
     )

@@ -258,8 +258,10 @@ class ViewHandler:
 
         view_type = view_type_registry.get_by_model(original_view)
 
+        cache = {}
+
         # Use export/import to duplicate the view easily
-        serialized = view_type.export_serialized(original_view)
+        serialized = view_type.export_serialized(original_view, cache)
 
         # Change the name of the view
         serialized["name"] = self.find_unused_view_name(
