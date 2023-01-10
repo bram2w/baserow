@@ -11,18 +11,19 @@ For example:
 
 ### New Features
 * Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
-
 * Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
 * Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
 * Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
 * Added a new setting to the Admin Settings page to enable/disable global group creation. [#1311](https://gitlab.com/bramw/baserow/-/issues/1311)
 * Add "has" and "has not" filters for Collaborators field. [#1204](https://gitlab.com/bramw/baserow/-/issues/1204)
+* ./dev.sh now uses "docker compose" command if available.
 
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
 * Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
 * Fixed a typo in the docker-compose.no-caddy.yml so it works out of the box. [#1317](https://gitlab.com/bramw/baserow/-/issues/1469)
 * Form validator shows the correct message when a field is required. [#1475](https://gitlab.com/bramw/baserow/-/issues/1475)
+* Prevent errors after migrating and syncing RBAC roles by adding migration to rename NO_ROLE to NO_ACCESS [#1478](https://gitlab.com/bramw/baserow/-/issues/1478)
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
@@ -42,7 +43,6 @@ For example:
 * The ordering APIs can now accept a partial list of ids to order only these ids.
 * Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
 * Added more Maths formula functions. [#1183](https://gitlab.com/bramw/baserow/-/issues/1183)
-* Supports now "docker compose" command in dev.
 
 ### Bug Fixes
 * Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role [#1394](https://gitlab.com/bramw/baserow/-/issues/1394)
