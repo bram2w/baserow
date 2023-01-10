@@ -25,6 +25,7 @@ class CoreConfig(AppConfig):
             CorePermissionManagerType,
             GroupMemberOnlyPermissionManagerType,
             StaffOnlyPermissionManagerType,
+            StaffOnlySettingOperationPermissionManagerType,
         )
         from baserow.core.registries import (
             object_scope_type_registry,
@@ -37,6 +38,9 @@ class CoreConfig(AppConfig):
         permission_manager_type_registry.register(BasicPermissionManagerType())
         permission_manager_type_registry.register(
             GroupMemberOnlyPermissionManagerType()
+        )
+        permission_manager_type_registry.register(
+            StaffOnlySettingOperationPermissionManagerType()
         )
 
         from .object_scopes import (
@@ -174,6 +178,11 @@ class CoreConfig(AppConfig):
         job_type_registry.register(InstallTemplateJobType())
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
+
+        from baserow.api.user.registries import user_data_registry
+        from baserow.api.user.user_data_types import GlobalPermissionsDataType
+
+        user_data_registry.register(GlobalPermissionsDataType())
 
         from baserow.core.auth_provider.auth_provider_types import (
             PasswordAuthProviderType,

@@ -43,7 +43,7 @@ from .types import ContextObject, ScopeObject
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
-    from .models import Application, Group
+    from baserow.core.models import Application, Group, GroupInvitation, Template
 
 
 class Plugin(APIUrlsInstanceMixin, Instance):
@@ -107,19 +107,25 @@ class Plugin(APIUrlsInstanceMixin, Instance):
 
         return []
 
-    def user_created(self, user, group, group_invitation, template):
+    def user_created(
+        self,
+        user: "AbstractUser",
+        group: "Group" = None,
+        group_invitation: "GroupInvitation" = None,
+        template: "Template" = None,
+    ):
         """
         A hook that is called after a new user has been created. This is the place to
-        create some data the user can start with. A group has already been created
-        for the user to that one is passed as a parameter.
+        create some data the user can start with. A group will most often be created,
+        but won't be if the account has `allow_global_group_creation` set to `False`.
 
         :param user: The newly created user.
         :type user: User
         :param group: The newly created group for the user.
-        :type group: Group
+        :type group: Group or None
         :param group_invitation: Is provided if the user has signed up using a valid
             group invitation token.
-        :type group_invitation: GroupInvitation
+        :type group_invitation: GroupInvitation or None
         :param template: The template that is installed right after creating the
             account. Is `None` if the template was not created.
         :type template: Template or None

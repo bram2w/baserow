@@ -44,4 +44,9 @@
 
 .admin-settings__control {
   min-width: 0;
+
+  .warning {
+    max-width: 500px;
+    line-height: 18px;
+  }
 }

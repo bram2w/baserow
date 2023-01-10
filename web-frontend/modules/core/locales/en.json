@@ -146,7 +146,9 @@
     "createGroupModal": {
         "createNew": "Create new group",
         "defaultName": "Untitled Group",
-        "add": "Add group"
+        "add": "Add group",
+        "permissionDeniedTitle": "Permission denied",
+        "permissionDeniedBody": "You do not have the required permission to create a new group."
     },
     "templateCategories": {
         "search": "Search templates",
@@ -184,7 +186,8 @@
     },
     "trashModal": {
         "emptyTitle": "No groups found",
-        "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group."
+        "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
+        "emptyMessageWithoutCreatePermission": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you will need to be invited to a group by an administrator first."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Upload from a URL",
@@ -270,6 +273,7 @@
         "redditTitle": "'Baserow - An open source no-code database",
         "noGroupTitle": "No groups found",
         "noGroupText": "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
+        "noGroupTextWithoutCreatePermission":  "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you will need to be invited to a group by an administrator first.",
         "createGroup": "Create group",
         "becomeGithubSponsor": "Become a GitHub sponsor",
         "starOnGitlab": "Star us on GitLab",
@@ -345,6 +349,9 @@
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",
         "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
+        "settingAllowNonStaffCreateGroupOperation":  "Allow everyone to create new groups",
+        "settingAllowNonStaffCreateGroupOperationDescription":  "By default, everyone can create new groups. Disable this to only allow staff to create new groups.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "With this setting enabled, new users will have a group automatically created for them where they are an Admin, so for billing purposes they will be reported as an Admin. To prevent this, disable this setting and newly invited users will only start with the role they were invited with.",
         "userDeletionGraceDelay": "User deletion",
         "settingUserDeletionGraceDelay": "Grace delay",
         "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",

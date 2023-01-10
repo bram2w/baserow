@@ -15,6 +15,7 @@
       </li>
       <li>
         <a
+          v-if="$hasPermission('create_group')"
           class="dashboard__sidebar-link dashboard__sidebar-link--light"
           @click="$emit('create-group-clicked')"
         >

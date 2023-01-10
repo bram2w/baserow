@@ -21,8 +21,11 @@
           <i class="fas fa-layer-group"></i>
         </div>
         <h1 class="placeholder__title">{{ $t('trashModal.emptyTitle') }}</h1>
-        <p class="placeholder__content">
+        <p v-if="$hasPermission('create_group')" class="placeholder__content">
           {{ $t('trashModal.emptyMessage') }}
+        </p>
+        <p v-else class="placeholder__content">
+          {{ $t('trashModal.emptyMessageWithoutCreatePermission') }}
         </p>
       </div>
       <TrashContent

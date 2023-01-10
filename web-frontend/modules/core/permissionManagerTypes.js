@@ -91,3 +91,29 @@ export class BasicPermissionManagerType extends PermissionManagerType {
     return false
   }
 }
+
+export class StaffOnlySettingOperationPermissionManagerType extends PermissionManagerType {
+  static getType() {
+    return 'setting_operation'
+  }
+
+  hasPermission(permissions, operation, context) {
+    // Fetch isStaff from the auth store, so we can reactively update the permission.
+    const { store } = this.app
+    const isStaff = store.getters['auth/isStaff']
+
+    // Check if the operation is in either array of operations.
+    if (
+      permissions.always_allowed_operations.includes(operation) ||
+      permissions.staff_only_operations.includes(operation)
+    ) {
+      // Permission is...
+      // A) allowed if the Setting it relates to is set to "everyone", or
+      // B) allowed if, regardless of the Setting, the actor isStaff.
+      return (
+        permissions.always_allowed_operations.includes(operation) ||
+        (permissions.staff_only_operations.includes(operation) && isStaff)
+      )
+    }
+  }
+}

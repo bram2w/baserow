@@ -18,7 +18,7 @@ from .utils import map_exceptions as map_exceptions_utility
 from .utils import validate_data, validate_data_custom_fields
 
 
-def map_exceptions(exceptions: ExceptionMappingType):
+def map_exceptions(exceptions: ExceptionMappingType = None):
     """
     This decorator simplifies mapping specific exceptions to a standard api response.
     Note that this decorator uses the map_exception function from baserow.api.utils
@@ -75,6 +75,12 @@ def map_exceptions(exceptions: ExceptionMappingType):
 
       # SomeException will be thrown directly if the provided callable returns None.
     """
+
+    # If a view needs no mappings, but does need the permission
+    # denied mapping, then allow the decorator to be called with
+    # no `exceptions`.
+    if exceptions is None:
+        exceptions = {}
 
     # Add globally permission denied exception mapping if missing
     if PermissionException not in exceptions:

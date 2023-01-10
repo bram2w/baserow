@@ -23,6 +23,7 @@ import {
   CorePermissionManagerType,
   StaffPermissionManagerType,
   GroupMemberPermissionManagerType,
+  StaffOnlySettingOperationPermissionManagerType,
 } from '@baserow/modules/core/permissionManagerTypes'
 
 import {
@@ -90,6 +91,10 @@ export default (context, inject) => {
   registry.register(
     'permissionManager',
     new BasicPermissionManagerType(context)
+  )
+  registry.register(
+    'permissionManager',
+    new StaffOnlySettingOperationPermissionManagerType(context)
   )
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(

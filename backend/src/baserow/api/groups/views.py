@@ -80,6 +80,7 @@ class GroupsView(APIView):
         request=GroupSerializer,
         responses={200: GroupUserGroupSerializer},
     )
+    @map_exceptions()
     @transaction.atomic
     @validate_body(GroupSerializer)
     def post(self, request, data):

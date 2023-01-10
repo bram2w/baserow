@@ -667,7 +667,8 @@ if "*" in FEATURE_FLAGS:
     FEATURE_FLAGS = Everything()
 
 PERMISSION_MANAGERS = os.getenv(
-    "BASEROW_PERMISSION_MANAGERS", "core,staff,member,token,role,basic"
+    "BASEROW_PERMISSION_MANAGERS",
+    "core,setting_operation,staff,member,token,role,basic",
 ).split(",")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(

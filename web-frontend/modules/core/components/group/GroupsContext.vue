@@ -32,7 +32,11 @@
       {{ $t('groupsContext.noResults') }}
     </div>
     <div class="select__footer">
-      <a class="select__footer-button" @click="$refs.createGroupModal.show()">
+      <a
+        v-if="$hasPermission('create_group')"
+        class="select__footer-button"
+        @click="$refs.createGroupModal.show()"
+      >
         <i class="fas fa-plus"></i>
         {{ $t('groupsContext.createGroup') }}
       </a>
