@@ -16,6 +16,7 @@ For example:
 * Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
 * Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
 * Added a new setting to the Admin Settings page to enable/disable global group creation. [#1311](https://gitlab.com/bramw/baserow/-/issues/1311)
+* Add "has" and "has not" filters for Collaborators field. [#1204](https://gitlab.com/bramw/baserow/-/issues/1204)
 
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)

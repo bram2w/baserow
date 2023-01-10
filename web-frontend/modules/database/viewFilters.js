@@ -12,6 +12,7 @@ import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/Vie
 import { trueString } from '@baserow/modules/database/utils/constants'
 import { isNumeric } from '@baserow/modules/core/utils/string'
 import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
+import ViewFilterTypeCollaborators from '@baserow/modules/database/components/view/ViewFilterTypeCollaborators'
 import {
   FormulaFieldType,
   NumberFieldType,
@@ -1154,6 +1155,70 @@ export class MultipleSelectHasNotFilterType extends ViewFilterType {
 
     const filterValueId = parseInt(filterValue)
     return !rowValue.some((option) => option.id === filterValueId)
+  }
+}
+
+export class MultipleCollaboratorsHasFilterType extends ViewFilterType {
+  static getType() {
+    return 'multiple_collaborators_has'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.has')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeCollaborators
+  }
+
+  getCompatibleFieldTypes() {
+    return ['multiple_collaborators']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue.some((user) => user.id === filterValueId)
+  }
+}
+
+export class MultipleCollaboratorsHasNotFilterType extends ViewFilterType {
+  static getType() {
+    return 'multiple_collaborators_has_not'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.hasNot')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeCollaborators
+  }
+
+  getCompatibleFieldTypes() {
+    return ['multiple_collaborators']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return !rowValue.some((user) => user.id === filterValueId)
   }
 }
 

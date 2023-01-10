@@ -104,6 +104,7 @@ class KanbanViewType(ViewType):
     def export_serialized(
         self,
         kanban: View,
+        cache: Optional[Dict] = None,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -111,7 +112,7 @@ class KanbanViewType(ViewType):
         Adds the serialized kanban view options to the exported dict.
         """
 
-        serialized = super().export_serialized(kanban, files_zip, storage)
+        serialized = super().export_serialized(kanban, cache, files_zip, storage)
         if kanban.single_select_field_id:
             serialized["single_select_field_id"] = kanban.single_select_field_id
 

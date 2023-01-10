@@ -823,7 +823,7 @@ def test_single_select_equal_filter_type(data_fixture):
 def test_single_select_equal_filter_type_export_import():
     view_filter_type = view_filter_type_registry.get("single_select_equal")
     id_mapping = {"database_field_select_options": {1: 2}}
-    assert view_filter_type.get_export_serialized_value("1") == "1"
+    assert view_filter_type.get_export_serialized_value("1", {}) == "1"
     assert view_filter_type.set_import_serialized_value("1", id_mapping) == "2"
     assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
     assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""
@@ -4003,7 +4003,7 @@ def test_multiple_select_has_filter_type(data_fixture):
 def test_multiple_select_has_filter_type_export_import():
     view_filter_type = view_filter_type_registry.get("multiple_select_has")
     id_mapping = {"database_field_select_options": {1: 2}}
-    assert view_filter_type.get_export_serialized_value("1") == "1"
+    assert view_filter_type.get_export_serialized_value("1", {}) == "1"
     assert view_filter_type.set_import_serialized_value("1", id_mapping) == "2"
     assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
     assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""
@@ -5199,3 +5199,281 @@ def test_multiple_collaborators_not_empty_filter_type(data_fixture):
     assert len(ids) == 2
     assert row_1.id in ids
     assert row_2.id in ids
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+def test_multiple_collaborators_has_filter_type(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+    user3 = data_fixture.create_user(group=group)
+    database = data_fixture.create_database_application(user=user, group=group)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    multiple_collaborators_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multi Collaborators",
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+            ],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+            ],
+        },
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [],
+        },
+    )
+
+    row_with_all_collaborators = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+                {"id": user3.id},
+            ],
+        },
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_collaborators_field,
+        type="multiple_collaborators_has",
+        value=f"",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = f"{user.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    print(ids)
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_with_all_collaborators.id in ids
+
+    view_filter.value = f"{user2.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_with_all_collaborators.id in ids
+
+    # # chaining filters should also work
+    view_filter.value = f"{user2.id}"
+    view_filter.save()
+
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_collaborators_field,
+        type="multiple_collaborators_has",
+        value=f"{user.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_with_all_collaborators.id in ids
+
+    # # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_with_all_collaborators.id in ids
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+def test_multiple_collaborators_has_not_filter_type(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+    user3 = data_fixture.create_user(group=group)
+    database = data_fixture.create_database_application(user=user, group=group)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    multiple_collaborators_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multiple Collaborators",
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+            ],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user2.id},
+                {"id": user3.id},
+            ],
+        },
+    )
+
+    row_3 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [],
+        },
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_collaborators_field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+                {"id": user3.id},
+            ],
+        },
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_collaborators_field,
+        type="multiple_collaborators_has_not",
+        value=f"",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = f"{user.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = f"{user2.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.value = f"{user3.id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+    # chaining filters should also work
+    view_filter.value = f"{user3.id}"
+    view_filter.save()
+
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_collaborators_field,
+        type="multiple_collaborators_has_not",
+        value=f"{user2.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+def test_multiple_collaborators_has_filter_type_export_import(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    view_filter_type = view_filter_type_registry.get("multiple_collaborators_has")
+    assert (
+        view_filter_type.get_export_serialized_value(
+            f"{user.id}", {"group_id": group.id}
+        )
+        == f"{user.email}"
+    )
+    id_mapping = {"group_id": group.id}
+    assert view_filter_type.set_import_serialized_value(user.email, id_mapping) == str(
+        user.id
+    )
+    assert view_filter_type.set_import_serialized_value(user.email, {}) == ""
+    assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
+    assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""

@@ -47,7 +47,7 @@ def test_import_export_grid_view(data_fixture):
     id_mapping = {"database_fields": {field.id: imported_field.id}}
 
     grid_view_type = view_type_registry.get("grid")
-    serialized = grid_view_type.export_serialized(grid_view, None, None)
+    serialized = grid_view_type.export_serialized(grid_view, None, None, None)
     imported_grid_view = grid_view_type.import_serialized(
         grid_view.table, serialized, id_mapping, None, None
     )
@@ -168,7 +168,7 @@ def test_import_export_gallery_view(data_fixture, tmpdir):
 
     with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
         serialized = gallery_view_type.export_serialized(
-            gallery_view, files_zip=files_zip, storage=storage
+            gallery_view, None, files_zip=files_zip, storage=storage
         )
 
     assert serialized["id"] == gallery_view.id
@@ -328,7 +328,7 @@ def test_import_export_form_view(data_fixture, tmpdir):
 
     with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
         serialized = form_view_type.export_serialized(
-            form_view, files_zip=files_zip, storage=storage
+            form_view, None, files_zip=files_zip, storage=storage
         )
 
     assert serialized["id"] == form_view.id

@@ -497,7 +497,9 @@ class AirtableHandler:
             grid_view = GridView(id=view_id, name="Grid", order=1)
             grid_view.get_field_options = lambda *args, **kwargs: []
             grid_view_type = view_type_registry.get_by_model(grid_view)
-            exported_views = [grid_view_type.export_serialized(grid_view, None, None)]
+            exported_views = [
+                grid_view_type.export_serialized(grid_view, None, None, None)
+            ]
 
             exported_table = DatabaseExportSerializedStructure.table(
                 id=table["id"],

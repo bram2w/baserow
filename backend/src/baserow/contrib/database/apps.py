@@ -263,6 +263,8 @@ class DatabaseConfig(AppConfig):
             LinkRowHasViewFilterType,
             LinkRowNotContainsViewFilterType,
             LowerThanViewFilterType,
+            MultipleCollaboratorsHasNotViewFilterType,
+            MultipleCollaboratorsHasViewFilterType,
             MultipleSelectHasNotViewFilterType,
             MultipleSelectHasViewFilterType,
             NotEmptyViewFilterType,
@@ -305,6 +307,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(NotEmptyViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
+        view_filter_type_registry.register(MultipleCollaboratorsHasViewFilterType())
+        view_filter_type_registry.register(MultipleCollaboratorsHasNotViewFilterType())
 
         from .views.view_aggregations import (
             AverageViewAggregationType,

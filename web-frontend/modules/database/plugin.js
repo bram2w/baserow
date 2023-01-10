@@ -58,6 +58,8 @@ import {
   LinkRowHasNotFilterType,
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
+  MultipleCollaboratorsHasFilterType,
+  MultipleCollaboratorsHasNotFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
 } from '@baserow/modules/database/viewFilters'
@@ -330,6 +332,14 @@ export default (context) => {
   app.$registry.register(
     'viewFilter',
     new MultipleSelectHasNotFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new MultipleCollaboratorsHasFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new MultipleCollaboratorsHasNotFilterType(context)
   )
   app.$registry.register('viewFilter', new EmptyViewFilterType(context))
   app.$registry.register('viewFilter', new NotEmptyViewFilterType(context))
