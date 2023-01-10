@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-from django.db import transaction
 from django.db.models.signals import post_migrate
 
 from tqdm import tqdm
@@ -155,8 +154,9 @@ class BaserowEnterpriseConfig(AppConfig):
         import baserow_enterprise.ws.signals  # noqa: F
 
 
-@transaction.atomic
 def sync_default_roles_after_migrate(sender, **kwargs):
+    from baserow.core.db import LockedAtomicTransaction
+
     from .role.default_roles import default_roles
 
     apps = kwargs.get("apps", None)
@@ -165,30 +165,26 @@ def sync_default_roles_after_migrate(sender, **kwargs):
         try:
             Operation = apps.get_model("core", "Operation")
             Role = apps.get_model("baserow_enterprise", "Role")
-            GroupUser = apps.get_model("core", "GroupUser")
         except LookupError:
             print("Skipping role creation as related models does not exist.")
         else:
-            # Migrate from NO_ROLE to NO_ACCESS
-            Role.objects.filter(uid="NO_ROLE").update(uid="NO_ACCESS")
-            GroupUser.objects.filter(permissions="NO_ROLE").update(
-                permissions="NO_ACCESS"
-            )
-
-            for role_name, operations in tqdm(
-                default_roles.items(), desc="Syncing default roles"
-            ):
-                role, _ = Role.objects.update_or_create(
-                    uid=role_name,
-                    defaults={"name": f"role.{role_name}", "default": True},
-                )
-                role.operations.all().delete()
-
-                to_add = []
-                for operation_type in operations:
-                    operation, _ = Operation.objects.get_or_create(
-                        name=operation_type.type
+            # Note: we used to migrate `NO_ROLE` to `NO_ACCESS` here.
+            # This was moved to 0010_rename_no_role_to_no_access.
+            with LockedAtomicTransaction(Role):
+                for role_name, operations in tqdm(
+                    default_roles.items(), desc="Syncing default roles"
+                ):
+                    role, _ = Role.objects.update_or_create(
+                        uid=role_name,
+                        defaults={"name": f"role.{role_name}", "default": True},
                     )
-                    to_add.append(operation)
+                    role.operations.all().delete()
 
-                role.operations.add(*to_add)
+                    to_add = []
+                    for operation_type in operations:
+                        operation, _ = Operation.objects.get_or_create(
+                            name=operation_type.type
+                        )
+                        to_add.append(operation)
+
+                    role.operations.add(*to_add)
