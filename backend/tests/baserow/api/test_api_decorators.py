@@ -22,6 +22,7 @@ from baserow.api.exceptions import (
     QueryParameterValidationException,
     RequestBodyValidationException,
 )
+from baserow.core.exceptions import PermissionDenied
 from baserow.core.models import Group
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
@@ -69,7 +70,7 @@ class TemporaryTypeRegistry(Registry):
     name = "temporary"
 
 
-def test_map_exceptions():
+def test_map_exceptions_decorator():
     @map_exceptions({TemporaryException: "ERROR_TEMPORARY"})
     def test_1():
         raise TemporaryException
@@ -105,6 +106,22 @@ def test_map_exceptions():
         pass
 
     test_3()
+
+    # Calling the decorator with no `exceptions` dict
+    # still includes the `PermissionDenied` exception.
+    @map_exceptions()
+    def test_no_dict():
+        raise PermissionDenied()
+
+    with pytest.raises(APIException) as api_exception_no_dict:
+        test_no_dict()
+
+    assert api_exception_no_dict.value.detail["error"] == "PERMISSION_DENIED"
+    assert (
+        api_exception_no_dict.value.detail["detail"]
+        == "You don't have the required permission to execute this operation."
+    )
+    assert api_exception_no_dict.value.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_validate_body():

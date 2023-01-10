@@ -4,11 +4,18 @@
       <i class="fas fa-layer-group"></i>
     </div>
     <h1 class="placeholder__title">{{ $t('dashboard.noGroupTitle') }}</h1>
-    <p class="placeholder__content">
+    <p v-if="$hasPermission('create_group')" class="placeholder__content">
       {{ $t('dashboard.noGroupText') }}
     </p>
+    <p v-else class="placeholder__content">
+      {{ $t('dashboard.noGroupTextWithoutCreatePermission') }}
+    </p>
     <div class="placeholder__action">
-      <a class="button button--large" @click="$emit('create-clicked')">
+      <a
+        v-if="$hasPermission('create_group')"
+        class="button button--large"
+        @click="$emit('create-clicked')"
+      >
         <i class="fas fa-plus"></i>
         {{ $t('dashboard.createGroup') }}
       </a>

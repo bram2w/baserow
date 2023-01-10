@@ -76,7 +76,7 @@ class TemporaryQueryParamSerializer(serializers.Serializer):
     field_6 = serializers.CharField(max_length=20, required=False)
 
 
-def test_map_exceptions():
+def test_map_exceptions_context_manager():
     with pytest.raises(APIException) as api_exception_1:
         with map_exceptions({TemporaryException: "ERROR_TEMPORARY"}):
             raise TemporaryException

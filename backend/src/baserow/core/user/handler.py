@@ -192,21 +192,28 @@ class UserHandler:
         language = language or settings.LANGUAGE_CODE
         UserProfile.objects.create(user=user, language=language)
 
+        # If we have an invitation to a group, then accept it.
         if group_invitation_token:
             group_user = core_handler.accept_group_invitation(user, group_invitation)
 
-        if not group_user:
+        # If we still don't have a `GroupUser`, which will be because we weren't invited
+        # to a group, and `allow_global_group_creation` is enabled, we'll create a group
+        # for this new user.
+        if not group_user and instance_settings.allow_global_group_creation:
             with translation.override(language):
                 group_user = core_handler.create_group(
                     user=user, name=_("%(name)s's group") % {"name": name}
                 )
 
-        if not group_invitation_token and template:
-            core_handler.install_template(user, group_user.group, template)
+        # If we've created a `GroupUser` at some point, pluck out the `Group`.
+        group = getattr(group_user, "group", None)
+
+        if not group_invitation_token and template and group:
+            core_handler.install_template(user, group, template)
 
         # Call the user_created method for each plugin that is in the registry.
         for plugin in plugin_registry.registry.values():
-            plugin.user_created(user, group_user.group, group_invitation, template)
+            plugin.user_created(user, group, group_invitation, template)
 
         # register the authentication provider used to create the user
         if auth_provider is None:

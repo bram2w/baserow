@@ -293,7 +293,11 @@
               </div>
             </li>
             <li class="sidebar__new-wrapper">
-              <a class="sidebar__new" @click="$refs.createGroupModal.show()">
+              <a
+                v-if="$hasPermission('create_group')"
+                class="sidebar__new"
+                @click="$refs.createGroupModal.show()"
+              >
                 <i class="fas fa-plus"></i>
                 {{ $t('sidebar.createGroup') }}
               </a>

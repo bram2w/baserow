@@ -81,6 +81,10 @@ class Settings(models.Model):
         default=True,
         help_text="Indicates whether users can request a password reset link.",
     )
+    allow_global_group_creation = models.BooleanField(
+        default=True,
+        help_text="Indicates whether all users can create groups, or just staff.",
+    )
     account_deletion_grace_delay = models.PositiveSmallIntegerField(
         default=30,
         help_text=(
