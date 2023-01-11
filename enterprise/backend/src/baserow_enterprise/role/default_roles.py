@@ -10,6 +10,7 @@ from baserow.contrib.database.export.operations import ExportTableOperationType
 from baserow.contrib.database.fields.operations import (
     CreateFieldOperationType,
     DeleteFieldOperationType,
+    DeleteRelatedLinkRowFieldOperationType,
     DuplicateFieldOperationType,
     ListFieldsOperationType,
     ReadAggregationDatabaseTableOperationType,
@@ -201,6 +202,7 @@ BUILDER_OPS = EDITOR_OPS + [
     DuplicateFieldOperationType,
     CreateViewDecorationOperationType,
     DeleteFieldOperationType,
+    DeleteRelatedLinkRowFieldOperationType,
     RestoreFieldOperationType,
     UpdateFieldOperationType,
     TypeFormulaOperationType,
