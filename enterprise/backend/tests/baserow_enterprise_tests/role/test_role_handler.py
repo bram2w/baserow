@@ -1,8 +1,9 @@
 from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.db.models import Q
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from pyinstrument import Profiler
@@ -778,3 +779,67 @@ def test_get_roles_per_scope_trashed_teams(data_fixture, enterprise_data_fixture
     assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
         (group, [admin_role]),
     ]
+
+
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_check_get_role_per_scope_performance" -s --run-disabled-in-ci
+def test_check_get_role_per_scope_performance(
+    data_fixture, enterprise_data_fixture, profiler
+):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, group=group)
+    table11 = data_fixture.create_database_table(user=user, database=database1)
+    table12 = data_fixture.create_database_table(user=user, database=database1)
+    database2 = data_fixture.create_database_application(user=user, group=group)
+    table21 = data_fixture.create_database_table(user=user, database=database2)
+    table22 = data_fixture.create_database_table(user=user, database=database2)
+
+    team1 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team2 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team3 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+
+    editor_role = Role.objects.get(uid="EDITOR")
+    builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    RoleAssignmentHandler().assign_role(
+        user, group, role=low_priority_role, scope=group
+    )
+    RoleAssignmentHandler().assign_role(user, group, role=editor_role, scope=database1)
+    RoleAssignmentHandler().assign_role(user, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(user, group, role=viewer_role, scope=table22)
+
+    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
+    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+
+    role_assignment_handler = RoleAssignmentHandler()
+
+    with CaptureQueriesContext(connection) as captured:
+        role_assignment_handler.get_roles_per_scope(group, user)
+
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))
+
+    with CaptureQueriesContext(connection) as captured:
+        role_assignment_handler.get_roles_per_scope(group, user)
+
+    print("----------- Second time ---------------")
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))
+
+    with profiler(html_report_name="enterprise_get_roles_per_scope"):
+        for i in range(1000):
+            role_assignment_handler.get_roles_per_scope(group, user)

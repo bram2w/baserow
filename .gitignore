@@ -92,8 +92,9 @@ __pycache__
 
 docker-compose.override.yml
 
-# python virtual envs
+# python
 venv/
+.profiles/
 
 web-frontend/plugins/
 backend/plugins/

@@ -28,6 +28,7 @@ class CreateViewSortOperationType(ViewOperationType):
 
 class ListViewSortOperationType(ViewOperationType):
     type = "database.table.view.list_sort"
+    object_scope_name = DatabaseViewSortObjectScopeType.type
 
 
 class ReadViewSortOperationType(ViewSortOperationType):

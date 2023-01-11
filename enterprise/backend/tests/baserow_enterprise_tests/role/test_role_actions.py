@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from django.test import override_settings
-
 import pytest
 
 from baserow.core.action.handler import ActionHandler
@@ -20,9 +18,6 @@ def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_rol
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-@override_settings(
-    PERMISSION_MANAGERS=["core", "staff", "member", "basic", "role"],
-)
 @patch("baserow.core.handler.CoreHandler.check_permissions")
 def test_can_undo_assign_role(mock_check_permissions, data_fixture):
     session_id = "session-id"

@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from baserow.core.object_scopes import GroupObjectScopeType
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 from baserow_enterprise.models import Team, TeamSubject
@@ -13,13 +15,15 @@ class TeamObjectScopeType(ObjectScopeType):
     def get_parent(self, context):
         return context.group
 
-    def get_all_context_objects_in_scope(self, scope):
-        scope_type = object_scope_type_registry.get_by_model(scope).type
+    def get_enhanced_queryset(self):
+        return self.model_class.objects.prefetch_related("group")
+
+    def get_filter_for_scope_type(self, scope_type, scopes):
+
         if scope_type.type == GroupObjectScopeType.type:
-            return Team.objects.filter(group=scope)
-        if object_scope_type_registry.get_by_model(scope).type == self.type:
-            return [scope]
-        return []
+            return Q(group__in=[s.id for s in scopes])
+
+        raise TypeError("The given type is not handled.")
 
 
 class TeamSubjectObjectScopeType(ObjectScopeType):
@@ -32,12 +36,15 @@ class TeamSubjectObjectScopeType(ObjectScopeType):
     def get_parent(self, context):
         return context.team
 
-    def get_all_context_objects_in_scope(self, scope):
-        scope_type = object_scope_type_registry.get_by_model(scope).type
+    def get_enhanced_queryset(self):
+        return self.model_class.objects.prefetch_related("team", "team__group")
+
+    def get_filter_for_scope_type(self, scope_type, scopes):
+
         if scope_type.type == GroupObjectScopeType.type:
-            return TeamSubject.objects.filter(team__group=scope)
+            return Q(team__group__in=[s.id for s in scopes])
+
         if scope_type.type == TeamObjectScopeType.type:
-            return TeamSubject.objects.filter(team=scope)
-        if scope_type.type == self.type:
-            return [scope]
-        return []
+            return Q(team__in=[s.id for s in scopes])
+
+        raise TypeError("The given type is not handled.")

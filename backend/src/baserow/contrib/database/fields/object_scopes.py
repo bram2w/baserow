@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from baserow.contrib.database.models import Field
 from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.contrib.database.table.object_scopes import DatabaseTableObjectScopeType
@@ -15,17 +17,22 @@ class FieldObjectScopeType(ObjectScopeType):
     def get_parent(self, context):
         return context.table
 
-    def get_all_context_objects_in_scope(self, scope):
-        scope_type = object_scope_type_registry.get_by_model(scope)
+    def get_enhanced_queryset(self):
+        return self.model_class.objects.prefetch_related(
+            "table", "table__database", "table__database__group"
+        )
+
+    def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == GroupObjectScopeType.type:
-            return Field.objects.filter(table__database__group=scope)
+            return Q(table__database__group__in=[s.id for s in scopes])
+
         if (
             scope_type.type == DatabaseObjectScopeType.type
             or scope_type.type == ApplicationObjectScopeType.type
         ):
-            return Field.objects.filter(table__database=scope)
+            return Q(table__database__in=[s.id for s in scopes])
+
         if scope_type.type == DatabaseTableObjectScopeType.type:
-            return Field.objects.filter(table=scope)
-        if scope_type.type == FieldObjectScopeType.type:
-            return [scope]
-        return []
+            return Q(table__in=[s.id for s in scopes])
+
+        raise TypeError("The given type is not handled.")
