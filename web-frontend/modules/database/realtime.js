@@ -1,5 +1,6 @@
 import { clone } from '@baserow/modules/core/utils/object'
 import { anyFieldsNeedFetch } from '@baserow/modules/database/store/field'
+import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 /**
  * Registers the real time events related to the database module. When a message comes
@@ -34,9 +35,15 @@ export const registerRealtimeEvents = (realtime) => {
   })
 
   realtime.registerEvent('tables_reordered', ({ store, app }, data) => {
-    const database = store.getters['application/get'](data.database_id)
+    const database = store.getters['application/getAll'].find(
+      (application) => generateHash(application.id) === data.database_id
+    )
     if (database !== undefined) {
-      store.commit('table/ORDER_TABLES', { database, order: data.order })
+      store.commit('table/ORDER_TABLES', {
+        database,
+        order: data.order,
+        isHashed: true,
+      })
     }
   })
 

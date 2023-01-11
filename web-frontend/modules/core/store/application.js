@@ -2,6 +2,7 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ApplicationService from '@baserow/modules/core/services/application'
 import { clone } from '@baserow/modules/core/utils/object'
 import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstants'
+import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 export function populateApplication(application, registry) {
   const type = registry.get('application', application.type)
@@ -46,11 +47,12 @@ export const mutations = {
       Object.assign(state.items[index], state.items[index], values)
     }
   },
-  ORDER_ITEMS(state, { group, order }) {
+  ORDER_ITEMS(state, { group, order, isHashed = false }) {
     state.items
       .filter((item) => item.group.id === group.id)
       .forEach((item) => {
-        const index = order.findIndex((value) => value === item.id)
+        const itemId = isHashed ? generateHash(item.id) : item.id
+        const index = order.findIndex((value) => value === itemId)
         item.order = index === -1 ? undefined : index + 1
       })
   },
@@ -209,13 +211,16 @@ export const actions = {
   /**
    * Updates the order of all the applications in a group.
    */
-  async order({ commit, getters }, { group, order, oldOrder }) {
-    commit('ORDER_ITEMS', { group, order })
+  async order(
+    { commit, getters },
+    { group, order, oldOrder, isHashed = false }
+  ) {
+    commit('ORDER_ITEMS', { group, order, isHashed })
 
     try {
       await ApplicationService(this.$client).order(group.id, order)
     } catch (error) {
-      commit('ORDER_ITEMS', { group, order: oldOrder })
+      commit('ORDER_ITEMS', { group, order: oldOrder, isHashed })
       throw error
     }
   },

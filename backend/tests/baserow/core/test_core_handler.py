@@ -39,6 +39,7 @@ from baserow.core.models import (
     Template,
     TemplateCategory,
 )
+from baserow.core.operations import ReadGroupOperationType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
@@ -1265,3 +1266,14 @@ def test_raise_if_user_is_last_admin_of_group(data_fixture):
         CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
     except LastAdminOfGroup:
         pytest.fail("Unexpected last admin error...")
+
+
+@pytest.mark.django_db
+def test_get_user_ids_of_permitted_users(data_fixture):
+    user = data_fixture.create_user()
+    user_of_another_group = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    assert CoreHandler().get_user_ids_of_permitted_users(
+        [user, user_of_another_group], ReadGroupOperationType.type, group, context=group
+    ) == {user.id}

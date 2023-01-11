@@ -42,6 +42,89 @@ def broadcast_to_users(
 
 
 @app.task(bind=True)
+def broadcast_to_permitted_users(
+    self,
+    group_id: int,
+    operation_type: str,
+    scope_name: str,
+    scope_id: int,
+    payload: Dict[str, any],
+    ignore_web_socket_id: Optional[int] = None,
+):
+    """
+    This task will broadcast a websocket message to all the users that are permitted
+    to perform the operation provided.
+
+    :param self:
+    :param group_id: The group the users are in
+    :param operation_type: The operation that should be checked for
+    :param scope_name: The name of the scope that the operation is executed on
+    :param scope_id: The id of the scope instance
+    :param payload: The message being sent
+    :param ignore_web_socket_id: An optional web socket id which will not be sent the
+        payload if provided. This is normally the web socket id that has originally
+        made the change request.
+    :return:
+    """
+
+    from baserow.core.handler import CoreHandler
+    from baserow.core.mixins import TrashableModelMixin
+    from baserow.core.models import Group, GroupUser
+    from baserow.core.registries import object_scope_type_registry
+
+    group = Group.objects.get(id=group_id)
+
+    users_in_group = [
+        group_user.user
+        for group_user in GroupUser.objects.filter(group=group).select_related("user")
+    ]
+
+    scope_type = object_scope_type_registry.get(scope_name)
+    scope_model_class = scope_type.model_class
+
+    objects = (
+        scope_model_class.objects_and_trash
+        if issubclass(scope_model_class, TrashableModelMixin)
+        else scope_model_class.objects
+    )
+
+    scope = objects.get(id=scope_id)
+
+    user_ids = list(
+        CoreHandler().get_user_ids_of_permitted_users(
+            users_in_group,
+            operation_type,
+            group,
+            context=scope,
+        )
+    )
+    broadcast_to_users(user_ids, payload, ignore_web_socket_id=ignore_web_socket_id)
+
+
+@app.task(bind=True)
+def broadcast_to_users_individual_payloads(self, payload_map: Dict[str, any]):
+    """
+    This task will broadcast different payloads to different users by just using one
+    message.
+
+    :param payload_map: A mapping from user_id to the payload that should be sent to
+        the user. The id has to be stringified to not violate redis channel policy
+    """
+
+    from asgiref.sync import async_to_sync
+    from channels.layers import get_channel_layer
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "users",
+        {
+            "type": "broadcast_to_users_individual_payloads",
+            "payload_map": payload_map,
+        },
+    )
+
+
+@app.task(bind=True)
 def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
     """
     Broadcasts a JSON payload all the users within the channel group having the
@@ -131,3 +214,52 @@ def broadcast_to_groups(
         return
 
     broadcast_to_users(user_ids, payload, ignore_web_socket_id)
+
+
+@app.task(bind=True)
+def broadcast_application_created(self, application_id: int):
+    """
+    This task is called when an application is created. We made this a task instead of
+    running the code in the signal because calculating the individual payloads can take
+    a lot of computational power and should therefore not run on a gunicorn worker.
+
+    :param application_id: The id of the application that was created
+    :return:
+    """
+
+    from baserow.api.applications.serializers import get_application_serializer
+    from baserow.core.handler import CoreHandler
+    from baserow.core.models import Application, GroupUser
+    from baserow.core.operations import ReadApplicationOperationType
+
+    application = Application.objects.get(id=application_id)
+    group = application.group
+    users_in_group = [
+        group_user.user
+        for group_user in GroupUser.objects.filter(group=group).select_related("user")
+    ]
+
+    user_ids = list(
+        CoreHandler().get_user_ids_of_permitted_users(
+            users_in_group,
+            ReadApplicationOperationType.type,
+            group,
+            context=application.specific,
+        )
+    )
+
+    users_in_group_id_map = {user.id: user for user in users_in_group}
+
+    payload_map = {}
+    for user_id in user_ids:
+        user = users_in_group_id_map[user_id]
+        application_serialized = get_application_serializer(
+            application, context={"user": user}
+        ).data
+
+        payload_map[str(user_id)] = {
+            "type": "application_created",
+            "application": application_serialized,
+        }
+
+    broadcast_to_users_individual_payloads(payload_map)

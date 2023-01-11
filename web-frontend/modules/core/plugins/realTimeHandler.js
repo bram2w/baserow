@@ -306,7 +306,11 @@ export class RealTimeHandler {
     this.registerEvent('applications_reordered', ({ store }, data) => {
       const group = store.getters['group/get'](data.group_id)
       if (group !== undefined) {
-        store.commit('application/ORDER_ITEMS', { group, order: data.order })
+        store.commit('application/ORDER_ITEMS', {
+          group,
+          order: data.order,
+          isHashed: true,
+        })
       }
     })
   }

@@ -3,7 +3,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any, Dict, List, NewType, Optional, Tuple, TypedDict, cast
+from typing import IO, Any, Dict, List, NewType, Optional, Set, Tuple, TypedDict, cast
 from urllib.parse import urljoin, urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -351,6 +351,21 @@ class CoreHandler:
             )
 
         return queryset
+
+    def get_user_ids_of_permitted_users(
+        self, users: List[AbstractUser], operation_name: str, group: Group, context=None
+    ) -> Set[int]:
+
+        permitted_user_ids = set()
+
+        # TODO replace with batch check_permission once it's implemented
+        for user in users:
+            if self.check_permissions(
+                user, operation_name, group, context, raise_error=False
+            ):
+                permitted_user_ids.add(user.id)
+
+        return permitted_user_ids
 
     def get_group_for_update(self, group_id: int) -> GroupForUpdate:
         return cast(
