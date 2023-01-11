@@ -285,6 +285,7 @@ class GroupInvitation(
     )
     message = models.TextField(
         blank=True,
+        max_length=250,
         help_text="An optional message that the invitor can provide. This will be "
         "visible to the receiver of the invitation.",
     )
