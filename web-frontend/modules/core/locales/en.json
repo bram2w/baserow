@@ -129,7 +129,8 @@
     "groupInviteForm": {
         "invitationFormTitle": "Invite by email",
         "optionalMessagePlaceholder": "Optional message",
-        "errorInvalidEmail": "Please enter a valid e-mail address."
+        "errorInvalidEmail": "Please enter a valid e-mail address.",
+        "errorTooLongMessage": "Messages are limited to {amount} characters."
     },
     "groupsContext": {
         "search": "Search groups",

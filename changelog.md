@@ -17,6 +17,7 @@ For example:
 * Added a new setting to the Admin Settings page to enable/disable global group creation. [#1311](https://gitlab.com/bramw/baserow/-/issues/1311)
 * Add "has" and "has not" filters for Collaborators field. [#1204](https://gitlab.com/bramw/baserow/-/issues/1204)
 * ./dev.sh now uses "docker compose" command if available.
+* Limit the amount of characters for messages supplied with group invitations to 250 [#1455](https://gitlab.com/bramw/baserow/-/issues/1455)
 
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)

@@ -51,6 +51,13 @@
               class="input"
               :placeholder="$t('groupInviteForm.optionalMessagePlaceholder')"
             />
+            <div v-if="fieldHasErrors('message')" class="error">
+              {{
+                $t('groupInviteForm.errorTooLongMessage', {
+                  amount: messageMaxLength,
+                })
+              }}
+            </div>
           </div>
         </FormElement>
       </div>
@@ -60,9 +67,11 @@
 </template>
 
 <script>
-import { required, email } from 'vuelidate/lib/validators'
+import { required, email, maxLength } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+
+const MESSAGE_MAX_LENGTH = 250
 
 export default {
   name: 'GroupInviteForm',
@@ -84,6 +93,9 @@ export default {
     }
   },
   computed: {
+    messageMaxLength() {
+      return MESSAGE_MAX_LENGTH
+    },
     roles() {
       return this.group._.roles
     },
@@ -102,6 +114,7 @@ export default {
   validations: {
     values: {
       email: { required, email },
+      message: { maxLength: maxLength(MESSAGE_MAX_LENGTH) },
     },
   },
 }

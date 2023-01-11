@@ -208,6 +208,24 @@ def test_create_group_invitation(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["message"] == ""
 
+    message = ""
+    for i in range(GroupInvitation._meta.get_field("message").max_length + 1):
+        message += str(i % 10)
+
+    response = api_client.post(
+        reverse("api:groups:invitations:list", kwargs={"group_id": group_1.id}),
+        {
+            "email": "test2@test.nl",
+            "permissions": "ADMIN",
+            "base_url": "http://localhost:3000/invite",
+            "message": message,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
 
 @pytest.mark.django_db
 def test_get_group_invitation(api_client, data_fixture):
