@@ -33,12 +33,10 @@ class RestoreDatabaseTableOperationType(DatabaseTableOperationType):
 
 class ListRowsDatabaseTableOperationType(DatabaseTableOperationType):
     type = "database.table.list_rows"
-    object_scope_name = "database_row"
 
 
 class ListRowNamesDatabaseTableOperationType(DatabaseTableOperationType):
     type = "database.table.list_row_names"
-    object_scope_name = "database_row"
 
 
 class ListAggregationDatabaseTableOperationType(DatabaseTableOperationType):

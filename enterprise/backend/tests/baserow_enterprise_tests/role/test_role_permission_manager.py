@@ -1,4 +1,6 @@
+from django.db import connection
 from django.test import override_settings
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 
@@ -681,7 +683,7 @@ def test_check_permissions_with_teams(
             user,
             UpdateApplicationOperationType.type,
             group=group_1,
-            context=database_1,
+            context=database_1.application_ptr,
         )
         is True
     )
@@ -885,8 +887,8 @@ def test_get_permissions_object_with_teams(
 
     perms = perm_manager.get_permissions_object(user, group=group_1)
 
-    assert all([not perm["default"] for perm in perms])
-    assert all([not perm["exceptions"] for perm in perms])
+    assert all([not perm["default"] for perm in perms.values()])
+    assert all([not perm["exceptions"] for perm in perms.values()])
 
     # The user role should take the precedence
     RoleAssignmentHandler().assign_role(user, group_1, role=role_builder)
@@ -1109,3 +1111,141 @@ def test_all_operations_are_in_at_least_one_default_role(data_fixture):
     assert missing_ops == [], "Non Assigned Ops:\n" + str(
         "\n".join([o.__class__.__name__ + "," for o in missing_ops])
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_check_permission_performance" -s --run-disabled-in-ci
+def test_check_permission_performance(data_fixture, enterprise_data_fixture, profiler):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, group=group)
+    table11 = data_fixture.create_database_table(user=user, database=database1)
+    table12 = data_fixture.create_database_table(user=user, database=database1)
+    database2 = data_fixture.create_database_application(user=user, group=group)
+    table21 = data_fixture.create_database_table(user=user, database=database2)
+    table22 = data_fixture.create_database_table(user=user, database=database2)
+
+    team1 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team2 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team3 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+
+    editor_role = Role.objects.get(uid="EDITOR")
+    builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    RoleAssignmentHandler().assign_role(
+        user, group, role=low_priority_role, scope=group
+    )
+    RoleAssignmentHandler().assign_role(user, group, role=editor_role, scope=database1)
+    RoleAssignmentHandler().assign_role(user, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(user, group, role=viewer_role, scope=table22)
+
+    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
+    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+
+    permission_manager = RolePermissionManagerType()
+
+    print("----------- first call queries ---------------")
+    with CaptureQueriesContext(connection) as captured:
+        permission_manager.check_permissions(
+            user, ReadDatabaseTableOperationType.type, group=group, context=table11
+        )
+
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))
+
+    print("----------- second call queries ---------------")
+    with CaptureQueriesContext(connection) as captured:
+        permission_manager.check_permissions(
+            user, ReadDatabaseTableOperationType.type, group=group, context=table11
+        )
+
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))
+
+    print("----------- check_permission perfs ---------------")
+    with profiler(html_report_name="enterprise_check_permissions"):
+        for i in range(1000):
+            permission_manager.check_permissions(
+                user, ReadDatabaseTableOperationType.type, group=group, context=table11
+            )
+
+
+@pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_get_permission_object_performance" -s --run-disabled-in-ci
+def test_get_permission_object_performance(
+    data_fixture, enterprise_data_fixture, profiler
+):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, group=group)
+    table11 = data_fixture.create_database_table(user=user, database=database1)
+    table12 = data_fixture.create_database_table(user=user, database=database1)
+    database2 = data_fixture.create_database_application(user=user, group=group)
+    table21 = data_fixture.create_database_table(user=user, database=database2)
+    table22 = data_fixture.create_database_table(user=user, database=database2)
+
+    team1 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team2 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team3 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+
+    editor_role = Role.objects.get(uid="EDITOR")
+    builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    RoleAssignmentHandler().assign_role(
+        user, group, role=low_priority_role, scope=group
+    )
+    RoleAssignmentHandler().assign_role(user, group, role=editor_role, scope=database1)
+    RoleAssignmentHandler().assign_role(user, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(user, group, role=viewer_role, scope=table22)
+
+    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
+    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+
+    permission_manager = RolePermissionManagerType()
+
+    print("----------- first call queries ---------------")
+    with CaptureQueriesContext(connection) as captured:
+        permission_manager.get_permissions_object(user, group=group)
+
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))
+
+    print("----------- second call queries ---------------")
+    with CaptureQueriesContext(connection) as captured:
+        permission_manager.get_permissions_object(user, group=group)
+
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))
+
+    print("----------- get_permission_object perfs ---------------")
+    with profiler(html_report_name="enterprise_get_permissions_object"):
+        for i in range(1000):
+            permission_manager.get_permissions_object(user, group=group)

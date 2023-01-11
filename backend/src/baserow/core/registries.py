@@ -1,11 +1,12 @@
 import abc
+from collections import defaultdict
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.db.transaction import Atomic
 
 from rest_framework.serializers import Serializer
@@ -504,6 +505,14 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
     context.
     """
 
+    def get_content_type(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        return ContentType.objects.get_for_model(self.model_class)
+
+    def get_object_for_this_type(self, **kwargs):
+        return self.get_content_type().get_object_for_this_type(**kwargs)
+
     def get_parent_scope(self) -> Optional["ObjectScopeType"]:
         """
         Returns the parent scope of the current scope.
@@ -512,6 +521,19 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         """
 
         return None
+
+    def get_parent_scopes(self) -> List["ObjectScopeType"]:
+        """
+        Returns the parent scope of the current scope.
+
+        :return: the parent `ObjectScopeType` or `None` if it's a root scope.
+        """
+
+        parent_scope = self.get_parent_scope()
+        if not parent_scope:
+            return []
+
+        return [parent_scope] + parent_scope.get_parent_scopes()
 
     def get_parent(self, context: ContextObject) -> Optional[ContextObject]:
         """
@@ -554,9 +576,100 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         :return: An iterable containing the context objects for the given scope.
         """
 
+        return self.get_objects_in_scopes([scope])[scope]
+
+    def get_filter_for_scope_type(
+        self, scope_type: "ObjectScopeType", scopes: List[Any]
+    ) -> Q:
+        """
+        Returns the filter to apply to the queryset that selects all the context
+        objects included in the given scopes.
+        All the scopes must be members of the given scope type.
+
+        :param scope_type: The scope type the scopes belongs to.
+        :param scopes: The scopes objects we want the context object for.
+        :return: A Q object that can be used in a filter operation.
+        """
+
         raise NotImplementedError(
             f"Must be implemented by the specific type <{self.type}>"
         )
+
+    def get_enhanced_queryset(self) -> QuerySet:
+        """
+        Returns the base queryset for the objects of this scope enhanced for better
+        performances.
+        """
+
+        return self.model_class.objects.all()
+
+    def get_filter_for_scopes(self, scopes: List[Any]) -> Dict[Any, Any]:
+        """
+        Computes the filter to apply get all the objects instance of `self.model_class`
+        included in the given scopes.
+
+        :param scopes: A list of scopes we want the object for.
+        :return: A Q object filter.
+        """
+
+        # Group scope by types to use `.get_filter_for_scope_type` later
+        scope_by_types = defaultdict(set)
+        for s in scopes:
+            scope_by_types[object_scope_type_registry.get_by_model(s)].add(s)
+
+        union_query = Q(id__in=[])
+
+        for scope_type, scopes in scope_by_types.items():
+            if scope_type.type == self.type:
+                # Simple case: the scope type is the same as this one
+                # Just filter by id
+                union_query |= Q(id__in=[s.id for s in scopes])
+            else:
+                # Otherwise it's a parent scope. We add a part to the query_parts
+                union_query |= self.get_filter_for_scope_type(scope_type, scopes)
+
+        return union_query
+
+    def get_objects_in_scopes(self, scopes: List[Any]) -> Dict[Any, Any]:
+        """
+        Computes the list of all objects, instance of the model_class property
+        included in the given scopes.
+
+        :param scopes: A list of scopes we want the object for.
+        :return: A dict where the keys are the given scopes and the value is a list
+          of the child objects of each scope.
+        """
+
+        objects_per_scope = {}
+
+        parent_scopes = []
+        for scope in scopes:
+            if object_scope_type_registry.get_by_model(scope).type == self.type:
+                # Scope of the same type doesn't need to be queried
+                objects_per_scope[scope] = set([scope])
+            else:
+                parent_scopes.append(scope)
+
+        if parent_scopes:
+            query_result = list(
+                self.get_enhanced_queryset().filter(
+                    self.get_filter_for_scopes(parent_scopes)
+                )
+            )
+
+            # We have all the objects in the queryset, but now we want to sort them
+            # into buckets per original scope they are a child of.
+            for scope in scopes:
+                objects_per_scope[scope] = set()
+                scope_type = object_scope_type_registry.get_by_model(scope)
+                for obj in query_result:
+                    parent_scope = object_scope_type_registry.get_parent(
+                        obj, at_scope_type=scope_type
+                    )
+                    if parent_scope == scope:
+                        objects_per_scope[scope].add(obj)
+
+        return objects_per_scope
 
     def contains(self, context: ContextObject):
         """
@@ -701,7 +814,7 @@ class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
         of subject that is being serialized
         :param model_instance: instance of a subject
         :param kwargs: additional kwargs that are parsed to serializer
-        :return: the correct seralizer for the subject
+        :return: the correct serializer for the subject
         """
 
         pass

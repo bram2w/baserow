@@ -1,12 +1,15 @@
 import asyncio
 import contextlib
 import os
+from pathlib import Path
+from typing import Dict, Optional
 
 from django.apps import apps
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS
 
 import pytest
+from pyinstrument import Profiler
 
 from baserow.core.apps import sync_operations_after_migrate
 from baserow_enterprise.apps import sync_default_roles_after_migrate
@@ -172,3 +175,50 @@ def pytest_collection_modifyitems(config, items):
                 )
                 item.add_marker(skip_marker)
                 break
+
+
+@pytest.fixture()
+def profiler():
+    """
+    A fixture to provide an easy way to profile code in your tests.
+    """
+
+    TESTS_ROOT = Path.cwd()
+    PROFILE_ROOT = TESTS_ROOT / ".profiles"
+    profiler = Profiler()
+
+    @contextlib.contextmanager
+    def profile_this(
+        print_result: bool = True,
+        html_report_name: str = "",
+        output_text_params: Optional[Dict] = None,
+        output_html_params: Optional[Dict] = None,
+    ):
+        """
+        Context manager to profile something.
+        """
+
+        profiler.start()
+
+        yield profiler
+
+        profiler.stop()
+
+        output_text_params = output_text_params or {}
+        output_html_params = output_html_params or {}
+
+        output_text_params.setdefault("unicode", True)
+        output_text_params.setdefault("color", True)
+
+        if print_result:
+            print(profiler.output_text(**output_text_params))
+
+        if html_report_name:
+            PROFILE_ROOT.mkdir(exist_ok=True)
+            results_file = PROFILE_ROOT / f"{html_report_name}.html"
+            with open(results_file, "w", encoding="utf-8") as f_html:
+                f_html.write(profiler.output_html(**output_html_params))
+
+        profiler.reset()
+
+    return profile_this
