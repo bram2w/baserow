@@ -32,7 +32,12 @@
           <div v-if="loading" class="context--loading">
             <div class="loading"></div>
           </div>
-          <div v-else-if="fieldsInThroughTable.length > 0" class="control">
+          <div
+            v-else-if="
+              fieldsInThroughTable.length > 0 && isSelectedFieldAccessible
+            "
+            class="control"
+          >
             <label class="control__label control__label--small">
               {{ $t('fieldLookupSubForm.selectTargetFieldLabel') }}
             </label>
@@ -102,15 +107,35 @@ export default {
     }
   },
   computed: {
+    database() {
+      return this.$store.getters['application/get'](this.table.database_id)
+    },
+    linkedToTable() {
+      return this.allTables.find(
+        (table) => table.id === this.selectedField?.link_row_table_id
+      )
+    },
+    isSelectedFieldAccessible() {
+      return (
+        this.linkedToTable &&
+        this.$hasPermission(
+          'database.table.list_fields',
+          this.linkedToTable,
+          this.database.group.id
+        )
+      )
+    },
+    selectedField() {
+      return this.$store.getters['field/get'](this.values.through_field_id)
+    },
     linkRowFieldsInThisTable() {
-      const tableIdsAccessible = this.allTables.map((table) => table.id)
       const fields = this.$store.getters['field/getAll']
       return fields
         .filter((f) => f.type === 'link_row')
         .map((f) => {
           const fieldType = this.$registry.get('field', f.type)
           f.icon = fieldType.getIconClass()
-          f.disabled = !tableIdsAccessible.includes(f.link_row_table_id)
+          f.disabled = !this.tableIdsAccessible.includes(f.link_row_table_id)
           return f
         })
     },
@@ -125,6 +150,9 @@ export default {
         },
         []
       )
+    },
+    tableIdsAccessible() {
+      return this.allTables.map((table) => table.id)
     },
     targetFieldFormulaType() {
       if (this.values.target_field_id) {
@@ -161,7 +189,7 @@ export default {
   },
   methods: {
     async throughFieldSelected() {
-      if (!this.values.through_field_id) {
+      if (!this.values.through_field_id || !this.isSelectedFieldAccessible) {
         return
       }
       this.loading = true
@@ -169,12 +197,9 @@ export default {
       this.errorFromServer = null
 
       try {
-        const selectedField = this.$store.getters['field/get'](
-          this.values.through_field_id
-        )
-        if (selectedField && selectedField.link_row_table_id) {
+        if (this.selectedField && this.selectedField.link_row_table_id) {
           const { data } = await FieldService(this.$client).fetchAll(
-            selectedField.link_row_table_id
+            this.selectedField.link_row_table_id
           )
           this.fieldsInThroughTable = data
             .filter((f) => {
