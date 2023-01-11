@@ -2,6 +2,9 @@ import uuid
 from typing import Any, Dict
 from urllib.request import Request
 
+from django.contrib.auth import get_user_model
+from django.db import transaction
+
 from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -19,6 +22,7 @@ from baserow.api.sessions import set_client_undo_redo_action_group_id
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     GroupDoesNotExist,
+    LastAdminOfGroup,
     ObjectScopeTypeDoesNotExist,
     UserNotInGroup,
 )
@@ -27,6 +31,7 @@ from baserow.core.registries import object_scope_type_registry
 from baserow.core.utils import unique_dicts_in_list
 from baserow_enterprise.api.errors import (
     ERROR_DUPLICATE_ROLE_ASSIGNMENTS,
+    ERROR_LAST_ADMIN_OF_GROUP,
     ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
     ERROR_ROLE_DOES_NOT_EXIST,
     ERROR_SCOPE_DOES_NOT_EXIST,
@@ -52,6 +57,8 @@ from .serializers import (
     OpenApiRoleAssignmentSerializer,
     RoleAssignmentSerializer,
 )
+
+User = get_user_model()
 
 
 class RoleAssignmentsView(APIView):
@@ -104,9 +111,11 @@ class RoleAssignmentsView(APIView):
             SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
+            LastAdminOfGroup: ERROR_LAST_ADMIN_OF_GROUP,
         }
     )
     @validate_body(CreateRoleAssignmentSerializer, return_validated=True)
+    @transaction.atomic
     def post(
         self,
         request: Request,
@@ -118,15 +127,17 @@ class RoleAssignmentsView(APIView):
         group = CoreHandler().get_group(group_id)
 
         role = data.get("role", None)
+        scope = data.get("scope", None)
+        subject = data.get("subject", None)
 
         if role is not None:
             # We set the role
             role_assignment = action_type_registry.get_by_type(AssignRoleActionType).do(
                 request.user,
-                data["subject"],
+                subject,
                 group,
                 role,
-                scope=data["scope"],
+                scope=scope,
             )
 
             serializer = RoleAssignmentSerializer(role_assignment)

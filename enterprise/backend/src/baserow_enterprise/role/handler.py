@@ -10,6 +10,7 @@ from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Group, GroupUser
 from baserow.core.object_scopes import CoreObjectScopeType
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
+from baserow.core.types import ScopeObject, Subject
 from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
 from baserow_enterprise.models import RoleAssignment
 from baserow_enterprise.role.models import Role
@@ -376,7 +377,7 @@ class RoleAssignmentHandler:
         content_types = ContentType.objects.get_for_models(scope, subject)
 
         # Group level permissions are not stored as RoleAssignment records
-        if scope == group and scope.id == group.id and isinstance(subject, User):
+        if RoleAssignmentHandler.is_group_level_assignment(group, scope, subject):
             group_user = group.get_group_user(subject)
             new_permissions = "MEMBER" if role.uid == "BUILDER" else role.uid
             CoreHandler().force_update_group_user(
@@ -429,7 +430,7 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
-        if scope == group and scope.id == group.id and isinstance(subject, User):
+        if RoleAssignmentHandler.is_group_level_assignment(group, scope, subject):
             group_user = group.get_group_user(subject)
             new_permissions = NO_ACCESS_ROLE
             CoreHandler().force_update_group_user(
@@ -541,3 +542,9 @@ class RoleAssignmentHandler:
                 scope_type=ContentType.objects.get_for_model(scope),
             )
             return list(role_assignments)
+
+    @classmethod
+    def is_group_level_assignment(
+        cls, group: Group, scope: ScopeObject, subject: Subject
+    ):
+        return scope == group and scope.id == group.id and isinstance(subject, User)

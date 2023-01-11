@@ -211,3 +211,9 @@ class InvalidPermissionContext(Exception):
     """
     Used when an invalid context is passed to a permission checker.
     """
+
+
+class LastAdminOfGroup(Exception):
+    """
+    Raised when somebody tries to remove the last admin of a group.
+    """

@@ -250,7 +250,9 @@
         "snapshotOperationLimitExceededTitle": "Limit reached",
         "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes.",
         "disabledPasswordProviderTitle": "Password authentication is disabled.",
-        "disabledPasswordProviderMessage": "Please use another authentication provider."
+        "disabledPasswordProviderMessage": "Please use another authentication provider.",
+        "lastAdminTitle": "Can't remove last group admin",
+        "lastAdminMessage": "A group has to have at least one admin."
     },
     "importerType": {
         "csv": "Import a CSV file",

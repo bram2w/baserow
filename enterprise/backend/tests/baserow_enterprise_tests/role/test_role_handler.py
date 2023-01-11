@@ -99,7 +99,7 @@ def test_create_role_assignment_unique_constraint(data_fixture):
 @pytest.mark.django_db
 def test_get_current_role_assignment(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(user=user, group=group)
     table = data_fixture.create_database_table(user=user, database=database)
     role = Role.objects.get(uid="BUILDER")
@@ -126,7 +126,7 @@ def test_get_current_role_assignment(data_fixture):
 @pytest.mark.django_db
 def test_remove_role(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(user=user, group=group)
     table = data_fixture.create_database_table(user=user, database=database)
     role = Role.objects.get(uid="BUILDER")
