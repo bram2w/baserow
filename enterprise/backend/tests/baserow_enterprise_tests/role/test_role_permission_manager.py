@@ -635,9 +635,7 @@ def test_check_permissions_with_teams(
     enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
 
-    group_1 = data_fixture.create_group(
-        user=user,
-    )
+    group_1 = data_fixture.create_group(members=[user])
     database_1 = data_fixture.create_database_application(group=group_1, order=1)
 
     table_1_1, _, _ = data_fixture.build_table(
@@ -855,7 +853,7 @@ def test_get_permissions_object_with_teams(
     user = data_fixture.create_user()
 
     group_1 = data_fixture.create_group(
-        user=user,
+        members=[user],
     )
     database_1 = data_fixture.create_database_application(group=group_1, order=1)
 

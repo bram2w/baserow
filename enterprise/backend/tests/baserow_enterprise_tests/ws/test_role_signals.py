@@ -51,7 +51,7 @@ def use_async_event_loop_here(async_event_loop):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
@@ -83,7 +83,7 @@ async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
@@ -117,7 +117,7 @@ async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
 async def test_unsubscribe_subject_from_table_unrelated_user(data_fixture):
     user = data_fixture.create_user()
     unrelated_user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[unrelated_user])
+    group = data_fixture.create_group(members=[user, unrelated_user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
@@ -180,7 +180,7 @@ async def test_unsubscribe_subject_from_table_new_role_no_access(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_updated(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")

@@ -34,6 +34,7 @@ from .exceptions import (
     GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
     InvalidPermissionContext,
+    LastAdminOfGroup,
     PermissionDenied,
     PermissionException,
     TemplateDoesNotExist,
@@ -92,7 +93,12 @@ from .signals import (
 )
 from .trash.handler import TrashHandler
 from .types import ContextObject
-from .utils import ChildProgressBuilder, find_unused_name, set_allowed_attrs
+from .utils import (
+    ChildProgressBuilder,
+    atomic_if_not_already,
+    find_unused_name,
+    set_allowed_attrs,
+)
 
 User = get_user_model()
 
@@ -631,11 +637,15 @@ class CoreHandler:
         sending all the appropriate signals that an update has been done.
         """
 
-        before_group_user_updated.send(self, group_user=group_user, **kwargs)
-        group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
-        group_user.save()
-        group_user_updated.send(self, group_user=group_user, user=user)
-        return group_user
+        with atomic_if_not_already():
+            if kwargs["permissions"] != "ADMIN":
+                CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
+
+            before_group_user_updated.send(self, group_user=group_user, **kwargs)
+            group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
+            group_user.save()
+            group_user_updated.send(self, group_user=group_user, user=user)
+            return group_user
 
     def delete_group_user(self, user, group_user):
         """
@@ -1601,3 +1611,24 @@ class CoreHandler:
         Application.objects.bulk_update(applications, ["installed_from_template"])
 
         return applications, id_mapping
+
+    @classmethod
+    def raise_if_user_is_last_admin_of_group(cls, group_user: GroupUser):
+        """
+        Checks if a user that's about to be removed is the last admin of the group.
+
+        :param group_user: The group user we are checking for
+        :return:
+        """
+
+        admins_in_group_count = len(
+            GroupUser.objects.filter(
+                group=group_user.group, permissions="ADMIN"
+            ).select_for_update(of=("self",))
+        )
+
+        is_subject_admin = group_user.permissions == "ADMIN"
+        is_subject_last_admin = is_subject_admin and admins_in_group_count == 1
+
+        if is_subject_last_admin:
+            raise LastAdminOfGroup()
