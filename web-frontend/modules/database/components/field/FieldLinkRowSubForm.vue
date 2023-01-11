@@ -9,10 +9,11 @@
           <Dropdown
             v-model="values.link_row_table_id"
             :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+            :disabled="!isSelectedFieldAccessible"
             @hide="$v.values.link_row_table_id.$touch()"
           >
             <DropdownItem
-              v-for="table in tables"
+              v-for="table in tablesWhereFieldsCanBeCreated"
               :key="table.id"
               :name="table.name"
               :value="table.id"
@@ -71,6 +72,39 @@ export default {
         }
       }
       return []
+    },
+    database() {
+      return this.$store.getters['application/get'](this.table.database_id)
+    },
+    tablesWhereFieldsCanBeCreated() {
+      return this.tables.filter((table) =>
+        this.$hasPermission(
+          'database.table.create_field',
+          table,
+          this.database.group.id
+        )
+      )
+    },
+    canDeleteInSelectedFieldTable() {
+      return (
+        this.selectedFieldTable &&
+        this.$hasPermission(
+          'database.table.field.delete_related_link_row_field',
+          this.selectedFieldTable,
+          this.database.group.id
+        )
+      )
+    },
+    selectedFieldTable() {
+      return this.tablesWhereFieldsCanBeCreated.find(
+        (table) => table.id === this.values?.link_row_table_id
+      )
+    },
+    isSelectedFieldAccessible() {
+      return (
+        this.values?.link_row_table_id === null ||
+        this.canDeleteInSelectedFieldTable
+      )
     },
   },
   mounted() {
