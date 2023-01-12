@@ -356,6 +356,13 @@ class LicenseHandler:
 
                 if authority_check["type"] == AUTHORITY_RESPONSE_UPDATE:
                     license_object.license = authority_check["new_license_payload"]
+                    license_payload_as_string = authority_check["new_license_payload"]
+                    license_payload = license_payload_as_string.encode()
+                    decoded_license_payload = cls.decode_license(license_payload)
+                    instance_wide = license_type_registry.get(
+                        decoded_license_payload["product_code"]
+                    ).instance_wide
+                    license_object.cached_untrusted_instance_wide = instance_wide
                     license_object.save()
                 elif authority_check["type"] in [
                     AUTHORITY_RESPONSE_DOES_NOT_EXIST,
