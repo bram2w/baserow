@@ -145,7 +145,7 @@ class ExportJobView(APIView):
         tags=["Database table export"],
         operation_id="get_export_job",
         description=(
-            "Returns information such as export progress and status or the url of the "
+            "Returns information such as export progress and state or the url of the "
             "exported file for the specified export job, only if the requesting user "
             "has access."
         ),

@@ -19,7 +19,8 @@
         :loading="loading"
         :disabled="!isValid"
         :filename="filename"
-      ></ExportTableLoadingBar>
+      >
+      </ExportTableLoadingBar>
     </ExportTableForm>
   </Modal>
 </template>
@@ -67,11 +68,11 @@ export default {
   computed: {
     jobIsRunning() {
       return (
-        this.job !== null && ['exporting', 'pending'].includes(this.job.status)
+        this.job !== null && ['exporting', 'pending'].includes(this.job.state)
       )
     },
     jobHasFailed() {
-      return ['failed', 'cancelled'].includes(this.job.status)
+      return ['failed', 'cancelled'].includes(this.job.state)
     },
     ...mapState({
       selectedTableViews: (state) => state.view.items,
@@ -142,11 +143,11 @@ export default {
         }
         if (this.jobHasFailed) {
           const title =
-            this.job.status === 'failed'
+            this.job.state === 'failed'
               ? this.$t('exportTableModal.failedTitle')
               : this.$t('exportTableModal.cancelledTitle')
           const message =
-            this.job.status === 'failed'
+            this.job.state === 'failed'
               ? this.$t('exportTableModal.failedDescription')
               : this.$t('exportTableModal.cancelledDescription')
           this.showError(title, message)
