@@ -1,3 +1,9 @@
+### What is in this MR
+- E.g. a short explanation of what this MR does.
+
+### How to test this MR
+- E.g. a short series of steps on how to test the features/bug fixes in this MR.
+
 ### Merge Request Checklist
 
 - [ ] [changelog.md](https://gitlab.com/bramw/baserow/-/blob/develop/changelog.md) has
@@ -8,7 +14,7 @@
   updated
 - [ ] [Quality Standards](https://gitlab.com/bramw/baserow/-/blob/develop/CONTRIBUTING.md#quality-standards)
   are met
-- [ ] **Performance**: tables are still fast with 100k+ rows, 100+ field tables 
+- [ ] **Performance**: tables are still fast with 100k+ rows, 100+ field tables
 - [ ] The [redoc API pages](https://api.baserow.io/api/redoc/) have been updated for any
   REST API changes
 - [ ] 
