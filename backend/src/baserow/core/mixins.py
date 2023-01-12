@@ -1,3 +1,4 @@
+import abc
 from typing import List
 
 from django.contrib.contenttypes.models import ContentType
@@ -245,6 +246,35 @@ class CreatedAndUpdatedOnMixin(models.Model):
 
     created_on = models.DateTimeField(auto_now_add=True, blank=True, editable=False)
     updated_on = models.DateTimeField(auto_now=True, blank=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class AbstractModelMeta(abc.ABCMeta, type(models.Model)):
+    pass
+
+
+class HierarchicalModelMixin(models.Model, metaclass=AbstractModelMeta):
+    """
+    This mixin introduce some helpers for working with hierarchical models.
+    """
+
+    @abc.abstractclassmethod
+    def get_parent(self):
+        """
+        :return: The parent of this model. Returns None if this is the root.
+        """
+
+    def get_root(self):
+        """
+        :return: The root of the hierarchy.
+        """
+
+        root = self
+        while r := root.get_parent():
+            root = r
+        return root
 
     class Meta:
         abstract = True

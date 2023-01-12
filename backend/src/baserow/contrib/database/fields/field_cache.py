@@ -34,7 +34,7 @@ class FieldCache:
 
     # noinspection PyUnresolvedReferences,PyProtectedMember
     def cache_model(self, model: Type[Model]):
-        self._model_cache[model._table_id] = model
+        self._model_cache[model.baserow_table_id] = model
         self.cache_model_fields(model)
 
     # noinspection PyUnresolvedReferences,PyProtectedMember

@@ -3,6 +3,7 @@ from django.db.models import Q
 
 from baserow.contrib.database.fields.models import Field, FileField, SingleSelectField
 from baserow.contrib.database.views.models import View
+from baserow.core.mixins import HierarchicalModelMixin
 
 
 class KanbanView(View):
@@ -41,7 +42,7 @@ class KanbanViewFieldOptionsManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class KanbanViewFieldOptions(models.Model):
+class KanbanViewFieldOptions(HierarchicalModelMixin, models.Model):
     objects = KanbanViewFieldOptionsManager()
     objects_and_trash = models.Manager()
 
@@ -57,6 +58,9 @@ class KanbanViewFieldOptions(models.Model):
         default=32767,
         help_text="The order that the field has in the form. Lower value is first.",
     )
+
+    def get_parent(self):
+        return self.kanban_view
 
     class Meta:
         db_table = "database_kanbanviewfieldoptions"

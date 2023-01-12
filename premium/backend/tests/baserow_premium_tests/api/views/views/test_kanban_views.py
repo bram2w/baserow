@@ -1719,3 +1719,24 @@ def test_list_public_rows_limit_offset(api_client, premium_data_fixture):
             }
         },
     }
+
+
+@pytest.mark.django_db
+def test_kanban_view_hierarchy(api_client, premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    group = premium_data_fixture.create_group(user=user)
+    app = premium_data_fixture.create_database_application(group=group, name="Test 1")
+    table = premium_data_fixture.create_database_table(database=app)
+    premium_data_fixture.create_text_field(table=table)
+
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    assert kanban_view.get_parent() == table
+    assert kanban_view.get_root() == group
+
+    kanban_view_field_options = kanban_view.get_field_options()[0]
+    assert kanban_view_field_options.get_parent() == kanban_view
+    assert kanban_view_field_options.get_root() == group
