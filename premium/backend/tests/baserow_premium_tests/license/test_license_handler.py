@@ -79,6 +79,19 @@ VALID_INSTANCE_TWO_LICENSE = (
     b"EB4cAeV4I29JXPC83qtwt6DSCPxudlJsli3tYsLMcxAHysVN3H_FAY8qg54MP33OKvZuwww5uFDITMQ="
     b"="
 )
+VALID_ENTERPRISE_FIVE_SEAT_LICENSE = (
+    b"eyJ2ZXJzaW9uIjogMSwgImlkIjogIjNmMDE2OGFmLWFmYWYtNDQyNi04OTZiLWIzODgzOTEwNzZlNyIsI"
+    b"CJ2YWxpZF9mcm9tIjogIjIwMjEtMDEtMDFUMDA6MDA6MDAiLCAidmFsaWRfdGhyb3VnaCI6ICIyMDIxLT"
+    b"EyLTMxVDIzOjU5OjU5IiwgInByb2R1Y3RfY29kZSI6ICJlbnRlcnByaXNlIiwgInNlYXRzIjogNSwgIml"
+    b"zc3VlZF9vbiI6ICIyMDIzLTAxLTExVDE0OjUzOjQ1LjM3Mjk1MCIsICJpc3N1ZWRfdG9fZW1haWwiOiAi"
+    b"cGV0ckBleGFtcGxlLmNvbSIsICJpc3N1ZWRfdG9fbmFtZSI6ICJwZXRyQGV4YW1wbGUuY29tIiwgImluc"
+    b"3RhbmNlX2lkIjogIjZkNjM2NmI4LTZmMzItNDU0OS04MWMyLWQ0YTBjMDdhMzM0YiJ9.B6os-CyNrp5wW"
+    b"3gDTwjariLS6KhUBFYBwOlDlpVkTB8BPe1yjVIxw7nRH09TXovp9oTc2iJkGY5znBxuFMbCotmnIkBTnw"
+    b"p6uOhBMlPQFydzUXt1GmaWpEEcTSV7hKNVykPasEBCTK3Z4CA-eTjJBKo7vGCT7qTu01I4ghgI4aBEM5J"
+    b"qMe-ngEomRVnRMPAEgCNjFB44rVAB3zcJfPuBoukRB2FjOw1ddEkA3DjwcHlhkj1NcETlyUpFbFtCjhtL"
+    b"oowm_5CZm8Ba6eL-YgI2vKTWfMsVZ9GkJxcaiK3d-AB_ipjub-VVyNXPiVWab7108w3EXmoZIvmhCc67g"
+    b"bL3jA=="
+)
 INVALID_SIGNATURE_LICENSE = (
     b"eyJ2ZXJzaW9uIjogMSwgImlkIjogMSwgInZhbGlkX2Zyb20iOiAiMjAyMS0wOC0yOVQxOTo1NDoxMi4w"
     b"NjY4NDYiLCAidmFsaWRfdGhyb3VnaCI6ICIyMDIxLTA5LTI5VDE5OjU0OjEyLjA2Njg0NiIsICJwcm9k"
@@ -357,6 +370,7 @@ def test_fetch_license_status_with_authority(data_fixture):
 # Activate the responses because we want to check with the authority to fail.
 @responses.activate
 def test_check_licenses_with_authority_check(premium_data_fixture):
+
     invalid_license = premium_data_fixture.create_premium_license(license="invalid")
     does_not_exist_license = premium_data_fixture.create_premium_license(
         license="does_not_exist"
@@ -408,6 +422,39 @@ def test_check_licenses_with_authority_check(premium_data_fixture):
         assert all_licenses[0].last_check.year == 2021
         assert all_licenses[1].id == ok_license.id
         assert all_licenses[1].last_check.year == 2021
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@responses.activate
+def test_check_licenses_update_instance_wide(premium_data_fixture):
+    updated_license = premium_data_fixture.create_premium_license(license="update")
+
+    with freeze_time("2021-07-01 12:00"):
+        responses.add(
+            responses.POST,
+            "http://baserow-saas-backend:8000/api/saas/licenses/check/",
+            json={
+                "update": {
+                    "type": "update",
+                    "detail": "",
+                    "new_license_payload": VALID_ENTERPRISE_FIVE_SEAT_LICENSE.decode(),
+                },
+                VALID_TWO_SEAT_LICENSE.decode(): {"type": "ok", "detail": ""},
+            },
+            status=200,
+        )
+
+        LicenseHandler.check_licenses(
+            [
+                updated_license,
+            ]
+        )
+
+        all_licenses = License.objects.all().order_by("id")
+        assert all_licenses[0].id == updated_license.id
+        assert all_licenses[0].license == VALID_ENTERPRISE_FIVE_SEAT_LICENSE.decode()
+        assert all_licenses[0].cached_untrusted_instance_wide is True
 
 
 @pytest.mark.django_db
