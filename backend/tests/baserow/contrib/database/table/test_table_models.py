@@ -823,3 +823,19 @@ def test_order_by_field_string_with_multiple_field_types_requiring_aggregations(
     )
     assert results[0].id == row_1.id
     assert results[1].id == row_2.id
+
+
+@pytest.mark.django_db
+def test_table_hierarchy(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    app = data_fixture.create_database_application(group=group, name="Test 1")
+    table = data_fixture.create_database_table(name="Cars", database=app)
+
+    assert table.get_parent() == app
+    assert table.get_root() == group
+
+    table_model = table.get_model()
+    row = table_model.objects.create()
+    assert row.get_parent() == table
+    assert row.get_root() == group

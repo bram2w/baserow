@@ -35,6 +35,7 @@ For example:
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
+* Introduce a single-parent hierarchy for models.
 
 ## Released (2022-12-22 1.13.3)
 

@@ -4,7 +4,7 @@ from django.db import connection
 
 import pytest
 
-from baserow.contrib.database.fields.models import DateField, LinkRowField
+from baserow.contrib.database.fields.models import DateField, LinkRowField, TextField
 
 
 @pytest.mark.django_db
@@ -113,3 +113,15 @@ def test_link_row_field(data_fixture):
         ).link_row_relation_id
         == base_link_row_relation_id + 5
     )
+
+
+@pytest.mark.django_db
+def test_field_hierarchy(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    app = data_fixture.create_database_application(group=group, name="Test 1")
+    table = data_fixture.create_database_table(name="Cars", database=app)
+    field = TextField.objects.create(name="Test1", table=table, order=1)
+
+    assert field.get_parent() == table
+    assert field.get_root() == group

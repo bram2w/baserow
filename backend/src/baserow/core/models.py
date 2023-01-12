@@ -17,6 +17,7 @@ from .action.models import Action
 from .exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
 from .mixins import (
     CreatedAndUpdatedOnMixin,
+    HierarchicalModelMixin,
     OrderableMixin,
     ParentGroupTrashableModelMixin,
     PolymorphicContentTypeMixin,
@@ -120,11 +121,14 @@ class UserProfile(models.Model):
     )
 
 
-class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
+class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=160)
     users = models.ManyToManyField(User, through="GroupUser")
     storage_usage = models.IntegerField(null=True)
     storage_usage_updated_at = models.DateTimeField(null=True)
+
+    def get_parent(self):
+        return None
 
     def application_set_including_trash(self):
         """
@@ -295,6 +299,7 @@ class GroupInvitation(
 
 
 class Application(
+    HierarchicalModelMixin,
     TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
@@ -324,6 +329,9 @@ class Application(
     def get_last_order(cls, group):
         queryset = Application.objects.filter(group=group)
         return cls.get_highest_order_of_queryset(queryset) + 1
+
+    def get_parent(self):
+        return self.group
 
 
 class TemplateCategory(models.Model):
@@ -474,7 +482,7 @@ class DuplicateApplicationJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
     )
 
 
-class Snapshot(models.Model):
+class Snapshot(HierarchicalModelMixin, models.Model):
     name = models.CharField(max_length=160)
     snapshot_from_application = models.ForeignKey(
         Application, on_delete=models.CASCADE, null=False, related_name="snapshot_to"
@@ -488,6 +496,9 @@ class Snapshot(models.Model):
 
     class Meta:
         unique_together = ("name", "snapshot_from_application")
+
+    def get_parent(self):
+        return self.snapshot_from_application
 
 
 class InstallTemplateJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):

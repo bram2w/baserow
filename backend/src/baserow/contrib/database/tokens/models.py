@@ -2,13 +2,13 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
 
-from baserow.core.mixins import ParentGroupTrashableModelMixin
+from baserow.core.mixins import HierarchicalModelMixin, ParentGroupTrashableModelMixin
 from baserow.core.models import Group
 
 User = get_user_model()
 
 
-class Token(ParentGroupTrashableModelMixin, models.Model):
+class Token(HierarchicalModelMixin, ParentGroupTrashableModelMixin, models.Model):
     """
     A token can be used to authenticate a user with the row create, read, update and
     delete endpoints.
@@ -47,6 +47,9 @@ class Token(ParentGroupTrashableModelMixin, models.Model):
     class Meta:
         ordering = ("id",)
 
+    def get_parent(self):
+        return self.group
+
 
 class TokenPermissionManager(models.Manager):
     """
@@ -62,7 +65,7 @@ class TokenPermissionManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class TokenPermission(models.Model):
+class TokenPermission(HierarchicalModelMixin, models.Model):
     """
     The existence of a permission indicates that the token has access to a table. If
     neither a database nor table is stored that means that the token has access to all
@@ -89,3 +92,6 @@ class TokenPermission(models.Model):
     table = models.ForeignKey(
         "database.Table", on_delete=models.CASCADE, blank=True, null=True
     )
+
+    def get_parent(self):
+        return self.token

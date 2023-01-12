@@ -23,6 +23,7 @@ from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
+    HierarchicalModelMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
@@ -64,6 +65,7 @@ def get_default_field_content_type():
 
 
 class Field(
+    HierarchicalModelMixin,
     TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
@@ -104,6 +106,9 @@ class Field(
             "-primary",
             "order",
         )
+
+    def get_parent(self):
+        return self.table
 
     @classmethod
     def get_last_order(cls, table):
@@ -164,7 +169,9 @@ class Field(
         return save
 
 
-class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
+class AbstractSelectOption(
+    HierarchicalModelMixin, ParentFieldTrashableModelMixin, models.Model
+):
     value = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField()
@@ -178,6 +185,9 @@ class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
             "order",
             "id",
         )
+
+    def get_parent(self):
+        return self.field
 
     def __str__(self):
         return self.value
