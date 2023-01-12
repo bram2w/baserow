@@ -81,6 +81,14 @@ class ExportedFileURLSerializerMixin(serializers.Serializer):
 
 
 class ExportJobSerializer(ExportedFileURLSerializerMixin, serializers.ModelSerializer):
+
+    status = serializers.SerializerMethodField(
+        help_text="DEPRECATED: Use state instead"
+    )
+
+    def get_status(self, instance):
+        return instance.state
+
     class Meta:
         model = ExportJob
         fields = [
@@ -88,6 +96,7 @@ class ExportJobSerializer(ExportedFileURLSerializerMixin, serializers.ModelSeria
             "table",
             "view",
             "exporter_type",
+            "state",
             "status",
             "exported_file_name",
             "created_at",

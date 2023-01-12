@@ -14,12 +14,12 @@ EXPORT_JOB_FAILED_STATUS = "failed"
 EXPORT_JOB_CANCELLED_STATUS = "cancelled"
 EXPORT_JOB_PENDING_STATUS = "pending"
 EXPORT_JOB_EXPIRED_STATUS = "expired"
-EXPORT_JOB_COMPLETED_STATUS = "complete"
+EXPORT_JOB_FINISHED_STATUS = "finished"
 EXPORT_JOB_STATUS_CHOICES = [
     (EXPORT_JOB_PENDING_STATUS, EXPORT_JOB_PENDING_STATUS),
     (EXPORT_JOB_EXPORTING_STATUS, EXPORT_JOB_EXPORTING_STATUS),
     (EXPORT_JOB_CANCELLED_STATUS, EXPORT_JOB_CANCELLED_STATUS),
-    (EXPORT_JOB_COMPLETED_STATUS, EXPORT_JOB_COMPLETED_STATUS),
+    (EXPORT_JOB_FINISHED_STATUS, EXPORT_JOB_FINISHED_STATUS),
     (EXPORT_JOB_FAILED_STATUS, EXPORT_JOB_FAILED_STATUS),
     (EXPORT_JOB_EXPIRED_STATUS, EXPORT_JOB_EXPIRED_STATUS),
 ]
@@ -35,25 +35,25 @@ class ExportJob(models.Model):
     # New exporter types might be registered dynamically by plugins hence we can't
     # restrict this field to a particular choice of options as we don't know them.
     exporter_type = models.TextField()
-    status = models.TextField(choices=EXPORT_JOB_STATUS_CHOICES)
+    state = models.TextField(choices=EXPORT_JOB_STATUS_CHOICES)
     exported_file_name = models.TextField(
         null=True,
         blank=True,
     )
     error = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    # A float going from 0.0 to 1.0 indicating how much progress has been made on the
+    # A float going from 0.0 to 100.0 indicating how much progress has been made on the
     # export.
     progress_percentage = models.FloatField(default=0.0)
     export_options = JSONField()
 
     def is_cancelled_or_expired(self):
-        return self.status in [EXPORT_JOB_CANCELLED_STATUS, EXPORT_JOB_EXPIRED_STATUS]
+        return self.state in [EXPORT_JOB_CANCELLED_STATUS, EXPORT_JOB_EXPIRED_STATUS]
 
     @staticmethod
     def unfinished_jobs(user):
         return ExportJob.objects.filter(user=user).filter(
-            status__in=EXPORT_JOB_RUNNING_STATUSES
+            state__in=EXPORT_JOB_RUNNING_STATUSES
         )
 
     @staticmethod
@@ -73,10 +73,10 @@ class ExportJob(models.Model):
         )
         return ExportJob.objects.filter(created_at__lte=expired_job_time).filter(
             Q(exported_file_name__isnull=False)
-            | Q(status__in=EXPORT_JOB_RUNNING_STATUSES)
+            | Q(state__in=EXPORT_JOB_RUNNING_STATUSES)
         )
 
     class Meta:
         indexes = [
-            models.Index(fields=["created_at", "user", "status"]),
+            models.Index(fields=["created_at", "user", "state"]),
         ]
