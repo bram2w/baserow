@@ -33,6 +33,7 @@ For example:
 * Fixed issue where 2 admins could lower each others permissions at the same time and lock each other out [#1443](https://gitlab.com/bramw/baserow/-/issues/1443)
 * Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
 * Fixed upgrading a license from premium to enterprise results in an expired license. [#1403](https://gitlab.com/bramw/baserow/-/issues/1403)
+* Tweaked the curl examples in the API documentation so that they work properly in all $SHELLs. [#1462](https://gitlab.com/bramw/baserow/-/issues/1462)
 * Replaced the "contains not" and "has not" English filters with "doesn't contain" and "doesn't have" respectively. [#1452](https://gitlab.com/bramw/baserow/-/issues/1452)
 
 ### Refactors
