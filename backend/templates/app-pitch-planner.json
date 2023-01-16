@@ -2,8 +2,20 @@
   "baserow_template_version": 1,
   "name": "App Pitch Planner",
   "icon": "chalkboard-teacher",
-  "keywords": ["keynote", "pitch", "presentation", "app", "idea", "product", "pitch deck", "outline"],
-  "categories": ["Local Business", "Startup"],
+  "keywords": [
+    "keynote",
+    "pitch",
+    "presentation",
+    "app",
+    "idea",
+    "product",
+    "pitch deck",
+    "outline"
+  ],
+  "categories": [
+    "Local Business",
+    "Startup"
+  ],
   "export": [
     {
       "id": 10001,

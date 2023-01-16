@@ -36,6 +36,7 @@ class ConditionalColorValueProviderConfColorFilterSerializer(serializers.Seriali
 
 
 class ConditionalColorValueProviderConfColorSerializer(serializers.Serializer):
+    id = serializers.CharField(help_text="A unique identifier for this condition.")
     color = serializers.CharField(
         help_text="The color the decorator should take if the defined conditions apply."
     )

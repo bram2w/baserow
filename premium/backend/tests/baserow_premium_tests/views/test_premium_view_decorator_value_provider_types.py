@@ -63,12 +63,11 @@ def test_import_export_grid_view_w_decorator(data_fixture):
         view_decoration_2.value_provider_type
         == imported_view_decorations[1].value_provider_type
     )
-    assert imported_view_decorations[1].value_provider_conf == {
-        "colors": [
-            {"filters": [{"field": imported_field.id}]},
-            {"filters": [{"field": imported_field.id}]},
-        ]
-    }
+
+    # a new id is generated for every inserted color
+    for color in imported_view_decorations[1].value_provider_conf["colors"]:
+        assert color["id"] is not None
+        assert color["filters"][0]["field"] == imported_field.id
 
 
 @pytest.mark.django_db
