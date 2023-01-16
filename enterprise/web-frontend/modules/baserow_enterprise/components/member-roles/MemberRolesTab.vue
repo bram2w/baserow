@@ -12,7 +12,7 @@
           class="margin-right-1"
         ></HelpIcon>
         <a
-          :class="{ 'button--loading': loading }"
+          :disabled="loading"
           class="button button--ghost"
           @click="loading ? null : $refs.roleAssignmentModal.show()"
           >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</a

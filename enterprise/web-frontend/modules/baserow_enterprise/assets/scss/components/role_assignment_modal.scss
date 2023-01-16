@@ -1,0 +1,10 @@
+.role-assignment-model__full-height-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.role-assignment-model__full-height-tab {
+  min-height: 0;
+  height: 100%;
+}
