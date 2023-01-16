@@ -236,7 +236,7 @@ export default {
         example += ` \\\n-F file=@${this.fileRequest}`
       }
 
-      example += `\n${this.url}`
+      example += `\n"${this.url}"`
 
       if (this.request !== false) {
         index++
