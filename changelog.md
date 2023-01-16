@@ -37,6 +37,7 @@ For example:
 * Tweaked the curl examples in the API documentation so that they work properly in all $SHELLs. [#1462](https://gitlab.com/bramw/baserow/-/issues/1462)
 * Replaced the "contains not" and "has not" English filters with "doesn't contain" and "doesn't have" respectively. [#1452](https://gitlab.com/bramw/baserow/-/issues/1452)
 * Fixed HOURS_UNTIL_TRASH_PERMANENTLY_DELETED environment variable is not converted to int. [#1499](https://gitlab.com/bramw/baserow/-/issues/1499)
+* Fixed Change Password dialog not visible. [#1501](https://gitlab.com/bramw/baserow/-/issues/1501)
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
