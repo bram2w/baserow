@@ -32,6 +32,7 @@ For example:
 * Fixed issue where 2 admins could lower each others permissions at the same time and lock each other out [#1443](https://gitlab.com/bramw/baserow/-/issues/1443)
 * Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
 * Fixed upgrading a license from premium to enterprise results in an expired license. [#1403](https://gitlab.com/bramw/baserow/-/issues/1403)
+* Replaced the "contains not" and "has not" English filters with "doesn't contain" and "doesn't have" respectively. [#1452](https://gitlab.com/bramw/baserow/-/issues/1452)
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
