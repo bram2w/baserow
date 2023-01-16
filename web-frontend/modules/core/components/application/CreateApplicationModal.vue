@@ -8,20 +8,10 @@
       :is="applicationType.getApplicationFormComponent()"
       ref="applicationForm"
       :default-name="getDefaultName()"
+      :loading="loading"
       @submitted="submitted"
       @hidden="hide()"
     >
-      <div class="actions">
-        <div class="align-right">
-          <button
-            class="button button--large"
-            :class="{ 'button--loading': loading }"
-            :disabled="loading"
-          >
-            {{ $t('action.add') }} {{ applicationType.getName() | lowercase }}
-          </button>
-        </div>
-      </div>
     </component>
   </Modal>
 </template>
