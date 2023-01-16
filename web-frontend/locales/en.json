@@ -125,10 +125,10 @@
     },
     "viewFilter": {
         "contains": "contains",
-        "containsNot": "contains not",
+        "containsNot": "doesn't contain",
         "filenameContains": "filename contains",
         "has": "has",
-        "hasNot": "has not",
+        "hasNot": "doesn't have",
         "higherThan": "higher than",
         "is": "is",
         "isNot": "is not",
