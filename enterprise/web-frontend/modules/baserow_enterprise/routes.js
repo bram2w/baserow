@@ -16,4 +16,9 @@ export const routes = [
     path: '/admin/auth-providers',
     component: path.resolve(__dirname, 'pages/admin/authProviders.vue'),
   },
+  {
+    name: 'admin-audit-log',
+    path: '/admin/audit-log',
+    component: path.resolve(__dirname, 'pages/admin/auditLog.vue'),
+  },
 ]

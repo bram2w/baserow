@@ -1,5 +1,6 @@
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.snapshots.errors import ERROR_SNAPSHOT_DOES_NOT_EXIST
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
@@ -29,9 +30,11 @@ class CreateSnapshotJobType(JobType):
         return application_type.export_safe_transaction_context(application)
 
     def run(self, job: CreateSnapshotJob, progress):
-        from baserow.core.snapshots.handler import SnapshotHandler
+        from .actions import CreateSnapshotActionType
 
-        SnapshotHandler().perform_create(job.snapshot, progress)
+        action_type_registry.get(CreateSnapshotActionType.type).do(
+            job.user, job.snapshot, progress
+        )
 
 
 class RestoreSnapshotJobType(JobType):
@@ -45,6 +48,8 @@ class RestoreSnapshotJobType(JobType):
     }
 
     def run(self, job: RestoreSnapshotJob, progress):
-        from baserow.core.snapshots.handler import SnapshotHandler
+        from .actions import RestoreSnapshotActionType
 
-        SnapshotHandler().perform_restore(job.snapshot, progress)
+        action_type_registry.get(RestoreSnapshotActionType.type).do(
+            job.user, job.snapshot, progress
+        )

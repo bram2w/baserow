@@ -29,3 +29,8 @@ ERROR_INVALID_SORT_ATTRIBUTE = (
     HTTP_400_BAD_REQUEST,
     "Invalid attribute name provided to sort by.",
 )
+ERROR_INVALID_FILTER_ATTRIBUTE = (
+    "ERROR_INVALID_FILTER_ATTRIBUTE",
+    HTTP_400_BAD_REQUEST,
+    "Invalid attribute name provided to filter by.",
+)

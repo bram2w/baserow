@@ -25,7 +25,7 @@
 
 <script>
 export default {
-  name: 'ExportTableLoadingBar',
+  name: 'ExportLoadingBar',
   props: {
     filename: {
       type: String,
@@ -49,13 +49,6 @@ export default {
     disabled: {
       type: Boolean,
       required: true,
-    },
-  },
-  computed: {
-    jobIsRunning() {
-      return (
-        this.job !== null && ['exporting', 'pending'].includes(this.job.state)
-      )
     },
   },
 }

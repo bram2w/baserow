@@ -285,6 +285,7 @@ def get_serializer_class(
     base_class=None,
     meta_ref_name=None,
     required_fields=None,
+    base_mixins=None,
 ):
     """
     Generates a model serializer based on the provided field names and field overrides.
@@ -304,6 +305,8 @@ def get_serializer_class(
     :param required_fields: List of field names that should be present even when
         performing partial validation.
     :type required_fields: list[str]
+    :param mixins: An optional list of mixins that must be added to the serializer.
+    :type base_mixins: list[serializers.Serializer]
     :return: The generated model serializer containing the provided fields.
     :rtype: ModelSerializer
     """
@@ -349,7 +352,15 @@ def get_serializer_class(
         return value
 
     attrs["validate"] = validate
-    return type(str(model_.__name__ + "Serializer"), (base_class,), attrs)
+    mixins = base_mixins or []
+    return type(
+        str(model_.__name__ + "Serializer"),
+        (
+            *mixins,
+            base_class,
+        ),
+        attrs,
+    )
 
 
 class MappingSerializer:

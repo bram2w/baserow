@@ -389,7 +389,9 @@ def test_create_user_with_template(data_fixture, client):
     assert Group.objects.all().count() == 2
     assert GroupUser.objects.all().count() == 1
     # We expect the example template to be installed
-    assert Database.objects.all().count() == 1
+    assert Database.objects.all().count() == 1, Database.objects.values_list(
+        "name", flat=True
+    )
     assert Database.objects.all().first().name == "Event marketing"
     assert Table.objects.all().count() == 2
 

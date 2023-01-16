@@ -113,7 +113,7 @@ class JobHandler:
                     states_q |= Q(state=state)
             return states_q
 
-        queryset = Job.objects.filter(user=user)
+        queryset = Job.objects.filter(user=user).order_by("-updated_on")
 
         if filter_states:
             queryset = queryset.filter(get_job_states_filter(filter_states))

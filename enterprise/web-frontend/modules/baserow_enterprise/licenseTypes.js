@@ -41,6 +41,7 @@ export class EnterpriseWithoutSupportLicenseType extends LicenseType {
       EnterpriseFeaturesObject.RBAC,
       EnterpriseFeaturesObject.SSO,
       EnterpriseFeaturesObject.TEAMS,
+      EnterpriseFeaturesObject.AUDIT_LOG,
     ]
   }
 

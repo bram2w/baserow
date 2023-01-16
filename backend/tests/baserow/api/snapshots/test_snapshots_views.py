@@ -4,6 +4,7 @@ import pytest
 from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_202_ACCEPTED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
@@ -25,9 +26,7 @@ def test_create_snapshot_invalid_token(api_client, data_fixture, token_header):
 
     response = api_client.post(
         url,
-        {
-            "name": "Test snapshot",
-        },
+        {"name": "Test snapshot"},
         format="json",
         HTTP_AUTHORIZATION=token_header,
     )
@@ -45,9 +44,7 @@ def test_create_snapshot_user_not_in_group(api_client, data_fixture):
 
     response = api_client.post(
         url,
-        {
-            "name": "Test snapshot",
-        },
+        {"name": "Test snapshot"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token_not_in_group}",
     )
@@ -64,9 +61,7 @@ def test_create_snapshot_app_not_found(api_client, data_fixture):
 
     response = api_client.post(
         url,
-        {
-            "name": snapshot_name,
-        },
+        {"name": snapshot_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -84,10 +79,7 @@ def test_create_snapshot_body_validation(api_client, data_fixture):
 
     with freeze_time("2021-01-02 12:00"):
         response = api_client.post(
-            url,
-            {},
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
+            url, {}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
         )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -105,14 +97,12 @@ def test_create_snapshot(api_client, data_fixture):
     with freeze_time("2021-01-02 12:00"):
         response = api_client.post(
             url,
-            {
-                "name": snapshot_name,
-            },
+            {"name": snapshot_name},
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
 
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_202_ACCEPTED
     assert is_dict_subset(
         {
             "human_readable_error": "",
@@ -174,14 +164,12 @@ def test_create_snapshot_limit_reached(api_client, data_fixture, settings):
 
     response = api_client.post(
         reverse("api:snapshots:list", kwargs={"application_id": application_3.id}),
-        {
-            "name": "New snapshot",
-        },
+        {"name": "New snapshot"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_202_ACCEPTED
 
 
 # List
@@ -401,7 +389,7 @@ def test_delete_snapshot_invalid_token(api_client, data_fixture, token_header):
         created_by=user,
         name="Snapshot1",
     )
-    url = reverse("api:snapshots:detail", kwargs={"snapshot_id": snapshot_1.id})
+    url = reverse("api:snapshots:item", kwargs={"snapshot_id": snapshot_1.id})
 
     response = api_client.delete(
         url,
@@ -424,7 +412,7 @@ def test_delete_snapshot_user_not_in_group(api_client, data_fixture):
         created_by=user,
         name="Snapshot1",
     )
-    url = reverse("api:snapshots:detail", kwargs={"snapshot_id": snapshot_1.id})
+    url = reverse("api:snapshots:item", kwargs={"snapshot_id": snapshot_1.id})
 
     response = api_client.delete(
         url,
@@ -441,7 +429,7 @@ def test_delete_snapshot_not_found(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
     response = api_client.delete(
-        reverse("api:snapshots:detail", kwargs={"snapshot_id": 1234}),
+        reverse("api:snapshots:item", kwargs={"snapshot_id": 1234}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -460,7 +448,7 @@ def test_delete_snapshot(api_client, data_fixture):
         created_by=user,
         name="Snapshot1",
     )
-    url = reverse("api:snapshots:detail", kwargs={"snapshot_id": snapshot_1.id})
+    url = reverse("api:snapshots:item", kwargs={"snapshot_id": snapshot_1.id})
 
     response = api_client.delete(
         url,

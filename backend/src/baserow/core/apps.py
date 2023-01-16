@@ -159,6 +159,28 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DuplicateApplicationActionType())
         action_type_registry.register(InstallTemplateActionType())
 
+        from baserow.core.snapshots.actions import (
+            CreateSnapshotActionType,
+            DeleteSnapshotActionType,
+            RestoreSnapshotActionType,
+        )
+
+        action_type_registry.register(CreateSnapshotActionType())
+        action_type_registry.register(DeleteSnapshotActionType())
+        action_type_registry.register(RestoreSnapshotActionType())
+
+        from baserow.core.user.actions import (
+            CancelUserDeletionActionType,
+            CreateUserActionType,
+            ScheduleUserDeletionActionType,
+            UpdateUserActionType,
+        )
+
+        action_type_registry.register(CreateUserActionType())
+        action_type_registry.register(UpdateUserActionType())
+        action_type_registry.register(ScheduleUserDeletionActionType())
+        action_type_registry.register(CancelUserDeletionActionType())
+
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,
             GroupActionScopeType,
@@ -172,7 +194,7 @@ class CoreConfig(AppConfig):
         from baserow.core.jobs.registries import job_type_registry
 
         from .job_types import DuplicateApplicationJobType, InstallTemplateJobType
-        from .snapshots.job_type import CreateSnapshotJobType, RestoreSnapshotJobType
+        from .snapshots.job_types import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
         job_type_registry.register(InstallTemplateJobType())

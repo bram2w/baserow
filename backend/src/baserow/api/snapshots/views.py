@@ -4,6 +4,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_202_ACCEPTED
 from rest_framework.views import APIView
 
 from baserow.api.applications.errors import (
@@ -23,12 +24,14 @@ from baserow.api.snapshots.errors import (
     ERROR_SNAPSHOT_NAME_NOT_UNIQUE,
     ERROR_SNAPSHOT_OPERATION_LIMIT_EXCEEDED,
 )
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationOperationNotSupported,
     UserNotInGroup,
 )
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.core.snapshots.actions import DeleteSnapshotActionType
 from baserow.core.snapshots.exceptions import (
     MaximumSnapshotsReached,
     SnapshotDoesNotExist,
@@ -99,7 +102,7 @@ class SnapshotsView(APIView):
         ),
         request=SnapshotSerializer,
         responses={
-            200: JobSerializer,
+            202: JobSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -134,7 +137,7 @@ class SnapshotsView(APIView):
         handler = SnapshotHandler()
         snapshot_created = handler.create(application_id, request.user, data["name"])
         serializer = JobSerializer(snapshot_created["job"])
-        return Response(serializer.data)
+        return Response(serializer.data, status=HTTP_202_ACCEPTED)
 
 
 class RestoreSnapshotView(APIView):
@@ -248,6 +251,7 @@ class SnapshotView(APIView):
         Deletes a given application snapshot.
         """
 
-        handler = SnapshotHandler()
-        handler.delete(snapshot_id, request.user)
+        action_type_registry.get(DeleteSnapshotActionType.type).do(
+            request.user, snapshot_id
+        )
         return Response(status=204)

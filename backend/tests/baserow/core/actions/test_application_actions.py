@@ -25,7 +25,7 @@ def test_can_undo_redo_order_applications(data_fixture, django_assert_num_querie
     application_2 = data_fixture.create_database_application(group=group, order=2)
 
     action_type_registry.get_by_type(OrderApplicationsActionType).do(
-        user, group, application_ids_in_order=[application_2.id, application_1.id]
+        user, group, [application_2.id, application_1.id]
     )
 
     def check_queryset():

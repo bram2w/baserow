@@ -115,19 +115,24 @@ class RowHandler:
             if field_id in values or field["name"] in values
         }
 
-    def prepare_rows_in_bulk(self, fields, rows, generate_error_report=False):
+    def prepare_rows_in_bulk(
+        self,
+        fields: Dict[int, Dict[str, Any]],
+        rows: List[Dict[str, Any]],
+        generate_error_report: bool = False,
+    ) -> Tuple[List[Dict[str, Any]], Dict[int, Dict[str, Any]]]:
         """
         Prepares a set of values in bulk for all rows so that they can be created or
         updated in the database. It will check if the values can actually be set and
         prepares them based on their field type.
 
         :param fields: The returned fields object from the get_model method.
-        :type fields: dict
-        :param values: The rows and their values that need to be prepared.
-        :type values: dict
+        :param rows: The rows and their values that need to be prepared.
+        :param generate_error_report: If set to True, the method will return an
+            object that contains information about the errors that
+            occurred during the rows preparation.
         :return: The prepared values for all rows in the same structure as it was
             passed in.
-        :rtype: dict
         """
 
         field_ids = {}
@@ -1268,7 +1273,7 @@ class RowHandler:
         self,
         user: AbstractUser,
         table: Table,
-        rows: List,
+        rows: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
         rows_to_update: Optional[RowsForUpdate] = None,
     ) -> List[GeneratedTableModelForUpdate]:

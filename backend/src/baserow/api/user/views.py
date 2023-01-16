@@ -35,7 +35,7 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.sessions import get_untrusted_client_session_id
 from baserow.api.user.registries import user_data_registry
 from baserow.core.action.handler import ActionHandler
-from baserow.core.action.registries import ActionScopeStr
+from baserow.core.action.registries import ActionScopeStr, action_type_registry
 from baserow.core.auth_provider.exceptions import AuthProviderDisabled
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.exceptions import (
@@ -45,6 +45,11 @@ from baserow.core.exceptions import (
     LockConflict,
 )
 from baserow.core.models import GroupInvitation, Template
+from baserow.core.user.actions import (
+    CreateUserActionType,
+    ScheduleUserDeletionActionType,
+    UpdateUserActionType,
+)
 from baserow.core.user.exceptions import (
     DeactivatedUserException,
     DisabledSignupError,
@@ -222,7 +227,7 @@ class UserView(APIView):
             else None
         )
 
-        user = UserHandler().create_user(
+        user = action_type_registry.get(CreateUserActionType.type).do(
             name=data["name"],
             email=data["email"],
             password=data["password"],
@@ -407,9 +412,8 @@ class AccountView(APIView):
     def patch(self, request, data):
         """Updates editable user account information."""
 
-        user = UserHandler().update_user(
-            request.user,
-            **data,
+        user = action_type_registry.get(UpdateUserActionType.type).do(
+            request.user, **data
         )
         return Response(AccountSerializer(user).data)
 
@@ -443,7 +447,7 @@ class ScheduleAccountDeletionView(APIView):
     def post(self, request):
         """Schedules user account deletion."""
 
-        UserHandler().schedule_user_deletion(request.user)
+        action_type_registry.get(ScheduleUserDeletionActionType.type).do(request.user)
         return Response(status=204)
 
 

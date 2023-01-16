@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import logging
 import os
 import re
 from decimal import Decimal
@@ -27,6 +28,7 @@ else:
     BASEROW_PLUGIN_FOLDERS = []
 
 BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
+BASEROW_BUILT_IN_PLUGINS = ["baserow_premium", "baserow_enterprise"]
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -59,8 +61,7 @@ INSTALLED_APPS = [
     "baserow.api",
     "baserow.ws",
     "baserow.contrib.database",
-    "baserow_premium",
-    "baserow_enterprise",
+    *BASEROW_BUILT_IN_PLUGINS,
 ]
 
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
@@ -763,10 +764,10 @@ class AttrDict(dict):
         return super().__getitem__(item)
 
     def __setattr__(self, item, value):
-        return super().__setitem__(item, value)
+        globals()[item] = value
 
 
-for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
+for plugin in [*BASEROW_BUILT_IN_PLUGINS, *BASEROW_BACKEND_PLUGIN_NAMES]:
     try:
         mod = importlib.import_module(plugin + ".config.settings.settings")
         # The plugin should have a setup function which accepts a 'settings' object.
@@ -774,4 +775,5 @@ for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
         # plugin can access the Django settings and modify them prior to startup.
         result = mod.setup(AttrDict(vars()))
     except ImportError:
-        pass
+        logger = logging.getLogger(__name__)
+        logger.warning("Could not import %s", plugin)

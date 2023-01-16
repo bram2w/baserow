@@ -4,8 +4,11 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 from baserow.contrib.database.action.scopes import (
+    TABLE_ACTION_CONTEXT,
+    VIEW_ACTION_CONTEXT,
     TableActionScopeType,
     ViewActionScopeType,
 )
@@ -22,18 +25,33 @@ from baserow.contrib.database.views.models import (
 )
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionScopeStr, ActionType
+from baserow.core.action.registries import (
+    ActionScopeStr,
+    ActionTypeDescription,
+    UndoableActionType,
+)
 from baserow.core.trash.handler import TrashHandler
 
 
-class CreateViewFilterActionType(ActionType):
+class CreateViewFilterActionType(UndoableActionType):
     type = "create_view_filter"
+    description = ActionTypeDescription(
+        _("Create a view filter"),
+        _('View filter created on field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
-        view_filter_id: int
         view_id: int
+        view_name: str
         field_id: int
+        field_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_filter_id: int
         filter_type: str
         filter_value: str
 
@@ -65,13 +83,21 @@ class CreateViewFilterActionType(ActionType):
             user, view, field, filter_type, filter_value
         )
 
-        cls.register_action(
-            user=user,
-            params=cls.Params(
-                view_filter.id, view.id, field.id, filter_type, filter_value
-            ),
-            scope=cls.scope(view.id),
+        group = view.table.database.group
+        params = cls.Params(
+            view.id,
+            view.name,
+            field.id,
+            field.name,
+            view.table.id,
+            view.table.name,
+            view.table.database.id,
+            view.table.database.name,
+            view_filter.id,
+            filter_type,
+            filter_value,
         )
+        cls.register_action(user, params, cls.scope(view.id), group)
         return view_filter
 
     @classmethod
@@ -100,18 +126,32 @@ class CreateViewFilterActionType(ActionType):
         )
 
 
-class UpdateViewFilterActionType(ActionType):
+# TODO: What to do here with fast UI updates?
+class UpdateViewFilterActionType(UndoableActionType):
     type = "update_view_filter"
+    description = ActionTypeDescription(
+        _("Update a view filter"),
+        _('View filter updated on field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         view_filter_id: int
+        filter_type: str
+        filter_value: str
         original_field_id: int
+        original_field_name: str
         original_filter_type: str
         original_filter_value: str
-        new_field_id: int
-        new_filter_type: str
-        new_filter_value: str
 
     @classmethod
     def do(
@@ -138,6 +178,7 @@ class UpdateViewFilterActionType(ActionType):
         """
 
         original_view_filter_field_id = view_filter.field_id
+        original_view_filter_field_name = view_filter.field.name
         original_view_filter_type = view_filter.type
         original_view_filter_value = view_filter.value
 
@@ -145,18 +186,30 @@ class UpdateViewFilterActionType(ActionType):
         updated_view_filter = view_handler.update_filter(
             user, view_filter, field, filter_type, filter_value
         )
+        view = view_filter.view
+        params = cls.Params(
+            updated_view_filter.field.id,
+            updated_view_filter.field.name,
+            view.id,
+            view.name,
+            view.table.id,
+            view.table.name,
+            view.table.database.id,
+            view.table.database.name,
+            view_filter.id,
+            updated_view_filter.type,
+            updated_view_filter.value,
+            original_view_filter_field_id,
+            original_view_filter_field_name,
+            original_view_filter_type,
+            original_view_filter_value,
+        )
+        group = updated_view_filter.field.table.database.group
         cls.register_action(
-            user=user,
-            params=cls.Params(
-                view_filter.id,
-                original_view_filter_field_id,
-                original_view_filter_type,
-                original_view_filter_value,
-                updated_view_filter.field_id,
-                updated_view_filter.type,
-                updated_view_filter.value,
-            ),
-            scope=cls.scope(view_filter.view_id),
+            user,
+            params,
+            cls.scope(view_filter.view_id),
+            group,
         )
 
         return updated_view_filter
@@ -182,7 +235,7 @@ class UpdateViewFilterActionType(ActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
-        field = FieldHandler().get_field(params.new_field_id)
+        field = FieldHandler().get_field(params.field_id)
 
         view_handler = ViewHandler()
         view_filter = view_handler.get_filter(user, params.view_filter_id)
@@ -191,19 +244,30 @@ class UpdateViewFilterActionType(ActionType):
             user,
             view_filter,
             field,
-            params.new_filter_type,
-            params.new_filter_value,
+            params.filter_type,
+            params.filter_value,
         )
 
 
-class DeleteViewFilterActionType(ActionType):
+class DeleteViewFilterActionType(UndoableActionType):
     type = "delete_view_filter"
+    description = ActionTypeDescription(
+        _("Delete a view filter"),
+        _('View filter deleted from field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
-        view_filter_id: int
-        view_id: int
         field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_filter_id: int
         filter_type: str
         filter_value: str
 
@@ -225,22 +289,35 @@ class DeleteViewFilterActionType(ActionType):
 
         view_filter_id = view_filter.id
         view_id = view_filter.view_id
+        view_name = view_filter.view.name
         field_id = view_filter.field_id
-        filter_type = view_filter.type
-        filter_value = view_filter.value
+        field_name = view_filter.field.name
+        view_filter_type = view_filter.type
+        view_filter_value = view_filter.value
 
         ViewHandler().delete_filter(user, view_filter)
 
+        params = cls.Params(
+            field_id,
+            field_name,
+            view_id,
+            view_name,
+            view_filter.view.table.id,
+            view_filter.view.table.name,
+            view_filter.view.table.database.id,
+            view_filter.view.table.database.name,
+            view_filter_id,
+            view_filter_type,
+            view_filter_value,
+        )
+        group = view_filter.view.table.database.group
         cls.register_action(
-            user=user,
-            params=cls.Params(
-                view_filter_id,
-                view_id,
-                field_id,
-                filter_type,
-                filter_value,
+            user,
+            params,
+            cls.scope(
+                view_filter.view_id,
             ),
-            scope=cls.scope(view_filter.view.id),
+            group,
         )
 
     @classmethod
@@ -269,14 +346,25 @@ class DeleteViewFilterActionType(ActionType):
         ViewHandler().delete_filter(user, view_filter)
 
 
-class CreateViewSortActionType(ActionType):
+class CreateViewSortActionType(UndoableActionType):
     type = "create_view_sort"
+    description = ActionTypeDescription(
+        _("Create a view sort"),
+        _('View sorted on field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
-        view_sort_id: int
-        view_id: int
         field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_sort_id: int
         sort_order: str
 
     @classmethod
@@ -298,11 +386,20 @@ class CreateViewSortActionType(ActionType):
 
         view_sort = ViewHandler().create_sort(user, view, field, sort_order)
 
-        cls.register_action(
-            user=user,
-            params=cls.Params(view_sort.id, view.id, field.id, sort_order),
-            scope=cls.scope(view.id),
+        params = cls.Params(
+            field.id,
+            field.name,
+            view.id,
+            view.name,
+            view.table.id,
+            view.table.name,
+            view.table.database.id,
+            view.table.database.name,
+            view_sort.id,
+            sort_order,
         )
+        group = view.table.database.group
+        cls.register_action(user, params, cls.scope(view.id), group)
         return view_sort
 
     @classmethod
@@ -326,16 +423,29 @@ class CreateViewSortActionType(ActionType):
         )
 
 
-class UpdateViewSortActionType(ActionType):
+class UpdateViewSortActionType(UndoableActionType):
     type = "update_view_sort"
+    description = ActionTypeDescription(
+        _("Update a view sort"),
+        _('View sort updated on field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         view_sort_id: int
+        sort_order: str
         original_field_id: int
+        original_field_name: str
         original_sort_order: str
-        new_field_id: int
-        new_sort_order: str
 
     @classmethod
     def do(
@@ -357,8 +467,11 @@ class UpdateViewSortActionType(ActionType):
         :param order: Indicates the sort order direction.
         """
 
-        original_view_sort_field_id = view_sort.field.id
-        original_view_sort_sort_order = view_sort.order
+        original_field_id = view_sort.field.id
+        original_field_name = view_sort.field.name
+        view_id = view_sort.view.id
+        view_name = view_sort.view.name
+        original_sort_order = view_sort.order
 
         handler = ViewHandler()
         updated_view_sort = handler.update_sort(user, view_sort, field, order)
@@ -366,13 +479,22 @@ class UpdateViewSortActionType(ActionType):
         cls.register_action(
             user=user,
             params=cls.Params(
-                view_sort.id,
-                original_view_sort_field_id,
-                original_view_sort_sort_order,
                 updated_view_sort.field.id,
+                updated_view_sort.field.name,
+                view_id,
+                view_name,
+                updated_view_sort.view.table.id,
+                updated_view_sort.view.table.name,
+                updated_view_sort.view.table.database.id,
+                updated_view_sort.view.table.database.name,
+                updated_view_sort.id,
                 updated_view_sort.order,
+                original_field_id,
+                original_field_name,
+                original_sort_order,
             ),
             scope=cls.scope(view_sort.view.id),
+            group=view_sort.view.table.database.group,
         )
 
         return updated_view_sort
@@ -392,22 +514,33 @@ class UpdateViewSortActionType(ActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
-        field = FieldHandler().get_field(params.new_field_id)
+        field = FieldHandler().get_field(params.field_id)
 
         view_handler = ViewHandler()
         view_sort = view_handler.get_sort(user, params.view_sort_id)
 
-        view_handler.update_sort(user, view_sort, field, params.new_sort_order)
+        view_handler.update_sort(user, view_sort, field, params.sort_order)
 
 
-class DeleteViewSortActionType(ActionType):
+class DeleteViewSortActionType(UndoableActionType):
     type = "delete_view_sort"
+    description = ActionTypeDescription(
+        _("Delete a view sort"),
+        _('View sort deleted from field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
-        view_sort_id: int
-        view_id: int
         field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_sort_id: int
         sort_order: str
 
     @classmethod
@@ -425,21 +558,27 @@ class DeleteViewSortActionType(ActionType):
 
         view_sort_id = view_sort.id
         view_id = view_sort.view.id
+        view_name = view_sort.view.name
         field_id = view_sort.field.id
+        field_name = view_sort.field.name
         sort_order = view_sort.order
 
         ViewHandler().delete_sort(user, view_sort)
 
-        cls.register_action(
-            user=user,
-            params=cls.Params(
-                view_sort_id,
-                view_id,
-                field_id,
-                sort_order,
-            ),
-            scope=cls.scope(view_sort.view.id),
+        params = cls.Params(
+            field_id,
+            field_name,
+            view_id,
+            view_name,
+            view_sort.view.table.id,
+            view_sort.view.table.name,
+            view_sort.view.table.database.id,
+            view_sort.view.table.database.name,
+            view_sort_id,
+            sort_order,
         )
+        group = view_sort.view.table.database.group
+        cls.register_action(user, params, cls.scope(view_sort.view.id), group)
 
     @classmethod
     def scope(cls, view_id: int) -> ActionScopeStr:
@@ -461,14 +600,20 @@ class DeleteViewSortActionType(ActionType):
         ViewHandler().delete_sort(user, view_sort)
 
 
-class OrderViewsActionType(ActionType):
+class OrderViewsActionType(UndoableActionType):
     type = "order_views"
+    description = ActionTypeDescription(
+        _("Order views"), _("Views order changed"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        order: List[int]
         original_order: List[int]
-        new_order: List[int]
 
     @classmethod
     def do(
@@ -493,8 +638,15 @@ class OrderViewsActionType(ActionType):
 
         ViewHandler().order_views(user, table, order)
 
-        params = cls.Params(table.id, original_order, order)
-        cls.register_action(user, params, cls.scope(table.id))
+        params = cls.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            order,
+            original_order,
+        )
+        cls.register_action(user, params, cls.scope(table.id), table.database.group)
 
     @classmethod
     def scope(cls, table_id: int) -> ActionScopeStr:
@@ -508,17 +660,27 @@ class OrderViewsActionType(ActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         table = TableHandler().get_table(params.table_id)
-        ViewHandler().order_views(user, table, params.new_order)
+        ViewHandler().order_views(user, table, params.order)
 
 
-class UpdateViewFieldOptionsActionType(ActionType):
+class UpdateViewFieldOptionsActionType(UndoableActionType):
     type = "update_view_field_options"
+    description = ActionTypeDescription(
+        _("Update view field options"),
+        _("ViewFieldOptions updated"),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        field_options: FieldOptionsDict
         original_field_options: FieldOptionsDict
-        new_field_options: FieldOptionsDict
 
     @classmethod
     def do(
@@ -564,10 +726,16 @@ class UpdateViewFieldOptionsActionType(ActionType):
             user=user,
             params=cls.Params(
                 view.id,
-                dict(original_field_options_to_save),
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
                 dict(new_field_options_to_save),
+                dict(original_field_options_to_save),
             ),
             scope=cls.scope(view.id),
+            group=view.table.database.group,
         )
 
     @classmethod
@@ -587,18 +755,28 @@ class UpdateViewFieldOptionsActionType(ActionType):
         view_handler = ViewHandler()
         view = view_handler.get_view(params.view_id).specific
         view_handler.update_field_options(
-            user=user, view=view, field_options=params.new_field_options
+            user=user, view=view, field_options=params.field_options
         )
 
 
-class RotateViewSlugActionType(ActionType):
+class RotateViewSlugActionType(UndoableActionType):
     type = "rotate_view_slug"
+    description = ActionTypeDescription(
+        _("View slug URL updated"),
+        _("View changed public slug URL"),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        slug: str
         original_slug: str
-        new_slug: str
 
     @classmethod
     def do(cls, user: AbstractUser, view: View) -> View:
@@ -618,8 +796,18 @@ class RotateViewSlugActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(view.id, original_slug, view.slug),
+            params=cls.Params(
+                view.id,
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
+                view.slug,
+                original_slug,
+            ),
             scope=cls.scope(view.id),
+            group=view.table.database.group,
         )
         return view
 
@@ -637,17 +825,27 @@ class RotateViewSlugActionType(ActionType):
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         view_handler = ViewHandler()
         view = view_handler.get_view_for_update(params.view_id)
-        view_handler.update_view_slug(user, view, params.new_slug)
+        view_handler.update_view_slug(user, view, params.slug)
 
 
-class UpdateViewActionType(ActionType):
+class UpdateViewActionType(UndoableActionType):
     type = "update_view"
+    description = ActionTypeDescription(
+        _("Update view"),
+        _('View "%(view_name)s" (%(view_id)s) updated'),
+        TABLE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        data: Dict[str, Any]
         original_data: Dict[str, Any]
-        new_data: Dict[str, Any]
 
     @classmethod
     def do(
@@ -683,8 +881,18 @@ class UpdateViewActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(view.id, original_data, new_data),
+            params=cls.Params(
+                view.id,
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
+                new_data,
+                original_data,
+            ),
             scope=cls.scope(view.id),
+            group=view.table.database.group,
         )
         return view
 
@@ -702,15 +910,26 @@ class UpdateViewActionType(ActionType):
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         view_handler = ViewHandler()
         view = view_handler.get_view_for_update(params.view_id).specific
-        view_handler.update_view(user, view, **params.new_data)
+        view_handler.update_view(user, view, **params.data)
 
 
-class CreateViewActionType(ActionType):
+class CreateViewActionType(UndoableActionType):
     type = "create_view"
+    description = ActionTypeDescription(
+        _("Create view"),
+        _('View "%(view_name)s" (%(view_id)s) created'),
+        TABLE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        view_type: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, table: Table, type_name: str, **kwargs) -> View:
@@ -735,8 +954,17 @@ class CreateViewActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(view.id),
+            params=cls.Params(
+                view.id,
+                view.name,
+                type_name,
+                table.id,
+                table.name,
+                table.database.id,
+                table.database.name,
+            ),
             scope=cls.scope(table.id),
+            group=table.database.group,
         )
 
         return view
@@ -754,12 +982,27 @@ class CreateViewActionType(ActionType):
         TrashHandler.restore_item(user, "view", params.view_id)
 
 
-class DuplicateViewActionType(ActionType):
+class DuplicateViewActionType(UndoableActionType):
     type = "duplicate_view"
+    description = ActionTypeDescription(
+        _("Duplicate view"),
+        _(
+            'View "%(view_name)s" (%(view_id)s) duplicated from '
+            'view "%(original_view_name)s" (%(original_view_id)s)'
+        ),
+        TABLE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        original_view_id: int
+        original_view_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, original_view: View) -> View:
@@ -780,8 +1023,18 @@ class DuplicateViewActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(view.id),
+            params=cls.Params(
+                view.id,
+                view.name,
+                original_view.table.id,
+                original_view.table.name,
+                original_view.table.database.id,
+                original_view.table.database.name,
+                original_view.id,
+                original_view.name,
+            ),
             scope=cls.scope(original_view.table.id),
+            group=original_view.table.database.group,
         )
 
         return view
@@ -799,12 +1052,22 @@ class DuplicateViewActionType(ActionType):
         TrashHandler.restore_item(user, "view", params.view_id)
 
 
-class DeleteViewActionType(ActionType):
+class DeleteViewActionType(UndoableActionType):
     type = "delete_view"
+    description = ActionTypeDescription(
+        _("Delete view"),
+        _('View "%(view_name)s" (%(view_id)s) deleted'),
+        TABLE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, view: View):
@@ -822,8 +1085,16 @@ class DeleteViewActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(view.id),
+            params=cls.Params(
+                view.id,
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
+            ),
             scope=cls.scope(view.table_id),
+            group=view.table.database.group,
         )
 
     @classmethod
@@ -839,12 +1110,22 @@ class DeleteViewActionType(ActionType):
         ViewHandler().delete_view_by_id(user, params.view_id)
 
 
-class CreateDecorationActionType(ActionType):
+class CreateDecorationActionType(UndoableActionType):
     type = "create_decoration"
+    description = ActionTypeDescription(
+        _("Create decoration"),
+        _("View decoration %(decorator_id)s created"),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         decorator_id: int
         decorator_type_name: str
         value_provider_type_name: str
@@ -887,12 +1168,18 @@ class CreateDecorationActionType(ActionType):
             user=user,
             params=cls.Params(
                 view.id,
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
                 decoration.id,
                 decorator_type_name,
                 value_provider_type_name,
                 value_provider_conf,
             ),
             scope=cls.scope(view.id),
+            group=view.table.database.group,
         )
 
         return decoration
@@ -919,11 +1206,22 @@ class CreateDecorationActionType(ActionType):
         )
 
 
-class UpdateDecorationActionType(ActionType):
+class UpdateDecorationActionType(UndoableActionType):
     type = "update_decoration"
+    description = ActionTypeDescription(
+        _("Update decoration"),
+        _("View decoration %(decorator_id)s updated"),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         decorator_id: int
         original_decoration_type_name: str
         original_value_provider_type_name: str
@@ -968,6 +1266,7 @@ class UpdateDecorationActionType(ActionType):
         original_value_provider_type_name = original_view_decoration.value_provider_type
         original_value_provider_conf = original_view_decoration.value_provider_conf
         original_order = original_view_decoration.order
+        view = view_decoration.view
 
         view_decoration_updated = ViewHandler().update_decoration(
             view_decoration,
@@ -981,6 +1280,12 @@ class UpdateDecorationActionType(ActionType):
         cls.register_action(
             user=user,
             params=cls.Params(
+                view.id,
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
                 view_decoration.id,
                 original_decoration_type_name,
                 original_value_provider_type_name,
@@ -992,6 +1297,7 @@ class UpdateDecorationActionType(ActionType):
                 order,
             ),
             scope=cls.scope(view_decoration.view_id),
+            group=view.table.database.group,
         )
 
         return view_decoration_updated
@@ -1025,12 +1331,23 @@ class UpdateDecorationActionType(ActionType):
         )
 
 
-class DeleteDecorationActionType(ActionType):
+class DeleteDecorationActionType(UndoableActionType):
     type = "delete_decoration"
+    description = ActionTypeDescription(
+        _("Delete decoration"),
+        _("View decoration %(decorator_id)s deleted"),
+        VIEW_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        decorator_id: int
         original_decorator_id: int
         original_decorator_type_name: str
         original_value_provider_type_name: str
@@ -1054,10 +1371,17 @@ class DeleteDecorationActionType(ActionType):
 
         ViewHandler().delete_decoration(view_decoration, user=user)
 
+        view = view_decoration.view
         cls.register_action(
             user=user,
             params=cls.Params(
-                original_view_decoration.view_id,
+                view.id,
+                view.name,
+                view.table.id,
+                view.table.name,
+                view.table.database.id,
+                view.table.database.name,
+                view_decoration.id,
                 original_view_decoration.id,
                 original_view_decoration.type,
                 original_view_decoration.value_provider_type,
@@ -1065,6 +1389,7 @@ class DeleteDecorationActionType(ActionType):
                 original_view_decoration.order,
             ),
             scope=cls.scope(view_decoration.view_id),
+            group=view.table.database.group,
         )
 
     @classmethod

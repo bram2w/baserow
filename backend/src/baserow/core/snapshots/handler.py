@@ -26,7 +26,7 @@ from baserow.core.snapshots.exceptions import (
 )
 from baserow.core.utils import Progress
 
-from .job_type import CreateSnapshotJobType, RestoreSnapshotJobType
+from .job_types import CreateSnapshotJobType, RestoreSnapshotJobType
 from .operations import (
     CreateSnapshotApplicationOperationType,
     DeleteApplicationSnapshotOperationType,
@@ -422,7 +422,7 @@ class SnapshotHandler:
             application, None, default_storage
         )
         progress.increment(by=50)
-        imported_database = application_type.import_serialized(
+        imported_application = application_type.import_serialized(
             snapshot.snapshot_from_application.group,
             exported_application,
             {},
@@ -430,9 +430,9 @@ class SnapshotHandler:
             default_storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
-        imported_database.name = CoreHandler().find_unused_application_name(
+        imported_application.name = CoreHandler().find_unused_application_name(
             snapshot.snapshot_from_application.group, snapshot.name
         )
-        imported_database.save()
-        application_created.send(self, application=imported_database, user=None)
-        return imported_database
+        imported_application.save()
+        application_created.send(self, application=imported_application, user=None)
+        return imported_application

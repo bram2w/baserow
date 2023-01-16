@@ -55,3 +55,9 @@ class InvalidSortAttributeException(Exception):
     """
     Raised when a sort is requested for an invalid or non-existent field.
     """
+
+
+class InvalidFilterAttributeException(Exception):
+    """
+    Raised when a filter is requested for an invalid or non-existent field.
+    """

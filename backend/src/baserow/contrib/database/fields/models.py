@@ -19,7 +19,11 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
-from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.mixins import (
+    JobWithUndoRedoIds,
+    JobWithUserIpAddress,
+    JobWithWebsocketId,
+)
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
@@ -535,7 +539,9 @@ class MultipleCollaboratorsField(Field):
         return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.id}"
 
 
-class DuplicateFieldJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+class DuplicateFieldJob(
+    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+):
 
     original_field = models.ForeignKey(
         Field,

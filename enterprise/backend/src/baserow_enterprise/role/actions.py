@@ -2,12 +2,17 @@ import dataclasses
 from typing import Any, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 from baserow_premium.license.handler import LicenseHandler
 
 from baserow.contrib.database.views.models import ViewFilter
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionScopeStr, ActionType
+from baserow.core.action.registries import (
+    ActionScopeStr,
+    ActionTypeDescription,
+    UndoableActionType,
+)
 from baserow.core.action.scopes import GroupActionScopeType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group
@@ -19,8 +24,15 @@ from baserow_enterprise.role.models import Role
 from .constants import ROLE_ASSIGNABLE_OBJECT_MAP
 
 
-class AssignRoleActionType(ActionType):
+class AssignRoleActionType(UndoableActionType):
     type = "assign_role"
+    description = ActionTypeDescription(
+        _("Assign role"),
+        _(
+            "Role %(role_uid)s assigned to %(subject_type)s %(subject_id)s "
+            "on %(scope_type)s %(scope_id)s"
+        ),
+    )
 
     @dataclasses.dataclass
     class Params:
@@ -73,10 +85,7 @@ class AssignRoleActionType(ActionType):
         )
 
         role_assignment = role_assignment_handler.assign_role(
-            subject,
-            group,
-            role,
-            scope=scope,
+            subject, group, role, scope=scope
         )
 
         scope_type = object_scope_type_registry.get_by_model(scope).type
@@ -94,6 +103,7 @@ class AssignRoleActionType(ActionType):
                 scope_type,
             ),
             scope=cls.scope(group.id),
+            group=group,
         )
         return role_assignment
 

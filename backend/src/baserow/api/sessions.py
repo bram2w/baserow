@@ -91,6 +91,18 @@ def set_user_websocket_id(user, request):
     user.web_socket_id = request.headers.get(settings.WEBSOCKET_ID_HEADER)
 
 
+def set_user_remote_addr_ip_from_request(user, request):
+    set_user_remote_addr_ip(user, request.META.get("REMOTE_ADDR"))
+
+
+def set_user_remote_addr_ip(user, ip_address):
+    user.remote_addr_ip = ip_address
+
+
+def get_user_remote_addr_ip(user):
+    return getattr(user, "remote_addr_ip", None)
+
+
 def set_user_session_data_from_request(user, request):
     """
     Sets the user data from the request. This includes the websocket id, the
@@ -103,3 +115,4 @@ def set_user_session_data_from_request(user, request):
     set_user_websocket_id(user, request)
     set_untrusted_client_session_id_from_request_or_raise_if_invalid(user, request)
     set_client_undo_redo_action_group_id_from_request_or_raise_if_invalid(user, request)
+    set_user_remote_addr_ip_from_request(user, request)

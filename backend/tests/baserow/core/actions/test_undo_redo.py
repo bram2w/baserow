@@ -19,7 +19,8 @@ from baserow.core.action.handler import ActionHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
-    ActionType,
+    UndoableActionCustomCleanupMixin,
+    UndoableActionType,
     action_type_registry,
 )
 from baserow.core.action.scopes import GroupActionScopeType, RootActionScopeType
@@ -523,7 +524,7 @@ def test_actions_which_were_updated_less_than_configured_limit_ago_not_cleaned_u
 
     with freeze_time(now):
         assert Action.objects.count() == 2
-        ActionHandler.clean_up_old_actions()
+        ActionHandler.clean_up_old_undoable_actions()
         assert Action.objects.count() == 2
 
 
@@ -543,7 +544,7 @@ def test_cleanup_doesnt_do_n_queries_per_action_when_they_have_no_custom_cleanup
     with freeze_time(now):
         assert Action.objects.count() == 2
         with CaptureQueriesContext(connection) as clean_up_two_actions:
-            ActionHandler.clean_up_old_actions()
+            ActionHandler.clean_up_old_undoable_actions()
         assert Action.objects.count() == 0
 
     # Now make 4 actions and record the number of queries done
@@ -554,7 +555,7 @@ def test_cleanup_doesnt_do_n_queries_per_action_when_they_have_no_custom_cleanup
     with freeze_time(now):
         assert Action.objects.count() == 4
         with CaptureQueriesContext(connection) as clean_up_four_actions:
-            ActionHandler.clean_up_old_actions()
+            ActionHandler.clean_up_old_undoable_actions()
         assert Action.objects.count() == 0
 
     # They should be the same as we should be doing a single bulk query to delete all
@@ -592,7 +593,7 @@ def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, se
 
     with freeze_time(now):
         assert Action.objects.count() == 3
-        ActionHandler.clean_up_old_actions()
+        ActionHandler.clean_up_old_undoable_actions()
         assert Action.objects.count() == 0
 
 
@@ -625,7 +626,7 @@ def test_custom_cleanup_failing_doesnt_rollback_other_successful_cleanups(
     with freeze_time(now):
         assert Action.objects.count() == 4
         with pytest.raises(Exception, match="Custom cleanup failed"):
-            ActionHandler.clean_up_old_actions()
+            ActionHandler.clean_up_old_undoable_actions()
         # The other 3 actions were deleted successfully, and only the last one which
         # failed is left.
         assert Action.objects.count() == 1
@@ -923,7 +924,9 @@ def _create_an_action_with_custom_cleanup(data_fixture):
 def _create_an_action_with_custom_cleanup_which_raises(
     mutable_action_registry, data_fixture, cleanup_exception_message
 ) -> Action:
-    class ActionWithCustomCleanupThatAlwaysRaises(ActionType):
+    class ActionWithCustomCleanupThatAlwaysRaises(
+        UndoableActionCustomCleanupMixin, UndoableActionType
+    ):
         type = "action_with_custom_cleanup_that_always_raises"
 
         @classmethod

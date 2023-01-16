@@ -439,6 +439,9 @@
         "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
     },
     "datetime": {
+        "secondsAgo": "Just now | 1 second ago | {n} seconds ago",
+        "minutesAgo": "0 minutes ago | 1 minute ago | {n} minutes ago",
+        "hoursAgo": "0 hours ago | 1 hour ago | {n} hours ago",
         "daysAgo": "0 days ago | 1 day ago | {n} days ago",
         "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
         "yearsAgo": "0 years ago | 1 year ago | {n} years ago"

@@ -139,7 +139,7 @@ def test_list_jobs(data_fixture, api_client):
     }
 
     assert response.status_code == HTTP_200_OK
-    assert response.json() == {"jobs": [job_1_json, job_2_json]}
+    assert response.json() == {"jobs": [job_2_json, job_1_json]}
 
     valid_job_states = ",".join(["pending", "finished"])
     response = api_client.get(
@@ -156,7 +156,7 @@ def test_list_jobs(data_fixture, api_client):
     )
 
     assert response.status_code == HTTP_200_OK
-    assert response.json() == {"jobs": [job_1_json, job_2_json]}
+    assert response.json() == {"jobs": [job_2_json, job_1_json]}
 
     response = api_client.get(
         f"{url}?states=importing",
