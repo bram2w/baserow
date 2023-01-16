@@ -2,8 +2,18 @@
   "baserow_template_version": 1,
   "name": "Blog Post Management",
   "icon": "th",
-  "keywords": ["blog", "post", "management", "planner", "posts", "tracker", "content"],
-  "categories": ["Content Marketing"],
+  "keywords": [
+    "blog",
+    "post",
+    "management",
+    "planner",
+    "posts",
+    "tracker",
+    "content"
+  ],
+  "categories": [
+    "Content Marketing"
+  ],
   "export": [
     {
       "id": 11073,

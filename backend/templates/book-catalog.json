@@ -1,1513 +1,1513 @@
 {
-    "baserow_template_version": 1,
-    "name": "Book Catalog",
-    "icon": "book",
-    "keywords": [
-        "book catalog",
-        "catalog",
-        "book",
-        "books",
-        "bookshelf",
-        "reading",
-        "bookworm",
-        "catalogue",
-        "book catalogue"
-    ],
-    "categories": [
-        "Personal",
-        "Hobbies"
-    ],
-    "export": [
+  "baserow_template_version": 1,
+  "name": "Book Catalog",
+  "icon": "book",
+  "keywords": [
+    "book catalog",
+    "catalog",
+    "book",
+    "books",
+    "bookshelf",
+    "reading",
+    "bookworm",
+    "catalogue",
+    "book catalogue"
+  ],
+  "categories": [
+    "Personal",
+    "Hobbies"
+  ],
+  "export": [
+    {
+      "id": 12790,
+      "name": "Book Catalog",
+      "order": 1,
+      "type": "database",
+      "tables": [
         {
-            "id": 12790,
-            "name": "Book Catalog",
-            "order": 1,
-            "type": "database",
-            "tables": [
+          "id": 25011,
+          "name": "Books",
+          "order": 1,
+          "fields": [
+            {
+              "id": 131737,
+              "type": "text",
+              "name": "Book title",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 131738,
+              "type": "long_text",
+              "name": "Synopsis",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 131739,
+              "type": "link_row",
+              "name": "Author(s)",
+              "order": 2,
+              "primary": false,
+              "link_row_table_id": 25012,
+              "link_row_related_field_id": 131750
+            },
+            {
+              "id": 131740,
+              "type": "file",
+              "name": "Cover photo",
+              "order": 3,
+              "primary": false
+            },
+            {
+              "id": 131741,
+              "type": "boolean",
+              "name": "In possession?",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 131742,
+              "type": "single_select",
+              "name": "Format",
+              "order": 5,
+              "primary": false,
+              "select_options": [
                 {
-                    "id": 25011,
-                    "name": "Books",
-                    "order": 1,
-                    "fields": [
-                        {
-                            "id": 131737,
-                            "type": "text",
-                            "name": "Book title",
-                            "order": 0,
-                            "primary": true,
-                            "text_default": ""
-                        },
-                        {
-                            "id": 131738,
-                            "type": "long_text",
-                            "name": "Synopsis",
-                            "order": 1,
-                            "primary": false
-                        },
-                        {
-                            "id": 131739,
-                            "type": "link_row",
-                            "name": "Author(s)",
-                            "order": 2,
-                            "primary": false,
-                            "link_row_table_id": 25012,
-                            "link_row_related_field_id": 131750
-                        },
-                        {
-                            "id": 131740,
-                            "type": "file",
-                            "name": "Cover photo",
-                            "order": 3,
-                            "primary": false
-                        },
-                        {
-                            "id": 131741,
-                            "type": "boolean",
-                            "name": "In possession?",
-                            "order": 4,
-                            "primary": false
-                        },
-                        {
-                            "id": 131742,
-                            "type": "single_select",
-                            "name": "Format",
-                            "order": 5,
-                            "primary": false,
-                            "select_options": [
-                                {
-                                    "id": 9711,
-                                    "value": "Hardcover",
-                                    "color": "light-green",
-                                    "order": 0
-                                },
-                                {
-                                    "id": 9712,
-                                    "value": "Paperback",
-                                    "color": "blue",
-                                    "order": 1
-                                },
-                                {
-                                    "id": 9713,
-                                    "value": "eBook",
-                                    "color": "red",
-                                    "order": 2
-                                },
-                                {
-                                    "id": 131616,
-                                    "value": "Audiobook",
-                                    "color": "gray",
-                                    "order": 3
-                                }
-                            ]
-                        },
-                        {
-                            "id": 131743,
-                            "type": "single_select",
-                            "name": "Status",
-                            "order": 6,
-                            "primary": false,
-                            "select_options": [
-                                {
-                                    "id": 130981,
-                                    "value": "Not read",
-                                    "color": "red",
-                                    "order": 0
-                                },
-                                {
-                                    "id": 130982,
-                                    "value": "Currently reading",
-                                    "color": "orange",
-                                    "order": 1
-                                },
-                                {
-                                    "id": 130983,
-                                    "value": "Finished",
-                                    "color": "green",
-                                    "order": 2
-                                }
-                            ]
-                        },
-                        {
-                            "id": 131744,
-                            "type": "link_row",
-                            "name": "Publisher",
-                            "order": 7,
-                            "primary": false,
-                            "link_row_table_id": 25013,
-                            "link_row_related_field_id": 131754
-                        },
-                        {
-                            "id": 131745,
-                            "type": "long_text",
-                            "name": "Personal notes",
-                            "order": 8,
-                            "primary": false
-                        },
-                        {
-                            "id": 131746,
-                            "type": "single_select",
-                            "name": "Language",
-                            "order": 9,
-                            "primary": false,
-                            "select_options": [
-                                {
-                                    "id": 9714,
-                                    "value": "English",
-                                    "color": "dark-red",
-                                    "order": 0
-                                },
-                                {
-                                    "id": 9715,
-                                    "value": "Spanish",
-                                    "color": "dark-orange",
-                                    "order": 1
-                                },
-                                {
-                                    "id": 9716,
-                                    "value": "Portuguese",
-                                    "color": "dark-green",
-                                    "order": 2
-                                }
-                            ]
-                        },
-                        {
-                            "id": 131747,
-                            "type": "number",
-                            "name": "Pages",
-                            "order": 10,
-                            "primary": false,
-                            "number_decimal_places": 0,
-                            "number_negative": false
-                        }
-                    ],
-                    "views": [
-                        {
-                            "id": 27308,
-                            "type": "grid",
-                            "name": "All books",
-                            "order": 1,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [
-                                {
-                                    "id": 1950,
-                                    "field_id": 131737,
-                                    "order": "ASC"
-                                }
-                            ],
-                            "decorations": [],
-                            "public": false,
-                            "row_identifier_type": "id",
-                            "field_options": [
-                                {
-                                    "id": 131752,
-                                    "field_id": 131737,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 10,
-                                    "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": "unique_count"
-                                },
-                                {
-                                    "id": 131753,
-                                    "field_id": 131738,
-                                    "width": 268,
-                                    "hidden": false,
-                                    "order": 3,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131754,
-                                    "field_id": 131739,
-                                    "width": 126,
-                                    "hidden": false,
-                                    "order": 0,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131755,
-                                    "field_id": 131740,
-                                    "width": 136,
-                                    "hidden": false,
-                                    "order": 1,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131756,
-                                    "field_id": 131741,
-                                    "width": 150,
-                                    "hidden": false,
-                                    "order": 6,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131757,
-                                    "field_id": 131742,
-                                    "width": 112,
-                                    "hidden": false,
-                                    "order": 7,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131758,
-                                    "field_id": 131743,
-                                    "width": 141,
-                                    "hidden": false,
-                                    "order": 8,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131759,
-                                    "field_id": 131744,
-                                    "width": 172,
-                                    "hidden": false,
-                                    "order": 2,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131760,
-                                    "field_id": 131745,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 9,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131761,
-                                    "field_id": 131746,
-                                    "width": 122,
-                                    "hidden": false,
-                                    "order": 4,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131762,
-                                    "field_id": 131747,
-                                    "width": 102,
-                                    "hidden": false,
-                                    "order": 5,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                }
-                            ]
-                        },
-                        {
-                            "id": 27323,
-                            "type": "grid",
-                            "name": "Acquired, not read",
-                            "order": 2,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [
-                                {
-                                    "id": 4235,
-                                    "field_id": 131741,
-                                    "type": "boolean",
-                                    "value": "1"
-                                },
-                                {
-                                    "id": 29771,
-                                    "field_id": 131743,
-                                    "type": "single_select_equal",
-                                    "value": "130981"
-                                }
-                            ],
-                            "sortings": [],
-                            "decorations": [],
-                            "public": false,
-                            "row_identifier_type": "id",
-                            "field_options": [
-                                {
-                                    "id": 131827,
-                                    "field_id": 131737,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 10,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131828,
-                                    "field_id": 131738,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 3,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131829,
-                                    "field_id": 131739,
-                                    "width": 126,
-                                    "hidden": false,
-                                    "order": 0,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131830,
-                                    "field_id": 131740,
-                                    "width": 138,
-                                    "hidden": false,
-                                    "order": 1,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131831,
-                                    "field_id": 131741,
-                                    "width": 157,
-                                    "hidden": false,
-                                    "order": 6,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131832,
-                                    "field_id": 131742,
-                                    "width": 106,
-                                    "hidden": false,
-                                    "order": 7,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131833,
-                                    "field_id": 131743,
-                                    "width": 100,
-                                    "hidden": false,
-                                    "order": 8,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131834,
-                                    "field_id": 131744,
-                                    "width": 138,
-                                    "hidden": false,
-                                    "order": 2,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131835,
-                                    "field_id": 131745,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 9,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131836,
-                                    "field_id": 131746,
-                                    "width": 126,
-                                    "hidden": false,
-                                    "order": 4,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131837,
-                                    "field_id": 131747,
-                                    "width": 102,
-                                    "hidden": false,
-                                    "order": 5,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                }
-                            ]
-                        },
-                        {
-                            "id": 27325,
-                            "type": "form",
-                            "name": "Book suggestions",
-                            "order": 3,
-                            "public": false,
-                            "title": "Hi there!",
-                            "description": "Please fill out the following form so I can add your recommendation to my Book Catalog on Baserow \ud83d\ude04",
-                            "cover_image": {
-                                "name": "JOT4EtQO1ehe2LXaDctBtbDke5JuPIk9_346e0f7ad828c320e795733b6d8e14a875e9c0889279c5494fc68928f50c9943.jpg",
-                                "original_name": "bookshelf cover photo.jpg"
-                            },
-                            "logo_image": {
-                                "name": "EPaG0MspRBrAhq92KlW1bnTzKKTJhIWt_c94ee92a12586a91b5ea964ad0ef9e1abc08bf0d58b424a99da75967d208431f.jpg",
-                                "original_name": "reading a book.jpg"
-                            },
-                            "submit_text": "Submit",
-                            "submit_action": "MESSAGE",
-                            "submit_action_message": "Thanks for your recommendation! I've added it to my Book Catalog and look forward to reading it soon. \ud83d\udcda",
-                            "submit_action_redirect_url": "",
-                            "field_options": [
-                                {
-                                    "id": 779,
-                                    "field_id": 131737,
-                                    "name": "What's the title of the book?",
-                                    "description": "",
-                                    "enabled": true,
-                                    "required": true,
-                                    "order": 0
-                                },
-                                {
-                                    "id": 780,
-                                    "field_id": 131738,
-                                    "name": "In a few sentences, what's the book about?",
-                                    "description": "Hope his goes without saying, but please: NO SPOILERS",
-                                    "enabled": true,
-                                    "required": true,
-                                    "order": 1
-                                },
-                                {
-                                    "id": 781,
-                                    "field_id": 131739,
-                                    "name": "Who is/are the author(s)?",
-                                    "description": "",
-                                    "enabled": true,
-                                    "required": true,
-                                    "order": 2
-                                },
-                                {
-                                    "id": 786,
-                                    "field_id": 131744,
-                                    "name": "Who's the publisher?",
-                                    "description": "No worries if you're unsure, but this helps me make sure I get the right book!",
-                                    "enabled": true,
-                                    "required": false,
-                                    "order": 3
-                                },
-                                {
-                                    "id": 788,
-                                    "field_id": 131746,
-                                    "name": "What language is the book written in?",
-                                    "description": "I read in English, Spanish, and Portuguese. \ud83c\uddec\ud83c\udde7\ud83c\uddea\ud83c\uddf8\ud83c\uddf5\ud83c\uddf9",
-                                    "enabled": true,
-                                    "required": true,
-                                    "order": 4
-                                },
-                                {
-                                    "id": 789,
-                                    "field_id": 131747,
-                                    "name": "How many pages is the book?",
-                                    "description": "Not required, but helps me gauge how long it might take me to read it.",
-                                    "enabled": true,
-                                    "required": false,
-                                    "order": 5
-                                },
-                                {
-                                    "id": 782,
-                                    "field_id": 131740,
-                                    "name": "",
-                                    "description": "",
-                                    "enabled": false,
-                                    "required": true,
-                                    "order": 6
-                                },
-                                {
-                                    "id": 783,
-                                    "field_id": 131741,
-                                    "name": "",
-                                    "description": "",
-                                    "enabled": false,
-                                    "required": true,
-                                    "order": 7
-                                },
-                                {
-                                    "id": 784,
-                                    "field_id": 131742,
-                                    "name": "",
-                                    "description": "",
-                                    "enabled": false,
-                                    "required": true,
-                                    "order": 8
-                                },
-                                {
-                                    "id": 785,
-                                    "field_id": 131743,
-                                    "name": "",
-                                    "description": "",
-                                    "enabled": false,
-                                    "required": true,
-                                    "order": 9
-                                },
-                                {
-                                    "id": 787,
-                                    "field_id": 131745,
-                                    "name": "",
-                                    "description": "",
-                                    "enabled": false,
-                                    "required": true,
-                                    "order": 10
-                                }
-                            ]
-                        },
-                        {
-                            "id": 92140,
-                            "type": "gallery",
-                            "name": "Library",
-                            "order": 4,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [
-                                {
-                                    "id": 19733,
-                                    "field_id": 131737,
-                                    "order": "ASC"
-                                }
-                            ],
-                            "decorations": [],
-                            "card_cover_image_field_id": 131740,
-                            "field_options": [
-                                {
-                                    "id": 13650,
-                                    "field_id": 131737,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13651,
-                                    "field_id": 131738,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13652,
-                                    "field_id": 131739,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13653,
-                                    "field_id": 131740,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13654,
-                                    "field_id": 131741,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13655,
-                                    "field_id": 131742,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13656,
-                                    "field_id": 131743,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13657,
-                                    "field_id": 131744,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13658,
-                                    "field_id": 131745,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13659,
-                                    "field_id": 131746,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13660,
-                                    "field_id": 131747,
-                                    "hidden": false,
-                                    "order": 32767
-                                }
-                            ]
-                        },
-                        {
-                            "id": 92144,
-                            "type": "kanban",
-                            "name": "Reading progress",
-                            "order": 5,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [],
-                            "decorations": [],
-                            "single_select_field_id": 131743,
-                            "card_cover_image_field_id": 131740,
-                            "field_options": [
-                                {
-                                    "id": 5223,
-                                    "field_id": 131737,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5224,
-                                    "field_id": 131738,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5225,
-                                    "field_id": 131739,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5226,
-                                    "field_id": 131740,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5227,
-                                    "field_id": 131741,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5228,
-                                    "field_id": 131742,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5229,
-                                    "field_id": 131743,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5230,
-                                    "field_id": 131744,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5231,
-                                    "field_id": 131745,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5232,
-                                    "field_id": 131746,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 5233,
-                                    "field_id": 131747,
-                                    "hidden": false,
-                                    "order": 32767
-                                }
-                            ]
-                        }
-                    ],
-                    "rows": [
-                        {
-                            "id": 1,
-                            "order": "1.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.447145+00:00",
-                            "updated_on": "2022-06-08T11:38:35.428265+00:00",
-                            "field_131737": "The Premonition: A Pandemic Story",
-                            "field_131738": "For those who could read between the lines, the censored news out of China was terrifying. But the president insisted there was nothing to worry about.\n\nFortunately, we are still a nation of skeptics. Fortunately, there are those among us who study pandemics and are willing to look unflinchingly at worst-case scenarios. Michael Lewis\u2019s taut and brilliant nonfiction thriller pits a band of medical visionaries against the wall of ignorance that was the official response of the Trump administration to the outbreak of COVID-19.\n\nThe characters you will meet in these pages are as fascinating as they are unexpected. A thirteen-year-old girl\u2019s science project on transmission of an airborne pathogen develops into a very grown-up model of disease control. A local public-health officer uses her worm\u2019s-eye view to see what the CDC misses, and reveals great truths about American society. A secret team of dissenting doctors, nicknamed the Wolverines, has everything necessary to fight the pandemic: brilliant backgrounds, world-class labs, prior experience with the pandemic scares of bird flu and swine flu\u2026everything, that is, except official permission to implement their work.\n\nMichael Lewis is not shy about calling these people heroes for their refusal to follow directives that they know to be based on misinformation and bad science. Even the internet, as crucial as it is to their exchange of ideas, poses a risk to them. They never know for sure who else might be listening in.",
-                            "field_131739": [
-                                1
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "Fm2dFbomQ5b9lSJIcGJwlDotwwxXV2fG_c5fc2d141ece54939dc822c544dee336bfdb81efef48fbd6247ff9b5f28c1cff.jpg",
-                                    "visible_name": "41+2DiWeWAS._SX345_BO1,204,203,200_.jpg",
-                                    "original_name": "41+2DiWeWAS._SX345_BO1,204,203,200_.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9711,
-                            "field_131743": 130982,
-                            "field_131744": [
-                                1
-                            ],
-                            "field_131745": null,
-                            "field_131746": 9714,
-                            "field_131747": "320"
-                        },
-                        {
-                            "id": 2,
-                            "order": "2.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.447319+00:00",
-                            "updated_on": "2022-06-08T11:38:33.490027+00:00",
-                            "field_131737": "The Good Sister: A Novel",
-                            "field_131738": "Fern Castle works in her local library. She has dinner with her twin sister Rose three nights a week. And she avoids crowds, bright lights and loud noises as much as possible. Fern has a carefully structured life and disrupting her routine can be...dangerous.\n\nWhen Rose discovers that she cannot get pregnant, Fern sees her chance to pay her sister back for everything Rose has done for her. Fern can have a baby for Rose. She just needs to find a father. Simple.\n\nFern's mission will shake the foundations of the life she has carefully built for herself and stir up dark secrets from the past, in this quirky, rich and shocking story of what families keep hidden.",
-                            "field_131739": [
-                                2
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "o7Fyylqf3MMfSQ709dGNIrXeZn0Cpdbh_3378d73e705610b09416d3da53b9fd0b03fb9b35d9f5ed7cc3db5a1489f3bede.jpg",
-                                    "visible_name": "51XlJUUQOgS._SX324_BO1,204,203,200_.jpg",
-                                    "original_name": "51XlJUUQOgS._SX324_BO1,204,203,200_.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9712,
-                            "field_131743": 130983,
-                            "field_131744": [
-                                2
-                            ],
-                            "field_131745": "A stunningly clever thriller made doubly suspenseful by not one, but two unreliable narrators",
-                            "field_131746": 9714,
-                            "field_131747": "336"
-                        },
-                        {
-                            "id": 3,
-                            "order": "3.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.447374+00:00",
-                            "updated_on": "2022-06-08T11:37:03.787023+00:00",
-                            "field_131737": "Second Place: A Novel",
-                            "field_131738": "A woman invites a famous artist to use her guesthouse in the remote coastal landscape where she lives with her family. Powerfully drawn to his paintings, she believes his vision might penetrate the mystery at the center of her life. But as a long, dry summer sets in, his provocative presence itself becomes an enigma\u2014and disrupts the calm of her secluded household.",
-                            "field_131739": [
-                                3
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "PFQFi3mPvNjzgU9x8NhHVFNsaFX3Bzoz_3d75e57895d96c677da2d69583eedf3a8a9f4fc3d4db4d78a20d0d6cd4ec6254.jpg",
-                                    "visible_name": "51yc2ocU8SS.jpg",
-                                    "original_name": "51yc2ocU8SS.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9713,
-                            "field_131743": 130983,
-                            "field_131744": [
-                                3
-                            ],
-                            "field_131745": "",
-                            "field_131746": 9714,
-                            "field_131747": null
-                        },
-                        {
-                            "id": 4,
-                            "order": "4.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.447422+00:00",
-                            "updated_on": "2022-06-08T13:24:10.739074+00:00",
-                            "field_131737": "Mujeres del alma m\u00eda: Sobre el amor impaciente, la vida larga y las brujas buenas",
-                            "field_131738": "En Mujeres del alma m\u00eda la gran autora chilena nos invita a acompa\u00f1arla en este viaje personal y emocional donde repasa su vinculaci\u00f3n con el feminismo desde la infancia hasta hoy. Recuerda a algunas mujeres imprescindibles en su vida, como sus a\u00f1oradas Panchita, Paula o la agente Carmen Balcells; a escritoras relevantes como Virginia Woolf o Margaret Atwood; a j\u00f3venes artistas que aglutinan la rebeld\u00eda de su generaci\u00f3n o, entre otras muchas, a esas mujeres an\u00f3nimas que han sufrido la violencia y que llenas de dignidad y coraje se levantan y avanzan... Ellas son las que tanto le inspiran y tanto le han acompa\u00f1ado a lo largo de su vida: sus mujeres del alma. Finalmente, re- flexiona tambi\u00e9n sobre el movimiento #MeToo \u2014que apoya y celebra\u2014, sobre las recientes revueltas sociales en su pa\u00eds de origen y, c\u00f3mo no, sobre la nueva situaci\u00f3n que globalmente estamos viviendo con la pandemia. Todo ello sin perder esa inconfundible pasi\u00f3n por la vida y por insistir en que, m\u00e1s all\u00e1\u0301 de la edad, siempre hay tiempo para el amor.",
-                            "field_131739": [
-                                4
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "NXItZmi2XzKG26xqE2fFoZjxrhxbB7iX_f57373bb7738efbfbcc4b0ee16b5787b1f849cf80247d7d0b325f81b5bcf52f3.jpg",
-                                    "visible_name": "41gc4w9-tHL._SX329_BO1,204,203,200_.jpg",
-                                    "original_name": "41gc4w9-tHL._SX329_BO1,204,203,200_.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9711,
-                            "field_131743": 130981,
-                            "field_131744": [
-                                4
-                            ],
-                            "field_131745": "",
-                            "field_131746": 9715,
-                            "field_131747": "192"
-                        },
-                        {
-                            "id": 5,
-                            "order": "5.00000000000000000000",
-                            "created_on": "2022-06-08T11:50:42.646984+00:00",
-                            "updated_on": "2022-06-08T13:24:05.161557+00:00",
-                            "field_131737": "The Lucky Ones",
-                            "field_131738": "Pregnant, a new father, a daughter, and a mother-to-be all find themselves in the midst of a profoundly altered existence. The Lucky Ones proves Rachel Cusk's status as one of our most incisive writers by illuminating \"the bustling concourses of life\" without sacrificing emotional depth and complexity.",
-                            "field_131739": [
-                                3
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "2KFXcuQmaHFG3NpnVtzc7gi3Q8URnn8C_99feab8bba5c6852ba43348bbbf35161ae1ad23d93a46836d062896ad7e0451e.jpg",
-                                    "visible_name": "the_lucky_ones.jpg",
-                                    "original_name": "the_lucky_ones.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9712,
-                            "field_131743": 130981,
-                            "field_131744": [
-                                5
-                            ],
-                            "field_131745": "Looks like an oldie but goodie.",
-                            "field_131746": 9714,
-                            "field_131747": "240"
-                        },
-                        {
-                            "id": 7,
-                            "order": "6.00000000000000000000",
-                            "created_on": "2022-06-08T11:58:20.769451+00:00",
-                            "updated_on": "2022-06-08T12:03:05.449818+00:00",
-                            "field_131737": "The Country Life",
-                            "field_131738": "It's time for Stella Benson to head to Hilltop, a small Sussex village where a family of enormous proportions lives. Although she has high hopes for the Maddens, her position as au pair for their obnoxious son Martin shows just how low she really is in the family hierarchy.\n\nIt's hard to imagine what could have compelled her to leave her home, job, and life in London for a life in the country. Is there a reason she has cut all ties with her parents? Why is she so adamant about keeping her past a secret?",
-                            "field_131739": [
-                                3
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "6DN4CfUAAjII2PbHNubIcDerJg8m0dpb_fbd7d92a0a36914f9c5a03e04415b792ef541ea1eff7d1a9e21254be6ed828f9.jpg",
-                                    "visible_name": "the_country_life.jpg",
-                                    "original_name": "the_country_life.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9712,
-                            "field_131743": 130983,
-                            "field_131744": [
-                                7
-                            ],
-                            "field_131745": "A great paradox and a serious joke Cusk has a strange way of keeping us interested in all the different ways people meet.",
-                            "field_131746": 9714,
-                            "field_131747": "352"
-                        },
-                        {
-                            "id": 8,
-                            "order": "7.00000000000000000000",
-                            "created_on": "2022-06-08T12:10:11.244755+00:00",
-                            "updated_on": "2022-06-08T12:16:00.956636+00:00",
-                            "field_131737": "Boomerang: Travels in the New Third World",
-                            "field_131738": "More than an economic phenomenon, cheap credit between 2002 and 2008 provided an opportunity for entire civilizations to show off aspects of their personalities that they typically couldn't afford.\n\nIcelanders aspired to leave the fishing industry and become investment bankers. On behalf of their population, the Greeks intended for Greece to be turned into a money-filled pi\u00f1ata that could be attacked by as many people as possible. Germany aspired to become even more German, while the Irish wanted to quit being Irish.\n\nWith its delightfully melancholy humor, Michael Lewis's inquiry into bubbles beyond our borders makes the American reader think, \"oh, those dumb foreigners,\" leading them to complacency. With his merciless eye on California and Washington, we notice that this narrative is baited with humor and we grasp the inevitable reckoning that awaits the greatest and greediest of debtor nations, which are the United States and China, respectively.",
-                            "field_131739": [
-                                1
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "dvszpuCrHBVtoFHRA2fe6l8xt5UmnfnS_1dbcedac79fdac08190243e8af2eac1959facb419d0bc94519198d16a7d04567.jpg",
-                                    "visible_name": "boomerang.jpg",
-                                    "original_name": "boomerang.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9712,
-                            "field_131743": 130983,
-                            "field_131744": [
-                                8
-                            ],
-                            "field_131745": "Fascinating. Some of the countries he calls the \"New Third World\" are Iceland, Greece, Ireland, and the USA. We've been ruined by our ancient lizard nature of greed, which makes us put short-term satisfaction ahead of common sense. It was both funny and thought-provoking.",
-                            "field_131746": 9714,
-                            "field_131747": "218"
-                        },
-                        {
-                            "id": 9,
-                            "order": "8.00000000000000000000",
-                            "created_on": "2022-06-08T12:17:48.074823+00:00",
-                            "updated_on": "2022-06-08T12:22:59.037010+00:00",
-                            "field_131737": "Panic: The Story of Modern Financial Insanity",
-                            "field_131738": "Markets are plagued by the first and most terrible of all sins: greed. The New York Times bestseller Michael Lewis serves as our jungle guide through five of the most violent and costly financial upheavals in recent memory. His signature humor and clever tales illustrate the mood and market elements building up to each event, allowing him to weave contemporaneous narratives of what people thought was happening at the time, then with hindsight, assess what actually happened and what we should have learned from experience.",
-                            "field_131739": [
-                                1
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "GO2MD1SXfRUitCtsZJ666fKCjHKctnbq_c03c4c4fa3732f5b8549f5ba651ae8ca297583bb19e9e5d225381fc55e7710fb.jpg",
-                                    "visible_name": "panic.jpg",
-                                    "original_name": "panic.jpg"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 9712,
-                            "field_131743": 130983,
-                            "field_131744": [
-                                1
-                            ],
-                            "field_131745": "\"No one believes the original assumptions anymore. It's hard to believe that anyone-- yes, including me-- ever believed it.\"\n- John Seo, Fermat Capital, quoted in 'Panic' by Michael Lewis",
-                            "field_131746": 9714,
-                            "field_131747": "400"
-                        },
-                        {
-                            "id": 10,
-                            "order": "9.00000000000000000000",
-                            "created_on": "2022-06-08T12:26:06.739230+00:00",
-                            "updated_on": "2022-06-08T12:32:35.999931+00:00",
-                            "field_131737": "Has Anyone Seen the President?",
-                            "field_131738": "Lewis\u00a0narrates\u00a0his\u00a02018\u00a0report\u00a0from\u00a0Washington,\u00a0which\u00a0was\u00a0originally\u00a0published\u00a0in\u00a0Bloomberg\u00a0View,\u00a0in\u00a0this\u00a0audio\u00a0investigation,\u00a0which\u00a0is\u00a0not\u00a0available\u00a0in\u00a0book\u00a0form.\u00a0\n\nLewis takes listeners on an unforgettable behind-the-scenes tour, from the White House press room, which Lewis describes as having \"the cramped, uncared-for feel of a public toilet,\" to a balcony overlooking \"a sea of white people\" in the Trump International Hotel, to Steve Bannon's Capitol Hill townhouse, where he joins the former campaign CEO to watch the State of the Union address.",
-                            "field_131739": [
-                                1
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "GOWjWjqJYuC60aap6AXA7pdRid0tYfRc_4e170bbcd181e52ff463359282a9c55009789ce45f07987dd7bb0bff5b3947e9.png",
-                                    "visible_name": "has_anyone_seen_the_president.png",
-                                    "original_name": "has_anyone_seen_the_president.png"
-                                }
-                            ],
-                            "field_131741": "true",
-                            "field_131742": 131616,
-                            "field_131743": 130983,
-                            "field_131744": [
-                                9
-                            ],
-                            "field_131745": "Audio length is just under an hour, and the author does an excellent job reading. Even if you don't pay attention to his tone or inflection, you can tell what he thinks from his words.",
-                            "field_131746": 9714,
-                            "field_131747": null
-                        },
-                        {
-                            "id": 11,
-                            "order": "10.00000000000000000000",
-                            "created_on": "2022-06-08T12:36:50.540800+00:00",
-                            "updated_on": "2022-06-08T12:45:49.202209+00:00",
-                            "field_131737": "El Amante Japones",
-                            "field_131738": "The story of Alma Velasco's romance with the Japanese gardener Ichimei takes the reader from World War II-era Poland to present-day San Francisco.",
-                            "field_131739": [
-                                4
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "ksLNOPaH3tvqkJmZobtKMntsOIs5fH7K_1b3df1a9321aa6b52e02c951793e22262cec910bc7c4bc880ca1eb428c24daef.jpg",
-                                    "visible_name": "el_amante_japones.jpg",
-                                    "original_name": "el_amante_japones.jpg"
-                                }
-                            ],
-                            "field_131741": "false",
-                            "field_131742": 9711,
-                            "field_131743": 130981,
-                            "field_131744": [
-                                10
-                            ],
-                            "field_131745": "This book appears to be both interesting and intriguing.",
-                            "field_131746": 9715,
-                            "field_131747": "352"
-                        },
-                        {
-                            "id": 12,
-                            "order": "11.00000000000000000000",
-                            "created_on": "2022-06-08T12:58:45.572781+00:00",
-                            "updated_on": "2022-06-08T13:05:38.071804+00:00",
-                            "field_131737": "Everything",
-                            "field_131738": "RL and June celebrate Taylor's 50th and final birthday with a bottle of Johnnie Walker Red on the fifth of July. Taylor was RL's childhood friend and June's spouse, but after eleven years, June, a childless hospice worker, eventually states that she is \"nobody's widow anymore.\" As she waits for her life to begin again, June contemplates selling her home. While Betsy is in the midst of chemo treatment, RL, a divorced empty-nester, is forced to have a profound change of heart. Besieged by his own sense of futility and the need to experience the kind of love that \"knocks you down,\" Cynical RL is forced to confront his own sense of futility and the longing for.\n\nEverything is a beautiful story of unexpected redemption written by a writer with a lot of heart and a lot of talent. It takes place in Montana and shows the beauty of the land and the independence of the people there.",
-                            "field_131739": [
-                                5
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "cMZhK67wtXmR9vBJpmFNefyWhr9cgL8T_70b1ac2e118b4450d6ca48f72e836f96213a17b0fd42a46b2b4c9742f3520dec.jpg",
-                                    "visible_name": "everything.jpg",
-                                    "original_name": "everything.jpg"
-                                }
-                            ],
-                            "field_131741": "false",
-                            "field_131742": 9711,
-                            "field_131743": 130981,
-                            "field_131744": [
-                                11
-                            ],
-                            "field_131745": "Find a time to buy and read this book.",
-                            "field_131746": 9714,
-                            "field_131747": "304"
-                        },
-                        {
-                            "id": 14,
-                            "order": "12.00000000000000000000",
-                            "created_on": "2022-06-08T13:06:50.546170+00:00",
-                            "updated_on": "2022-06-08T13:16:30.952292+00:00",
-                            "field_131737": "Where the Money Went",
-                            "field_131738": "Even when he falls in love with someone else, the narrator can't shake his enduring devotion to his ex-wife. His friends' long-term marriages reveal more than he bargained for. We see men as fathers, husbands, and lovers attempting to make sense of a world that stubbornly refuses to make sense in these nine stories. In writing that has been described as \"smart, gritty, unsentimental\" and \"lovely and unforgiving\" by the New York Times, Boston Globe, and USA Today, Canty conveys both the bitterness and tenderness that can be found in romantic relationships.",
-                            "field_131739": [
-                                5
-                            ],
-                            "field_131740": [
-                                {
-                                    "name": "CbCv74Ce5CjRWO4qFd1rrGH3ZkdqPN6Z_d76d35ac81b996cf5659da31c19d2819f6c86e8779c9f32ce12f25ffb3782c9d.jpg",
-                                    "visible_name": "where_the_money_went.jpg",
-                                    "original_name": "where_the_money_went.jpg"
-                                }
-                            ],
-                            "field_131741": "false",
-                            "field_131742": 9711,
-                            "field_131743": 130981,
-                            "field_131744": [
-                                11
-                            ],
-                            "field_131745": "A different perspective on things could help.",
-                            "field_131746": 9714,
-                            "field_131747": "208"
-                        }
-                    ]
+                  "id": 9711,
+                  "value": "Hardcover",
+                  "color": "light-green",
+                  "order": 0
                 },
                 {
-                    "id": 25012,
-                    "name": "Authors",
-                    "order": 2,
-                    "fields": [
-                        {
-                            "id": 131748,
-                            "type": "text",
-                            "name": "Name",
-                            "order": 0,
-                            "primary": true,
-                            "text_default": ""
-                        },
-                        {
-                            "id": 131749,
-                            "type": "file",
-                            "name": "Photos",
-                            "order": 1,
-                            "primary": false
-                        },
-                        {
-                            "id": 131750,
-                            "type": "link_row",
-                            "name": "Books",
-                            "order": 3,
-                            "primary": false,
-                            "link_row_table_id": 25011,
-                            "link_row_related_field_id": 131739
-                        },
-                        {
-                            "id": 131751,
-                            "type": "long_text",
-                            "name": "Bio",
-                            "order": 4,
-                            "primary": false
-                        },
-                        {
-                            "id": 131752,
-                            "type": "long_text",
-                            "name": "Personal notes",
-                            "order": 5,
-                            "primary": false
-                        }
-                    ],
-                    "views": [
-                        {
-                            "id": 27309,
-                            "type": "grid",
-                            "name": "All authors",
-                            "order": 1,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [
-                                {
-                                    "id": 1963,
-                                    "field_id": 131748,
-                                    "order": "ASC"
-                                }
-                            ],
-                            "decorations": [],
-                            "public": false,
-                            "row_identifier_type": "id",
-                            "field_options": [
-                                {
-                                    "id": 131763,
-                                    "field_id": 131748,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 3,
-                                    "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": "unique_count"
-                                },
-                                {
-                                    "id": 131764,
-                                    "field_id": 131749,
-                                    "width": 107,
-                                    "hidden": false,
-                                    "order": 0,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131765,
-                                    "field_id": 131750,
-                                    "width": 301,
-                                    "hidden": false,
-                                    "order": 2,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131766,
-                                    "field_id": 131751,
-                                    "width": 313,
-                                    "hidden": false,
-                                    "order": 1,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131767,
-                                    "field_id": 131752,
-                                    "width": 292,
-                                    "hidden": false,
-                                    "order": 32767,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                }
-                            ]
-                        },
-                        {
-                            "id": 92145,
-                            "type": "gallery",
-                            "name": "Authors gallery",
-                            "order": 2,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [
-                                {
-                                    "id": 19734,
-                                    "field_id": 131748,
-                                    "order": "ASC"
-                                }
-                            ],
-                            "decorations": [],
-                            "card_cover_image_field_id": 131749,
-                            "field_options": [
-                                {
-                                    "id": 13661,
-                                    "field_id": 131748,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13662,
-                                    "field_id": 131749,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13663,
-                                    "field_id": 131750,
-                                    "hidden": false,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13664,
-                                    "field_id": 131751,
-                                    "hidden": true,
-                                    "order": 32767
-                                },
-                                {
-                                    "id": 13665,
-                                    "field_id": 131752,
-                                    "hidden": true,
-                                    "order": 32767
-                                }
-                            ]
-                        }
-                    ],
-                    "rows": [
-                        {
-                            "id": 1,
-                            "order": "1.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.470615+00:00",
-                            "updated_on": "2021-07-22T01:59:53.470646+00:00",
-                            "field_131748": "Michael Lewis",
-                            "field_131749": [
-                                {
-                                    "name": "LFsYBOfMvFwkSuEn62YDTSVJC6qnFBri_2fd17f51f8392edc3f37a6b3e1ba0ff43b9b788a84b1a4eae147b22844fcad98.jpg",
-                                    "visible_name": "michael lewis.jpg",
-                                    "original_name": "michael lewis.jpg"
-                                }
-                            ],
-                            "field_131750": [
-                                1,
-                                8,
-                                9,
-                                10
-                            ],
-                            "field_131751": "Michael Lewis, the best-selling author of The Undoing Project, Liar's Poker, Flash Boys, Moneyball, The Blind Side, Home Game and The Big Short, among other works, lives in Berkeley, California, with his wife, Tabitha Soren, and their three children.",
-                            "field_131752": null
-                        },
-                        {
-                            "id": 2,
-                            "order": "2.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.470746+00:00",
-                            "updated_on": "2021-07-22T01:59:53.470759+00:00",
-                            "field_131748": "Sally Hepworth",
-                            "field_131749": [
-                                {
-                                    "name": "bICrYnzk2NuNqxcF1OHWt2xNsPDAPTID_7c004169e2eb348665764e9a7657b093508a7a2280e8b71783936df0edd0716f.jpg",
-                                    "visible_name": "sally hepworth.jpg",
-                                    "original_name": "sally hepworth.jpg"
-                                }
-                            ],
-                            "field_131750": [
-                                2
-                            ],
-                            "field_131751": "Sally Hepworth is the bestselling author of The Secrets of Midwives (2015), The Things We Keep (2016) The Mother's Promise (2017), The Family Next Door (2018) and The Mother In Law (April 2019). Sally's books have been labelled \"enchanting\" by The Herald Sun, \"smart and engaging\" by Publisher's Weekly, and New York Times bestselling authors Liane Moriarty and Emily Giffin have praised Sally's novels as \"women's fiction at its finest\" and \"totally absorbing\".\n\nSally's novels are available worldwide in English and have been translated into 10+ languages.\n\u200b\nSally lives in Melbourne, Australia with her husband and three children.",
-                            "field_131752": null
-                        },
-                        {
-                            "id": 3,
-                            "order": "3.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.470808+00:00",
-                            "updated_on": "2021-07-22T01:59:53.470819+00:00",
-                            "field_131748": "Rachel Cusk",
-                            "field_131749": [
-                                {
-                                    "name": "245VGseWzCSrWVWXPjxsP1gd4BSjoBZC_1c7a2f79805297e69563ee0ee4b5920648d8e7fd9291d3ee9c34a0f9c31672a7.jpg",
-                                    "visible_name": "rachel cusk.jpg",
-                                    "original_name": "rachel cusk.jpg"
-                                }
-                            ],
-                            "field_131750": [
-                                3,
-                                5,
-                                7
-                            ],
-                            "field_131751": "Rachel Cusk is the author of nine novels, three non-fiction works, a play, and numerous shorter essays and memoirs. Her first novel, Saving Agnes, was published in 1993. Her most recent novel, Kudos, the final part of the Outline trilogy, will be published in the US and the UK in May 2018.\n\nSaving Agnes won the Whitbread First Novel Award, The Country Life won the Somerset Maugham Award and subsequent books have been shortlisted for the Orange Prize, Whitbread Prize, Goldsmiths Prize, Bailey's Prize, and the Giller Prize and Governor General's Award in Canada. She was named one of Granta's Best of Young British Novelists in 2003. Her version of Euripides' Medea was directed by Rupert Goold and was shortlisted for the Susan Blackburn Smith Award.\n\nRachel was born in Canada in 1967 and spent her early childhood in Los Angeles before moving to the UK in 1974. She studied English at Oxford and published her first novel Saving Agnes when she was twenty six, and its themes of femininity and social satire remained central to her work over the next decade. In responding to the formal problems of the novel representing female experience she began to work additionally in non-fiction. Her autobiographical accounts of motherhood and divorce (A Life's Work and Aftermath) were groundbreaking and controversial.\n\nMost recently, after a long period of consideration, she attempted to evolve a new form, one that could represent personal experience while avoiding the politics of subjectivity and literalism and remaining free from narrative convention. That project became a trilogy (Outline, Transit and Kudos). Outline was one of The New York Times' top 5 novels in 2015. Judith Thurman's 2017 profile of Rachel in The New Yorker comments \"Many experimental writers have rejected the mechanics of storytelling, but Cusk has found a way to do so without sacrificing its tension. Where the action meanders, language takes up the slack. Her sentences hum with intelligence, like a neural pathway.\"",
-                            "field_131752": ""
-                        },
-                        {
-                            "id": 4,
-                            "order": "4.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.470864+00:00",
-                            "updated_on": "2021-07-22T02:05:32.661293+00:00",
-                            "field_131748": "Isabel Allende",
-                            "field_131749": [
-                                {
-                                    "name": "GBJuClkViEkZBJbmfn2jak7nKAAti5ji_7baa5d83257012a298d636659abee30fe78d344ca6c8f423b7b53c3df0f4724d.jpg",
-                                    "visible_name": "1e2bc3mepm7g78u3mvmuihr46p._US230_.jpg",
-                                    "original_name": "1e2bc3mepm7g78u3mvmuihr46p._US230_.jpg"
-                                }
-                            ],
-                            "field_131750": [
-                                4,
-                                11
-                            ],
-                            "field_131751": "Born in Peru and raised in Chile, Isabel Allende is the author of The House of the Spirits, Daughter of Fortune, Paula, My Invented Country and The Japanese Lover. Her books have been translated into more than 35 languages and have sold over 65 million copies worldwide. The Japanese Lover was an international and New York Times bestseller. She lives in California.",
-                            "field_131752": "She has a really fascinating life story!"
-                        },
-                        {
-                            "id": 5,
-                            "order": "5.00000000000000000000",
-                            "created_on": "2022-06-08T12:50:35.125401+00:00",
-                            "updated_on": "2022-06-08T12:58:02.231576+00:00",
-                            "field_131748": "Kevin Canty",
-                            "field_131749": [
-                                {
-                                    "name": "jn62t4VpNocIexIhelBKXcWYpExYvKmq_82fb76951d06ea198adad3c446c99168b0e555b23e5b632179af03096d6c3507.jpg",
-                                    "visible_name": "kevin_canty.jpg",
-                                    "original_name": "kevin_canty.jpg"
-                                }
-                            ],
-                            "field_131750": [
-                                12,
-                                14
-                            ],
-                            "field_131751": "Kevin Canty is an American novelist and short story writer. He is currently a professor of English at the University of Montana at Missoula, where he teaches. At the University of Florida, Canty earned his master's in English literature in 1990. In 1993, he graduated from the University of Arizona with a Master of Fine Arts degree in creative writing.\n\nCanty (Where the Money Went, Everything), a Montana-based author, has been compared to Richard Ford and Russell Banks. Canty's beautifully rendered novels and stories have a strong sense of place, but his work transcends any notion of regionalism.",
-                            "field_131752": "A professor at the University of Montana."
-                        }
-                    ]
+                  "id": 9712,
+                  "value": "Paperback",
+                  "color": "blue",
+                  "order": 1
                 },
                 {
-                    "id": 25013,
-                    "name": "Publishers",
-                    "order": 3,
-                    "fields": [
-                        {
-                            "id": 131753,
-                            "type": "text",
-                            "name": "Name",
-                            "order": 0,
-                            "primary": true,
-                            "text_default": ""
-                        },
-                        {
-                            "id": 131754,
-                            "type": "link_row",
-                            "name": "Books",
-                            "order": 3,
-                            "primary": false,
-                            "link_row_table_id": 25011,
-                            "link_row_related_field_id": 131744
-                        },
-                        {
-                            "id": 131755,
-                            "type": "url",
-                            "name": "Website",
-                            "order": 4,
-                            "primary": false
-                        }
-                    ],
-                    "views": [
-                        {
-                            "id": 27310,
-                            "type": "grid",
-                            "name": "All publishers",
-                            "order": 1,
-                            "filter_type": "AND",
-                            "filters_disabled": false,
-                            "filters": [],
-                            "sortings": [
-                                {
-                                    "id": 20212,
-                                    "field_id": 131753,
-                                    "order": "ASC"
-                                }
-                            ],
-                            "decorations": [],
-                            "public": false,
-                            "row_identifier_type": "id",
-                            "field_options": [
-                                {
-                                    "id": 131768,
-                                    "field_id": 131753,
-                                    "width": 200,
-                                    "hidden": false,
-                                    "order": 2,
-                                    "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": "unique_count"
-                                },
-                                {
-                                    "id": 131769,
-                                    "field_id": 131754,
-                                    "width": 220,
-                                    "hidden": false,
-                                    "order": 1,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                },
-                                {
-                                    "id": 131770,
-                                    "field_id": 131755,
-                                    "width": 233,
-                                    "hidden": false,
-                                    "order": 0,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
-                                }
-                            ]
-                        }
-                    ],
-                    "rows": [
-                        {
-                            "id": 1,
-                            "order": "1.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.480742+00:00",
-                            "updated_on": "2021-07-22T01:59:53.480772+00:00",
-                            "field_131753": "W. W. Norton & Company",
-                            "field_131754": [
-                                1,
-                                9
-                            ],
-                            "field_131755": "https://wwnorton.com/"
-                        },
-                        {
-                            "id": 2,
-                            "order": "2.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.480848+00:00",
-                            "updated_on": "2021-07-22T01:59:53.480861+00:00",
-                            "field_131753": "St. Martin's Griffin",
-                            "field_131754": [
-                                2
-                            ],
-                            "field_131755": "https://us.macmillan.com/smp"
-                        },
-                        {
-                            "id": 3,
-                            "order": "3.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.480900+00:00",
-                            "updated_on": "2021-07-22T01:59:53.480911+00:00",
-                            "field_131753": "Farrar, Straus and Giroux",
-                            "field_131754": [
-                                3
-                            ],
-                            "field_131755": "https://us.macmillan.com/fsg/"
-                        },
-                        {
-                            "id": 4,
-                            "order": "4.00000000000000000000",
-                            "created_on": "2021-07-22T01:59:53.480948+00:00",
-                            "updated_on": "2021-07-22T02:06:07.488842+00:00",
-                            "field_131753": "Vintage Espanol",
-                            "field_131754": [
-                                4
-                            ],
-                            "field_131755": "https://vintageespanol.net"
-                        },
-                        {
-                            "id": 5,
-                            "order": "5.00000000000000000000",
-                            "created_on": "2022-06-08T11:54:26.301754+00:00",
-                            "updated_on": "2022-06-08T11:54:37.126613+00:00",
-                            "field_131753": "Harper Perennial",
-                            "field_131754": [
-                                5
-                            ],
-                            "field_131755": "https://www.harpercollins.com/"
-                        },
-                        {
-                            "id": 7,
-                            "order": "6.00000000000000000000",
-                            "created_on": "2022-06-08T11:59:46.429606+00:00",
-                            "updated_on": "2022-06-08T11:59:55.574630+00:00",
-                            "field_131753": "Picador",
-                            "field_131754": [
-                                7
-                            ],
-                            "field_131755": "https://www.panmacmillan.com/picador"
-                        },
-                        {
-                            "id": 8,
-                            "order": "7.00000000000000000000",
-                            "created_on": "2022-06-08T12:11:45.815941+00:00",
-                            "updated_on": "2022-06-08T12:11:53.866268+00:00",
-                            "field_131753": "W. W. Norton Company",
-                            "field_131754": [
-                                8
-                            ],
-                            "field_131755": "https://wwnorton.com/"
-                        },
-                        {
-                            "id": 9,
-                            "order": "8.00000000000000000000",
-                            "created_on": "2022-06-08T12:29:06.518261+00:00",
-                            "updated_on": "2022-06-08T12:29:15.465849+00:00",
-                            "field_131753": "Simon Schuster Audio",
-                            "field_131754": [
-                                10
-                            ],
-                            "field_131755": "https://www.simonandschuster.com/h/audio"
-                        },
-                        {
-                            "id": 10,
-                            "order": "9.00000000000000000000",
-                            "created_on": "2022-06-08T12:39:34.633608+00:00",
-                            "updated_on": "2022-06-08T12:41:08.637228+00:00",
-                            "field_131753": "Plaza & Jan\u00e9s",
-                            "field_131754": [
-                                11
-                            ],
-                            "field_131755": "https://www.plazayjanescolombia.com/"
-                        },
-                        {
-                            "id": 11,
-                            "order": "10.00000000000000000000",
-                            "created_on": "2022-06-08T13:02:00.882697+00:00",
-                            "updated_on": "2022-06-08T13:04:13.607710+00:00",
-                            "field_131753": "Nan A. Talese",
-                            "field_131754": [
-                                12,
-                                14
-                            ],
-                            "field_131755": "https://www.nantalese.com/"
-                        }
-                    ]
+                  "id": 9713,
+                  "value": "eBook",
+                  "color": "red",
+                  "order": 2
+                },
+                {
+                  "id": 131616,
+                  "value": "Audiobook",
+                  "color": "gray",
+                  "order": 3
                 }
-            ]
+              ]
+            },
+            {
+              "id": 131743,
+              "type": "single_select",
+              "name": "Status",
+              "order": 6,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 130981,
+                  "value": "Not read",
+                  "color": "red",
+                  "order": 0
+                },
+                {
+                  "id": 130982,
+                  "value": "Currently reading",
+                  "color": "orange",
+                  "order": 1
+                },
+                {
+                  "id": 130983,
+                  "value": "Finished",
+                  "color": "green",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 131744,
+              "type": "link_row",
+              "name": "Publisher",
+              "order": 7,
+              "primary": false,
+              "link_row_table_id": 25013,
+              "link_row_related_field_id": 131754
+            },
+            {
+              "id": 131745,
+              "type": "long_text",
+              "name": "Personal notes",
+              "order": 8,
+              "primary": false
+            },
+            {
+              "id": 131746,
+              "type": "single_select",
+              "name": "Language",
+              "order": 9,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 9714,
+                  "value": "English",
+                  "color": "dark-red",
+                  "order": 0
+                },
+                {
+                  "id": 9715,
+                  "value": "Spanish",
+                  "color": "dark-orange",
+                  "order": 1
+                },
+                {
+                  "id": 9716,
+                  "value": "Portuguese",
+                  "color": "dark-green",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 131747,
+              "type": "number",
+              "name": "Pages",
+              "order": 10,
+              "primary": false,
+              "number_decimal_places": 0,
+              "number_negative": false
+            }
+          ],
+          "views": [
+            {
+              "id": 27308,
+              "type": "grid",
+              "name": "All books",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1950,
+                  "field_id": 131737,
+                  "order": "ASC"
+                }
+              ],
+              "decorations": [],
+              "public": false,
+              "row_identifier_type": "id",
+              "field_options": [
+                {
+                  "id": 131752,
+                  "field_id": 131737,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 10,
+                  "aggregation_type": "unique_count",
+                  "aggregation_raw_type": "unique_count"
+                },
+                {
+                  "id": 131753,
+                  "field_id": 131738,
+                  "width": 268,
+                  "hidden": false,
+                  "order": 3,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131754,
+                  "field_id": 131739,
+                  "width": 126,
+                  "hidden": false,
+                  "order": 0,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131755,
+                  "field_id": 131740,
+                  "width": 136,
+                  "hidden": false,
+                  "order": 1,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131756,
+                  "field_id": 131741,
+                  "width": 150,
+                  "hidden": false,
+                  "order": 6,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131757,
+                  "field_id": 131742,
+                  "width": 112,
+                  "hidden": false,
+                  "order": 7,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131758,
+                  "field_id": 131743,
+                  "width": 141,
+                  "hidden": false,
+                  "order": 8,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131759,
+                  "field_id": 131744,
+                  "width": 172,
+                  "hidden": false,
+                  "order": 2,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131760,
+                  "field_id": 131745,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 9,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131761,
+                  "field_id": 131746,
+                  "width": 122,
+                  "hidden": false,
+                  "order": 4,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131762,
+                  "field_id": 131747,
+                  "width": 102,
+                  "hidden": false,
+                  "order": 5,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                }
+              ]
+            },
+            {
+              "id": 27323,
+              "type": "grid",
+              "name": "Acquired, not read",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 4235,
+                  "field_id": 131741,
+                  "type": "boolean",
+                  "value": "1"
+                },
+                {
+                  "id": 29771,
+                  "field_id": 131743,
+                  "type": "single_select_equal",
+                  "value": "130981"
+                }
+              ],
+              "sortings": [],
+              "decorations": [],
+              "public": false,
+              "row_identifier_type": "id",
+              "field_options": [
+                {
+                  "id": 131827,
+                  "field_id": 131737,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 10,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131828,
+                  "field_id": 131738,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131829,
+                  "field_id": 131739,
+                  "width": 126,
+                  "hidden": false,
+                  "order": 0,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131830,
+                  "field_id": 131740,
+                  "width": 138,
+                  "hidden": false,
+                  "order": 1,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131831,
+                  "field_id": 131741,
+                  "width": 157,
+                  "hidden": false,
+                  "order": 6,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131832,
+                  "field_id": 131742,
+                  "width": 106,
+                  "hidden": false,
+                  "order": 7,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131833,
+                  "field_id": 131743,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 8,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131834,
+                  "field_id": 131744,
+                  "width": 138,
+                  "hidden": false,
+                  "order": 2,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131835,
+                  "field_id": 131745,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 9,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131836,
+                  "field_id": 131746,
+                  "width": 126,
+                  "hidden": false,
+                  "order": 4,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131837,
+                  "field_id": 131747,
+                  "width": 102,
+                  "hidden": false,
+                  "order": 5,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                }
+              ]
+            },
+            {
+              "id": 27325,
+              "type": "form",
+              "name": "Book suggestions",
+              "order": 3,
+              "public": false,
+              "title": "Hi there!",
+              "description": "Please fill out the following form so I can add your recommendation to my Book Catalog on Baserow \ud83d\ude04",
+              "cover_image": {
+                "name": "JOT4EtQO1ehe2LXaDctBtbDke5JuPIk9_346e0f7ad828c320e795733b6d8e14a875e9c0889279c5494fc68928f50c9943.jpg",
+                "original_name": "bookshelf cover photo.jpg"
+              },
+              "logo_image": {
+                "name": "EPaG0MspRBrAhq92KlW1bnTzKKTJhIWt_c94ee92a12586a91b5ea964ad0ef9e1abc08bf0d58b424a99da75967d208431f.jpg",
+                "original_name": "reading a book.jpg"
+              },
+              "submit_text": "Submit",
+              "submit_action": "MESSAGE",
+              "submit_action_message": "Thanks for your recommendation! I've added it to my Book Catalog and look forward to reading it soon. \ud83d\udcda",
+              "submit_action_redirect_url": "",
+              "field_options": [
+                {
+                  "id": 779,
+                  "field_id": 131737,
+                  "name": "What's the title of the book?",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 0
+                },
+                {
+                  "id": 780,
+                  "field_id": 131738,
+                  "name": "In a few sentences, what's the book about?",
+                  "description": "Hope his goes without saying, but please: NO SPOILERS",
+                  "enabled": true,
+                  "required": true,
+                  "order": 1
+                },
+                {
+                  "id": 781,
+                  "field_id": 131739,
+                  "name": "Who is/are the author(s)?",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 2
+                },
+                {
+                  "id": 786,
+                  "field_id": 131744,
+                  "name": "Who's the publisher?",
+                  "description": "No worries if you're unsure, but this helps me make sure I get the right book!",
+                  "enabled": true,
+                  "required": false,
+                  "order": 3
+                },
+                {
+                  "id": 788,
+                  "field_id": 131746,
+                  "name": "What language is the book written in?",
+                  "description": "I read in English, Spanish, and Portuguese. \ud83c\uddec\ud83c\udde7\ud83c\uddea\ud83c\uddf8\ud83c\uddf5\ud83c\uddf9",
+                  "enabled": true,
+                  "required": true,
+                  "order": 4
+                },
+                {
+                  "id": 789,
+                  "field_id": 131747,
+                  "name": "How many pages is the book?",
+                  "description": "Not required, but helps me gauge how long it might take me to read it.",
+                  "enabled": true,
+                  "required": false,
+                  "order": 5
+                },
+                {
+                  "id": 782,
+                  "field_id": 131740,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 6
+                },
+                {
+                  "id": 783,
+                  "field_id": 131741,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 7
+                },
+                {
+                  "id": 784,
+                  "field_id": 131742,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 8
+                },
+                {
+                  "id": 785,
+                  "field_id": 131743,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 9
+                },
+                {
+                  "id": 787,
+                  "field_id": 131745,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 10
+                }
+              ]
+            },
+            {
+              "id": 92140,
+              "type": "gallery",
+              "name": "Library",
+              "order": 4,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 19733,
+                  "field_id": 131737,
+                  "order": "ASC"
+                }
+              ],
+              "decorations": [],
+              "card_cover_image_field_id": 131740,
+              "field_options": [
+                {
+                  "id": 13650,
+                  "field_id": 131737,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 13651,
+                  "field_id": 131738,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13652,
+                  "field_id": 131739,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 13653,
+                  "field_id": 131740,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13654,
+                  "field_id": 131741,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 13655,
+                  "field_id": 131742,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 13656,
+                  "field_id": 131743,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13657,
+                  "field_id": 131744,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13658,
+                  "field_id": 131745,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13659,
+                  "field_id": 131746,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13660,
+                  "field_id": 131747,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 92144,
+              "type": "kanban",
+              "name": "Reading progress",
+              "order": 5,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "decorations": [],
+              "single_select_field_id": 131743,
+              "card_cover_image_field_id": 131740,
+              "field_options": [
+                {
+                  "id": 5223,
+                  "field_id": 131737,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 5224,
+                  "field_id": 131738,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 5225,
+                  "field_id": 131739,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 5226,
+                  "field_id": 131740,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 5227,
+                  "field_id": 131741,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 5228,
+                  "field_id": 131742,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 5229,
+                  "field_id": 131743,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 5230,
+                  "field_id": 131744,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 5231,
+                  "field_id": 131745,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 5232,
+                  "field_id": 131746,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 5233,
+                  "field_id": 131747,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.447145+00:00",
+              "updated_on": "2022-06-08T11:38:35.428265+00:00",
+              "field_131737": "The Premonition: A Pandemic Story",
+              "field_131738": "For those who could read between the lines, the censored news out of China was terrifying. But the president insisted there was nothing to worry about.\n\nFortunately, we are still a nation of skeptics. Fortunately, there are those among us who study pandemics and are willing to look unflinchingly at worst-case scenarios. Michael Lewis\u2019s taut and brilliant nonfiction thriller pits a band of medical visionaries against the wall of ignorance that was the official response of the Trump administration to the outbreak of COVID-19.\n\nThe characters you will meet in these pages are as fascinating as they are unexpected. A thirteen-year-old girl\u2019s science project on transmission of an airborne pathogen develops into a very grown-up model of disease control. A local public-health officer uses her worm\u2019s-eye view to see what the CDC misses, and reveals great truths about American society. A secret team of dissenting doctors, nicknamed the Wolverines, has everything necessary to fight the pandemic: brilliant backgrounds, world-class labs, prior experience with the pandemic scares of bird flu and swine flu\u2026everything, that is, except official permission to implement their work.\n\nMichael Lewis is not shy about calling these people heroes for their refusal to follow directives that they know to be based on misinformation and bad science. Even the internet, as crucial as it is to their exchange of ideas, poses a risk to them. They never know for sure who else might be listening in.",
+              "field_131739": [
+                1
+              ],
+              "field_131740": [
+                {
+                  "name": "Fm2dFbomQ5b9lSJIcGJwlDotwwxXV2fG_c5fc2d141ece54939dc822c544dee336bfdb81efef48fbd6247ff9b5f28c1cff.jpg",
+                  "visible_name": "41+2DiWeWAS._SX345_BO1,204,203,200_.jpg",
+                  "original_name": "41+2DiWeWAS._SX345_BO1,204,203,200_.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9711,
+              "field_131743": 130982,
+              "field_131744": [
+                1
+              ],
+              "field_131745": null,
+              "field_131746": 9714,
+              "field_131747": "320"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.447319+00:00",
+              "updated_on": "2022-06-08T11:38:33.490027+00:00",
+              "field_131737": "The Good Sister: A Novel",
+              "field_131738": "Fern Castle works in her local library. She has dinner with her twin sister Rose three nights a week. And she avoids crowds, bright lights and loud noises as much as possible. Fern has a carefully structured life and disrupting her routine can be...dangerous.\n\nWhen Rose discovers that she cannot get pregnant, Fern sees her chance to pay her sister back for everything Rose has done for her. Fern can have a baby for Rose. She just needs to find a father. Simple.\n\nFern's mission will shake the foundations of the life she has carefully built for herself and stir up dark secrets from the past, in this quirky, rich and shocking story of what families keep hidden.",
+              "field_131739": [
+                2
+              ],
+              "field_131740": [
+                {
+                  "name": "o7Fyylqf3MMfSQ709dGNIrXeZn0Cpdbh_3378d73e705610b09416d3da53b9fd0b03fb9b35d9f5ed7cc3db5a1489f3bede.jpg",
+                  "visible_name": "51XlJUUQOgS._SX324_BO1,204,203,200_.jpg",
+                  "original_name": "51XlJUUQOgS._SX324_BO1,204,203,200_.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9712,
+              "field_131743": 130983,
+              "field_131744": [
+                2
+              ],
+              "field_131745": "A stunningly clever thriller made doubly suspenseful by not one, but two unreliable narrators",
+              "field_131746": 9714,
+              "field_131747": "336"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.447374+00:00",
+              "updated_on": "2022-06-08T11:37:03.787023+00:00",
+              "field_131737": "Second Place: A Novel",
+              "field_131738": "A woman invites a famous artist to use her guesthouse in the remote coastal landscape where she lives with her family. Powerfully drawn to his paintings, she believes his vision might penetrate the mystery at the center of her life. But as a long, dry summer sets in, his provocative presence itself becomes an enigma\u2014and disrupts the calm of her secluded household.",
+              "field_131739": [
+                3
+              ],
+              "field_131740": [
+                {
+                  "name": "PFQFi3mPvNjzgU9x8NhHVFNsaFX3Bzoz_3d75e57895d96c677da2d69583eedf3a8a9f4fc3d4db4d78a20d0d6cd4ec6254.jpg",
+                  "visible_name": "51yc2ocU8SS.jpg",
+                  "original_name": "51yc2ocU8SS.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9713,
+              "field_131743": 130983,
+              "field_131744": [
+                3
+              ],
+              "field_131745": "",
+              "field_131746": 9714,
+              "field_131747": null
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.447422+00:00",
+              "updated_on": "2022-06-08T13:24:10.739074+00:00",
+              "field_131737": "Mujeres del alma m\u00eda: Sobre el amor impaciente, la vida larga y las brujas buenas",
+              "field_131738": "En Mujeres del alma m\u00eda la gran autora chilena nos invita a acompa\u00f1arla en este viaje personal y emocional donde repasa su vinculaci\u00f3n con el feminismo desde la infancia hasta hoy. Recuerda a algunas mujeres imprescindibles en su vida, como sus a\u00f1oradas Panchita, Paula o la agente Carmen Balcells; a escritoras relevantes como Virginia Woolf o Margaret Atwood; a j\u00f3venes artistas que aglutinan la rebeld\u00eda de su generaci\u00f3n o, entre otras muchas, a esas mujeres an\u00f3nimas que han sufrido la violencia y que llenas de dignidad y coraje se levantan y avanzan... Ellas son las que tanto le inspiran y tanto le han acompa\u00f1ado a lo largo de su vida: sus mujeres del alma. Finalmente, re- flexiona tambi\u00e9n sobre el movimiento #MeToo \u2014que apoya y celebra\u2014, sobre las recientes revueltas sociales en su pa\u00eds de origen y, c\u00f3mo no, sobre la nueva situaci\u00f3n que globalmente estamos viviendo con la pandemia. Todo ello sin perder esa inconfundible pasi\u00f3n por la vida y por insistir en que, m\u00e1s all\u00e1\u0301 de la edad, siempre hay tiempo para el amor.",
+              "field_131739": [
+                4
+              ],
+              "field_131740": [
+                {
+                  "name": "NXItZmi2XzKG26xqE2fFoZjxrhxbB7iX_f57373bb7738efbfbcc4b0ee16b5787b1f849cf80247d7d0b325f81b5bcf52f3.jpg",
+                  "visible_name": "41gc4w9-tHL._SX329_BO1,204,203,200_.jpg",
+                  "original_name": "41gc4w9-tHL._SX329_BO1,204,203,200_.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9711,
+              "field_131743": 130981,
+              "field_131744": [
+                4
+              ],
+              "field_131745": "",
+              "field_131746": 9715,
+              "field_131747": "192"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "created_on": "2022-06-08T11:50:42.646984+00:00",
+              "updated_on": "2022-06-08T13:24:05.161557+00:00",
+              "field_131737": "The Lucky Ones",
+              "field_131738": "Pregnant, a new father, a daughter, and a mother-to-be all find themselves in the midst of a profoundly altered existence. The Lucky Ones proves Rachel Cusk's status as one of our most incisive writers by illuminating \"the bustling concourses of life\" without sacrificing emotional depth and complexity.",
+              "field_131739": [
+                3
+              ],
+              "field_131740": [
+                {
+                  "name": "2KFXcuQmaHFG3NpnVtzc7gi3Q8URnn8C_99feab8bba5c6852ba43348bbbf35161ae1ad23d93a46836d062896ad7e0451e.jpg",
+                  "visible_name": "the_lucky_ones.jpg",
+                  "original_name": "the_lucky_ones.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9712,
+              "field_131743": 130981,
+              "field_131744": [
+                5
+              ],
+              "field_131745": "Looks like an oldie but goodie.",
+              "field_131746": 9714,
+              "field_131747": "240"
+            },
+            {
+              "id": 7,
+              "order": "6.00000000000000000000",
+              "created_on": "2022-06-08T11:58:20.769451+00:00",
+              "updated_on": "2022-06-08T12:03:05.449818+00:00",
+              "field_131737": "The Country Life",
+              "field_131738": "It's time for Stella Benson to head to Hilltop, a small Sussex village where a family of enormous proportions lives. Although she has high hopes for the Maddens, her position as au pair for their obnoxious son Martin shows just how low she really is in the family hierarchy.\n\nIt's hard to imagine what could have compelled her to leave her home, job, and life in London for a life in the country. Is there a reason she has cut all ties with her parents? Why is she so adamant about keeping her past a secret?",
+              "field_131739": [
+                3
+              ],
+              "field_131740": [
+                {
+                  "name": "6DN4CfUAAjII2PbHNubIcDerJg8m0dpb_fbd7d92a0a36914f9c5a03e04415b792ef541ea1eff7d1a9e21254be6ed828f9.jpg",
+                  "visible_name": "the_country_life.jpg",
+                  "original_name": "the_country_life.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9712,
+              "field_131743": 130983,
+              "field_131744": [
+                7
+              ],
+              "field_131745": "A great paradox and a serious joke Cusk has a strange way of keeping us interested in all the different ways people meet.",
+              "field_131746": 9714,
+              "field_131747": "352"
+            },
+            {
+              "id": 8,
+              "order": "7.00000000000000000000",
+              "created_on": "2022-06-08T12:10:11.244755+00:00",
+              "updated_on": "2022-06-08T12:16:00.956636+00:00",
+              "field_131737": "Boomerang: Travels in the New Third World",
+              "field_131738": "More than an economic phenomenon, cheap credit between 2002 and 2008 provided an opportunity for entire civilizations to show off aspects of their personalities that they typically couldn't afford.\n\nIcelanders aspired to leave the fishing industry and become investment bankers. On behalf of their population, the Greeks intended for Greece to be turned into a money-filled pi\u00f1ata that could be attacked by as many people as possible. Germany aspired to become even more German, while the Irish wanted to quit being Irish.\n\nWith its delightfully melancholy humor, Michael Lewis's inquiry into bubbles beyond our borders makes the American reader think, \"oh, those dumb foreigners,\" leading them to complacency. With his merciless eye on California and Washington, we notice that this narrative is baited with humor and we grasp the inevitable reckoning that awaits the greatest and greediest of debtor nations, which are the United States and China, respectively.",
+              "field_131739": [
+                1
+              ],
+              "field_131740": [
+                {
+                  "name": "dvszpuCrHBVtoFHRA2fe6l8xt5UmnfnS_1dbcedac79fdac08190243e8af2eac1959facb419d0bc94519198d16a7d04567.jpg",
+                  "visible_name": "boomerang.jpg",
+                  "original_name": "boomerang.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9712,
+              "field_131743": 130983,
+              "field_131744": [
+                8
+              ],
+              "field_131745": "Fascinating. Some of the countries he calls the \"New Third World\" are Iceland, Greece, Ireland, and the USA. We've been ruined by our ancient lizard nature of greed, which makes us put short-term satisfaction ahead of common sense. It was both funny and thought-provoking.",
+              "field_131746": 9714,
+              "field_131747": "218"
+            },
+            {
+              "id": 9,
+              "order": "8.00000000000000000000",
+              "created_on": "2022-06-08T12:17:48.074823+00:00",
+              "updated_on": "2022-06-08T12:22:59.037010+00:00",
+              "field_131737": "Panic: The Story of Modern Financial Insanity",
+              "field_131738": "Markets are plagued by the first and most terrible of all sins: greed. The New York Times bestseller Michael Lewis serves as our jungle guide through five of the most violent and costly financial upheavals in recent memory. His signature humor and clever tales illustrate the mood and market elements building up to each event, allowing him to weave contemporaneous narratives of what people thought was happening at the time, then with hindsight, assess what actually happened and what we should have learned from experience.",
+              "field_131739": [
+                1
+              ],
+              "field_131740": [
+                {
+                  "name": "GO2MD1SXfRUitCtsZJ666fKCjHKctnbq_c03c4c4fa3732f5b8549f5ba651ae8ca297583bb19e9e5d225381fc55e7710fb.jpg",
+                  "visible_name": "panic.jpg",
+                  "original_name": "panic.jpg"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 9712,
+              "field_131743": 130983,
+              "field_131744": [
+                1
+              ],
+              "field_131745": "\"No one believes the original assumptions anymore. It's hard to believe that anyone-- yes, including me-- ever believed it.\"\n- John Seo, Fermat Capital, quoted in 'Panic' by Michael Lewis",
+              "field_131746": 9714,
+              "field_131747": "400"
+            },
+            {
+              "id": 10,
+              "order": "9.00000000000000000000",
+              "created_on": "2022-06-08T12:26:06.739230+00:00",
+              "updated_on": "2022-06-08T12:32:35.999931+00:00",
+              "field_131737": "Has Anyone Seen the President?",
+              "field_131738": "Lewis\u00a0narrates\u00a0his\u00a02018\u00a0report\u00a0from\u00a0Washington,\u00a0which\u00a0was\u00a0originally\u00a0published\u00a0in\u00a0Bloomberg\u00a0View,\u00a0in\u00a0this\u00a0audio\u00a0investigation,\u00a0which\u00a0is\u00a0not\u00a0available\u00a0in\u00a0book\u00a0form.\u00a0\n\nLewis takes listeners on an unforgettable behind-the-scenes tour, from the White House press room, which Lewis describes as having \"the cramped, uncared-for feel of a public toilet,\" to a balcony overlooking \"a sea of white people\" in the Trump International Hotel, to Steve Bannon's Capitol Hill townhouse, where he joins the former campaign CEO to watch the State of the Union address.",
+              "field_131739": [
+                1
+              ],
+              "field_131740": [
+                {
+                  "name": "GOWjWjqJYuC60aap6AXA7pdRid0tYfRc_4e170bbcd181e52ff463359282a9c55009789ce45f07987dd7bb0bff5b3947e9.png",
+                  "visible_name": "has_anyone_seen_the_president.png",
+                  "original_name": "has_anyone_seen_the_president.png"
+                }
+              ],
+              "field_131741": "true",
+              "field_131742": 131616,
+              "field_131743": 130983,
+              "field_131744": [
+                9
+              ],
+              "field_131745": "Audio length is just under an hour, and the author does an excellent job reading. Even if you don't pay attention to his tone or inflection, you can tell what he thinks from his words.",
+              "field_131746": 9714,
+              "field_131747": null
+            },
+            {
+              "id": 11,
+              "order": "10.00000000000000000000",
+              "created_on": "2022-06-08T12:36:50.540800+00:00",
+              "updated_on": "2022-06-08T12:45:49.202209+00:00",
+              "field_131737": "El Amante Japones",
+              "field_131738": "The story of Alma Velasco's romance with the Japanese gardener Ichimei takes the reader from World War II-era Poland to present-day San Francisco.",
+              "field_131739": [
+                4
+              ],
+              "field_131740": [
+                {
+                  "name": "ksLNOPaH3tvqkJmZobtKMntsOIs5fH7K_1b3df1a9321aa6b52e02c951793e22262cec910bc7c4bc880ca1eb428c24daef.jpg",
+                  "visible_name": "el_amante_japones.jpg",
+                  "original_name": "el_amante_japones.jpg"
+                }
+              ],
+              "field_131741": "false",
+              "field_131742": 9711,
+              "field_131743": 130981,
+              "field_131744": [
+                10
+              ],
+              "field_131745": "This book appears to be both interesting and intriguing.",
+              "field_131746": 9715,
+              "field_131747": "352"
+            },
+            {
+              "id": 12,
+              "order": "11.00000000000000000000",
+              "created_on": "2022-06-08T12:58:45.572781+00:00",
+              "updated_on": "2022-06-08T13:05:38.071804+00:00",
+              "field_131737": "Everything",
+              "field_131738": "RL and June celebrate Taylor's 50th and final birthday with a bottle of Johnnie Walker Red on the fifth of July. Taylor was RL's childhood friend and June's spouse, but after eleven years, June, a childless hospice worker, eventually states that she is \"nobody's widow anymore.\" As she waits for her life to begin again, June contemplates selling her home. While Betsy is in the midst of chemo treatment, RL, a divorced empty-nester, is forced to have a profound change of heart. Besieged by his own sense of futility and the need to experience the kind of love that \"knocks you down,\" Cynical RL is forced to confront his own sense of futility and the longing for.\n\nEverything is a beautiful story of unexpected redemption written by a writer with a lot of heart and a lot of talent. It takes place in Montana and shows the beauty of the land and the independence of the people there.",
+              "field_131739": [
+                5
+              ],
+              "field_131740": [
+                {
+                  "name": "cMZhK67wtXmR9vBJpmFNefyWhr9cgL8T_70b1ac2e118b4450d6ca48f72e836f96213a17b0fd42a46b2b4c9742f3520dec.jpg",
+                  "visible_name": "everything.jpg",
+                  "original_name": "everything.jpg"
+                }
+              ],
+              "field_131741": "false",
+              "field_131742": 9711,
+              "field_131743": 130981,
+              "field_131744": [
+                11
+              ],
+              "field_131745": "Find a time to buy and read this book.",
+              "field_131746": 9714,
+              "field_131747": "304"
+            },
+            {
+              "id": 14,
+              "order": "12.00000000000000000000",
+              "created_on": "2022-06-08T13:06:50.546170+00:00",
+              "updated_on": "2022-06-08T13:16:30.952292+00:00",
+              "field_131737": "Where the Money Went",
+              "field_131738": "Even when he falls in love with someone else, the narrator can't shake his enduring devotion to his ex-wife. His friends' long-term marriages reveal more than he bargained for. We see men as fathers, husbands, and lovers attempting to make sense of a world that stubbornly refuses to make sense in these nine stories. In writing that has been described as \"smart, gritty, unsentimental\" and \"lovely and unforgiving\" by the New York Times, Boston Globe, and USA Today, Canty conveys both the bitterness and tenderness that can be found in romantic relationships.",
+              "field_131739": [
+                5
+              ],
+              "field_131740": [
+                {
+                  "name": "CbCv74Ce5CjRWO4qFd1rrGH3ZkdqPN6Z_d76d35ac81b996cf5659da31c19d2819f6c86e8779c9f32ce12f25ffb3782c9d.jpg",
+                  "visible_name": "where_the_money_went.jpg",
+                  "original_name": "where_the_money_went.jpg"
+                }
+              ],
+              "field_131741": "false",
+              "field_131742": 9711,
+              "field_131743": 130981,
+              "field_131744": [
+                11
+              ],
+              "field_131745": "A different perspective on things could help.",
+              "field_131746": 9714,
+              "field_131747": "208"
+            }
+          ]
+        },
+        {
+          "id": 25012,
+          "name": "Authors",
+          "order": 2,
+          "fields": [
+            {
+              "id": 131748,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 131749,
+              "type": "file",
+              "name": "Photos",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 131750,
+              "type": "link_row",
+              "name": "Books",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 25011,
+              "link_row_related_field_id": 131739
+            },
+            {
+              "id": 131751,
+              "type": "long_text",
+              "name": "Bio",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 131752,
+              "type": "long_text",
+              "name": "Personal notes",
+              "order": 5,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 27309,
+              "type": "grid",
+              "name": "All authors",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1963,
+                  "field_id": 131748,
+                  "order": "ASC"
+                }
+              ],
+              "decorations": [],
+              "public": false,
+              "row_identifier_type": "id",
+              "field_options": [
+                {
+                  "id": 131763,
+                  "field_id": 131748,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3,
+                  "aggregation_type": "unique_count",
+                  "aggregation_raw_type": "unique_count"
+                },
+                {
+                  "id": 131764,
+                  "field_id": 131749,
+                  "width": 107,
+                  "hidden": false,
+                  "order": 0,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131765,
+                  "field_id": 131750,
+                  "width": 301,
+                  "hidden": false,
+                  "order": 2,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131766,
+                  "field_id": 131751,
+                  "width": 313,
+                  "hidden": false,
+                  "order": 1,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131767,
+                  "field_id": 131752,
+                  "width": 292,
+                  "hidden": false,
+                  "order": 32767,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                }
+              ]
+            },
+            {
+              "id": 92145,
+              "type": "gallery",
+              "name": "Authors gallery",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 19734,
+                  "field_id": 131748,
+                  "order": "ASC"
+                }
+              ],
+              "decorations": [],
+              "card_cover_image_field_id": 131749,
+              "field_options": [
+                {
+                  "id": 13661,
+                  "field_id": 131748,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 13662,
+                  "field_id": 131749,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13663,
+                  "field_id": 131750,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 13664,
+                  "field_id": 131751,
+                  "hidden": true,
+                  "order": 32767
+                },
+                {
+                  "id": 13665,
+                  "field_id": 131752,
+                  "hidden": true,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.470615+00:00",
+              "updated_on": "2021-07-22T01:59:53.470646+00:00",
+              "field_131748": "Michael Lewis",
+              "field_131749": [
+                {
+                  "name": "LFsYBOfMvFwkSuEn62YDTSVJC6qnFBri_2fd17f51f8392edc3f37a6b3e1ba0ff43b9b788a84b1a4eae147b22844fcad98.jpg",
+                  "visible_name": "michael lewis.jpg",
+                  "original_name": "michael lewis.jpg"
+                }
+              ],
+              "field_131750": [
+                1,
+                8,
+                9,
+                10
+              ],
+              "field_131751": "Michael Lewis, the best-selling author of The Undoing Project, Liar's Poker, Flash Boys, Moneyball, The Blind Side, Home Game and The Big Short, among other works, lives in Berkeley, California, with his wife, Tabitha Soren, and their three children.",
+              "field_131752": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.470746+00:00",
+              "updated_on": "2021-07-22T01:59:53.470759+00:00",
+              "field_131748": "Sally Hepworth",
+              "field_131749": [
+                {
+                  "name": "bICrYnzk2NuNqxcF1OHWt2xNsPDAPTID_7c004169e2eb348665764e9a7657b093508a7a2280e8b71783936df0edd0716f.jpg",
+                  "visible_name": "sally hepworth.jpg",
+                  "original_name": "sally hepworth.jpg"
+                }
+              ],
+              "field_131750": [
+                2
+              ],
+              "field_131751": "Sally Hepworth is the bestselling author of The Secrets of Midwives (2015), The Things We Keep (2016) The Mother's Promise (2017), The Family Next Door (2018) and The Mother In Law (April 2019). Sally's books have been labelled \"enchanting\" by The Herald Sun, \"smart and engaging\" by Publisher's Weekly, and New York Times bestselling authors Liane Moriarty and Emily Giffin have praised Sally's novels as \"women's fiction at its finest\" and \"totally absorbing\".\n\nSally's novels are available worldwide in English and have been translated into 10+ languages.\n\u200b\nSally lives in Melbourne, Australia with her husband and three children.",
+              "field_131752": null
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.470808+00:00",
+              "updated_on": "2021-07-22T01:59:53.470819+00:00",
+              "field_131748": "Rachel Cusk",
+              "field_131749": [
+                {
+                  "name": "245VGseWzCSrWVWXPjxsP1gd4BSjoBZC_1c7a2f79805297e69563ee0ee4b5920648d8e7fd9291d3ee9c34a0f9c31672a7.jpg",
+                  "visible_name": "rachel cusk.jpg",
+                  "original_name": "rachel cusk.jpg"
+                }
+              ],
+              "field_131750": [
+                3,
+                5,
+                7
+              ],
+              "field_131751": "Rachel Cusk is the author of nine novels, three non-fiction works, a play, and numerous shorter essays and memoirs. Her first novel, Saving Agnes, was published in 1993. Her most recent novel, Kudos, the final part of the Outline trilogy, will be published in the US and the UK in May 2018.\n\nSaving Agnes won the Whitbread First Novel Award, The Country Life won the Somerset Maugham Award and subsequent books have been shortlisted for the Orange Prize, Whitbread Prize, Goldsmiths Prize, Bailey's Prize, and the Giller Prize and Governor General's Award in Canada. She was named one of Granta's Best of Young British Novelists in 2003. Her version of Euripides' Medea was directed by Rupert Goold and was shortlisted for the Susan Blackburn Smith Award.\n\nRachel was born in Canada in 1967 and spent her early childhood in Los Angeles before moving to the UK in 1974. She studied English at Oxford and published her first novel Saving Agnes when she was twenty six, and its themes of femininity and social satire remained central to her work over the next decade. In responding to the formal problems of the novel representing female experience she began to work additionally in non-fiction. Her autobiographical accounts of motherhood and divorce (A Life's Work and Aftermath) were groundbreaking and controversial.\n\nMost recently, after a long period of consideration, she attempted to evolve a new form, one that could represent personal experience while avoiding the politics of subjectivity and literalism and remaining free from narrative convention. That project became a trilogy (Outline, Transit and Kudos). Outline was one of The New York Times' top 5 novels in 2015. Judith Thurman's 2017 profile of Rachel in The New Yorker comments \"Many experimental writers have rejected the mechanics of storytelling, but Cusk has found a way to do so without sacrificing its tension. Where the action meanders, language takes up the slack. Her sentences hum with intelligence, like a neural pathway.\"",
+              "field_131752": ""
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.470864+00:00",
+              "updated_on": "2021-07-22T02:05:32.661293+00:00",
+              "field_131748": "Isabel Allende",
+              "field_131749": [
+                {
+                  "name": "GBJuClkViEkZBJbmfn2jak7nKAAti5ji_7baa5d83257012a298d636659abee30fe78d344ca6c8f423b7b53c3df0f4724d.jpg",
+                  "visible_name": "1e2bc3mepm7g78u3mvmuihr46p._US230_.jpg",
+                  "original_name": "1e2bc3mepm7g78u3mvmuihr46p._US230_.jpg"
+                }
+              ],
+              "field_131750": [
+                4,
+                11
+              ],
+              "field_131751": "Born in Peru and raised in Chile, Isabel Allende is the author of The House of the Spirits, Daughter of Fortune, Paula, My Invented Country and The Japanese Lover. Her books have been translated into more than 35 languages and have sold over 65 million copies worldwide. The Japanese Lover was an international and New York Times bestseller. She lives in California.",
+              "field_131752": "She has a really fascinating life story!"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "created_on": "2022-06-08T12:50:35.125401+00:00",
+              "updated_on": "2022-06-08T12:58:02.231576+00:00",
+              "field_131748": "Kevin Canty",
+              "field_131749": [
+                {
+                  "name": "jn62t4VpNocIexIhelBKXcWYpExYvKmq_82fb76951d06ea198adad3c446c99168b0e555b23e5b632179af03096d6c3507.jpg",
+                  "visible_name": "kevin_canty.jpg",
+                  "original_name": "kevin_canty.jpg"
+                }
+              ],
+              "field_131750": [
+                12,
+                14
+              ],
+              "field_131751": "Kevin Canty is an American novelist and short story writer. He is currently a professor of English at the University of Montana at Missoula, where he teaches. At the University of Florida, Canty earned his master's in English literature in 1990. In 1993, he graduated from the University of Arizona with a Master of Fine Arts degree in creative writing.\n\nCanty (Where the Money Went, Everything), a Montana-based author, has been compared to Richard Ford and Russell Banks. Canty's beautifully rendered novels and stories have a strong sense of place, but his work transcends any notion of regionalism.",
+              "field_131752": "A professor at the University of Montana."
+            }
+          ]
+        },
+        {
+          "id": 25013,
+          "name": "Publishers",
+          "order": 3,
+          "fields": [
+            {
+              "id": 131753,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 131754,
+              "type": "link_row",
+              "name": "Books",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 25011,
+              "link_row_related_field_id": 131744
+            },
+            {
+              "id": 131755,
+              "type": "url",
+              "name": "Website",
+              "order": 4,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 27310,
+              "type": "grid",
+              "name": "All publishers",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 20212,
+                  "field_id": 131753,
+                  "order": "ASC"
+                }
+              ],
+              "decorations": [],
+              "public": false,
+              "row_identifier_type": "id",
+              "field_options": [
+                {
+                  "id": 131768,
+                  "field_id": 131753,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2,
+                  "aggregation_type": "unique_count",
+                  "aggregation_raw_type": "unique_count"
+                },
+                {
+                  "id": 131769,
+                  "field_id": 131754,
+                  "width": 220,
+                  "hidden": false,
+                  "order": 1,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 131770,
+                  "field_id": 131755,
+                  "width": 233,
+                  "hidden": false,
+                  "order": 0,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.480742+00:00",
+              "updated_on": "2021-07-22T01:59:53.480772+00:00",
+              "field_131753": "W. W. Norton & Company",
+              "field_131754": [
+                1,
+                9
+              ],
+              "field_131755": "https://wwnorton.com/"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.480848+00:00",
+              "updated_on": "2021-07-22T01:59:53.480861+00:00",
+              "field_131753": "St. Martin's Griffin",
+              "field_131754": [
+                2
+              ],
+              "field_131755": "https://us.macmillan.com/smp"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.480900+00:00",
+              "updated_on": "2021-07-22T01:59:53.480911+00:00",
+              "field_131753": "Farrar, Straus and Giroux",
+              "field_131754": [
+                3
+              ],
+              "field_131755": "https://us.macmillan.com/fsg/"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "created_on": "2021-07-22T01:59:53.480948+00:00",
+              "updated_on": "2021-07-22T02:06:07.488842+00:00",
+              "field_131753": "Vintage Espanol",
+              "field_131754": [
+                4
+              ],
+              "field_131755": "https://vintageespanol.net"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "created_on": "2022-06-08T11:54:26.301754+00:00",
+              "updated_on": "2022-06-08T11:54:37.126613+00:00",
+              "field_131753": "Harper Perennial",
+              "field_131754": [
+                5
+              ],
+              "field_131755": "https://www.harpercollins.com/"
+            },
+            {
+              "id": 7,
+              "order": "6.00000000000000000000",
+              "created_on": "2022-06-08T11:59:46.429606+00:00",
+              "updated_on": "2022-06-08T11:59:55.574630+00:00",
+              "field_131753": "Picador",
+              "field_131754": [
+                7
+              ],
+              "field_131755": "https://www.panmacmillan.com/picador"
+            },
+            {
+              "id": 8,
+              "order": "7.00000000000000000000",
+              "created_on": "2022-06-08T12:11:45.815941+00:00",
+              "updated_on": "2022-06-08T12:11:53.866268+00:00",
+              "field_131753": "W. W. Norton Company",
+              "field_131754": [
+                8
+              ],
+              "field_131755": "https://wwnorton.com/"
+            },
+            {
+              "id": 9,
+              "order": "8.00000000000000000000",
+              "created_on": "2022-06-08T12:29:06.518261+00:00",
+              "updated_on": "2022-06-08T12:29:15.465849+00:00",
+              "field_131753": "Simon Schuster Audio",
+              "field_131754": [
+                10
+              ],
+              "field_131755": "https://www.simonandschuster.com/h/audio"
+            },
+            {
+              "id": 10,
+              "order": "9.00000000000000000000",
+              "created_on": "2022-06-08T12:39:34.633608+00:00",
+              "updated_on": "2022-06-08T12:41:08.637228+00:00",
+              "field_131753": "Plaza & Jan\u00e9s",
+              "field_131754": [
+                11
+              ],
+              "field_131755": "https://www.plazayjanescolombia.com/"
+            },
+            {
+              "id": 11,
+              "order": "10.00000000000000000000",
+              "created_on": "2022-06-08T13:02:00.882697+00:00",
+              "updated_on": "2022-06-08T13:04:13.607710+00:00",
+              "field_131753": "Nan A. Talese",
+              "field_131754": [
+                12,
+                14
+              ],
+              "field_131755": "https://www.nantalese.com/"
+            }
+          ]
         }
-    ]
+      ]
+    }
+  ]
 }

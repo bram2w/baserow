@@ -1,4 +1,5 @@
 from typing import Any, Dict
+from uuid import uuid4
 
 from baserow_premium.license.handler import LicenseHandler
 
@@ -123,6 +124,11 @@ class ConditionalColorValueProviderType(PremiumDecoratorValueProviderType):
         value_provider_conf = value["value_provider_conf"]
 
         for color in value_provider_conf["colors"]:
+            # templates can have colors without an id, but we need one to be able to
+            # correctly update the color later on in the frontend.
+            if "id" not in color:
+                color["id"] = str(uuid4())
+
             for filter in color["filters"]:
                 new_field_id = id_mapping["database_fields"][filter["field"]]
                 filter["field"] = new_field_id

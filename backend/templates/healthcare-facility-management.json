@@ -1,14 +1,14 @@
 {
-  "baserow_template_version":1,
-  "name":"Healthcare Facility Management",
-  "icon":"user-md",
-  "keywords":[
+  "baserow_template_version": 1,
+  "name": "Healthcare Facility Management",
+  "icon": "user-md",
+  "keywords": [
     "medical",
     "record",
     "patient",
     "personal"
   ],
-  "categories":[
+  "categories": [
     "Health"
   ],
   "export": [

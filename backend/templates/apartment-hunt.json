@@ -1,14 +1,14 @@
 {
-  "baserow_template_version":1,
-  "name":"Apartment Hunt",
-  "icon":"search-location",
-  "keywords":[
+  "baserow_template_version": 1,
+  "name": "Apartment Hunt",
+  "icon": "search-location",
+  "keywords": [
     "apartment",
     "apartments",
     "search",
     "condo"
   ],
-  "categories":[
+  "categories": [
     "Personal",
     "Real Estate"
   ],
