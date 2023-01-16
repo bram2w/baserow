@@ -4,7 +4,7 @@ from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
 from baserow.core.trash.registries import TrashableItemType
 from baserow_enterprise.models import Team
-from baserow_enterprise.signals import team_created
+from baserow_enterprise.signals import team_restored
 from baserow_enterprise.teams.operations import RestoreTeamOperationType
 
 
@@ -20,11 +20,7 @@ class TeamTrashableItemType(TrashableItemType):
 
     def restore(self, trashed_item: Team, trash_entry: TrashEntry):
         super().restore(trashed_item, trash_entry)
-        team_created.send(
-            self,
-            team=trashed_item,
-            user=None,
-        )
+        team_restored.send(self, team_id=trashed_item.id, team=trashed_item, user=None)
 
     def permanently_delete_item(self, trashed_item: Team, trash_item_lookup_cache=None):
         """Deletes the team."""

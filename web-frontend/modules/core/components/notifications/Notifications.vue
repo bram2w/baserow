@@ -1,6 +1,7 @@
 <template>
   <div class="notifications">
     <div class="top-right-notifications">
+      <PermissionsUpdatedNotification v-if="permissionsUpdated" />
       <ConnectingNotification v-if="connecting"></ConnectingNotification>
       <UserSessionExpiredNotification
         v-if="isUserSessionExpired"
@@ -35,7 +36,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 import Notification from '@baserow/modules/core/components/notifications/Notification'
 import ConnectingNotification from '@baserow/modules/core/components/notifications/ConnectingNotification'
@@ -48,10 +49,12 @@ import AuthorizationErrorNotification from '@baserow/modules/core/components/not
 import UserSessionExpiredNotification from '@baserow/modules/core/components/notifications/UserSessionExpiredNotification'
 import UndoRedoNotification from '@baserow/modules/core/components/notifications/UndoRedoNotification'
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
+import PermissionsUpdatedNotification from '@baserow/modules/core/components/notifications/PermissionsUpdatedNotification'
 
 export default {
   name: 'Notifications',
   components: {
+    PermissionsUpdatedNotification,
     RestoreNotification,
     Notification,
     ConnectingNotification,
@@ -83,7 +86,16 @@ export default {
       notifications: (state) => state.notification.items,
       undoRedoState: (state) => state.notification.undoRedoState,
       isUserSessionExpired: (state) => state.notification.userSessionExpired,
+      permissionsUpdated: (state) => state.notification.permissionsUpdated,
     }),
+    ...mapGetters({ isAuthenticated: 'auth/isAuthenticated' }),
+  },
+  watch: {
+    isAuthenticated(value) {
+      if (!value) {
+        this.$store.dispatch('notification/userLoggedOut')
+      }
+    },
   },
 }
 </script>

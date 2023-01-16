@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 
 import pytest
@@ -129,3 +131,27 @@ def test_deletion_cascading_to_role_assignments(data_fixture, enterprise_data_fi
     Table.objects.filter(database=database_3).delete()
 
     assert RoleAssignment.objects.count() == 0
+
+
+@pytest.mark.django_db
+@patch("baserow_enterprise.role.receivers.permissions_updated")
+def test_send_permissions_updated_only_if_permissions_were_updated(
+    mock_permissions_updated, data_fixture
+):
+    user_unrelated = data_fixture.create_user()
+    group_user = data_fixture.create_user_group()
+    CoreHandler().add_user_to_group(
+        group_user.group, user_unrelated, permissions="ADMIN"
+    )
+
+    CoreHandler().force_update_group_user(
+        group_user.user, group_user, permissions="ADMIN"
+    )
+
+    assert not mock_permissions_updated.send.called
+
+    CoreHandler().force_update_group_user(
+        group_user.user, group_user, permissions="MEMBER"
+    )
+
+    mock_permissions_updated.send.assert_called_once()
