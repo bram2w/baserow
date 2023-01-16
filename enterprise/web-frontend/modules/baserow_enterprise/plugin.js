@@ -75,12 +75,10 @@ export default (context) => {
     new EnterpriseMembersPagePluginType(context)
   )
 
-  if (app.$featureFlagIsEnabled('RBAC')) {
-    app.$registry.register(
-      'groupSettingsPage',
-      new TeamsGroupSettingsPageType(context)
-    )
-  }
+  app.$registry.register(
+    'groupSettingsPage',
+    new TeamsGroupSettingsPageType(context)
+  )
 
   app.$registry.register(
     'license',
