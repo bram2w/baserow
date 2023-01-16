@@ -63,7 +63,7 @@ export const getters = {
     return loginActions
   },
   getPasswordLoginEnabled: (state) => {
-    return state.loginOptions.password
+    return !!state.loginOptions.password
   },
   getDefaultRedirectUrl: (state) => {
     const loginOptionsArr = Object.values(state.loginOptions)
