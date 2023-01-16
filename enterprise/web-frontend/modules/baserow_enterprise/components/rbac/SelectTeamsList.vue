@@ -1,18 +1,20 @@
 <template>
-  <div>
-    <input
-      v-model="activeSearchTerm"
-      type="text"
-      class="input input--large"
-      :placeholder="$t('selectTeamsList.searchPlaceholder')"
-      @keyup="search(activeSearchTerm)"
-    />
-    <div class="margin-top-2">
-      {{
-        $t('selectTeamsList.selectedAmountLabel', {
-          count: teamsSelected.length,
-        })
-      }}
+  <div class="select-members-list">
+    <div>
+      <input
+        v-model="activeSearchTerm"
+        type="text"
+        class="input input--large"
+        :placeholder="$t('selectTeamsList.searchPlaceholder')"
+        @keyup="search(activeSearchTerm)"
+      />
+      <div class="margin-top-2">
+        {{
+          $t('selectTeamsList.selectedAmountLabel', {
+            count: teamsSelected.length,
+          })
+        }}
+      </div>
     </div>
     <List
       class="margin-top-2 select-teams-list__items"

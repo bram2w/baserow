@@ -1,17 +1,19 @@
 <template>
-  <div>
-    <input
-      v-model="activeSearchTerm"
-      type="text"
-      class="input input--large"
-      :placeholder="$t('memberSelectionList.searchPlaceholder')"
-    />
-    <div class="margin-top-2">
-      {{
-        $t('memberSelectionList.selectedAmountLabel', {
-          count: membersSelected.length,
-        })
-      }}
+  <div class="select-members-list">
+    <div>
+      <input
+        v-model="activeSearchTerm"
+        type="text"
+        class="input input--large"
+        :placeholder="$t('memberSelectionList.searchPlaceholder')"
+      />
+      <div class="margin-top-2">
+        {{
+          $t('memberSelectionList.selectedAmountLabel', {
+            count: membersSelected.length,
+          })
+        }}
+      </div>
     </div>
     <List
       class="margin-top-2 select-members-list__items"

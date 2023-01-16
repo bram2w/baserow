@@ -1,6 +1,12 @@
+.select-members-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .select-members-list__items {
-  max-height: 500px;
-  overflow-y: scroll;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .select-members-list__user-initials {

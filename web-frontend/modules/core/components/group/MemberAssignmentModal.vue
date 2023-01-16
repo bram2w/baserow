@@ -1,8 +1,8 @@
 <template>
-  <Modal>
+  <Modal :full-height="true" :small="true">
     <MemberSelectionList
       ref="memberSelectionList"
-      class="margin-top-2"
+      class="padding-top-2"
       :members="members"
       @invite="storeSelectedMembers"
     />

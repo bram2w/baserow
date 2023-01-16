@@ -19,7 +19,7 @@
             >
               {{ $t('error.requiredField') }}
             </div>
-            <div v-if="hasMinMaxError" class="error">
+            <div v-if="$v.values.name.$dirty && hasMinMaxError" class="error">
               {{
                 $t('error.minMaxLength', {
                   max: $v.values.name.$params.maxLength.max,
@@ -94,7 +94,6 @@
     <div class="row margin-top-2">
       <div class="col col-6">
         <a
-          :class="{ 'button--loading': loading }"
           class="button button--ghost"
           :disabled="loading"
           @click="$emit('invite')"

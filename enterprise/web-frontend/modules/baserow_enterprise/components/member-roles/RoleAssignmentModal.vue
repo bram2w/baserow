@@ -1,18 +1,22 @@
 <template>
-  <Modal>
-    <Tabs>
-      <Tab :title="$t('roleAssignmentModal.membersTab')">
+  <Modal :small="true" :full-height="true">
+    <Tabs class="role-assignment-model__full-height-tabs">
+      <Tab
+        :title="$t('roleAssignmentModal.membersTab')"
+        class="role-assignment-model__full-height-tab"
+      >
         <SelectMembersList
-          class="margin-top-2"
           :users="users"
           :scope-type="scopeType"
           show-role-selector
           @invite="(...params) => onInvite('invite-members', ...params)"
         />
       </Tab>
-      <Tab :title="$t('roleAssignmentModal.teamsTab')">
+      <Tab
+        :title="$t('roleAssignmentModal.teamsTab')"
+        class="role-assignment-model__full-height-tab"
+      >
         <SelectTeamsList
-          class="margin-top-2"
           :teams="teams"
           :scope-type="scopeType"
           show-role-selector
