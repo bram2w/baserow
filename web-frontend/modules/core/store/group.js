@@ -515,6 +515,9 @@ export const getters = {
     const users = getters.getAllUsersByName
     return users[name]
   },
+  haveGroupPermissionsBeenLoaded: (state, getters) => (groupId) => {
+    return getters.get(groupId)._.permissionsLoaded
+  },
 }
 
 export default {

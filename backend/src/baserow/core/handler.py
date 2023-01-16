@@ -657,9 +657,15 @@ class CoreHandler:
                 CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
 
             before_group_user_updated.send(self, group_user=group_user, **kwargs)
+            permissions_before = group_user.permissions
             group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
             group_user.save()
-            group_user_updated.send(self, group_user=group_user, user=user)
+            group_user_updated.send(
+                self,
+                group_user=group_user,
+                user=user,
+                permissions_before=permissions_before,
+            )
             return group_user
 
     def delete_group_user(self, user, group_user):

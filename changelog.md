@@ -10,6 +10,7 @@ For example:
 ## Unreleased
 
 ### New Features
+* When your permissions change you now get notified in the frontend to reload your page [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
 * Database and table ids are now hashed in websocket messages to not leak sensitive data [#1374](https://gitlab.com/bramw/baserow/-/issues/1374)
 * Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
