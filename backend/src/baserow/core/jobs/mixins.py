@@ -6,8 +6,10 @@ from django.db import models
 from baserow.api.sessions import (
     get_client_undo_redo_action_group_id,
     get_untrusted_client_session_id,
+    get_user_remote_addr_ip,
     set_client_undo_redo_action_group_id,
     set_untrusted_client_session_id,
+    set_user_remote_addr_ip,
 )
 
 
@@ -56,6 +58,37 @@ class JobWithUserDataMixin(models.Model):
             self.restore_user_data_if_present(user)
 
         return value
+
+    class Meta:
+        abstract = True
+
+
+class JobWithUserIpAddress(JobWithUserDataMixin):
+
+    user_ip_address = models.GenericIPAddressField(
+        null=True, help_text="The user IP address."
+    )
+
+    def _save_user_data_if_not_present(self, user: AbstractUser) -> None:
+        """
+        Save the user session in the job so to be able to restore.
+        Call this in a request context and not from a celery job or other contexts.
+
+        :param user: The user to save the data for.
+        """
+
+        if getattr(self, "user_ip_address") is None:
+            self.user_ip_address = get_user_remote_addr_ip(user)
+
+    def _restore_user_data_if_present(self, user: AbstractUser) -> None:
+        """
+        Restore the user session in the job so to be able to restore.
+
+        :param user: The user to restore the data for.
+        """
+
+        if getattr(self, "user_ip_address") is not None:
+            set_user_remote_addr_ip(user, self.user_ip_address)
 
     class Meta:
         abstract = True

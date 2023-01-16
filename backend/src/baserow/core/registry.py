@@ -73,6 +73,12 @@ class CustomFieldsInstanceMixin:
     `serializer_field_overrides` property.
     """
 
+    serializer_mixins = []
+    """
+    The serializer mixins that must be added to the serializer. This property is
+    useful if you want to add some custom SerializerMethodField for example.
+    """
+
     def __init__(self):
         """
         :raises ValueError: If the object does not have a `model_class` attribute.
@@ -105,10 +111,13 @@ class CustomFieldsInstanceMixin:
         else:
             field_names = self.serializer_field_names
 
+        mixins = [] if request_serializer else self.serializer_mixins
+
         return get_serializer_class(
             self.model_class,
             field_names,
             field_overrides=field_overrides,
+            base_mixins=mixins,
             *args,
             **kwargs,
         )

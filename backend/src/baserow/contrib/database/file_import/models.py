@@ -2,7 +2,11 @@ from django.db import models
 
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
-from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.mixins import (
+    JobWithUndoRedoIds,
+    JobWithUserIpAddress,
+    JobWithWebsocketId,
+)
 from baserow.core.jobs.models import Job
 
 
@@ -20,7 +24,7 @@ def default_report():
     return {"failing_rows": {}}
 
 
-class FileImportJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+class FileImportJob(JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job):
 
     database = models.ForeignKey(
         Database,

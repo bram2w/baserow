@@ -1,6 +1,11 @@
 <template functional>
   <div :class="[data.staticClass, data.class]" v-on="listeners">
-    {{ $options.methods.localDate(props.row[props.column.key]) }}
+    {{
+      $options.methods.localDate(
+        props.row[props.column.key],
+        props.column.additionalProps.dateTimeFormat || 'L LT'
+      )
+    }}
   </div>
 </template>
 
@@ -21,9 +26,9 @@ export default {
     },
   },
   methods: {
-    localDate(date) {
+    localDate(date, format) {
       if (date) {
-        return moment.utc(date).local().format('L LT')
+        return moment.utc(date).local().format(format)
       } else {
         return ''
       }

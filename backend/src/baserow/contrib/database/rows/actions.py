@@ -4,8 +4,12 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
-from baserow.contrib.database.action.scopes import TableActionScopeType
+from baserow.contrib.database.action.scopes import (
+    TABLE_ACTION_CONTEXT,
+    TableActionScopeType,
+)
 from baserow.contrib.database.rows.handler import (
     GeneratedTableModelForUpdate,
     RowHandler,
@@ -14,17 +18,27 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.signals import table_updated
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionScopeStr, ActionType
+from baserow.core.action.registries import (
+    ActionScopeStr,
+    ActionTypeDescription,
+    UndoableActionType,
+)
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress
 
 
-class CreateRowActionType(ActionType):
+class CreateRowActionType(UndoableActionType):
     type = "create_row"
+    description = ActionTypeDescription(
+        _("Create row"), _("Row (%(row_id)s) created"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_id: int
 
     @classmethod
@@ -66,8 +80,11 @@ class CreateRowActionType(ActionType):
             user_field_names=user_field_names,
         )
 
-        params = cls.Params(table.id, row.id)
-        cls.register_action(user, params, cls.scope(table.id))
+        group = table.database.group
+        params = cls.Params(
+            table.id, table.name, table.database.id, table.database.name, row.id
+        )
+        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
 
         return row
 
@@ -88,12 +105,18 @@ class CreateRowActionType(ActionType):
         )
 
 
-class CreateRowsActionType(ActionType):
+class CreateRowsActionType(UndoableActionType):
     type = "create_rows"
+    description = ActionTypeDescription(
+        _("Create rows"), _("Rows (%(row_ids)s) created"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_ids: List[int]
         trashed_rows_entry_id: Optional[int] = None
 
@@ -127,8 +150,15 @@ class CreateRowsActionType(ActionType):
             user, table, rows_values, before_row=before_row, model=model
         )
 
-        params = cls.Params(table.id, [row.id for row in rows])
-        cls.register_action(user, params, cls.scope(table.id))
+        group = table.database.group
+        params = cls.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            [row.id for row in rows],
+        )
+        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
 
         return rows
 
@@ -154,12 +184,18 @@ class CreateRowsActionType(ActionType):
         )
 
 
-class ImportRowsActionType(ActionType):
+class ImportRowsActionType(UndoableActionType):
     type = "import_rows"
+    description = ActionTypeDescription(
+        _("Import rows"), _("Rows (%(row_ids)s) imported"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_ids: List[int]
         trashed_rows_entry_id: Optional[int] = None
 
@@ -196,8 +232,15 @@ class ImportRowsActionType(ActionType):
         # big amount of data.
         table_updated.send(cls, table=table, user=user, force_table_refresh=True)
 
-        params = cls.Params(table.id, [row.id for row in created_rows])
-        cls.register_action(user, params, cls.scope(table.id))
+        group = table.database.group
+        params = cls.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            [row.id for row in created_rows],
+        )
+        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
 
         return created_rows, error_report
 
@@ -223,12 +266,18 @@ class ImportRowsActionType(ActionType):
         )
 
 
-class DeleteRowActionType(ActionType):
+class DeleteRowActionType(UndoableActionType):
     type = "delete_row"
+    description = ActionTypeDescription(
+        _("Delete row"), _("Row (%(row_id)s) deleted"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_id: int
 
     @classmethod
@@ -255,8 +304,11 @@ class DeleteRowActionType(ActionType):
 
         RowHandler().delete_row_by_id(user, table, row_id, model=model)
 
-        params = cls.Params(table.id, row_id)
-        cls.register_action(user, params, cls.scope(table.id))
+        database = table.database
+        params = cls.Params(table.id, table.name, database.id, database.name, row_id)
+        cls.register_action(
+            user, params, scope=cls.scope(table.id), group=database.group
+        )
 
     @classmethod
     def scope(cls, table_id) -> ActionScopeStr:
@@ -275,12 +327,18 @@ class DeleteRowActionType(ActionType):
         )
 
 
-class DeleteRowsActionType(ActionType):
+class DeleteRowsActionType(UndoableActionType):
     type = "delete_rows"
+    description = ActionTypeDescription(
+        _("Delete rows"), _("Rows (%(row_ids)s) deleted"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_ids: List[int]
         trashed_rows_entry_id: int
 
@@ -308,8 +366,16 @@ class DeleteRowsActionType(ActionType):
 
         trashed_rows_entry = RowHandler().delete_rows(user, table, row_ids, model=model)
 
-        params = cls.Params(table.id, row_ids, trashed_rows_entry.id)
-        cls.register_action(user, params, cls.scope(table.id))
+        group = table.database.group
+        params = cls.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            row_ids,
+            trashed_rows_entry.id,
+        )
+        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
 
     @classmethod
     def scope(cls, table_id) -> ActionScopeStr:
@@ -401,12 +467,18 @@ def get_before_row_from_displacement(
             return queryset.last()
 
 
-class MoveRowActionType(ActionType):
+class MoveRowActionType(UndoableActionType):
     type = "move_row"
+    description = ActionTypeDescription(
+        _("Move row"), _("Row (%(row_id)s) moved"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_id: int
         rows_displacement: int
 
@@ -458,9 +530,16 @@ class MoveRowActionType(ActionType):
         if rows_displacement == 0:
             return updated_row
 
-        params = cls.Params(table.id, row.id, rows_displacement)
-        cls.register_action(user, params, cls.scope(table.id))
-
+        group = table.database.group
+        params = cls.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            row.id,
+            rows_displacement,
+        )
+        cls.register_action(user, params, cls.scope(table.id), group=group)
         return updated_row
 
     @classmethod
@@ -496,15 +575,21 @@ class MoveRowActionType(ActionType):
         row_handler.move_row(user, table, row, before_row=before_row, model=model)
 
 
-class UpdateRowActionType(ActionType):
+class UpdateRowActionType(UndoableActionType):
     type = "update_row"
+    description = ActionTypeDescription(
+        _("Update row"), _("Row (%(row_id)s) updated"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
         row_id: int
+        row_values: Dict[str, Any]
         original_row_values: Dict[str, Any]
-        new_row_values: Dict[str, Any]
 
     @classmethod
     def do(
@@ -555,16 +640,19 @@ class UpdateRowActionType(ActionType):
         )
 
         updated_row = row_handler.update_row(user, table, row, values, model=model)
+        row_values = row_handler.get_internal_values_for_fields(row, field_keys)
 
-        new_row_values = row_handler.get_internal_values_for_fields(row, field_keys)
-
+        group = table.database.group
         params = cls.Params(
             table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
             row.id,
+            row_values,
             original_row_values,
-            new_row_values,
         )
-        cls.register_action(user, params, cls.scope(table.id))
+        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
 
         return updated_row
 
@@ -583,25 +671,32 @@ class UpdateRowActionType(ActionType):
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         table = TableHandler().get_table(params.table_id)
         RowHandler().update_row_by_id(
-            user, table, row_id=params.row_id, values=params.new_row_values
+            user, table, row_id=params.row_id, values=params.row_values
         )
 
 
-class UpdateRowsActionType(ActionType):
+class UpdateRowsActionType(UndoableActionType):
     type = "update_rows"
+    description = ActionTypeDescription(
+        _("Update rows"), _("Rows (%(row_ids)s) updated"), TABLE_ACTION_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         table_id: int
-        original_rows_values: List
-        new_rows: List
+        table_name: str
+        database_id: int
+        database_name: str
+        row_ids: List[int]
+        row_values: List[Dict[str, Any]]
+        original_rows_values: List[Dict[str, Any]]
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
         table: Table,
-        rows: List,
+        rows: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
     ) -> List[GeneratedTableModelForUpdate]:
         """
@@ -643,9 +738,17 @@ class UpdateRowsActionType(ActionType):
             user, table, rows, model=model, rows_to_update=original_rows
         )
 
-        params = cls.Params(table.id, original_rows_values, new_rows)
-
-        cls.register_action(user, params, cls.scope(table.id))
+        group = table.database.group
+        params = cls.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            [row.id for row in updated_rows],
+            new_rows,
+            original_rows_values,
+        )
+        cls.register_action(user, params, cls.scope(table.id), group=group)
 
         return updated_rows
 
@@ -661,4 +764,4 @@ class UpdateRowsActionType(ActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         table = TableHandler().get_table(params.table_id)
-        RowHandler().update_rows(user, table, params.new_rows)
+        RowHandler().update_rows(user, table, params.row_values)

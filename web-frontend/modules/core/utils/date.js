@@ -21,8 +21,32 @@ export const getHumanPeriodAgoCount = (dateTime) => {
   }
 
   const diffDays = now.diff(d, 'days')
+  if (diffDays >= 1) {
+    return {
+      period: 'days',
+      count: diffDays,
+    }
+  }
+
+  const diffHours = now.diff(d, 'hours')
+  if (diffHours >= 1) {
+    return {
+      period: 'hours',
+      count: diffHours,
+    }
+  }
+
+  const diffMinutes = now.diff(d, 'minutes')
+  if (diffMinutes >= 1) {
+    return {
+      period: 'minutes',
+      count: diffMinutes,
+    }
+  }
+
+  const diffSeconds = now.diff(d, 'seconds')
   return {
-    period: 'days',
-    count: diffDays,
+    period: 'seconds',
+    count: diffSeconds,
   }
 }

@@ -26,7 +26,11 @@ from baserow.contrib.database.table.cache import (
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
-from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.mixins import (
+    JobWithUndoRedoIds,
+    JobWithUserIpAddress,
+    JobWithWebsocketId,
+)
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
@@ -723,7 +727,9 @@ class Table(
         return f"tbl_order_id_{self.id}_idx"
 
 
-class DuplicateTableJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+class DuplicateTableJob(
+    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+):
 
     original_table = models.ForeignKey(
         Table,

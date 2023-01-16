@@ -40,7 +40,7 @@
       >
         <DropdownItem
           v-if="addEmptyItem"
-          :name="''"
+          :name="emptyItemDisplayName"
           :value="null"
         ></DropdownItem>
         <DropdownItem
@@ -91,6 +91,10 @@ export default {
       required: false,
       default: true,
     },
+    emptyItemDisplayName: {
+      type: [String],
+      default: '',
+    },
     notSelectedText: {
       type: [String, null],
       required: false,
@@ -122,6 +126,9 @@ export default {
     }
   },
   methods: {
+    clear() {
+      this.displayName = this.initialDisplayName
+    },
     /**
      * Because the dropdown items could be destroyed in case of a search and because we
      * don't need reactivity, we store a copy of the name as display name as soon as it

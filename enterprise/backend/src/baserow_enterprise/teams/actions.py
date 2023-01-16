@@ -2,9 +2,14 @@ import dataclasses
 from typing import Dict, List, Optional, Union
 
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionScopeStr, ActionType
+from baserow.core.action.registries import (
+    ActionScopeStr,
+    ActionTypeDescription,
+    UndoableActionType,
+)
 from baserow.core.models import Group
 from baserow.core.trash.handler import TrashHandler
 from baserow_enterprise.models import Team, TeamSubject
@@ -13,9 +18,15 @@ from baserow_enterprise.role.models import Role
 from baserow_enterprise.scopes import TeamsActionScopeType
 from baserow_enterprise.teams.handler import TeamHandler
 
+TEAM_CONTEXT = _('in team "%(team_name)s" (%(team_id)s) ')
 
-class CreateTeamActionType(ActionType):
+
+class CreateTeamActionType(UndoableActionType):
     type = "create_team"
+    description = ActionTypeDescription(
+        _("Create team"),
+        _('Team "%(name)s" (%(team_id)s) created.'),
+    )
 
     @dataclasses.dataclass
     class Params:
@@ -55,6 +66,7 @@ class CreateTeamActionType(ActionType):
             user=user,
             params=cls.Params(team.name, team.id, group.id, subjects),
             scope=cls.scope(team.group_id),
+            group=group,
         )
         return team
 
@@ -83,8 +95,12 @@ class CreateTeamActionType(ActionType):
         )
 
 
-class UpdateTeamActionType(ActionType):
+class UpdateTeamActionType(UndoableActionType):
     type = "update_team"
+    description = ActionTypeDescription(
+        _("Update team"),
+        _('Team "%(name)s" (%(team_id)s) updated.'),
+    )
 
     @dataclasses.dataclass
     class Params:
@@ -143,6 +159,7 @@ class UpdateTeamActionType(ActionType):
                 default_role_uid,
             ),
             scope=cls.scope(team.group_id),
+            group=team.group,
         )
 
         return team
@@ -170,12 +187,17 @@ class UpdateTeamActionType(ActionType):
         TeamHandler().update_team(user, team, params.name, default_role=new_role)
 
 
-class DeleteTeamActionType(ActionType):
+class DeleteTeamActionType(UndoableActionType):
     type = "delete_team"
+    description = ActionTypeDescription(
+        _("Delete team"),
+        _('Team "%(team_name)s" (%(team_id)s) deleted.'),
+    )
 
     @dataclasses.dataclass
     class Params:
         team_id: int
+        team_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, team: Team) -> None:
@@ -193,8 +215,9 @@ class DeleteTeamActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(team.id),
+            params=cls.Params(team.id, team.name),
             scope=cls.scope(team.group_id),
+            group=team.group,
         )
 
     @classmethod
@@ -211,12 +234,16 @@ class DeleteTeamActionType(ActionType):
         TeamHandler().delete_team(user, team_for_update)
 
 
-class CreateTeamSubjectActionType(ActionType):
+class CreateTeamSubjectActionType(UndoableActionType):
     type = "create_team_subject"
+    description = ActionTypeDescription(
+        _("Create team subject"), _("Subject (%(subject_id)s) created"), TEAM_CONTEXT
+    )
 
     @dataclasses.dataclass
     class Params:
         team_id: int
+        team_name: str
         subject_id: int  # TeamSubject PK
         subject_lookup: Dict[
             str, Union[str, int]
@@ -248,8 +275,11 @@ class CreateTeamSubjectActionType(ActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(team.id, subject.id, subject_lookup, subject_type),
+            params=cls.Params(
+                team.id, team.name, subject.id, subject_lookup, subject_type
+            ),
             scope=cls.scope(team.group_id),
+            group=team.group,
         )
         return subject
 
@@ -284,12 +314,18 @@ class CreateTeamSubjectActionType(ActionType):
         )
 
 
-class DeleteTeamSubjectActionType(ActionType):
+class DeleteTeamSubjectActionType(UndoableActionType):
     type = "delete_team_subject"
+    description = ActionTypeDescription(
+        _("Delete team subject"),
+        _("Subject (%(subject_id)s) deleted"),
+        TEAM_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         team_id: int
+        team_name: str
         subject_id: int  # TeamSubject PK
         subject_subject_id: int  # TeamSubject.subject_id
         subject_subject_type_natural_key: int  # TeamSubject.subject_type natural key
@@ -313,11 +349,13 @@ class DeleteTeamSubjectActionType(ActionType):
             user=user,
             params=cls.Params(
                 subject.team_id,
+                subject.team.name,
                 subject_id,
                 subject.subject_id,
                 subject.subject_type_natural_key,
             ),
             scope=cls.scope(subject.team.group_id),
+            group=subject.team.group,
         )
 
     @classmethod

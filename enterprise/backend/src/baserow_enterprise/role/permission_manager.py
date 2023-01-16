@@ -273,7 +273,6 @@ class RolePermissionManagerType(PermissionManagerType):
 
         # Get all role assignments for this user into this group
         roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(group, actor)
-
         operation_type = operation_type_registry.get(operation_name)
 
         default, exceptions = self.get_operation_policy(

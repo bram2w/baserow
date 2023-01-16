@@ -1,0 +1,15 @@
+.crud-table-filters__filter-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.crud-table-filters__filter-wrapper-title {
+  font-weight: 700;
+}
+
+.crud-table-filters__filter-value-input {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 34px;
+}

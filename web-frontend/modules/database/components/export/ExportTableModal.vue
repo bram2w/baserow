@@ -14,13 +14,13 @@
       @submitted="submitted"
       @values-changed="valuesChanged"
     >
-      <ExportTableLoadingBar
+      <ExportLoadingBar
         :job="job"
         :loading="loading"
         :disabled="!isValid"
         :filename="filename"
       >
-      </ExportTableLoadingBar>
+      </ExportLoadingBar>
     </ExportTableForm>
   </Modal>
 </template>
@@ -34,11 +34,11 @@ import ExporterService from '@baserow/modules/database/services/export'
 import ViewService from '@baserow/modules/database/services/view'
 import { populateView } from '@baserow/modules/database/store/view'
 import ExportTableForm from '@baserow/modules/database/components/export/ExportTableForm'
-import ExportTableLoadingBar from '@baserow/modules/database/components/export/ExportTableLoadingBar'
+import ExportLoadingBar from '@baserow/modules/database/components/export/ExportLoadingBar'
 
 export default {
   name: 'ExportTableModal',
-  components: { ExportTableForm, ExportTableLoadingBar },
+  components: { ExportTableForm, ExportLoadingBar },
   mixins: [modal, error],
   props: {
     database: {
@@ -66,13 +66,13 @@ export default {
     }
   },
   computed: {
-    jobIsRunning() {
-      return (
-        this.job !== null && ['exporting', 'pending'].includes(this.job.state)
-      )
-    },
     jobHasFailed() {
       return ['failed', 'cancelled'].includes(this.job.state)
+    },
+    jobIsRunning() {
+      return (
+        this.job !== null && this.job.state !== 'finished' && !this.jobHasFailed
+      )
     },
     ...mapState({
       selectedTableViews: (state) => state.view.items,

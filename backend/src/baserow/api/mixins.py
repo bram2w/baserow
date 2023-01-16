@@ -1,8 +1,10 @@
+import json
 from typing import Dict, List, Union
 
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, Value
 
 from baserow.api.exceptions import (
+    InvalidFilterAttributeException,
     InvalidSortAttributeException,
     InvalidSortDirectionException,
     UnknownFieldProvided,
@@ -92,7 +94,7 @@ class SearchableViewMixin:
         q = Q()
 
         for search_field in self.search_fields:
-            q.add(Q(**{f"{search_field}__icontains": search}), Q.OR)
+            q.add(Q(**{f"{search_field}__icontains": Value(search)}), Q.OR)
 
         return queryset.filter(q)
 
@@ -102,6 +104,7 @@ class SortableViewMixin:
     # It's a mapping from the field name in the request to teh field name in the
     # database.
     sort_field_mapping: Dict[str, str] = {}
+    default_order_by: str = "id"
 
     def apply_sorts_or_default_sort(
         self, sorts: Union[str, None], queryset: QuerySet
@@ -121,7 +124,7 @@ class SortableViewMixin:
         """
 
         if sorts is None:
-            return queryset.order_by("id")
+            return queryset.order_by(self.default_order_by)
 
         parsed_django_order_bys = []
         already_seen_sorts = set()
@@ -151,3 +154,49 @@ class SortableViewMixin:
             parsed_django_order_bys.append(f"{direction}{attribute}")
 
         return queryset.order_by(*parsed_django_order_bys)
+
+
+class FilterableViewMixin:
+    filters_field_mapping: Dict[str, str] = {}
+
+    def parse_filters(self, unparsed_filters: str) -> Dict[str, str]:
+        """
+        Parses the filters query string into a dictionary. The filters query string
+        is JSON encoded dictionary. The key is the field name and
+        the value is the field value that the field should have.
+
+        :param unparsed_filters: The filters query string.
+        :return: The filters query string parsed into a dictionary.
+        """
+
+        if unparsed_filters:
+            try:
+                return json.loads(unparsed_filters)
+            except json.JSONDecodeError:
+                raise InvalidFilterAttributeException()
+        else:
+            return {}
+
+    def apply_filters(self, filters: Dict[str, str], queryset: QuerySet) -> QuerySet:
+        """
+        Applies the provided filters to the provided query. If the filters are
+        provided then an `exact` lookup will be done for each field in the
+        filters_fields property. One of the fields has to match the query.
+
+        :param filters: The filters query.
+        :param queryset: The queryset where the filters query must be applied to.
+        :return: The queryset filtering the results by the filters query.
+        """
+
+        if not filters:
+            return queryset
+
+        q = Q()
+
+        for key, value in filters.items():
+            if key in self.filters_field_mapping:
+                q.add(Q(**{f"{self.filters_field_mapping[key]}": Value(value)}), Q.AND)
+            else:
+                raise InvalidFilterAttributeException()
+
+        return queryset.filter(q)

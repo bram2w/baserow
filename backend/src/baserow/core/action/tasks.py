@@ -10,7 +10,7 @@ from baserow.core.action.handler import ActionHandler
 
 @app.task(bind=True, queue="export")
 def cleanup_old_actions(self):
-    ActionHandler().clean_up_old_actions()
+    ActionHandler().clean_up_old_undoable_actions()
 
 
 # noinspection PyUnusedLocal

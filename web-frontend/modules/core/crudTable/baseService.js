@@ -12,10 +12,11 @@ export default (client, baseUrl, isPaginated = true) => {
      * @param page The page number to fetch.
      * @param searchQuery The search query to filter the results by.
      * @param sorts An array of objects containing the key and direction to sort by.
+     * @param filters An object containing the keys and values to filter by.
      * @param options Any additional options that might be passed to the fetch function.
      * @returns {*}
      */
-    fetch(baseUrl, page, searchQuery, sorts, options) {
+    fetch(baseUrl, page, searchQuery, sorts, filters, options) {
       if (typeof baseUrl === 'function') {
         baseUrl = baseUrl(options.urlParams)
       }
@@ -36,6 +37,10 @@ export default (client, baseUrl, isPaginated = true) => {
             return `${direction}${s.key}`
           })
           .join(',')
+      }
+      if (Object.keys(filters).length > 0) {
+        // We need to stringify filters values because they can contain special characters.
+        params.filters = JSON.stringify(filters)
       }
       return client.get(baseUrl, { params })
     },

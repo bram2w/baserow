@@ -57,7 +57,36 @@
         "teamsTabTitle": "Teams"
     },
     "adminType": {
+        "AuditLog": "Audit log",
         "Authentication": "Authentication"
+    },
+    "auditLog": {
+        "title": "Audit log",
+        "filterUserTitle": "User",
+        "filterGroupTitle": "Group",
+        "filterActionTypeTitle": "Event Type",
+        "filterFromTimestampTitle": "From Date",
+        "filterFromTimestamp": "From Date",
+        "filterToTimestampTitle": "To Date",
+        "filterToTimestamp": "To Date",
+        "user": "User",
+        "group": "Group",
+        "actionType": "Event Type",
+        "description": "Description",
+        "timestamp": "Timestamp",
+        "ip_address": "IP Address",
+        "exportToCsv": "Export to CSV",
+        "exportModalTitle": "Export to CSV",
+        "clearFilters": "Clear",
+        "allUsers": "All Users",
+        "allGroups": "All Groups",
+        "allActionTypes": "All Event Types"
+    },
+    "auditLogExportModal": {
+        "title": "Export to CSV",
+        "exportFilename": "Audit Log Export - {date}",
+        "cancelledTitle": "Export failed",
+        "cancelledDescription": "Something went wrong while exporting the audit log. Please try again."
     },
     "authProviders": {
         "title": "Authentication Providers",

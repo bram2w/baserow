@@ -8,6 +8,11 @@ class BaserowEnterpriseConfig(AppConfig):
     name = "baserow_enterprise"
 
     def ready(self):
+        from baserow.core.jobs.registries import job_type_registry
+        from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
+
+        job_type_registry.register(AuditLogExportJobType())
+
         from baserow.api.user.registries import member_data_registry
         from baserow.core.action.registries import (
             action_scope_registry,
@@ -151,6 +156,7 @@ class BaserowEnterpriseConfig(AppConfig):
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
+        import baserow_enterprise.audit_log.signals  # noqa: F
         import baserow_enterprise.ws.signals  # noqa: F
 
 

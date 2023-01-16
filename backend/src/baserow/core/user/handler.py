@@ -207,6 +207,7 @@ class UserHandler:
 
         # If we've created a `GroupUser` at some point, pluck out the `Group`.
         group = getattr(group_user, "group", None)
+        user.default_group = group
 
         if not group_invitation_token and template and group:
             core_handler.install_template(user, group, template)

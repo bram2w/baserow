@@ -608,11 +608,7 @@ class DuplicateViewView(APIView):
             200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
-            400: get_error_schema(
-                [
-                    "ERROR_USER_NOT_IN_GROUP",
-                ]
-            ),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
         },
     )

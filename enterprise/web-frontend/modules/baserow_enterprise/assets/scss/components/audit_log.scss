@@ -1,0 +1,40 @@
+.audit-log__filters {
+  display: grid;
+  grid-template-columns: 250px 250px 220px 140px 140px 90px;
+  grid-gap: 20px;
+  padding: 16px 42px 48px;
+  z-index: 4;
+}
+
+.audit-log__exported-list {
+  margin-top: 30px;
+  border-top: 1px solid $color-neutral-200;
+  padding-top: 20px;
+}
+
+.audit-log__exported-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+}
+
+.audit-log__exported-list-item-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.audit-log__exported-list-item-name {
+  font-weight: 600;
+  padding-bottom: 5px;
+}
+
+.audit-log__exported-list-item-details {
+  color: $color-neutral-500;
+}
+
+.audit-log__clear_filters_button {
+  margin-top: auto;
+  height: 36px;
+}

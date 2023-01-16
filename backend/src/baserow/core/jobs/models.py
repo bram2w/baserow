@@ -87,3 +87,4 @@ class Job(CreatedAndUpdatedOnMixin, PolymorphicContentTypeMixin, models.Model):
 
     class Meta:
         ordering = ("id",)
+        indexes = [models.Index(fields=["-updated_on"])]
