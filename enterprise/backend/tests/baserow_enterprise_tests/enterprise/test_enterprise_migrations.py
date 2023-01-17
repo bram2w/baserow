@@ -3,7 +3,7 @@ from django.db.migrations.executor import MigrationExecutor
 
 import pytest
 
-from baserow_enterprise.role.default_roles import NO_ACCESS_ROLE_UID
+from baserow_enterprise.role.constants import NO_ACCESS_ROLE_UID
 
 
 @pytest.fixture(autouse=True)

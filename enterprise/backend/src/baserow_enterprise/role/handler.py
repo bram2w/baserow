@@ -22,8 +22,8 @@ from baserow_enterprise.signals import (
 from baserow_enterprise.teams.models import Team, TeamSubject
 
 from .constants import (
-    NO_ACCESS_ROLE,
-    NO_ROLE_LOW_PRIORITY_ROLE,
+    NO_ACCESS_ROLE_UID,
+    NO_ROLE_LOW_PRIORITY_ROLE_UID,
     ROLE_ASSIGNABLE_OBJECT_MAP,
     SUBJECT_PRIORITY,
 )
@@ -97,7 +97,7 @@ class RoleAssignmentHandler:
             return self._get_role_caches()[0][role_uid]
         except Role.DoesNotExist:
             if use_fallback:
-                return self.get_role_by_uid(NO_ACCESS_ROLE)
+                return self.get_role_by_uid(NO_ACCESS_ROLE_UID)
             else:
                 raise
 
@@ -248,7 +248,7 @@ class RoleAssignmentHandler:
             RoleAssignment.objects.filter(
                 group=group,
             )
-            .filter(subjects_q, ~Q(role__uid=NO_ROLE_LOW_PRIORITY_ROLE))
+            .filter(subjects_q, ~Q(role__uid=NO_ROLE_LOW_PRIORITY_ROLE_UID))
             .annotate(
                 scope_type_order=Case(
                     *scope_cases,
@@ -301,11 +301,11 @@ class RoleAssignmentHandler:
                 group_user.permissions,
                 use_fallback=True,
             )
-            if group_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE:
+            if group_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE_UID:
                 # Low priority role -> Use team role or NO_ACCESS if no team role
                 if not roles_by_scope.get(group_scope_param):
                     roles_by_scope[group_scope_param] = [
-                        self.get_role_by_uid(NO_ACCESS_ROLE)
+                        self.get_role_by_uid(NO_ACCESS_ROLE_UID)
                     ]
             else:
                 # Otherwise user role wins
@@ -334,7 +334,9 @@ class RoleAssignmentHandler:
         roles_by_scopes = self.get_roles_per_scope(
             group, actor, include_trash=include_trash
         )
-        most_precise_roles = [RoleAssignmentHandler().get_role_by_uid(NO_ACCESS_ROLE)]
+        most_precise_roles = [
+            RoleAssignmentHandler().get_role_by_uid(NO_ACCESS_ROLE_UID)
+        ]
 
         for (scope, roles) in roles_by_scopes:
             if object_scope_type_registry.scope_includes_context(scope, context):
@@ -344,7 +346,7 @@ class RoleAssignmentHandler:
                 most_precise_roles = roles
             elif object_scope_type_registry.scope_includes_context(
                 context, scope
-            ) and any([r.uid != NO_ACCESS_ROLE for r in roles]):
+            ) and any([r.uid != NO_ACCESS_ROLE_UID for r in roles]):
                 # Here the user has a permission on a scope that is a child of the
                 # context, then we grant the user permission on all read operations
                 # for all parents of that scope and hence this context should be
@@ -450,7 +452,7 @@ class RoleAssignmentHandler:
 
         if RoleAssignmentHandler.is_group_level_assignment(group, scope, subject):
             group_user = group.get_group_user(subject)
-            new_permissions = NO_ACCESS_ROLE
+            new_permissions = NO_ACCESS_ROLE_UID
             CoreHandler().force_update_group_user(
                 None, group_user, permissions=new_permissions
             )

@@ -15,12 +15,8 @@ from baserow.core.models import (
     Group,
     GroupUser,
 )
-from baserow_enterprise.role.default_roles import (
-    BUILDER_ROLE_UID,
-    NO_ACCESS_ROLE_UID,
-    VIEWER_ROLE_UID,
-    default_roles,
-)
+from baserow_enterprise.role.constants import BUILDER_ROLE_UID, FREE_ROLE_UIDS
+from baserow_enterprise.role.default_roles import default_roles
 from baserow_enterprise.role.models import RoleAssignment
 from baserow_enterprise.teams.models import Team
 
@@ -28,8 +24,6 @@ User = get_user_model()
 
 
 class RoleBasedSeatUsageSummaryCalculator:
-    FREE_ROLE_UIDS = [VIEWER_ROLE_UID, NO_ACCESS_ROLE_UID]
-
     @classmethod
     def get_seat_usage_for_group(cls, group: Group) -> SeatUsageSummary:
         return cls._get_seat_usage(group)
@@ -175,7 +169,7 @@ class RoleBasedSeatUsageSummaryCalculator:
         for highest_role_a_user_has in highest_role_per_user_id.values():
             num_users_with_highest_role.setdefault(highest_role_a_user_has, 0)
             num_users_with_highest_role[highest_role_a_user_has] += 1
-            if highest_role_a_user_has not in cls.FREE_ROLE_UIDS:
+            if highest_role_a_user_has not in FREE_ROLE_UIDS:
                 num_paid_users += 1
             else:
                 num_free_users += 1
