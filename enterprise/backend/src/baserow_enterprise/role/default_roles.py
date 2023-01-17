@@ -122,6 +122,15 @@ from baserow.core.trash.operations import (
     ReadApplicationTrashOperationType,
     ReadGroupTrashOperationType,
 )
+from baserow_enterprise.role.constants import (
+    ADMIN_ROLE_UID,
+    BUILDER_ROLE_UID,
+    COMMENTER_ROLE_UID,
+    EDITOR_ROLE_UID,
+    NO_ACCESS_ROLE_UID,
+    NO_ROLE_LOW_PRIORITY_ROLE_UID,
+    VIEWER_ROLE_UID,
+)
 from baserow_enterprise.role.operations import (
     AssignRoleGroupOperationType,
     ReadRoleApplicationOperationType,
@@ -272,14 +281,6 @@ ADMIN_OPS = BUILDER_OPS + [
     UpdateRoleApplicationOperationType,
 ]
 
-ADMIN_ROLE_UID = "ADMIN"
-BUILDER_ROLE_UID = "BUILDER"
-EDITOR_ROLE_UID = "EDITOR"
-COMMENTER_ROLE_UID = "COMMENTER"
-VIEWER_ROLE_UID = "VIEWER"
-NO_ACCESS_ROLE_UID = "NO_ACCESS"
-NO_ROLE_LOW_PRIORITY = "NO_ROLE_LOW_PRIORITY"
-
 default_roles = {
     ADMIN_ROLE_UID: ADMIN_OPS,
     BUILDER_ROLE_UID: BUILDER_OPS,
@@ -287,5 +288,5 @@ default_roles = {
     COMMENTER_ROLE_UID: COMMENTER_OPS,
     VIEWER_ROLE_UID: VIEWER_OPS,
     NO_ACCESS_ROLE_UID: NO_ACCESS_OPS,
-    NO_ROLE_LOW_PRIORITY: NO_ACCESS_OPS,
+    NO_ROLE_LOW_PRIORITY_ROLE_UID: NO_ACCESS_OPS,
 }
