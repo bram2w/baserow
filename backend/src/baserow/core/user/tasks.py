@@ -17,7 +17,7 @@ def check_pending_account_deletion(self):
 
     from .handler import UserHandler
 
-    UserHandler().delete_expired_users()
+    UserHandler().delete_expired_users_and_related_groups_if_last_admin()
 
 
 # noinspection PyUnusedLocal

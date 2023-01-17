@@ -78,7 +78,9 @@ def test_user_permanently_deleted(mock_broadcast_to_groups, data_fixture):
     group_user = CoreHandler().create_group(user=user, name="Test")
     group_user_2 = CoreHandler().create_group(user=user, name="Test 2")
 
-    UserHandler().delete_expired_users(grace_delay=timedelta(days=1))
+    UserHandler().delete_expired_users_and_related_groups_if_last_admin(
+        grace_delay=timedelta(days=1)
+    )
 
     mock_broadcast_to_groups.delay.assert_called_once()
     args = mock_broadcast_to_groups.delay.call_args

@@ -446,7 +446,9 @@ class UserHandler:
 
         user_restored.send(self, performed_by=user, user=user)
 
-    def delete_expired_users(self, grace_delay: Optional[timedelta] = None):
+    def delete_expired_users_and_related_groups_if_last_admin(
+        self, grace_delay: Optional[timedelta] = None
+    ):
         """
         Executes all previously scheduled user account deletions for which
         the `last_login` date is earlier than the defined grace delay. If the users
@@ -489,15 +491,7 @@ class UserHandler:
                 "groupuser",
                 filter=(
                     Q(groupuser__permissions="ADMIN")
-                    & ~Q(
-                        groupuser__user__in=User.objects.filter(
-                            (
-                                Q(profile__to_be_deleted=True)
-                                & Q(last_login__lt=limit_date)
-                            )
-                            | Q(is_active=False)
-                        )
-                    )
+                    & ~Q(groupuser__user__in=users_to_delete)
                 ),
             ),
         ).filter(template=None, admin_count_after=0)
