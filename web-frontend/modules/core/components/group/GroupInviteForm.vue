@@ -35,7 +35,15 @@
                   :name="role.name"
                   :value="role.uid"
                   :description="role.description"
-                ></DropdownItem>
+                >
+                  {{ role.name }}
+                  <Badge
+                    v-if="!role.isBillable && atLeastOneBillableRole"
+                    primary
+                    class="margin-left-1"
+                    >{{ $t('common.free') }}
+                  </Badge>
+                </DropdownItem>
               </Dropdown>
             </div>
           </div>
@@ -101,6 +109,9 @@ export default {
     },
     defaultRole() {
       return this.roles.length > 0 ? this.roles[this.roles.length - 1] : null
+    },
+    atLeastOneBillableRole() {
+      return this.roles.some((role) => role.isBillable)
     },
   },
   watch: {

@@ -133,6 +133,9 @@
 }
 
 .select__item-name {
+  display: flex;
+  align-items: center;
+
   @extend %ellipsis;
   @extend %select__item-size;
 }

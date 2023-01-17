@@ -17,6 +17,7 @@
         <slot>
           <i
             v-if="icon"
+            v-tooltip="iconTooltip"
             class="select__item-icon fas fa-fw"
             :class="'fa-' + icon"
           />

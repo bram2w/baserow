@@ -15,6 +15,11 @@ export default {
       required: false,
       default: null,
     },
+    iconTooltip: {
+      type: String,
+      required: false,
+      default: null,
+    },
     description: {
       type: String,
       required: false,
