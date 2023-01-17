@@ -3,7 +3,8 @@
         "yes": "yes",
         "no": "no",
         "wrong": "Something went wrong",
-        "none": "None"
+        "none": "None",
+        "free": "Free"
     },
     "action": {
         "upload": "Upload",

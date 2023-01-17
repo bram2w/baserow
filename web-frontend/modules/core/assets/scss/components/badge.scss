@@ -1,0 +1,25 @@
+.badge {
+  background-color: $color-primary-500;
+  border-radius: 3px;
+  color: $white;
+  padding: 0 4px;
+  width: fit-content;
+
+  @include fixed-height(14px, 11px);
+}
+
+.badge--primary {
+  background-color: $color-primary-500;
+}
+
+.badge--success {
+  background-color: $color-success-500;
+}
+
+.badge--warning {
+  background-color: $color-warning-500;
+}
+
+.badge--error {
+  background-color: $color-error-500;
+}

@@ -34,6 +34,7 @@ import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScr
 import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
 import autoScroll from '@baserow/modules/core/directives/autoScroll'
 import clickOutside from '@baserow/modules/core/directives/clickOutside'
+import Badge from '@baserow/modules/core/components/Badge'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -56,6 +57,7 @@ Vue.component('Tab', Tab)
 Vue.component('Tabs', Tabs)
 Vue.component('List', List)
 Vue.component('HelpIcon', HelpIcon)
+Vue.component('Badge', Badge)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)
