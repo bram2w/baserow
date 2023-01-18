@@ -106,6 +106,12 @@ class FieldType(
     and so isn't done as we can get the data back from simply restoring the attributes.
     """
 
+    needs_refresh_after_import_serialized = False
+    """Set this to True your after_import_serialized function can cause the field
+    data to change and hence it needs to be refreshed after this function has run
+    inside of the import process.
+    """
+
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
         When a row is created or updated all the values are going to be prepared for the
