@@ -1,11 +1,23 @@
 <template>
-  <div class="select-list-footer select-list-footer--single">
-    <a
-      class="button"
-      :class="{ disabled: !inviteEnabled }"
-      @click="inviteEnabled ? $emit('invite') : null"
-      >{{ $t('memberAssignmentModalFooter.invite', { count }) }}
-    </a>
+  <div class="row">
+    <div class="col col-6">
+      <a
+        v-if="toggleEnabled"
+        class="button button--ghost"
+        @click="$emit('toggle-select-all')"
+        >{{ getToggleLabel }}</a
+      >
+    </div>
+    <div class="col col-6 align-right">
+      <a
+        class="button"
+        :class="{ disabled: !inviteEnabled }"
+        @click="inviteEnabled ? $emit('invite') : null"
+        >{{
+          $t('memberAssignmentModalFooter.invite', { selectedMembersCount })
+        }}
+      </a>
+    </div>
   </div>
 </template>
 
@@ -13,14 +25,31 @@
 export default {
   name: 'MemberAssignmentModalFooter',
   props: {
-    count: {
+    filteredMembersCount: {
       type: Number,
       required: true,
     },
+    selectedMembersCount: {
+      type: Number,
+      required: true,
+    },
+    allFilteredMembersSelected: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   computed: {
+    toggleEnabled() {
+      return this.filteredMembersCount !== 0
+    },
     inviteEnabled() {
-      return this.count !== 0
+      return this.selectedMembersCount !== 0
+    },
+    getToggleLabel() {
+      return this.allFilteredMembersSelected
+        ? this.$t('memberAssignmentModalFooter.deselectAll')
+        : this.$t('memberAssignmentModalFooter.selectAll')
     },
   },
 }
