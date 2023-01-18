@@ -105,7 +105,8 @@
     "groupInviteForm": {
         "invitationFormTitle": "Invita via e-mail",
         "optionalMessagePlaceholder": "Messaggio facoltativo",
-        "errorInvalidEmail": "Inserisci un indirizzo e-mail valido."
+        "errorInvalidEmail": "Inserisci un indirizzo e-mail valido.",
+        "errorTooLongMessage": "I messaggi sono limitati a {amount} caratteri."
     },
     "groupsContext": {
         "search": "Cerca gruppo",
@@ -122,7 +123,9 @@
     "createGroupModal": {
         "createNew": "Crea nuovo gruppo",
         "add": "Aggiungi gruppo",
-        "defaultName": "Nuovo Gruppo"
+        "defaultName": "Nuovo Gruppo",
+        "permissionDeniedTitle": "Permesso negato",
+        "permissionDeniedBody": "Non hai i permessi richiesti per creare un nuovo gruppo."
     },
     "templateCategories": {
         "search": "Cerca modelli",
@@ -160,7 +163,8 @@
     },
     "trashModal": {
         "emptyTitle": "Nessun gruppo",
-        "emptyMessage": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono a un gruppo, quindi per crearli devi creare un gruppo."
+        "emptyMessage": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono a un gruppo, quindi per crearli devi creare un gruppo.",
+        "emptyMessageWithoutCreatePermission": "Non sei membro di nessun gruppo. Per creare nuove applicazioni o database è necessario essere parte di un gruppo. Richiedi al tuo amministratore l'invito per entrare in nuovo gruppo di lavoro."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Carica da un URL",
@@ -220,7 +224,8 @@
         "shareOnTwitter": "Invia un tweet su Baserow",
         "shareOnReddit": "Condividi su Reddit",
         "shareOnFacebook": "Condividi su Facebook",
-        "shareOnLinkedIn": "Condividi su LinkedIn"
+        "shareOnLinkedIn": "Condividi su LinkedIn",
+        "noGroupTextWithoutCreatePermission": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono ad un gruppo, quindi per crearli richiedi al tuo amministratore di essere invitato ad un gruppo."
     },
     "login": {
         "title": "Login",
@@ -284,7 +289,10 @@
         "userDeletionGraceDelay": "Eliminazione account",
         "settingUserDeletionGraceDelay": "Tempo di grazia",
         "settingUserDeletionGraceDelayDescription": "Questo è il numero di giorni dopo i quali verrà definitivamente cancellato l'account.",
-        "invalidAccountDeletionGraceDelay": "Questo campo è obbligatorio e deve essere un valore intero positivo più piccolo di 32000"
+        "invalidAccountDeletionGraceDelay": "Questo campo è obbligatorio e deve essere un valore intero positivo più piccolo di 32000",
+        "settingAllowNonStaffCreateGroupOperation": "Permetti a chiunque di creare nuovi gruppi di lavoro",
+        "settingAllowNonStaffCreateGroupOperationDescription": "Di default, chiunque puó creare gruppi di lavoro. Disabilitando questa opzione solo gli amministratori potranno creare nuovi gruppi.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "Quando questa impostazione è abilitata, i nuovi utenti verranno assegnati automaticamente ad un nuovo gruppo del quale saranno amministratori, e quindi conteggiati al termine della giornata come licenze paganti. Per evitare costi inaspettati, disabilita questa impostazione e invita nuovi utenti con ruoli predefiniti."
     },
     "undoRedoNotification": {
         "undoingTitle": "Annullando..",
@@ -421,7 +429,10 @@
     "datetime": {
         "daysAgo": "0 giorni fa | 1 giorno fa | {n} giorni fa",
         "yearsAgo": "0 anni fa | 1 anno fa | {n} anni fa",
-        "monthsAgo": "0 mesi fa | 1 mese fa | {n} mesi fa"
+        "monthsAgo": "0 mesi fa | 1 mese fa | {n} mesi fa",
+        "minutesAgo": "0 minuti fa | 1 minuto fa | {n} minuti fa",
+        "secondsAgo": "Ora | 1 secondo fa | {n} secondi fa",
+        "hoursAgo": "0 ore fa | 1 ora fa | {n} ore fa"
     },
     "duplicateApplicationJobType": {
         "duplicating": "Duplicando",
@@ -471,7 +482,8 @@
                     "title": "L'utente fa già parte del gruppo."
                 }
             },
-            "submit": "Manda invito"
+            "submit": "Manda invito",
+            "helpIconText": "Il ruolo scelto sarà il ruolo di default in questo gruppo."
         }
     },
     "memberSelectionList": {
@@ -489,5 +501,10 @@
         "title": "Conferma la rimozione dal gruppo",
         "confirmation": "Sei sicuro di voler rimuovere {name} dal {group_name}? Questa azione non potrà essere annullata.",
         "remove": "Rimuovi"
+    },
+    "permissionsUpdatedNotification": {
+        "title": "Permessi aggiornati",
+        "content": "Questo potrebbe avere effetti su quello che stai guardando, si prega di ricaricare la pagina.",
+        "action": "Ricarica"
     }
 }

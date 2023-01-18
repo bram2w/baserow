@@ -253,7 +253,9 @@
         "snapshotNameNotUniqueDescription": "Tutti i nomi devono essere unici per applicazione.",
         "snapshotOperationLimitExceededDescription": "Hai raggiunto il limite delle operazioni contemporanee possibili. Attenti finché le operazioni precedenti sono concluse.",
         "disabledPasswordProviderTitle": "Autenticazione tramite password disabilitata.",
-        "disabledPasswordProviderMessage": "Per favore, utilizza un altro provider per l'autenticazione."
+        "disabledPasswordProviderMessage": "Per favore, utilizza un altro provider per l'autenticazione.",
+        "lastAdminTitle": "L'ultimo ammistratore non può essere rimosso",
+        "lastAdminMessage": "Un gruppo di lavoro deve avere almeno un amministratore."
     },
     "importerType": {
         "csv": "Importa un file CSV",

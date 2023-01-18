@@ -105,7 +105,8 @@
     "groupInviteForm": {
         "invitationFormTitle": "Einladen per E-Mail",
         "optionalMessagePlaceholder": "Optionale Nachricht",
-        "errorInvalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein."
+        "errorInvalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein.",
+        "errorTooLongMessage": "Nachrichten sind auf {amount} Zeichen begrenzt."
     },
     "groupsContext": {
         "search": "Suche nach Gruppen",
@@ -122,7 +123,9 @@
     "createGroupModal": {
         "createNew": "Neue Gruppe erstellen",
         "add": "Gruppe hinzufügen",
-        "defaultName": "Unbenannte Gruppe"
+        "defaultName": "Unbenannte Gruppe",
+        "permissionDeniedTitle": "Erlaubnis verweigert",
+        "permissionDeniedBody": "Sie haben nicht die erforderliche Berechtigung, um eine neue Gruppe zu erstellen."
     },
     "templateCategories": {
         "search": "Vorlagen suchen",
@@ -160,7 +163,8 @@
     },
     "trashModal": {
         "emptyTitle": "Keine Gruppen gefunden",
-        "emptyMessage": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen."
+        "emptyMessage": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen.",
+        "emptyMessageWithoutCreatePermission": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also zuerst von einem Administrator in eine Gruppe eingeladen werden."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Hochladen von einer URL",
@@ -224,7 +228,8 @@
         "shareOnTwitter": "Tweet über Baserow",
         "shareOnReddit": "Teilen auf Reddit",
         "shareOnFacebook": "Teilen auf Facebook",
-        "shareOnLinkedIn": "Teilen auf LinkedIn"
+        "shareOnLinkedIn": "Teilen auf LinkedIn",
+        "noGroupTextWithoutCreatePermission": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also zuerst von einem Administrator in eine Gruppe eingeladen werden."
     },
     "login": {
         "title": "Anmeldung",
@@ -288,7 +293,10 @@
         "settingUserDeletionGraceDelayDescription": "Dies ist die Anzahl der Tage ohne Anmeldung, nach denen ein zur Löschung vorgesehenes Konto endgültig gelöscht wird.",
         "userDeletionGraceDelay": "Benutzerlöschung",
         "settingUserDeletionGraceDelay": "Gnadenfrist",
-        "invalidAccountDeletionGraceDelay": "Dieser Wert ist erforderlich und muss eine positive ganze Zahl kleiner als 32000 sein"
+        "invalidAccountDeletionGraceDelay": "Dieser Wert ist erforderlich und muss eine positive ganze Zahl kleiner als 32000 sein",
+        "settingAllowNonStaffCreateGroupOperation": "Jedem die Möglichkeit geben, neue Gruppen zu erstellen",
+        "settingAllowNonStaffCreateGroupOperationDescription": "Standardmäßig kann jeder neue Gruppen erstellen. Deaktivieren Sie diese Option, damit nur Mitglieder neue Gruppen erstellen können.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "Wenn diese Einstellung aktiviert ist, wird für neue Benutzer automatisch eine Gruppe erstellt, in der sie Administrator sind, so dass sie für Abrechnungszwecke als Administrator ausgewiesen werden. Um dies zu verhindern, deaktivieren Sie diese Einstellung und neu eingeladene Benutzer starten nur mit der Rolle, mit der sie eingeladen wurden."
     },
     "undoRedoNotification": {
         "redoingText": "Deine Aktion wird wieder hergestellt",
@@ -421,7 +429,10 @@
     "datetime": {
         "daysAgo": "vor 0 Tagen | vor 1 Tag | vor {n} Tagen",
         "monthsAgo": "vor 0 Monaten | vor 1 Monat | vor {n} Monaten",
-        "yearsAgo": "vor 0 Jahren | vor 1 Jahr | vor {n} Jahren"
+        "yearsAgo": "vor 0 Jahren | vor 1 Jahr | vor {n} Jahren",
+        "hoursAgo": "vor 0 Stunden | vor 1 Stunde | vor {n} Stunden",
+        "secondsAgo": "Gerade eben | vor 1 Sekunde | {n} Sekunden zuvor",
+        "minutesAgo": "vor 0 Minuten | vor 1 Minute | vor {n} Minuten"
     },
     "duplicateApplicationJobType": {
         "duplicating": "Duplizieren",
@@ -471,7 +482,8 @@
                     "title": "Der Benutzer ist bereits Mitglied der Gruppe.",
                     "text": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied der Gruppe ist."
                 }
-            }
+            },
+            "helpIconText": "Die ausgewählte Rolle wird die Standardrolle des Benutzers in dieser Gruppe."
         }
     },
     "memberAssignmentModalFooter": {
@@ -489,5 +501,10 @@
     "memberSelectionList": {
         "searchPlaceholder": "Finden...",
         "selectedAmountLabel": "{count} ausgewählt"
+    },
+    "permissionsUpdatedNotification": {
+        "content": "Dies könnte Ihren Zugang beeinträchtigen, bitte laden Sie die Seite neu.",
+        "action": "Neu laden",
+        "title": "Berechtigungen aktualisiert"
     }
 }
