@@ -24,6 +24,7 @@ For example:
 * Add "has" and "has not" filters for Collaborators field. [#1204](https://gitlab.com/bramw/baserow/-/issues/1204)
 * ./dev.sh now uses "docker compose" command if available.
 * Limit the amount of characters for messages supplied with group invitations to 250 [#1455](https://gitlab.com/bramw/baserow/-/issues/1455)
+* Introduced a "select" and "deselect all" members button to the teams modal.  [#1335](https://gitlab.com/bramw/baserow/-/issues/1335)
 * Add Free label to free roles on role selector [#1504](https://gitlab.com/bramw/baserow/-/issues/1504)
 
 ### Bug Fixes

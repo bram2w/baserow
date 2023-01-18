@@ -4,7 +4,7 @@
       <div class="list__left-side">
         <checkbox
           v-if="selectable"
-          :value="selectedItemsIndexes.includes(index)"
+          :value="selectedItemsIds.includes(item.id)"
           @input="selected($event, item, index)"
         />
         <slot name="left-side" :item="item"></slot>
@@ -26,6 +26,11 @@ export default {
       required: false,
       default: () => [],
     },
+    selectedItems: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
     attributes: {
       type: Array,
       required: false,
@@ -36,11 +41,6 @@ export default {
       required: false,
       default: () => false,
     },
-  },
-  data() {
-    return {
-      selectedItemsIndexes: [],
-    }
   },
   computed: {
     /**
@@ -53,16 +53,16 @@ export default {
       }
       return []
     },
+    selectedItemsIds() {
+      return this.selectedItems.map((item) => item.id)
+    },
   },
   methods: {
     selected(value, item, index) {
       if (value) {
-        this.selectedItemsIndexes.push(index)
+        this.selectedItemsIds.push(item.id)
       } else {
-        this.selectedItemsIndexes.splice(
-          this.selectedItemsIndexes.indexOf(index),
-          1
-        )
+        this.selectedItemsIds.splice(this.selectedItemsIds.indexOf(item.id), 1)
       }
       this.$emit('selected', { value, item, index })
     },

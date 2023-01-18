@@ -18,6 +18,7 @@
     <List
       class="margin-top-2 select-members-list__items"
       :items="membersFiltered"
+      :selected-items="membersSelected"
       :attributes="['email']"
       selectable
       @selected="memberSelected"
@@ -32,7 +33,10 @@
       </template>
     </List>
     <MemberAssignmentModalFooter
-      :count="membersSelected.length"
+      :all-filtered-members-selected="allFilteredMembersSelected"
+      :selected-members-count="membersSelected.length"
+      :filtered-members-count="membersFiltered.length"
+      @toggle-select-all="toggleSelectAll"
       @invite="$emit('invite', membersSelected)"
     />
   </div>
@@ -60,6 +64,12 @@ export default {
     searchAbleAttributes() {
       return ['name', 'email']
     },
+    allFilteredMembersSelected() {
+      // Are all members in `membersFiltered` selected?
+      return this.membersFiltered.every((member) =>
+        this.membersSelected.includes(member)
+      )
+    },
   },
   watch: {
     activeSearchTerm(newValue) {
@@ -67,6 +77,21 @@ export default {
     },
   },
   methods: {
+    toggleSelectAll() {
+      // If all filtered members are selected...
+      if (this.allFilteredMembersSelected) {
+        // Exclude those filtered members from the selections.
+        this.membersSelected = this.membersSelected.filter(
+          (member) => !this.membersFiltered.includes(member)
+        )
+      } else {
+        // We have new filtered members to add to the selections.
+        const membersToAdd = this.membersFiltered.filter(
+          (member) => !this.membersSelected.includes(member)
+        )
+        this.membersSelected = this.membersSelected.concat(membersToAdd)
+      }
+    },
     search(value) {
       if (value === null || value === '' || this.members.length === 0) {
         this.membersFiltered = this.members

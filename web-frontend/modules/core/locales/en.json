@@ -495,7 +495,9 @@
         "selectedAmountLabel": "{count} selected"
     },
     "memberAssignmentModalFooter": {
-        "invite": "Invite {count}"
+        "invite": "Invite {count}",
+        "deselectAll": "Deselect all",
+        "selectAll": "Select all"
     },
     "removeFromGroupModal": {
         "title": "Confirm removal from group",
