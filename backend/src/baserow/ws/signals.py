@@ -222,7 +222,11 @@ def groups_reordered(sender, group_ids, user, **kwargs):
 
 @receiver(signals.application_created)
 def application_created(sender, application, user, **kwargs):
-    transaction.on_commit(lambda: broadcast_application_created.delay(application.id))
+    transaction.on_commit(
+        lambda: broadcast_application_created.delay(
+            application.id, getattr(user, "web_socket_id", None)
+        )
+    )
 
 
 @receiver(signals.application_updated)

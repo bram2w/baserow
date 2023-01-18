@@ -9,6 +9,7 @@ from baserow.ws.tasks import (
     broadcast_to_group,
     broadcast_to_groups,
     broadcast_to_users,
+    broadcast_to_users_individual_payloads,
 )
 
 
@@ -398,6 +399,64 @@ async def test_can_still_ignore_when_sending_to_all_users(data_fixture):
 
     response_2 = await communicator_2.receive_json_from(0.1)
     assert response_2["message"] == "test"
+
+    assert communicator_1.output_queue.qsize() == 0
+    assert communicator_2.output_queue.qsize() == 0
+
+    await communicator_1.disconnect()
+    await communicator_2.disconnect()
+
+
+@pytest.mark.run(order=10)
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_broadcast_to_users_individual_payloads(data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+
+    communicator_1 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_1}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_1.connect()
+    response_1 = await communicator_1.receive_json_from()
+    web_socket_id_1 = response_1["web_socket_id"]
+
+    communicator_2 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_2}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_2.connect()
+    response_2 = await communicator_2.receive_json_from()
+
+    # Assert each user gets a unique message
+    await sync_to_async(broadcast_to_users_individual_payloads)(
+        {str(user_1.id): "payload1", str(user_2.id): "payload2"}
+    )
+    response_1 = await communicator_1.receive_json_from(0.1)
+    assert response_1 == "payload1"
+
+    response_2 = await communicator_2.receive_json_from(0.1)
+    assert response_2 == "payload2"
+
+    # Assert we can ignore a websocket for one user
+    await sync_to_async(broadcast_to_users_individual_payloads)(
+        {str(user_1.id): "payload1", str(user_2.id): "payload2"},
+        ignore_web_socket_id=web_socket_id_1,
+    )
+    await communicator_1.receive_nothing(0.1)
+    response_2 = await communicator_2.receive_json_from(0.1)
+    assert response_2 == "payload2"
+
+    # Assert not including a user id wont send them anything
+    await sync_to_async(broadcast_to_users_individual_payloads)(
+        {str(user_2.id): "payload2"},
+    )
+    await communicator_1.receive_nothing(0.1)
+    response_2 = await communicator_2.receive_json_from(0.1)
+    assert response_2 == "payload2"
 
     assert communicator_1.output_queue.qsize() == 0
     assert communicator_2.output_queue.qsize() == 0

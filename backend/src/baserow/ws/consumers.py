@@ -136,10 +136,18 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         :param event: The event containing the payload mapping
         """
 
+        web_socket_id = self.scope["web_socket_id"]
+
         payload_map = event["payload_map"]
+        ignore_web_socket_id = event["ignore_web_socket_id"]
+
         user_id = str(self.scope["user"].id)
 
-        if user_id in payload_map:
+        shouldnt_ignore = (
+            not ignore_web_socket_id or ignore_web_socket_id != web_socket_id
+        )
+
+        if shouldnt_ignore and user_id in payload_map:
             await self.send_json(payload_map[user_id])
 
     async def broadcast_to_group(self, event):
