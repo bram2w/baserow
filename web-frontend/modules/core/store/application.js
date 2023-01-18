@@ -173,15 +173,15 @@ export const actions = {
   /**
    * Forcefully create an item in the store without making a call to the server.
    */
-  forceCreate({ commit, state }, data) {
-    const application = populateApplication(data, this.$registry)
+  forceCreate({ commit, state, getters }, data) {
+    populateApplication(data, this.$registry)
     const index = state.items.findIndex((item) => item.id === data.id)
     if (index === -1) {
       commit('ADD_ITEM', data)
     } else {
       commit('UPDATE_ITEM', { id: data.id, values: data })
     }
-    return application
+    return getters.get(data.id)
   },
   /**
    * Updates the values of an existing application.

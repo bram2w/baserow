@@ -59,8 +59,8 @@ export default {
         })
         this.$emit('created', application)
         // select the application just created in the sidebar and open it
-        await this.$store.dispatch('application/select', application)
-        await this.$registry
+        await this.$store.dispatch('application/selectById', application.id)
+        this.$registry
           .get('application', application.type)
           .select(application, this, () => {
             this.hide()

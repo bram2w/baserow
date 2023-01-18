@@ -44,7 +44,7 @@
 
 <script>
 import ImportFromAirtable from '@baserow/modules/database/components/airtable/ImportFromAirtable'
-import BlankDatabaseForm from '@baserow/modules/database/components/form/BlankDatabaseForm.vue'
+import BlankDatabaseForm from '@baserow/modules/database/components/form/BlankDatabaseForm'
 
 export default {
   name: 'DatabaseForm',
