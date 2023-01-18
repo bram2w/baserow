@@ -10,6 +10,16 @@ For example:
 ## Unreleased
 
 ### New Features
+
+### Bug Fixes
+
+### Refactors
+
+### Breaking API changes
+
+## Released (2023-01-13 1.14.0)
+
+### New Features
 * When your permissions change you now get notified in the frontend to reload your page [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
 * Database and table ids are now hashed in websocket messages to not leak sensitive data [#1374](https://gitlab.com/bramw/baserow/-/issues/1374)
@@ -55,6 +65,8 @@ For example:
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
 * Introduce a single-parent hierarchy for models.
 * Refactor paving the way for a future removal of the `ExportJob` system in favor of the `core/jobs` one.
+
+### Breaking API changes
 * Changed the return code from `HTTP_200_OK` to `HTTP_202_ACCEPTED` if a `POST` is submitted to `/api/snapshots/application/$ID/` to start the async job.
 
 ## Released (2022-12-22 1.13.3)
