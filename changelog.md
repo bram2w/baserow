@@ -25,6 +25,12 @@ For example:
 * ./dev.sh now uses "docker compose" command if available.
 * Limit the amount of characters for messages supplied with group invitations to 250 [#1455](https://gitlab.com/bramw/baserow/-/issues/1455)
 * Add Free label to free roles on role selector [#1504](https://gitlab.com/bramw/baserow/-/issues/1504)
+* New templates:
+    * Car Dealership Inventory
+    * Car Dealership Services
+    * Customer Research
+    * Frequent Flyer Rewards
+    * Grocery Planner
 
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
@@ -42,6 +48,7 @@ For example:
 * Fixed Change Password dialog not visible. [#1501](https://gitlab.com/bramw/baserow/-/issues/1501)
 * Fixed bug where it was not possible to change `conditional_color` decorator provider color after reloading. [#1098](https://gitlab.com/bramw/baserow/-/issues/1098)
 * Fixed issue where importing a database would immediately close the modal and not show progress [#1492](https://gitlab.com/bramw/baserow/-/issues/1492)
+* Fixed issue during importing of serialized applications causing formula columns to have incorrect database column [#1220](https://gitlab.com/bramw/baserow/-/issues/1220)
 
 ### Refactors
 * Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)

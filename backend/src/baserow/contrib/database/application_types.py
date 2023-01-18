@@ -282,9 +282,18 @@ class DatabaseApplicationType(ApplicationType):
             field_type.import_serialized(external_table, serialized_field, id_mapping)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
+        # From each field we call after_import_serialized which will recursively
+        # be called on all of its dependants. This ensures that formulas recalculate
+        # themselves now that all fields exist.
         field_cache = FieldCache()
         for field_type, serialized_field in fields_excluding_reversed_linked_fields:
             field_type.after_import_serialized(serialized_field, field_cache)
+
+        # The loop above might have recalculated the formula fields in the list,
+        # we need to refresh the instances we have as a result as they might be stale.
+        for field_type, serialized_field in fields_excluding_reversed_linked_fields:
+            if field_type.needs_refresh_after_import_serialized:
+                serialized_field.refresh_from_db()
 
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
