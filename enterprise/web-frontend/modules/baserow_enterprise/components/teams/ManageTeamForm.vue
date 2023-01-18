@@ -19,7 +19,7 @@
             >
               {{ $t('error.requiredField') }}
             </div>
-            <div v-if="hasMinMaxError" class="error">
+            <div v-if="$v.values.name.$dirty && hasMinMaxError" class="error">
               {{
                 $t('error.minMaxLength', {
                   max: $v.values.name.$params.maxLength.max,
@@ -31,7 +31,15 @@
         </FormElement>
       </div>
       <div class="col col-5">
-        <h3>{{ $t('manageTeamForm.roleTitle') }}</h3>
+        <div class="manage-team-form__role-title">
+          <h3>
+            {{ $t('manageTeamForm.roleTitle') }}
+            <HelpIcon
+              class="margin-left-1"
+              :tooltip="$t('manageTeamForm.roleHelpText')"
+            />
+          </h3>
+        </div>
         <FormElement class="control">
           <div class="control__elements">
             <Dropdown v-model="values.default_role" :show-search="false">
@@ -41,7 +49,15 @@
                 :name="role.name"
                 :value="role.uid"
                 :description="role.description"
-              ></DropdownItem>
+              >
+                {{ role.name }}
+                <Badge
+                  v-if="!role.isBillable && atLeastOneBillableRole"
+                  primary
+                  class="margin-left-1"
+                  >{{ $t('common.free') }}
+                </Badge>
+              </DropdownItem>
             </Dropdown>
           </div>
         </FormElement>
@@ -86,7 +102,6 @@
     <div class="row margin-top-2">
       <div class="col col-6">
         <a
-          :class="{ 'button--loading': loading }"
           class="button button--ghost"
           :disabled="loading"
           @click="$emit('invite')"
@@ -155,6 +170,9 @@ export default {
     },
     hasMinMaxError() {
       return !this.$v.values.name.maxLength || !this.$v.values.name.minLength
+    },
+    atLeastOneBillableRole() {
+      return this.roles.some((role) => role.isBillable)
     },
   },
   watch: {

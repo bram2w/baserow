@@ -253,7 +253,9 @@
         "snapshotNameNotUniqueTitle": "De naam van de snapshot moet uniek zijn.",
         "snapshotNameNotUniqueDescription": "Alle snapshotnamen moeten uniek zijn per toepassing.",
         "disabledPasswordProviderMessage": "Gebruik een andere authenticatieprovider.",
-        "disabledPasswordProviderTitle": "Wachtwoordverificatie is uitgeschakeld."
+        "disabledPasswordProviderTitle": "Wachtwoordverificatie is uitgeschakeld.",
+        "lastAdminTitle": "Kan laatste groepsbeheerder niet verwijderen",
+        "lastAdminMessage": "Een groep moet minstens één beheerder hebben."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",

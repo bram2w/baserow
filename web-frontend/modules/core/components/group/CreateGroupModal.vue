@@ -28,6 +28,7 @@ import error from '@baserow/modules/core/mixins/error'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 
 import GroupForm from './GroupForm'
+import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 
 export default {
   name: 'CreateGroupModal',
@@ -59,6 +60,12 @@ export default {
       } catch (error) {
         this.loading = false
         this.handleError(error, 'group')
+        this.handleError(error, 'group', {
+          PERMISSION_DENIED: new ResponseErrorMessage(
+            this.$t('createGroupModal.permissionDeniedTitle'),
+            this.$t('createGroupModal.permissionDeniedBody')
+          ),
+        })
       }
     },
   },

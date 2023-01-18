@@ -38,6 +38,7 @@
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
       @add-row="addRow()"
+      @add-row-after="addRowAfter($event)"
       @update="updateValue"
       @paste="multiplePasteFromCell"
       @edit="editValue"
@@ -93,6 +94,7 @@
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
       @add-row="addRow()"
+      @add-row-after="addRowAfter($event)"
       @update="updateValue"
       @paste="multiplePasteFromCell"
       @edit="editValue"
@@ -152,7 +154,7 @@
             )
           "
         >
-          <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
+          <a @click="addRowAboveSelectedRow($event, selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
@@ -167,7 +169,7 @@
             )
           "
         >
-          <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
+          <a @click="addRowBelowSelectedRow($event, selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
@@ -182,11 +184,7 @@
             )
           "
         >
-          <a
-            @click="
-              ;[addRowAfter(selectedRow, selectedRow), $refs.rowContext.hide()]
-            "
-          >
+          <a @click="duplicateSelectedRow($event, selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-clone"></i>
             {{ $t('gridView.duplicateRow') }}
           </a>
@@ -446,6 +444,21 @@ export default {
     )
   },
   methods: {
+    duplicateSelectedRow(event, selectedRow) {
+      event.preventFieldCellUnselect = true
+      this.addRowAfter(selectedRow, selectedRow)
+      this.$refs.rowContext.hide()
+    },
+    addRowAboveSelectedRow(event, selectedRow) {
+      event.preventFieldCellUnselect = true
+      this.addRow(selectedRow)
+      this.$refs.rowContext.hide()
+    },
+    addRowBelowSelectedRow(event, selectedRow) {
+      event.preventFieldCellUnselect = true
+      this.addRowAfter(selectedRow)
+      this.$refs.rowContext.hide()
+    },
     /**
      * When a field is deleted we need to check if that field was related to any
      * filters or sortings. If that is the case then the view needs to be refreshed so
@@ -601,6 +614,7 @@ export default {
             fields: this.fields,
             values,
             before,
+            selectPrimaryCell: true,
           }
         )
       } catch (error) {
@@ -810,6 +824,7 @@ export default {
           getScrollTop = () =>
             this.$store.getters[this.storePrefix + 'view/grid/getScrollTop']
         }
+
         this.$store.dispatch(
           this.storePrefix + 'view/grid/removeRowSelectedBy',
           {
@@ -969,20 +984,23 @@ export default {
      * formatted as TSV
      */
     async copySelection(event) {
+      const gridStore = this.storePrefix + 'view/grid'
+      if (!this.$store.getters[`${gridStore}/isMultiSelectActive`]) {
+        return
+      }
       try {
         this.$store.dispatch('notification/setCopying', true)
-        const selection = await this.$store.dispatch(
-          this.storePrefix + 'view/grid/getCurrentSelection',
-          { fields: this.allVisibleFields }
+        await this.copySelectionToClipboard(
+          this.$store.dispatch(`${gridStore}/getCurrentSelection`, {
+            fields: this.allVisibleFields,
+          })
         )
-        if (selection !== undefined) {
-          const [fields, rows] = selection
-          this.copySelectionToClipboard(fields, rows)
-        }
       } catch (error) {
         notifyIf(error, 'view')
       } finally {
         this.$store.dispatch('notification/setCopying', false)
+        // prevent Safari from beeping since window.getSelection() is empty
+        event.preventDefault()
       }
     },
     /**

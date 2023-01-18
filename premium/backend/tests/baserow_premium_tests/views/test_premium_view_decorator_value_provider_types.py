@@ -41,7 +41,7 @@ def test_import_export_grid_view_w_decorator(data_fixture):
     id_mapping = {"database_fields": {field.id: imported_field.id}}
 
     grid_view_type = view_type_registry.get("grid")
-    serialized = grid_view_type.export_serialized(grid_view, None, None)
+    serialized = grid_view_type.export_serialized(grid_view, None, None, None)
     imported_grid_view = grid_view_type.import_serialized(
         grid_view.table, serialized, id_mapping, None, None
     )
@@ -63,12 +63,11 @@ def test_import_export_grid_view_w_decorator(data_fixture):
         view_decoration_2.value_provider_type
         == imported_view_decorations[1].value_provider_type
     )
-    assert imported_view_decorations[1].value_provider_conf == {
-        "colors": [
-            {"filters": [{"field": imported_field.id}]},
-            {"filters": [{"field": imported_field.id}]},
-        ]
-    }
+
+    # a new id is generated for every inserted color
+    for color in imported_view_decorations[1].value_provider_conf["colors"]:
+        assert color["id"] is not None
+        assert color["filters"][0]["field"] == imported_field.id
 
 
 @pytest.mark.django_db

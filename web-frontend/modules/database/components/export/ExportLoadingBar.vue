@@ -1,13 +1,10 @@
 <template>
   <div class="modal-progress__actions">
     <template v-if="job !== null">
-      <ProgressBar
-        :value="job.progress_percentage * 100"
-        :status="job.status"
-      />
+      <ProgressBar :value="job.progress_percentage" :status="job.state" />
     </template>
     <button
-      v-if="job === null || job.status !== 'complete'"
+      v-if="job === null || job.state !== 'finished'"
       class="button button--large button--primary modal-progress__export-button"
       :class="{ 'button--loading': loading }"
       :disabled="disabled"
@@ -28,7 +25,7 @@
 
 <script>
 export default {
-  name: 'ExportTableLoadingBar',
+  name: 'ExportLoadingBar',
   props: {
     filename: {
       type: String,
@@ -52,13 +49,6 @@ export default {
     disabled: {
       type: Boolean,
       required: true,
-    },
-  },
-  computed: {
-    jobIsRunning() {
-      return (
-        this.job !== null && ['exporting', 'pending'].includes(this.job.status)
-      )
     },
   },
 }

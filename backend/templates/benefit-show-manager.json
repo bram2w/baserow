@@ -5321,14 +5321,14 @@
                             "name": "Over/under",
                             "order": 6,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator + was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
+                            "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "minus( \n  add( \n    tonumber(join(totext(field(\"Funds raised\")), \"\")), \n    field(\"Ticket sales\") \n  ), \n  tonumber(join(totext(field(\"Cost\")), \"\")) \n)",
-                            "formula_type": "invalid"
+                            "formula": "minus( \n  add( \n    field(\"Funds raised\"), \n    field(\"Ticket sales\") \n  ), \n  field(\"Cost\") \n)",
+                            "formula_type": "number"
                         },
                         {
                             "id": 350915,
@@ -5463,10 +5463,10 @@
                                     "id": 433003,
                                     "field_id": 350914,
                                     "width": 135,
-                                    "hidden": true,
+                                    "hidden": false,
                                     "order": 5,
-                                    "aggregation_type": "",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_type": "average",
+                                    "aggregation_raw_type": "average"
                                 },
                                 {
                                     "id": 433005,

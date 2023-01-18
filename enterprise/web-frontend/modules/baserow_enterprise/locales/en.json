@@ -34,7 +34,8 @@
         "roleTitle": "Default role",
         "inviteMembers": "Add members",
         "membersTitle": "Members",
-        "noSubjectsSelected": "Click '{buttonLabel}' to optionally add team users."
+        "noSubjectsSelected": "Click '{buttonLabel}' to optionally add team users.",
+        "roleHelpText": "User specific roles will always override Team roles."
     },
     "editTeamContext": {
         "edit": "Edit team",
@@ -46,7 +47,8 @@
         "nameColumn": "Name",
         "createdColumn": "Created on",
         "subjectsColumn": "Members",
-        "roleColumn": "Default role"
+        "roleColumn": "Default role",
+        "roleHelpText": "Can be overriden with roles on databases and tables."
     },
     "subjectSampleField": {
         "titleAttr": "{subjectCount} members in this team."
@@ -55,7 +57,36 @@
         "teamsTabTitle": "Teams"
     },
     "adminType": {
+        "AuditLog": "Audit log",
         "Authentication": "Authentication"
+    },
+    "auditLog": {
+        "title": "Audit log",
+        "filterUserTitle": "User",
+        "filterGroupTitle": "Group",
+        "filterActionTypeTitle": "Event Type",
+        "filterFromTimestampTitle": "From Date",
+        "filterFromTimestamp": "From Date",
+        "filterToTimestampTitle": "To Date",
+        "filterToTimestamp": "To Date",
+        "user": "User",
+        "group": "Group",
+        "actionType": "Event Type",
+        "description": "Description",
+        "timestamp": "Timestamp",
+        "ip_address": "IP Address",
+        "exportToCsv": "Export to CSV",
+        "exportModalTitle": "Export to CSV",
+        "clearFilters": "Clear",
+        "allUsers": "All Users",
+        "allGroups": "All Groups",
+        "allActionTypes": "All Event Types"
+    },
+    "auditLogExportModal": {
+        "title": "Export to CSV",
+        "exportFilename": "Audit Log Export - {date}",
+        "cancelledTitle": "Export failed",
+        "cancelledDescription": "Something went wrong while exporting the audit log. Please try again."
     },
     "authProviders": {
         "title": "Authentication Providers",
@@ -158,7 +189,8 @@
             "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
             "onlyYouHaveAccess": "Only you can access this database.",
             "warningTitle": "Other users might inherit access!",
-            "warningMessage": "Other users might inherit access via their respective roles on the parent group."
+            "warningMessage": "Other users might inherit access via their respective roles on the parent group.",
+            "headerTooltip": "Database roles will override group roles."
         },
         "table": {
             "title": "{name} table",
@@ -166,7 +198,8 @@
             "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
             "onlyYouHaveAccess": "Only you can access this table.",
             "warningTitle": "Other users might inherit access!",
-            "warningMessage": "Other users might inherit access via their respective roles on the parent database or group."
+            "warningMessage": "Other users might inherit access via their respective roles on the parent database or group.",
+            "headerTooltip": "Table roles will override group and database roles."
         }
     },
     "memberRolesShareToggle": {
@@ -181,7 +214,8 @@
     },
     "memberRolesMembersList": {
         "remove": "Remove",
-        "teamMembersCount": "{count} team members"
+        "teamMembersCount": "{count} team members",
+        "adminHelpText": "Admins can restrict other admins roles."
     },
     "roleAssignmentModal": {
         "membersTab": "Members",
@@ -202,7 +236,16 @@
         "types": {
             "members": "members",
             "teams": "teams"
-        }
+        },
+        "helpTooltip": "Member role assignments override team role assignments.",
+        "roleSelectorBuilderDataWarningTooltip": "They will be able to create formula and lookup fields exposing any fields in any linked tables."
+    },
+    "membersRoleField": {
+        "noAccessHelpText": "This user requires explicit access to resources.",
+        "adminHelpText": "Admins can restrict other admins roles."
+    },
+    "membersPagePlugin": {
+        "roleHelpText": "Can be overriden with roles on databases and tables."
     },
     "oauthSettingsForm": {
         "providerName": "Name",

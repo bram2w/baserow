@@ -24,10 +24,10 @@ from baserow.contrib.database.export.exceptions import (
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.export.models import (
     EXPORT_JOB_CANCELLED_STATUS,
-    EXPORT_JOB_COMPLETED_STATUS,
     EXPORT_JOB_EXPIRED_STATUS,
     EXPORT_JOB_EXPORTING_STATUS,
     EXPORT_JOB_FAILED_STATUS,
+    EXPORT_JOB_FINISHED_STATUS,
     EXPORT_JOB_PENDING_STATUS,
     ExportJob,
 )
@@ -282,9 +282,9 @@ def test_creating_a_new_export_job_will_cancel_any_already_running_jobs_for_that
     )
     first_job.refresh_from_db()
     other_users_job.refresh_from_db()
-    assert first_job.status == EXPORT_JOB_CANCELLED_STATUS
-    assert second_job.status == EXPORT_JOB_PENDING_STATUS
-    assert other_users_job.status == EXPORT_JOB_PENDING_STATUS
+    assert first_job.state == EXPORT_JOB_CANCELLED_STATUS
+    assert second_job.state == EXPORT_JOB_PENDING_STATUS
+    assert other_users_job.state == EXPORT_JOB_PENDING_STATUS
 
 
 @pytest.mark.django_db
@@ -316,10 +316,10 @@ def test_a_complete_export_job_which_has_expired_will_have_its_file_deleted(
         "export_files/" + first_job.exported_file_name
     )
     first_job.refresh_from_db()
-    assert first_job.status == EXPORT_JOB_EXPIRED_STATUS
+    assert first_job.state == EXPORT_JOB_EXPIRED_STATUS
     assert first_job.exported_file_name is None
     second_job.refresh_from_db()
-    assert second_job.status == EXPORT_JOB_COMPLETED_STATUS
+    assert second_job.state == EXPORT_JOB_FINISHED_STATUS
     assert second_job.exported_file_name is not None
 
 
@@ -357,9 +357,9 @@ def test_a_pending_job_which_has_expired_will_be_cleaned_up(
     storage_mock.delete.assert_not_called()
 
     old_pending_job.refresh_from_db()
-    assert old_pending_job.status == EXPORT_JOB_EXPIRED_STATUS
+    assert old_pending_job.state == EXPORT_JOB_EXPIRED_STATUS
     unexpired_other_user_job.refresh_from_db()
-    assert unexpired_other_user_job.status == EXPORT_JOB_PENDING_STATUS
+    assert unexpired_other_user_job.state == EXPORT_JOB_PENDING_STATUS
 
 
 @pytest.mark.django_db
@@ -384,7 +384,7 @@ def test_a_running_export_job_which_has_expired_will_be_stopped(
         long_running_job = handler.create_pending_export_job(
             user, table, None, {"exporter_type": "csv"}
         )
-        long_running_job.status = EXPORT_JOB_EXPORTING_STATUS
+        long_running_job.state = EXPORT_JOB_EXPORTING_STATUS
         long_running_job.save()
     with freeze_time(second_job_start):
         unexpired_other_user_job = handler.create_pending_export_job(
@@ -396,9 +396,9 @@ def test_a_running_export_job_which_has_expired_will_be_stopped(
     storage_mock.delete.assert_not_called()
 
     long_running_job.refresh_from_db()
-    assert long_running_job.status == EXPORT_JOB_EXPIRED_STATUS
+    assert long_running_job.state == EXPORT_JOB_EXPIRED_STATUS
     unexpired_other_user_job.refresh_from_db()
-    assert unexpired_other_user_job.status == EXPORT_JOB_PENDING_STATUS
+    assert unexpired_other_user_job.state == EXPORT_JOB_PENDING_STATUS
 
 
 @pytest.mark.django_db
@@ -533,7 +533,7 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
         handler.run_export_job(job_which_fails)
 
     job_which_fails.refresh_from_db()
-    assert job_which_fails.status == EXPORT_JOB_FAILED_STATUS
+    assert job_which_fails.state == EXPORT_JOB_FAILED_STATUS
     assert job_which_fails.error == "Failed"
     table_exporter_registry.unregister("broken")
 

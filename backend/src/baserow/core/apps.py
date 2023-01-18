@@ -25,6 +25,7 @@ class CoreConfig(AppConfig):
             CorePermissionManagerType,
             GroupMemberOnlyPermissionManagerType,
             StaffOnlyPermissionManagerType,
+            StaffOnlySettingOperationPermissionManagerType,
         )
         from baserow.core.registries import (
             object_scope_type_registry,
@@ -37,6 +38,9 @@ class CoreConfig(AppConfig):
         permission_manager_type_registry.register(BasicPermissionManagerType())
         permission_manager_type_registry.register(
             GroupMemberOnlyPermissionManagerType()
+        )
+        permission_manager_type_registry.register(
+            StaffOnlySettingOperationPermissionManagerType()
         )
 
         from .object_scopes import (
@@ -155,6 +159,28 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DuplicateApplicationActionType())
         action_type_registry.register(InstallTemplateActionType())
 
+        from baserow.core.snapshots.actions import (
+            CreateSnapshotActionType,
+            DeleteSnapshotActionType,
+            RestoreSnapshotActionType,
+        )
+
+        action_type_registry.register(CreateSnapshotActionType())
+        action_type_registry.register(DeleteSnapshotActionType())
+        action_type_registry.register(RestoreSnapshotActionType())
+
+        from baserow.core.user.actions import (
+            CancelUserDeletionActionType,
+            CreateUserActionType,
+            ScheduleUserDeletionActionType,
+            UpdateUserActionType,
+        )
+
+        action_type_registry.register(CreateUserActionType())
+        action_type_registry.register(UpdateUserActionType())
+        action_type_registry.register(ScheduleUserDeletionActionType())
+        action_type_registry.register(CancelUserDeletionActionType())
+
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,
             GroupActionScopeType,
@@ -168,12 +194,17 @@ class CoreConfig(AppConfig):
         from baserow.core.jobs.registries import job_type_registry
 
         from .job_types import DuplicateApplicationJobType, InstallTemplateJobType
-        from .snapshots.job_type import CreateSnapshotJobType, RestoreSnapshotJobType
+        from .snapshots.job_types import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
         job_type_registry.register(InstallTemplateJobType())
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
+
+        from baserow.api.user.registries import user_data_registry
+        from baserow.api.user.user_data_types import GlobalPermissionsDataType
+
+        user_data_registry.register(GlobalPermissionsDataType())
 
         from baserow.core.auth_provider.auth_provider_types import (
             PasswordAuthProviderType,

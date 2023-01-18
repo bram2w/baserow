@@ -313,7 +313,7 @@ def test_enterprise_license_counts_viewers_as_free(
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
     user3 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2, user3])
+    group = data_fixture.create_group(members=[user, user2, user3])
 
     table = data_fixture.create_database_table(user=user)
 
@@ -353,8 +353,8 @@ def test_user_who_is_commenter_in_one_group_and_viewer_in_another_is_not_free(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group1 = data_fixture.create_group(user=user, members=[user2])
-    group2 = data_fixture.create_group(user=user, members=[user2])
+    group1 = data_fixture.create_group(members=[user, user2])
+    group2 = data_fixture.create_group(members=[user, user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     commenter_role = Role.objects.get(uid="COMMENTER")
@@ -394,8 +394,8 @@ def test_user_marked_for_deletion_is_not_counted_as_a_paid_user(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group1 = data_fixture.create_group(user=user, members=[user2])
-    group2 = data_fixture.create_group(user=user, members=[user2])
+    group1 = data_fixture.create_group(members=[user, user2])
+    group2 = data_fixture.create_group(members=[user, user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     commenter_role = Role.objects.get(uid="COMMENTER")
@@ -438,8 +438,8 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group1 = data_fixture.create_group(user=user, members=[user2])
-    group2 = data_fixture.create_group(user=user, members=[user2])
+    group1 = data_fixture.create_group(members=[user, user2])
+    group2 = data_fixture.create_group(members=[user, user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     commenter_role = Role.objects.get(uid="COMMENTER")
@@ -1918,3 +1918,17 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
             "NO_ROLE_LOW_PRIORITY": 0,
         },
     )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_can_restore_a_group_with_rbac_enabled(
+    enterprise_data_fixture, data_fixture, synced_roles
+):
+    license_object = enterprise_data_fixture.enable_enterprise()
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    TrashHandler.trash(user, group, None, group)
+
+    TrashHandler.restore_item(user, "group", group.id)

@@ -5,9 +5,9 @@ from baserow.core.models import Group
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
 from baserow.core.signals import group_user_updated
 from baserow.core.types import ScopeObject, Subject
-from baserow_enterprise.role.default_roles import (
+from baserow_enterprise.role.constants import (
     NO_ACCESS_ROLE_UID,
-    NO_ROLE_LOW_PRIORITY,
+    NO_ROLE_LOW_PRIORITY_ROLE_UID,
 )
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.tasks import (
@@ -28,7 +28,7 @@ role_assignment_updated = Signal()
 role_assignment_deleted = Signal()
 
 
-NO_ACCESS_ROLES = [NO_ACCESS_ROLE_UID, NO_ROLE_LOW_PRIORITY]
+NO_ACCESS_ROLES = [NO_ACCESS_ROLE_UID, NO_ROLE_LOW_PRIORITY_ROLE_UID]
 
 
 @receiver(group_user_updated)

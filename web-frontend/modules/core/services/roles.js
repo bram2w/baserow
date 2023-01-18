@@ -5,22 +5,26 @@ export default (client, $hasFeature) => {
       if ($hasFeature('RBAC', group.id)) {
         return {
           data: [
-            { uid: 'ADMIN' },
-            { uid: 'BUILDER' },
-            { uid: 'EDITOR' },
-            { uid: 'COMMENTER' },
-            { uid: 'VIEWER' },
-            { uid: 'NO_ACCESS' },
+            { uid: 'ADMIN', isBillable: true },
+            { uid: 'BUILDER', isBillable: true },
+            { uid: 'EDITOR', isBillable: true },
+            { uid: 'COMMENTER', isBillable: true },
+            { uid: 'VIEWER', isBillable: false },
+            { uid: 'NO_ACCESS', isBillable: false },
             {
               uid: 'NO_ROLE_LOW_PRIORITY',
               allowed_scope_types: ['group'],
               allowed_subject_types: ['auth.User'],
+              isBillable: false,
             },
           ],
         }
       }
       return {
-        data: [{ uid: 'ADMIN' }, { uid: 'MEMBER' }],
+        data: [
+          { uid: 'ADMIN', isBillable: false },
+          { uid: 'MEMBER', isBillable: false },
+        ],
       }
     },
   }

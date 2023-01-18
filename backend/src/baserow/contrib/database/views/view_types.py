@@ -87,6 +87,7 @@ class GridViewType(ViewType):
     def export_serialized(
         self,
         grid: View,
+        cache: Optional[Dict] = None,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -94,7 +95,7 @@ class GridViewType(ViewType):
         Adds the serialized grid view options to the exported dict.
         """
 
-        serialized = super().export_serialized(grid, files_zip, storage)
+        serialized = super().export_serialized(grid, cache, files_zip, storage)
         serialized["row_identifier_type"] = grid.row_identifier_type
 
         serialized_field_options = []
@@ -366,6 +367,7 @@ class GalleryViewType(ViewType):
     def export_serialized(
         self,
         gallery: View,
+        cache: Optional[Dict] = None,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -373,7 +375,7 @@ class GalleryViewType(ViewType):
         Adds the serialized gallery view options to the exported dict.
         """
 
-        serialized = super().export_serialized(gallery, files_zip, storage)
+        serialized = super().export_serialized(gallery, cache, files_zip, storage)
 
         if gallery.card_cover_image_field:
             serialized["card_cover_image_field_id"] = gallery.card_cover_image_field.id
@@ -681,6 +683,7 @@ class FormViewType(ViewType):
     def export_serialized(
         self,
         form: View,
+        cache: Optional[Dict] = None,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
@@ -688,7 +691,7 @@ class FormViewType(ViewType):
         Adds the serialized form view options to the exported dict.
         """
 
-        serialized = super().export_serialized(form, files_zip, storage)
+        serialized = super().export_serialized(form, cache, files_zip, storage)
 
         def add_user_file(user_file):
             if not user_file:
@@ -732,7 +735,7 @@ class FormViewType(ViewType):
                             "type": condition.type,
                             "value": view_filter_type_registry.get(
                                 condition.type
-                            ).get_export_serialized_value(condition.value),
+                            ).get_export_serialized_value(condition.value, {}),
                         }
                         for condition in field_option.conditions.all()
                     ],

@@ -22,10 +22,11 @@ class JSONEncoderSupportingDataClasses(json.JSONEncoder):
 
 class Action(CreatedAndUpdatedOnMixin, models.Model):
     """
-    An action represents a user performed change to Baserow.
+    An undoable-action represents a user performed change that can be undone.
     """
 
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
+    group = models.ForeignKey("core.Group", null=True, on_delete=models.SET_NULL)
     session = models.TextField(null=True, blank=True, db_index=True)
     type = models.TextField(db_index=True)
     params = models.JSONField(encoder=JSONEncoderSupportingDataClasses)

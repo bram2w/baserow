@@ -1,18 +1,20 @@
 <template>
-  <div>
-    <input
-      v-model="activeSearchTerm"
-      type="text"
-      class="input input--large"
-      :placeholder="$t('selectMembersList.searchPlaceholder')"
-      @keyup="search(activeSearchTerm)"
-    />
-    <div class="margin-top-2">
-      {{
-        $t('selectMembersList.selectedAmountLabel', {
-          count: usersSelected.length,
-        })
-      }}
+  <div class="select-members-list">
+    <div>
+      <input
+        v-model="activeSearchTerm"
+        type="text"
+        class="input input--large"
+        :placeholder="$t('selectMembersList.searchPlaceholder')"
+        @keyup="search(activeSearchTerm)"
+      />
+      <div class="margin-top-2">
+        {{
+          $t('selectMembersList.selectedAmountLabel', {
+            count: usersSelected.length,
+          })
+        }}
+      </div>
     </div>
     <List
       class="margin-top-2 select-members-list__items"

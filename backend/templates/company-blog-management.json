@@ -100,7 +100,8 @@
                             "order": 5,
                             "primary": false,
                             "link_row_table_id": 21078,
-                            "link_row_related_field_id": 120330
+                            "link_row_related_field_id": 120330,
+                            "has_related_field": true
                         },
                         {
                             "id": 120331,
@@ -169,7 +170,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 21079,
-                            "link_row_related_field_id": 120406
+                            "link_row_related_field_id": 120406,
+                            "has_related_field": true
                         },
                         {
                             "id": 165825,
@@ -316,7 +318,7 @@
                         {
                             "id": 189483,
                             "type": "text",
-                            "name": "URL Handle",
+                            "name": "Slug (optimized)",
                             "order": 14,
                             "primary": false,
                             "text_default": ""
@@ -333,7 +335,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "concat('https://www.ourgreatblog.com/',field('URL Handle'))",
+                            "formula": "concat('https://www.ourgreatblog.com/',field('Slug (optimized)'))",
                             "formula_type": "text"
                         },
                         {
@@ -365,6 +367,51 @@
                             "array_formula_type": null,
                             "formula": "if(field('Meta description length')<=160, '\u2705', '\u274c')",
                             "formula_type": "text"
+                        },
+                        {
+                            "id": 767073,
+                            "type": "formula",
+                            "name": "Slug (auto)",
+                            "order": 18,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": null,
+                            "formula": "lower(replace(field('Headline'), \" \", \"-\"))",
+                            "formula_type": "text"
+                        },
+                        {
+                            "id": 767126,
+                            "type": "formula",
+                            "name": "Slug (auto) length",
+                            "order": 19,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "array_formula_type": null,
+                            "formula": "length(field('Slug (auto)'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 767127,
+                            "type": "formula",
+                            "name": "Slug (optimized) length",
+                            "order": 20,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "array_formula_type": null,
+                            "formula": "length(field('Slug (optimized)'))",
+                            "formula_type": "number"
                         }
                     ],
                     "views": [
@@ -392,7 +439,7 @@
                                     "field_id": 120322,
                                     "width": 350,
                                     "hidden": false,
-                                    "order": 17,
+                                    "order": 0,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -401,7 +448,7 @@
                                     "field_id": 120325,
                                     "width": 157,
                                     "hidden": false,
-                                    "order": 2,
+                                    "order": 3,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -410,7 +457,7 @@
                                     "field_id": 120326,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 3,
+                                    "order": 4,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -419,7 +466,7 @@
                                     "field_id": 120327,
                                     "width": 125,
                                     "hidden": false,
-                                    "order": 0,
+                                    "order": 1,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -428,7 +475,7 @@
                                     "field_id": 120328,
                                     "width": 262,
                                     "hidden": false,
-                                    "order": 4,
+                                    "order": 5,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -437,7 +484,7 @@
                                     "field_id": 120329,
                                     "width": 226,
                                     "hidden": false,
-                                    "order": 9,
+                                    "order": 10,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -446,7 +493,7 @@
                                     "field_id": 120331,
                                     "width": 136,
                                     "hidden": false,
-                                    "order": 10,
+                                    "order": 11,
                                     "aggregation_type": "checked_percentage",
                                     "aggregation_raw_type": "empty_count"
                                 },
@@ -455,7 +502,7 @@
                                     "field_id": 120332,
                                     "width": 153,
                                     "hidden": false,
-                                    "order": 12,
+                                    "order": 13,
                                     "aggregation_type": "empty_count",
                                     "aggregation_raw_type": "empty_count"
                                 },
@@ -464,7 +511,7 @@
                                     "field_id": 120333,
                                     "width": 167,
                                     "hidden": false,
-                                    "order": 16,
+                                    "order": 20,
                                     "aggregation_type": "empty_count",
                                     "aggregation_raw_type": "empty_count"
                                 },
@@ -473,7 +520,7 @@
                                     "field_id": 120362,
                                     "width": 129,
                                     "hidden": false,
-                                    "order": 8,
+                                    "order": 9,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -482,7 +529,7 @@
                                     "field_id": 120405,
                                     "width": 416,
                                     "hidden": false,
-                                    "order": 11,
+                                    "order": 12,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -491,7 +538,7 @@
                                     "field_id": 165825,
                                     "width": 136,
                                     "hidden": false,
-                                    "order": 15,
+                                    "order": 19,
                                     "aggregation_type": "min_date",
                                     "aggregation_raw_type": "min"
                                 },
@@ -500,7 +547,7 @@
                                     "field_id": 189481,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 7,
+                                    "order": 8,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -509,7 +556,7 @@
                                     "field_id": 189482,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 1,
+                                    "order": 2,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -518,7 +565,7 @@
                                     "field_id": 189483,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 13,
+                                    "order": 16,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -527,7 +574,7 @@
                                     "field_id": 189488,
                                     "width": 451,
                                     "hidden": false,
-                                    "order": 14,
+                                    "order": 18,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -536,7 +583,7 @@
                                     "field_id": 356416,
                                     "width": 206,
                                     "hidden": false,
-                                    "order": 5,
+                                    "order": 6,
                                     "aggregation_type": "average",
                                     "aggregation_raw_type": "average"
                                 },
@@ -545,7 +592,34 @@
                                     "field_id": 356425,
                                     "width": 196,
                                     "hidden": false,
-                                    "order": 6,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1110049,
+                                    "field_id": 767073,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1110102,
+                                    "field_id": 767126,
+                                    "width": 175,
+                                    "hidden": false,
+                                    "order": 15,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1110106,
+                                    "field_id": 767127,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 17,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 }
@@ -941,6 +1015,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 120362,
                             "card_cover_image_field_id": 120325,
                             "field_options": [
@@ -1070,6 +1145,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 120325,
                             "field_options": [
                                 {
@@ -1188,7 +1264,7 @@
                             "id": 1,
                             "order": "1.00000000000000000000",
                             "created_on": "2021-06-24T17:00:52.561938+00:00",
-                            "updated_on": "2021-11-03T03:24:47.573575+00:00",
+                            "updated_on": "2022-12-03T18:04:24.858410+00:00",
                             "field_120322": "10 Open Source Alternatives to Popular Apps",
                             "field_120325": [
                                 {
@@ -1226,10 +1302,13 @@
                                 20001,
                                 20002
                             ],
-                            "field_189483": "10-open-source-alternatives-popular-apps",
+                            "field_189483": "10-open-source-alternatives",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         },
                         {
                             "id": 2,
@@ -1270,13 +1349,16 @@
                             "field_189483": "self-hosting-crash-course",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         },
                         {
                             "id": 3,
                             "order": "3.00000000000000000000",
                             "created_on": "2021-06-24T17:06:08.876507+00:00",
-                            "updated_on": "2021-11-03T03:25:18.209547+00:00",
+                            "updated_on": "2022-12-03T18:03:23.192819+00:00",
                             "field_120322": "How Cloudron Makes Self-Hosting Easier",
                             "field_120325": [
                                 {
@@ -1305,16 +1387,19 @@
                             "field_189482": [
                                 19991
                             ],
-                            "field_189483": "self-host-with-cloudron",
+                            "field_189483": "self-host-cloudron",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         },
                         {
                             "id": 4,
                             "order": "4.00000000000000000000",
                             "created_on": "2021-06-24T17:06:09.211391+00:00",
-                            "updated_on": "2021-11-03T03:25:01.299968+00:00",
+                            "updated_on": "2022-12-03T18:03:16.244185+00:00",
                             "field_120322": "Automate Your Life Using Baserow and n8n",
                             "field_120325": [
                                 {
@@ -1347,10 +1432,13 @@
                                 19989,
                                 19993
                             ],
-                            "field_189483": "automate-your-life-using-baserow-n8n",
+                            "field_189483": "automate-using-baserow-n8n",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         },
                         {
                             "id": 5,
@@ -1393,13 +1481,16 @@
                             "field_189483": "top-open-source-password-managers",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         },
                         {
                             "id": 6,
                             "order": "6.00000000000000000000",
                             "created_on": "2021-06-24T17:06:10.746730+00:00",
-                            "updated_on": "2021-11-03T03:25:36.474824+00:00",
+                            "updated_on": "2022-12-03T18:03:42.766641+00:00",
                             "field_120322": "Privacy-invading Apps You Should Delete Now",
                             "field_120325": [
                                 {
@@ -1437,16 +1528,19 @@
                                 20006,
                                 20007
                             ],
-                            "field_189483": "delete-these-privacy-invading-apps",
+                            "field_189483": "privacy-invading-apps",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         },
                         {
                             "id": 7,
                             "order": "7.00000000000000000000",
                             "created_on": "2021-06-24T17:06:12.240358+00:00",
-                            "updated_on": "2021-11-03T03:25:28.280351+00:00",
+                            "updated_on": "2022-12-03T18:03:36.710627+00:00",
                             "field_120322": "How Facial Recognition is Being Misused and Abused",
                             "field_120325": [
                                 {
@@ -1479,10 +1573,13 @@
                                 19994,
                                 19995
                             ],
-                            "field_189483": "facial-recognition-abuse-misuse",
+                            "field_189483": "facial-recognition-misuse",
                             "field_189488": null,
                             "field_356416": null,
-                            "field_356425": null
+                            "field_356425": null,
+                            "field_767073": null,
+                            "field_767126": null,
+                            "field_767127": null
                         }
                     ]
                 },
@@ -1574,7 +1671,8 @@
                             "order": 9,
                             "primary": false,
                             "link_row_table_id": 22861,
-                            "link_row_related_field_id": 120329
+                            "link_row_related_field_id": 120329,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -1678,6 +1776,7 @@
                                 }
                             ],
                             "decorations": [],
+                            "public": false,
                             "card_cover_image_field_id": 110750,
                             "field_options": [
                                 {
@@ -1734,6 +1833,7 @@
                             "filters": [],
                             "sortings": [],
                             "decorations": [],
+                            "public": false,
                             "single_select_field_id": 110728,
                             "card_cover_image_field_id": 110750,
                             "field_options": [
@@ -1944,7 +2044,8 @@
                             "order": 6,
                             "primary": false,
                             "link_row_table_id": 22861,
-                            "link_row_related_field_id": 120405
+                            "link_row_related_field_id": 120405,
+                            "has_related_field": true
                         },
                         {
                             "id": 356383,

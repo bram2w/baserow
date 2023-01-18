@@ -4,6 +4,7 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import TableService from '@baserow/modules/database/services/table'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import { DATABASE_ACTION_SCOPES } from '@baserow/modules/database/utils/undoRedoConstants'
+import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 export function populateTable(table) {
   table._ = {
@@ -28,9 +29,10 @@ export const mutations = {
   UPDATE_ITEM(state, { table, values }) {
     Object.assign(table, table, values)
   },
-  ORDER_TABLES(state, { database, order }) {
+  ORDER_TABLES(state, { database, order, isHashed = false }) {
     database.tables.forEach((table) => {
-      const index = order.findIndex((value) => value === table.id)
+      const tableId = isHashed ? generateHash(table.id) : table.id
+      const index = order.findIndex((value) => value === tableId)
       table.order = index === -1 ? 0 : index + 1
     })
   },
@@ -148,13 +150,16 @@ export const actions = {
   /**
    * Updates the order of all the tables in a database.
    */
-  async order({ commit, getters }, { database, order, oldOrder }) {
-    commit('ORDER_TABLES', { database, order })
+  async order(
+    { commit, getters },
+    { database, order, oldOrder, isHashed = false }
+  ) {
+    commit('ORDER_TABLES', { database, order, isHashed })
 
     try {
       await TableService(this.$client).order(database.id, order)
     } catch (error) {
-      commit('ORDER_TABLES', { database, order: oldOrder })
+      commit('ORDER_TABLES', { database, order: oldOrder, isHashed })
       throw error
     }
   },

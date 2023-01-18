@@ -253,7 +253,9 @@
         "snapshotBeingRestoredTitle": "La sauvegarde est en cours de restauration",
         "maximumSnapshotsReachedDescription": "Le nombre maximum de sauvegardes d'un groupe a été atteint.",
         "disabledPasswordProviderMessage": "Veuillez utiliser un autre service d'authentification.",
-        "disabledPasswordProviderTitle": "L'authentification par mot de passe est désactivée."
+        "disabledPasswordProviderTitle": "L'authentification par mot de passe est désactivée.",
+        "lastAdminTitle": "Impossible de supprimer le dernier administrateur du groupe",
+        "lastAdminMessage": "Un groupe doit avoir au moins un administrateur."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",

@@ -89,3 +89,16 @@ def test_application_content_type_init(data_fixture):
 
     assert database.content_type.app_label == "database"
     assert database.content_type.model == "database"
+
+
+@pytest.mark.django_db
+def test_core_models_hierarchy(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    app = data_fixture.create_database_application(group=group, name="Test 1")
+
+    assert app.get_parent() == group
+    assert app.get_root() == group
+
+    assert group.get_parent() is None
+    assert group.get_root() == group

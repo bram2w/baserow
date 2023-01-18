@@ -1,8 +1,12 @@
 from typing import Optional, cast
 
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from baserow.core.action.registries import ActionScopeStr, ActionScopeType
+
+GROUP_CONTEXT = _('in group "%(group_name)s" (%(group_id)s).')
 
 
 class RootActionScopeType(ActionScopeType):

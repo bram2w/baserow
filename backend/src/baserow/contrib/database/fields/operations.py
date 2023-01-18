@@ -29,6 +29,10 @@ class DeleteFieldOperationType(FieldOperationType):
     type = "database.table.field.delete"
 
 
+class DeleteRelatedLinkRowFieldOperationType(DatabaseTableOperationType):
+    type = "database.table.field.delete_related_link_row_field"
+
+
 class RestoreFieldOperationType(FieldOperationType):
     type = "database.table.field.restore"
 

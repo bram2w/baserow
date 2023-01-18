@@ -69,6 +69,10 @@
   overflow: hidden;
 }
 
+.member-roles-members-list__role-selector {
+  display: flex;
+}
+
 .select-members-list__user-name {
   max-width: 400px;
   text-overflow: ellipsis;

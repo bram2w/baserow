@@ -115,7 +115,7 @@ export default {
         // If the tab or arrow keys are pressed we want to select the next field. This
         // is however out of the scope of this component so we emit the selectNext
         // event that the GridView can handle.
-        const { key, shiftKey, ctrlKey, metaKey } = event
+        const { key, shiftKey } = event
         const arrowKeysMapping = {
           ArrowLeft: 'selectPrevious',
           ArrowUp: 'selectAbove',
@@ -129,18 +129,13 @@ export default {
           } else if (key === 'Tab') {
             event.preventDefault()
             this.$emit(shiftKey ? 'selectPrevious' : 'selectNext')
-          } else if (key === 'Enter' && shiftKey) {
+          } else if (key === 'Enter' && shiftKey && !this.readOnly) {
             event.preventDefault()
+            event.preventFieldCellUnselect = true
+            this.$emit('add-row-after')
             this.$emit('selectBelow')
+            return
           }
-        }
-
-        // Copy the value to the clipboard if ctrl/cmd + c is pressed.
-        if ((ctrlKey || metaKey) && key === 'c' && this.canCopy(event)) {
-          this.copySelectionToClipboard(
-            [this.field],
-            [{ [`field_${this.field.id}`]: this.value }]
-          )
         }
 
         // Removes the value if the backspace/delete key is pressed.
@@ -161,8 +156,22 @@ export default {
       }
       document.body.addEventListener('keydown', this.$el.keyDownEvent)
 
+      this.$el.copyEventListener = async (event) => {
+        if (!this.canKeyDown(event) || !this.canCopy(event)) return
+
+        await this.copySelectionToClipboard(
+          Promise.resolve([
+            [this.field],
+            [{ [`field_${this.field.id}`]: this.value }],
+          ])
+        )
+        // prevent Safari from beeping since the window.getSelection() is empty
+        event.preventDefault()
+      }
+      document.addEventListener('copy', this.$el.copyEventListener)
+
       // Updates the value of the field when a user pastes something in the field.
-      this.$el.pasteEvent = async (event) => {
+      this.$el.pasteEventListener = async (event) => {
         if (!this.canPaste(event)) {
           return
         }
@@ -178,7 +187,6 @@ export default {
 
         try {
           const [data, jsonData] = await this.extractClipboardData(event)
-
           // A grid field cell can only handle one single value. We try to extract
           // that from the clipboard and update the cell, otherwise we emit the
           // paste event up.
@@ -207,7 +215,7 @@ export default {
           }
         } catch (e) {}
       }
-      document.addEventListener('paste', this.$el.pasteEvent)
+      document.addEventListener('paste', this.$el.pasteEventListener)
 
       this.clickTimestamp = new Date().getTime()
       this.select()
@@ -230,7 +238,8 @@ export default {
         this.$el.clickOutsideEventCancel()
       }
       document.body.removeEventListener('keydown', this.$el.keyDownEvent)
-      document.removeEventListener('paste', this.$el.pasteEvent)
+      document.removeEventListener('copy', this.$el.copyEventListener)
+      document.removeEventListener('paste', this.$el.pasteEventListener)
       this.beforeUnSelect()
       this.$emit('unselected', {})
     },

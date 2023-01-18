@@ -3,20 +3,34 @@
     class="select-list-footer"
     :class="{ 'select-list-footer--single': !showRoleSelector }"
   >
-    <div v-if="showRoleSelector">
+    <div v-if="showRoleSelector" class="select-list-footer__left-side">
       <RoleSelector v-model="roleSelected" :roles="roles" />
+      <HelpIcon
+        v-if="roleSelectedExposesData"
+        class="margin-left-1"
+        :tooltip="
+          $t('selectSubjectsListFooter.roleSelectorBuilderDataWarningTooltip')
+        "
+        is-warning
+      />
     </div>
-    <a
-      class="button"
-      :class="{ disabled: !inviteEnabled }"
-      @click="inviteEnabled ? $emit('invite', roleSelected) : null"
-      >{{
-        $t('selectSubjectsListFooter.invite', {
-          count,
-          type: subjectTypeLabel,
-        })
-      }}
-    </a>
+    <div>
+      <HelpIcon
+        :tooltip="$t('selectSubjectsListFooter.helpTooltip')"
+        class="margin-right-1"
+      ></HelpIcon>
+      <a
+        class="button"
+        :class="{ disabled: !inviteEnabled }"
+        @click="inviteEnabled ? $emit('invite', roleSelected) : null"
+        >{{
+          $t('selectSubjectsListFooter.invite', {
+            count,
+            type: subjectTypeLabel,
+          })
+        }}
+      </a>
+    </div>
   </div>
 </template>
 
@@ -73,6 +87,12 @@ export default {
     },
     inviteEnabled() {
       return this.count !== 0
+    },
+    roleSelectedExposesData() {
+      return (
+        ['ADMIN', 'BUILDER'].includes(this.roleSelected.uid) &&
+        this.scopeType === 'database_table'
+      )
     },
   },
   mounted() {

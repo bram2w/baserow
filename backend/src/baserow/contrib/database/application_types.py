@@ -81,17 +81,19 @@ class DatabaseApplicationType(ApplicationType):
                 field_type = field_type_registry.get_by_model(field)
                 serialized_fields.append(field_type.export_serialized(field))
 
+            table_cache: Dict[str, Any] = {}
+            if table.database.group is not None:
+                table_cache["group_id"] = table.database.group.id
             serialized_views = []
             for v in table.view_set.all():
                 view = v.specific
                 view_type = view_type_registry.get_by_model(view)
                 serialized_views.append(
-                    view_type.export_serialized(view, files_zip, storage)
+                    view_type.export_serialized(view, table_cache, files_zip, storage)
                 )
 
             model = table.get_model(fields=fields, add_dependencies=False)
             serialized_rows = []
-            table_cache: Dict[str, Any] = {}
             for row in model.objects.all():
                 serialized_row = DatabaseExportSerializedStructure.row(
                     id=row.id,
@@ -235,6 +237,9 @@ class DatabaseApplicationType(ApplicationType):
         if "database_tables" not in id_mapping:
             id_mapping["database_tables"] = {}
 
+        if "group_id" not in id_mapping and database.group is not None:
+            id_mapping["group_id"] = database.group.id
+
         imported_tables: List[Table] = []
 
         # First, we want to create all the table instances because it could be that
@@ -277,9 +282,18 @@ class DatabaseApplicationType(ApplicationType):
             field_type.import_serialized(external_table, serialized_field, id_mapping)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
+        # From each field we call after_import_serialized which will recursively
+        # be called on all of its dependants. This ensures that formulas recalculate
+        # themselves now that all fields exist.
         field_cache = FieldCache()
         for field_type, serialized_field in fields_excluding_reversed_linked_fields:
             field_type.after_import_serialized(serialized_field, field_cache)
+
+        # The loop above might have recalculated the formula fields in the list,
+        # we need to refresh the instances we have as a result as they might be stale.
+        for field_type, serialized_field in fields_excluding_reversed_linked_fields:
+            if field_type.needs_refresh_after_import_serialized:
+                serialized_field.refresh_from_db()
 
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.

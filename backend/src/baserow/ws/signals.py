@@ -1,7 +1,11 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 from django.dispatch import receiver
 
-from baserow.api.applications.serializers import get_application_serializer
+from baserow.api.applications.serializers import (
+    ApplicationSerializer,
+    get_application_serializer,
+)
 from baserow.api.groups.serializers import (
     GroupSerializer,
     GroupUserGroupSerializer,
@@ -10,9 +14,21 @@ from baserow.api.groups.serializers import (
 from baserow.api.user.serializers import PublicUserSerializer
 from baserow.core import signals
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser
+from baserow.core.models import Application, GroupUser
+from baserow.core.operations import (
+    ListApplicationsGroupOperationType,
+    ReadApplicationOperationType,
+)
+from baserow.core.registries import object_scope_type_registry
+from baserow.core.utils import generate_hash
 
-from .tasks import broadcast_to_group, broadcast_to_groups, broadcast_to_users
+from .tasks import (
+    broadcast_application_created,
+    broadcast_to_group,
+    broadcast_to_groups,
+    broadcast_to_permitted_users,
+    broadcast_to_users,
+)
 
 
 @receiver(signals.user_updated)
@@ -163,6 +179,22 @@ def group_restored(sender, group_user, user, **kwargs):
     groupuser_groups = (
         CoreHandler().get_groupuser_group_queryset().get(id=group_user.id)
     )
+
+    applications_qs = group_user.group.application_set.select_related(
+        "content_type", "group"
+    ).all()
+    applications_qs = CoreHandler().filter_queryset(
+        group_user.user,
+        ListApplicationsGroupOperationType.type,
+        applications_qs,
+        group=group_user.group,
+        context=group_user.group,
+    )
+    applications = [
+        get_application_serializer(application, context={"user": group_user.user}).data
+        for application in applications_qs
+    ]
+
     transaction.on_commit(
         lambda: broadcast_to_users.delay(
             [group_user.user_id],
@@ -170,12 +202,7 @@ def group_restored(sender, group_user, user, **kwargs):
                 "type": "group_restored",
                 "group_id": group_user.group_id,
                 "group": GroupUserGroupSerializer(groupuser_groups).data,
-                "applications": [
-                    get_application_serializer(application).data
-                    for application in group_user.group.application_set.select_related(
-                        "content_type", "group"
-                    ).all()
-                ],
+                "applications": applications,
             },
             getattr(user, "web_socket_id", None),
         )
@@ -196,26 +223,26 @@ def groups_reordered(sender, group_ids, user, **kwargs):
 @receiver(signals.application_created)
 def application_created(sender, application, user, **kwargs):
     transaction.on_commit(
-        lambda: broadcast_to_group.delay(
-            application.group_id,
-            {
-                "type": "application_created",
-                "application": get_application_serializer(application).data,
-            },
-            getattr(user, "web_socket_id", None),
+        lambda: broadcast_application_created.delay(
+            application.id, getattr(user, "web_socket_id", None)
         )
     )
 
 
 @receiver(signals.application_updated)
-def application_updated(sender, application, user, **kwargs):
+def application_updated(sender, application: Application, user: AbstractUser, **kwargs):
+    scope_type = object_scope_type_registry.get_by_model(application.specific)
+
     transaction.on_commit(
-        lambda: broadcast_to_group.delay(
+        lambda: broadcast_to_permitted_users.delay(
             application.group_id,
+            ReadApplicationOperationType.type,
+            scope_type.type,
+            application.id,
             {
                 "type": "application_updated",
                 "application_id": application.id,
-                "application": get_application_serializer(application).data,
+                "application": ApplicationSerializer(application).data,
             },
             getattr(user, "web_socket_id", None),
         )
@@ -224,9 +251,14 @@ def application_updated(sender, application, user, **kwargs):
 
 @receiver(signals.application_deleted)
 def application_deleted(sender, application_id, application, user, **kwargs):
+    scope_type = object_scope_type_registry.get_by_model(application.specific)
+
     transaction.on_commit(
-        lambda: broadcast_to_group.delay(
+        lambda: broadcast_to_permitted_users.delay(
             application.group_id,
+            ReadApplicationOperationType.type,
+            scope_type.type,
+            application.id,
             {"type": "application_deleted", "application_id": application_id},
             getattr(user, "web_socket_id", None),
         )
@@ -235,6 +267,9 @@ def application_deleted(sender, application_id, application, user, **kwargs):
 
 @receiver(signals.applications_reordered)
 def applications_reordered(sender, group, order, user, **kwargs):
+    # Hashing all values here to not expose real ids of applications a user might not
+    # have access to
+    order = [generate_hash(o) for o in order]
     transaction.on_commit(
         lambda: broadcast_to_group.delay(
             group.id,

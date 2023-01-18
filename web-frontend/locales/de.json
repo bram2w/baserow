@@ -253,7 +253,9 @@
         "snapshotNameNotUniqueTitle": "Der Name des Snapshots muss eindeutig sein.",
         "snapshotOperationLimitExceededDescription": "Sie haben ein Limit für die Anzahl der laufenden Snapshot-Vorgänge erreicht. Bitte warten Sie, bis der vorherige Vorgang abgeschlossen ist.",
         "disabledPasswordProviderMessage": "Bitte verwenden Sie einen anderen Authentifizierungsanbieter.",
-        "disabledPasswordProviderTitle": "Die Passwortauthentifizierung ist deaktiviert."
+        "disabledPasswordProviderTitle": "Die Passwortauthentifizierung ist deaktiviert.",
+        "lastAdminMessage": "Eine Gruppe muss mindestens einen Administrator haben.",
+        "lastAdminTitle": "Kann den letzten Gruppenadmin nicht entfernen"
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",

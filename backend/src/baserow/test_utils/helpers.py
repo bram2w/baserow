@@ -411,8 +411,8 @@ def assert_undo_redo_actions_are_valid(
         ), f"Action expected of type {expected_action_type} but got {action.type}"
         assert (
             action is not None
-        ), "Action is None, but should be of type {expected_action_type}"
-        assert action.error is None, "Action has error: {action.error}"
+        ), f"Action is None, but should be of type {expected_action_type}"
+        assert action.error is None, f"Action has error: {action.error}"
 
 
 def assert_undo_redo_actions_fails_with_error(
@@ -421,7 +421,7 @@ def assert_undo_redo_actions_fails_with_error(
     assert actions, "Actions list should not be empty"
 
     for action, expected_action_type in zip(actions, expected_action_types):
-        assert action, "Action is None, but should be of type {expected_action_type}"
+        assert action, f"Action is None, but should be of type {expected_action_type}"
         assert action.error is not None, "Action has no error, but should have one"
 
 

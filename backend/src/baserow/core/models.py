@@ -9,7 +9,11 @@ from django.db.models import Q, UniqueConstraint
 
 from rest_framework.exceptions import NotAuthenticated
 
-from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.mixins import (
+    JobWithUndoRedoIds,
+    JobWithUserIpAddress,
+    JobWithWebsocketId,
+)
 from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
@@ -17,6 +21,7 @@ from .action.models import Action
 from .exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
 from .mixins import (
     CreatedAndUpdatedOnMixin,
+    HierarchicalModelMixin,
     OrderableMixin,
     ParentGroupTrashableModelMixin,
     PolymorphicContentTypeMixin,
@@ -81,6 +86,10 @@ class Settings(models.Model):
         default=True,
         help_text="Indicates whether users can request a password reset link.",
     )
+    allow_global_group_creation = models.BooleanField(
+        default=True,
+        help_text="Indicates whether all users can create groups, or just staff.",
+    )
     account_deletion_grace_delay = models.PositiveSmallIntegerField(
         default=30,
         help_text=(
@@ -116,11 +125,14 @@ class UserProfile(models.Model):
     )
 
 
-class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
+class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=160)
     users = models.ManyToManyField(User, through="GroupUser")
     storage_usage = models.IntegerField(null=True)
     storage_usage_updated_at = models.DateTimeField(null=True)
+
+    def get_parent(self):
+        return None
 
     def application_set_including_trash(self):
         """
@@ -281,6 +293,7 @@ class GroupInvitation(
     )
     message = models.TextField(
         blank=True,
+        max_length=250,
         help_text="An optional message that the invitor can provide. This will be "
         "visible to the receiver of the invitation.",
     )
@@ -290,6 +303,7 @@ class GroupInvitation(
 
 
 class Application(
+    HierarchicalModelMixin,
     TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
@@ -319,6 +333,9 @@ class Application(
     def get_last_order(cls, group):
         queryset = Application.objects.filter(group=group)
         return cls.get_highest_order_of_queryset(queryset) + 1
+
+    def get_parent(self):
+        return self.group
 
 
 class TemplateCategory(models.Model):
@@ -451,7 +468,9 @@ class TrashEntry(models.Model):
         ]
 
 
-class DuplicateApplicationJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+class DuplicateApplicationJob(
+    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+):
 
     original_application = models.ForeignKey(
         Application,
@@ -469,7 +488,7 @@ class DuplicateApplicationJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
     )
 
 
-class Snapshot(models.Model):
+class Snapshot(HierarchicalModelMixin, models.Model):
     name = models.CharField(max_length=160)
     snapshot_from_application = models.ForeignKey(
         Application, on_delete=models.CASCADE, null=False, related_name="snapshot_to"
@@ -484,8 +503,13 @@ class Snapshot(models.Model):
     class Meta:
         unique_together = ("name", "snapshot_from_application")
 
+    def get_parent(self):
+        return self.snapshot_from_application
 
-class InstallTemplateJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+
+class InstallTemplateJob(
+    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+):
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,

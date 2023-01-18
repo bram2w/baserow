@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework.permissions import IsAdminUser
@@ -5,28 +7,38 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import (
+    ERROR_INVALID_FILTER_ATTRIBUTE,
     ERROR_INVALID_SORT_ATTRIBUTE,
     ERROR_INVALID_SORT_DIRECTION,
 )
 from baserow.api.exceptions import (
+    InvalidFilterAttributeException,
     InvalidSortAttributeException,
     InvalidSortDirectionException,
 )
-from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
+from baserow.api.mixins import (
+    FilterableViewMixin,
+    SearchableViewMixin,
+    SortableViewMixin,
+)
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 
 
-class AdminListingView(APIView, SearchableViewMixin, SortableViewMixin):
+class AdminListingView(
+    APIView, SearchableViewMixin, SortableViewMixin, FilterableViewMixin
+):
     permission_classes = (IsAdminUser,)
     serializer_class = None
-    search_fields = ["id"]
-    sort_field_mapping = {}
+    search_fields: List[str] = ["id"]
+    filters_field_mapping: Dict[str, str] = {}
+    sort_field_mapping: Dict[str, str] = {}
 
     @map_exceptions(
         {
             InvalidSortDirectionException: ERROR_INVALID_SORT_DIRECTION,
             InvalidSortAttributeException: ERROR_INVALID_SORT_ATTRIBUTE,
+            InvalidFilterAttributeException: ERROR_INVALID_FILTER_ATTRIBUTE,
         }
     )
     def get(self, request):
@@ -37,10 +49,12 @@ class AdminListingView(APIView, SearchableViewMixin, SortableViewMixin):
 
         search = request.GET.get("search")
         sorts = request.GET.get("sorts")
+        filters = self.parse_filters(request.GET.get("filters"))
 
         queryset = self.get_queryset(request)
-        queryset = self.apply_sorts_or_default_sort(sorts, queryset)
+        queryset = self.apply_filters(filters, queryset)
         queryset = self.apply_search(search, queryset)
+        queryset = self.apply_sorts_or_default_sort(sorts, queryset)
 
         paginator = PageNumberPagination(limit_page_size=100)
         page = paginator.paginate_queryset(queryset, request, self)

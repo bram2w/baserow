@@ -128,6 +128,28 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         if shouldnt_ignore and (self.scope["user"].id in user_ids or send_to_all_users):
             await self.send_json(payload)
 
+    async def broadcast_to_users_individual_payloads(self, event):
+        """
+        Accepts a payload mapping and sends the payload as JSON if the user_id of the
+        consumer is part of the mapping provided
+
+        :param event: The event containing the payload mapping
+        """
+
+        web_socket_id = self.scope["web_socket_id"]
+
+        payload_map = event["payload_map"]
+        ignore_web_socket_id = event["ignore_web_socket_id"]
+
+        user_id = str(self.scope["user"].id)
+
+        shouldnt_ignore = (
+            not ignore_web_socket_id or ignore_web_socket_id != web_socket_id
+        )
+
+        if shouldnt_ignore and user_id in payload_map:
+            await self.send_json(payload_map[user_id])
+
     async def broadcast_to_group(self, event):
         """
         Broadcasts a message to all the users that are in the provided group name.

@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import logging
 import os
 import re
 from decimal import Decimal
@@ -27,6 +28,7 @@ else:
     BASEROW_PLUGIN_FOLDERS = []
 
 BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
+BASEROW_BUILT_IN_PLUGINS = ["baserow_premium", "baserow_enterprise"]
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -59,8 +61,7 @@ INSTALLED_APPS = [
     "baserow.api",
     "baserow.ws",
     "baserow.contrib.database",
-    "baserow_premium",
-    "baserow_enterprise",
+    *BASEROW_BUILT_IN_PLUGINS,
 ]
 
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
@@ -316,7 +317,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.13.3",
+    "VERSION": "1.14.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -556,8 +557,8 @@ MAX_FIELD_LIMIT = 1500
 
 # If you change this default please also update the default for the web-frontend found
 # in web-frontend/modules/core/module.js:55
-HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = os.getenv(
-    "HOURS_UNTIL_TRASH_PERMANENTLY_DELETED", 24 * 3
+HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = int(
+    os.getenv("HOURS_UNTIL_TRASH_PERMANENTLY_DELETED", 24 * 3)
 )
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
 
@@ -667,7 +668,8 @@ if "*" in FEATURE_FLAGS:
     FEATURE_FLAGS = Everything()
 
 PERMISSION_MANAGERS = os.getenv(
-    "BASEROW_PERMISSION_MANAGERS", "core,staff,member,token,role,basic"
+    "BASEROW_PERMISSION_MANAGERS",
+    "core,setting_operation,staff,member,token,role,basic",
 ).split(",")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
@@ -762,10 +764,10 @@ class AttrDict(dict):
         return super().__getitem__(item)
 
     def __setattr__(self, item, value):
-        return super().__setitem__(item, value)
+        globals()[item] = value
 
 
-for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
+for plugin in [*BASEROW_BUILT_IN_PLUGINS, *BASEROW_BACKEND_PLUGIN_NAMES]:
     try:
         mod = importlib.import_module(plugin + ".config.settings.settings")
         # The plugin should have a setup function which accepts a 'settings' object.
@@ -773,4 +775,5 @@ for plugin in BASEROW_BACKEND_PLUGIN_NAMES:
         # plugin can access the Django settings and modify them prior to startup.
         result = mod.setup(AttrDict(vars()))
     except ImportError:
-        pass
+        logger = logging.getLogger(__name__)
+        logger.warning("Could not import %s", plugin)

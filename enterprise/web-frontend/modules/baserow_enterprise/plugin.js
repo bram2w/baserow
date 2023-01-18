@@ -1,6 +1,6 @@
 import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
 import { RolePermissionManagerType } from '@baserow_enterprise/permissionManagerTypes'
-import { AuthProvidersType } from '@baserow_enterprise/adminTypes'
+import { AuthProvidersType, AuditLogType } from '@baserow_enterprise/adminTypes'
 import authProviderAdminStore from '@baserow_enterprise/store/authProviderAdmin'
 import { PasswordAuthProviderType as CorePasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
 import {
@@ -66,6 +66,8 @@ export default (context) => {
     'authProvider',
     new OpenIdConnectAuthProviderType(context)
   )
+
+  app.$registry.register('admin', new AuditLogType(context))
   app.$registry.register('plugin', new EnterprisePlugin(context))
 
   registerRealtimeEvents(app.$realtime)
@@ -75,12 +77,10 @@ export default (context) => {
     new EnterpriseMembersPagePluginType(context)
   )
 
-  if (app.$featureFlagIsEnabled('RBAC')) {
-    app.$registry.register(
-      'groupSettingsPage',
-      new TeamsGroupSettingsPageType(context)
-    )
-  }
+  app.$registry.register(
+    'groupSettingsPage',
+    new TeamsGroupSettingsPageType(context)
+  )
 
   app.$registry.register(
     'license',

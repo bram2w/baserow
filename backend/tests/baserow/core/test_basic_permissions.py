@@ -1,6 +1,7 @@
 import inspect
 
 from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q, QuerySet
 from django.test.utils import override_settings
 
 import pytest
@@ -217,3 +218,17 @@ def test_all_scope_types_referenced_by_operations_are_registered():
     ) + " or somehow the following context types are registered but not subclasses?: " + str(
         object_scope_types.difference(all_op_context_types)
     )
+
+
+@pytest.mark.django_db
+def test_all_scope_types_query_methods():
+    all_scope_type = object_scope_type_registry.get_all()
+
+    for scope_type in all_scope_type:
+        if scope_type.type == "core":
+            continue
+
+        assert isinstance(scope_type.get_enhanced_queryset(), QuerySet)
+
+        for parent in scope_type.get_parent_scopes():
+            assert isinstance(scope_type.get_filter_for_scope_type(parent, []), Q)

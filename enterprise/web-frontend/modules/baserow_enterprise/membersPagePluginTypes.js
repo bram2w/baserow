@@ -18,22 +18,20 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
       context
     )
 
-    if (this.app.$featureFlagIsEnabled('RBAC')) {
-      const roleColumnIndex = columns.findIndex(
-        (column) => column.key === 'permissions'
-      )
-      const teamsColumn = new CrudTableColumn(
-        'teams',
-        this.app.i18n.t('membersSettings.membersTable.columns.teams'),
-        UserTeamsField,
-        false,
-        false,
-        false,
-        {},
-        20
-      )
-      columns.splice(roleColumnIndex, 0, teamsColumn)
-    }
+    const roleColumnIndex = columns.findIndex(
+      (column) => column.key === 'permissions'
+    )
+    const teamsColumn = new CrudTableColumn(
+      'teams',
+      this.app.i18n.t('membersSettings.membersTable.columns.teams'),
+      UserTeamsField,
+      false,
+      false,
+      false,
+      {},
+      20
+    )
+    columns.splice(roleColumnIndex, 0, teamsColumn)
 
     return columns
   }
@@ -68,7 +66,8 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
           false,
           {
             groupId: group.id,
-          }
+          },
+          this.app.i18n.t('membersPagePlugin.roleHelpText')
         )
       )
     }

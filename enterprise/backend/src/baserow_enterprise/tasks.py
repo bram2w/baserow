@@ -2,6 +2,10 @@ from baserow.config.celery import app
 from baserow.contrib.database.table.tasks import (
     unsubscribe_subject_from_tables_currently_subscribed_to,
 )
+from baserow_enterprise.audit_log.tasks import (
+    clean_up_audit_log_entries,
+    setup_periodic_tasks,
+)
 
 
 @app.task(bind=True)
@@ -34,3 +38,6 @@ def unsubscribe_subject_from_tables_currently_subscribed_to_task(
         group_id,
         RolePermissionManagerType(),
     )
+
+
+__all__ = ["clean_up_audit_log_entries", "setup_periodic_tasks"]

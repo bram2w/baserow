@@ -19,9 +19,6 @@ def load_valid_idp_metadata_and_response():
 
 
 class SamlFixture:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def get_test_saml_idp_metadata(self):
         return load_test_idp_metadata()
 

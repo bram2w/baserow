@@ -529,7 +529,8 @@
                             "order": 14,
                             "primary": false,
                             "link_row_table_id": 76147,
-                            "link_row_related_field_id": 462909
+                            "link_row_related_field_id": 462909,
+                            "has_related_field": true
                         },
                         {
                             "id": 462912,
@@ -538,7 +539,8 @@
                             "order": 15,
                             "primary": false,
                             "link_row_table_id": 76147,
-                            "link_row_related_field_id": 462911
+                            "link_row_related_field_id": 462911,
+                            "has_related_field": true
                         },
                         {
                             "id": 464999,
@@ -1436,6 +1438,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "card_cover_image_field_id": 462805,
                             "field_options": [
                                 {
@@ -1581,6 +1584,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462813,
                             "card_cover_image_field_id": 462805,
                             "field_options": [
@@ -1727,6 +1731,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462806,
                             "card_cover_image_field_id": 462805,
                             "field_options": [
@@ -1873,6 +1878,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462822,
                             "card_cover_image_field_id": 462805,
                             "field_options": [
@@ -2005,7 +2011,10 @@
                                     "description": "Please enter the freelancer's full name.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 0
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32043,
@@ -2014,7 +2023,10 @@
                                     "description": "Select the freelancer's skill level.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 1
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32044,
@@ -2023,7 +2035,10 @@
                                     "description": "Please identify the freelancer's preferred or prioritized field of work.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 2
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32045,
@@ -2032,7 +2047,10 @@
                                     "description": "Select all skills where this freelancer is most confident.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32047,
@@ -2041,7 +2059,10 @@
                                     "description": "Please provide the freelancer's hourly rate in the given field below.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32046,
@@ -2050,7 +2071,10 @@
                                     "description": "Please select the freelancer's current geographical location.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32050,
@@ -2059,7 +2083,10 @@
                                     "description": "Enter the freelancer's current phone number.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 6
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32049,
@@ -2068,7 +2095,10 @@
                                     "description": "Enter the freelancer's current email address.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 7
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32051,
@@ -2077,7 +2107,10 @@
                                     "description": "Enter the freelancer's website or portfolio URL.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32057,
@@ -2086,7 +2119,10 @@
                                     "description": "Rate this talent.",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 9
+                                    "order": 9,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32054,
@@ -2095,7 +2131,10 @@
                                     "description": "Enter any notes or remarks about this freelancer.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 10
+                                    "order": 10,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32042,
@@ -2104,7 +2143,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 11
+                                    "order": 11,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32048,
@@ -2113,7 +2155,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 12
+                                    "order": 12,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32052,
@@ -2122,7 +2167,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 13
+                                    "order": 13,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32053,
@@ -2131,7 +2179,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 14
+                                    "order": 14,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32055,
@@ -2140,7 +2191,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 15
+                                    "order": 15,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32056,
@@ -2149,7 +2203,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 16
+                                    "order": 16,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -3252,7 +3309,8 @@
                             "order": 13,
                             "primary": false,
                             "link_row_table_id": 76147,
-                            "link_row_related_field_id": 462812
+                            "link_row_related_field_id": 462812,
+                            "has_related_field": true
                         }
                     ],
                     "views": [
@@ -3810,6 +3868,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462865,
                             "field_options": [
                                 {
@@ -3931,6 +3990,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462866,
                             "field_options": [
                                 {
@@ -4038,7 +4098,10 @@
                                     "description": "Please enter the client's business name.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 0
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32059,
@@ -4047,7 +4110,10 @@
                                     "description": "Enter a brief description of this client.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 1
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32061,
@@ -4056,7 +4122,10 @@
                                     "description": "Please select the industry to which this client belongs.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 2
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32062,
@@ -4065,7 +4134,10 @@
                                     "description": "Please indicate the client's company size from the selection below.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 3
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32063,
@@ -4074,7 +4146,10 @@
                                     "description": "Please provide the main contact person for this client.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32065,
@@ -4083,7 +4158,10 @@
                                     "description": "Enter the contact person's current phone number.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 5
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32064,
@@ -4092,7 +4170,10 @@
                                     "description": "Enter the contact person's email address.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32066,
@@ -4101,7 +4182,10 @@
                                     "description": "Enter the client's business website URL.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32067,
@@ -4110,7 +4194,10 @@
                                     "description": "Enter the client's business address.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32069,
@@ -4119,7 +4206,10 @@
                                     "description": "Write notes or remarks about this client.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32060,
@@ -4128,7 +4218,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 10
+                                    "order": 10,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32068,
@@ -4137,7 +4230,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 11
+                                    "order": 11,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32070,
@@ -4146,7 +4242,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 12
+                                    "order": 12,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         }
@@ -4551,7 +4650,8 @@
                             "order": 2,
                             "primary": false,
                             "link_row_table_id": 76146,
-                            "link_row_related_field_id": 462880
+                            "link_row_related_field_id": 462880,
+                            "has_related_field": true
                         },
                         {
                             "id": 462884,
@@ -4783,7 +4883,8 @@
                             "order": 10,
                             "primary": false,
                             "link_row_table_id": 76145,
-                            "link_row_related_field_id": 462910
+                            "link_row_related_field_id": 462910,
+                            "has_related_field": true
                         },
                         {
                             "id": 462911,
@@ -4792,7 +4893,8 @@
                             "order": 11,
                             "primary": false,
                             "link_row_table_id": 76145,
-                            "link_row_related_field_id": 462912
+                            "link_row_related_field_id": 462912,
+                            "has_related_field": true
                         },
                         {
                             "id": 462913,
@@ -4865,7 +4967,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "minus(\n  field(\"Budget\"), \n  tonumber(join(totext(field(\"Estimated freelancer cost\")), \"\"))\n)",
+                            "formula": "minus(\n  field(\"Budget\"), \n  field(\"Estimated freelancer cost\") \n)",
                             "formula_type": "number"
                         },
                         {
@@ -4911,8 +5013,20 @@
                                                 "color": "light-red",
                                                 "filters": [
                                                     {
-                                                        "id": "1254d46a-cd76-4324-a27e-f3a21175cafc",
+                                                        "id": "a85d889e-b265-4b8e-ac79-03677cf83041",
                                                         "type": "lower_than",
+                                                        "field": 463127,
+                                                        "value": "0"
+                                                    }
+                                                ],
+                                                "operator": "AND"
+                                            },
+                                            {
+                                                "color": "light-orange",
+                                                "filters": [
+                                                    {
+                                                        "id": "161733c5-b8c9-49ae-92c7-fa576699c602",
+                                                        "type": "equal",
                                                         "field": 463127,
                                                         "value": "0"
                                                     }
@@ -5084,10 +5198,10 @@
                                     "id": 591672,
                                     "field_id": 463127,
                                     "width": 134,
-                                    "hidden": true,
+                                    "hidden": false,
                                     "order": 11,
-                                    "aggregation_type": "sum",
-                                    "aggregation_raw_type": "sum"
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 596826,
@@ -5125,7 +5239,10 @@
                                     "description": "Please enter the project's title, which will serve as a unique identifier for this project.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 0
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32114,
@@ -5134,7 +5251,10 @@
                                     "description": "Choose the project's main category based on the related industry.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 1
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32112,
@@ -5143,7 +5263,10 @@
                                     "description": "Enter the project's description or the project's detailed instructions.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 2
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32113,
@@ -5152,7 +5275,10 @@
                                     "description": "Select the client this project is for.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 3
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32115,
@@ -5161,7 +5287,10 @@
                                     "description": "Please select the project's current status.",
                                     "enabled": true,
                                     "required": true,
-                                    "order": 4
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32116,
@@ -5170,7 +5299,10 @@
                                     "description": "The start date of the project's implementation.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 5
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32117,
@@ -5179,7 +5311,10 @@
                                     "description": "The project's expected time of completion.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 6
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32118,
@@ -5188,7 +5323,10 @@
                                     "description": "The client's budget for this project.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 7
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32120,
@@ -5197,7 +5335,10 @@
                                     "description": "Choose the region in which this project will be based.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 8
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32121,
@@ -5206,7 +5347,10 @@
                                     "description": "Select the project's team leader.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 9
+                                    "order": 9,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32122,
@@ -5215,7 +5359,10 @@
                                     "description": "Select the professional(s) working for this project.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 10
+                                    "order": 10,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32125,
@@ -5224,7 +5371,10 @@
                                     "description": "Please write down any notes or remarks about this project.",
                                     "enabled": true,
                                     "required": false,
-                                    "order": 11
+                                    "order": 11,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32119,
@@ -5233,7 +5383,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 12
+                                    "order": 12,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32123,
@@ -5242,7 +5395,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 13
+                                    "order": 13,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32124,
@@ -5251,7 +5407,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 14
+                                    "order": 14,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32126,
@@ -5260,7 +5419,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 15
+                                    "order": 15,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32127,
@@ -5269,7 +5431,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 16
+                                    "order": 16,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32128,
@@ -5278,7 +5443,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 17
+                                    "order": 17,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 },
                                 {
                                     "id": 32129,
@@ -5287,7 +5455,10 @@
                                     "description": "",
                                     "enabled": false,
                                     "required": true,
-                                    "order": 18
+                                    "order": 18,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
                                 }
                             ]
                         },
@@ -5309,14 +5480,7 @@
                                         "colors": [
                                             {
                                                 "color": "light-red",
-                                                "filters": [
-                                                    {
-                                                        "id": "713a9f19-a523-428f-851f-abd48c62c663",
-                                                        "type": "lower_than",
-                                                        "field": 463127,
-                                                        "value": "0"
-                                                    }
-                                                ],
+                                                "filters": [],
                                                 "operator": "OR"
                                             }
                                         ]
@@ -5324,6 +5488,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462889,
                             "field_options": [
                                 {
@@ -5460,14 +5625,7 @@
                                         "colors": [
                                             {
                                                 "color": "light-red",
-                                                "filters": [
-                                                    {
-                                                        "id": "77490d22-0c32-4e58-be8d-9ac02730b8c4",
-                                                        "type": "lower_than",
-                                                        "field": 463127,
-                                                        "value": "0"
-                                                    }
-                                                ],
+                                                "filters": [],
                                                 "operator": "AND"
                                             }
                                         ]
@@ -5475,6 +5633,7 @@
                                     "order": 1
                                 }
                             ],
+                            "public": false,
                             "single_select_field_id": 462884,
                             "field_options": [
                                 {

@@ -7,7 +7,7 @@
   >
     <GridViewRow
       v-for="(row, index) in rows"
-      :key="`row-${row.id}`"
+      :key="`row-${row._.persistentId}`"
       :view="view"
       :group-id="groupId"
       :row="row"

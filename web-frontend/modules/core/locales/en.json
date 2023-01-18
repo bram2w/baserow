@@ -129,7 +129,8 @@
     "groupInviteForm": {
         "invitationFormTitle": "Invite by email",
         "optionalMessagePlaceholder": "Optional message",
-        "errorInvalidEmail": "Please enter a valid e-mail address."
+        "errorInvalidEmail": "Please enter a valid e-mail address.",
+        "errorTooLongMessage": "Messages are limited to {amount} characters."
     },
     "groupsContext": {
         "search": "Search groups",
@@ -146,7 +147,9 @@
     "createGroupModal": {
         "createNew": "Create new group",
         "defaultName": "Untitled Group",
-        "add": "Add group"
+        "add": "Add group",
+        "permissionDeniedTitle": "Permission denied",
+        "permissionDeniedBody": "You do not have the required permission to create a new group."
     },
     "templateCategories": {
         "search": "Search templates",
@@ -184,7 +187,8 @@
     },
     "trashModal": {
         "emptyTitle": "No groups found",
-        "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group."
+        "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
+        "emptyMessageWithoutCreatePermission": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you will need to be invited to a group by an administrator first."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Upload from a URL",
@@ -254,6 +258,11 @@
         "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
         "failed": "Failed"
     },
+    "permissionsUpdatedNotification": {
+        "title": "Permissions updated",
+        "content": "This might affect what you have access to, please reload the page.",
+        "action": "Reload"
+    },
     "errorLayout": {
         "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
         "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",
@@ -270,6 +279,7 @@
         "redditTitle": "'Baserow - An open source no-code database",
         "noGroupTitle": "No groups found",
         "noGroupText": "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
+        "noGroupTextWithoutCreatePermission":  "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you will need to be invited to a group by an administrator first.",
         "createGroup": "Create group",
         "becomeGithubSponsor": "Become a GitHub sponsor",
         "starOnGitlab": "Star us on GitLab",
@@ -345,6 +355,9 @@
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",
         "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
+        "settingAllowNonStaffCreateGroupOperation":  "Allow everyone to create new groups",
+        "settingAllowNonStaffCreateGroupOperationDescription":  "By default, everyone can create new groups. Disable this to only allow staff to create new groups.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "With this setting enabled, new users will have a group automatically created for them where they are an Admin, so for billing purposes they will be reported as an Admin. To prevent this, disable this setting and newly invited users will only start with the role they were invited with.",
         "userDeletionGraceDelay": "User deletion",
         "settingUserDeletionGraceDelay": "Grace delay",
         "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
@@ -426,6 +439,9 @@
         "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
     },
     "datetime": {
+        "secondsAgo": "Just now | 1 second ago | {n} seconds ago",
+        "minutesAgo": "0 minutes ago | 1 minute ago | {n} minutes ago",
+        "hoursAgo": "0 hours ago | 1 hour ago | {n} hours ago",
         "daysAgo": "0 days ago | 1 day ago | {n} days ago",
         "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
         "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
@@ -465,6 +481,7 @@
         "membersInviteModal": {
             "title": "Invite group members",
             "submit": "Send invite",
+            "helpIconText": "The selected role will be the users default role in this group.",
             "errors": {
                 "userAlreadyInGroup": {
                     "title": "User is already in the group.",
@@ -478,11 +495,16 @@
         "selectedAmountLabel": "{count} selected"
     },
     "memberAssignmentModalFooter": {
-        "invite": "Invite {count}"
+        "invite": "Invite {count}",
+        "deselectAll": "Deselect all",
+        "selectAll": "Select all"
     },
     "removeFromGroupModal": {
         "title": "Confirm removal from group",
         "confirmation": "Are you sure you want to remove {name} from {group_name}? This action cannot be undone.",
         "remove": "Remove"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "Billable roles documentation"
     }
 }

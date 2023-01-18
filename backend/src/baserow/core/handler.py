@@ -3,7 +3,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any, Dict, List, NewType, Optional, Tuple, TypedDict, cast
+from typing import IO, Any, Dict, List, NewType, Optional, Set, Tuple, TypedDict, cast
 from urllib.parse import urljoin, urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -34,6 +34,7 @@ from .exceptions import (
     GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
     InvalidPermissionContext,
+    LastAdminOfGroup,
     PermissionDenied,
     PermissionException,
     TemplateDoesNotExist,
@@ -92,7 +93,12 @@ from .signals import (
 )
 from .trash.handler import TrashHandler
 from .types import ContextObject
-from .utils import ChildProgressBuilder, find_unused_name, set_allowed_attrs
+from .utils import (
+    ChildProgressBuilder,
+    atomic_if_not_already,
+    find_unused_name,
+    set_allowed_attrs,
+)
 
 User = get_user_model()
 
@@ -146,6 +152,7 @@ class CoreHandler:
                 "allow_new_signups",
                 "allow_signups_via_group_invitations",
                 "allow_reset_password",
+                "allow_global_group_creation",
                 "account_deletion_grace_delay",
             ],
             settings_instance,
@@ -345,6 +352,21 @@ class CoreHandler:
 
         return queryset
 
+    def get_user_ids_of_permitted_users(
+        self, users: List[AbstractUser], operation_name: str, group: Group, context=None
+    ) -> Set[int]:
+
+        permitted_user_ids = set()
+
+        # TODO replace with batch check_permission once it's implemented
+        for user in users:
+            if self.check_permissions(
+                user, operation_name, group, context, raise_error=False
+            ):
+                permitted_user_ids.add(user.id)
+
+        return permitted_user_ids
+
     def get_group_for_update(self, group_id: int) -> GroupForUpdate:
         return cast(
             GroupForUpdate,
@@ -402,11 +424,9 @@ class CoreHandler:
         :return: The newly created GroupUser object
         """
 
-        group = Group.objects.create(name=name)
+        CoreHandler().check_permissions(user, CreateGroupOperationType.type)
 
-        CoreHandler().check_permissions(
-            user, CreateGroupOperationType.type, group=group
-        )
+        group = Group.objects.create(name=name)
 
         last_order = GroupUser.get_last_order(user)
         group_user = GroupUser.objects.create(
@@ -632,11 +652,21 @@ class CoreHandler:
         sending all the appropriate signals that an update has been done.
         """
 
-        before_group_user_updated.send(self, group_user=group_user, **kwargs)
-        group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
-        group_user.save()
-        group_user_updated.send(self, group_user=group_user, user=user)
-        return group_user
+        with atomic_if_not_already():
+            if kwargs["permissions"] != "ADMIN":
+                CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
+
+            before_group_user_updated.send(self, group_user=group_user, **kwargs)
+            permissions_before = group_user.permissions
+            group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
+            group_user.save()
+            group_user_updated.send(
+                self,
+                group_user=group_user,
+                user=user,
+                permissions_before=permissions_before,
+            )
+            return group_user
 
     def delete_group_user(self, user, group_user):
         """
@@ -1602,3 +1632,24 @@ class CoreHandler:
         Application.objects.bulk_update(applications, ["installed_from_template"])
 
         return applications, id_mapping
+
+    @classmethod
+    def raise_if_user_is_last_admin_of_group(cls, group_user: GroupUser):
+        """
+        Checks if a user that's about to be removed is the last admin of the group.
+
+        :param group_user: The group user we are checking for
+        :return:
+        """
+
+        admins_in_group_count = len(
+            GroupUser.objects.filter(
+                group=group_user.group, permissions="ADMIN"
+            ).select_for_update(of=("self",))
+        )
+
+        is_subject_admin = group_user.permissions == "ADMIN"
+        is_subject_last_admin = is_subject_admin and admins_in_group_count == 1
+
+        if is_subject_last_admin:
+            raise LastAdminOfGroup()

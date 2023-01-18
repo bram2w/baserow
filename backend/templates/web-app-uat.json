@@ -207,14 +207,14 @@
                             "name": "Test result (%)",
                             "order": 8,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  count(field(\"Related scripts\")) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  count(field(\"Related scripts\")) = 0, \n  \"\", \n  concat( \n    round( \n      field(\"Percentage for filter\"), \n      2 \n    ), \n    \"%\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 497968,
@@ -7889,14 +7889,14 @@
                             "name": "Tests accepted (%)",
                             "order": 7,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  \"\", \n  concat( \n    round( \n      field(\"Percentage for filter\"), \n      2 \n    ), \n    \"%\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 497975,
@@ -7921,14 +7921,14 @@
                             "name": "Percentage for filter",
                             "order": 10,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
+                            "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  0, \n  multiply( \n    divide( \n      count( \n        filter( \n          field(\"Related tests\"), \n          lookup(\"Related tests\", \"Is accepted\") \n        ) \n      ), \n      tonumber( \n        join( \n          totext( \n            field(\"Tests count\") \n          ), \n          \"\" \n        ) \n      ) \n    ), \n    100 \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  0, \n  multiply( \n    divide( \n      count( \n        filter( \n          field(\"Related tests\"), \n          lookup(\"Related tests\", \"Is accepted\") \n        ) \n      ), \n      field(\"Tests count\") \n    ), \n    100 \n  ) \n)",
+                            "formula_type": "number"
                         }
                     ],
                     "views": [
@@ -8715,14 +8715,14 @@
                             "name": "Tests accepted (%)",
                             "order": 11,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  \"\", \n  concat( \n    round( \n      field(\"Percentage for filter\"), \n      2 \n    ), \n    \"%\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 496386,
@@ -8777,14 +8777,14 @@
                             "name": "Percentage for filter",
                             "order": 19,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
+                            "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  0, \n  multiply( \n    divide( \n      add( \n        count( \n          filter( \n            field(\"Related tests as manager\"), \n            lookup(\"Related tests as manager\", \"Is accepted\") \n          ) \n        ), \n        count( \n          filter( \n            field(\"Related tests as tester\"), \n            lookup(\"Related tests as tester\", \"Is accepted\") \n          ) \n        ) \n      ), \n      tonumber( \n        join( \n          totext( \n            field(\"Tests count\") \n          ), \n          \"\" \n        ) \n      ) \n    ), \n    100 \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  0, \n  multiply( \n    divide( \n      add( \n        count( \n          filter( \n            field(\"Related tests as manager\"), \n            lookup(\"Related tests as manager\", \"Is accepted\") \n          ) \n        ), \n        count( \n          filter( \n            field(\"Related tests as tester\"), \n            lookup(\"Related tests as tester\", \"Is accepted\") \n          ) \n        ) \n      ), \n      field(\"Tests count\") \n    ), \n    100 \n  ) \n)",
+                            "formula_type": "number"
                         }
                     ],
                     "views": [
@@ -8835,7 +8835,7 @@
                                     "field_id": 496377,
                                     "width": 141,
                                     "hidden": false,
-                                    "order": 11,
+                                    "order": 0,
                                     "aggregation_type": "unique_count",
                                     "aggregation_raw_type": "unique_count"
                                 },
@@ -8853,7 +8853,7 @@
                                     "field_id": 496379,
                                     "width": 100,
                                     "hidden": false,
-                                    "order": 0,
+                                    "order": 1,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8862,7 +8862,7 @@
                                     "field_id": 496380,
                                     "width": 140,
                                     "hidden": false,
-                                    "order": 1,
+                                    "order": 2,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8871,7 +8871,7 @@
                                     "field_id": 496381,
                                     "width": 158,
                                     "hidden": false,
-                                    "order": 3,
+                                    "order": 4,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8880,7 +8880,7 @@
                                     "field_id": 496382,
                                     "width": 255,
                                     "hidden": false,
-                                    "order": 4,
+                                    "order": 5,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8889,7 +8889,7 @@
                                     "field_id": 496383,
                                     "width": 133,
                                     "hidden": false,
-                                    "order": 5,
+                                    "order": 6,
                                     "aggregation_type": "average",
                                     "aggregation_raw_type": "average"
                                 },
@@ -8898,7 +8898,7 @@
                                     "field_id": 496384,
                                     "width": 175,
                                     "hidden": false,
-                                    "order": 6,
+                                    "order": 7,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8907,7 +8907,7 @@
                                     "field_id": 496386,
                                     "width": 159,
                                     "hidden": false,
-                                    "order": 2,
+                                    "order": 3,
                                     "aggregation_type": "not_empty_percentage",
                                     "aggregation_raw_type": "empty_count"
                                 },
@@ -8916,7 +8916,7 @@
                                     "field_id": 497964,
                                     "width": 214,
                                     "hidden": true,
-                                    "order": 12,
+                                    "order": 11,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8925,7 +8925,7 @@
                                     "field_id": 497972,
                                     "width": 161,
                                     "hidden": true,
-                                    "order": 13,
+                                    "order": 12,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -8934,14 +8934,14 @@
                                     "field_id": 497990,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 14,
+                                    "order": 13,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
                                 {
                                     "id": 651640,
                                     "field_id": 498023,
-                                    "width": 110,
+                                    "width": 111,
                                     "hidden": false,
                                     "order": 10,
                                     "aggregation_type": "checked_count",
@@ -8952,7 +8952,7 @@
                                     "field_id": 498658,
                                     "width": 183,
                                     "hidden": true,
-                                    "order": 7,
+                                    "order": 8,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 }

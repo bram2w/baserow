@@ -8,7 +8,7 @@ from channels.testing import WebsocketCommunicator
 from baserow.config.asgi import application
 from baserow.core.apps import sync_operations_after_migrate
 from baserow_enterprise.apps import sync_default_roles_after_migrate
-from baserow_enterprise.role.default_roles import NO_ROLE_LOW_PRIORITY
+from baserow_enterprise.role.constants import NO_ROLE_LOW_PRIORITY_ROLE_UID
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.teams.handler import TeamHandler
@@ -51,7 +51,7 @@ def use_async_event_loop_here(async_event_loop):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
@@ -83,11 +83,11 @@ async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
-    no_role_role = Role.objects.get(uid=NO_ROLE_LOW_PRIORITY)
+    no_role_role = Role.objects.get(uid=NO_ROLE_LOW_PRIORITY_ROLE_UID)
 
     # Assign an initial role to the user
     await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, builder_role)
@@ -117,7 +117,7 @@ async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
 async def test_unsubscribe_subject_from_table_unrelated_user(data_fixture):
     user = data_fixture.create_user()
     unrelated_user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[unrelated_user])
+    group = data_fixture.create_group(members=[user, unrelated_user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
@@ -180,7 +180,7 @@ async def test_unsubscribe_subject_from_table_new_role_no_access(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_updated(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    group = data_fixture.create_group(members=[user])
     database = data_fixture.create_database_application(group=group)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")

@@ -329,25 +329,26 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 
 class UpdateViewSerializer(serializers.ModelSerializer):
-    def _update_public_view_password(self, new_public_view_password):
+    def _make_password(self, plain_password: str):
         """
         An empty string disables password protection.
         A non-empty string will be encrypted and used to check user authorization.
+
+        :param plain_password: The password to encrypt.
+        :return: The encrypted password or "" if disabled.
         """
 
-        if new_public_view_password:
-            return View.make_password(new_public_view_password)
-        else:
-            return ""
+        return View.make_password(plain_password) if plain_password else ""
 
     def to_internal_value(self, data):
-        public_view_password = data.pop("public_view_password", None)
-        updated_view = super().to_internal_value(data)
-        if public_view_password is not None:
-            updated_view["public_view_password"] = self._update_public_view_password(
-                public_view_password
-            )
-        return updated_view
+        plain_password = data.get("public_view_password")
+        if plain_password is not None:
+            data = {
+                **data,
+                "public_view_password": self._make_password(plain_password),
+            }
+
+        return super().to_internal_value(data)
 
     class Meta:
         ref_name = "view_update"

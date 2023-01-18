@@ -27,16 +27,27 @@
       role-value-column="role_uid"
       @update-role="roleUpdate($event)"
     ></EditRoleContext>
+    <HelpIcon
+      v-if="roleUidSelected === 'NO_ACCESS'"
+      :tooltip="$t('membersRoleField.noAccessHelpText')"
+      class="margin-left-1"
+    />
+    <HelpIcon
+      v-if="roleUidSelected === 'ADMIN'"
+      :tooltip="$t('membersRoleField.adminHelpText')"
+      class="margin-left-1"
+      is-warning
+    />
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import { clone } from '@baserow/modules/core/utils/object'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 import { filterRoles } from '@baserow_enterprise/utils/roles'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'MembersRoleField',
@@ -65,6 +76,9 @@ export default {
           })
         : []
     },
+    roleUidSelected() {
+      return this.row[this.column.key]
+    },
     ...mapGetters({ userId: 'auth/getUserId' }),
   },
   methods: {
@@ -89,7 +103,7 @@ export default {
         )
       } catch (error) {
         this.$emit('row-update', oldMember)
-        notifyIf(error, 'group')
+        notifyIf(error)
       }
     },
   },

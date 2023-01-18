@@ -77,3 +77,9 @@ ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN = (
     HTTP_400_BAD_REQUEST,
     "You can't assign a role exception to a scope with ADMIN role.",
 )
+
+ERROR_LAST_ADMIN_OF_GROUP = (
+    "ERROR_LAST_ADMIN_OF_GROUP",
+    HTTP_400_BAD_REQUEST,
+    "You can't remove the last admin of a group.",
+)

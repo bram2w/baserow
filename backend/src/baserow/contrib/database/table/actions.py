@@ -2,24 +2,38 @@ import dataclasses
 from typing import Any, List, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
+from baserow.contrib.database.action.scopes import DATABASE_ACTION_CONTEXT
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
-from baserow.core.action.registries import ActionScopeStr, ActionType
+from baserow.core.action.registries import (
+    ActionScopeStr,
+    ActionTypeDescription,
+    UndoableActionType,
+)
 from baserow.core.action.scopes import ApplicationActionScopeType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress
 
 
-class CreateTableActionType(ActionType):
+class CreateTableActionType(UndoableActionType):
     type = "create_table"
+    description = ActionTypeDescription(
+        _("Create table"),
+        _('Table "%(table_name)s" (%(table_id)s) created'),
+        DATABASE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        database_id: int
+        database_name: str
         table_id: int
+        table_name: str
 
     @classmethod
     def do(
@@ -58,8 +72,9 @@ class CreateTableActionType(ActionType):
             progress=progress,
         )
 
-        params = cls.Params(table.id)
-        cls.register_action(user, params, cls.scope(database.id))
+        group = database.group
+        params = cls.Params(database.id, database.name, table.id, table.name)
+        cls.register_action(user, params, cls.scope(database.id), group=group)
 
         return table, error_report
 
@@ -79,12 +94,20 @@ class CreateTableActionType(ActionType):
         )
 
 
-class DeleteTableActionType(ActionType):
+class DeleteTableActionType(UndoableActionType):
     type = "delete_table"
+    description = ActionTypeDescription(
+        _("Delete table"),
+        _('Table "%(table_name)s" (%(table_id)s) deleted'),
+        DATABASE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        database_id: int
+        database_name: str
         table_id: int
+        table_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, table: Table):
@@ -99,12 +122,12 @@ class DeleteTableActionType(ActionType):
         :raises ValueError: When the provided table is not an instance of Table.
         """
 
-        params = cls.Params(table.id)
-        database_id = table.database_id
+        database = table.database
+        params = cls.Params(database.id, database.name, table.id, table.name)
 
         TableHandler().delete_table(user, table)
 
-        cls.register_action(user, params, cls.scope(database_id))
+        cls.register_action(user, params, cls.scope(database.id), group=database.group)
 
     @classmethod
     def scope(cls, database_id) -> ActionScopeStr:
@@ -121,14 +144,20 @@ class DeleteTableActionType(ActionType):
         TableHandler().delete_table_by_id(user, params.table_id)
 
 
-class OrderTableActionType(ActionType):
-    type = "order_table"
+class OrderTableActionType(UndoableActionType):
+    type = "order_tables"
+    description = ActionTypeDescription(
+        _("Order tables"),
+        _("Tables order changed"),
+        DATABASE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
         database_id: int
+        database_name: str
+        tables_order: List[int]
         original_tables_order: List[int]
-        new_tables_order: List[int]
 
     @classmethod
     def do(cls, user: AbstractUser, database: Database, order: List[int]):
@@ -147,11 +176,11 @@ class OrderTableActionType(ActionType):
 
         table_handler = TableHandler()
         original_table_order = table_handler.get_tables_order(database)
-        params = cls.Params(database.id, original_table_order, new_tables_order=order)
+        params = cls.Params(database.id, database.name, order, original_table_order)
 
         table_handler.order_tables(user, database, order=order)
 
-        cls.register_action(user, params, cls.scope(database.id))
+        cls.register_action(user, params, cls.scope(database.id), group=database.group)
 
     @classmethod
     def scope(cls, database_id) -> ActionScopeStr:
@@ -171,18 +200,28 @@ class OrderTableActionType(ActionType):
         TableHandler().order_tables(
             user,
             DatabaseHandler().get_database(params.database_id),
-            order=params.new_tables_order,
+            order=params.tables_order,
         )
 
 
-class UpdateTableActionType(ActionType):
+class UpdateTableActionType(UndoableActionType):
     type = "update_table"
+    description = ActionTypeDescription(
+        _("Update table"),
+        _(
+            "Table (%(table_id)s) name changed from "
+            '"%(original_table_name)s" to "%(table_name)s"'
+        ),
+        DATABASE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        database_id: int
+        database_name: str
         table_id: int
+        table_name: str
         original_table_name: str
-        new_table_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, table: Table, name: str) -> Table:
@@ -204,13 +243,16 @@ class UpdateTableActionType(ActionType):
 
         TableHandler().update_table(user, table, name=name)
 
+        database = table.database
         params = cls.Params(
+            database.id,
+            database.name,
             table.id,
+            name,
             original_table_name,
-            new_table_name=name,
         )
 
-        cls.register_action(user, params, cls.scope(table.database_id))
+        cls.register_action(user, params, cls.scope(database.id), group=database.group)
         return table
 
     @classmethod
@@ -225,17 +267,28 @@ class UpdateTableActionType(ActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
-        TableHandler().update_table_by_id(
-            user, params.table_id, name=params.new_table_name
-        )
+        TableHandler().update_table_by_id(user, params.table_id, name=params.table_name)
 
 
-class DuplicateTableActionType(ActionType):
+class DuplicateTableActionType(UndoableActionType):
     type = "duplicate_table"
+    description = ActionTypeDescription(
+        _("Duplicate table"),
+        _(
+            'Table "%(table_name)s" (%(table_id)s) duplicated from '
+            '"%(original_table_name)s" (%(original_table_id)s) '
+        ),
+        DATABASE_ACTION_CONTEXT,
+    )
 
     @dataclasses.dataclass
     class Params:
+        database_id: int
+        database_name: str
         table_id: int
+        table_name: str
+        original_table_id: int
+        original_table_name: str
 
     @classmethod
     def do(
@@ -258,9 +311,16 @@ class DuplicateTableActionType(ActionType):
         new_table_clone = TableHandler().duplicate_table(
             user, table, progress_builder=progress_builder
         )
-        cls.register_action(
-            user, cls.Params(new_table_clone.id), cls.scope(table.database_id)
+        database = table.database
+        params = cls.Params(
+            database.id,
+            database.name,
+            new_table_clone.id,
+            new_table_clone.name,
+            table.id,
+            table.name,
         )
+        cls.register_action(user, params, cls.scope(database.id), group=database.group)
         return new_table_clone
 
     @classmethod

@@ -105,7 +105,7 @@ class PaginatedExportJobFileWriter(FileWriter):
 
     def _check_and_update_job(self, current_row, total_rows):
         """
-        Checks if enough time has passed and if so checks the status of the job and
+        Checks if enough time has passed and if so checks the state of the job and
         updates its progress percentage.
         Will raise a ExportJobCanceledException exception if when a check occurs
         the job has been cancelled.
@@ -128,7 +128,7 @@ class PaginatedExportJobFileWriter(FileWriter):
             if self.job.is_cancelled_or_expired():
                 raise ExportJobCanceledException()
             else:
-                self.job.progress_percentage = current_row / total_rows
+                self.job.progress_percentage = current_row / total_rows * 100
                 self.job.save()
 
 

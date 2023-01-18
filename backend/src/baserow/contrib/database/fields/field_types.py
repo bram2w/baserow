@@ -120,7 +120,7 @@ from .models import (
     TextField,
     URLField,
 )
-from .operations import CreateFieldOperationType
+from .operations import CreateFieldOperationType, DeleteRelatedLinkRowFieldOperationType
 from .registries import (
     FieldType,
     ReadOnlyFieldType,
@@ -1428,6 +1428,13 @@ class LinkRowFieldType(FieldType):
                 f"as the table {table.id}."
             )
 
+        CoreHandler().check_permissions(
+            user,
+            CreateFieldOperationType.type,
+            table.database.group,
+            context=link_row_table,
+        )
+
         self_referencing_link_row = table.id == link_row_table.id
         create_related_field = field_kwargs.get("has_related_field")
         if self_referencing_link_row and create_related_field:
@@ -1532,6 +1539,22 @@ class LinkRowFieldType(FieldType):
         to_link_row_table_has_related_field = (
             to_instance and to_field_kwargs["has_related_field"]
         )
+
+        if to_instance:
+            CoreHandler().check_permissions(
+                user,
+                CreateFieldOperationType.type,
+                to_field.table.database.group,
+                context=to_field.link_row_table,
+            )
+
+        if from_instance:
+            CoreHandler().check_permissions(
+                user,
+                DeleteRelatedLinkRowFieldOperationType.type,
+                from_field.table.database.group,
+                context=from_field.link_row_table,
+            )
 
         if (
             from_link_row_table_has_related_field
@@ -2730,6 +2753,7 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     can_be_in_form_view = False
     field_data_is_derived_from_attrs = True
+    needs_refresh_after_import_serialized = True
 
     CORE_FORMULA_FIELDS = [
         "formula",

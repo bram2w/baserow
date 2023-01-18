@@ -117,14 +117,14 @@
                             "name": "Test result (%)",
                             "order": 8,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  count(field(\"Related scripts\")) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  count(field(\"Related scripts\")) = 0, \n  \"\", \n  concat( \n    round(field(\"Percentage for filter\"), 2), \n    \"%\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 546925,
@@ -2289,7 +2289,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "join( \n  if( \n    or( \n      int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 1, \n      int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 6 \n    ), \n    \"S\", \n    if( \n      or( \n        int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 2, \n        int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 7 \n      ), \n      \"R\", \n      if( \n        or( \n          int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 3, \n          int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 8 \n        ), \n        \"Y\", \n        if( \n          or( \n            int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 4, \n            int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 9 \n          ), \n          \"G\", \n          \"B\"\n        )\n      )\n    )\n  ), \n  \"\"\n)",
+                            "formula": "join( \n  if( \n    or( \n      int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 1, \n      int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 6 \n    ), \n    \"S\", \n    if( \n      or( \n        int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 2, \n        int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 7 \n      ), \n      \"R\", \n      if( \n        or( \n          int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 3, \n          int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 8 \n        ), \n        \"Y\", \n        if( \n          or( \n            int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 4, \n            int(tonumber(right(totext(field(\"Test case ID\")), 1))) = 9 \n          ), \n          \"G\", \n          \"B\"\n        )\n      )\n    )\n  ), \n  \"\" \n)",
                             "formula_type": "text"
                         },
                         {
@@ -6036,14 +6036,14 @@
                             "name": "Tests completed (%)",
                             "order": 8,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  \"\", \n  concat( \n    round( \n      field(\"Percentage for filter\"), \n      2 \n    ), \n    \"%\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 547024,
@@ -6051,14 +6051,14 @@
                             "name": "Percentage for filter",
                             "order": 9,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
+                            "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  0, \n  multiply( \n    divide( \n      count( \n        filter( \n          field(\"Related tests\"), \n          int(lookup(\"Related tests\", \"Percentage for filter\")) = 100 \n        ) \n      ), \n      tonumber( \n        join( \n          totext( \n            field(\"Tests count\") \n          ), \n          \"\" \n        ) \n      ) \n    ), \n    100 \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  0, \n  multiply( \n    divide( \n      count( \n        filter( \n          field(\"Related tests\"), \n          int(lookup(\"Related tests\", \"Percentage for filter\")) = 100 \n        ) \n      ), \n      field(\"Tests count\") \n    ), \n    100 \n  ) \n)",
+                            "formula_type": "number"
                         },
                         {
                             "id": 547025,
@@ -6812,14 +6812,14 @@
                             "name": "Tests completed (%)",
                             "order": 10,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  \"\", \n  concat( \n    round( \n      tonumber(join(totext(field(\"Percentage for filter\")), \"\")), \n      2 \n    ), \n    \"%\" \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") < 0.01, \n  \"\", \n  concat( \n    round( \n      field(\"Percentage for filter\"), \n      2 \n    ), \n    \"%\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 547036,
@@ -6827,14 +6827,14 @@
                             "name": "Percentage for filter",
                             "order": 11,
                             "primary": false,
-                            "error": "argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference, argument number 2 given to operator = was of type number but there are no possible types usable here, argument number 1 given to function join was of type text but the only usable type for this argument is a list of text values obtained from a lookup or link row field reference",
+                            "error": null,
                             "date_format": null,
                             "date_include_time": null,
                             "date_time_format": null,
-                            "number_decimal_places": null,
+                            "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "if( \n  tonumber( \n    join( \n      totext(field(\"Tests count\")), \n      \"\" \n    ) \n  ) = 0, \n  0, \n  multiply( \n    divide( \n      add( \n        count( \n          filter( \n            field(\"Related tests as manager\"), \n            int(lookup(\"Related tests as manager\", \"Percentage for filter\")) = 100 \n          ) \n        ), \n        count( \n          filter( \n            field(\"Related tests as tester\"), \n            int(lookup(\"Related tests as tester\", \"Percentage for filter\")) = 100 \n          ) \n        ) \n      ), \n      tonumber( \n        join( \n          totext( \n            field(\"Tests count\") \n          ), \n          \"\" \n        ) \n      ) \n    ), \n    100 \n  ) \n)",
-                            "formula_type": "invalid"
+                            "formula": "if( \n  field(\"Tests count\") = 0, \n  0, \n  multiply( \n    divide( \n      add( \n        count( \n          filter( \n            field(\"Related tests as manager\"), \n            int(lookup(\"Related tests as manager\", \"Percentage for filter\")) = 100 \n          ) \n        ), \n        count( \n          filter( \n            field(\"Related tests as tester\"), \n            int(lookup(\"Related tests as tester\", \"Percentage for filter\")) = 100 \n          ) \n        ) \n      ), \n      field(\"Tests count\")\n    ), \n    100 \n  ) \n)",
+                            "formula_type": "number"
                         },
                         {
                             "id": 547037,

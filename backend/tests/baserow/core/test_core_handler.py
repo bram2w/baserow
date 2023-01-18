@@ -22,6 +22,7 @@ from baserow.core.exceptions import (
     GroupUserDoesNotExist,
     GroupUserIsLastAdmin,
     IsNotAdminError,
+    LastAdminOfGroup,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserInvalidGroupPermissionsError,
@@ -38,6 +39,7 @@ from baserow.core.models import (
     Template,
     TemplateCategory,
 )
+from baserow.core.operations import ReadGroupOperationType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
@@ -1248,3 +1250,30 @@ def test_restore_application(application_created_mock, data_fixture):
 
     assert restored_app.name == database.name
     assert restored_app.id == database.id
+
+
+@pytest.mark.django_db
+def test_raise_if_user_is_last_admin_of_group(data_fixture):
+    group_user = data_fixture.create_user_group()
+    user2 = data_fixture.create_user()
+
+    with pytest.raises(LastAdminOfGroup):
+        CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
+
+    CoreHandler().add_user_to_group(group_user.group, user2, "ADMIN")
+
+    try:
+        CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
+    except LastAdminOfGroup:
+        pytest.fail("Unexpected last admin error...")
+
+
+@pytest.mark.django_db
+def test_get_user_ids_of_permitted_users(data_fixture):
+    user = data_fixture.create_user()
+    user_of_another_group = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    assert CoreHandler().get_user_ids_of_permitted_users(
+        [user, user_of_another_group], ReadGroupOperationType.type, group, context=group
+    ) == {user.id}

@@ -6,12 +6,18 @@
           $t(`memberRolesTab.${translationPrefix}.title`, { name: scope.name })
         }}
       </h2>
-      <a
-        :class="{ 'button--loading': loading }"
-        class="button button--ghost"
-        @click="loading ? null : $refs.roleAssignmentModal.show()"
-        >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</a
-      >
+      <div>
+        <HelpIcon
+          :tooltip="$t(`memberRolesTab.${translationPrefix}.headerTooltip`)"
+          class="margin-right-1"
+        ></HelpIcon>
+        <a
+          :disabled="loading"
+          class="button button--ghost"
+          @click="loading ? null : $refs.roleAssignmentModal.show()"
+          >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</a
+        >
+      </div>
     </div>
     <div v-if="loading" class="loading"></div>
     <div v-else>
@@ -50,14 +56,12 @@
 <script>
 import { mapGetters } from 'vuex'
 import MemberRolesMembersList from '@baserow_enterprise/components/member-roles/MemberRolesMembersList'
-import MemberRolesShareToggle from '@baserow_enterprise/components/member-roles/MemberRolesShareToggle'
 import RoleAssignmentModal from '@baserow_enterprise/components/member-roles/RoleAssignmentModal'
 
 export default {
   name: 'MemberRolesTab',
   components: {
     RoleAssignmentModal,
-    MemberRolesShareToggle,
     MemberRolesMembersList,
   },
   props: {

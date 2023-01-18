@@ -19,7 +19,6 @@ from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.signals import (
     team_created,
     team_deleted,
-    team_restored,
     team_subject_created,
     team_subject_deleted,
     team_subject_restored,
@@ -304,7 +303,6 @@ class TeamHandler:
         LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
         TrashHandler.restore_item(user, "team", team_id)
         team.refresh_from_db()
-        team_restored.send(self, team_id=team.id, team=team, user=user)
         return team
 
     def get_teamsubject_subject_qs(self, subject, base_queryset=None) -> QuerySet:

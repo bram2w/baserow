@@ -15,13 +15,66 @@ For example:
 
 ### Refactors
 
-## Released (2022-12-21 1.13.3)
+### Breaking API changes
+
+## Released (2023-01-13 1.14.0)
+
+### New Features
+* When your permissions change you now get notified in the frontend to reload your page [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
+* Add various help icons to explain RBAC in the UI [#1318](https://gitlab.com/bramw/baserow/-/issues/1318)
+* Database and table ids are now hashed in websocket messages to not leak sensitive data [#1374](https://gitlab.com/bramw/baserow/-/issues/1374)
+* Add the "Audit Log" enterprise feature. Now admins can see every action that has been done in the instance. [#1152](https://gitlab.com/bramw/baserow/-/issues/1152)
+* Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
+* Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
+* Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
+* Pressing shift + enter in a selected cell of the grid view creates a new row. [#1208](https://gitlab.com/bramw/baserow/-/issues/1208)
+* Pressing enter on a selected cell should select the cell below. [#1329](https://gitlab.com/bramw/baserow/-/issues/1329)
+* Select the primary field in the grid view after creating a new row. [#1217](https://gitlab.com/bramw/baserow/-/issues/1217)
+* Added a new setting to the Admin Settings page to enable/disable global group creation. [#1311](https://gitlab.com/bramw/baserow/-/issues/1311)
+* Add "has" and "has not" filters for Collaborators field. [#1204](https://gitlab.com/bramw/baserow/-/issues/1204)
+* ./dev.sh now uses "docker compose" command if available.
+* Limit the amount of characters for messages supplied with group invitations to 250 [#1455](https://gitlab.com/bramw/baserow/-/issues/1455)
+* Introduced a "select" and "deselect all" members button to the teams modal.  [#1335](https://gitlab.com/bramw/baserow/-/issues/1335)
+* Add Free label to free roles on role selector [#1504](https://gitlab.com/bramw/baserow/-/issues/1504)
+* New templates:
+    * Car Dealership Inventory
+    * Car Dealership Services
+    * Customer Research
+    * Frequent Flyer Rewards
+    * Grocery Planner
+
+### Bug Fixes
+* Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
+* Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
+* Fixed a typo in the docker-compose.no-caddy.yml so it works out of the box. [#1317](https://gitlab.com/bramw/baserow/-/issues/1469)
+* Form validator shows the correct message when a field is required. [#1475](https://gitlab.com/bramw/baserow/-/issues/1475)
+* Prevent errors after migrating and syncing RBAC roles by adding migration to rename NO_ROLE to NO_ACCESS [#1478](https://gitlab.com/bramw/baserow/-/issues/1478)
+* Fixed issue where 2 admins could lower each others permissions at the same time and lock each other out [#1443](https://gitlab.com/bramw/baserow/-/issues/1443)
+* Fixed bug preventing groups from being restored when RBAC was enabled [#1485](https://gitlab.com/bramw/baserow/-/issues/1485)
+* Fixed upgrading a license from premium to enterprise results in an expired license. [#1403](https://gitlab.com/bramw/baserow/-/issues/1403)
+* Tweaked the curl examples in the API documentation so that they work properly in all $SHELLs. [#1462](https://gitlab.com/bramw/baserow/-/issues/1462)
+* Replaced the "contains not" and "has not" English filters with "doesn't contain" and "doesn't have" respectively. [#1452](https://gitlab.com/bramw/baserow/-/issues/1452)
+* Resolved an issue in `delete_expired_users` so that it doesn't delete groups when admins are deactivated and not marked for deletion. [#1503](https://gitlab.com/bramw/baserow/-/issues/1503)
+* Fixed HOURS_UNTIL_TRASH_PERMANENTLY_DELETED environment variable is not converted to int. [#1499](https://gitlab.com/bramw/baserow/-/issues/1499)
+* Fixed Change Password dialog not visible. [#1501](https://gitlab.com/bramw/baserow/-/issues/1501)
+* Fixed bug where it was not possible to change `conditional_color` decorator provider color after reloading. [#1098](https://gitlab.com/bramw/baserow/-/issues/1098)
+* Fixed issue where importing a database would immediately close the modal and not show progress [#1492](https://gitlab.com/bramw/baserow/-/issues/1492)
+* Fixed issue during importing of serialized applications causing formula columns to have incorrect database column [#1220](https://gitlab.com/bramw/baserow/-/issues/1220)
+
+### Refactors
+* Replaced deprecated `execCommand('copy')` with `clipboard API` for copy and paste. [#1392](https://gitlab.com/bramw/baserow/-/issues/1392)
+* Introduce a single-parent hierarchy for models.
+* Refactor paving the way for a future removal of the `ExportJob` system in favor of the `core/jobs` one.
+
+### Breaking API changes
+* Changed the return code from `HTTP_200_OK` to `HTTP_202_ACCEPTED` if a `POST` is submitted to `/api/snapshots/application/$ID/` to start the async job.
+
+## Released (2022-12-22 1.13.3)
 
 ## Deploy steps
 * (Optional) - Regenerate the `card_cover` thumbnails to have better quality images in gallery views with: `./baserow regenerate_user_file_thumbnails card_cover`
 
 ### New Features
-
 * (Enterprise Preview Feature) Database and Table level RBAC with Teams are now available as a preview feature for enterprise users, Add 'RBAC' to the FEATURE_FLAG env and restart var to enable.
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
 * Users with roles higher than viewer on tables and databases now counted as paid users

@@ -19,10 +19,15 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
-from baserow.core.jobs.mixins import JobWithUndoRedoIds, JobWithWebsocketId
+from baserow.core.jobs.mixins import (
+    JobWithUndoRedoIds,
+    JobWithUserIpAddress,
+    JobWithWebsocketId,
+)
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
+    HierarchicalModelMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
@@ -64,6 +69,7 @@ def get_default_field_content_type():
 
 
 class Field(
+    HierarchicalModelMixin,
     TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
@@ -104,6 +110,9 @@ class Field(
             "-primary",
             "order",
         )
+
+    def get_parent(self):
+        return self.table
 
     @classmethod
     def get_last_order(cls, table):
@@ -164,7 +173,9 @@ class Field(
         return save
 
 
-class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
+class AbstractSelectOption(
+    HierarchicalModelMixin, ParentFieldTrashableModelMixin, models.Model
+):
     value = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField()
@@ -178,6 +189,9 @@ class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
             "order",
             "id",
         )
+
+    def get_parent(self):
+        return self.field
 
     def __str__(self):
         return self.value
@@ -417,13 +431,22 @@ class FormulaField(Field):
     def cached_formula_type(self):
         return FormulaHandler.get_formula_type_from_field(self)
 
-    def recalculate_internal_fields(self, raise_if_invalid=False, field_cache=None):
+    def clear_cached_properties(self):
         try:
             # noinspection PyPropertyAccess
             del self.cached_untyped_expression
         except AttributeError:
             # It has not been cached yet so nothing to deleted.
             pass
+        try:
+            # noinspection PyPropertyAccess
+            del self.cached_formula_type
+        except AttributeError:
+            # It has not been cached yet so nothing to deleted.
+            pass
+
+    def recalculate_internal_fields(self, raise_if_invalid=False, field_cache=None):
+        self.clear_cached_properties()
         expression = FormulaHandler.recalculate_formula_field_cached_properties(
             self, field_cache
         )
@@ -460,6 +483,10 @@ class FormulaField(Field):
                 field_cache=field_cache, raise_if_invalid=raise_if_invalid
             )
         super().save(*args, **kwargs)
+
+    def refresh_from_db(self, *args, **kwargs) -> None:
+        super().refresh_from_db(*args, **kwargs)
+        self.clear_cached_properties()
 
     def __str__(self):
         return (
@@ -525,7 +552,9 @@ class MultipleCollaboratorsField(Field):
         return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.id}"
 
 
-class DuplicateFieldJob(JobWithWebsocketId, JobWithUndoRedoIds, Job):
+class DuplicateFieldJob(
+    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+):
 
     original_field = models.ForeignKey(
         Field,

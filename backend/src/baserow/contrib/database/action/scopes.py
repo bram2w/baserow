@@ -1,8 +1,25 @@
 from typing import Optional, cast
 
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from baserow.core.action.registries import ActionScopeStr, ActionScopeType
+
+DATABASE_ACTION_CONTEXT = _('in database "%(database_name)s" (%(database_id)s).')
+
+
+TABLE_ACTION_CONTEXT = _(
+    'in table "%(table_name)s" (%(table_id)s) '
+    'of database "%(database_name)s" (%(database_id)s).'
+)
+
+
+VIEW_ACTION_CONTEXT = _(
+    'in view "%(view_name)s" (%(view_id)s) '
+    'of table "%(table_name)s" (%(table_id)s) '
+    'in database "%(database_name)s" (%(database_id)s).'
+)
 
 
 class TableActionScopeType(ActionScopeType):

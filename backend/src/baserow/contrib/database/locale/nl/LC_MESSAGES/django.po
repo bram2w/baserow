@@ -7,28 +7,418 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-22 08:46+0000\n"
-"PO-Revision-Date: 2022-02-04 10:29+0000\n"
-"Last-Translator: Cornelia Dieleman <financialswift@gmail.com>\n"
-"Language-Team: Dutch <https://hosted.weblate.org/projects/baserow/backend-"
-"database/nl/>\n"
+"POT-Creation-Date: 2023-01-16 14:17+0000\n"
+"PO-Revision-Date: 2023-01-18 11:38+0000\n"
+"Last-Translator: Bram <bram@baserow.io>\n"
+"Language-Team: Dutch <https://hosted.weblate.org/projects/baserow/"
+"backend-database/nl/>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 4.15.1-dev\n"
 
-#: src/baserow/contrib/database/plugins.py:45
+#: src/baserow/contrib/database/action/scopes.py:9
+#, python-format
+msgid "in database \"%(database_name)s\" (%(database_id)s)."
+msgstr "in de database \"%(database_name)s\" (%(database_id)s)."
+
+#: src/baserow/contrib/database/action/scopes.py:13
+#, fuzzy, python-format
+msgid ""
+"in table \"%(table_name)s\" (%(table_id)s) of database \"%(database_name)s"
+"\" (%(database_id)s)."
+msgstr ""
+"in tabel \"%(table_name)s\" (%(table_id)s) van database \"%(database_name)s\""
+" (%(database_id)s)."
+
+#: src/baserow/contrib/database/action/scopes.py:19
+#, fuzzy, python-format
+msgid ""
+"in view \"%(view_name)s\" (%(view_id)s) of table \"%(table_name)s"
+"\" (%(table_id)s) in database \"%(database_name)s\" (%(database_id)s)."
+msgstr ""
+"in weergave \"%(view_name)s\" (%(view_id)s) van tabel \"%(table_name)s\" "
+"(%(table_id)s) in database \"%(database_name)s\" (%(database_id)s)."
+
+#: src/baserow/contrib/database/application_types.py:190
+msgid "Table"
+msgstr "Tabel"
+
+#: src/baserow/contrib/database/fields/actions.py:35
+msgid "Update field"
+msgstr "Veld bijwerken"
+
+#: src/baserow/contrib/database/fields/actions.py:36
+#, python-format
+msgid "Field \"%(field_name)s\" (%(field_id)s) updated"
+msgstr "Veld \"%(field_name)s\" (%(field_id)s) bijgewerkt"
+
+#: src/baserow/contrib/database/fields/actions.py:325
+msgid "Create field"
+msgstr "Veld maken"
+
+#: src/baserow/contrib/database/fields/actions.py:326
+#, fuzzy, python-format
+msgid "Field \"%(field_name)s\" (%(field_id)s) created"
+msgstr "Veld \"%(field_name)s\" (%(field_id)s) aangemaakt"
+
+#: src/baserow/contrib/database/fields/actions.py:418
+msgid "Delete field"
+msgstr "Veld verwijderen"
+
+#: src/baserow/contrib/database/fields/actions.py:419
+#, python-format
+msgid "Field \"%(field_name)s\" (%(field_id)s) deleted"
+msgstr "Veld \"%(field_name)s\" (%(field_id)s) verwijderd"
+
+#: src/baserow/contrib/database/fields/actions.py:486
+msgid "Duplicate field"
+msgstr "Dupliceer veld"
+
+#: src/baserow/contrib/database/fields/actions.py:488
+#, fuzzy, python-format
+msgid ""
+"Field \"%(field_name)s\" (%(field_id)s) duplicated (with_data=%(with_data)s) "
+"from field \"%(original_field_name)s\" (%(original_field_id)s)"
+msgstr ""
+"Veld \"%(field_name)s\" (%(field_id)s) gedupliceerd (with_data=%(with_data)s)"
+" uit veld \"%(original_field_name)s\" (%(original_field_id)s)"
+
+#: src/baserow/contrib/database/plugins.py:63
 #, python-format
 msgid "%(first_name)s's company"
 msgstr "Het bedrijf van %(first_name)s"
 
-#~ msgid "Customers"
-#~ msgstr "Klanten"
+#: src/baserow/contrib/database/plugins.py:70
+msgid "Customers"
+msgstr "Klanten"
 
-#~ msgid "Grid"
-#~ msgstr "Rooster"
+#: src/baserow/contrib/database/plugins.py:72
+#: src/baserow/contrib/database/plugins.py:94
+#: src/baserow/contrib/database/table/handler.py:333
+#: src/baserow/contrib/database/table/handler.py:346
+msgid "Name"
+msgstr "Naam"
 
-#~ msgid "Projects"
-#~ msgstr "Projecten"
+#: src/baserow/contrib/database/plugins.py:73
+msgid "Last name"
+msgstr "Achternaam"
+
+#: src/baserow/contrib/database/plugins.py:74
+#: src/baserow/contrib/database/table/handler.py:334
+msgid "Notes"
+msgstr "Opmerkingen"
+
+#: src/baserow/contrib/database/plugins.py:75
+#: src/baserow/contrib/database/plugins.py:96
+#: src/baserow/contrib/database/table/handler.py:335
+msgid "Active"
+msgstr "Actief"
+
+#: src/baserow/contrib/database/plugins.py:92
+msgid "Projects"
+msgstr "Projecten"
+
+#: src/baserow/contrib/database/plugins.py:95
+#, fuzzy
+msgid "Started"
+msgstr "Begonnen"
+
+#: src/baserow/contrib/database/plugins.py:101
+msgid "Calculator"
+msgstr "Rekenmachine"
+
+#: src/baserow/contrib/database/plugins.py:102
+msgid "Turing machine"
+msgstr "Turing machine"
+
+#: src/baserow/contrib/database/plugins.py:103
+msgid "Computer architecture"
+msgstr "Computerarchitectuur"
+
+#: src/baserow/contrib/database/plugins.py:104
+msgid "Cellular Automata"
+msgstr "Cellular Automata"
+
+#: src/baserow/contrib/database/rows/actions.py:33
+msgid "Create row"
+msgstr "Rij maken"
+
+#: src/baserow/contrib/database/rows/actions.py:33
+#, fuzzy, python-format
+msgid "Row (%(row_id)s) created"
+msgstr "Rij (%(row_id)s) aangemaakt"
+
+#: src/baserow/contrib/database/rows/actions.py:111
+msgid "Create rows"
+msgstr "Rijen maken"
+
+#: src/baserow/contrib/database/rows/actions.py:111
+#, python-format
+msgid "Rows (%(row_ids)s) created"
+msgstr "Rijen (%(row_ids)s) gemaakt"
+
+#: src/baserow/contrib/database/rows/actions.py:190
+msgid "Import rows"
+msgstr "Rijen importeren"
+
+#: src/baserow/contrib/database/rows/actions.py:190
+#, fuzzy, python-format
+msgid "Rows (%(row_ids)s) imported"
+msgstr "Rijen (%(row_ids)s) geïmporteerd"
+
+#: src/baserow/contrib/database/rows/actions.py:272
+msgid "Delete row"
+msgstr "Rij verwijderen"
+
+#: src/baserow/contrib/database/rows/actions.py:272
+#, fuzzy, python-format
+msgid "Row (%(row_id)s) deleted"
+msgstr "Rij (%(row_id)s) verwijderd"
+
+#: src/baserow/contrib/database/rows/actions.py:333
+msgid "Delete rows"
+msgstr "Rijen verwijderen"
+
+#: src/baserow/contrib/database/rows/actions.py:333
+#, fuzzy, python-format
+msgid "Rows (%(row_ids)s) deleted"
+msgstr "Rijen (%(row_ids)s) verwijderd"
+
+#: src/baserow/contrib/database/rows/actions.py:473
+msgid "Move row"
+msgstr "Rij verplaatsen"
+
+#: src/baserow/contrib/database/rows/actions.py:473
+#, python-format
+msgid "Row (%(row_id)s) moved"
+msgstr "Rij (%(row_id)s) verplaatst"
+
+#: src/baserow/contrib/database/rows/actions.py:581
+msgid "Update row"
+msgstr "Rij bijwerken"
+
+#: src/baserow/contrib/database/rows/actions.py:581
+#, fuzzy, python-format
+msgid "Row (%(row_id)s) updated"
+msgstr "Rij (%(row_id)s) bijgewerkt"
+
+#: src/baserow/contrib/database/rows/actions.py:681
+msgid "Update rows"
+msgstr "Rijen bijwerken"
+
+#: src/baserow/contrib/database/rows/actions.py:681
+#, python-format
+msgid "Rows (%(row_ids)s) updated"
+msgstr "Rijen (%(row_ids)s) bijgewerkt"
+
+#: src/baserow/contrib/database/table/actions.py:26
+msgid "Create table"
+msgstr "Tabel aanmaken"
+
+#: src/baserow/contrib/database/table/actions.py:27
+#, python-format
+msgid "Table \"%(table_name)s\" (%(table_id)s) created"
+msgstr "Tabel \"%(table_name)s\" (%(table_id)s) aangemaakt"
+
+#: src/baserow/contrib/database/table/actions.py:100
+msgid "Delete table"
+msgstr "Tabel verwijderen"
+
+#: src/baserow/contrib/database/table/actions.py:101
+#, python-format
+msgid "Table \"%(table_name)s\" (%(table_id)s) deleted"
+msgstr "Tabel \"%(table_name)s\" (%(table_id)s) verwijderd"
+
+#: src/baserow/contrib/database/table/actions.py:150
+msgid "Order tables"
+msgstr "Order tabellen"
+
+#: src/baserow/contrib/database/table/actions.py:151
+msgid "Tables order changed"
+msgstr "Tabelvolgorde gewijzigd"
+
+#: src/baserow/contrib/database/table/actions.py:210
+msgid "Update table"
+msgstr "Tabel bijwerken"
+
+#: src/baserow/contrib/database/table/actions.py:212
+#, fuzzy, python-format
+msgid ""
+"Table (%(table_id)s) name changed from \"%(original_table_name)s\" to "
+"\"%(table_name)s\""
+msgstr ""
+"Tabel (%(table_id)s) naam veranderd van \"%(original_table_name)s\" naar \""
+"%(table_name)s\"."
+
+#: src/baserow/contrib/database/table/actions.py:276
+msgid "Duplicate table"
+msgstr "Dupliceer tabel"
+
+#: src/baserow/contrib/database/table/actions.py:278
+#, fuzzy, python-format
+msgid ""
+"Table \"%(table_name)s\" (%(table_id)s) duplicated from "
+"\"%(original_table_name)s\" (%(original_table_id)s) "
+msgstr ""
+"Tabel \"%(table_name)s\" (%(table_id)s) gedupliceerd van \""
+"%(original_table_name)s\" (%(original_table_id)s) "
+
+#: src/baserow/contrib/database/table/handler.py:237
+msgid "Grid"
+msgstr "Rooster"
+
+#: src/baserow/contrib/database/table/handler.py:295
+#, python-format
+msgid "Field %d"
+msgstr "Veld %d"
+
+#: src/baserow/contrib/database/views/actions.py:39
+msgid "Create a view filter"
+msgstr "Maak een weergavefilter"
+
+#: src/baserow/contrib/database/views/actions.py:40
+#, python-format
+msgid "View filter created on field \"%(field_name)s\" (%(field_id)s)"
+msgstr "Weergave filter aangemaakt op veld \"%(field_name)s\" (%(field_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:133
+msgid "Update a view filter"
+msgstr "Een weergavefilter bijwerken"
+
+#: src/baserow/contrib/database/views/actions.py:134
+#, fuzzy, python-format
+msgid "View filter updated on field \"%(field_name)s\" (%(field_id)s)"
+msgstr "Bekijk filter bijgewerkt op veld \"%(field_name)s\" (%(field_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:255
+msgid "Delete a view filter"
+msgstr "Een weergavefilter verwijderen"
+
+#: src/baserow/contrib/database/views/actions.py:256
+#, python-format
+msgid "View filter deleted from field \"%(field_name)s\" (%(field_id)s)"
+msgstr "Weergavefilter verwijderd uit veld \"%(field_name)s\" (%(field_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:352
+msgid "Create a view sort"
+msgstr "Een weergavesortering maken"
+
+#: src/baserow/contrib/database/views/actions.py:353
+#, fuzzy, python-format
+msgid "View sorted on field \"%(field_name)s\" (%(field_id)s)"
+msgstr "Weergave gesorteerd op veld \"%(field_name)s\" (%(field_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:429
+#, fuzzy
+msgid "Update a view sort"
+msgstr "Een weergavesortering bijwerken"
+
+#: src/baserow/contrib/database/views/actions.py:430
+#, python-format
+msgid "View sort updated on field \"%(field_name)s\" (%(field_id)s)"
+msgstr "Weergave sortering bijgewerkt op veld \"%(field_name)s\" (%(field_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:528
+#, fuzzy
+msgid "Delete a view sort"
+msgstr "Een weergavesortering verwijderen"
+
+#: src/baserow/contrib/database/views/actions.py:529
+#, fuzzy, python-format
+msgid "View sort deleted from field \"%(field_name)s\" (%(field_id)s)"
+msgstr "Weergavefilter verwijderd uit veld \"%(field_name)s\" (%(field_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:606
+msgid "Order views"
+msgstr "Order weergaves"
+
+#: src/baserow/contrib/database/views/actions.py:606
+msgid "Views order changed"
+msgstr "Weergave order gewijzigd"
+
+#: src/baserow/contrib/database/views/actions.py:669
+#, fuzzy
+msgid "Update view field options"
+msgstr "Weergaveveldopties bijwerken"
+
+#: src/baserow/contrib/database/views/actions.py:670
+msgid "ViewFieldOptions updated"
+msgstr "Weergaveveldopties bijgewerkt"
+
+#: src/baserow/contrib/database/views/actions.py:765
+msgid "View slug URL updated"
+msgstr "Weergave slug URL bijgewerkt"
+
+#: src/baserow/contrib/database/views/actions.py:766
+msgid "View changed public slug URL"
+msgstr "Weergave veranderde publieke slug URL"
+
+#: src/baserow/contrib/database/views/actions.py:834
+msgid "Update view"
+msgstr "Weergave bijwerken"
+
+#: src/baserow/contrib/database/views/actions.py:835
+#, python-format
+msgid "View \"%(view_name)s\" (%(view_id)s) updated"
+msgstr "Weergave \"%(view_name)s\" (%(view_id)s) bijgewerkt"
+
+#: src/baserow/contrib/database/views/actions.py:919
+msgid "Create view"
+msgstr "Maak weergave"
+
+#: src/baserow/contrib/database/views/actions.py:920
+#, python-format
+msgid "View \"%(view_name)s\" (%(view_id)s) created"
+msgstr "Weergave \"%(view_name)s\" (%(view_id)s) gemaakt"
+
+#: src/baserow/contrib/database/views/actions.py:988
+msgid "Duplicate view"
+msgstr "Dupliceer weergave"
+
+#: src/baserow/contrib/database/views/actions.py:990
+#, fuzzy, python-format
+msgid ""
+"View \"%(view_name)s\" (%(view_id)s) duplicated from view "
+"\"%(original_view_name)s\" (%(original_view_id)s)"
+msgstr ""
+"Weergave \"%(view_name)s\" (%(view_id)s) gedupliceerd van weergave \""
+"%(original_view_name)s\" (%(original_view_id)s)"
+
+#: src/baserow/contrib/database/views/actions.py:1058
+msgid "Delete view"
+msgstr "Weergave verwijderen"
+
+#: src/baserow/contrib/database/views/actions.py:1059
+#, python-format
+msgid "View \"%(view_name)s\" (%(view_id)s) deleted"
+msgstr "Weergave \"%(view_name)s\" (%(view_id)s) verwijderd"
+
+#: src/baserow/contrib/database/views/actions.py:1116
+msgid "Create decoration"
+msgstr "Decoratie maken"
+
+#: src/baserow/contrib/database/views/actions.py:1117
+#, python-format
+msgid "View decoration %(decorator_id)s created"
+msgstr "Weergave decoratie %(decorator_id)s gemaakt"
+
+#: src/baserow/contrib/database/views/actions.py:1212
+msgid "Update decoration"
+msgstr "Decoratie bijwerken"
+
+#: src/baserow/contrib/database/views/actions.py:1213
+#, python-format
+msgid "View decoration %(decorator_id)s updated"
+msgstr "Weergave decoratie %(decorator_id)s gemaakt"
+
+#: src/baserow/contrib/database/views/actions.py:1337
+msgid "Delete decoration"
+msgstr "Decoratie verwijderen"
+
+#: src/baserow/contrib/database/views/actions.py:1338
+#, python-format
+msgid "View decoration %(decorator_id)s deleted"
+msgstr "Weergave decoratie %(decorator_id)s gemaakt"

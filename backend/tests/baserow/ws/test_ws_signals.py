@@ -13,6 +13,7 @@ from baserow.core.models import (
 )
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user.handler import UserHandler
+from baserow.core.utils import generate_hash
 
 
 @pytest.mark.django_db(transaction=True)
@@ -77,7 +78,9 @@ def test_user_permanently_deleted(mock_broadcast_to_groups, data_fixture):
     group_user = CoreHandler().create_group(user=user, name="Test")
     group_user_2 = CoreHandler().create_group(user=user, name="Test 2")
 
-    UserHandler().delete_expired_users(grace_delay=timedelta(days=1))
+    UserHandler().delete_expired_users_and_related_groups_if_last_admin(
+        grace_delay=timedelta(days=1)
+    )
 
     mock_broadcast_to_groups.delay.assert_called_once()
     args = mock_broadcast_to_groups.delay.call_args
@@ -131,8 +134,8 @@ def test_group_restored(mock_broadcast_to_users, data_fixture):
         "name": database.name,
         "order": 0,
         "type": "database",
-        "tables": [],
         "group": {"id": group.id, "name": group.name},
+        "tables": [],
     }
     assert member_call[1]["applications"] == [expected_group_json]
     assert admin_call[0] == [user.id]
@@ -306,49 +309,48 @@ def test_groups_reordered(mock_broadcast_to_users, data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.signals.broadcast_to_group")
-def test_application_created(mock_broadcast_to_group, data_fixture):
+@patch("baserow.ws.signals.broadcast_application_created")
+def test_application_created(mock_broadcast_application_created, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
+    websocket_id = "test"
+    user.web_socket_id = websocket_id
     database = CoreHandler().create_application(
         user=user, group=group, type_name="database", name="Database"
     )
 
-    mock_broadcast_to_group.delay.assert_called_once()
-    args = mock_broadcast_to_group.delay.call_args
-    assert args[0][0] == group.id
-    assert args[0][1]["type"] == "application_created"
-    assert args[0][1]["application"]["id"] == database.id
+    mock_broadcast_application_created.delay.assert_called_once()
+    args = mock_broadcast_application_created.delay.call_args
+    assert args[0][0] == database.id
+    assert args[0][1] == websocket_id
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.signals.broadcast_to_group")
-def test_application_updated(mock_broadcast_to_group, data_fixture):
+@patch("baserow.ws.signals.broadcast_to_permitted_users")
+def test_application_updated(mock_broadcast_to_permitted_users, data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     CoreHandler().update_application(user=user, application=database, name="Database")
 
-    mock_broadcast_to_group.delay.assert_called_once()
-    args = mock_broadcast_to_group.delay.call_args
-    assert args[0][0] == database.group_id
-    assert args[0][1]["type"] == "application_updated"
-    assert args[0][1]["application_id"] == database.id
-    assert args[0][1]["application"]["id"] == database.id
+    mock_broadcast_to_permitted_users.delay.assert_called_once()
+    args = mock_broadcast_to_permitted_users.delay.call_args
+    assert args[0][4]["type"] == "application_updated"
+    assert args[0][4]["application_id"] == database.id
+    assert args[0][4]["application"]["id"] == database.id
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.signals.broadcast_to_group")
-def test_application_deleted(mock_broadcast_to_group, data_fixture):
+@patch("baserow.ws.signals.broadcast_to_permitted_users")
+def test_application_deleted(mock_broadcast_to_permitted_users, data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     database_id = database.id
     CoreHandler().delete_application(user=user, application=database)
 
-    mock_broadcast_to_group.delay.assert_called_once()
-    args = mock_broadcast_to_group.delay.call_args
-    assert args[0][0] == database.group_id
-    assert args[0][1]["type"] == "application_deleted"
-    assert args[0][1]["application_id"] == database_id
+    mock_broadcast_to_permitted_users.delay.assert_called_once()
+    args = mock_broadcast_to_permitted_users.delay.call_args
+    assert args[0][4]["type"] == "application_deleted"
+    assert args[0][4]["application_id"] == database_id
 
 
 @pytest.mark.django_db(transaction=True)
@@ -364,12 +366,12 @@ def test_applications_reordered(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][0] == database.group_id
     assert args[0][1]["type"] == "applications_reordered"
     assert args[0][1]["group_id"] == group.id
-    assert args[0][1]["order"] == [database.id]
+    assert args[0][1]["order"] == [generate_hash(database.id)]
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.signals.broadcast_to_group")
-def test_duplicate_application(mock_broadcast_to_channel_group, data_fixture):
+@patch("baserow.ws.signals.broadcast_application_created")
+def test_duplicate_application(mock_broadcast_to_permitted_users, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group)
@@ -379,8 +381,6 @@ def test_duplicate_application(mock_broadcast_to_channel_group, data_fixture):
             user=user, application=database
         )
 
-    mock_broadcast_to_channel_group.delay.assert_called_once()
-    args = mock_broadcast_to_channel_group.delay.call_args
-    assert args[0][0] == group.id
-    assert args[0][1]["type"] == "application_created"
-    assert args[0][1]["application"]["id"] == application_clone.id
+    mock_broadcast_to_permitted_users.delay.assert_called_once()
+    args = mock_broadcast_to_permitted_users.delay.call_args
+    assert args[0][0] == application_clone.id

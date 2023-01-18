@@ -18,6 +18,7 @@ from baserow.contrib.database.views.registries import (
 )
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
+    HierarchicalModelMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
@@ -45,6 +46,7 @@ def get_default_view_content_type():
 
 
 class View(
+    HierarchicalModelMixin,
     TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
@@ -102,6 +104,9 @@ class View(
         """
 
         return self.public_view_password != ""  # nosec b105
+
+    def get_parent(self):
+        return self.table
 
     def rotate_slug(self):
         """
@@ -259,7 +264,7 @@ class ViewFilterManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class ViewFilter(models.Model):
+class ViewFilter(HierarchicalModelMixin, models.Model):
     objects = ViewFilterManager()
 
     view = models.ForeignKey(
@@ -292,6 +297,9 @@ class ViewFilter(models.Model):
     def preload_values(self):
         return view_filter_type_registry.get(self.type).get_preload_values(self)
 
+    def get_parent(self):
+        return self.view
+
 
 class ViewDecorationManager(models.Manager):
     """
@@ -305,7 +313,7 @@ class ViewDecorationManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class ViewDecoration(OrderableMixin, models.Model):
+class ViewDecoration(HierarchicalModelMixin, OrderableMixin, models.Model):
     objects = ViewDecorationManager()
 
     view = models.ForeignKey(
@@ -345,6 +353,9 @@ class ViewDecoration(OrderableMixin, models.Model):
         queryset = ViewDecoration.objects.filter(view=view)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
+    def get_parent(self):
+        return self.view
+
     class Meta:
         ordering = ("order", "id")
 
@@ -361,7 +372,7 @@ class ViewSortManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class ViewSort(models.Model):
+class ViewSort(HierarchicalModelMixin, models.Model):
     objects = ViewSortManager()
 
     view = models.ForeignKey(
@@ -382,6 +393,9 @@ class ViewSort(models.Model):
         "and DESC (Descending) is from Z to A.",
         default=SORT_ORDER_ASC,
     )
+
+    def get_parent(self):
+        return self.view
 
     class Meta:
         ordering = ("id",)
@@ -415,7 +429,7 @@ class GridViewFieldOptionsManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class GridViewFieldOptions(models.Model):
+class GridViewFieldOptions(HierarchicalModelMixin, models.Model):
     objects = GridViewFieldOptionsManager()
     objects_and_trash = models.Manager()
 
@@ -469,6 +483,9 @@ class GridViewFieldOptions(models.Model):
         ),
     )
 
+    def get_parent(self):
+        return self.grid_view
+
     class Meta:
         ordering = ("field_id",)
 
@@ -497,7 +514,7 @@ class GalleryViewFieldOptionsManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class GalleryViewFieldOptions(models.Model):
+class GalleryViewFieldOptions(HierarchicalModelMixin, models.Model):
     objects = GalleryViewFieldOptionsManager()
     objects_and_trash = models.Manager()
 
@@ -513,6 +530,9 @@ class GalleryViewFieldOptions(models.Model):
         default=32767,
         help_text="The order that the field has in the form. Lower value is first.",
     )
+
+    def get_parent(self):
+        return self.gallery_view
 
     class Meta:
         ordering = (
@@ -597,7 +617,7 @@ class FormViewFieldOptionsManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
-class FormViewFieldOptions(models.Model):
+class FormViewFieldOptions(HierarchicalModelMixin, models.Model):
     objects = FormViewFieldOptionsManager()
     objects_and_trash = models.Manager()
 
@@ -640,6 +660,9 @@ class FormViewFieldOptions(models.Model):
         help_text="The order that the field has in the form. Lower value is first.",
     )
 
+    def get_parent(self):
+        return self.form_view
+
     class Meta:
         ordering = (
             "order",
@@ -664,7 +687,7 @@ class FormViewFieldOptionsConditionManager(models.Manager):
         return super().get_queryset().filter(~Q(field__trashed=True))
 
 
-class FormViewFieldOptionsCondition(models.Model):
+class FormViewFieldOptionsCondition(HierarchicalModelMixin, models.Model):
     field_option = models.ForeignKey(
         FormViewFieldOptions,
         on_delete=models.CASCADE,
@@ -688,6 +711,9 @@ class FormViewFieldOptionsCondition(models.Model):
         help_text="The filter value that must be compared to the field's value.",
     )
     objects = FormViewFieldOptionsConditionManager()
+
+    def get_parent(self):
+        return self.field_option
 
     class Meta:
         ordering = ("id",)

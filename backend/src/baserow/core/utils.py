@@ -689,3 +689,17 @@ def atomic_if_not_already():
     """
 
     return optional_atomic(transaction.get_autocommit())
+
+
+def generate_hash(value: str):
+    """
+    Generates a hexadecimal hash given an input value. The same function is replicated
+    in the frontend as `generateHash` such that the front and backend can share the
+    same hashing algorithm.
+    :param value: The value used to generate the hash
+    :return: The hexadecimal hash of the value provided using sha256
+    """
+
+    value_hashed = hashlib.sha256()
+    value_hashed.update(str(value).encode("UTF-8"))
+    return value_hashed.hexdigest()

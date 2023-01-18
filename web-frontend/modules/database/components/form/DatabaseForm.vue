@@ -1,6 +1,6 @@
 <template>
-  <form @submit.prevent="submit">
-    <FormElement class="control">
+  <div>
+    <div class="control">
       <label class="control__label">
         {{ $t('databaseForm.importLabel') }}
       </label>
@@ -28,68 +28,42 @@
           </li>
         </ul>
       </div>
-    </FormElement>
-    <template v-if="importType !== 'airtable'">
-      <FormElement :error="fieldHasErrors('name')" class="control">
-        <label class="control__label">
-          <i class="fas fa-font"></i>
-          {{ $t('applicationForm.nameLabel') }}
-        </label>
-        <div class="control__elements">
-          <input
-            ref="name"
-            v-model="values.name"
-            :class="{ 'input--error': fieldHasErrors('name') }"
-            type="text"
-            class="input input--large"
-            @focus.once="$event.target.select()"
-            @blur="$v.values.name.$touch()"
-          />
-          <div v-if="fieldHasErrors('name')" class="error">
-            {{ $t('error.requiredField') }}
-          </div>
-        </div>
-        <slot></slot>
-      </FormElement>
-    </template>
+    </div>
+    <BlankDatabaseForm
+      v-if="importType === 'none'"
+      :default-name="defaultName"
+      :loading="loading"
+      @submitted="$emit('submitted', $event)"
+    />
     <ImportFromAirtable
-      v-else
+      v-else-if="importType === 'airtable'"
       @hidden="$emit('hidden', $event)"
     ></ImportFromAirtable>
-  </form>
+  </div>
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
-import { required } from 'vuelidate/lib/validators'
 import ImportFromAirtable from '@baserow/modules/database/components/airtable/ImportFromAirtable'
+import BlankDatabaseForm from '@baserow/modules/database/components/form/BlankDatabaseForm'
 
 export default {
   name: 'DatabaseForm',
-  components: { ImportFromAirtable },
-  mixins: [form],
+  components: { BlankDatabaseForm, ImportFromAirtable },
   props: {
     defaultName: {
       type: String,
       required: false,
       default: '',
     },
+    loading: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
-      values: {
-        name: this.defaultName,
-      },
       importType: 'none',
     }
-  },
-  mounted() {
-    this.$refs.name.focus()
-  },
-  validations: {
-    values: {
-      name: { required },
-    },
   },
 }
 </script>

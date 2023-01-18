@@ -84,7 +84,7 @@
       -->
       <GridViewCell
         v-for="field in fieldsToRender"
-        :key="'row-field-' + row.id.toString() + '-' + field.id.toString()"
+        :key="'row-field-' + row._.persistentId + '-' + field.id.toString()"
         :group-id="groupId"
         :field="field"
         :row="row"
@@ -107,6 +107,7 @@
         @cell-mousedown-left="$emit('cell-mousedown-left', { row, field })"
         @cell-mouseover="$emit('cell-mouseover', { row, field })"
         @cell-mouseup-left="$emit('cell-mouseup-left', { row, field })"
+        @add-row-after="$emit('add-row-after', $event)"
       ></GridViewCell>
     </div>
   </RecursiveWrapper>

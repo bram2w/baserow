@@ -45,7 +45,7 @@ export default {
         const fieldType = this.$registry.get('field', this.field.type)
         const empty = fieldType.isEmpty(this.field, value)
         if (empty) {
-          return this.$t('error.required')
+          return this.$t('error.requiredField')
         }
       }
 

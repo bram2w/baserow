@@ -172,6 +172,8 @@ def test_can_undo_creating_subject_by_id(data_fixture, enterprise_data_fixture):
         user, {"id": invitee.id}, "auth.User", team
     )
 
+    assert TeamSubject.objects.filter(team=team).exists()
+
     ActionHandler.undo(user, [TeamsActionScopeType.value(group.id)], session_id)
 
     assert not TeamSubject.objects.filter(team=team).exists()

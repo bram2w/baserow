@@ -14,7 +14,7 @@ urlpatterns = [
     re_path(
         r"(?P<snapshot_id>[0-9]+)/$",
         SnapshotView.as_view(),
-        name="detail",
+        name="item",
     ),
     re_path(
         r"(?P<snapshot_id>[0-9]+)/restore/$",

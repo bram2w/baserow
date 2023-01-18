@@ -263,6 +263,8 @@ class DatabaseConfig(AppConfig):
             LinkRowHasViewFilterType,
             LinkRowNotContainsViewFilterType,
             LowerThanViewFilterType,
+            MultipleCollaboratorsHasNotViewFilterType,
+            MultipleCollaboratorsHasViewFilterType,
             MultipleSelectHasNotViewFilterType,
             MultipleSelectHasViewFilterType,
             NotEmptyViewFilterType,
@@ -305,6 +307,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(NotEmptyViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
+        view_filter_type_registry.register(MultipleCollaboratorsHasViewFilterType())
+        view_filter_type_registry.register(MultipleCollaboratorsHasNotViewFilterType())
 
         from .views.view_aggregations import (
             AverageViewAggregationType,
@@ -469,6 +473,7 @@ class DatabaseConfig(AppConfig):
         from .fields.operations import (
             CreateFieldOperationType,
             DeleteFieldOperationType,
+            DeleteRelatedLinkRowFieldOperationType,
             DuplicateFieldOperationType,
             ListFieldsOperationType,
             ReadAggregationDatabaseTableOperationType,
@@ -565,6 +570,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ReadFieldOperationType())
         operation_type_registry.register(UpdateFieldOperationType())
         operation_type_registry.register(DeleteFieldOperationType())
+        operation_type_registry.register(DeleteRelatedLinkRowFieldOperationType())
         operation_type_registry.register(DuplicateFieldOperationType())
         operation_type_registry.register(UpdateViewFieldOptionsOperationType())
         operation_type_registry.register(DeleteViewSortOperationType())
