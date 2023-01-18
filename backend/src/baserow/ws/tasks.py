@@ -102,13 +102,18 @@ def broadcast_to_permitted_users(
 
 
 @app.task(bind=True)
-def broadcast_to_users_individual_payloads(self, payload_map: Dict[str, any]):
+def broadcast_to_users_individual_payloads(
+    self, payload_map: Dict[str, any], ignore_web_socket_id: Optional[int] = None
+):
     """
     This task will broadcast different payloads to different users by just using one
     message.
 
     :param payload_map: A mapping from user_id to the payload that should be sent to
         the user. The id has to be stringified to not violate redis channel policy
+    :param ignore_web_socket_id: An optional web socket id which will not be sent the
+        payload if provided. This is normally the web socket id that has originally
+        made the change request.
     """
 
     from asgiref.sync import async_to_sync
@@ -120,6 +125,7 @@ def broadcast_to_users_individual_payloads(self, payload_map: Dict[str, any]):
         {
             "type": "broadcast_to_users_individual_payloads",
             "payload_map": payload_map,
+            "ignore_web_socket_id": ignore_web_socket_id,
         },
     )
 
@@ -217,13 +223,16 @@ def broadcast_to_groups(
 
 
 @app.task(bind=True)
-def broadcast_application_created(self, application_id: int):
+def broadcast_application_created(
+    self, application_id: int, ignore_web_socket_id: Optional[int]
+):
     """
     This task is called when an application is created. We made this a task instead of
     running the code in the signal because calculating the individual payloads can take
     a lot of computational power and should therefore not run on a gunicorn worker.
 
     :param application_id: The id of the application that was created
+    :param ignore_web_socket_id: The web socket id to ignore
     :return:
     """
 
@@ -262,4 +271,4 @@ def broadcast_application_created(self, application_id: int):
             "application": application_serialized,
         }
 
-    broadcast_to_users_individual_payloads(payload_map)
+    broadcast_to_users_individual_payloads(payload_map, ignore_web_socket_id)

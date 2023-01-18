@@ -310,16 +310,19 @@ def test_groups_reordered(mock_broadcast_to_users, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.signals.broadcast_application_created")
-def test_application_created(mock_broadcast_to_permitted_users, data_fixture):
+def test_application_created(mock_broadcast_application_created, data_fixture):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
+    websocket_id = "test"
+    user.web_socket_id = websocket_id
     database = CoreHandler().create_application(
         user=user, group=group, type_name="database", name="Database"
     )
 
-    mock_broadcast_to_permitted_users.delay.assert_called_once()
-    args = mock_broadcast_to_permitted_users.delay.call_args
+    mock_broadcast_application_created.delay.assert_called_once()
+    args = mock_broadcast_application_created.delay.call_args
     assert args[0][0] == database.id
+    assert args[0][1] == websocket_id
 
 
 @pytest.mark.django_db(transaction=True)
