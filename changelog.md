@@ -17,7 +17,7 @@ For example:
 
 ### Breaking API changes
 
-## Released (2023-01-13 1.14.0)
+## Released (2023-01-18 1.14.0)
 
 ### New Features
 * When your permissions change you now get notified in the frontend to reload your page [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
