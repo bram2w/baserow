@@ -125,10 +125,10 @@
     },
     "viewFilter": {
         "contains": "contiene",
-        "containsNot": "no contiene",
+        "containsNot": "no contenga",
         "filenameContains": "el nombre del archivo contiene",
         "has": "tiene",
-        "hasNot": "no tiene",
+        "hasNot": "no tenga",
         "higherThan": "Mas alto que",
         "is": "es",
         "isNot": "no es",
@@ -253,7 +253,9 @@
         "snapshotOperationLimitExceededTitle": "Límite alcanzado",
         "snapshotOperationLimitExceededDescription": "Se ha alcanzado el límite del número de operaciones de imagenes instantáneas en ejecución. Favor de esperar hasta que termine la operación anterior.",
         "disabledPasswordProviderTitle": "La autentificación por contraseña está deshabilitada.",
-        "disabledPasswordProviderMessage": "Utiliza otro proveedor de autentificación."
+        "disabledPasswordProviderMessage": "Utiliza otro proveedor de autentificación.",
+        "lastAdminTitle": "No se puede eliminar el último administrador del grupo",
+        "lastAdminMessage": "Un grupo debe tener al menos un administrador."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
