@@ -1,10 +1,9 @@
-import json
 from typing import Dict, List, Union
 
 from django.db.models import Q, QuerySet, Value
+from django.http import QueryDict
 
 from baserow.api.exceptions import (
-    InvalidFilterAttributeException,
     InvalidSortAttributeException,
     InvalidSortDirectionException,
     UnknownFieldProvided,
@@ -159,44 +158,23 @@ class SortableViewMixin:
 class FilterableViewMixin:
     filters_field_mapping: Dict[str, str] = {}
 
-    def parse_filters(self, unparsed_filters: str) -> Dict[str, str]:
-        """
-        Parses the filters query string into a dictionary. The filters query string
-        is JSON encoded dictionary. The key is the field name and
-        the value is the field value that the field should have.
-
-        :param unparsed_filters: The filters query string.
-        :return: The filters query string parsed into a dictionary.
-        """
-
-        if unparsed_filters:
-            try:
-                return json.loads(unparsed_filters)
-            except json.JSONDecodeError:
-                raise InvalidFilterAttributeException()
-        else:
-            return {}
-
-    def apply_filters(self, filters: Dict[str, str], queryset: QuerySet) -> QuerySet:
+    def apply_filters(self, query_params: QueryDict, queryset: QuerySet) -> QuerySet:
         """
         Applies the provided filters to the provided query. If the filters are
         provided then an `exact` lookup will be done for each field in the
         filters_fields property. One of the fields has to match the query.
 
-        :param filters: The filters query.
+        :param query_params: The request query parameters.
         :param queryset: The queryset where the filters query must be applied to.
         :return: The queryset filtering the results by the filters query.
         """
 
-        if not filters:
-            return queryset
-
         q = Q()
 
-        for key, value in filters.items():
-            if key in self.filters_field_mapping:
-                q.add(Q(**{f"{self.filters_field_mapping[key]}": Value(value)}), Q.AND)
-            else:
-                raise InvalidFilterAttributeException()
+        for key, field in self.filters_field_mapping.items():
+            if (value := query_params.get(key)) is None:
+                continue
+
+            q.add(Q(**{f"{field}": Value(value)}), Q.AND)
 
         return queryset.filter(q)

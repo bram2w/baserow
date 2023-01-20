@@ -489,3 +489,13 @@ def stub_getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=N
         (AF_INET, SOCK_STREAM, IPPROTO_TCP, host, (ip, port)),
         (AF_INET6, SOCK_STREAM, IPPROTO_TCP, "", (ip, port)),
     ]
+
+
+class AnyInt(int):
+    """
+    A class that can be used to check if a value is an int. Useful in tests when
+    you don't care about ID, but you want to check all other values.
+    """
+
+    def __eq__(self, other):
+        return isinstance(other, int)
