@@ -21,7 +21,7 @@ export default (client, baseUrl, isPaginated = true) => {
         baseUrl = baseUrl(options.urlParams)
       }
 
-      const params = {}
+      const params = Object.assign({}, filters)
 
       if (page) {
         params.page = page
@@ -38,10 +38,7 @@ export default (client, baseUrl, isPaginated = true) => {
           })
           .join(',')
       }
-      if (Object.keys(filters).length > 0) {
-        // We need to stringify filters values because they can contain special characters.
-        params.filters = JSON.stringify(filters)
-      }
+
       return client.get(baseUrl, { params })
     },
   }

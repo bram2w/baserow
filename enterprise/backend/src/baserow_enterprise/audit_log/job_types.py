@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
+from django.utils.functional import lazy
 from django.utils.translation import gettext as _
 from django.utils.translation import override as translation_override
 
@@ -22,7 +23,7 @@ from baserow.contrib.database.export.handler import (
     ExportHandler,
     _create_storage_dir_if_missing_and_open,
 )
-from baserow.core.db import IsolationLevel, transaction_atomic
+from baserow.core.action.registries import action_type_registry
 from baserow.core.jobs.registries import JobType
 from baserow.core.utils import ChildProgressBuilder
 from baserow_enterprise.features import AUDIT_LOG
@@ -84,15 +85,19 @@ class AuditLogExportJobType(JobType):
             help_text="Whether or not to generate a header row at the top of the csv file.",
         ),
         "filter_user_id": serializers.IntegerField(
+            min_value=0,
             required=False,
             help_text="Optional: The user to filter the audit log by.",
         ),
         "filter_group_id": serializers.IntegerField(
+            min_value=0,
             required=False,
             help_text="Optional: The group to filter the audit log by.",
         ),
-        "filter_action_type": serializers.CharField(
+        "filter_action_type": serializers.ChoiceField(
+            choices=lazy(action_type_registry.get_types, list)(),
             required=False,
+            default=None,
             help_text="Optional: The action type to filter the audit log by.",
         ),
         "filter_from_timestamp": serializers.DateTimeField(
@@ -126,14 +131,6 @@ class AuditLogExportJobType(JobType):
                 storage_location,
                 job.id,
             )
-
-    def transaction_atomic_context(self, job: AuditLogExportJob):
-        """
-        Protects the table and the fields from modifications while import is in
-        progress.
-        """
-
-        return transaction_atomic(isolation_level=IsolationLevel.REPEATABLE_READ)
 
     def write_audit_log_rows(self, job, file, queryset, progress):
 
@@ -179,6 +176,22 @@ class AuditLogExportJobType(JobType):
             writer.writerows(rows)
             export_progress.increment()
 
+    def get_filtered_queryset(self, job):
+        queryset = AuditLogEntry.objects.order_by("-action_timestamp")
+        filters_field_mapping: Dict[str, str] = {
+            "filter_user_id": "user_id",
+            "filter_group_id": "group_id",
+            "filter_action_type": "action_type",
+            "filter_from_timestamp": "action_timestamp__gte",
+            "filter_to_timestamp": "action_timestamp__lte",
+        }
+
+        for field, qs_filter in filters_field_mapping.items():
+            if (value := getattr(job, field)) is not None:
+                queryset = queryset.filter(**{qs_filter: value})
+
+        return queryset
+
     def run(self, job, progress):
         """
         Export the filtered audit log entries to a CSV file.
@@ -191,19 +204,7 @@ class AuditLogExportJobType(JobType):
             AUDIT_LOG, job.user
         )
 
-        queryset = AuditLogEntry.objects.order_by("-action_timestamp")
-        filters_field_mapping: Dict[str, str] = {
-            "filter_user_id": "user_id",
-            "filter_group_id": "group_id",
-            "filter_action_type": "action_type",
-            "filter_from_timestamp": "action_timestamp__gte",
-            "filter_to_timestamp": "action_timestamp__lte",
-        }
-
-        for field, qs_filter in filters_field_mapping.items():
-            value = getattr(job, field)
-            if value:
-                queryset = queryset.filter(**{qs_filter: value})
+        queryset = self.get_filtered_queryset(job)
 
         filename = f"{uuid4()}.csv"
         storage_location = ExportHandler.export_file_path(filename)

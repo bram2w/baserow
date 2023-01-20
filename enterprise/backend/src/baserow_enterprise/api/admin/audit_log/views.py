@@ -161,20 +161,19 @@ class AdminAuditLogActionTypeFilterView(APIView):
         with translation.override(request.user.profile.language):
             search = request.GET.get("search")
 
-            action_types = action_type_registry.get_types()
-            serialized_types = AuditLogActionTypeSerializer(
-                action_types, many=True
+            action_types = AuditLogActionTypeSerializer(
+                action_type_registry.get_all(), many=True
             ).data
 
             if search:
-                serialized_types = self.filter_action_types(serialized_types, search)
+                action_types = self.filter_action_types(action_types, search)
 
             return Response(
                 {
-                    "count": len(serialized_types),
+                    "count": len(action_types),
                     "next": None,
                     "previous": None,
-                    "results": sorted(serialized_types, key=lambda x: x["value"]),
+                    "results": sorted(action_types, key=lambda x: x["value"]),
                 }
             )
 

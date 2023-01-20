@@ -1,13 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.utils.functional import lazy
 
 from rest_framework import serializers
 
 from baserow.core.action.registries import action_type_registry
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Group
-from baserow_enterprise.api.admin.audit_log.validators import (
-    audit_log_list_filters_validator,
-)
 from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
 from baserow_enterprise.audit_log.models import AuditLogEntry
 
@@ -61,26 +59,30 @@ class AuditLogSerializer(serializers.ModelSerializer):
 
 
 class AuditLogUserSerializer(serializers.ModelSerializer):
+    value = serializers.CharField(source="email")
+
     class Meta:
         model = User
-        fields = ("email",)
-
-    def to_representation(self, instance):
-        return {"id": instance.id, "value": instance.email}
+        fields = ("id", "value")
 
 
 class AuditLogGroupSerializer(serializers.ModelSerializer):
+    value = serializers.CharField(source="name")
+
     class Meta:
         model = Group
-        fields = ("name",)
-
-    def to_representation(self, instance):
-        return {"id": instance.id, "value": instance.name}
+        fields = ("id", "value")
 
 
 class AuditLogActionTypeSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        return {"id": instance, "value": render_action_type(instance)}
+    id = serializers.ChoiceField(
+        choices=lazy(action_type_registry.get_types, list)(),
+        source="type",
+    )
+    value = serializers.SerializerMethodField()
+
+    def get_value(self, instance):
+        return render_action_type(instance.type)
 
 
 AuditLogExportJobRequestSerializer = job_type_registry.get(
@@ -93,8 +95,15 @@ AuditLogExportJobResponseSerializer = job_type_registry.get(
 
 
 class AuditLogQueryParamsSerializer(serializers.Serializer):
+    page = serializers.IntegerField(required=False, default=1)
     search = serializers.CharField(required=False, default=None)
     sorts = serializers.CharField(required=False, default=None)
-    filters = serializers.CharField(
-        required=False, default=None, validators=[audit_log_list_filters_validator]
+    user_id = serializers.IntegerField(min_value=0, required=False, default=None)
+    group_id = serializers.IntegerField(min_value=0, required=False, default=None)
+    action_type = serializers.ChoiceField(
+        choices=lazy(action_type_registry.get_types, list)(),
+        default=None,
+        required=False,
     )
+    from_timestamp = serializers.DateTimeField(required=False, default=None)
+    to_timestamp = serializers.DateTimeField(required=False, default=None)
