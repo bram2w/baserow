@@ -2441,9 +2441,11 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
                 "required": required,
                 "allow_null": not required,
                 **kwargs,
-            }
+            },
         )
-        return serializers.ListSerializer(child=field_serializer, required=required)
+        return serializers.ListSerializer(
+            child=field_serializer, required=required, **kwargs
+        )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> str:
         related_objects = getattr(row, field_name)
@@ -3389,7 +3391,9 @@ class MultipleCollaboratorsFieldType(FieldType):
                 **kwargs,
             }
         )
-        return serializers.ListSerializer(child=field_serializer, required=required)
+        return serializers.ListSerializer(
+            child=field_serializer, required=required, **kwargs
+        )
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
