@@ -56,6 +56,7 @@ RUN apt-get update && \
     gawk \
     git \
     xmlsec1 \
+    procps \
     && \
     # ========================
     # Install Node and Yarn
