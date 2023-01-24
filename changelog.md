@@ -12,9 +12,9 @@ For example:
 ### New Features
 
 ### Bug Fixes
-
 * Add missing `procps` system package to all-in-one docker image fixing `/baserow/supervisor/docker-postgres-setup.sh run` (#1512)[https://gitlab.com/bramw/baserow/-/issues/1512]
 * Fixed API docs for creating and updating rows are missing for Multiple Select and Multiple Collaborator fields. [#1196](https://gitlab.com/bramw/baserow/-/issues/1196)
+* Fix date field failing hard when trying to prefill an empty form value. [#1521](https://gitlab.com/bramw/baserow/-/issues/1521)
 
 ### Refactors
 
