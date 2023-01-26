@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.pagination import LimitOffsetPagination
@@ -455,6 +457,13 @@ class GridViewFieldAggregationsView(APIView):
         result = view_handler.get_view_field_aggregations(
             view, with_total=total, search=search
         )
+
+        # Decimal("NaN") can't be serialized, therefore we have to replace it
+        # with its literal string representation
+        nan_replacement_value = "NaN"
+        for field in result:
+            if isinstance(result[field], Decimal) and result[field].is_nan():
+                result[field] = nan_replacement_value
 
         return Response(result)
 
