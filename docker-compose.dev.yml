@@ -137,8 +137,6 @@ services:
         GID: $GID
       context: .
       dockerfile: ./web-frontend/Dockerfile
-    healthcheck:
-      test: [ "CMD-SHELL", "exit 0" ]
     image: baserow_web-frontend:latest
     command: "bash -c 'cd /baserow/backend/email_compiler/ && yarn install && yarn run watch'"
     volumes:
