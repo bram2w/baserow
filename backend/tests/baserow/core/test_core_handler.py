@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
+from django.db import transaction
 
 import pytest
 from itsdangerous.exc import BadSignature
@@ -1075,7 +1076,7 @@ def test_export_import_group_application(data_fixture):
     assert id_mapping["applications"][database.id] == imported_database.id
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.once_per_day_in_ci
 # You must add --run-once-per-day-in-ci to pytest's additional args to run this test,
 # you can do this in intellij by editing the run config for this test and adding
@@ -1091,9 +1092,10 @@ def test_sync_and_install_all_templates(data_fixture, tmpdir):
 
     group_user = data_fixture.create_user_group()
     for template in Template.objects.all():
-        handler.install_template(
-            group_user.user, group_user.group, template, storage=storage
-        )
+        with transaction.atomic():
+            handler.install_template(
+                group_user.user, group_user.group, template, storage=storage
+            )
 
 
 @pytest.mark.django_db
