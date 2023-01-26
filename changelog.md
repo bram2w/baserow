@@ -21,6 +21,7 @@ For example:
 * Fix being able to submit lookup field options without a field being selected [#941](https://gitlab.com/bramw/baserow/-/issues/941)
 * Fix issue where you wouldn't get an error if you inserted whitespace only into a form text field [#1202](https://gitlab.com/bramw/baserow/-/issues/1202)
 * Improved the handling of taking a snapshot of, or duplicating, a database with many thousands of tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
+* Stop backend from failing hard during csv export if a character can't be encoded [#697](https://gitlab.com/bramw/baserow/-/issues/697)
 
 ### Refactors
 

@@ -263,6 +263,40 @@ def run_export_job_over_interesting_table(data_fixture, storage_mock, options):
 
 
 @pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_can_export_special_characters_in_arabic_encoding_to_csv(
+    storage_mock, data_fixture
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(user=user, table=table, name="text")
+
+    special_character = "ê"
+    special_character_exported_expected = "\\xea"
+
+    model = table.get_model()
+    model.objects.create(**{f"field_{text_field.id}": special_character})
+
+    job, contents = run_export_job_with_mock_storage(
+        table,
+        grid_view,
+        storage_mock,
+        user,
+        {
+            "exporter_type": "csv",
+            "export_charset": "iso-8859-6",
+        },
+    )
+
+    assert (
+        contents
+        == f"id,{text_field.name}\r\n1,{special_character_exported_expected}\r\n"
+    )
+
+
+@pytest.mark.django_db
 def test_creating_a_new_export_job_will_cancel_any_already_running_jobs_for_that_user(
     data_fixture,
 ):
