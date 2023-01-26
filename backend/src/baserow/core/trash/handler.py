@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, OperationalError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 
@@ -13,6 +13,7 @@ from baserow.core.exceptions import (
     ApplicationNotInGroup,
     GroupDoesNotExist,
     TrashItemDoesNotExist,
+    is_max_lock_exceeded_exception,
 )
 from baserow.core.models import Application, Group, TrashEntry
 from baserow.core.trash.exceptions import (
@@ -20,6 +21,7 @@ from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
+    PermanentDeletionMaxLocksExceededException,
 )
 from baserow.core.trash.operations import (
     EmptyApplicationTrashOperationType,
@@ -220,6 +222,43 @@ class TrashHandler:
             trash_contents.update(should_be_permanently_deleted=True)
 
     @staticmethod
+    def try_perm_delete_trash_entry(
+        trash_entry: TrashEntry,
+        trash_item_lookup_cache: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Responsible for finding the trash item type for this `TrashEntry`, then finding
+        the model to destroy and passing it into `_permanently_delete_and_signal`
+        for it to be permanently deleted.
+        """ ""
+
+        trash_item_type = trash_item_type_registry.get(trash_entry.trash_item_type)
+
+        try:
+            to_delete = trash_item_type.lookup_trashed_item(
+                trash_entry, trash_item_lookup_cache
+            )
+            TrashHandler._permanently_delete_and_signal(
+                trash_item_type,
+                to_delete,
+                trash_entry.parent_trash_item_id,
+                trash_item_lookup_cache,
+            )
+        except TrashItemDoesNotExist:
+            # When a parent item is deleted it should also delete all of its
+            # children. Hence we expect that many of these TrashEntries to no
+            # longer point to an existing item. In such a situation we just want
+            # to delete the entry as the item itself has been correctly deleted.
+            pass
+        except OperationalError as e:
+            # Detect if this `OperationalError` is due to us exceeding the
+            # lock count in `max_locks_per_transaction`. If it is, we'll
+            # raise a different exception so that we can catch this scenario.
+            if is_max_lock_exceeded_exception(e):
+                raise PermanentDeletionMaxLocksExceededException()
+            raise e
+
+    @staticmethod
     def permanently_delete_marked_trash():
         """
         Looks up every trash item marked for permanent deletion and removes them
@@ -241,26 +280,9 @@ class TrashHandler:
                 if not trash_entry:
                     break
 
-                trash_item_type = trash_item_type_registry.get(
-                    trash_entry.trash_item_type
+                TrashHandler.try_perm_delete_trash_entry(
+                    trash_entry, trash_item_lookup_cache
                 )
-
-                try:
-                    to_delete = trash_item_type.lookup_trashed_item(
-                        trash_entry, trash_item_lookup_cache
-                    )
-                    TrashHandler._permanently_delete_and_signal(
-                        trash_item_type,
-                        to_delete,
-                        trash_entry.parent_trash_item_id,
-                        trash_item_lookup_cache,
-                    )
-                except TrashItemDoesNotExist:
-                    # When a parent item is deleted it should also delete all of it's
-                    # children. Hence we expect that many of these TrashEntries to no
-                    # longer point to an existing item. In such a situation we just want
-                    # to delete the entry as the item itself has been correctly deleted.
-                    pass
                 trash_entry.delete()
                 deleted_count += 1
         logger.info(

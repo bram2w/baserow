@@ -123,7 +123,7 @@ export default {
       this.createLoading = false
       this.showError(
         this.$t('clientHandler.notCompletedTitle'),
-        this.$t('clientHandler.notCompletedDescription')
+        this.job.human_readable_error
       )
     },
     // eslint-disable-next-line require-await

@@ -68,7 +68,7 @@ class JobType(
         instance creation. For example, files can be saved, or relationship can be
         added.
 
-        :param Job: The created job.
+        :param job: The created job.
         :param values: The provided values.
         """
 

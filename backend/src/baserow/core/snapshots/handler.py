@@ -2,13 +2,17 @@ import datetime
 
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.db import IntegrityError
+from django.db import IntegrityError, OperationalError
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
+from baserow.contrib.database.exceptions import (
+    DatabaseSnapshotMaxLocksExceededException,
+)
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationOperationNotSupported,
+    is_max_lock_exceeded_exception,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.handler import JobHandler
@@ -376,9 +380,18 @@ class SnapshotHandler:
         )
 
         application_type = application_type_registry.get_by_model(application)
-        exported_application = application_type.export_serialized(
-            application, None, default_storage
-        )
+        try:
+            exported_application = application_type.export_serialized(
+                application, None, default_storage
+            )
+        except OperationalError as e:
+            # Detect if this `OperationalError` is due to us exceeding the
+            # lock count in `max_locks_per_transaction`. If it is, we'll
+            # raise a different exception so that we can catch this scenario.
+            if is_max_lock_exceeded_exception(e):
+                raise DatabaseSnapshotMaxLocksExceededException()
+            raise e
+
         progress.increment(by=50)
         id_mapping = {"import_group_id": group.id}
         imported_database = application_type.import_serialized(

@@ -1,3 +1,6 @@
+from django.db import OperationalError
+
+
 class PermissionException(Exception):
     """
     Every permission related exception should inherit from this one.
@@ -211,6 +214,44 @@ class InvalidPermissionContext(Exception):
     """
     Used when an invalid context is passed to a permission checker.
     """
+
+
+class MaxLocksPerTransactionExceededException(Exception):
+    """
+    Baserow can sometimes perform operations that require a Postgres LOCK on a large
+    number of tuples. If this quantity results in the lock count exceeding the value
+    set in `max_locks_per_transaction`, a subclass of this exception will be raised.
+    """
+
+    message = (
+        "Baserow has exceeded the maximum number of PostgreSQL locks per transaction. "
+        "Please read https://baserow.io/docs/technical/postgresql-locks"
+    )
+
+
+def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:
+    """
+    Returns whether the `OperationalError` which we've been given
+    is due to `max_locks_per_transaction` being exceeded.
+    """
+
+    return "You might need to increase max_locks_per_transaction" in exception.args[0]
+
+
+class DuplicateApplicationMaxLocksExceededException(
+    MaxLocksPerTransactionExceededException
+):
+    """
+    If someone tries to duplicate an application with a lot of tables in a single
+    transaction, it'll quickly exceed the `max_locks_per_transaction` value set
+    in Postgres. This exception is raised when we detect the scenario.
+    """
+
+    message = (
+        "Baserow attempted to duplicate an application, but exceeded the maximum "
+        "number of PostgreSQL locks per transaction. Please read "
+        "https://baserow.io/docs/technical/postgresql-locks"
+    )
 
 
 class LastAdminOfGroup(Exception):

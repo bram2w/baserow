@@ -1,8 +1,11 @@
 from io import BytesIO
 from unittest.mock import MagicMock, patch
 
+from django.db import OperationalError
+
 import pytest
 
+from baserow.core.exceptions import is_max_lock_exceeded_exception
 from baserow.core.utils import (
     ChildProgressBuilder,
     MirrorDict,
@@ -389,3 +392,12 @@ def test_unique_dicts_in_list():
 
     with pytest.raises(ValueError):
         assert unique_dicts_in_list([{"a": "a"}, {"a": "a"}], unique_fields=["b"])
+
+
+def test_is_max_lock_exceeded_exception():
+    incorrect_exc = OperationalError("no such table: foo_bar")
+    assert not is_max_lock_exceeded_exception(incorrect_exc)
+    correct_exc = OperationalError(
+        "HINT:  You might need to increase max_locks_per_transaction."
+    )
+    assert is_max_lock_exceeded_exception(correct_exc)
