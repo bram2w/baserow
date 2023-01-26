@@ -1,4 +1,4 @@
-from django.db import connection
+from django.db import OperationalError, connection
 from django.utils import timezone
 
 import pytest
@@ -12,6 +12,7 @@ from baserow.core.models import Application, Group, TrashEntry
 from baserow.core.trash.exceptions import (
     CannotDeleteAlreadyDeletedItem,
     CannotRestoreChildBeforeParent,
+    PermanentDeletionMaxLocksExceededException,
 )
 from baserow.core.trash.handler import TrashHandler, _get_trash_entry
 
@@ -489,3 +490,31 @@ def test_cant_trash_same_row_twice(
     model = table.get_model()
     assert model.objects.count() == 1
     assert model.trash.count() == 1
+
+
+@pytest.mark.django_db
+def test_permanently_delete_item_raises_operationalerror(
+    data_fixture,
+    bypass_check_permissions,
+    trash_item_type_perm_delete_item_raising_operationalerror,
+):
+    trash_item_lookup_cache = {}
+    user = data_fixture.create_user()
+    group_to_delete = data_fixture.create_group(user=user)
+    trash_entry = TrashHandler.trash(user, group_to_delete, None, group_to_delete)
+
+    with trash_item_type_perm_delete_item_raising_operationalerror(
+        raise_transaction_exception=True
+    ):
+        with pytest.raises(PermanentDeletionMaxLocksExceededException):
+            TrashHandler.try_perm_delete_trash_entry(
+                trash_entry, trash_item_lookup_cache
+            )
+
+    with trash_item_type_perm_delete_item_raising_operationalerror(
+        raise_transaction_exception=False
+    ):
+        with pytest.raises(OperationalError):
+            TrashHandler.try_perm_delete_trash_entry(
+                trash_entry, trash_item_lookup_cache
+            )

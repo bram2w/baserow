@@ -127,6 +127,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.cannotDisableAllAuthProvidersTitle'),
         app.i18n.t('clientHandler.cannotDisableAllAuthProvidersDescription')
       ),
+      ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.maxLocksPerTransactionExceededTitle'),
+        app.i18n.t('clientHandler.maxLocksPerTransactionExceededDescription')
+      ),
       ERROR_LAST_ADMIN_OF_GROUP: new ResponseErrorMessage(
         app.i18n.t('clientHandler.lastAdminTitle'),
         app.i18n.t('clientHandler.lastAdminMessage')

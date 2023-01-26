@@ -252,6 +252,9 @@
         "snapshotOperationLimitExceededDescription": "You have reached a limit on the number of running snapshot operations. Please wait until previous operation finishes.",
         "disabledPasswordProviderTitle": "Password authentication is disabled.",
         "disabledPasswordProviderMessage": "Please use another authentication provider.",
+        "maxLocksPerTransactionExceededTitle": "PostgreSQL issue detected",
+        "maxLocksPerTransactionExceededDescription": "Baserow attempted to permanently delete the trashed items, but exceeded the available locks specified in `max_locks_per_transaction`.",
+        "disabledPasswordProviderMessage": "Please use another authentication provider.",
         "lastAdminTitle": "Can't remove last group admin",
         "lastAdminMessage": "A group has to have at least one admin."
     },

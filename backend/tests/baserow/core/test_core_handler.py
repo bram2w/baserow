@@ -5,17 +5,19 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from django.db import transaction
+from django.db import OperationalError, transaction
 
 import pytest
 from itsdangerous.exc import BadSignature
 
+from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.models import Database
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
     ApplicationTypeDoesNotExist,
     BaseURLHostnameNotAllowed,
+    DuplicateApplicationMaxLocksExceededException,
     GroupDoesNotExist,
     GroupInvitationDoesNotExist,
     GroupInvitationEmailMismatch,
@@ -1279,3 +1281,28 @@ def test_get_user_ids_of_permitted_users(data_fixture):
     assert CoreHandler().get_user_ids_of_permitted_users(
         [user, user_of_another_group], ReadGroupOperationType.type, group, context=group
     ) == {user.id}
+
+
+@pytest.mark.django_db
+def test_duplicate_application_export_serialized_raises_operationalerror(
+    data_fixture,
+    bypass_check_permissions,
+    application_type_serialized_raising_operationalerror,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = CoreHandler().create_application(
+        user=user, group=group, type_name=DatabaseApplicationType.type, name="Database"
+    )
+
+    with application_type_serialized_raising_operationalerror(
+        raise_transaction_exception=True
+    ):
+        with pytest.raises(DuplicateApplicationMaxLocksExceededException) as exc:
+            CoreHandler().duplicate_application(user, database)
+
+    with application_type_serialized_raising_operationalerror(
+        raise_transaction_exception=False
+    ):
+        with pytest.raises(OperationalError) as exc:
+            CoreHandler().duplicate_application(user, database)

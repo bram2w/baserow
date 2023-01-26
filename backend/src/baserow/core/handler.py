@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import Storage, default_storage
-from django.db import transaction
+from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
 
@@ -27,6 +27,7 @@ from .exceptions import (
     ApplicationNotInGroup,
     BaseURLHostnameNotAllowed,
     CannotDeleteYourselfFromGroup,
+    DuplicateApplicationMaxLocksExceededException,
     GroupDoesNotExist,
     GroupInvitationDoesNotExist,
     GroupInvitationEmailMismatch,
@@ -40,6 +41,7 @@ from .exceptions import (
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserNotInGroup,
+    is_max_lock_exceeded_exception,
 )
 from .models import (
     GROUP_USER_PERMISSION_ADMIN,
@@ -1176,6 +1178,8 @@ class CoreHandler:
 
         :param user: The user on whose behalf the application is duplicated.
         :param application: The application instance that needs to be duplicated.
+        :param progress_builder: If provided will be used to build a child progress bar
+            and report on this methods progress to the parent of the progress_builder.
         :return: The new (duplicated) application instance.
         """
 
@@ -1195,7 +1199,17 @@ class CoreHandler:
         # export the application
         specific_application = application.specific
         application_type = application_type_registry.get_by_model(specific_application)
-        serialized = application_type.export_serialized(specific_application)
+        try:
+            serialized = application_type.export_serialized(specific_application)
+        except OperationalError as e:
+            # Detect if this `OperationalError` is due to us exceeding the
+            # lock count in `max_locks_per_transaction`. If it is, we'll
+            # raise a different exception so that we can catch this scenario.
+
+            if is_max_lock_exceeded_exception(e):
+                raise DuplicateApplicationMaxLocksExceededException()
+            raise e
+
         progress.increment(by=export_progress)
 
         # Set a new unique name for the new application
@@ -1653,3 +1667,14 @@ class CoreHandler:
 
         if is_subject_last_admin:
             raise LastAdminOfGroup()
+
+    @staticmethod
+    def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:
+        """
+        Returns whether the `OperationalError` which we've been given
+        is due to `max_locks_per_transaction` being exceeded.
+        """
+
+        return (
+            "You might need to increase max_locks_per_transaction" in exception.args[0]
+        )

@@ -29,6 +29,12 @@ ERROR_INVALID_SORT_ATTRIBUTE = (
     HTTP_400_BAD_REQUEST,
     "Invalid attribute name provided to sort by.",
 )
+ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED = (
+    "MAX_LOCKS_PER_TRANSACTION_EXCEEDED",
+    HTTP_400_BAD_REQUEST,
+    "The maximum number of PostgreSQL locks per transaction has been exhausted. "
+    "Please increase `max_locks_per_transaction`.",
+)
 ERROR_INVALID_FILTER_ATTRIBUTE = (
     "ERROR_INVALID_FILTER_ATTRIBUTE",
     HTTP_400_BAD_REQUEST,

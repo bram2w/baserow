@@ -1,3 +1,6 @@
+from baserow.core.exceptions import MaxLocksPerTransactionExceededException
+
+
 class CannotRestoreChildBeforeParent(Exception):
     """
     Raised when attempting to restore a trashed item when it's parent is also trashed.
@@ -29,3 +32,19 @@ class RelatedTableTrashedException(Exception):
     Raised when attempting to restore a trashed field because one of its related fields
     is in a trashed table.
     """
+
+
+class PermanentDeletionMaxLocksExceededException(
+    MaxLocksPerTransactionExceededException
+):
+    """
+    If too many items marked as trash are deleting in a single transaction,
+    it'll quickly exceed the `max_locks_per_transaction` value set in Postgres.
+    This exception is raised when we detect the scenario.
+    """
+
+    message = (
+        "Baserow attempted to permanently delete trashed items, but exceeded the maximum "
+        "number of PostgreSQL locks per transaction. Please read "
+        "https://baserow.io/docs/technical/postgresql-locks"
+    )

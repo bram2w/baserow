@@ -151,7 +151,7 @@ export class DuplicateApplicationJobType extends JobType {
       'notification/error',
       {
         title: i18n.t('clientHandler.notCompletedTitle'),
-        message: i18n.t('clientHandler.notCompletedDescription'),
+        message: job.human_readable_error,
       },
       { root: true }
     )

@@ -10,6 +10,7 @@ For example:
 ## Unreleased
 
 ### New Features
+* Introduced a new command, `permanently_empty_database`, which will empty a database of all its tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
 
 ### Bug Fixes
 * Add missing `procps` system package to all-in-one docker image fixing `/baserow/supervisor/docker-postgres-setup.sh run` (#1512)[https://gitlab.com/bramw/baserow/-/issues/1512]
@@ -19,6 +20,7 @@ For example:
 * Fix 500 error when fetching an aggregation that computes to `NaN` [#1054](https://gitlab.com/bramw/baserow/-/issues/1054)
 * Fix being able to submit lookup field options without a field being selected [#941](https://gitlab.com/bramw/baserow/-/issues/941)
 * Fix issue where you wouldn't get an error if you inserted whitespace only into a form text field [#1202](https://gitlab.com/bramw/baserow/-/issues/1202)
+* Improved the handling of taking a snapshot of, or duplicating, a database with many thousands of tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
 
 ### Refactors
 

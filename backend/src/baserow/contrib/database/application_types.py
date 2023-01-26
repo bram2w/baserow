@@ -128,7 +128,7 @@ class DatabaseApplicationType(ApplicationType):
         storage: Optional[Storage] = None,
     ) -> Dict[str, Any]:
         """
-        Exports the database application type to a serialized format that can later be
+        Exports the database application type to a serialized format that can later
         be imported via the `import_serialized`.
         """
 
