@@ -216,7 +216,10 @@ export class FieldType extends Registerable {
     if (typeof val === 'object' && Object.keys(value).length === 0) {
       return true
     }
-    return [null, '', false].includes(value)
+    if (typeof value === 'string') {
+      return value.trim() === ''
+    }
+    return [null, false].includes(value)
   }
 
   /**

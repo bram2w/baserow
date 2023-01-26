@@ -17,6 +17,7 @@ For example:
 * Fix date field failing hard when trying to prefill an empty form value. [#1521](https://gitlab.com/bramw/baserow/-/issues/1521)
 * Fix 500 error when fetching an aggregation that computes to `NaN` [#1054](https://gitlab.com/bramw/baserow/-/issues/1054)
 * Fix being able to submit lookup field options without a field being selected [#941](https://gitlab.com/bramw/baserow/-/issues/941)
+* Fix issue where you wouldn't get an error if you inserted whitespace only into a form text field [#1202](https://gitlab.com/bramw/baserow/-/issues/1202)
 
 ### Refactors
 
