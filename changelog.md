@@ -16,6 +16,7 @@ For example:
 * Fixed API docs for creating and updating rows are missing for Multiple Select and Multiple Collaborator fields. [#1196](https://gitlab.com/bramw/baserow/-/issues/1196)
 * Fix date field failing hard when trying to prefill an empty form value. [#1521](https://gitlab.com/bramw/baserow/-/issues/1521)
 * Fix 500 error when fetching an aggregation that computes to `NaN` [#1054](https://gitlab.com/bramw/baserow/-/issues/1054)
+* Fix being able to submit lookup field options without a field being selected [#941](https://gitlab.com/bramw/baserow/-/issues/941)
 
 ### Refactors
 
