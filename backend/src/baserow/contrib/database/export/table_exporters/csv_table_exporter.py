@@ -69,7 +69,10 @@ class CsvQuerysetSerializer(QuerysetSerializer):
             file_writer.write_bytes(b"\xef\xbb\xbf")
 
         csv_dict_writer = file_writer.get_csv_dict_writer(
-            self.headers.keys(), encoding=export_charset, delimiter=csv_column_separator
+            self.headers.keys(),
+            encoding=export_charset,
+            delimiter=csv_column_separator,
+            errors="backslashreplace",
         )
 
         if csv_include_header:
