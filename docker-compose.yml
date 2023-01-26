@@ -148,11 +148,6 @@ services:
       - media:/baserow/media
       - caddy_config:/config
       - caddy_data:/data
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "http://localhost/caddy-health-check" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       local:
 
@@ -234,9 +229,6 @@ services:
       <<: *backend-variables
     # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237
     stop_signal: SIGQUIT
-    # We don't yet have a healthcheck for the beat worker, just assume it is healthy.
-    healthcheck:
-      test: [ "CMD-SHELL", "exit 0" ]
     depends_on:
       - backend
     volumes:

@@ -21,11 +21,6 @@ services:
       - media:/baserow/media
       - caddy_config:/config
       - caddy_data:/data
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "http://localhost/caddy-health-check" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     image: {{ cookiecutter.project_slug }}_backend

@@ -212,9 +212,6 @@ services:
       <<: *backend-variables
     # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237
     stop_signal: SIGQUIT
-    # We don't yet have a healthcheck for the beat worker, just assume it is healthy.
-    healthcheck:
-      test: [ "CMD-SHELL", "exit 0" ]
     depends_on:
       - backend
     volumes:
