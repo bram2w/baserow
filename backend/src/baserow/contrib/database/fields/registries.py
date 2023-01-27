@@ -122,7 +122,6 @@ class FieldType(
         :param instance: The field instance.
         :param value: The value that needs to be inserted or updated.
         :return: The modified value that is going to be saved in the database.
-        :rtype: str
         """
 
         return value

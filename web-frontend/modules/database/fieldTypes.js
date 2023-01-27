@@ -824,8 +824,14 @@ export class LinkRowFieldType extends FieldType {
       }
       return richClipboardData.value
     } else {
-      // No fallback to text for now
-      return []
+      // Fallback to text version
+      try {
+        const data = this.app.$papa.stringToArray(clipboardData)
+
+        return data.map((name) => ({ id: null, value: name }))
+      } catch (e) {
+        return []
+      }
     }
   }
 
@@ -895,6 +901,10 @@ export class LinkRowFieldType extends FieldType {
     const item = data.results.find((item) => item.value === value)
 
     return item ? [item] : this.getEmptyValue()
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -2069,7 +2079,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getDocsDataType() {
-    return 'integer'
+    return 'integer or string'
   }
 
   getDocsDescription(field) {

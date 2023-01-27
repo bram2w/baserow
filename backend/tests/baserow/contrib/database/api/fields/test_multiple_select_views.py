@@ -223,7 +223,7 @@ def test_batch_update_rows_multiple_select_field_wrong_option(api_client, data_f
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response.json()["detail"]
-        == "The provided select option ids [787, 789] are not valid select options."
+        == "The provided select option values [787, 789] are not valid select options."
     )
 
 
@@ -264,7 +264,7 @@ def test_batch_update_rows_multiple_select_field_null_as_id(api_client, data_fix
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response.json()["detail"]
-        == "The provided select option id [None] is not a valid select option."
+        == "The provided value '[None]' is not a valid integer or string."
     )
 
 

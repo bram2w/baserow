@@ -380,9 +380,9 @@ def test_run_file_import_task_for_special_fields(data_fixture, patch_filefield_s
         [
             "six",
             1.2,
-            ["invalid_value", row_2.id],
-            ["invalid_value", multi_select_option_2.id],
-            "invalid_value",
+            [1.2, row_2.id],
+            [1.3, multi_select_option_2.id],
+            [],
             [
                 {},
                 {"name": file2.name, "visible_name": "another name"},

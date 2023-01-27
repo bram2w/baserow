@@ -1242,7 +1242,7 @@ def test_multiple_select_field_type(api_client, data_fixture):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response_json["detail"]
-        == "The provided select option id [999999] is not a valid select option."
+        == "The provided select option value '999999' is not a valid select option."
     )
 
     response = api_client.post(

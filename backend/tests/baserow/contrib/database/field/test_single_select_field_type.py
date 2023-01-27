@@ -177,6 +177,11 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
             user=user, table=table, values={f"field_{field.id}": other_select_option.id}
         )
 
+    with pytest.raises(ValidationError):
+        row_handler.create_row(
+            user=user, table=table, values={f"field_{field.id}": "Missing option value"}
+        )
+
     select_options = field.select_options.all()
     row = row_handler.create_row(
         user=user, table=table, values={f"field_{field.id}": select_options[0].id}
@@ -198,7 +203,7 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
 
     select_options = field.select_options.all()
     row_2 = row_handler.create_row(
-        user=user, table=table, values={f"field_{field.id}": select_options[0].id}
+        user=user, table=table, values={f"field_{field.id}": select_options[0].value}
     )
     assert getattr(row_2, f"field_{field.id}").id == select_options[0].id
     assert getattr(row_2, f"field_{field.id}").value == select_options[0].value
@@ -284,6 +289,167 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     assert getattr(row_1, f"field_{field.id}") is None
     assert getattr(row_2, f"field_{field.id}") is None
     assert getattr(row_3, f"field_{field.id}") is None
+
+    # Check that we are using the first select option when using text values
+    field = field_handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="single_select",
+        select_options=[
+            {"value": "Option 2", "color": "blue"},
+            {"value": "Option 0", "color": "purple"},
+            {"value": "option 3", "color": "blue"},
+            {"value": "Option 0", "color": "Orange"},
+        ],
+    )
+
+    select_options = field.select_options.all()
+    row_2 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": select_options[1].value}
+    )
+    assert getattr(row_2, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_2, f"field_{field.id}").value == "Option 0"
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_single_select_field_type_multiple_rows(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+
+    field_handler = FieldHandler()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="name",
+        type_name="single_select",
+        select_options=[
+            {"value": "Option 1", "color": "red"},
+            {"value": "Option 2", "color": "blue"},
+            {"value": "Option 1", "color": "green"},
+        ],
+    )
+
+    select_options = field.select_options.all()
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": select_options[0].id},
+            {f"field_{field.id}": select_options[1].id},
+            {f"field_{field.id}": select_options[2].id},
+        ],
+    )
+
+    model = table.get_model()
+    row_0, row_1, row_2 = model.objects.all()
+
+    assert getattr(row_0, f"field_{field.id}").id == select_options[0].id
+    assert getattr(row_1, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_2, f"field_{field.id}").id == select_options[2].id
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": select_options[0].value},
+            {f"field_{field.id}": select_options[1].value},
+            {f"field_{field.id}": select_options[2].value},
+        ],
+    )
+
+    _, _, _, row_0, row_1, row_2 = model.objects.all()
+
+    assert getattr(row_0, f"field_{field.id}").id == select_options[0].id
+    assert getattr(row_1, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_2, f"field_{field.id}").id == select_options[0].id
+
+    # Here we mix value types
+    with pytest.raises(ValidationError):
+        RowHandler().create_rows(
+            user,
+            table,
+            rows_values=[
+                {f"field_{field.id}": select_options[0].id},
+                {f"field_{field.id}": "Missing"},
+                {f"field_{field.id}": select_options[1].id},
+                {f"field_{field.id}": "Missing too"},
+                {f"field_{field.id}": select_options[2].value},
+                {f"field_{field.id}": 99999999},
+            ],
+        )
+
+    rows, error_report = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": select_options[0].id},
+            {f"field_{field.id}": "Missing"},
+            {f"field_{field.id}": select_options[1].id},
+            {f"field_{field.id}": "Missing too"},
+            {f"field_{field.id}": select_options[2].value},
+            {f"field_{field.id}": 99999999},
+        ],
+        generate_error_report=True,
+    )
+
+    assert list(error_report.keys()) == [1, 3, 5]
+    assert f"field_{field.id}" in error_report[1]
+    assert f"field_{field.id}" in error_report[3]
+    assert f"field_{field.id}" in error_report[5]
+
+    _, _, _, _, _, _, row_0, row_1, row_2 = model.objects.all()
+
+    assert getattr(row_0, f"field_{field.id}").id == select_options[0].id
+    assert getattr(row_1, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_2, f"field_{field.id}").id == select_options[0].id
+
+    RowHandler().update_rows(
+        user,
+        table,
+        [
+            {
+                "id": row_0.id,
+                f"field_{field.id}": select_options[1].id,
+            },
+            {
+                "id": row_1.id,
+                f"field_{field.id}": select_options[0].id,
+            },
+        ],
+    )
+
+    row_0.refresh_from_db()
+    row_1.refresh_from_db()
+
+    assert getattr(row_0, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_1, f"field_{field.id}").id == select_options[0].id
+
+    RowHandler().update_rows(
+        user,
+        table,
+        [
+            {
+                "id": row_0.id,
+                f"field_{field.id}": select_options[0].value,
+            },
+            {
+                "id": row_1.id,
+                f"field_{field.id}": select_options[1].value,
+            },
+        ],
+    )
+
+    row_0.refresh_from_db()
+    row_1.refresh_from_db()
+
+    assert getattr(row_0, f"field_{field.id}").id == select_options[0].id
+    assert getattr(row_1, f"field_{field.id}").id == select_options[1].id
 
 
 @pytest.mark.django_db
@@ -433,7 +599,7 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {f"field_{field.id}": "Nothing"},
+        {f"field_{field.id}": []},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -444,6 +610,38 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field.id}": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"] == {
+        field.db_column: [
+            {
+                "error": "The provided value should be a valid integer or string",
+                "code": "invalid",
+            }
+        ]
+    }
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field.id}": "Nothing"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"] == "The provided select option value 'Nothing' is "
+        "not a valid select option."
+    )
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
         {f"field_{field.id}": 999999},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -451,7 +649,10 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"] == "The provided value is not a valid option."
+    assert (
+        response_json["detail"]
+        == "The provided select option value '999999' is not a valid select option."
+    )
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -462,7 +663,11 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"] == "The provided value is not a valid option."
+    assert (
+        response_json["detail"]
+        == f"The provided select option value '{other_select_option.id}' is "
+        "not a valid select option."
+    )
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),

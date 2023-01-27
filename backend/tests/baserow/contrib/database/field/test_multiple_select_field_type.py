@@ -7,8 +7,8 @@ import pytest
 from faker import Faker
 
 from baserow.contrib.database.fields.exceptions import (
-    AllProvidedMultipleSelectValuesMustBeIntegers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
+    AllProvidedValuesMustBeIntegersOrStrings,
 )
 from baserow.contrib.database.fields.field_converters import (
     MultipleSelectConversionConfig,
@@ -207,35 +207,53 @@ def test_multiple_select_field_type_rows(data_fixture, django_assert_num_queries
     select_options = field.select_options.all()
 
     with pytest.raises(AllProvidedMultipleSelectValuesMustBeSelectOption):
-        row = row_handler.create_row(
+        row_handler.create_row(
             user=user,
             table=table,
             values={f"field_{field.id}": [select_options[0].id, 9999]},
         )
 
-    with pytest.raises(AllProvidedMultipleSelectValuesMustBeIntegers):
-        row = row_handler.create_row(
+    with pytest.raises(AllProvidedMultipleSelectValuesMustBeSelectOption):
+        row_handler.create_row(
             user=user,
             table=table,
-            values={f"field_{field.id}": [select_options[0].id, "wrong_type"]},
+            values={f"field_{field.id}": [select_options[0].id, "not existing option"]},
         )
 
-    with pytest.raises(AllProvidedMultipleSelectValuesMustBeIntegers):
-        row = row_handler.create_row(
+    with pytest.raises(AllProvidedValuesMustBeIntegersOrStrings):
+        row_handler.create_row(
             user=user,
             table=table,
-            values={f"field_{field.id}": ["wrong_type"]},
+            values={f"field_{field.id}": [select_options[0].id, []]},
         )
 
-    row = row_handler.create_row(
+    with pytest.raises(AllProvidedValuesMustBeIntegersOrStrings):
+        row_handler.create_row(
+            user=user,
+            table=table,
+            values={f"field_{field.id}": [{}]},
+        )
+
+    row_0 = row_handler.create_row(
         user=user, table=table, values={f"field_{field.id}": [select_options[0].id]}
     )
 
-    row_field = getattr(row, f"field_{field.id}").all()
-    assert len(row_field) == 1
-    assert row_field[0].id == select_options[0].id
-    assert row_field[0].value == select_options[0].value
-    assert row_field[0].color == select_options[0].color
+    row_0_field = getattr(row_0, f"field_{field.id}").all()
+    assert len(row_0_field) == 1
+    assert row_0_field[0].id == select_options[0].id
+    assert row_0_field[0].value == select_options[0].value
+    assert row_0_field[0].color == select_options[0].color
+
+    # Use the name of the option instead of the id
+    row_1 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": [select_options[1].value]}
+    )
+
+    row_1_field = getattr(row_1, f"field_{field.id}").all()
+    assert len(row_1_field) == 1
+    assert row_1_field[0].id == select_options[1].id
+    assert row_1_field[0].value == select_options[1].value
+    assert row_1_field[0].color == select_options[1].color
 
     field = field_handler.update_field(
         user=user,
@@ -283,17 +301,157 @@ def test_multiple_select_field_type_rows(data_fixture, django_assert_num_queries
         rows = list(model.objects.all().enhance_by_fields())
 
     assert len(getattr(rows[0], f"field_{field.id}").all()) == 0
-    assert getattr(rows[1], f"field_{field.id}").all()[0].id == select_options[0].id
-    assert getattr(rows[2], f"field_{field.id}").all()[0].id == select_options[1].id
-    assert getattr(rows[3], f"field_{field.id}").all()[0].id == select_options[0].id
+    assert len(getattr(rows[1], f"field_{field.id}").all()) == 0
+    assert getattr(rows[2], f"field_{field.id}").all()[0].id == select_options[0].id
+    assert getattr(rows[3], f"field_{field.id}").all()[0].id == select_options[1].id
+    assert getattr(rows[4], f"field_{field.id}").all()[0].id == select_options[0].id
 
-    row.refresh_from_db()
-    assert len(getattr(row, f"field_{field.id}").all()) == 0
+    row_0.refresh_from_db()
+    assert len(getattr(row_0, f"field_{field.id}").all()) == 0
 
     row_4 = row_handler.update_row_by_id(
         user=user, table=table, row_id=row_4.id, values={f"field_{field.id}": []}
     )
     assert len(getattr(row_4, f"field_{field.id}").all()) == 0
+
+    # Check that text value mixed with ids works and select the right id in case of
+    # duplicate
+    field = field_handler.update_field(
+        user=user,
+        field=field,
+        select_options=[
+            {"value": "Option 3", "color": "orange"},
+            {"value": "Option 4", "color": "purple"},
+            {"value": "Option 3", "color": "blue"},
+        ],
+    )
+
+    select_options = field.select_options.all()
+    row_5 = row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{field.id}": [
+                select_options[1].id,
+                select_options[2].value,  # option 0 should be selected
+            ]
+        },
+    )
+    row_5_field = getattr(row_5, f"field_{field.id}").all()
+    assert len(row_5_field) == 2
+    assert set([getattr(row_5_field[0], "id"), getattr(row_5_field[1], "id")]) == set(
+        [select_options[1].id, select_options[0].id]
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_multiple_select_field_type_multiple_rows(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Multiple Select",
+        type_name="multiple_select",
+        select_options=[
+            {"value": "Option 1", "color": "red"},
+            {"value": "Option 2", "color": "blue"},
+            {"value": "Option 3", "color": "orange"},
+            {"value": "Option 1", "color": "black"},
+        ],
+    )
+
+    select_options = field.select_options.all()
+
+    with pytest.raises(AllProvidedMultipleSelectValuesMustBeSelectOption):
+        row_handler.create_rows(
+            user,
+            table,
+            rows_values=[
+                {f"field_{field.id}": [select_options[0].id]},
+                {f"field_{field.id}": [select_options[0].id, 999999]},
+                {f"field_{field.id}": [select_options[1].id]},
+            ],
+        )
+
+    with pytest.raises(AllProvidedMultipleSelectValuesMustBeSelectOption):
+        row_handler.create_rows(
+            user,
+            table,
+            rows_values=[
+                {f"field_{field.id}": [select_options[0].id]},
+                {f"field_{field.id}": [select_options[0].id, "Missing option"]},
+                {f"field_{field.id}": [select_options[1].id]},
+            ],
+        )
+
+    row_handler.create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": [select_options[0].id, select_options[1].value]},
+            {f"field_{field.id}": [select_options[2].value, select_options[0].id]},
+            {f"field_{field.id}": [select_options[2].id, select_options[3].value]},
+            {f"field_{field.id}": [select_options[3].id, select_options[3].value]},
+            {f"field_{field.id}": [select_options[0].id, select_options[3].value]},
+            {f"field_{field.id}": [select_options[0].id, select_options[0].id]},
+        ],
+    )
+
+    model = table.get_model()
+
+    row_0, row_1, row_2, row_3, row_4, row_5 = model.objects.all()
+
+    row_0_field = getattr(row_0, f"field_{field.id}").all()
+    assert len(row_0_field) == 2
+    assert getattr(row_0_field[0], "id") == select_options[0].id
+    assert getattr(row_0_field[1], "id") == select_options[1].id
+
+    row_1_field = getattr(row_1, f"field_{field.id}").all()
+    assert len(row_1_field) == 2
+    assert getattr(row_1_field[0], "id") == select_options[2].id
+    assert getattr(row_1_field[1], "id") == select_options[0].id
+
+    row_2_field = getattr(row_2, f"field_{field.id}").all()
+    assert len(row_2_field) == 2
+    assert getattr(row_2_field[0], "id") == select_options[2].id
+    assert getattr(row_2_field[1], "id") == select_options[0].id
+
+    row_3_field = getattr(row_3, f"field_{field.id}").all()
+    assert len(row_3_field) == 2
+    assert getattr(row_3_field[0], "id") == select_options[3].id
+    assert getattr(row_3_field[1], "id") == select_options[0].id
+
+    row_4_field = getattr(row_4, f"field_{field.id}").all()
+    assert len(row_4_field) == 1
+    assert getattr(row_4_field[0], "id") == select_options[0].id
+
+    row_5_field = getattr(row_5, f"field_{field.id}").all()
+    assert len(row_5_field) == 1
+    assert getattr(row_5_field[0], "id") == select_options[0].id
+
+    _, error_report = row_handler.create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": [select_options[0].id, "missing"]},
+            {f"field_{field.id}": [select_options[0].id, select_options[3].value]},
+            {f"field_{field.id}": [select_options[2].value, 999999]},
+            {f"field_{field.id}": [99999, "missing"]},
+        ],
+        generate_error_report=True,
+    )
+
+    assert list(error_report.keys()) == [0, 2, 3]
+    assert f"field_{field.id}" in error_report[0]
+    assert f"field_{field.id}" in error_report[2]
+    assert f"field_{field.id}" in error_report[3]
 
 
 @pytest.mark.django_db
