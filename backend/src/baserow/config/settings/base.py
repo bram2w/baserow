@@ -667,10 +667,16 @@ class Everything(object):
 if "*" in FEATURE_FLAGS:
     FEATURE_FLAGS = Everything()
 
-PERMISSION_MANAGERS = os.getenv(
-    "BASEROW_PERMISSION_MANAGERS",
-    "core,setting_operation,staff,member,token,role,basic",
-).split(",")
+PERMISSION_MANAGERS = [
+    "view_ownership",
+    "core",
+    "setting_operation",
+    "staff",
+    "member",
+    "token",
+    "role",
+    "basic",
+]
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5

@@ -146,6 +146,7 @@ class DatabaseConfig(AppConfig):
             form_view_mode_registry,
             view_aggregation_type_registry,
             view_filter_type_registry,
+            view_ownership_type_registry,
             view_type_registry,
         )
         from .webhooks.registries import webhook_event_type_registry
@@ -340,6 +341,10 @@ class DatabaseConfig(AppConfig):
 
         form_view_mode_registry.register(FormViewModeTypeForm())
 
+        from .views.view_ownership_types import CollaborativeViewOwnershipType
+
+        view_ownership_type_registry.register(CollaborativeViewOwnershipType())
+
         from .application_types import DatabaseApplicationType
 
         application_type_registry.register(DatabaseApplicationType())
@@ -476,7 +481,6 @@ class DatabaseConfig(AppConfig):
             DeleteRelatedLinkRowFieldOperationType,
             DuplicateFieldOperationType,
             ListFieldsOperationType,
-            ReadAggregationDatabaseTableOperationType,
             ReadFieldOperationType,
             RestoreFieldOperationType,
             UpdateFieldOperationType,
@@ -500,7 +504,6 @@ class DatabaseConfig(AppConfig):
             DeleteDatabaseTableOperationType,
             DuplicateDatabaseTableOperationType,
             ImportRowsDatabaseTableOperationType,
-            ListAggregationDatabaseTableOperationType,
             ListenToAllDatabaseTableEventsOperationType,
             ListRowNamesDatabaseTableOperationType,
             ListRowsDatabaseTableOperationType,
@@ -523,11 +526,13 @@ class DatabaseConfig(AppConfig):
             DeleteViewOperationType,
             DeleteViewSortOperationType,
             DuplicateViewOperationType,
+            ListAggregationsViewOperationType,
             ListViewDecorationOperationType,
             ListViewFilterOperationType,
             ListViewsOperationType,
             ListViewSortOperationType,
             OrderViewsOperationType,
+            ReadAggregationsViewOperationType,
             ReadViewDecorationOperationType,
             ReadViewFieldOptionsOperationType,
             ReadViewFilterOperationType,
@@ -601,8 +606,8 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(TypeFormulaOperationType())
         operation_type_registry.register(ListRowNamesDatabaseTableOperationType())
         operation_type_registry.register(ReadAdjacentRowDatabaseRowOperationType())
-        operation_type_registry.register(ReadAggregationDatabaseTableOperationType())
-        operation_type_registry.register(ListAggregationDatabaseTableOperationType())
+        operation_type_registry.register(ReadAggregationsViewOperationType())
+        operation_type_registry.register(ListAggregationsViewOperationType())
         operation_type_registry.register(ExportTableOperationType())
         operation_type_registry.register(ListFieldsOperationType())
         operation_type_registry.register(ListViewsOperationType())

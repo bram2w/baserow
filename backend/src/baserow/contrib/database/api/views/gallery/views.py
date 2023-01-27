@@ -149,7 +149,7 @@ class GalleryViewView(APIView):
         """Lists the rows for the gallery view."""
 
         view_handler = ViewHandler()
-        view = view_handler.get_view(view_id, GalleryView)
+        view = view_handler.get_view_as_user(request.user, view_id, GalleryView)
         view_type = view_type_registry.get_by_model(view)
 
         group = view.table.database.group

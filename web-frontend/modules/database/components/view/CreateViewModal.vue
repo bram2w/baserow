@@ -12,6 +12,7 @@
       :is="viewType.getViewFormComponent()"
       ref="viewForm"
       :default-name="getDefaultName()"
+      :database="database"
       @submitted="submitted"
     >
       <div class="actions">
@@ -43,6 +44,10 @@ export default {
   mixins: [modal, error],
   props: {
     table: {
+      type: Object,
+      required: true,
+    },
+    database: {
       type: Object,
       required: true,
     },

@@ -9,6 +9,7 @@ from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import (
+    OWNERSHIP_TYPE_COLLABORATIVE,
     View,
     ViewDecoration,
     ViewFilter,
@@ -18,6 +19,7 @@ from baserow.contrib.database.views.registries import (
     decorator_type_registry,
     decorator_value_provider_type_registry,
     view_filter_type_registry,
+    view_ownership_type_registry,
     view_type_registry,
 )
 
@@ -265,6 +267,7 @@ class ViewSerializer(serializers.ModelSerializer):
         many=True, source="viewdecoration_set", required=False
     )
     show_logo = serializers.BooleanField(required=False)
+    ownership_type = serializers.CharField()
 
     class Meta:
         model = View
@@ -282,11 +285,13 @@ class ViewSerializer(serializers.ModelSerializer):
             "filters_disabled",
             "public_view_has_password",
             "show_logo",
+            "ownership_type",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
             "public_view_has_password": {"read_only": True},
+            "ownership_type": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):
@@ -322,10 +327,14 @@ class CreateViewSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(
         choices=lazy(view_type_registry.get_types, list)(), required=True
     )
+    ownership_type = serializers.ChoiceField(
+        choices=lazy(view_ownership_type_registry.get_types, list)(),
+        default=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
 
     class Meta:
         model = View
-        fields = ("name", "type", "filter_type", "filters_disabled")
+        fields = ("name", "type", "ownership_type", "filter_type", "filters_disabled")
 
 
 class UpdateViewSerializer(serializers.ModelSerializer):
@@ -363,7 +372,9 @@ class UpdateViewSerializer(serializers.ModelSerializer):
 
 class OrderViewsSerializer(serializers.Serializer):
     view_ids = serializers.ListField(
-        child=serializers.IntegerField(), help_text="View ids in the desired order."
+        child=serializers.IntegerField(),
+        help_text="View ids in the desired order.",
+        min_length=1,
     )
 
 

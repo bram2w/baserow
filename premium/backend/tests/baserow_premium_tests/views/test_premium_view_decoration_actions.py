@@ -184,7 +184,7 @@ def test_can_undo_delete_decoration(premium_data_fixture):
 
     assert ViewDecoration.objects.count() == 1
 
-    view_decoration = ViewHandler().get_decoration(view_decoration_id)
+    view_decoration = ViewHandler().get_decoration(user, view_decoration_id)
     assert view_decoration.order == order
 
 

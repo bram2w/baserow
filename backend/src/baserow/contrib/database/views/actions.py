@@ -16,6 +16,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import FieldOptionsDict, ViewHandler
 from baserow.contrib.database.views.models import (
     View,
@@ -634,7 +635,11 @@ class OrderViewsActionType(UndoableActionType):
         :param order: The new order of the views.
         """
 
-        original_order = ViewHandler().get_views_order(user, table)
+        try:
+            view = ViewHandler().get_view(order[0])
+        except ViewDoesNotExist:
+            raise ViewNotInTable
+        original_order = ViewHandler().get_views_order(user, table, view.ownership_type)
 
         ViewHandler().order_views(user, table, order)
 
@@ -818,13 +823,13 @@ class RotateViewSlugActionType(UndoableActionType):
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
         view_handler = ViewHandler()
-        view = view_handler.get_view_for_update(params.view_id)
+        view = view_handler.get_view_for_update(user, params.view_id)
         view_handler.update_view_slug(user, view, params.original_slug)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         view_handler = ViewHandler()
-        view = view_handler.get_view_for_update(params.view_id)
+        view = view_handler.get_view_for_update(user, params.view_id)
         view_handler.update_view_slug(user, view, params.slug)
 
 
@@ -903,13 +908,13 @@ class UpdateViewActionType(UndoableActionType):
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
         view_handler = ViewHandler()
-        view = view_handler.get_view_for_update(params.view_id).specific
+        view = view_handler.get_view_for_update(user, params.view_id).specific
         view_handler.update_view(user, view, **params.original_data)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         view_handler = ViewHandler()
-        view = view_handler.get_view_for_update(params.view_id).specific
+        view = view_handler.get_view_for_update(user, params.view_id).specific
         view_handler.update_view(user, view, **params.data)
 
 
@@ -1190,7 +1195,7 @@ class CreateDecorationActionType(UndoableActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
-        view_decoration = ViewHandler().get_decoration(params.decorator_id)
+        view_decoration = ViewHandler().get_decoration(user, params.decorator_id)
         ViewHandler().delete_decoration(view_decoration, user=user)
 
     @classmethod
@@ -1308,7 +1313,7 @@ class UpdateDecorationActionType(UndoableActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
-        view_decoration = ViewHandler().get_decoration(params.decorator_id)
+        view_decoration = ViewHandler().get_decoration(user, params.decorator_id)
         ViewHandler().update_decoration(
             view_decoration,
             user=user,
@@ -1320,7 +1325,7 @@ class UpdateDecorationActionType(UndoableActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
-        view_decoration = ViewHandler().get_decoration(params.decorator_id)
+        view_decoration = ViewHandler().get_decoration(user, params.decorator_id)
         ViewHandler().update_decoration(
             view_decoration,
             user=user,
@@ -1411,5 +1416,7 @@ class DeleteDecorationActionType(UndoableActionType):
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Any, action_being_redone: Action):
-        view_decoration = ViewHandler().get_decoration(params.original_decorator_id)
+        view_decoration = ViewHandler().get_decoration(
+            user, params.original_decorator_id
+        )
         ViewHandler().delete_decoration(view_decoration, user=user)

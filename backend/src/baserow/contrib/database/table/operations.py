@@ -39,10 +39,6 @@ class ListRowNamesDatabaseTableOperationType(DatabaseTableOperationType):
     type = "database.table.list_row_names"
 
 
-class ListAggregationDatabaseTableOperationType(DatabaseTableOperationType):
-    type = "database.table.list_aggregations"
-
-
 class CreateRowDatabaseTableOperationType(DatabaseTableOperationType):
     type = "database.table.create_row"
 

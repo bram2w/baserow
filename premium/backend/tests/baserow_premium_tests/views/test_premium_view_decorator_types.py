@@ -42,14 +42,6 @@ def test_create_left_border_color_without_premium_license(premium_data_fixture):
             user=user,
         )
 
-    decoration = handler.create_decoration(
-        view=grid_view,
-        decorator_type_name="left_border_color",
-        value_provider_type_name="",
-        value_provider_conf={},
-    )
-    assert isinstance(decoration, ViewDecoration)
-
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
@@ -117,14 +109,6 @@ def test_create_background_color_without_premium_license(premium_data_fixture):
             value_provider_conf={},
             user=user,
         )
-
-    decoration = handler.create_decoration(
-        view=grid_view,
-        decorator_type_name="background_color",
-        value_provider_type_name="",
-        value_provider_conf={},
-    )
-    assert isinstance(decoration, ViewDecoration)
 
 
 @pytest.mark.django_db

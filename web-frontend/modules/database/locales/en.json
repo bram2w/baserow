@@ -412,7 +412,8 @@
     },
     "viewsContext": {
         "searchView": "Search views",
-        "noViews": "No views found"
+        "noViews": "No views found",
+        "collaborative": "Collaborative"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "unnamed row {value}",
@@ -518,7 +519,12 @@
         "delete": "Delete view"
     },
     "viewForm": {
-        "name": "Name"
+        "name": "Name",
+        "whoCanEdit": "Who can edit"
+    },
+    "viewOwnershipType": {
+        "collaborative": "Collaborative",
+        "personal": "Personal"
     },
     "galleryViewHeader": {
         "customizeCards": "Customize cards"

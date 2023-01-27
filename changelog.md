@@ -11,6 +11,7 @@ For example:
 
 ### New Features
 * Introduced a new command, `permanently_empty_database`, which will empty a database of all its tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
+* Users can now create their own personal views. [#1448](https://gitlab.com/bramw/baserow/-/issues/1448)
 
 * Link row field can now be imported. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Can add a row with textual values for single select, multiple select and link row field. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
@@ -52,6 +53,7 @@ For example:
     * Customer Research
     * Frequent Flyer Rewards
     * Grocery Planner
+
 
 ### Bug Fixes
 * Fixed encoding issue where you couldn't import xml files with non-ascii characters [#1360](https://gitlab.com/bramw/baserow/-/issues/1360)
