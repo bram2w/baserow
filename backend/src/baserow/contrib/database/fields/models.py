@@ -196,6 +196,9 @@ class AbstractSelectOption(
     def __str__(self):
         return self.value
 
+    def __repr__(self):
+        return f"<SelectOption {self.value} ({self.id})>"
+
 
 class SelectOption(AbstractSelectOption):
     @classmethod

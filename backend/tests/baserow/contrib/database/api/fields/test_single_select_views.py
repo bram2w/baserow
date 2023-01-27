@@ -121,7 +121,7 @@ def test_batch_update_rows_single_select_field_wrong_option(api_client, data_fix
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response.json()["detail"]
-        == "The provided select option id [787] is not a valid select option."
+        == "The provided select option value '787' is not a valid select option."
     )
 
 

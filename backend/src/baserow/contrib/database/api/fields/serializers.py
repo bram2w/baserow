@@ -196,3 +196,51 @@ class DuplicateFieldParamsSerializer(serializers.Serializer):
     duplicate_data = serializers.BooleanField(
         default=False, help_text="Indicates whether the data should be duplicated."
     )
+
+
+@extend_schema_field(OpenApiTypes.INT)
+class IntegerOrStringField(serializers.Field):
+    """
+    A serializer field that accept an int or a string.
+    """
+
+    def __init__(self, **kwargs):
+        required = kwargs.pop("required", False)
+        allow_null = kwargs.pop("allow_null", True)
+        allow_blank = kwargs.pop("allow_blank", allow_null)
+        min_value = kwargs.pop("min_value", None)
+        max_value = kwargs.pop("max_value", None)
+        max_length = kwargs.pop("max_length", None)
+
+        super().__init__(required=required, allow_null=allow_null, **kwargs)
+        self._integer_field = serializers.IntegerField(
+            **{
+                "required": required,
+                "allow_null": allow_null,
+                "min_value": min_value,
+                "max_value": max_value,
+                **kwargs,
+            }
+        )
+        self._char_field = serializers.CharField(
+            **{
+                "required": required,
+                "allow_blank": allow_blank,
+                "max_length": max_length,
+                **kwargs,
+            }
+        )
+
+    def to_internal_value(self, data):
+        if isinstance(data, int) or data is None:
+            return self._integer_field.to_internal_value(data)
+        elif isinstance(data, str):
+            return self._char_field.to_internal_value(data)
+        else:
+            raise serializers.ValidationError(
+                "The provided value should be a valid integer or string",
+                code="invalid",
+            )
+
+    def to_representation(self, value):
+        return value

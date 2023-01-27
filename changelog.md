@@ -12,6 +12,9 @@ For example:
 ### New Features
 * Introduced a new command, `permanently_empty_database`, which will empty a database of all its tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
 
+* Link row field can now be imported. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
+* Can add a row with textual values for single select, multiple select and link row field. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
+
 ### Bug Fixes
 * Add missing `procps` system package to all-in-one docker image fixing `/baserow/supervisor/docker-postgres-setup.sh run` (#1512)[https://gitlab.com/bramw/baserow/-/issues/1512]
 * Fixed API docs for creating and updating rows are missing for Multiple Select and Multiple Collaborator fields. [#1196](https://gitlab.com/bramw/baserow/-/issues/1196)
