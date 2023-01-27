@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.shortcuts import reverse
+from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 
 import pytest
@@ -92,6 +93,30 @@ def test_list_views(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@override_settings(PERMISSION_MANAGERS=["basic"])
+@pytest.mark.django_db
+def test_list_views_ownership_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    view_1 = data_fixture.create_grid_view(
+        table=table_1, order=1, ownership_type="collaborative"
+    )
+    view_2 = data_fixture.create_grid_view(
+        table=table_1, order=3, ownership_type="personal"
+    )
+
+    response = api_client.get(
+        reverse("api:database:views:list", kwargs={"table_id": table_1.id}),
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 2
 
 
 @pytest.mark.django_db
@@ -356,7 +381,7 @@ def test_order_views(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
     response = api_client.post(
         reverse("api:database:views:order", kwargs={"table_id": 999999}),
@@ -364,8 +389,8 @@ def test_order_views(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
     response = api_client.post(
         reverse("api:database:views:order", kwargs={"table_id": table_1.id}),
@@ -387,7 +412,9 @@ def test_order_views(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:views:order", kwargs={"table_id": table_1.id}),
-        {"view_ids": [view_3.id, view_2.id, view_1.id]},
+        {
+            "view_ids": [view_3.id, view_2.id, view_1.id],
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

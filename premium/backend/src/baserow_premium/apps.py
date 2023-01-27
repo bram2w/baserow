@@ -21,6 +21,7 @@ class BaserowPremiumConfig(AppConfig):
             decorator_type_registry,
             decorator_value_provider_type_registry,
             form_view_mode_registry,
+            view_ownership_type_registry,
             view_type_registry,
         )
         from baserow.core.registries import plugin_registry
@@ -59,6 +60,10 @@ class BaserowPremiumConfig(AppConfig):
             ConditionalColorValueProviderType()
         )
 
+        from .views.view_ownership_types import PersonalViewOwnershipType
+
+        view_ownership_type_registry.register(PersonalViewOwnershipType())
+
         from baserow_premium.license.license_types import PremiumLicenseType
         from baserow_premium.license.registries import license_type_registry
 
@@ -74,5 +79,13 @@ class BaserowPremiumConfig(AppConfig):
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
-        import baserow_premium.views.signals  # noqa: F403, F401
+        import baserow_premium.views.signals as view_signals  # noqa: F403, F401
         import baserow_premium.ws.signals  # noqa: F403, F401
+
+        view_signals.connect_to_user_pre_delete_signal()
+
+        from baserow.core.registries import permission_manager_type_registry
+
+        from .permission_manager import ViewOwnershipPermissionManagerType
+
+        permission_manager_type_registry.register(ViewOwnershipPermissionManagerType())

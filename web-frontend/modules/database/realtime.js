@@ -254,7 +254,7 @@ export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent('views_reordered', ({ store, app }, data) => {
     const table = store.getters['table/getSelected']
     if (table !== undefined && table.id === data.table_id) {
-      store.commit('view/ORDER_ITEMS', data.order)
+      store.commit('view/ORDER_ITEMS', { order: data.order })
     }
   })
 

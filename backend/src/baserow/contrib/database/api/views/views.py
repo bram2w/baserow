@@ -81,29 +81,17 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
     ViewNotInTable,
+    ViewOwnerhshipTypeDoesNotExist,
     ViewSortDoesNotExist,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
     ViewSortNotSupported,
 )
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import (
-    View,
-    ViewDecoration,
-    ViewFilter,
-    ViewSort,
-)
+from baserow.contrib.database.views.models import ViewDecoration, ViewFilter, ViewSort
 from baserow.contrib.database.views.operations import (
-    CreateViewDecorationOperationType,
     DeleteViewDecorationOperationType,
-    ListViewDecorationOperationType,
-    ListViewFilterOperationType,
     ListViewsOperationType,
-    ListViewSortOperationType,
-    ReadViewDecorationOperationType,
-    ReadViewFieldOptionsOperationType,
-    ReadViewOperationType,
-    UpdateViewDecorationOperationType,
 )
 from baserow.contrib.database.views.registries import (
     decorator_value_provider_type_registry,
@@ -127,6 +115,7 @@ from .errors import (
     ERROR_VIEW_FILTER_NOT_SUPPORTED,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
     ERROR_VIEW_NOT_IN_TABLE,
+    ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_SORT_DOES_NOT_EXIST,
     ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
     ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
@@ -263,26 +252,15 @@ class ViewsView(APIView):
             allow_if_template=True,
         )
 
-        views = View.objects.filter(table=table).select_related("content_type", "table")
-
-        if query_params["type"]:
-            view_type = view_type_registry.get(query_params["type"])
-            content_type = ContentType.objects.get_for_model(view_type.model_class)
-            views = views.filter(content_type=content_type)
-
-        if filters:
-            views = views.prefetch_related("viewfilter_set")
-
-        if sortings:
-            views = views.prefetch_related("viewsort_set")
-
-        if decorations:
-            views = views.prefetch_related("viewdecoration_set")
-
-        if query_params["limit"]:
-            views = views[: query_params["limit"]]
-
-        views = specific_iterator(views)
+        views = ViewHandler().list_views(
+            request.user,
+            table,
+            query_params["type"],
+            filters,
+            sortings,
+            decorations,
+            query_params["limit"],
+        )
 
         data = [
             view_type_registry.get_serializer(
@@ -354,6 +332,7 @@ class ViewsView(APIView):
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewOwnerhshipTypeDoesNotExist: ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST,
         }
     )
     @allowed_includes("filters", "sortings", "decorations")
@@ -431,13 +410,7 @@ class ViewView(APIView):
     def get(self, request, view_id, filters, sortings, decorations):
         """Selects a single view and responds with a serialized version."""
 
-        view = ViewHandler().get_view(view_id)
-        CoreHandler().check_permissions(
-            request.user,
-            ReadViewOperationType.type,
-            group=view.table.database.group,
-            context=view,
-        )
+        view = ViewHandler().get_view_as_user(request.user, view_id)
 
         serializer = view_type_registry.get_serializer(
             view,
@@ -514,7 +487,7 @@ class ViewView(APIView):
     ) -> Response:
         """Updates the view if the user belongs to the group."""
 
-        view = ViewHandler().get_view_for_update(view_id).specific
+        view = ViewHandler().get_view_for_update(request.user, view_id).specific
         view_type = view_type_registry.get_by_model(view)
         data = validate_data_custom_fields(
             view_type.type,
@@ -731,12 +704,7 @@ class ViewFiltersView(APIView):
         has access to that group.
         """
 
-        view = ViewHandler().get_view(view_id)
-        group = view.table.database.group
-        CoreHandler().check_permissions(
-            request.user, ListViewFilterOperationType.type, group=group, context=view
-        )
-        filters = ViewFilter.objects.filter(view=view)
+        filters = ViewHandler().list_filters(request.user, view_id)
         serializer = ViewFilterSerializer(filters, many=True)
         return Response(serializer.data)
 
@@ -998,14 +966,7 @@ class ViewDecorationsView(APIView):
         if the user has access to that group.
         """
 
-        view = ViewHandler().get_view(view_id)
-        CoreHandler().check_permissions(
-            request.user,
-            ListViewDecorationOperationType.type,
-            group=view.table.database.group,
-            context=view,
-        )
-        decorations = ViewDecoration.objects.filter(view=view)
+        decorations = ViewHandler().list_decorations(request.user, view_id)
         serializer = ViewDecorationSerializer(decorations, many=True)
         return Response(serializer.data)
 
@@ -1061,14 +1022,6 @@ class ViewDecorationsView(APIView):
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id)
 
-        group = view.table.database.group
-        CoreHandler().check_permissions(
-            request.user,
-            CreateViewDecorationOperationType.type,
-            group=group,
-            context=view,
-        )
-
         # We can safely assume the field exists because the
         # CreateViewDecorationSerializer has already checked that.
         view_decoration = action_type_registry.get_by_type(
@@ -1118,16 +1071,7 @@ class ViewDecorationView(APIView):
     def get(self, request, view_decoration_id):
         """Selects a single decoration and responds with a serialized version."""
 
-        view_decoration = ViewHandler().get_decoration(view_decoration_id)
-
-        group = view_decoration.view.table.database.group
-        CoreHandler().check_permissions(
-            request.user,
-            ReadViewDecorationOperationType.type,
-            group=group,
-            context=view_decoration,
-        )
-
+        view_decoration = ViewHandler().get_decoration(request.user, view_decoration_id)
         serializer = ViewDecorationSerializer(view_decoration)
         return Response(serializer.data)
 
@@ -1172,16 +1116,9 @@ class ViewDecorationView(APIView):
 
         handler = ViewHandler()
         view_decoration = handler.get_decoration(
+            request.user,
             view_decoration_id,
             base_queryset=ViewDecoration.objects.select_for_update(of=("self",)),
-        )
-
-        group = view_decoration.view.table.database.group
-        CoreHandler().check_permissions(
-            request.user,
-            UpdateViewDecorationOperationType.type,
-            group=group,
-            context=view_decoration,
         )
 
         type_name = request.data.get(
@@ -1255,7 +1192,7 @@ class ViewDecorationView(APIView):
     def delete(self, request, view_decoration_id):
         """Deletes an existing decoration if the user belongs to the group."""
 
-        view_decoration = ViewHandler().get_decoration(view_decoration_id)
+        view_decoration = ViewHandler().get_decoration(request.user, view_decoration_id)
 
         group = view_decoration.view.table.database.group
         CoreHandler().check_permissions(
@@ -1311,14 +1248,7 @@ class ViewSortingsView(APIView):
         has access to that group.
         """
 
-        view = ViewHandler().get_view(view_id)
-        CoreHandler().check_permissions(
-            request.user,
-            ListViewSortOperationType.type,
-            group=view.table.database.group,
-            context=view,
-        )
-        sortings = ViewSort.objects.filter(view=view)
+        sortings = ViewHandler().list_sorts(request.user, view_id)
         serializer = ViewSortSerializer(sortings, many=True)
         return Response(serializer.data)
 
@@ -1576,16 +1506,7 @@ class ViewFieldOptionsView(APIView):
         """Returns the field options of the view."""
 
         view = ViewHandler().get_view(view_id).specific
-        group = view.table.database.group
-        CoreHandler().check_permissions(
-            request.user,
-            ReadViewFieldOptionsOperationType.type,
-            group=group,
-            context=view,
-            allow_if_template=True,
-        )
-        view_type = view_type_registry.get_by_model(view)
-
+        view_type = ViewHandler().get_field_options_as_user(request.user, view)
         try:
             serializer_class = view_type.get_field_options_serializer_class(
                 create_if_missing=True
@@ -1594,7 +1515,6 @@ class ViewFieldOptionsView(APIView):
             raise ViewDoesNotSupportFieldOptions(
                 "The view type does not have a `field_options_serializer_class`"
             ) from exc
-
         return Response(serializer_class(view).data)
 
     @extend_schema(
@@ -1703,7 +1623,8 @@ class RotateViewSlugView(APIView):
         """Rotates the slug of a view."""
 
         view = action_type_registry.get_by_type(RotateViewSlugActionType).do(
-            request.user, ViewHandler().get_view_for_update(view_id).specific
+            request.user,
+            ViewHandler().get_view_for_update(request.user, view_id).specific,
         )
 
         serializer = view_type_registry.get_serializer(view, ViewSerializer)

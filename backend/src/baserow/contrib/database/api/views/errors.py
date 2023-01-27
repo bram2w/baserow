@@ -94,3 +94,8 @@ ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW = (
     HTTP_401_UNAUTHORIZED,
     "The user does not have the permissions to see this password protected shared view.",
 )
+ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST = (
+    "ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The view ownership type does not exist.",
+)

@@ -16,6 +16,7 @@
     <CreateViewModal
       ref="createModal"
       :table="table"
+      :database="database"
       :view-type="viewType"
       @created="$emit('created', $event)"
     ></CreateViewModal>

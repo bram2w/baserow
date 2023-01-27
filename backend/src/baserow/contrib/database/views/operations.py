@@ -102,6 +102,14 @@ class ListViewFilterOperationType(ViewOperationType):
     object_scope_name = DatabaseViewFilterObjectScopeType.type
 
 
+class ListAggregationsViewOperationType(ViewOperationType):
+    type = "database.table.view.list_aggregations"
+
+
+class ReadAggregationsViewOperationType(ViewOperationType):
+    type = "database.table.view.read_aggregation"
+
+
 class ReadViewFilterOperationType(ViewFilterOperationType):
     type = "database.table.view.filter.read"
 
@@ -129,6 +137,7 @@ class ViewDecorationOperationType(ViewOperationType, abc.ABC):
 
 class ReadViewDecorationOperationType(ViewDecorationOperationType):
     type = "database.table.view.decoration.read"
+    object_scope_name = DatabaseViewDecorationObjectScopeType.type
 
 
 class UpdateViewDecorationOperationType(ViewDecorationOperationType):

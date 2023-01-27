@@ -206,6 +206,7 @@ import {
   MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
 import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
+import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -343,6 +344,12 @@ export default (context) => {
   )
   app.$registry.register('viewFilter', new EmptyViewFilterType(context))
   app.$registry.register('viewFilter', new NotEmptyViewFilterType(context))
+
+  app.$registry.register(
+    'viewOwnershipType',
+    new CollaborativeViewOwnershipType(context)
+  )
+
   app.$registry.register('field', new TextFieldType(context))
   app.$registry.register('field', new LongTextFieldType(context))
   app.$registry.register('field', new LinkRowFieldType(context))

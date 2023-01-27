@@ -225,8 +225,9 @@ class RolePermissionManagerType(PermissionManagerType):
                 roles_by_scope, operation_type
             )
 
-            policy_per_operation[operation_type.type]["default"] = default
-            policy_per_operation[operation_type.type]["exceptions"] = exceptions
+            if default or exceptions:
+                policy_per_operation[operation_type.type]["default"] = default
+                policy_per_operation[operation_type.type]["exceptions"] = exceptions
 
             if exceptions:
                 # We store the exceptions by scope to get all objects at once later
