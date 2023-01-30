@@ -248,7 +248,7 @@ variables:
   CLOUDRON_DOCKERFILE_PATH: $CI_PROJECT_DIR/deploy/cloudron/Dockerfile
   HEROKU_DOCKERFILE_PATH: $CI_PROJECT_DIR/heroku.Dockerfile
   # The image path for the helper CI util image that will be built and pushed to.
-  CI_UTIL_IMAGE: $CI_REGISTRY/bramw/baserow/ci/ci_util_image:latest
+  CI_UTIL_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/ci/ci_util_image:latest
 
 # ==================================== CI UTIL ====================================
 
@@ -263,8 +263,6 @@ build-ci-util-image:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
     - cd .gitlab/ci_util_image
     - docker build -t $CI_UTIL_IMAGE .
@@ -573,9 +571,7 @@ build-cloudron-image:
     - job: build-all-in-one-image
   only:
     variables:
-      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
-      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
-      - $BUILD_ALL_IN_ONE == "true"
+      - ( $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME ) && $BUILD_ALL_IN_ONE == "true" && $CLOUDRON_IMAGE_NAME != "disable"
   variables:
     IMAGE_NAME: $CLOUDRON_IMAGE_NAME
     DOCKERFILE_PATH: $CLOUDRON_DOCKERFILE_PATH
@@ -593,9 +589,7 @@ build-heroku-image:
     - job: build-all-in-one-image
   only:
     variables:
-      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
-      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
-      - $BUILD_ALL_IN_ONE == "true"
+      - ( $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME ) && $BUILD_ALL_IN_ONE == "true" && $HEROKU_IMAGE_NAME != "disable"
   variables:
     IMAGE_NAME: $HEROKU_IMAGE_NAME
     DOCKERFILE_PATH: $HEROKU_DOCKERFILE_PATH
@@ -623,9 +617,8 @@ trigger-saas-build:
   variables:
     UPSTREAM_SHA: $CI_COMMIT_SHA
     UPSTREAM_SHORT_SHA: $CI_COMMIT_SHORT_SHA
-  only:
-    variables:
-      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  rules:
+    - if: $CI_PROJECT_ID == "10858056" && $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   allow_failure: true
   trigger:
     project: bramw/baserow-saas
@@ -779,7 +772,7 @@ publish-cloudron-develop-latest-image:
   extends: .publish-baserow-image
   only:
     variables:
-      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+      - $CLOUDRON_IMAGE_NAME != "disable" && $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   dependencies: []
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
@@ -793,6 +786,8 @@ publish-cloudron-develop-latest-image:
 publish-cloudron-release-tagged-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CLOUDRON_IMAGE_NAME != "disable"
     refs:
       - tags
   dependencies: []
