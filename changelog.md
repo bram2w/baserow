@@ -16,6 +16,8 @@ For example:
 * Link row field can now be imported. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Can add a row with textual values for single select, multiple select and link row field. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 
+* Add e2e tests. [#820](https://gitlab.com/bramw/baserow/-/issues/820)
+
 ### Bug Fixes
 * Add missing `procps` system package to all-in-one docker image fixing `/baserow/supervisor/docker-postgres-setup.sh run` (#1512)[https://gitlab.com/bramw/baserow/-/issues/1512]
 * Fixed API docs for creating and updating rows are missing for Multiple Select and Multiple Collaborator fields. [#1196](https://gitlab.com/bramw/baserow/-/issues/1196)
