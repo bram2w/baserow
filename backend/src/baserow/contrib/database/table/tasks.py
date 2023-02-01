@@ -8,7 +8,7 @@ from baserow.contrib.database.table.operations import (
     ListenToAllDatabaseTableEventsOperationType,
 )
 from baserow.contrib.database.ws.pages import TablePageType
-from baserow.core.exceptions import PermissionDenied
+from baserow.core.exceptions import PermissionException
 from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Group
 from baserow.core.object_scopes import GroupObjectScopeType
@@ -78,7 +78,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     subject = subject_type_qs.get(pk=subject_id)
     scope = scope_type.model_class.objects.get(pk=scope_id)
 
-    users = subject_type.get_associated_users(subject)
+    users = subject_type.get_users_included_in_subject(subject)
     tables = DatabaseTableObjectScopeType().get_all_context_objects_in_scope(scope)
 
     channel_group_names_users_dict = defaultdict(set)
@@ -95,7 +95,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
                         group=group,
                         context=table,
                     )
-                except PermissionDenied:
+                except PermissionException:
                     channel_group_names_users_dict[channel_group_name].add(user.id)
 
     channel_layer = get_channel_layer()

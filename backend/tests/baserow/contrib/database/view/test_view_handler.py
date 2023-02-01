@@ -50,6 +50,16 @@ from baserow.core.exceptions import PermissionDenied, UserNotInGroup
 from baserow.core.trash.handler import TrashHandler
 
 
+@pytest.fixture(autouse=True)
+def clean_registry_cache():
+    """
+    Ensure no patched version stays in cache.
+    """
+
+    view_type_registry.get_for_class.cache_clear()
+    yield
+
+
 @pytest.mark.django_db
 def test_get_view(data_fixture):
     user = data_fixture.create_user()

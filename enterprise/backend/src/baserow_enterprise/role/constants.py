@@ -21,6 +21,7 @@ EDITOR_ROLE_UID = "EDITOR"
 COMMENTER_ROLE_UID = "COMMENTER"
 VIEWER_ROLE_UID = "VIEWER"
 NO_ACCESS_ROLE_UID = getattr(settings, "NO_ACCESS_ROLE_UID", "NO_ACCESS")
+READ_ONLY_ROLE_UID = getattr(settings, "READ_ONLY_ROLE_UID", "VIEWER")
 NO_ROLE_LOW_PRIORITY_ROLE_UID = getattr(
     settings, "NO_ROLE_LOW_PRIORITY_UID", "NO_ROLE_LOW_PRIORITY"
 )
@@ -31,6 +32,8 @@ ROLE_ASSIGNABLE_OBJECT_MAP = getattr(
     "GET_ROLE_ASSIGNABLE_OBJECT_MAP",
     DEFAULT_ROLE_ASSIGNABLE_OBJECT_MAP,
 )
-SUBJECT_PRIORITY = getattr(
-    settings, "SUBJECT_PRIORITY", ["auth.User", "baserow_enterprise.Team"]
+ALLOWED_SUBJECT_TYPE_BY_PRIORITY = getattr(
+    settings,
+    "ALLOWED_SUBJECT_TYPE_BY_PRIORITY",
+    ["auth.User", "baserow_enterprise.Team"],
 )

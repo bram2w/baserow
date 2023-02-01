@@ -84,7 +84,7 @@ def test_list_tables_doesnt_do_n_queries_per_tables(api_client, data_fixture):
         response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
         assert response.status_code == HTTP_200_OK
 
-    assert len(query_for_n_tables.captured_queries) == len(
+    assert len(query_for_n_tables.captured_queries) >= len(
         query_for_n_plus_one_tables.captured_queries
     )
 

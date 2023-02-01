@@ -18,7 +18,7 @@ class FieldObjectScopeType(ObjectScopeType):
         return context.table
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related(
+        return self.get_base_queryset().prefetch_related(
             "table", "table__database", "table__database__group"
         )
 

@@ -27,7 +27,7 @@ class BaserowEnterpriseConfig(AppConfig):
         from baserow_enterprise.api.member_data_types import (
             EnterpriseMemberTeamsDataType,
         )
-        from baserow_enterprise.role.actions import AssignRoleActionType
+        from baserow_enterprise.role.actions import BatchAssignRoleActionType
         from baserow_enterprise.scopes import TeamsActionScopeType
         from baserow_enterprise.teams.actions import (
             CreateTeamActionType,
@@ -73,7 +73,7 @@ class BaserowEnterpriseConfig(AppConfig):
         action_type_registry.register(DeleteTeamActionType())
         action_type_registry.register(CreateTeamSubjectActionType())
         action_type_registry.register(DeleteTeamSubjectActionType())
-        action_type_registry.register(AssignRoleActionType())
+        action_type_registry.register(BatchAssignRoleActionType())
 
         trash_item_type_registry.register(TeamTrashableItemType())
 

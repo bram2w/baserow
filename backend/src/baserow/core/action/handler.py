@@ -1,6 +1,5 @@
 import logging
 import traceback
-from copy import deepcopy
 from datetime import datetime
 from typing import List, Optional, Set, Tuple
 
@@ -75,7 +74,7 @@ class ActionHandler:
             # noinspection PyBroadException
             action_type = action_type_registry.get(action.type)
             # noinspection PyArgumentList
-            latest_params = action_type.Params(**deepcopy(action.params))
+            latest_params = action_type.serialized_to_params(action.params)
 
             action_type.undo(user, latest_params, action)
             # action.params could be changed, so save the action
@@ -150,7 +149,7 @@ class ActionHandler:
             action_being_redone = action
             action_type = action_type_registry.get(action.type)
             # noinspection PyArgumentList
-            latest_params = action_type.Params(**deepcopy(action.params))
+            latest_params = action_type.serialized_to_params(action.params)
 
             action_type.redo(user, latest_params, action_being_redone)
 

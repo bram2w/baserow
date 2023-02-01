@@ -35,7 +35,7 @@ async def test_database_updated_message_not_leaking(data_fixture):
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, database
+        user_excluded, group, no_access_role, database.application_ptr
     )
 
     # Establish websocket connection and subscribe to table
@@ -65,7 +65,7 @@ async def test_database_deleted_message_not_leaking(data_fixture):
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, database
+        user_excluded, group, no_access_role, database.application_ptr
     )
 
     # Establish websocket connection and subscribe to table
@@ -95,7 +95,7 @@ async def test_database_created_message_not_leaking(data_fixture):
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, database
+        user_excluded, group, no_access_role, database.application_ptr
     )
 
     # Establish websocket connection and subscribe to table

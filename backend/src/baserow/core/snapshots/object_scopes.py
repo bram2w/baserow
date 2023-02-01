@@ -16,7 +16,7 @@ class SnapshotObjectScopeType(ObjectScopeType):
         return context.snapshot_from_application.specific
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related(
+        return self.get_base_queryset().prefetch_related(
             "snapshot_from_application", "snapshot_from_application__group"
         )
 

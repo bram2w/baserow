@@ -2040,7 +2040,7 @@ class ViewHandler:
             ReadViewOperationType.type,
             group=view.table.database.group,
             context=view,
-            raise_error=False,
+            raise_permission_exceptions=False,
         )
         if not user_in_group:
             if not view.public:

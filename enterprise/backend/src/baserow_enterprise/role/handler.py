@@ -1,17 +1,31 @@
-from typing import Any, List, Optional, Tuple, TypedDict, Union
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, IntegerField, Q, QuerySet, Value, When
 
+from baserow_premium.license.handler import LicenseHandler
+
+from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
 from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Group, GroupUser
 from baserow.core.object_scopes import CoreObjectScopeType
-from baserow.core.registries import object_scope_type_registry, subject_type_registry
-from baserow.core.types import ScopeObject, Subject
-from baserow_enterprise.exceptions import ScopeNotExist, SubjectNotExist
+from baserow.core.registries import (
+    SubjectType,
+    object_scope_type_registry,
+    subject_type_registry,
+)
+from baserow.core.subjects import UserSubjectType
+from baserow.core.types import PermissionCheck, ScopeObject, Subject
+from baserow_enterprise.exceptions import (
+    ScopeNotExist,
+    SubjectNotExist,
+    SubjectUnsupported,
+)
+from baserow_enterprise.features import RBAC
 from baserow_enterprise.models import RoleAssignment
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.signals import (
@@ -22,23 +36,15 @@ from baserow_enterprise.signals import (
 from baserow_enterprise.teams.models import Team, TeamSubject
 
 from .constants import (
+    ALLOWED_SUBJECT_TYPE_BY_PRIORITY,
     NO_ACCESS_ROLE_UID,
     NO_ROLE_LOW_PRIORITY_ROLE_UID,
+    READ_ONLY_ROLE_UID,
     ROLE_ASSIGNABLE_OBJECT_MAP,
-    SUBJECT_PRIORITY,
 )
+from .types import NewRoleAssignment
 
 User = get_user_model()
-
-
-class RoleAssignmentDict(TypedDict):
-    scope: Any
-    scope_id: int
-    scope_type: ContentType
-    subject: Any
-    subject_id: int
-    subject_type: ContentType
-    role: Role
 
 
 class RoleAssignmentHandler:
@@ -118,7 +124,7 @@ class RoleAssignmentHandler:
         self,
         subject: Union[AbstractUser, Team],
         group: Group,
-        scope: Optional[Any] = None,
+        scope: Optional[ScopeObject] = None,
     ) -> Union[RoleAssignment, None]:
         """
         Returns the current assigned role for the given Group/Subject/Scope.
@@ -133,54 +139,131 @@ class RoleAssignmentHandler:
         if scope is None:
             scope = group
 
-        content_types = ContentType.objects.get_for_models(scope, subject)
+        key = (subject, scope)
 
-        # If we are assigning a role to a group, we store the role uid in
-        # the `.permissions` property of the `GroupUser` object instead to stay
-        # compatible with other permission manager. This make it easy to switch from
-        # one permission manager to another without losing nor duplicating information
-        if (
-            isinstance(scope, Group)
-            and scope.id == group.id
-            and isinstance(subject, User)
-        ):
-            try:
-                group_user = group.get_group_user(subject)
-                role = self.get_role_by_uid(group_user.permissions, use_fallback=True)
+        return self.get_current_role_assignments(group, [key])[key]
+
+    def get_current_role_assignments(
+        self,
+        group: Group,
+        for_subject_scope: List[Tuple[Subject, ScopeObject]],
+        include_trash=False,
+    ) -> Dict[Tuple[Subject, ScopeObject], Optional[RoleAssignment]]:
+        """
+        Returns the current assigned role for the given Subject/Scope tuples.
+
+        :param group: The group in which you want the role assignments.
+        :param for_subject_scope: A list of (subject, scope) with want the role for.
+        :return: The current `RoleAssignment` or `None` if no role is defined for the
+            scope each of the given tuples.
+        """
+
+        user_subject_type = subject_type_registry.get(UserSubjectType.type)
+
+        # Group all scopes and subjects to get their content_type
+        scope_types = set([Group])
+        subject_types = set()
+        for (subject, scope) in for_subject_scope:
+            scope_types.add(type(scope))
+            subject_types.add(type(subject))
+
+        content_types = ContentType.objects.get_for_models(
+            *subject_types,
+            *scope_types,
+        )
+
+        # Generate the query to get all the current role assignments for the given
+        # tuples
+        # Exception for user subject for group scope as we read the permission
+        # from the group_users object
+        subject_scope_q = Q()
+        user_subject_with_group_scope_by_id = dict()
+        for (subject, scope) in for_subject_scope:
+            if isinstance(subject, user_subject_type.model_class) and scope == group:
+                # Exception for users with group scope
+                user_subject_with_group_scope_by_id[subject.id] = subject
+            else:
+                subject_scope_q |= Q(
+                    subject_type=content_types[type(subject)],
+                    subject_id=subject.id,
+                    scope_id=scope.id,
+                    scope_type=content_types[type(scope)],
+                )
+
+        role_assignments = (
+            self._get_role_assignments_for_valid_subjects_qs()
+            .prefetch_related("role")
+            .filter(group=group)
+            .filter(subject_scope_q)
+        )
+
+        # Create a map to easily match the given tuples at the end
+        # without triggering the django query for the related content
+        role_assignments_by_user_id_scope_id = {
+            (ra.subject_type, ra.subject_id, ra.scope_type, ra.scope_id): ra
+            for ra in role_assignments
+        }
+
+        # If we are get the role of a user at a group scope level,
+        # we get it from the role uid in the `.permissions` property of the `GroupUser`
+        # object instead to remain compatible with other permission managers.
+        # This makes it easy to switch from one permission manager to another without
+        # loosing nor duplicating information
+        if user_subject_with_group_scope_by_id:
+            for user_id, permissions in (
+                CoreHandler()
+                .get_group_users(
+                    group,
+                    user_subject_with_group_scope_by_id.values(),
+                    include_trash=include_trash,
+                )
+                .values_list("user_id", "permissions")
+            ):
+                role = self.get_role_by_uid(permissions, use_fallback=True)
+                key = (
+                    user_subject_type.get_content_type(),
+                    user_id,
+                    content_types[Group],
+                    group.id,
+                )
+                subject = user_subject_with_group_scope_by_id[user_id]
                 # We need to fake a RoleAssignment instance here to keep the same
                 # return interface
-                return RoleAssignment(
+                fake_role_assignment = RoleAssignment(
                     subject=subject,
                     subject_id=subject.id,
-                    subject_type=content_types[subject],
+                    subject_type=content_types[type(subject)],
                     role=role,
                     group=group,
-                    scope=scope,
-                    scope_type=content_types[scope],
+                    scope=group,
+                    scope_type=content_types[Group],
                 )
-            except GroupUser.DoesNotExist:
-                return None
+                role_assignments_by_user_id_scope_id[key] = fake_role_assignment
 
-        try:
-            role_assignment = (
-                self._get_role_assignments_for_valid_subjects_qs()
-                .select_related("role")
-                .get(
-                    scope_id=scope.id,
-                    scope_type=content_types[scope],
-                    group=group,
-                    subject_id=subject.id,
-                    subject_type=content_types[subject],
-                )
+        # Dispatch each role assignments to the (subject, scope) tuple it belongs to
+        # if there is one for this tuple otherwise None which means no previous
+        # role existed for the (subject, scope) tuple.
+        roles_by_user_scope = {}
+        for subject, scope in for_subject_scope:
+            key = (
+                content_types[type(subject)],
+                subject.id,
+                content_types[type(scope)],
+                scope.id,
             )
 
-            return role_assignment
-        except RoleAssignment.DoesNotExist:
-            return None
+            if key in role_assignments_by_user_id_scope_id:
+                roles_by_user_scope[
+                    (subject, scope)
+                ] = role_assignments_by_user_id_scope_id[key]
+            else:
+                roles_by_user_scope[(subject, scope)] = None
+
+        return roles_by_user_scope
 
     def get_roles_per_scope(
         self, group: Group, actor: AbstractUser, include_trash=False
-    ) -> List[Tuple[Any, List[Role]]]:
+    ) -> List[Tuple[ScopeObject, List[Role]]]:
         """
         Returns the RoleAssignments for the given actor in the given group. The roles
         are ordered by position of the role scope in the object hierarchy: the highest
@@ -196,29 +279,61 @@ class RoleAssignmentHandler:
         """
 
         actor_subject_type = subject_type_registry.get_by_model(actor)
+        return self.get_roles_per_scope_for_actors(
+            group, actor_subject_type, [actor], include_trash=include_trash
+        )[actor]
+
+    def get_roles_per_scope_for_actors(
+        self,
+        group: Group,
+        actor_subject_type: SubjectType,
+        actors: List[Subject],
+        include_trash=False,
+    ) -> Dict[Subject, Tuple[ScopeObject, List[Role]]]:
+        """
+        Returns the role assignments for for all given actors who are all of the
+        actor_subject_type.
+
+        :param group: The group in which we want the role assignments for.
+        :param actor_subject_type: The type of the actors.
+        :param actors: The actors we want the role per scope map.
+        :return: A dict with actor as keys and a list of (scope, list[role]) as value.
+            The roles per scope are sorted by priority: the more the scope is high in
+            the object hierarchy, the earlier the tuple is in the list.
+        """
 
         content_types = ContentType.objects.get_for_models(
-            *[s.model_class for s in subject_type_registry.get_all()], Group
+            actor_subject_type.model_class, Team, Group
         )
+
+        actor_by_id = {a.id: a for a in actors}
 
         subjects_q = Q(
             subject_type=content_types[actor_subject_type.model_class],
-            subject_id=actor.id,
+            subject_id__in=actor_by_id.keys(),
         )
 
         # Add team roles
-        user_teams_qs = TeamSubject.objects.filter(
+        users_teams_qs = TeamSubject.objects.filter(
             subject_type=content_types[actor_subject_type.model_class],
-            subject_id=actor.id,
+            subject_id__in=actor_by_id.keys(),
         )
 
-        user_teams_ids = user_teams_qs.values_list("team_id", flat=True)
+        teams_subjects = users_teams_qs.values_list("team_id", "subject_id")
+
+        # Populate double map for later use
+        subjects_per_team = defaultdict(list)
+        teams_per_subject = defaultdict(list)
+        for (team_id, subject_id) in teams_subjects:
+            subjects_per_team[team_id].append(subject_id)
+            teams_per_subject[subject_id].append(team_id)
 
         subjects_q |= Q(
             subject_type=content_types[Team],
-            subject_id__in=user_teams_ids,
+            subject_id__in=subjects_per_team.keys(),
         )
 
+        # Allow to order assignment by scope level
         scope_cases = [
             When(
                 scope_type=ContentType.objects.get_for_model(scope_type.model_class),
@@ -231,6 +346,7 @@ class RoleAssignmentHandler:
             if scope_type.type != CoreObjectScopeType.type
         ]
 
+        # Allow to order assignment by subject priority
         role_priority_cases = [
             When(
                 subject_type=content_types[subject_type.model_class],
@@ -239,11 +355,12 @@ class RoleAssignmentHandler:
             for order, subject_type in enumerate(
                 [
                     subject_type_registry.get(subject_name)
-                    for subject_name in SUBJECT_PRIORITY
+                    for subject_name in ALLOWED_SUBJECT_TYPE_BY_PRIORITY
                 ]
             )
         ]
 
+        # Final query
         role_assignments = (
             RoleAssignment.objects.filter(
                 group=group,
@@ -267,86 +384,133 @@ class RoleAssignmentHandler:
             .select_related("subject_type")
         )
 
-        group_scope_param = (group.id, content_types[Group].id)
-        # we are using a tuple of (scope.id, content_type.id) to prevent the query
-        # automatically done when accessing the property from the role assignments
-        # to query them all at once later
-        roles_by_scope = {group_scope_param: []}
-        priorities_by_scope = {}
+        group_scope_param = (content_types[Group].id, group.id)
+
+        # Track the latest role priority for each scope of each subject
+        priorities_by_scope_per_actor_id = defaultdict(dict)
+
+        # Keep a list of scope params to query later
+        scopes_to_query = defaultdict(set)
+
+        roles_by_scope = defaultdict(lambda: {group_scope_param: []})
 
         for role_assignment in role_assignments:
-            scope_param = (role_assignment.scope_id, role_assignment.scope_type_id)
+            scope_param = (role_assignment.scope_type_id, role_assignment.scope_id)
             role = self.get_role_by_id(role_assignment.role_id)
-            priority = role_assignment.role_priority
+            role_assignment_priority = role_assignment.role_priority
+            subject_id = role_assignment.subject_id
 
-            # We don't use defaultdict here to be sure we have the right key order
-            if scope_param not in roles_by_scope:
-                roles_by_scope[scope_param] = []
+            scopes_to_query[role_assignment.scope_type_id].add(role_assignment.scope_id)
 
-            existing_priority = priorities_by_scope.setdefault(scope_param, priority)
-            if priority < existing_priority:
-                roles_by_scope[scope_param] = [role]
-            elif existing_priority == priority:
-                roles_by_scope[scope_param].append(role)
-
-        # Get the group level role by reading the GroupUser permissions property for
-        # User actors.
-        if isinstance(actor, User):
-
-            # We want to get the group user even if the group is trashed as we still
-            # want to support checking permissions on a trashed scope (the group).
-            group_user = group.get_group_user(actor, include_trash=include_trash)
-
-            group_level_role = self.get_role_by_uid(
-                group_user.permissions,
-                use_fallback=True,
-            )
-            if group_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE_UID:
-                # Low priority role -> Use team role or NO_ACCESS if no team role
-                if not roles_by_scope.get(group_scope_param):
-                    roles_by_scope[group_scope_param] = [
-                        self.get_role_by_uid(NO_ACCESS_ROLE_UID)
-                    ]
+            # Is it a simple actor or a team?
+            # If it's a team we need to iterate over all the actor that are
+            # subject of the team
+            if role_assignment.subject_type == content_types[Team]:
+                actor_ids = subjects_per_team[subject_id]
             else:
-                # Otherwise user role wins
-                roles_by_scope[group_scope_param] = [group_level_role]
+                actor_ids = [subject_id]
 
-        roles_by_scope = [
-            (self.get_scope(*key), value) for (key, value) in roles_by_scope.items()
-        ]
+            for actor_id in actor_ids:
+                if not roles_by_scope[actor_id].get(scope_param, []):
+                    # If there is no role yet for the scope of the role assignment
+                    # We can define one from the assignment.
+                    # We don't use defaultdict here to be sure we have the right key
+                    # order for role_by_scope. We need to keep it ordered as expected
+                    # by the caller.
+                    roles_by_scope[actor_id][scope_param] = [role]
+                    priorities_by_scope_per_actor_id[actor_id][
+                        scope_param
+                    ] = role_assignment_priority
+                else:
+                    # If the priority is the same we add the role to the
+                    # current role list.
+                    # Otherwise, we ignore the role as the following roles can only
+                    # have a lower priority because of the priority ordering
+                    current_priority = priorities_by_scope_per_actor_id[actor_id][
+                        scope_param
+                    ]
+                    if (
+                        current_priority == role_assignment_priority
+                        and role not in roles_by_scope[actor_id][scope_param]
+                    ):
+                        roles_by_scope[actor_id][scope_param].append(role)
 
-        return roles_by_scope
+        # For user actor, we need to get the group level role by reading the
+        # GroupUser permissions property
+        if actor_subject_type.type == UserSubjectType.type:
+
+            # Get all group users at once
+            user_permissions_by_id = dict(
+                CoreHandler()
+                .get_group_users(
+                    group, actor_by_id.values(), include_trash=include_trash
+                )
+                .values_list("user_id", "permissions")
+            )
+
+            for actor in actors:
+                group_level_role = self.get_role_by_uid(
+                    user_permissions_by_id[actor.id], use_fallback=True
+                )
+                if group_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE_UID:
+                    # Low priority role -> Use team role or NO_ACCESS if no team role
+                    if not roles_by_scope[actor.id].get(group_scope_param):
+                        roles_by_scope[actor.id][group_scope_param] = [
+                            self.get_role_by_uid(NO_ACCESS_ROLE_UID)
+                        ]
+                else:
+                    # Otherwise user role wins
+                    roles_by_scope[actor.id][group_scope_param] = [group_level_role]
+
+        # Populate scope cache by querying all scopes type by type
+        scope_cache = {group_scope_param: group}
+        for content_type_id, content_ids in scopes_to_query.items():
+            for scope in self.get_scopes(content_type_id, content_ids):
+                scope_cache[(content_type_id, scope.id)] = scope
+
+        # Finally replace scope_params by real scope
+        roles_per_scope_per_user = defaultdict(list)
+        for actor in actors:
+            for (key, value) in roles_by_scope[actor.id].items():
+                roles_per_scope_per_user[actor].append((scope_cache[key], value))
+
+        return roles_per_scope_per_user
 
     def get_computed_roles(
-        self, group: Group, actor: AbstractUser, context: Any, include_trash=False
+        self, roles_per_scopes, context: Any, cache: Optional[Dict] = None
     ) -> List[Role]:
         """
         Returns the computed roles for the given actor on the given context.
 
-        :param group: The group in which we want the roles.
-        :param actor: The actor for whom we want the roles.
+        :param group: The group in which we want the roles for.
+        :param actor: The actor for whom we want the roles for.
         :param context: The context on which we want to now the role.
         :param include_trash: If true then also checks even if given group has been
             trashed instead of raising a DoesNotExist exception.
         :return: A list of roles that applies on this context.
         """
 
-        roles_by_scopes = self.get_roles_per_scope(
-            group, actor, include_trash=include_trash
-        )
-        most_precise_roles = [
-            RoleAssignmentHandler().get_role_by_uid(NO_ACCESS_ROLE_UID)
-        ]
+        most_precise_roles = [self.get_role_by_uid(NO_ACCESS_ROLE_UID)]
 
-        for (scope, roles) in roles_by_scopes:
-            if object_scope_type_registry.scope_includes_context(scope, context):
+        cache = cache or {}
+
+        def scope_includes_context(scope, context):
+            key = (type(scope).__name__, scope.id, type(context).__name__, context.id)
+            if key not in cache:
+                cache[key] = object_scope_type_registry.scope_includes_context(
+                    scope, context
+                )
+            return cache[key]
+
+        for (scope, roles) in roles_per_scopes:
+            if scope_includes_context(scope, context):
                 # Check if this scope includes the context. As the role assignments
                 # are sorted, the new scope is more precise than the previous one.
                 # So we keep this new role.
-                most_precise_roles = roles
-            elif object_scope_type_registry.scope_includes_context(
-                context, scope
-            ) and any([r.uid != NO_ACCESS_ROLE_UID for r in roles]):
+                most_precise_roles = list(roles)
+            elif scope_includes_context(context, scope) and any(
+                [r.uid != NO_ACCESS_ROLE_UID for r in roles]
+            ):
                 # Here the user has a permission on a scope that is a child of the
                 # context, then we grant the user permission on all read operations
                 # for all parents of that scope and hence this context should be
@@ -355,7 +519,7 @@ class RoleAssignmentHandler:
                 # and the context here is the parent database of this table the
                 # user should be able to read this database object so they can
                 # actually have access to lower down.
-                most_precise_roles.append(self.get_role_by_uid("VIEWER"))
+                most_precise_roles.append(self.get_role_by_uid(READ_ONLY_ROLE_UID))
 
         return most_precise_roles
 
@@ -387,16 +551,10 @@ class RoleAssignmentHandler:
             self.remove_role(subject, group, scope=scope)
             return
 
-        subject_type = subject_type_registry.get_by_model(subject)
-        if not subject_type.is_in_group(subject.id, group):
-            raise SubjectNotExist()
-
-        if not object_scope_type_registry.scope_includes_context(group, scope):
-            raise ScopeNotExist()
-
         content_types = ContentType.objects.get_for_models(scope, subject)
 
-        # Group level permissions are not stored as RoleAssignment records
+        # Group level permissions are not stored as RoleAssignment records but
+        # in the GroupUser.permissions property.
         if RoleAssignmentHandler.is_group_level_assignment(group, scope, subject):
             group_user = group.get_group_user(subject)
             new_permissions = "MEMBER" if role.uid == "BUILDER" else role.uid
@@ -425,6 +583,7 @@ class RoleAssignmentHandler:
             defaults={"role": role},
         )
 
+        # TODO remove signaling from here
         if created:
             role_assignment_created.send(
                 self, subject=subject, group=group, scope=scope, role=role
@@ -469,19 +628,106 @@ class RoleAssignmentHandler:
         ).delete()
         role_assignment_deleted.send(self, subject=subject, group=group, scope=scope)
 
-    def get_subject(self, subject_id: int, subject_type: str):
+    def assign_role_batch(
+        self,
+        group: Group,
+        new_role_assignments: List[NewRoleAssignment],
+    ):
         """
-        Helper method that returns the actual subject object given the subject_id and
-        the subject type.
+        TODO: this function is not yet a real batch. Should be implemented properly.
 
-        :param subject_id: The subject id.
-        :param subject_type: The subject type.
+        Creates role assignments in batch, this should be used if many role assignments
+        are created at once, to be more efficient.
+
+        :return: The list of role assignments. Some can be None if the role assignment
+            has been deleted.
         """
 
-        content_type = subject_type_registry.get(subject_type).get_content_type()
-        return content_type.get_object_for_this_type(id=subject_id)
+        return [
+            self.assign_role(
+                role_assignment.subject,
+                group,
+                role=role_assignment.role,
+                scope=role_assignment.scope,
+            )
+            for role_assignment in new_role_assignments
+        ]
 
-    def get_scope(self, scope_id: int, content_type_id: int) -> Any:
+    def assign_role_batch_for_user(
+        self,
+        user: AbstractUser,
+        group: Group,
+        new_role_assignments: List[NewRoleAssignment],
+    ) -> List[Optional[RoleAssignment]]:
+        """
+        Assign multiple roles to multiple users at once. This method do all the Licence
+        and permission checking before calling the real batch assign.
+
+        :param user: The user who assigns roles.
+        :param group: The group in which the role assignments take place.
+        :param new_role_assignments: A list of triplet (subject, role_uid, scope) for
+            each assignment the user wants to do.
+        :raise SubjectNotExist: If at least one of the subjects is not member of the
+            group.
+        :raise SubjectUnsupported: If at least one of the subjects is unsupported by
+            role assignments.
+        :raise ScopeNotExist: If at least one of the scopes is not a child of the
+            group.
+        :return: A list of the result of each assignment. Each result can be a
+            RoleAssignment object or None if the assignment has been removed.
+        """
+
+        # First check licence
+        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
+
+        # Create a dict of unique scope and subject by type to allow performants
+        # preliminary checks
+        permission_to_check = []
+        unique_scopes_by_type = defaultdict(set)
+        unique_subjects_by_type = defaultdict(set)
+        for subject, _, scope in new_role_assignments:
+            scope_type = object_scope_type_registry.get_by_model(scope)
+            if scope not in unique_scopes_by_type[scope_type]:
+                permission_to_check.append(
+                    PermissionCheck(
+                        user,
+                        ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
+                        context=scope,
+                    )
+                )
+                unique_scopes_by_type[scope_type].add(scope)
+                subject_type = subject_type_registry.get_by_model(subject)
+                unique_subjects_by_type[subject_type].add(subject)
+
+        # Check if all subjects are in the group
+        for subject_type, subjects in unique_subjects_by_type.items():
+            if subject_type.type not in ALLOWED_SUBJECT_TYPE_BY_PRIORITY:
+                raise SubjectUnsupported(
+                    f"The subject type {subject_type.type} is unsupported for role "
+                    "assignments."
+                )
+            are_subjects_in_group = subject_type.are_in_group(subjects, group)
+            if not all(are_subjects_in_group):
+                raise SubjectNotExist()
+
+        # Check if all scopes are child of the group
+        for scope_type, scopes in unique_scopes_by_type.items():
+            are_scopes_in_group = scope_type.are_objects_child_of(scopes, group)
+            if not all(are_scopes_in_group):
+                raise ScopeNotExist()
+
+        # Do we have the permission to change roles for all scopes
+        user_permission_for_scopes = CoreHandler().check_multiple_permissions(
+            permission_to_check,
+            group=group,
+        )
+
+        if not all(user_permission_for_scopes.values()):
+            raise PermissionDenied()
+
+        return self.assign_role_batch(group, new_role_assignments)
+
+    def get_scopes(self, content_type_id, scope_ids) -> List[ScopeObject]:
         """
         Helper method that returns the actual scope object given the scope ID and
         the scope type.
@@ -491,32 +737,7 @@ class RoleAssignmentHandler:
         """
 
         content_type = ContentType.objects.get_for_id(content_type_id)
-        return content_type.get_object_for_this_type(id=scope_id)
-
-    def assign_role_batch(
-        self,
-        user: AbstractUser,
-        group: Group,
-        new_role_assignments: List[RoleAssignmentDict],
-    ):
-        """
-        TODO: this function is orphaned until we have implemented it properly
-
-        Creates role assignments in batch, this should be used if many role assignments
-        are created at once, to be more efficient.
-
-        :return:
-        """
-
-        return [
-            self.assign_role(
-                role_assignment["subject"],
-                group,
-                role=role_assignment["role"],
-                scope=role_assignment["scope"],
-            )
-            for role_assignment in new_role_assignments
-        ]
+        return content_type.get_all_objects_for_this_type(id__in=scope_ids)
 
     def get_role_assignments(self, group: Group, scope=None):
         """
@@ -536,8 +757,8 @@ class RoleAssignmentHandler:
                 role = self.get_role_by_uid(role_uid, use_fallback=True)
                 subject = group_user.user
 
-                # TODO we probably shouldn't do this in a loop (performance)
                 content_types = ContentType.objects.get_for_models(scope, subject)
+
                 # We need to fake a RoleAssignment instance here to keep the same
                 # return interface
                 role_assignments.append(

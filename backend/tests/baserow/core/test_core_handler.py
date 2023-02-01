@@ -1273,14 +1273,14 @@ def test_raise_if_user_is_last_admin_of_group(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_user_ids_of_permitted_users(data_fixture):
+def test_check_permission_for_multiple_actors(data_fixture):
     user = data_fixture.create_user()
     user_of_another_group = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
 
-    assert CoreHandler().get_user_ids_of_permitted_users(
+    assert CoreHandler().check_permission_for_multiple_actors(
         [user, user_of_another_group], ReadGroupOperationType.type, group, context=group
-    ) == {user.id}
+    ) == [user]
 
 
 @pytest.mark.django_db

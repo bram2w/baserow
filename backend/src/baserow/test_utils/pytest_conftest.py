@@ -74,7 +74,9 @@ def mutable_field_type_registry():
     from baserow.contrib.database.fields.registries import field_type_registry
 
     before = field_type_registry.registry.copy()
+    field_type_registry.get_for_class.cache_clear()
     yield field_type_registry
+    field_type_registry.get_for_class.cache_clear()
     field_type_registry.registry = before
 
 
@@ -92,7 +94,9 @@ def mutable_application_registry():
     from baserow.core.registries import application_type_registry
 
     before = application_type_registry.registry.copy()
+    application_type_registry.get_for_class.cache_clear()
     yield application_type_registry
+    application_type_registry.get_for_class.cache_clear()
     application_type_registry.registry = before
 
 
@@ -101,7 +105,9 @@ def mutable_trash_item_type_registry():
     from baserow.core.trash.registries import trash_item_type_registry
 
     before = trash_item_type_registry.registry.copy()
+    trash_item_type_registry.get_for_class.cache_clear()
     yield trash_item_type_registry
+    trash_item_type_registry.get_for_class.cache_clear()
     trash_item_type_registry.registry = before
 
 
@@ -295,6 +301,7 @@ def application_type_serialized_raising_operationalerror(
     def _perform_stub(raise_transaction_exception: bool = True):
         stub_application_type = MaxLocksPerTransactionExceededApplicationType()
         stub_application_type.raise_transaction_exception = raise_transaction_exception
+        mutable_application_registry.get_for_class.cache_clear()
         mutable_application_registry.registry[
             DatabaseApplicationType.type
         ] = stub_application_type
@@ -319,6 +326,7 @@ def trash_item_type_perm_delete_item_raising_operationalerror(
     def _perform_stub(raise_transaction_exception: bool = True):
         stub_trash_item_type = MaxLocksPerTransactionExceededGroupTrashableItemType()
         stub_trash_item_type.raise_transaction_exception = raise_transaction_exception
+        mutable_trash_item_type_registry.get_for_class.cache_clear()
         mutable_trash_item_type_registry.registry[
             GroupTrashableItemType.type
         ] = stub_trash_item_type

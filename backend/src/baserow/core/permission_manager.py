@@ -1,12 +1,11 @@
-from typing import Union
-
-from rest_framework.exceptions import NotAuthenticated
+from django.contrib.auth import get_user_model
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser
 
 from .exceptions import (
     IsNotAdminError,
+    PermissionDenied,
     UserInvalidGroupPermissionsError,
     UserNotInGroup,
 )
@@ -26,6 +25,9 @@ from .operations import (
     UpdateSettingsOperationType,
 )
 from .registries import PermissionManagerType
+from .subjects import UserSubjectType
+
+User = get_user_model()
 
 
 class CorePermissionManagerType(PermissionManagerType):
@@ -34,17 +36,20 @@ class CorePermissionManagerType(PermissionManagerType):
     """
 
     type = "core"
+    supported_actor_types = [UserSubjectType.type]
 
     ALWAYS_ALLOWED_OPERATIONS = [
         ListGroupsOperationType.type,
     ]
 
-    def check_permissions(
-        self, actor, operation, group=None, context=None, include_trash=False
-    ):
+    def check_multiple_permissions(self, checks, group=None, include_trash=False):
 
-        if operation in self.ALWAYS_ALLOWED_OPERATIONS:
-            return True
+        result = {}
+        for check in checks:
+            if check.operation_name in self.ALWAYS_ALLOWED_OPERATIONS:
+                result[check] = True
+
+        return result
 
     def get_permissions_object(self, actor, group=None):
         return self.ALWAYS_ALLOWED_OPERATIONS
@@ -56,23 +61,21 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
     """
 
     type = "staff"
+    supported_actor_types = [UserSubjectType.type]
 
     STAFF_ONLY_OPERATIONS = [UpdateSettingsOperationType.type]
 
-    def check_permissions(
-        self, actor, operation, group=None, context=None, include_trash=False
-    ):
+    def check_multiple_permissions(self, checks, group=None, include_trash=False):
 
-        if hasattr(actor, "is_authenticated"):
-            user = actor
-            if not user.is_authenticated:
-                raise NotAuthenticated()
-
-            if operation in self.STAFF_ONLY_OPERATIONS:
-                if actor.is_staff:
-                    return True
+        result = {}
+        for check in checks:
+            if check.operation_name in self.STAFF_ONLY_OPERATIONS:
+                if check.actor.is_staff:
+                    result[check] = True
                 else:
-                    raise IsNotAdminError(user)
+                    result[check] = IsNotAdminError(check.actor)
+
+        return result
 
     def get_permissions_object(self, actor, group=None):
         return {
@@ -87,26 +90,27 @@ class GroupMemberOnlyPermissionManagerType(PermissionManagerType):
     """
 
     type = "member"
+    supported_actor_types = [UserSubjectType.type]
 
-    def check_permissions(
-        self, actor, operation, group=None, context=None, include_trash=False
-    ):
+    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+
         if group is None:
-            return None
+            return {}
 
-        if hasattr(actor, "is_authenticated"):
-            user = actor
-            if not user.is_authenticated:
-                raise NotAuthenticated()
+        users_to_query = {c.actor for c in checks}
 
-            if include_trash:
-                queryset = GroupUser.objects_and_trash
-            else:
-                queryset = GroupUser.objects
+        user_ids_in_group = set(
+            CoreHandler()
+            .get_group_users(group, users_to_query, include_trash=include_trash)
+            .values_list("user_id", flat=True)
+        )
 
-            # Check if the user is a member of this group
-            if not queryset.filter(user_id=user.id, group_id=group.id).exists():
-                raise UserNotInGroup(user, group)
+        permission_by_check = {}
+        for check in checks:
+            if check.actor.id not in user_ids_in_group:
+                permission_by_check[check] = UserNotInGroup(check.actor, group)
+
+        return permission_by_check
 
     def get_permissions_object(self, actor, group=None):
         # Check if the user is a member of this group
@@ -125,6 +129,7 @@ class BasicPermissionManagerType(PermissionManagerType):
     """
 
     type = "basic"
+    supported_actor_types = [UserSubjectType.type]
 
     ADMIN_ONLY_OPERATIONS = [
         ListInvitationsGroupOperationType.type,
@@ -139,34 +144,35 @@ class BasicPermissionManagerType(PermissionManagerType):
         DeleteGroupUserOperationType.type,
     ]
 
-    def check_permissions(
-        self, actor, operation, group=None, context=None, include_trash=False
-    ):
+    def check_multiple_permissions(self, checks, group=None, include_trash=False):
 
         if group is None:
-            return None
+            return {}
 
-        if hasattr(actor, "is_authenticated"):
-            user = actor
-            if not user.is_authenticated:
-                raise NotAuthenticated()
+        permission_by_check = {}
+        users_to_query = set()
+        for check in checks:
+            if check.operation_name in self.ADMIN_ONLY_OPERATIONS:
+                users_to_query.add(check.actor)
+            else:
+                permission_by_check[check] = True
 
-            if operation in self.ADMIN_ONLY_OPERATIONS:
+        user_permissions_by_id = dict(
+            CoreHandler()
+            .get_group_users(group, users_to_query, include_trash=include_trash)
+            .values_list("user_id", "permissions")
+        )
 
-                if include_trash:
-                    manager = GroupUser.objects_and_trash
+        for check in checks:
+            if check.operation_name in self.ADMIN_ONLY_OPERATIONS:
+                if user_permissions_by_id.get(check.actor.id, "MEMBER") == "ADMIN":
+                    permission_by_check[check] = True
                 else:
-                    manager = GroupUser.objects
+                    permission_by_check[check] = UserInvalidGroupPermissionsError(
+                        check.actor, group, check.operation_name
+                    )
 
-                queryset = manager.filter(user_id=user.id, group_id=group.id)
-
-                # Check if the user is a member of this group
-                group_user = queryset.get()
-
-                if "ADMIN" not in group_user.permissions:
-                    raise UserInvalidGroupPermissionsError(user, group, operation)
-
-            return True
+        return permission_by_check
 
     def get_permissions_object(self, actor, group=None, include_trash=False):
         if group is None:
@@ -198,6 +204,7 @@ class StaffOnlySettingOperationPermissionManagerType(PermissionManagerType):
     """
 
     type = "setting_operation"
+    supported_actor_types = [UserSubjectType.type]
 
     # Maps `CoreOperationType` to `Setting` boolean field.
     STAFF_ONLY_SETTING_OPERATION_MAP = {
@@ -234,26 +241,23 @@ class StaffOnlySettingOperationPermissionManagerType(PermissionManagerType):
                 staff_only_operations.append(staff_operation_type)
         return always_allowed_operations, staff_only_operations
 
-    def check_permissions(
-        self, actor, operation, group=None, context=None, include_trash=False
-    ) -> Union[None, bool]:
+    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+        (
+            always_allowed_ops,
+            staff_only_ops,
+        ) = self.get_permitted_operations_for_settings()
 
-        if hasattr(actor, "is_authenticated"):
-            user = actor
-            if not user.is_authenticated:
-                raise NotAuthenticated()
+        result = {}
+        for check in checks:
+            if check.operation_name in self.STAFF_ONLY_SETTING_OPERATION_MAP:
+                if check.operation_name in always_allowed_ops or (
+                    check.operation_name in staff_only_ops and check.actor.is_staff
+                ):
+                    result[check] = True
+                else:
+                    result[check] = PermissionDenied()
 
-            # Test if the operation is one that's relevant to this manager
-            # Saves us from unnecessarily fetching the instance Settings.
-            if operation in self.STAFF_ONLY_SETTING_OPERATION_MAP:
-                # Get our lists of always allowed / staff only operations.
-                (
-                    always_allowed_ops,
-                    staff_only_ops,
-                ) = self.get_permitted_operations_for_settings()
-                return operation in always_allowed_ops or (
-                    operation in staff_only_ops and actor.is_staff
-                )
+        return result
 
     def get_permissions_object(self, actor, group=None):
         (

@@ -631,6 +631,12 @@ class DatabaseConfig(AppConfig):
 
         permission_manager_type_registry.register(TokenPermissionManagerType())
 
+        from baserow.core.registries import subject_type_registry
+
+        from .tokens.subjects import TokenSubjectType
+
+        subject_type_registry.register(TokenSubjectType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.ws.signals  # noqa: F403, F401

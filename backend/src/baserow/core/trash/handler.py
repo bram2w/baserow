@@ -174,7 +174,7 @@ class TrashHandler:
                 ReadGroupTrashOperationType.type,
                 group=group,
                 context=group,
-                raise_error=False,
+                raise_permission_exceptions=False,
                 include_trash=True,
             )
             if can_view_group:
@@ -575,7 +575,7 @@ def _get_applications_excluding_perm_deleted(
             ReadApplicationTrashOperationType.type,
             group=group,
             context=application,
-            raise_error=False,
+            raise_permission_exceptions=False,
             include_trash=True,
         )
         if can_view_application:

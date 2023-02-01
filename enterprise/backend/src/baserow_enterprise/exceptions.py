@@ -23,12 +23,16 @@ class SubjectTypeNotExist(Exception):
 
 
 class SubjectNotExist(Exception):
-    """Raised when trying to retrieve a subject that does not exist"""
+    """Raised when trying to retrieve a subject that does not exist."""
+
+
+class SubjectUnsupported(Exception):
+    """Raised when trying to use an unsupported subject type."""
 
 
 class ScopeNotExist(Exception):
-    """Raised when trying to retrieve a scope that does not exist"""
+    """Raised when trying to retrieve a scope that does not exist."""
 
 
 class RoleNotExist(Exception):
-    """Raised when trying to retrieve a role that does not exist"""
+    """Raised when trying to retrieve a role that does not exist."""

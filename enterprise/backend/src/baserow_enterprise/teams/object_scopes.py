@@ -16,7 +16,7 @@ class TeamObjectScopeType(ObjectScopeType):
         return context.group
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related("group")
+        return self.get_base_queryset().prefetch_related("group")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
 
@@ -37,7 +37,7 @@ class TeamSubjectObjectScopeType(ObjectScopeType):
         return context.team
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related("team", "team__group")
+        return self.get_base_queryset().prefetch_related("team", "team__group")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
 

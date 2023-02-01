@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q, QuerySet
@@ -8,12 +8,14 @@ from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 
 from baserow.contrib.database.views.operations import ListViewsOperationType
-from baserow.core.exceptions import PermissionDenied
+from baserow.core.exceptions import PermissionDenied, PermissionException
 from baserow.core.registries import (
     PermissionManagerType,
     object_scope_type_registry,
     operation_type_registry,
 )
+from baserow.core.subjects import UserSubjectType
+from baserow.core.types import PermissionCheck
 
 User = get_user_model()
 
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
 
 class ViewOwnershipPermissionManagerType(PermissionManagerType):
     type = "view_ownership"
+    supported_actor_types = [UserSubjectType.type]
 
     def __init__(self):
         view_scope_type = object_scope_type_registry.get("database_view")
@@ -40,69 +43,50 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
 
         super().__init__()
 
-    def check_permissions(
+    def check_multiple_permissions(
         self,
-        actor: "AbstractUser",
-        operation_name: str,
-        group: Optional["Group"] = None,
-        context: Optional[Any] = None,
+        checks: List[PermissionCheck],
+        group: "Group",
         include_trash: bool = False,
-    ) -> Optional[bool]:
+    ) -> Dict[PermissionCheck, Union[bool, PermissionException]]:
         """
-        check_permissions() impl for view ownership checks.
+        check_multiple_permissions() impl for view ownership checks.
 
         There are other instances that this method cannot check:
         - CreateViewDecorationOperationType is currently implemented via view_created
           signal since the permission system doesn't allow to pass richer context.
-        - OrderViewsOperationType is currently implemented via views_reordered signal
-          since the permission system doesn't allow to pass richer context.
         - ListViewsOperationType and ReadViewsOrderOperationType operations invoke
           filter_queryset() method and hence don't need to be checked.
-
-        :param actor: The actor who wants to execute the operation. Generally a `User`,
-            but can be a `Token`.
-        :param operation_name: The operation name the actor wants to execute.
-        :param group: The optional group in which  the operation takes place.
-        :param context: The optional object affected by the operation. For instance
-            if you are updating a `Table` object, the context is this `Table` object.
-        :param include_trash: If true then also checks if the given group has been
-            trashed instead of raising a DoesNotExist exception.
-        :raise PermissionDenied: If the operation is disallowed a PermissionDenied is
-            raised.
-        :return: `True` if the operation is permitted, None if the permission manager
-            can't decide.
         """
 
-        if not isinstance(actor, User):
-            return
+        result_by_check = {}
+        for check in checks:
+            actor, operation_name, context = check
+            if operation_name not in self.operations or not group or not context:
+                continue
 
-        if operation_name not in self.operations:
-            return
+            premium = LicenseHandler.user_has_feature(PREMIUM, actor, group)
 
-        if not group:
-            return
+            view_scope_type = object_scope_type_registry.get("database_view")
+            view = object_scope_type_registry.get_parent(
+                context, at_scope_type=view_scope_type
+            )
 
-        if not context:
-            return
+            if premium:
+                if (
+                    view.ownership_type == OWNERSHIP_TYPE_PERSONAL
+                    and view.created_by_id != actor.id
+                ):
+                    result_by_check[check] = PermissionDenied(
+                        "The user doesn't own this personal view"
+                    )
+            else:
+                if view.ownership_type == OWNERSHIP_TYPE_PERSONAL:
+                    result_by_check[check] = PermissionDenied(
+                        "The user doesn't have the authorization to see personal views"
+                    )
 
-        premium = LicenseHandler.user_has_feature(PREMIUM, actor, group)
-
-        view_scope_type = object_scope_type_registry.get("database_view")
-        view = object_scope_type_registry.get_parent(
-            context, at_scope_type=view_scope_type
-        )
-
-        if premium:
-            if (
-                view.ownership_type == OWNERSHIP_TYPE_PERSONAL
-                and view.created_by != actor
-            ):
-                raise PermissionDenied()
-        else:
-            if view.ownership_type == OWNERSHIP_TYPE_PERSONAL:
-                raise PermissionDenied()
-
-        return
+        return result_by_check
 
     def filter_queryset(
         self,

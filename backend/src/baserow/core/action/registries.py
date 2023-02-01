@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, Dict, NewType, Optional
 
@@ -158,6 +159,24 @@ class ActionType(Instance, abc.ABC):
         pass
 
     @classmethod
+    def params_to_serializable(cls, params: Any) -> Any:
+        """
+        Hooks that allows an action to prepare the params object before the
+        serialization.
+        """
+
+        return params
+
+    @classmethod
+    def serialized_to_params(cls, serialized_params: Any) -> Any:
+        """
+        Hooks that allow an action to change the way the param object is prepared from
+        the serialized dict.
+        """
+
+        return cls.Params(**deepcopy(serialized_params))
+
+    @classmethod
     @abc.abstractmethod
     def scope(cls, *args, **kwargs) -> ActionScopeStr:
         """
@@ -299,7 +318,7 @@ class UndoableActionTypeMixin(abc.ABC):
             user=user,
             group=group,
             type=cls.type,
-            params=params,
+            params=cls.params_to_serializable(params),
             scope=scope,
             session=session,
             action_group=action_group,
