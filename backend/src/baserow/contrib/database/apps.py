@@ -67,6 +67,38 @@ class DatabaseConfig(AppConfig):
         action_scope_registry.register(TableActionScopeType())
         action_scope_registry.register(ViewActionScopeType())
 
+        from baserow.contrib.database.tokens.actions import (
+            CreateDbTokenActionType,
+            DeleteDbTokenActionType,
+            RotateDbTokenKeyActionType,
+            UpdateDbTokenNameActionType,
+            UpdateDbTokenPermissionsActionType,
+        )
+
+        action_type_registry.register(CreateDbTokenActionType())
+        action_type_registry.register(UpdateDbTokenNameActionType())
+        action_type_registry.register(UpdateDbTokenPermissionsActionType())
+        action_type_registry.register(RotateDbTokenKeyActionType())
+        action_type_registry.register(DeleteDbTokenActionType())
+
+        from baserow.contrib.database.webhooks.actions import (
+            CreateWebhookActionType,
+            DeleteWebhookActionType,
+            UpdateWebhookActionType,
+        )
+
+        action_type_registry.register(CreateWebhookActionType())
+        action_type_registry.register(DeleteWebhookActionType())
+        action_type_registry.register(UpdateWebhookActionType())
+
+        from .export.actions import ExportTableActionType
+
+        action_type_registry.register(ExportTableActionType())
+
+        from .airtable.actions import ImportDatabaseFromAirtableActionType
+
+        action_type_registry.register(ImportDatabaseFromAirtableActionType())
+
         from .table.actions import (
             CreateTableActionType,
             DeleteTableActionType,

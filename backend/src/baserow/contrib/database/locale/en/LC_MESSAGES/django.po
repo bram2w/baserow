@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-16 14:17+0000\n"
+"POT-Creation-Date: 2023-01-31 17:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,8 +37,34 @@ msgid ""
 "\" (%(table_id)s) in database \"%(database_name)s\" (%(database_id)s)."
 msgstr ""
 
+#: src/baserow/contrib/database/airtable/actions.py:19
+msgid "Import database from Airtable"
+msgstr ""
+
+#: src/baserow/contrib/database/airtable/actions.py:21
+#, python-format
+msgid ""
+"Imported database \"%(installed_application_name)s"
+"\" (%(installed_application_id)s) from Airtable share ID "
+"\"%(airtable_share_id)s\""
+msgstr ""
+
 #: src/baserow/contrib/database/application_types.py:190
 msgid "Table"
+msgstr ""
+
+#: src/baserow/contrib/database/export/actions.py:20
+msgid "Export Table"
+msgstr ""
+
+#: src/baserow/contrib/database/export/actions.py:21
+#, python-format
+msgid "View \"%(view_name)s\" (%(view_id)s) exported to %(export_type)s"
+msgstr ""
+
+#: src/baserow/contrib/database/export/actions.py:82
+#, python-format
+msgid "Table \"%(table_name)s\" (%(table_id)s) exported to %(export_type)s"
 msgstr ""
 
 #: src/baserow/contrib/database/fields/actions.py:35
@@ -263,6 +289,56 @@ msgstr ""
 msgid "Field %d"
 msgstr ""
 
+#: src/baserow/contrib/database/tokens/actions.py:18
+msgid "Create DB token"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:20
+#, python-format
+msgid ""
+"A Database Token with name \"%(token_name)s\" (%(token_id)s) has been created"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:51
+msgid "Update DB token name"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:53
+#, python-format
+msgid ""
+"The Database Token (%(token_name)s) name changed from "
+"\"%(original_token_name)s\" to \"%(token_name)s\""
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:89
+msgid "Update DB token permissions"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:91
+#, python-format
+msgid ""
+"The Database Token \"%(token_name)s\" (%(token_id)s) permissions has been "
+"updated"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:144
+msgid "Rotate DB token key"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:145
+#, python-format
+msgid "The Database Token \"%(token_name)s\" (%(token_id)s) has been rotated"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:178
+msgid "Delete DB token"
+msgstr ""
+
+#: src/baserow/contrib/database/tokens/actions.py:179
+#, python-format
+msgid "The Database Token \"%(token_name)s\" (%(token_id)s) has been deleted"
+msgstr ""
+
 #: src/baserow/contrib/database/views/actions.py:39
 msgid "Create a view filter"
 msgstr ""
@@ -404,4 +480,37 @@ msgstr ""
 #: src/baserow/contrib/database/views/actions.py:1338
 #, python-format
 msgid "View decoration %(decorator_id)s deleted"
+msgstr ""
+
+#: src/baserow/contrib/database/webhooks/actions.py:20
+msgid "Create Webhook"
+msgstr ""
+
+#: src/baserow/contrib/database/webhooks/actions.py:22
+#, python-format
+msgid ""
+"Webhook \"%(webhook_name)s\" (%(webhook_id)s) as %(webhook_request_method)s "
+"to %(webhook_url)s\" created"
+msgstr ""
+
+#: src/baserow/contrib/database/webhooks/actions.py:81
+msgid "Delete Webhook"
+msgstr ""
+
+#: src/baserow/contrib/database/webhooks/actions.py:83
+#, python-format
+msgid ""
+"Webhook \"%(webhook_name)s\" (%(webhook_id)s) as %(webhook_request_method)s "
+"to %(webhook_url)s\" deleted"
+msgstr ""
+
+#: src/baserow/contrib/database/webhooks/actions.py:138
+msgid "Update Webhook"
+msgstr ""
+
+#: src/baserow/contrib/database/webhooks/actions.py:140
+#, python-format
+msgid ""
+"Webhook \"%(webhook_name)s\" (%(webhook_id)s) as %(webhook_request_method)s "
+"to %(webhook_url)s\" updated"
 msgstr ""

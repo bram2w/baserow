@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-31 17:04+0000\n"
+"POT-Creation-Date: 2023-01-31 17:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,10 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/baserow/api/authentication.py:24
-msgid "Token contained no recognizable user identification"
+#: baserow_premium/row_comments/actions.py:20
+msgid "Create row comment"
 msgstr ""
 
-#: src/baserow/api/authentication.py:30
-msgid "User not found"
+#: baserow_premium/row_comments/actions.py:21
+#, python-format
+msgid "Comment (%(comment_id)s) has been added to row (%(row_id)s)"
 msgstr ""

@@ -1,10 +1,11 @@
 from django.db import models
 
+from baserow.core.jobs.mixins import JobWithUserIpAddress
 from baserow.core.jobs.models import Job
 from baserow.core.models import Application, Group
 
 
-class AirtableImportJob(Job):
+class AirtableImportJob(JobWithUserIpAddress, Job):
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,

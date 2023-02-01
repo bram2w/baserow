@@ -24,6 +24,7 @@ class BaserowPremiumConfig(AppConfig):
             view_ownership_type_registry,
             view_type_registry,
         )
+        from baserow.core.action.registries import action_type_registry
         from baserow.core.registries import plugin_registry
 
         from .export.exporter_types import JSONTableExporter, XMLTableExporter
@@ -68,6 +69,10 @@ class BaserowPremiumConfig(AppConfig):
         from baserow_premium.license.registries import license_type_registry
 
         license_type_registry.register(PremiumLicenseType())
+
+        from baserow_premium.row_comments.actions import CreateRowCommentActionType
+
+        action_type_registry.register(CreateRowCommentActionType())
 
         from .row_comments.operations import (
             CreateRowCommentsOperationType,

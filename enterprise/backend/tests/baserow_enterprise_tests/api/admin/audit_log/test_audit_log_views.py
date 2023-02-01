@@ -219,7 +219,7 @@ def test_audit_log_action_type_filter_returns_action_types_correctly(
     # searching by name should return only the correct action_type
     response = api_client.get(
         reverse("api:enterprise:admin:audit_log:action_types")
-        + f"?search=create+group",
+        + f"?search=create+application",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -228,7 +228,7 @@ def test_audit_log_action_type_filter_returns_action_types_correctly(
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [{"id": "create_group", "value": "Create group"}],
+        "results": [{"id": "create_application", "value": "Create application"}],
     }
 
 

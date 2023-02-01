@@ -117,7 +117,7 @@ class UserHandler:
             accepted and initial group will not be created.
         :param template: If provided, that template will be installed into the newly
             created group.
-        :param authentication_provider: If provided, a reference to the authentication
+        :param auth_provider: If provided, a reference to the authentication
             provider will be stored in order to be able to provide different options
             for the user to login.
         :raises: UserAlreadyExist: When a user with the provided username (email)

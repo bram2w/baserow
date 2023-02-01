@@ -1,3 +1,5 @@
+from django.utils.functional import lazy
+
 from drf_spectacular.openapi import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -148,7 +150,7 @@ class TableWebhookSerializer(serializers.ModelSerializer):
 
 class TableWebhookTestCallRequestSerializer(serializers.ModelSerializer):
     event_type = serializers.ChoiceField(
-        choices=webhook_event_type_registry.get_types(),
+        choices=lazy(webhook_event_type_registry.get_types, list)(),
         help_text="The event type that must be used for the test call.",
     )
     headers = serializers.DictField(

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import transaction
 
+from baserow_premium.row_comments.actions import CreateRowCommentActionType
 from baserow_premium.row_comments.handler import RowCommentHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -17,6 +18,7 @@ from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 
 from .serializers import RowCommentCreateSerializer, RowCommentSerializer
@@ -144,7 +146,8 @@ class RowCommentView(APIView):
     @validate_body(RowCommentCreateSerializer)
     @transaction.atomic
     def post(self, request, table_id, row_id, data):
-        new_row_comment = RowCommentHandler.create_comment(
+
+        new_row_comment = action_type_registry.get(CreateRowCommentActionType.type).do(
             request.user, table_id, row_id, data["comment"]
         )
         context = {"user": request.user}

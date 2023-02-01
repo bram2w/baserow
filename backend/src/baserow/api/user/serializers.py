@@ -15,14 +15,16 @@ from rest_framework_simplejwt.serializers import (
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
+from baserow.api.sessions import set_user_session_data_from_request
 from baserow.api.user.jwt import get_user_from_token
 from baserow.api.user.registries import user_data_registry
 from baserow.api.user.validators import language_validation, password_validation
+from baserow.core.action.registries import action_type_registry
 from baserow.core.auth_provider.exceptions import AuthProviderDisabled
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.models import Template
+from baserow.core.user.actions import SignInUserActionType
 from baserow.core.user.exceptions import DeactivatedUserException
-from baserow.core.user.handler import UserHandler
 from baserow.core.user.utils import (
     generate_session_tokens_for_user,
     normalize_email_address,
@@ -224,7 +226,8 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
         data = generate_session_tokens_for_user(user, include_refresh_token=True)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
 
-        UserHandler().user_signed_in_via_provider(user, password_provider)
+        set_user_session_data_from_request(user, self.context["request"])
+        action_type_registry.get(SignInUserActionType.type).do(user, password_provider)
 
         return data
 

@@ -15,6 +15,7 @@ from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GRO
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
@@ -22,6 +23,7 @@ from baserow.core.exceptions import (
     TrashItemDoesNotExist,
     UserNotInGroup,
 )
+from baserow.core.trash.actions import EmptyTrashActionType, RestoreFromTrashActionType
 from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
@@ -83,7 +85,7 @@ class TrashItemView(APIView):
         in the items group.
         """
 
-        TrashHandler.restore_item(
+        action_type_registry.get(RestoreFromTrashActionType.type).do(
             request.user,
             data["trash_item_type"],
             data["trash_item_id"],
@@ -205,7 +207,9 @@ class TrashContentsView(APIView):
         """
 
         application_id = request.GET.get("application_id", None)
-        TrashHandler.empty(request.user, group_id, application_id)
+        action_type_registry.get(EmptyTrashActionType.type).do(
+            request.user, group_id, application_id
+        )
         return Response(status=204)
 
 

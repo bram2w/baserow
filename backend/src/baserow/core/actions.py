@@ -7,16 +7,17 @@ from django.utils.translation import gettext_lazy as _
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
+    ActionType,
     ActionTypeDescription,
     UndoableActionType,
 )
 from baserow.core.action.scopes import (
-    GROUP_CONTEXT,
+    GROUP_ACTION_CONTEXT,
     GroupActionScopeType,
     RootActionScopeType,
 )
 from baserow.core.handler import CoreHandler, GroupForUpdate
-from baserow.core.models import Application, Group, GroupUser, Template
+from baserow.core.models import Application, Group, GroupInvitation, GroupUser, Template
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
@@ -287,7 +288,7 @@ class OrderGroupsActionType(UndoableActionType):
 class OrderApplicationsActionType(UndoableActionType):
     type = "order_applications"
     description = ActionTypeDescription(
-        _("Order applications"), _("Applications reordered"), GROUP_CONTEXT
+        _("Order applications"), _("Applications reordered"), GROUP_ACTION_CONTEXT
     )
 
     @dataclasses.dataclass
@@ -345,7 +346,7 @@ class CreateApplicationActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Create application"),
         _('"%(application_name)s" (%(application_id)s) %(application_type)s created'),
-        GROUP_CONTEXT,
+        GROUP_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -424,7 +425,7 @@ class DeleteApplicationActionType(UndoableActionType):
             'Application "%(application_name)s" (%(application_id)s) of type '
             "%(application_type)s deleted"
         ),
-        GROUP_CONTEXT,
+        GROUP_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -488,7 +489,7 @@ class UpdateApplicationActionType(UndoableActionType):
             "Application (%(application_id)s) of type %(application_type)s renamed "
             'from "%(original_application_name)s" to "%(application_name)s"'
         ),
-        GROUP_CONTEXT,
+        GROUP_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -561,7 +562,7 @@ class DuplicateApplicationActionType(UndoableActionType):
             'Application "%(application_name)s" (%(application_id)s) of type %(application_type)s '
             'duplicated from "%(original_application_name)s" (%(original_application_id)s)'
         ),
-        GROUP_CONTEXT,
+        GROUP_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -640,7 +641,7 @@ class InstallTemplateActionType(UndoableActionType):
             'Template "%(template_name)s" (%(template_id)s) installed '
             "into application IDs %(installed_application_ids)s"
         ),
-        GROUP_CONTEXT,
+        GROUP_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -708,3 +709,309 @@ class InstallTemplateActionType(UndoableActionType):
             TrashHandler.restore_item(
                 user, "application", application_id, parent_trash_item_id=None
             )
+
+
+class CreateGroupInvitationActionType(ActionType):
+    type = "create_group_invitation"
+    description = ActionTypeDescription(
+        _("Create group invitation"),
+        _(
+            'Group invitation created for "%(email)s" to join '
+            '"%(group_name)s" (%(group_id)s) as %(permissions)s.'
+        ),
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        email: str
+        permissions: str
+        group_id: int
+        group_name: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        group: Group,
+        email: str,
+        permissions: str,
+        base_url: str,
+        message: str = "",
+    ) -> GroupInvitation:
+        """
+        Creates a new group invitation for the given email address and sends out an
+        email containing the invitation.
+        Look into baserow.core.handler.CoreHandler.create_group_invitation for further
+        details.
+
+
+        """
+
+        group_invitation = CoreHandler().create_group_invitation(
+            user, group, email, permissions, base_url, message
+        )
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(email, permissions, group.id, group.name),
+            scope=cls.scope(),
+            group=group,
+        )
+        return group_invitation
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class DeleteGroupInvitationActionType(ActionType):
+    type = "delete_group_invitation"
+    description = ActionTypeDescription(
+        _("Delete group invitation"),
+        _(
+            'Group invitation (%(invitation_id)s) deleted for "%(email)s" '
+            'to join "%(group_name)s" (%(group_id)s) as %(permissions)s.'
+        ),
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        invitation_id: int
+        email: str
+        permissions: str
+        group_id: int
+        group_name: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        group_invitation: GroupInvitation,
+    ):
+        """
+        Deletes an existing group invitation.
+        Look into baserow.core.handler.CoreHandler.delete_group_invitation for further
+        details.
+
+
+        """
+
+        group = group_invitation.group
+        params = cls.Params(
+            group_invitation.id,
+            group_invitation.email,
+            group_invitation.permissions,
+            group.id,
+            group.name,
+        )
+        CoreHandler().delete_group_invitation(user, group_invitation)
+
+        cls.register_action(
+            user=user,
+            params=params,
+            scope=cls.scope(),
+            group=group,
+        )
+        return group_invitation
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class AcceptGroupInvitationActionType(ActionType):
+    type = "accept_group_invitation"
+    description = ActionTypeDescription(
+        _("Accept group invitation"),
+        _(
+            'Invitation (%(invitation_id)s) sent by "%(sender)s" to join '
+            '"%(group_name)s" (%(group_id)s) as %(permissions)s was accepted.'
+        ),
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        invitation_id: int
+        sender: str
+        permissions: str
+        group_id: int
+        group_name: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        group_invitation: GroupInvitation,
+    ) -> GroupUser:
+        """
+        Accepts an existing group invitation.
+        Look into baserow.core.handler.CoreHandler.accept_group_invitation for further
+        details.
+        """
+
+        group = group_invitation.group
+        params = cls.Params(
+            group_invitation.id,
+            group_invitation.invited_by.email,
+            group_invitation.permissions,
+            group.id,
+            group.name,
+        )
+        group_user = CoreHandler().accept_group_invitation(user, group_invitation)
+
+        cls.register_action(
+            user=user,
+            params=params,
+            scope=cls.scope(),
+            group=group,
+        )
+        return group_user
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class RejectGroupInvitationActionType(ActionType):
+    type = "reject_group_invitation"
+    description = ActionTypeDescription(
+        _("Reject group invitation"),
+        _(
+            'Invitation (%(invitation_id)s) sent by "%(sender)s" to join '
+            '"%(group_name)s" (%(group_id)s) as %(permissions)s was rejected.'
+        ),
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        invitation_id: int
+        sender: str
+        permissions: str
+        group_id: int
+        group_name: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        group_invitation: GroupInvitation,
+    ) -> GroupUser:
+        """
+        Accepts an existing group invitation.
+        Look into baserow.core.handler.CoreHandler.reject_group_invitation for further
+        details.
+        """
+
+        group = group_invitation.group
+        params = cls.Params(
+            group_invitation.id,
+            group_invitation.invited_by.email,
+            group_invitation.permissions,
+            group.id,
+            group.name,
+        )
+        group_user = CoreHandler().reject_group_invitation(user, group_invitation)
+
+        cls.register_action(
+            user=user,
+            params=params,
+            scope=cls.scope(),
+            group=group,
+        )
+        return group_user
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class UpdateGroupInvitationActionType(ActionType):
+    type = "update_group_invitation_permissions"
+    description = ActionTypeDescription(
+        _("Update group invitation permissions"),
+        _(
+            "Invitation (%(invitation_id)s) permissions changed from "
+            "%(original_permissions)s to %(permissions)s for %(email)s "
+            ' on group "%(group_name)s" (%(group_id)s).'
+        ),
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        invitation_id: int
+        email: str
+        permissions: str
+        group_id: int
+        group_name: str
+        original_permissions: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        group_invitation: GroupInvitation,
+        permissions: str,
+    ) -> GroupInvitation:
+        """
+        Updates an existing group invitation permissions.
+        Look into baserow.core.handler.CoreHandler.update_group_invitation for further
+        details.
+        """
+
+        group = group_invitation.group
+        params = cls.Params(
+            group_invitation.id,
+            group_invitation.email,
+            permissions,
+            group.id,
+            group.name,
+            original_permissions=group_invitation.permissions,
+        )
+        group_invitation = CoreHandler().update_group_invitation(
+            user, group_invitation, permissions
+        )
+
+        cls.register_action(
+            user=user,
+            params=params,
+            scope=cls.scope(),
+            group=group,
+        )
+        return group_invitation
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class LeaveGroupActionType(ActionType):
+    type = "leave_group"
+    description = ActionTypeDescription(
+        _("Leave group"),
+        _('Group "%(group_name)s" (%(group_id)s) left.'),
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        group_id: int
+        group_name: str
+
+    @classmethod
+    def do(cls, user: AbstractUser, group: Group):
+        """
+        Leaves an existing group.
+        Look into baserow.core.handler.CoreHandler.leave_group for further details.
+        """
+
+        CoreHandler().leave_group(user, group)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(group.id, group.name),
+            scope=cls.scope(),
+            group=group,
+        )
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()

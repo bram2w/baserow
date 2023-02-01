@@ -91,8 +91,13 @@ def set_user_websocket_id(user, request):
     user.web_socket_id = request.headers.get(settings.WEBSOCKET_ID_HEADER)
 
 
+def get_user_remote_ip_address_from_request(request):
+    return request.META.get("REMOTE_ADDR")
+
+
 def set_user_remote_addr_ip_from_request(user, request):
-    set_user_remote_addr_ip(user, request.META.get("REMOTE_ADDR"))
+    ip_address = get_user_remote_ip_address_from_request(request)
+    set_user_remote_addr_ip(user, ip_address)
 
 
 def set_user_remote_addr_ip(user, ip_address):
