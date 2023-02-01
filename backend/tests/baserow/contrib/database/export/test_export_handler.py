@@ -861,3 +861,29 @@ def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
 
     assert GridViewFieldOptions.objects.count() == 2
     assert GridViewFieldOptions.objects.filter(field=field_without_an_option).exists()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_action_done_is_emitted_when_the_export_finish(storage_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+
+    with patch("baserow.core.action.signals.action_done.send") as send_mock:
+
+        run_export_job_with_mock_storage(table, None, storage_mock, user)
+
+        assert send_mock.call_count == 1
+        assert send_mock.call_args[1]["action_type"].type == "export_table"
+        action_type = send_mock.call_args[1]["action_type"]
+        params = send_mock.call_args[1]["action_params"]
+        assert action_type.get_long_description(params).startswith("Table")
+
+        grid_view = GridView.objects.create(table=table, order=0, name="grid_view")
+        run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
+
+        assert send_mock.call_count == 2
+        assert send_mock.call_args[1]["action_type"].type == "export_table"
+        action_type = send_mock.call_args[1]["action_type"]
+        params = send_mock.call_args[1]["action_params"]
+        assert action_type.get_long_description(params).startswith("View")

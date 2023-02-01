@@ -105,8 +105,17 @@ class TrashHandler:
 
             return trash_entry
 
-    @staticmethod
-    def restore_item(user, trash_item_type, trash_item_id, parent_trash_item_id=None):
+    @classmethod
+    def get_trash_entry(cls, trash_item_type, trash_item_id, parent_trash_item_id=None):
+        trashable_item_type = trash_item_type_registry.get(trash_item_type)
+        _check_parent_id_valid(parent_trash_item_id, trashable_item_type)
+
+        return _get_trash_entry(trash_item_type, parent_trash_item_id, trash_item_id)
+
+    @classmethod
+    def restore_item(
+        cls, user, trash_item_type, trash_item_id, parent_trash_item_id=None
+    ):
         """
         Restores an item from the trash re-instating it back in Baserow exactly how it
         was before it was trashed.
@@ -120,13 +129,10 @@ class TrashHandler:
         """
 
         with transaction.atomic():
-            trashable_item_type = trash_item_type_registry.get(trash_item_type)
-            _check_parent_id_valid(parent_trash_item_id, trashable_item_type)
-
-            trash_entry = _get_trash_entry(
-                trash_item_type, parent_trash_item_id, trash_item_id
+            trash_entry = cls.get_trash_entry(
+                trash_item_type, trash_item_id, parent_trash_item_id
             )
-
+            trashable_item_type = trash_item_type_registry.get(trash_item_type)
             trash_item = trashable_item_type.lookup_trashed_item(trash_entry, {})
 
             from baserow.core.handler import CoreHandler

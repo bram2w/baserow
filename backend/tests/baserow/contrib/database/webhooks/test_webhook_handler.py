@@ -214,12 +214,10 @@ def test_create_webhook(data_fixture):
     }
 
     with pytest.raises(UserNotInGroup):
-        webhook_handler.create_table_webhook(
-            user=user_2, table=table, **dict(webhook_data)
-        )
+        webhook_handler.create_table_webhook(user=user_2, table=table, **webhook_data)
 
     webhook = webhook_handler.create_table_webhook(
-        user=user, table=table, **dict(webhook_data)
+        user=user, table=table, **webhook_data
     )
 
     assert webhook.name == webhook_data["name"]
@@ -239,7 +237,7 @@ def test_create_webhook(data_fixture):
     # the handler will not create the entry in the events table.
     events = ["rows.created"]
     webhook = webhook_handler.create_table_webhook(
-        user=user, table=table, events=events, headers={}, **dict(webhook_data)
+        user=user, table=table, events=events, headers={}, **webhook_data
     )
     webhook_events = webhook.events.all()
     assert len(webhook_events) == 0
@@ -250,7 +248,7 @@ def test_create_webhook(data_fixture):
     webhook_data["url"] = "https://baserow.io/endpoint-3"
     headers = {"Baserow-test-1": "Value 1", "Baserow-header-2": "Value 2"}
     webhook = webhook_handler.create_table_webhook(
-        user=user, table=table, events=events, headers=headers, **dict(webhook_data)
+        user=user, table=table, events=events, headers=headers, **webhook_data
     )
     assert webhook.include_all_events is False
     webhook_events = webhook.events.all()
@@ -266,7 +264,7 @@ def test_create_webhook(data_fixture):
     # By providing an invalid header name, we expect it to fail.
     with pytest.raises(ValidationError):
         webhook_handler.create_table_webhook(
-            user=user, table=table, headers={"Test:": ""}, **dict(webhook_data)
+            user=user, table=table, headers={"Test:": ""}, **webhook_data
         )
 
     # check that we can't create more than "MAX_ALLOWED_WEBHOOKS" per table
@@ -274,7 +272,7 @@ def test_create_webhook(data_fixture):
     webhook_data["url"] = "https://baserow.io/endpoint-4"
     with pytest.raises(TableWebhookMaxAllowedCountExceeded):
         webhook_handler.create_table_webhook(
-            user=user, table=table, events=events, headers={}, **dict(webhook_data)
+            user=user, table=table, events=events, headers={}, **webhook_data
         )
 
 

@@ -39,7 +39,7 @@ def test_run_import_from_airtable(
         progress = ChildProgressBuilder.build(progress_builder, 100)
         progress.increment(100)
 
-        return ([created_database], {})
+        return created_database
 
     mock_import_from_airtable_to_group.side_effect = update_progress_slow
 
@@ -115,7 +115,7 @@ def test_run_import_from_airtable_with_timezone(
     mock_import_from_airtable_to_group, data_fixture
 ):
     database = data_fixture.create_database_application()
-    mock_import_from_airtable_to_group.return_value = [database], {}
+    mock_import_from_airtable_to_group.return_value = database
 
     job = data_fixture.create_airtable_import_job(timezone="Europe/Amsterdam")
 

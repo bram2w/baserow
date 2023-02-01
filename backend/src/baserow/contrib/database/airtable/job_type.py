@@ -9,17 +9,19 @@ from baserow.contrib.database.airtable.exceptions import (
     AirtableBaseNotPublic,
     AirtableShareIsNotABase,
 )
-from baserow.contrib.database.airtable.handler import AirtableHandler
 from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
 from baserow.contrib.database.airtable.utils import extract_share_id_from_url
 from baserow.contrib.database.airtable.validators import is_publicly_shared_airtable_url
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 from baserow.core.signals import application_created
+
+from .actions import ImportDatabaseFromAirtableActionType
 
 
 class AirtableImportJobType(JobType):
@@ -115,19 +117,19 @@ class AirtableImportJobType(JobType):
         if job.timezone is not None:
             kwargs["timezone"] = pytz_timezone(job.timezone)
 
-        databases, id_mapping = AirtableHandler.import_from_airtable_to_group(
+        database = action_type_registry.get(
+            ImportDatabaseFromAirtableActionType.type
+        ).do(
+            job.user,
             job.group,
             job.airtable_share_id,
             progress_builder=progress.create_child_builder(
                 represents_progress=progress.total
             ),
-            **kwargs
+            **kwargs,
         )
 
-        # The web-frontend needs to know about the newly created database, so we
-        # call the application_created signal.
-        for database in databases:
-            application_created.send(self, application=database, user=None)
+        application_created.send(self, application=database, user=None)
 
-        job.database = databases[0]
+        job.database = database
         job.save(update_fields=("database",))

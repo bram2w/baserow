@@ -250,6 +250,21 @@ def _mark_job_as_failed(job, e):
     return job
 
 
+def _register_action(job):
+    """
+    Temporary solution to register the action. Refactor this to use the jobs
+    system.
+    """
+
+    from baserow.core.action.registries import action_type_registry
+
+    from .actions import ExportTableActionType
+
+    action_type_registry.get(ExportTableActionType.type).do(
+        job.user, job.table, export_type=job.exporter_type, view=job.view
+    )
+
+
 def _open_file_and_run_export(job: ExportJob) -> ExportJob:
     """
     Using the jobs exporter type exports all data into a new file placed in the
@@ -268,6 +283,9 @@ def _open_file_and_run_export(job: ExportJob) -> ExportJob:
     job.exported_file_name = exported_file_name
     job.state = EXPORT_JOB_EXPORTING_STATUS
     job.save()
+
+    # TODO: refactor to use the jobs systems
+    _register_action(job)
 
     with _create_storage_dir_if_missing_and_open(storage_location) as file:
         queryset_serializer_class = exporter.queryset_serializer_class

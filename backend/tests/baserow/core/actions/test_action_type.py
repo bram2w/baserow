@@ -14,9 +14,9 @@ def test_action_type_description_is_correct(data_fixture, django_assert_num_quer
         descr = action_type.description
 
         # ensure all the variables in the description are present in the Params
-        assert set(re.findall(r"%\((\w+)\)s", str(descr.long))).issubset(
-            set([f.name for f in dataclasses.fields(action_type.Params)])
-        ), descr
+        assert set(
+            re.findall(r"%\((\w+)\)s", str(descr.long) + str(descr.context))
+        ).issubset(set([f.name for f in dataclasses.fields(action_type.Params)])), descr
 
         # ensure the description is not ending with a dot if there is a context
         if descr.context:

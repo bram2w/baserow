@@ -12,11 +12,10 @@ For example:
 ### New Features
 * Introduced a new command, `permanently_empty_database`, which will empty a database of all its tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
 * Users can now create their own personal views. [#1448](https://gitlab.com/bramw/baserow/-/issues/1448)
-
 * Link row field can now be imported. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Can add a row with textual values for single select, multiple select and link row field. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
-
 * Add e2e tests. [#820](https://gitlab.com/bramw/baserow/-/issues/820)
+* Added missing actions for audit log. [#1500](https://gitlab.com/bramw/baserow/-/issues/1500)
 
 ### Bug Fixes
 * Add missing `procps` system package to all-in-one docker image fixing `/baserow/supervisor/docker-postgres-setup.sh run` (#1512)[https://gitlab.com/bramw/baserow/-/issues/1512]

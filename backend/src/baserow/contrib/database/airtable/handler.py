@@ -543,7 +543,7 @@ class AirtableHandler:
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
         download_files_buffer: Union[None, IOBase] = None,
-    ) -> Tuple[List[Database], dict]:
+    ) -> Database:
         """
         Downloads all the data of the provided publicly shared Airtable base, converts
         it into Baserow export format, downloads the related files and imports that
@@ -608,7 +608,7 @@ class AirtableHandler:
         )
 
         # Import the converted data using the existing method to avoid duplicate code.
-        databases, id_mapping = CoreHandler().import_applications_to_group(
+        databases, _ = CoreHandler().import_applications_to_group(
             group,
             [baserow_database_export],
             files_buffer,
@@ -616,4 +616,4 @@ class AirtableHandler:
             progress_builder=progress.create_child_builder(represents_progress=600),
         )
 
-        return databases, id_mapping
+        return databases[0].specific

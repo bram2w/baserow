@@ -23,6 +23,7 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     CreateGroupActionType,
     DeleteGroupActionType,
+    LeaveGroupActionType,
     OrderGroupsActionType,
     UpdateGroupActionType,
 )
@@ -237,9 +238,9 @@ class GroupLeaveView(APIView):
     def post(self, request, group_id):
         """Leaves the group if the user is a member of it."""
 
-        handler = CoreHandler()
-        group = handler.get_group(group_id)
-        handler.leave_group(request.user, group)
+        group = CoreHandler().get_group(group_id)
+        action_type_registry.get(LeaveGroupActionType.type).do(request.user, group)
+
         return Response(status=204)
 
 

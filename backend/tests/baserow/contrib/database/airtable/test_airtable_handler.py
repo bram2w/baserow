@@ -391,7 +391,7 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
 
     progress = Progress(1000)
 
-    databases, id_mapping = AirtableHandler.import_from_airtable_to_group(
+    database = AirtableHandler.import_from_airtable_to_group(
         group,
         "shrXxmp0WmqsTkFWTzv",
         timezone=UTC,
@@ -404,8 +404,6 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
     file_path = tmpdir.join("user_files", UserFile.objects.all()[0].name)
     assert file_path.isfile()
     assert file_path.open().read() == "test\n"
-
-    database = databases[0]
 
     assert database.name == "Test"
     all_tables = database.table_set.all()
