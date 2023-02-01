@@ -1,4 +1,3 @@
-import uuid
 from typing import Any, Dict
 from urllib.request import Request
 
@@ -18,7 +17,6 @@ from baserow.api.decorators import (
 )
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.api.sessions import set_client_undo_redo_action_group_id
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     GroupDoesNotExist,
@@ -37,17 +35,20 @@ from baserow_enterprise.api.errors import (
     ERROR_SCOPE_DOES_NOT_EXIST,
     ERROR_SUBJECT_DOES_NOT_EXIST,
     ERROR_SUBJECT_TYPE_DOES_NOT_EXIST,
+    ERROR_SUBJECT_TYPE_UNSUPPORTED,
 )
 from baserow_enterprise.exceptions import (
     RoleNotExist,
     ScopeNotExist,
     SubjectNotExist,
     SubjectTypeNotExist,
+    SubjectUnsupported,
 )
 from baserow_enterprise.features import RBAC
-from baserow_enterprise.role.actions import AssignRoleActionType
+from baserow_enterprise.role.actions import BatchAssignRoleActionType
 from baserow_enterprise.role.constants import ROLE_ASSIGNABLE_OBJECT_MAP
 from baserow_enterprise.role.handler import RoleAssignmentHandler
+from baserow_enterprise.role.types import NewRoleAssignment
 
 from .exceptions import DuplicateRoleAssignments
 from .serializers import (
@@ -109,6 +110,7 @@ class RoleAssignmentsView(APIView):
             ObjectScopeTypeDoesNotExist: ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
             SubjectTypeNotExist: ERROR_SUBJECT_TYPE_DOES_NOT_EXIST,
             SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
+            SubjectUnsupported: ERROR_SUBJECT_TYPE_UNSUPPORTED,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
             LastAdminOfGroup: ERROR_LAST_ADMIN_OF_GROUP,
@@ -122,37 +124,31 @@ class RoleAssignmentsView(APIView):
         group_id: int,
         data,
     ) -> Response:
-        """Assign or remove a role to the user."""
+        """Assign or remove a role to the user on the given scope."""
 
         group = CoreHandler().get_group(group_id)
 
         role = data.get("role", None)
-        scope = data.get("scope", None)
         subject = data.get("subject", None)
+        scope = data.get("scope", None)
 
-        if role is not None:
-            # We set the role
-            role_assignment = action_type_registry.get_by_type(AssignRoleActionType).do(
-                request.user,
-                subject,
-                group,
-                role,
-                scope=scope,
-            )
+        new_role_assignments = [NewRoleAssignment(subject, role, scope)]
 
+        roles_assignments = action_type_registry.get_by_type(
+            BatchAssignRoleActionType
+        ).do(
+            request.user,
+            new_role_assignments,
+            group,
+        )
+
+        role_assignment = roles_assignments[0]
+
+        if role_assignment:
             serializer = RoleAssignmentSerializer(role_assignment)
-
             return Response(serializer.data)
-        else:
-            # We remove the role
-            action_type_registry.get_by_type(AssignRoleActionType).do(
-                request.user,
-                data["subject"],
-                group,
-                role=None,
-                scope=data["scope"],
-            )
-            return Response(status=204)
+
+        return Response(status=204)
 
     @extend_schema(
         parameters=[
@@ -256,8 +252,8 @@ class BatchRoleAssignmentsView(APIView):
         operation_id="batch_assign_role",
         description=(
             "You can assign a role to a multiple subjects into the given group for "
-            "the given scope with this endpoint. If you want to remove the role you can"
-            "omit the role property."
+            "the given scopes with this endpoint. If you want to remove the role you "
+            "can omit the role property."
         ),
         request=BatchCreateRoleAssignmentSerializer,
         responses={
@@ -288,6 +284,7 @@ class BatchRoleAssignmentsView(APIView):
             ObjectScopeTypeDoesNotExist: ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
             SubjectTypeNotExist: ERROR_SUBJECT_TYPE_DOES_NOT_EXIST,
             SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
+            SubjectUnsupported: ERROR_SUBJECT_TYPE_UNSUPPORTED,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
             DuplicateRoleAssignments: ERROR_DUPLICATE_ROLE_ASSIGNMENTS,
@@ -303,7 +300,10 @@ class BatchRoleAssignmentsView(APIView):
         group_id: int,
         data,
     ) -> Response:
-        """Assign or remove a role to the user."""
+        """
+        Assigns or removes a role to multiple subjects on multiple scope at the same
+        time.
+        """
 
         data = data.get("items", [])
         user = request.user
@@ -316,19 +316,20 @@ class BatchRoleAssignmentsView(APIView):
             indexes = [data.index(duplicate) for duplicate in duplicates]
             raise DuplicateRoleAssignments(indexes)
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, request.user, group)
-
-        set_client_undo_redo_action_group_id(user, uuid.uuid4())
-
-        role_assignments = [
-            action_type_registry.get_by_type(AssignRoleActionType).do(
-                user,
-                role_assignment["subject"],
-                group,
-                role_assignment["role"],
-                scope=role_assignment["scope"],
-            )
-            for role_assignment in data
+        new_role_assignments = [
+            NewRoleAssignment(elt["subject"], elt["role"], elt["scope"]) for elt in data
         ]
 
-        return Response(RoleAssignmentSerializer(role_assignments, many=True).data)
+        role_assignments = action_type_registry.get_by_type(
+            BatchAssignRoleActionType
+        ).do(
+            user,
+            new_role_assignments,
+            group,
+        )
+
+        response = [
+            RoleAssignmentSerializer(ra).data if ra else None for ra in role_assignments
+        ]
+
+        return Response(response)

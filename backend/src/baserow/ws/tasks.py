@@ -90,14 +90,16 @@ def broadcast_to_permitted_users(
 
     scope = objects.get(id=scope_id)
 
-    user_ids = list(
-        CoreHandler().get_user_ids_of_permitted_users(
+    user_ids = [
+        u.id
+        for u in CoreHandler().check_permission_for_multiple_actors(
             users_in_group,
             operation_type,
             group,
             context=scope,
         )
-    )
+    ]
+
     broadcast_to_users(user_ids, payload, ignore_web_socket_id=ignore_web_socket_id)
 
 
@@ -248,14 +250,15 @@ def broadcast_application_created(
         for group_user in GroupUser.objects.filter(group=group).select_related("user")
     ]
 
-    user_ids = list(
-        CoreHandler().get_user_ids_of_permitted_users(
+    user_ids = [
+        u.id
+        for u in CoreHandler().check_permission_for_multiple_actors(
             users_in_group,
             ReadApplicationOperationType.type,
             group,
-            context=application.specific,
+            context=application,
         )
-    )
+    ]
 
     users_in_group_id_map = {user.id: user for user in users_in_group}
 

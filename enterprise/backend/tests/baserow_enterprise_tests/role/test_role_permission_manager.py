@@ -1,8 +1,9 @@
-from django.db import connection
+from django.db import IntegrityError, connection, reset_queries
 from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 
 import pytest
+from tqdm import tqdm
 
 from baserow.contrib.database.fields.operations import (
     ReadFieldOperationType,
@@ -30,6 +31,7 @@ from baserow.core.exceptions import PermissionException
 from baserow.core.models import Application
 from baserow.core.operations import (
     CreateGroupOperationType,
+    DeleteApplicationOperationType,
     DeleteGroupOperationType,
     ListApplicationsGroupOperationType,
     ListGroupsOperationType,
@@ -40,6 +42,7 @@ from baserow.core.operations import (
     UpdateSettingsOperationType,
 )
 from baserow.core.registries import operation_type_registry
+from baserow.core.types import PermissionCheck
 from baserow_enterprise.role.default_roles import default_roles
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
@@ -780,6 +783,118 @@ def test_check_permissions_with_teams(
     )
 
 
+@pytest.mark.django_db
+def test_check_multiple_permissions(data_fixture, enterprise_data_fixture):
+    admin = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    user_4 = data_fixture.create_user()
+    group = data_fixture.create_group(user=admin, members=[user_2, user_3, user_4])
+    database1 = data_fixture.create_database_application(user=admin, group=group)
+    table11 = data_fixture.create_database_table(user=admin, database=database1)
+    table12 = data_fixture.create_database_table(user=admin, database=database1)
+    database2 = data_fixture.create_database_application(user=admin, group=group)
+    table21 = data_fixture.create_database_table(user=admin, database=database2)
+    table22 = data_fixture.create_database_table(user=admin, database=database2)
+
+    team1 = enterprise_data_fixture.create_team(group=group, members=[user_3])
+    team2 = enterprise_data_fixture.create_team(group=group, members=[user_4])
+    team3 = enterprise_data_fixture.create_team(group=group, members=[user_3, user_4])
+
+    editor_role = Role.objects.get(uid="EDITOR")
+    builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    RoleAssignmentHandler().assign_role(user_2, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(user_3, group, role=no_role_role, scope=group)
+    RoleAssignmentHandler().assign_role(
+        user_4, group, role=low_priority_role, scope=group
+    )
+
+    # User 2 assignments
+    RoleAssignmentHandler().assign_role(
+        user_2, group, role=editor_role, scope=database1
+    )
+    RoleAssignmentHandler().assign_role(user_2, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(user_2, group, role=viewer_role, scope=table22)
+
+    # User 4 assignments
+    RoleAssignmentHandler().assign_role(
+        user_4, group, role=no_role_role, scope=database1
+    )
+    RoleAssignmentHandler().assign_role(user_4, group, role=builder_role, scope=table11)
+    RoleAssignmentHandler().assign_role(user_4, group, role=no_role_role, scope=table22)
+
+    # Team assignments
+    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
+    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+
+    permission_manager = RolePermissionManagerType()
+
+    checks = [
+        PermissionCheck(
+            actor=user_2,
+            operation_name=ReadApplicationOperationType.type,
+            context=database1,
+        ),
+        PermissionCheck(
+            actor=user_2,
+            operation_name=ReadDatabaseTableOperationType.type,
+            context=table12,
+        ),
+        PermissionCheck(
+            actor=user_2,
+            operation_name=ReadDatabaseTableOperationType.type,
+            context=table21,
+        ),
+        PermissionCheck(
+            actor=user_3,
+            operation_name=DeleteApplicationOperationType.type,
+            context=group,
+        ),
+        PermissionCheck(
+            actor=user_3,
+            operation_name=ReadApplicationOperationType.type,
+            context=database2,
+        ),
+        PermissionCheck(
+            actor=user_4,
+            operation_name=ReadApplicationOperationType.type,
+            context=database1,
+        ),
+        PermissionCheck(
+            actor=user_4,
+            operation_name=ReadDatabaseTableOperationType.type,
+            context=table12,
+        ),
+        PermissionCheck(
+            actor=user_4,
+            operation_name=ReadDatabaseTableOperationType.type,
+            context=table21,
+        ),
+    ]
+
+    result = permission_manager.check_multiple_permissions(checks, group=group)
+
+    assert len(result) == len(checks)
+    assert [v is True for v in result.values()] == [
+        True,
+        False,
+        True,
+        False,
+        True,
+        True,
+        False,
+        True,
+    ]
+
+
 @pytest.mark.django_db(transaction=True)
 @override_settings(
     PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
@@ -1141,11 +1256,11 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=low_priority_role, scope=group
+        user2, group, role=low_priority_role, scope=group
     )
-    RoleAssignmentHandler().assign_role(user, group, role=editor_role, scope=database1)
-    RoleAssignmentHandler().assign_role(user, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=database1)
+    RoleAssignmentHandler().assign_role(user2, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role, scope=table22)
 
     RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
     RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
@@ -1159,7 +1274,7 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     print("----------- first call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
         permission_manager.check_permissions(
-            user, ReadDatabaseTableOperationType.type, group=group, context=table11
+            user2, ReadDatabaseTableOperationType.type, group=group, context=table11
         )
 
     for q in captured.captured_queries:
@@ -1169,7 +1284,7 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     print("----------- second call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
         permission_manager.check_permissions(
-            user, ReadDatabaseTableOperationType.type, group=group, context=table11
+            user2, ReadDatabaseTableOperationType.type, group=group, context=table11
         )
 
     for q in captured.captured_queries:
@@ -1180,7 +1295,7 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     with profiler(html_report_name="enterprise_check_permissions"):
         for i in range(1000):
             permission_manager.check_permissions(
-                user, ReadDatabaseTableOperationType.type, group=group, context=table11
+                user2, ReadDatabaseTableOperationType.type, group=group, context=table11
             )
 
 
@@ -1214,11 +1329,11 @@ def test_get_permission_object_performance(
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=low_priority_role, scope=group
+        user2, group, role=low_priority_role, scope=group
     )
-    RoleAssignmentHandler().assign_role(user, group, role=editor_role, scope=database1)
-    RoleAssignmentHandler().assign_role(user, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=database1)
+    RoleAssignmentHandler().assign_role(user2, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role, scope=table22)
 
     RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
     RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
@@ -1231,7 +1346,7 @@ def test_get_permission_object_performance(
 
     print("----------- first call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
-        permission_manager.get_permissions_object(user, group=group)
+        permission_manager.get_permissions_object(user2, group=group)
 
     for q in captured.captured_queries:
         print(q)
@@ -1239,7 +1354,7 @@ def test_get_permission_object_performance(
 
     print("----------- second call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
-        permission_manager.get_permissions_object(user, group=group)
+        permission_manager.get_permissions_object(user2, group=group)
 
     for q in captured.captured_queries:
         print(q)
@@ -1248,4 +1363,129 @@ def test_get_permission_object_performance(
     print("----------- get_permission_object perfs ---------------")
     with profiler(html_report_name="enterprise_get_permissions_object"):
         for i in range(1000):
-            permission_manager.get_permissions_object(user, group=group)
+            permission_manager.get_permissions_object(user2, group=group)
+
+
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_check_multiple_permissions_perf" -s --run-disabled-in-ci
+# 166 second for 3 710 000 checks on Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz -
+# 7200 bogomips
+def test_check_multiple_permissions_perf(
+    data_fixture, enterprise_data_fixture, profiler
+):
+    admin = data_fixture.create_user()
+
+    users = []
+    print("Populating database...")
+
+    for _ in tqdm(range(1000), desc="Users creation"):
+        try:
+            users.append(data_fixture.create_user())
+        except IntegrityError:
+            pass
+
+    group = data_fixture.create_group(user=admin, members=users)
+
+    data = {}
+    for _ in tqdm(range(10), desc="Database"):
+        database = data_fixture.create_database_application(user=admin, group=group)
+        data[database] = []
+        for _ in range(10):
+            data[database].append(
+                data_fixture.create_database_table(user=admin, database=database)
+            )
+
+    teams = []
+    for max in range(10):
+        teams.append(
+            enterprise_data_fixture.create_team(
+                group=group,
+                members=users,  # members=users[max * 10 : (max + 1) * 10 - 5]
+            )
+        )
+
+    editor_role = Role.objects.get(uid="EDITOR")
+    builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+    low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
+
+    role_assignment_handler = RoleAssignmentHandler()
+
+    def role_gen():
+        while True:
+            yield editor_role
+            yield None
+            yield viewer_role
+            yield None
+            yield no_role_role
+            yield None
+            yield builder_role
+            yield None
+
+    role_generator = role_gen()
+
+    for user in tqdm(users, "User roles"):
+        group_role = next(role_generator)
+        if group_role is None:
+            group_role = low_priority_role
+
+        role_assignment_handler.assign_role(user, group, role=group_role, scope=group)
+
+        for database, tables in data.items():
+            role_assignment_handler.assign_role(
+                user, group, role=next(role_generator), scope=database.application_ptr
+            )
+            for table in tables:
+                role_assignment_handler.assign_role(
+                    user, group, role=next(role_generator), scope=table
+                )
+
+    for team in tqdm(teams, "Team roles"):
+        for database, tables in data.items():
+            role_assignment_handler.assign_role(
+                team, group, role=next(role_generator), scope=database
+            )
+            for table in tables:
+                role_assignment_handler.assign_role(
+                    team, group, role=next(role_generator), scope=table
+                )
+
+    reset_queries()
+
+    perm_manager = RolePermissionManagerType()
+
+    all_op = operation_type_registry.get_all()
+
+    db_op = [op for op in all_op if op.context_scope_name == "application"]
+    table_op = [op for op in all_op if op.context_scope_name == "database_table"]
+
+    checks = []
+    for user in tqdm(users, "Creating checks"):
+        for db, tables in data.items():
+            for op in db_op:
+                checks.append(
+                    PermissionCheck(
+                        actor=user, operation_name=op.type, context=db.application_ptr
+                    )
+                )
+            for table in tables:
+                for op in table_op:
+                    checks.append(
+                        PermissionCheck(
+                            actor=user, operation_name=op.type, context=table
+                        )
+                    )
+
+    print(f"------------ For {len(checks)} checks! ----------")
+
+    with CaptureQueriesContext(connection) as captured:
+        with profiler(html_report_name="enterprise_check_multiple_permissions"):
+            perm_manager.check_multiple_permissions(checks, group=group)
+
+    for q in captured.captured_queries:
+        print(q)
+    print(len(captured.captured_queries))

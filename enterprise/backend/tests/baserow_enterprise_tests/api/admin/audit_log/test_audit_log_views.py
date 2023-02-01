@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.shortcuts import reverse
 from django.test.utils import override_settings
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import pytest
 from freezegun import freeze_time
@@ -284,7 +284,7 @@ def test_audit_log_entries_are_not_created_without_a_license(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_audit_log_entries_are_created_from_actions_and_returned_in_order(
-    api_client, enterprise_data_fixture
+    api_client, enterprise_data_fixture, synced_roles
 ):
     session_id = "session_id"
     (

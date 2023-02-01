@@ -3,10 +3,8 @@ from datetime import datetime
 import pytest
 from freezegun import freeze_time
 from pytz import timezone
-from rest_framework.exceptions import NotAuthenticated
 
 from baserow.contrib.database.models import Database
-from baserow.core.exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
 from baserow.core.models import Group, GroupUser
 
 
@@ -38,48 +36,6 @@ def test_group_user_get_next_order(data_fixture):
 
     assert GroupUser.get_last_order(group_user_1.user) == 1
     assert GroupUser.get_last_order(group_user_2_1.user) == 12
-
-
-@pytest.mark.django_db
-def test_group_has_user(data_fixture):
-    user = data_fixture.create_user()
-    user_group = data_fixture.create_user_group(permissions="ADMIN")
-    user_group_2 = data_fixture.create_user_group(permissions="MEMBER")
-    user_group_3 = data_fixture.create_user_group()
-    data_fixture.create_template(group=user_group_3.group)
-
-    assert user_group.group.has_user(user_group.user)
-    assert not user_group.group.has_user(user)
-
-    assert not user_group.group.has_user(user, "ADMIN")
-    assert not user_group.group.has_user(user, ["ADMIN", "MEMBER"])
-    assert not user_group.group.has_user(user_group.user, "MEMBER")
-    assert user_group.group.has_user(user_group.user, "ADMIN")
-    assert user_group.group.has_user(user_group.user, ["ADMIN", "MEMBER"])
-
-    user_group.group.has_user(user_group.user, raise_error=True)
-
-    with pytest.raises(UserNotInGroup):
-        user_group.group.has_user(user, raise_error=True)
-
-    with pytest.raises(UserNotInGroup):
-        user_group.group.has_user(user, "ADMIN", raise_error=True)
-
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        user_group_2.group.has_user(user_group_2.user, "ADMIN", raise_error=True)
-
-    user_group.group.has_user(user_group.user, "ADMIN", raise_error=True)
-    user_group_2.group.has_user(user_group_2.user, "MEMBER", raise_error=True)
-
-    assert user_group_3.group.has_user(None) is False
-    assert user_group_2.group.has_user(None, allow_if_template=True) is False
-    assert user_group_3.group.has_user(None, allow_if_template=True) is True
-
-    with pytest.raises(NotAuthenticated):
-        user_group_3.group.has_user(None, raise_error=True)
-
-    with pytest.raises(NotAuthenticated):
-        user_group_2.group.has_user(None, raise_error=True, allow_if_template=True)
 
 
 @pytest.mark.django_db

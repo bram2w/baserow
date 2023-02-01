@@ -31,6 +31,18 @@ from baserow.core.user.utils import (
 User = get_user_model()
 
 
+class SubjectUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "first_name", "email"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "username": {"read_only": True},
+            "first_name": {"read_only": True},
+            "email": {"read_only": True},
+        }
+
+
 class UserSerializer(serializers.ModelSerializer):
     language = serializers.CharField(
         source="profile.language",

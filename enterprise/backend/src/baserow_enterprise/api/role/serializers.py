@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.functional import lazy
@@ -11,20 +10,6 @@ from baserow.api.serializers import NaturalKeyRelatedField
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
 from baserow_enterprise.exceptions import RoleNotExist, ScopeNotExist, SubjectNotExist
 from baserow_enterprise.models import Role, RoleAssignment, Team
-
-User = get_user_model()
-
-
-class SubjectUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username", "first_name", "email"]
-        extra_kwargs = {
-            "id": {"read_only": True},
-            "username": {"read_only": True},
-            "first_name": {"read_only": True},
-            "email": {"read_only": True},
-        }
 
 
 class SubjectTeamSerializer(serializers.ModelSerializer):

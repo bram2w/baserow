@@ -24,7 +24,7 @@ class DatabaseViewObjectScopeType(ObjectScopeType):
         return context.table
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related(
+        return self.get_base_queryset().prefetch_related(
             "table", "table__database", "table__database__group"
         )
 
@@ -56,7 +56,7 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
         return context.view
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related(
+        return self.get_base_queryset().prefetch_related(
             "view",
             "view__table",
             "view__table__database",
@@ -94,7 +94,7 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
         return context.view
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related(
+        return self.get_base_queryset().prefetch_related(
             "view",
             "view__table",
             "view__table__database",
@@ -132,7 +132,7 @@ class DatabaseViewFilterObjectScopeType(ObjectScopeType):
         return context.view
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related(
+        return self.get_base_queryset().prefetch_related(
             "view",
             "view__table",
             "view__table__database",

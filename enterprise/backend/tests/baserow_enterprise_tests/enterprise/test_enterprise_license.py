@@ -1868,7 +1868,11 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
         )
 
     subject_cts = ContentType.objects.get_for_models(
-        *[t.model_class for t in subject_type_registry.get_all()]
+        *[
+            t.model_class
+            for t in subject_type_registry.get_all()
+            if hasattr(t.model_class, "_meta")
+        ]
     ).values()
 
     # RA's on subjects which no longer exist

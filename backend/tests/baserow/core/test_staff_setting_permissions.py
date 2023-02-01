@@ -1,5 +1,6 @@
 import pytest
 
+from baserow.core.exceptions import PermissionException
 from baserow.core.operations import CreateGroupOperationType
 from baserow.core.permission_manager import (
     StaffOnlySettingOperationPermissionManagerType,
@@ -44,7 +45,9 @@ def test_staff_setting_permission_manager_non_staff_with_allow_global_group_crea
     perm_manager = StaffOnlySettingOperationPermissionManagerType()
     user = data_fixture.create_user(is_staff=False)
     data_fixture.update_settings(allow_global_group_creation=False)
-    assert not perm_manager.check_permissions(user, CreateGroupOperationType.type)
+    with pytest.raises(PermissionException):
+        perm_manager.check_permissions(user, CreateGroupOperationType.type)
+
     assert perm_manager.get_permissions_object(user) == {
         "staff_only_operations": [CreateGroupOperationType.type],
         "always_allowed_operations": [],

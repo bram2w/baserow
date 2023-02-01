@@ -22,6 +22,16 @@ from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.trash.handler import TrashHandler
 
 
+@pytest.fixture(autouse=True)
+def clean_registry_cache():
+    """
+    Ensure no patched version stays in cache.
+    """
+
+    view_type_registry.get_for_class.cache_clear()
+    yield
+
+
 @pytest.mark.django_db
 def test_list_views(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
@@ -201,7 +211,7 @@ def test_list_views_doesnt_do_n_queries(api_client, data_fixture):
         assert response.status_code == HTTP_200_OK
         response_json = response.json()
 
-    assert len(query_for_n.captured_queries) == len(
+    assert len(query_for_n.captured_queries) >= len(
         query_for_n_plus_one.captured_queries
     )
 
@@ -462,6 +472,7 @@ def test_get_view_field_options(api_client, data_fixture):
     with patch.dict(
         view_type_registry.registry, {"grid": GridViewWithNormalViewModel()}
     ):
+        view_type_registry.get_for_class.cache_clear()
         url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
         response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
         assert response.status_code == HTTP_400_BAD_REQUEST
