@@ -46,6 +46,11 @@
   }
 }
 
+.select__items--expanded {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
 .select__items-loading {
   position: relative;
   height: 32px;
