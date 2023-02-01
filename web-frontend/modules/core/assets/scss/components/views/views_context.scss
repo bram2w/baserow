@@ -8,3 +8,8 @@
 .views-context .section-header ~ .section-header {
   margin-top: 0;
 }
+
+.views-context__select_items {
+  max-height: (8 * 36px) + 60px; // scroll after ~ 8 items
+  overflow-y: auto;
+}
