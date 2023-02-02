@@ -155,6 +155,8 @@ import {
   BaserowContains,
   BaserowFilter,
   BaserowTrunc,
+  BaserowIsNaN,
+  BaserowWhenNaN,
   BaserowEven,
   BaserowOdd,
   BaserowCeil,
@@ -458,6 +460,8 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
   app.$registry.register('formula_function', new BaserowTrunc(context))
+  app.$registry.register('formula_function', new BaserowIsNaN(context))
+  app.$registry.register('formula_function', new BaserowWhenNaN(context))
   app.$registry.register('formula_function', new BaserowEven(context))
   app.$registry.register('formula_function', new BaserowOdd(context))
   app.$registry.register('formula_function', new BaserowAbs(context))

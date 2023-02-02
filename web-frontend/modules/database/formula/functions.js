@@ -1594,6 +1594,52 @@ export class BaserowTrunc extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowIsNaN extends BaserowFunctionDefinition {
+  static getType() {
+    return 'is_nan'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.isNanDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['is_nan(number)']
+  }
+
+  getExamples() {
+    return ['is_nan(1 / 0) = true', 'is_nan(1) = false']
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowWhenNaN extends BaserowFunctionDefinition {
+  static getType() {
+    return 'when_nan'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.whenNanDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['when_nan(number, fallback)']
+  }
+
+  getExamples() {
+    return ['when_nan(1 / 0, 4) = 4', 'when_nan(1, 4) = 1']
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
 export class BaserowLeast extends BaserowFunctionDefinition {
   static getType() {
     return 'least'
