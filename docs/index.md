@@ -70,6 +70,8 @@ Baserow provides various APIs detailed below:
   internals of Baserow formulas.
 * [Undo Redo Technical Guide](technical/undo-redo-guide.md): How Baserow implements undo
   redo technically.
+* [Permissions handling Guide](technical/permissions-guide.md): How Baserow implements
+  permission checking technically.
 
 ## Development
 
