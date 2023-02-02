@@ -382,7 +382,8 @@ class CoreHandler:
         ```
 
         If the permission manager return value is None, it's ignored and not included
-        in the final result.
+        in the final result. This permission will therefore not be checked on the
+        frontend side at all.
 
         :param actor: The actor whom we want to compute the permission object for.
         :param group: The optional group into which we want to compute the permission
