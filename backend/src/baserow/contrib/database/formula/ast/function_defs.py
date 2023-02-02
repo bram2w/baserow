@@ -1,6 +1,6 @@
 from abc import ABC
 from decimal import Decimal
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Union
 
 from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
@@ -147,6 +147,8 @@ def register_formula_functions(registry):
     registry.register(BaserowCeil())
     registry.register(BaserowFloor())
     registry.register(BaserowSign())
+    registry.register(BaserowIsNaN())
+    registry.register(BaserowWhenNan())
     # Boolean functions
     registry.register(BaserowIf())
     registry.register(BaserowEqual())
@@ -767,6 +769,44 @@ def int_like_numeric_output_field() -> fields.DecimalField:
     return fields.DecimalField(
         max_digits=BaserowFormulaNumberType.MAX_DIGITS, decimal_places=0
     )
+
+
+class BaserowIsNaN(OneArgumentBaserowFunction):
+    type = "is_nan"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: Union[BaserowExpression[BaserowFormulaNumberType]],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaBooleanType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return EqualsExpr(
+            arg,
+            Value(Decimal("NaN")),
+            output_field=fields.BooleanField(),
+        )
+
+
+class BaserowWhenNan(TwoArgumentBaserowFunction):
+    type = "when_nan"
+    arg1_type = [BaserowFormulaNumberType]
+    arg2_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: Union[BaserowExpression[BaserowFormulaNumberType]],
+        arg2: Union[BaserowExpression[BaserowFormulaNumberType]],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            calculate_number_type([arg1.expression_type, arg2.expression_type])
+        )
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return handle_arg_being_nan(arg1, arg2, arg1)
 
 
 class BaserowInt(BaserowTrunc):
