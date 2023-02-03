@@ -22,6 +22,7 @@ from baserow.core.exceptions import (
     GroupDoesNotExist,
     LastAdminOfGroup,
     ObjectScopeTypeDoesNotExist,
+    SubjectTypeNotExist,
     UserNotInGroup,
 )
 from baserow.core.handler import CoreHandler
@@ -41,7 +42,6 @@ from baserow_enterprise.exceptions import (
     RoleNotExist,
     ScopeNotExist,
     SubjectNotExist,
-    SubjectTypeNotExist,
     SubjectUnsupported,
 )
 from baserow_enterprise.features import RBAC

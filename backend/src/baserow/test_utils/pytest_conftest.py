@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from typing import Dict, Optional
 
-from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError
@@ -13,11 +12,8 @@ import pytest
 from pyinstrument import Profiler
 
 from baserow.contrib.database.application_types import DatabaseApplicationType
-from baserow.core.apps import sync_operations_after_migrate
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.trash.trash_types import GroupTrashableItemType
-from baserow_enterprise.apps import sync_default_roles_after_migrate
-from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
@@ -38,13 +34,6 @@ def data_fixture():
     from .fixtures import Fixtures
 
     return Fixtures()
-
-
-@pytest.fixture
-def synced_roles(db):
-    sync_operations_after_migrate(None, apps=apps)
-    sync_default_roles_after_migrate(None, apps=apps)
-    RoleAssignmentHandler._init = False
 
 
 @pytest.fixture()

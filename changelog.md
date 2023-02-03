@@ -32,6 +32,8 @@ For example:
 
 ### Refactors
 
+* Move enterprise imports out of core. [#1537](https://gitlab.com/bramw/baserow/-/issues/1537)
+
 ### Breaking API changes
 
 ## Released (2023-01-18 1.14.0)
