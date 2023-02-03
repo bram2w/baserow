@@ -12,8 +12,8 @@ from django.db.transaction import Atomic
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
+from baserow.core.exceptions import SubjectTypeNotExist
 from baserow.core.utils import ChildProgressBuilder
-from baserow_enterprise.exceptions import SubjectTypeNotExist
 
 from .exceptions import (
     ApplicationTypeAlreadyRegistered,

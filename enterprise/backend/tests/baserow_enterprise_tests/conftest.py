@@ -1,7 +1,12 @@
+from django.apps import apps
 from django.test.utils import override_settings
+
+from baserow.core.apps import sync_operations_after_migrate
 
 # noinspection PyUnresolvedReferences
 from baserow.test_utils.pytest_conftest import *  # noqa: F403, F401
+from baserow_enterprise.apps import sync_default_roles_after_migrate
+from baserow_enterprise.role.handler import RoleAssignmentHandler
 
 VALID_ONE_SEAT_ENTERPRISE_LICENSE = (
     # id: "1", instance_id: "1"
@@ -30,3 +35,10 @@ def enable_enterprise(db, enterprise_data_fixture):
     with override_settings(DEBUG=True):
         enterprise_data_fixture.enable_enterprise()
         yield
+
+
+@pytest.fixture  # noqa: F405
+def synced_roles(db):
+    sync_operations_after_migrate(None, apps=apps)
+    sync_default_roles_after_migrate(None, apps=apps)
+    RoleAssignmentHandler._init = False
