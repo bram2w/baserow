@@ -175,7 +175,7 @@ ndg-httpsclient==0.5.1
     # via advocate
 netifaces==0.11.0
     # via advocate
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via requests-oauthlib
 packaging==21.3
     # via redis
