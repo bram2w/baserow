@@ -14,6 +14,21 @@ from corsheaders.defaults import default_headers
 
 from baserow.version import VERSION
 
+# A comma separated list of feature flags used to enable in-progress or not ready
+# features for developers. See docs/development/feature-flags.md for more info.
+FEATURE_FLAGS = [
+    flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
+]
+
+
+class Everything(object):
+    def __contains__(self, other):
+        return True
+
+
+if "*" in FEATURE_FLAGS:
+    FEATURE_FLAGS = Everything()
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASEROW_PLUGIN_DIR_PATH = Path(os.environ.get("BASEROW_PLUGIN_DIR", "/baserow/plugins"))
@@ -63,6 +78,9 @@ INSTALLED_APPS = [
     "baserow.contrib.database",
     *BASEROW_BUILT_IN_PLUGINS,
 ]
+
+if "builder" in FEATURE_FLAGS:
+    INSTALLED_APPS.append("baserow.contrib.builder")
 
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
 if BASEROW_FULL_HEALTHCHECKS is not None:
@@ -651,21 +669,6 @@ BASEROW_MAX_SNAPSHOTS_PER_GROUP = int(os.getenv("BASEROW_MAX_SNAPSHOTS_PER_GROUP
 BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
     os.getenv("BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS", 360)  # 360 days
 )
-
-# A comma separated list of feature flags used to enable in-progress or not ready
-# features for developers. See docs/development/feature-flags.md for more info.
-FEATURE_FLAGS = [
-    flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
-]
-
-
-class Everything(object):
-    def __contains__(self, other):
-        return True
-
-
-if "*" in FEATURE_FLAGS:
-    FEATURE_FLAGS = Everything()
 
 PERMISSION_MANAGERS = [
     "view_ownership",
