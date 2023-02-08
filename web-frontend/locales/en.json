@@ -39,6 +39,8 @@
     "applicationType": {
         "database": "Database",
         "databaseDefaultName": "Untitled Database",
+        "builder": "Application",
+        "builderDefaultName": "Untitled Application",
         "cantSelectTableTitle": "Couldn't select the database.",
         "cantSelectTableDescription": "The database couldn't be selected because it doesn't have any tables. Use the sidebar to create one."
     },
