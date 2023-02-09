@@ -64,14 +64,25 @@ export default {
   },
   methods: {
     /**
-     * Adds all the event listeners related to all the field types, for example when a
-     * user presses the one of the arrow keys, tab, backspace, double clicks etc. This
-     * method is not meant to be overwritten.
+     * This method adds an event listener to the given element. It also
+     * automatically removes the event listeners when the cell is unselected
+     * (emitted from `_beforeUnSelect`) so there's no need to do that manually.
      */
-    _select() {
-      this.$el.clickEvent = (event) => {
+    addEventListenerWithAutoRemove(el, event, eventHandler) {
+      el.addEventListener(event, eventHandler)
+      this.$once('unselected', () => {
+        el.removeEventListener(event, eventHandler)
+      })
+    },
+    /**
+     * This method is called when the cell is selected to add all the event
+     * listeners needed to handle the user interaction.
+     * It uses the `addEventListenerWithAutoRemove` method to automatically
+     * remove the event listeners when the cell is unselected.
+     */
+    setupAllEventListenersOnCellSelected() {
+      const clickEventListener = (event) => {
         const timestamp = new Date().getTime()
-
         if (
           this.clickTimestamp !== null &&
           timestamp - this.clickTimestamp < 200
@@ -81,12 +92,12 @@ export default {
 
         this.clickTimestamp = timestamp
       }
-      this.$el.addEventListener('click', this.$el.clickEvent)
+      this.addEventListenerWithAutoRemove(this.$el, 'click', clickEventListener)
 
       // Register a body click event listener so that we can detect if a user has
       // clicked outside the field. If that happens we want to unselect the field and
       // possibly save the value.
-      this.$el.clickOutsideEventCancel = onClickOutside(
+      const clickOutsideEventCancel = onClickOutside(
         this.$el,
         (target, event) => {
           if (
@@ -103,9 +114,10 @@ export default {
           }
         }
       )
+      this.$once('unselected', clickOutsideEventCancel)
 
       // Event that is called when a key is pressed while the field is selected.
-      this.$el.keyDownEvent = (event) => {
+      const keyDownEventListener = (event) => {
         // When for example a related modal is open all the key combinations must be
         // ignored because the focus is not in the cell.
         if (!this.canKeyDown(event)) {
@@ -154,9 +166,13 @@ export default {
           }
         }
       }
-      document.body.addEventListener('keydown', this.$el.keyDownEvent)
+      this.addEventListenerWithAutoRemove(
+        document.body,
+        'keydown',
+        keyDownEventListener
+      )
 
-      this.$el.copyEventListener = async (event) => {
+      const copyEventListener = async (event) => {
         if (!this.canKeyDown(event) || !this.canCopy(event)) return
 
         await this.copySelectionToClipboard(
@@ -168,10 +184,10 @@ export default {
         // prevent Safari from beeping since the window.getSelection() is empty
         event.preventDefault()
       }
-      document.addEventListener('copy', this.$el.copyEventListener)
+      this.addEventListenerWithAutoRemove(document, 'copy', copyEventListener)
 
       // Updates the value of the field when a user pastes something in the field.
-      this.$el.pasteEventListener = async (event) => {
+      const pasteEventListener = async (event) => {
         if (!this.canPaste(event)) {
           return
         }
@@ -215,8 +231,15 @@ export default {
           }
         } catch (e) {}
       }
-      document.addEventListener('paste', this.$el.pasteEventListener)
-
+      this.addEventListenerWithAutoRemove(document, 'paste', pasteEventListener)
+    },
+    /**
+     * Adds all the event listeners related to all the field types, for example when a
+     * user presses the one of the arrow keys, tab, backspace, double clicks etc. This
+     * method is not meant to be overwritten.
+     */
+    _select() {
+      this.setupAllEventListenersOnCellSelected()
       this.clickTimestamp = new Date().getTime()
       this.select()
 
@@ -228,18 +251,6 @@ export default {
      * Removes all the listeners related to all field types.
      */
     _beforeUnSelect() {
-      this.$el.removeEventListener('click', this.$el.clickEvent)
-      if (
-        Object.prototype.hasOwnProperty.call(
-          this.$el,
-          'clickOutsideEventCancel'
-        )
-      ) {
-        this.$el.clickOutsideEventCancel()
-      }
-      document.body.removeEventListener('keydown', this.$el.keyDownEvent)
-      document.removeEventListener('copy', this.$el.copyEventListener)
-      document.removeEventListener('paste', this.$el.pasteEventListener)
       this.beforeUnSelect()
       this.$emit('unselected', {})
     },

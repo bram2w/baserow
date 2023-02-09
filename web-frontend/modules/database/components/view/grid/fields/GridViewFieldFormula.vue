@@ -1,40 +1,21 @@
-<template>
+<template functional>
   <component
-    :is="getComponent(field)"
-    :group-id="groupId"
-    :field="field"
-    :value="value"
+    :is="$options.methods.getComponent(props.field, parent.$registry)"
+    v-bind="data.attrs"
     :read-only="true"
-    :selected="selected"
-    :store-prefix="storePrefix"
     class="active"
+    v-on="listeners"
   ></component>
 </template>
 
 <script>
-import gridField from '@baserow/modules/database/mixins/gridField'
-
 export default {
   name: 'GridViewFieldFormula',
-  mixins: [gridField],
-  props: {
-    selected: {
-      type: Boolean,
-      required: true,
-    },
-    readOnly: {
-      type: Boolean,
-      required: true,
-    },
-    storePrefix: {
-      type: String,
-      required: true,
-    },
-  },
   methods: {
-    getComponent(field) {
-      const formulaType = this.$registry.get('formula_type', field.formula_type)
-      return formulaType.getGridViewFieldComponent()
+    getComponent(field, registry) {
+      return registry
+        .get('formula_type', field.formula_type)
+        .getGridViewFieldComponent()
     },
   },
 }

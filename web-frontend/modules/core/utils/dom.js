@@ -67,17 +67,17 @@ export const onClickOutside = (el, callback) => {
   // Add the event to the `insideEvent` map. This allow to be sure a click event has
   // been triggered from an element inside this context, even if the element has
   // been removed after in the meantime.
-  el.clickOutsideClickEvent = (event) => {
+  const clickOutsideClickEvent = (event) => {
     insideEvent.add(event)
   }
-  el.addEventListener('click', el.clickOutsideClickEvent)
+  el.addEventListener('click', clickOutsideClickEvent)
 
-  el.clickOutsideMouseDownEvent = (event) => {
+  const clickOutsideMouseDownEvent = (event) => {
     downElement = event.target
   }
-  document.body.addEventListener('mousedown', el.clickOutsideMouseDownEvent)
+  document.body.addEventListener('mousedown', clickOutsideMouseDownEvent)
 
-  el.clickOutsideEvent = (event) => {
+  const clickOutsideEvent = (event) => {
     const target = downElement || event.target
 
     // If the event is from current context or any element inside current context
@@ -88,23 +88,17 @@ export const onClickOutside = (el, callback) => {
       insideEvent.delete(event)
     }
 
-    if (
-      // If the click was outside the context element because we want to ignore
-      // clicks inside it or any child of this element
-      !isElement(el, target) &&
-      !insideContext
-    ) {
+    // If the click was outside the context element because we want to ignore
+    // clicks inside it or any child of this element
+    if (!isElement(el, target) && !insideContext) {
       callback(target, event)
     }
   }
-  document.body.addEventListener('click', el.clickOutsideEvent)
+  document.body.addEventListener('click', clickOutsideEvent)
 
   return () => {
-    el.removeEventListener('click', el.clickOutsideClickEvent)
-    document.body.removeEventListener(
-      'mousedown',
-      el.clickOutsideMouseDownEvent
-    )
-    document.body.removeEventListener('click', el.clickOutsideEvent)
+    el.removeEventListener('click', clickOutsideClickEvent)
+    document.body.removeEventListener('mousedown', clickOutsideMouseDownEvent)
+    document.body.removeEventListener('click', clickOutsideEvent)
   }
 }
