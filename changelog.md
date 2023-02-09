@@ -16,6 +16,7 @@ For example:
 * Can add a row with textual values for single select, multiple select and link row field. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Add e2e tests. [#820](https://gitlab.com/bramw/baserow/-/issues/820)
 * Added missing actions for audit log. [#1500](https://gitlab.com/bramw/baserow/-/issues/1500)
+* Personal views improvements regarding premium. [#1532](https://gitlab.com/bramw/baserow/-/issues/1532)
 * Add `is_nan` and `when_nan` formula functions [#1527](https://gitlab.com/bramw/baserow/-/issues/1527)
 
 ### Bug Fixes
