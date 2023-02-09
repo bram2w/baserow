@@ -30,6 +30,7 @@ For example:
 * Improved the handling of taking a snapshot of, or duplicating, a database with many thousands of tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
 * Stop backend from failing hard during csv export if a character can't be encoded [#697](https://gitlab.com/bramw/baserow/-/issues/697)
 * Single scrollbar for the personal and collaborative views. [#1531](https://gitlab.com/bramw/baserow/-/issues/1531)
+* Fix backspace stop responding due to double mixins. [#1523](https://gitlab.com/bramw/baserow/-/issues/1523)
 
 ### Refactors
 

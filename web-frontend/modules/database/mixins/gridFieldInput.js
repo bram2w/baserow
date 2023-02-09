@@ -29,20 +29,18 @@ export default {
     },
   },
   mounted() {
-    this.$el.leftMouseDownEvent = this.$el.addEventListener(
-      'mousedown',
-      (event) => {
-        // The `GridViewCell` component initiates the multiple selection when left
-        // clicking on the element. This is something we want to prevent while editing
-        // by stopping the propagation.
-        if (event.button === 0 && this.editing) {
-          event.stopPropagation()
-        }
+    const leftMouseDownListener = (event) => {
+      // The `GridViewCell` component initiates the multiple selection when left
+      // clicking on the element. This is something we want to prevent while editing
+      // by stopping the propagation.
+      if (event.button === 0 && this.editing) {
+        event.stopPropagation()
       }
+    }
+    this.$el.addEventListener('mousedown', leftMouseDownListener)
+    this.$once('hook:beforeDestroy', () =>
+      this.$el.removeEventListener('mousedown', leftMouseDownListener)
     )
-  },
-  beforeDestroy() {
-    this.$el.removeEventListener('mousedown', this.$el.leftMouseDownEvent)
   },
   methods: {
     /**
@@ -52,7 +50,7 @@ export default {
      * characters are pressed because that should replace the value.
      */
     select() {
-      this.$el.keydownEvent = (event) => {
+      const keydownListener = (event) => {
         // If the tab or arrow keys are pressed we don't want to do anything because
         // the GridViewField component will select the next field.
         const ignoredKeys = [
@@ -102,7 +100,10 @@ export default {
           this.edit('', event)
         }
       }
-      document.body.addEventListener('keydown', this.$el.keydownEvent)
+      document.body.addEventListener('keydown', keydownListener)
+      this.$once('unselected', () =>
+        document.body.removeEventListener('keydown', keydownListener)
+      )
     },
     /**
      * Event that is called wen the column is unselected, for example when clicked
@@ -116,7 +117,6 @@ export default {
       } else {
         this.editing = false
       }
-      document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     /**
      * Event that is called when the user double clicks in the column. In this case
