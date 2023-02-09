@@ -187,7 +187,8 @@
         "admin": "Admin functionality",
         "rowColoring": "Row coloring",
         "surveyForm": "Survey form",
-        "publicLogoRemoval": "Public logo removal"
+        "publicLogoRemoval": "Public logo removal",
+        "personalViews": "Personal views"
     },
     "licenses": {
         "titleNoLicenses": "No licenses found",

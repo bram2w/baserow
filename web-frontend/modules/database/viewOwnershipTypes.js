@@ -1,4 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import ViewOwnershipRadioVue from './components/view/ViewOwnershipRadio.vue'
 
 export class ViewOwnershipType extends Registerable {
   /**
@@ -9,10 +10,24 @@ export class ViewOwnershipType extends Registerable {
   }
 
   /**
+   * A human readable name of the feature it belongs to.
+   */
+  getFeatureName() {
+    return this.getName()
+  }
+
+  /**
    * The icon for the type in the form of CSS class.
    */
   getIconClass() {
     return null
+  }
+
+  /*
+   * Radio component used in view ownership forms.
+   */
+  getRadioComponent() {
+    return ViewOwnershipRadioVue
   }
 
   /**
@@ -20,6 +35,20 @@ export class ViewOwnershipType extends Registerable {
    */
   isDeactivated(groupId) {
     return false
+  }
+
+  /**
+   * Text description when deactivated.
+   */
+  getDeactivatedText() {
+    return null
+  }
+
+  /**
+   * Show deactivated modal when selecting.
+   */
+  getDeactivatedModal() {
+    return null
   }
 
   /**

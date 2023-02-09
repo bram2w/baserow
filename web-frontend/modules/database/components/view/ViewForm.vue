@@ -24,19 +24,14 @@
         {{ $t('viewForm.whoCanEdit') }}
       </label>
       <div class="control__elements view-ownership-select">
-        <Radio
+        <component
+          :is="type.getRadioComponent()"
           v-for="type in viewOwnershipTypes"
           :key="type.getType()"
-          v-model="values.ownershipType"
-          :value="type.getType()"
-          :disabled="type.isDeactivated()"
-        >
-          <i :class="type.getIconClass()"></i>
-          {{ type.getName() }}
-          <div v-if="type.isDeactivated()" class="deactivated-label">
-            <i class="fas fa-lock"></i>
-          </div>
-        </Radio>
+          :view-ownership-type="type"
+          :selected-type="values.ownershipType"
+          @input="(value) => (values.ownershipType = value)"
+        ></component>
       </div>
     </FormElement>
     <slot></slot>
