@@ -62,6 +62,8 @@ import {
   MultipleCollaboratorsHasNotFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
+  ContainsWordViewFilterType,
+  DoesntContainWordViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -303,12 +305,17 @@ export default (context) => {
   app.$registry.register('viewFilter', new DateBeforeViewFilterType(context))
   app.$registry.register('viewFilter', new DateAfterViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
+  app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
+  app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DoesntContainWordViewFilterType(context)
+  )
   app.$registry.register(
     'viewFilter',
     new FilenameContainsViewFilterType(context)
   )
   app.$registry.register('viewFilter', new HasFileTypeViewFilterType(context))
-  app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register(
     'viewFilter',
     new LengthIsLowerThanViewFilterType(context)

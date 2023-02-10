@@ -365,6 +365,52 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 }
 
+export class ContainsWordViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'contains_word'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.containsWord')
+  }
+
+  getInputComponent(field) {
+    return ViewFilterTypeText
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'single_select',
+      'multiple_select',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char'),
+    ]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.containsWordFilter(rowValue, filterValue, field)
+  }
+}
+
+export class DoesntContainWordViewFilterType extends ContainsWordViewFilterType {
+  static getType() {
+    return 'doesnt_contain_word'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.doesntContainWord')
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.doesntContainWordFilter(rowValue, filterValue, field)
+  }
+}
+
 export class LengthIsLowerThanViewFilterType extends ViewFilterType {
   static getType() {
     return 'length_is_lower_than'
