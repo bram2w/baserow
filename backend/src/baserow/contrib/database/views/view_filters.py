@@ -180,6 +180,42 @@ class ContainsViewFilterType(ViewFilterType):
             return self.default_filter_on_exception()
 
 
+class ContainsWordViewFilterType(ViewFilterType):
+    """
+    The contains word filter checks if the field value contains the provided filter
+    value as a whole word, and not as a substring. It is compatible with
+    models.CharField and models.TextField.
+    """
+
+    type = "contains_word"
+    compatible_field_types = [
+        TextFieldType.type,
+        LongTextFieldType.type,
+        URLFieldType.type,
+        EmailFieldType.type,
+        SingleSelectFieldType.type,
+        MultipleSelectFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaTextType.type,
+            BaserowFormulaCharType.type,
+        ),
+    ]
+
+    def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
+        # Check if the model_field accepts the value.
+        try:
+            field_type = field_type_registry.get_by_model(field)
+            return field_type.contains_word_query(field_name, value, model_field, field)
+        except Exception:
+            return self.default_filter_on_exception()
+
+
+class DoesntContainWordViewFilterType(
+    NotViewFilterTypeMixin, ContainsWordViewFilterType
+):
+    type = "doesnt_contain_word"
+
+
 class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
     type = "contains_not"
 

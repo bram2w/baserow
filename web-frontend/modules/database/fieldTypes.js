@@ -89,6 +89,7 @@ import {
 import {
   filenameContainsFilter,
   genericContainsFilter,
+  genericContainsWordFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
@@ -292,7 +293,7 @@ export class FieldType extends Registerable {
    * the single select or file field. In this case, the object might needs to be
    * converted to string.
    */
-  toHumanReadableString(field, value) {
+  toHumanReadableString(field, value, delimiter = ', ') {
     return value || ''
   }
 
@@ -435,6 +436,13 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Should return a contains word filter function unique for this field type.
+   */
+  getContainsWordFilterFunction(field) {
+    return (rowValue, humanReadableRowValue, filterValue) => false
+  }
+
+  /**
    * Converts rowValue to its human readable form first before applying the
    * filter returned from getContainsFilterFunction.
    */
@@ -457,6 +465,36 @@ export class FieldType extends Registerable {
     return (
       filterValue === '' ||
       !this.getContainsFilterFunction(field)(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the
+   * filter returned from getContainsWordFilterFunction.
+   */
+  containsWordFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      this.getContainsWordFilterFunction(field)(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the field
+   * filter returned by getContainsWordFilterFunction's notted.
+   */
+  doesntContainWordFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      !this.getContainsWordFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -631,6 +669,10 @@ export class TextFieldType extends FieldType {
     return genericContainsFilter
   }
 
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
   canBeReferencedByFormulaField() {
     return true
   }
@@ -703,6 +745,10 @@ export class LongTextFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   canBeReferencedByFormulaField() {
@@ -1678,6 +1724,10 @@ export class URLFieldType extends FieldType {
     return genericContainsFilter
   }
 
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
   canParseQueryParameter() {
     return true
   }
@@ -1764,6 +1814,10 @@ export class EmailFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   canBeReferencedByFormulaField() {
@@ -2118,6 +2172,10 @@ export class SingleSelectFieldType extends FieldType {
     return genericContainsFilter
   }
 
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
   canBeReferencedByFormulaField() {
     return true
   }
@@ -2257,11 +2315,11 @@ export class MultipleSelectFieldType extends FieldType {
     }
   }
 
-  toHumanReadableString(field, value) {
+  toHumanReadableString(field, value, delimiter = ', ') {
     if (value === undefined || value === null || value === []) {
       return ''
     }
-    return value.map((item) => item.value).join(', ')
+    return value.map((item) => item.value).join(delimiter)
   }
 
   getDocsDataType() {
@@ -2304,6 +2362,21 @@ export class MultipleSelectFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  containsWordFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      this.getContainsWordFilterFunction(field)(
+        rowValue,
+        this.toHumanReadableString(field, rowValue, ' '),
+        filterValue
+      )
+    )
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   getEmptyValue() {
@@ -2531,6 +2604,14 @@ export class FormulaFieldType extends FieldType {
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
     return underlyingFieldType.getContainsFilterFunction()
+  }
+
+  getContainsWordFilterFunction(field) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getContainsWordFilterFunction()
   }
 
   toHumanReadableString(field, value) {

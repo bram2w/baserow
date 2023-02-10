@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict, Union
 
 from django.db.models import BooleanField, Q
@@ -115,6 +116,17 @@ def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
         return Q()
     model_field.get_prep_value(value)
     return Q(**{f"{field_name}__icontains": value})
+
+
+def contains_word_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
+    value = value.strip()
+    # If an empty value has been provided we do not want to filter at all.
+    if value == "":
+        return Q()
+    # make sure to escape the value as it may contain regex characters
+    value = re.escape(value)
+    model_field.get_prep_value(value)
+    return Q(**{f"{field_name}__iregex": rf"\m{value}\M"})
 
 
 def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotatedQ:

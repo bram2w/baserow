@@ -129,6 +129,8 @@
     "viewFilter": {
         "contains": "contains",
         "containsNot": "doesn't contain",
+        "containsWord": "contains word",
+        "doesntContainWord": "doesn't contain word",
         "filenameContains": "filename contains",
         "has": "has",
         "hasNot": "doesn't have",

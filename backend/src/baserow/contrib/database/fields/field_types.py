@@ -1,4 +1,5 @@
 import logging
+import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
@@ -89,7 +90,12 @@ from .exceptions import (
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
-from .field_filters import AnnotatedQ, contains_filter, filename_contains_filter
+from .field_filters import (
+    AnnotatedQ,
+    contains_filter,
+    contains_word_filter,
+    filename_contains_filter,
+)
 from .field_sortings import AnnotatedOrder
 from .fields import (
     BaserowExpressionField,
@@ -209,6 +215,9 @@ class TextFieldMatchingRegexFieldType(FieldType, ABC):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
+
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaTextType()
 
@@ -283,6 +292,9 @@ class TextFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
+
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaTextType()
 
@@ -315,6 +327,9 @@ class LongTextFieldType(FieldType):
 
     def contains_query(self, *args):
         return contains_filter(*args)
+
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaTextType()
@@ -585,6 +600,9 @@ class RatingFieldType(FieldType):
 
     def contains_query(self, *args):
         return contains_filter(*args)
+
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaNumberType(0)
@@ -2576,8 +2594,15 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         # If an empty value has been provided we do not want to filter at all.
         if value == "":
             return Q()
-
         return Q(**{f"{field_name}__value__icontains": value})
+
+    def contains_word_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        value = re.escape(value)
+        return Q(**{f"{field_name}__value__iregex": rf"\m{value}\M"})
 
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
@@ -2888,6 +2913,21 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
             q={f"select_option_value_{field_name}__icontains": value},
         )
 
+    def contains_word_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        value = re.escape(value)
+        query = StringAgg(f"{field_name}__value", " ")
+
+        return AnnotatedQ(
+            annotation={
+                f"select_option_value_{field_name}": Coalesce(query, Value(""))
+            },
+            q={f"select_option_value_{field_name}__iregex": rf"\m{value}\M"},
+        )
+
     def get_order(self, field, field_name, order_direction):
         """
         If the user wants to sort the results he expects them to be ordered
@@ -3115,6 +3155,15 @@ class FormulaFieldType(ReadOnlyFieldType):
             field_type,
         ) = self._get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_query(field_name, value, model_field, field_instance)
+
+    def contains_word_query(self, field_name, value, model_field, field):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+        return field_type.contains_word_query(
+            field_name, value, model_field, field_instance
+        )
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         (

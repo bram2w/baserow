@@ -763,6 +763,389 @@ def test_contains_not_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_contains_word_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    long_text_field = data_fixture.create_long_text_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    field_handler = FieldHandler()
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula",
+        formula=f"field('{text_field.name}')",  # mimic the text field as it is, just to test the filter
+        formula_type="text",
+    )
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Multiple Select",
+        type_name="multiple_select",
+        select_options=[
+            {"value": "CC", "color": "blue"},
+            {"value": "DC", "color": "blue"},
+        ],
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="AC", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="BC", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="CE", color="green"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field, value="DE", color="yellow"
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{text_field.id}": "My name is John Doe.",
+            f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
+            f"field_{url_field.id}": "https://www.example.com",
+            f"field_{email_field.id}": "test.user@example.com",
+            f"field_{single_select_field.id}": option_a,
+        }
+    )
+    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "",
+            f"field_{long_text_field.id}": "",
+            f"field_{url_field.id}": "",
+            f"field_{email_field.id}": "",
+            f"field_{single_select_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "This is a test field with the word Johny.",
+            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+            "contains.\n A multiline approach.",
+            f"field_{url_field.id}": "https://www.examplewebsite.com",
+            f"field_{email_field.id}": "test.user@examplewebsite.com",
+            f"field_{single_select_field.id}": option_b,
+        }
+    )
+    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="contains_word", value="John"
+    )
+    # check for whole word in text field
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    # check for multiple words in text field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    # check for case insensitive in text field
+    view_filter.value = "JOHNY"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.value = "random"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = formula_field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = long_text_field
+    view_filter.value = "multiLINE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.field = url_field
+    view_filter.value = "exAmPle"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = url_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = email_field
+    view_filter.value = "ExamplE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = email_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = single_select_field
+    view_filter.value = "A"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = single_select_field
+    view_filter.value = "AC"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = single_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "E"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = multiple_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    # multiple select field with multiple values does not work
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE,CE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
+def test_doesnt_contain_word_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    long_text_field = data_fixture.create_long_text_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    field_handler = FieldHandler()
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula",
+        formula=f"field('{text_field.name}')",  # mimic the text field as it is, just to test the filter
+        formula_type="text",
+    )
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Multiple Select",
+        type_name="multiple_select",
+        select_options=[
+            {"value": "CC", "color": "blue"},
+            {"value": "DC", "color": "blue"},
+        ],
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="AC", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="BC", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="CE", color="green"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field, value="DE", color="yellow"
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{text_field.id}": "My name is John Doe.",
+            f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
+            f"field_{url_field.id}": "https://www.example.com",
+            f"field_{email_field.id}": "test.user@example.com",
+            f"field_{single_select_field.id}": option_a,
+        }
+    )
+    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "",
+            f"field_{long_text_field.id}": "",
+            f"field_{url_field.id}": "",
+            f"field_{email_field.id}": "",
+            f"field_{single_select_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "This is a test field with the word Johny.",
+            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+            "contains.\n A multiline approach.",
+            f"field_{url_field.id}": "https://www.examplewebsite.com",
+            f"field_{email_field.id}": "test.user@examplewebsite.com",
+            f"field_{single_select_field.id}": option_b,
+        }
+    )
+    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="doesnt_contain_word", value="John"
+    )
+    # check for whole word in text field
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    # check for multiple words in text field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    # check for case insensitive in text field
+    view_filter.value = "JOHNY"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_3.id not in ids
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.value = "random"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = formula_field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = long_text_field
+    view_filter.value = "multiLINE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_3.id not in ids
+
+    view_filter.field = url_field
+    view_filter.value = "exAmPle"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = url_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = email_field
+    view_filter.value = "ExamplE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = email_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = single_select_field
+    view_filter.value = "A"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = single_select_field
+    view_filter.value = "AC"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = single_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    view_filter.field = multiple_select_field
+    view_filter.value = "E"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    # multiple select field with multiple values does not work
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE,CE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+
+@pytest.mark.django_db
 def test_single_select_equal_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
