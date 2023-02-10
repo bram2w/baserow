@@ -175,7 +175,7 @@ class NoAuthorizationToPubliclySharedView(Exception):
     """
 
 
-class ViewOwnerhshipTypeDoesNotExist(InstanceTypeDoesNotExist):
+class ViewOwnershipTypeDoesNotExist(InstanceTypeDoesNotExist):
     """
     Raised when trying to get a view ownership type
     that does not exist.
