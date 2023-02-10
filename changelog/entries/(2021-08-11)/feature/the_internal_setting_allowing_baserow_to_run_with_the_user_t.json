@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "The internal setting allowing Baserow to run with the user tables in a separate\ndatabase has been removed entirely to prevent data integrity issues.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

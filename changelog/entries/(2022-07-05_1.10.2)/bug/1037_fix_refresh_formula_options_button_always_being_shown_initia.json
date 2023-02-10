@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix refresh formula options button always being shown initially.",
+    "issue_number": 1037,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

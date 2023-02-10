@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "Changed the JWT library to fix a problem causing the refresh-tokens not working properly.",
+    "issue_number": 787,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

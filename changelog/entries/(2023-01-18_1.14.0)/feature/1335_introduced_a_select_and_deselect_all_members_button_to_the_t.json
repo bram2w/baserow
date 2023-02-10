@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Introduced a \"select\" and \"deselect all\" members button to the teams modal.",
+    "issue_number": 1335,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

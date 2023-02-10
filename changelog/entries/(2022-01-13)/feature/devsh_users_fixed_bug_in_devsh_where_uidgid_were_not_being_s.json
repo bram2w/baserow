@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "**dev.sh users** Fixed bug in dev.sh where UID/GID were not being set correctly,\nplease rebuild any dev images you are using.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

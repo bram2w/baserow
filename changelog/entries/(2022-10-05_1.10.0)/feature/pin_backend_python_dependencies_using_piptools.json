@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Pin backend python dependencies using pip-tools.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

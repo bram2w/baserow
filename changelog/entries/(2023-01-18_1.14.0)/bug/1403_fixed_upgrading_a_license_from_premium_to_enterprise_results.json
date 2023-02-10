@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed upgrading a license from premium to enterprise results in an expired license.",
+    "issue_number": 1403,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

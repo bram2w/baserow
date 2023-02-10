@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed duplicating view with that depends on select options mapping.",
+    "issue_number": 1104,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

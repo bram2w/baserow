@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Pressing shift + enter in a selected cell of the grid view creates a new row.",
+    "issue_number": 1208,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

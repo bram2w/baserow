@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Replace the CSS classes for SSO settings forms.",
+    "issue_number": 1336,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

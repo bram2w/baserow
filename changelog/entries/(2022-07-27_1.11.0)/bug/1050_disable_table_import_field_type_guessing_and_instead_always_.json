@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Disable table import field type guessing and instead always import as text fields.",
+    "issue_number": 1050,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

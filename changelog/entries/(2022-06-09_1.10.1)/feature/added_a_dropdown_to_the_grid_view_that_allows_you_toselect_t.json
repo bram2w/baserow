@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added a dropdown to the grid view that allows you to\nselect the type of row identifier displayed next to a row (`Count`or `Row Identifier`).",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

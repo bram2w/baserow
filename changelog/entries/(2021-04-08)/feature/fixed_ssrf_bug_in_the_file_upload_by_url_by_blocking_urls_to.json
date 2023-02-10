@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed SSRF bug in the file upload by URL by blocking urls to the private network.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

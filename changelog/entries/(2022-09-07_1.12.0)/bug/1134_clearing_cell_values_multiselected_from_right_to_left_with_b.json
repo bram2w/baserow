@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Clearing cell values multi-selected from right to left with backspace shifts selection to the right and results in wrong deletion.",
+    "issue_number": 1134,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

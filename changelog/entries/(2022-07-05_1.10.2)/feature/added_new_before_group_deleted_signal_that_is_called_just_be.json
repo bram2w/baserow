@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added new `before_group_deleted` signal that is called just before a group would end up in the trash.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

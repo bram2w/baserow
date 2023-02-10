@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Show an error to the user when the web socket connection could not be made and the\nreconnect loop stops.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

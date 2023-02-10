@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Don't allow invalid aggregate formulas from being created causing errors when inserting rows.",
+    "issue_number": 1089,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

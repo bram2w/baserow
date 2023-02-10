@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "The API now returns appropriate errors when trying to create a field with a name which is too long.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

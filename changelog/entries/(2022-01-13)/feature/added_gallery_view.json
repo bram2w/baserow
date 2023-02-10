@@ -1,0 +1,9 @@
+{
+    "type": "feature",
+    "message": "Added gallery view.",
+    "issue_number": null,
+    "bullet_points": [
+        "Added cover field to the gallery view."
+    ],
+    "created_at": "2023-02-10"
+}

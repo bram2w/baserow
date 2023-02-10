@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "New items automatically get a new name in the modal. [1166](https://gitlab.com/bramw/baserow/-/issues/1166)",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

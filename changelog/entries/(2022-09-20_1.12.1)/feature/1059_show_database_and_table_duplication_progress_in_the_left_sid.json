@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Show database and table duplication progress in the left sidebar.",
+    "issue_number": 1059,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

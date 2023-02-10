@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Improved grid view on smaller screens by not making the primary field sticky.",
+    "issue_number": 690,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

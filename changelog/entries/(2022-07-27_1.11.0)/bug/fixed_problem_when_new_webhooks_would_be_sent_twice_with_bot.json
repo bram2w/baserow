@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed problem when new webhooks would be sent twice with both old and new payload.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

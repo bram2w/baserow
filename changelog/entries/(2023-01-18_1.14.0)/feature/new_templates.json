@@ -1,0 +1,13 @@
+{
+    "type": "feature",
+    "message": "New templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Car Dealership Inventory",
+        "Car Dealership Services",
+        "Customer Research",
+        "Frequent Flyer Rewards",
+        "Grocery Planner"
+    ],
+    "created_at": "2023-02-10"
+}

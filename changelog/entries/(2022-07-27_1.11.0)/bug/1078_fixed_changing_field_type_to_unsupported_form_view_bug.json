@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed changing field type to unsupported form view bug.",
+    "issue_number": 1078,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

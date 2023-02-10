@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add env vars for controlling which URLs and IPs webhooks are allowed to use.",
+    "issue_number": 931,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

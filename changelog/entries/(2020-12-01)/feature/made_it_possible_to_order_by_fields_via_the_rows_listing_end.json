@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Made it possible to order by fields via the rows listing endpoint.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

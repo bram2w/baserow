@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Pressing enter on a selected cell should select the cell below.",
+    "issue_number": 1329,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

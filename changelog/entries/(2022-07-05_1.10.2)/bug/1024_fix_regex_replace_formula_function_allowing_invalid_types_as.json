@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix regex_replace formula function allowing invalid types as params.",
+    "issue_number": 1024,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

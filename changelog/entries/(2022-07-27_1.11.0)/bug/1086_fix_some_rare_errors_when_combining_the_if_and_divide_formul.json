@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix some rare errors when combining the if and divide formula functions.",
+    "issue_number": 1086,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

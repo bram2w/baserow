@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fix the create group invite endpoint failing when no message provided.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

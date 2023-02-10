@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "Changed error codes returned by the premium license API endpoints to replacing `PREMIUM_LICENSE` with `LICENSE`.",
+    "issue_number": 1230,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

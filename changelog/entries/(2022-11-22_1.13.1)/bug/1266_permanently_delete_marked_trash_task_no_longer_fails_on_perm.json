@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "`permanently_delete_marked_trash` task no longer fails on permanently deleting a table before an associated rows batch.",
+    "issue_number": 1266,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

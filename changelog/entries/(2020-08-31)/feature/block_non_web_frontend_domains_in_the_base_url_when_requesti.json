@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Block non web frontend domains in the base url when requesting a password reset\nemail.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

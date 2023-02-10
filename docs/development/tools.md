@@ -150,6 +150,16 @@ frontend.
 
 https://fontawesome.com/
 
+## Additional tools
+### Changelog generator
+The changelog generator is a custom-built tool we developed to make it easier for you to
+write changelog entries which don't cause merge conflicts.
+
+Every time a merge request is created and requires a changelog, the changelog generator
+should be used to generate such changelog.
+
+See [here](../../changelog/README.md) for more details.
+
 ## Thanks!
 
 Big thanks to creators and contributors of the tools described above! Without you

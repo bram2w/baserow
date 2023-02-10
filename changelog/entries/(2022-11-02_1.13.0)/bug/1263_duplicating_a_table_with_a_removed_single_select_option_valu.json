@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Duplicating a table with a removed single select option value no longer results in an error.",
+    "issue_number": 1263,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

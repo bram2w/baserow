@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added OAuth2 support for Single Sign On with Google, Facebook, GitHub, and GitLab as preconfigured providers. Added general support for OpenID Connect.",
+    "issue_number": 1254,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

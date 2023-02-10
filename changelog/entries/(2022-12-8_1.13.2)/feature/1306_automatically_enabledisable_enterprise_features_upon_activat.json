@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Automatically enable/disable enterprise features upon activation/deactivation without needing a page refresh first.",
+    "issue_number": 1306,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

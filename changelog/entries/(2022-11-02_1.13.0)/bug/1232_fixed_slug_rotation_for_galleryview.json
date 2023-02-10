@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed slug rotation for GalleryView.",
+    "issue_number": 1232,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

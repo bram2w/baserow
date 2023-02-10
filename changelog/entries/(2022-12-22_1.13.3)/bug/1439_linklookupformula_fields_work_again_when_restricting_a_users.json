@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Link/Lookup/Formula fields work again when restricting a users access to the related table",
+    "issue_number": 1439,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

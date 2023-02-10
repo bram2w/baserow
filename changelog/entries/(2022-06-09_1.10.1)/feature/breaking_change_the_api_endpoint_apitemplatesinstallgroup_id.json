@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "**breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`\nis now a POST request instead of GET.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

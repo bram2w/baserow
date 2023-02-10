@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added the ability to double click a grid field name so that quick edits can be made.",
+    "issue_number": 1147,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

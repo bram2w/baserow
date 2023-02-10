@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "When your permissions change you now get notified in the frontend to reload your page",
+    "issue_number": 1312,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,13 @@
+{
+    "type": "feature",
+    "message": "New templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "House Search",
+        "Personal Health Log",
+        "Job Search",
+        "Single Trip Planner",
+        "Software Application Bug Tracker"
+    ],
+    "created_at": "2023-02-10"
+}

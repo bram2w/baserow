@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix formula bug caused when looking up date intervals.",
+    "issue_number": 924,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

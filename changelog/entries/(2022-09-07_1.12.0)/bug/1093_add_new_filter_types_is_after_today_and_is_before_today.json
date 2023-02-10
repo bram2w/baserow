@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Add new filter types 'is after today' and 'is before today'.",
+    "issue_number": 1093,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

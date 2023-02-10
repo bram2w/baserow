@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added SAML protocol implementation for Single Sign On as an enterprise feature.",
+    "issue_number": 1227,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

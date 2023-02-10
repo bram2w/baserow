@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added a new `ClientUndoRedoActionGroupId` request header to bundle multiple actions in a single API call.",
+    "issue_number": 951,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Refactored the has_user everywhere such that the raise_error argument is used when\npossible.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}
