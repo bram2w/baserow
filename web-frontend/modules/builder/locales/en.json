@@ -1,1 +1,15 @@
-{}
+{
+    "builderForm": {
+        "submit": "Add application"
+    },
+    "sidebarComponentBuilder": {
+        "settings": "Settings"
+    },
+    "builderSettingsModal": {
+        "title": "Application"
+    },
+    "builderSettingTypes": {
+        "integrationsName": "Integrations",
+        "themeName": "Theme"
+    }
+}
