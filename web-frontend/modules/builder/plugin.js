@@ -6,6 +6,10 @@ import de from '@baserow/modules/builder/locales/de.json'
 import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
+import {
+  IntegrationsBuilderSettingsType,
+  ThemeBuilderSettingsType,
+} from '@baserow/modules/builder/builderSettingTypes'
 
 export default (context) => {
   const { app, isDev } = context
@@ -22,5 +26,16 @@ export default (context) => {
     i18n.mergeLocaleMessage('pl', pl)
   }
 
+  app.$registry.registerNamespace('builderSettings')
+
   app.$registry.register('application', new BuilderApplicationType(context))
+
+  app.$registry.register(
+    'builderSettings',
+    new IntegrationsBuilderSettingsType(context)
+  )
+  app.$registry.register(
+    'builderSettings',
+    new ThemeBuilderSettingsType(context)
+  )
 }

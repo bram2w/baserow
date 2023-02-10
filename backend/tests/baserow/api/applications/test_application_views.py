@@ -20,10 +20,36 @@ from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.models import Template
 from baserow.core.operations import ListApplicationsGroupOperationType
+from baserow.core.registries import application_type_registry
 
 
 def stub_filter_queryset(u, o, q, **kwargs):
     return q
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize("application_type", application_type_registry.get_all())
+def test_can_create_different_application_types(
+    application_type, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+
+    response = api_client.post(
+        reverse("api:applications:list", kwargs={"group_id": group.id}),
+        {"name": "Test 1", "type": application_type.type},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    application = application_type.model_class.objects.all()[0]
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == application_type.type
+    assert response_json["id"] == application.id
+    assert response_json["name"] == application.name
+    assert response_json["order"] == application.order
 
 
 @pytest.mark.django_db

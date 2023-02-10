@@ -67,6 +67,8 @@ export default {
           })
       } catch (error) {
         this.handleError(error, 'application')
+      } finally {
+        this.loading = false
       }
     },
   },
