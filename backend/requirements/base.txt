@@ -42,6 +42,8 @@ botocore==1.23.54
     # via
     #   boto3
     #   s3transfer
+brotli==1.0.9
+    # via -r base.in
 celery[redis]==5.2.3
     # via
     #   -r base.in
