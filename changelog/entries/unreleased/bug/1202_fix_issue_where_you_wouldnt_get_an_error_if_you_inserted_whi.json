@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix issue where you wouldn't get an error if you inserted whitespace only into a form text field",
+    "issue_number": 1202,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

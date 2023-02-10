@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed memory leak when using our example `docker-compose` and a https URL in `BASEROW_CADDY_ADDRESSES` files caused by an incorrect Caddy healthcheck.",
+    "issue_number": 1516,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

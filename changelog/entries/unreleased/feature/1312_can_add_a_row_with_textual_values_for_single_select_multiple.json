@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Can add a row with textual values for single select, multiple select and link row field.",
+    "issue_number": 1312,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

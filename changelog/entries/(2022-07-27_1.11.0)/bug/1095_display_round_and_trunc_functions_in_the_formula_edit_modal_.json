@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Display round and trunc functions in the formula edit modal, rename int to trunc and make these functions handle weird inputs better.",
+    "issue_number": 1095,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

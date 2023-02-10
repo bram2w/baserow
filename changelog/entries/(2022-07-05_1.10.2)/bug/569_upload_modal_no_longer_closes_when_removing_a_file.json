@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Upload modal no longer closes when removing a file.",
+    "issue_number": 569,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

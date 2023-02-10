@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Redirect to signup instead of the login page if there are no admin users.",
+    "issue_number": 1035,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,19 @@
+{
+    "type": "feature",
+    "message": "Updated templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Company Blog Management",
+        "Student Planner",
+        "Applicant Tracker",
+        "Book Catalog",
+        "Bucket List",
+        "Car Maintenance Log",
+        "Company Asset Tracker",
+        "Email Marketing Campaigns",
+        "Holiday Shopping",
+        "Recipe Book",
+        "Wedding Planning"
+    ],
+    "created_at": "2023-02-10"
+}

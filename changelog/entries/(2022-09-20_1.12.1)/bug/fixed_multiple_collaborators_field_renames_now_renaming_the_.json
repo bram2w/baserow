@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed Multiple Collaborators field renames. Now renaming the field won't recreate the field so that data is preserved.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

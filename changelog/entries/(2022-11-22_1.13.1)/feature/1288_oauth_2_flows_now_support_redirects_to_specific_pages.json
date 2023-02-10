@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "OAuth 2 flows now support redirects to specific pages.",
+    "issue_number": 1288,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

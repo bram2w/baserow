@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug when importing Airtable base with a date field less than 1000.",
+    "issue_number": 1046,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

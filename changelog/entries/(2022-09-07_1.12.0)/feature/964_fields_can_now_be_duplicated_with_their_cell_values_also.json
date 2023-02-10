@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fields can now be duplicated with their cell values also.",
+    "issue_number": 964,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

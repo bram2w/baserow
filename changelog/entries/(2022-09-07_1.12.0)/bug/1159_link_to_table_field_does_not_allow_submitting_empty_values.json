@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "\"Link to table\" field does not allow submitting empty values.",
+    "issue_number": 1159,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed a bug for some number filters that causes all rows to be returned when text is entered.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

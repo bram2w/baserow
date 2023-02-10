@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "**Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL\nenv variable. If using MEDIA_PORT you now need to set MEDIA_URL also.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

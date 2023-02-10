@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix lookup field conversions deleting all of its old field dependencies.",
+    "issue_number": 1036,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

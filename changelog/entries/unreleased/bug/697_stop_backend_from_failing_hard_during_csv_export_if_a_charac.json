@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Stop backend from failing hard during csv export if a character can't be encoded",
+    "issue_number": 697,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

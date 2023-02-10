@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed error when rapidly switching between template tables or views in the template\npreview.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

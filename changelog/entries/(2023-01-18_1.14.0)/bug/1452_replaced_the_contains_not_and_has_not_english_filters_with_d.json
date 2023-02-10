@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Replaced the \"contains not\" and \"has not\" English filters with \"doesn't contain\" and \"doesn't have\" respectively.",
+    "issue_number": 1452,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

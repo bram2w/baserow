@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed HOURS_UNTIL_TRASH_PERMANENTLY_DELETED environment variable is not converted to int.",
+    "issue_number": 1499,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

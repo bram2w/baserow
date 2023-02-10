@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Tweaked the curl examples in the API documentation so that they work properly in all $SHELLs.",
+    "issue_number": 1462,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

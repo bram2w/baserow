@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add `is_nan` and `when_nan` formula functions",
+    "issue_number": 1527,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "New signals `user_updated`, `user_deleted`, `user_restored`, `user_permanently_deleted` were added to track user changes.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

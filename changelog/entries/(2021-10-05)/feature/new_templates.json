@@ -1,0 +1,17 @@
+{
+    "type": "feature",
+    "message": "New templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Recipe Book",
+        "Healthcare Facility Management",
+        "Bucket List",
+        "Apartment Hunt",
+        "Holiday Shopping",
+        "Email Marketing Campaigns",
+        "Book Writing Guide",
+        "Home Inventory",
+        "Political Campaign Contributions"
+    ],
+    "created_at": "2023-02-10"
+}

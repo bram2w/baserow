@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Introduced environment variable to disable Google docs file preview.",
+    "issue_number": 1074,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

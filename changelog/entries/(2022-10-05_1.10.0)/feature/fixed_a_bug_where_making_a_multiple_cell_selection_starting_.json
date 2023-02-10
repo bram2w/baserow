@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed a bug where making a multiple cell selection starting from an\nempty `link_row` or `formula` field was not possible in Firefox.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

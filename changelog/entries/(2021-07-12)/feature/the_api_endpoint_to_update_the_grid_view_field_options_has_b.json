@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "The API endpoint to update the grid view field options has been moved to\n`/api/database/views/{view_id}/field-options/`.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

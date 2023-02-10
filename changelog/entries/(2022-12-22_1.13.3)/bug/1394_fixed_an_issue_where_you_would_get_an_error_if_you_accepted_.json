@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed an issue where you would get an error if you accepted a group invitation with `NO_ACCESS` as you role",
+    "issue_number": 1394,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

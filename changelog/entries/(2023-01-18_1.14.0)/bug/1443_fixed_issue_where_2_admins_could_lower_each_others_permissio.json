@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed issue where 2 admins could lower each others permissions at the same time and lock each other out",
+    "issue_number": 1443,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

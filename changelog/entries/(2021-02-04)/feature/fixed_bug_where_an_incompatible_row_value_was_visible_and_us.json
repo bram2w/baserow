@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed bug where an incompatible row value was visible and used while changing the\nfield type.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

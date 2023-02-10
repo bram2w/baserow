@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fix formula bug caused when arguments of `when_empty` have different types.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

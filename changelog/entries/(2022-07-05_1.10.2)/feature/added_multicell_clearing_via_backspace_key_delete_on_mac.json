@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added multi-cell clearing via backspace key (delete on Mac).",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,18 @@
+{
+    "type": "feature",
+    "message": "New templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Benefit Show Manager",
+        "Business Expenses",
+        "Emergency Triage Log",
+        "Employee Directory",
+        "Growth Experiments",
+        "Moving Company Manager",
+        "Online Freelancer Management",
+        "Personal Finance Manager",
+        "User Feedback",
+        "Workshops and Trainings"
+    ],
+    "created_at": "2023-02-10"
+}

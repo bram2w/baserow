@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Fixed error when sharing a view publicly with sorts more than one multi-select field.",
+    "issue_number": 1082,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

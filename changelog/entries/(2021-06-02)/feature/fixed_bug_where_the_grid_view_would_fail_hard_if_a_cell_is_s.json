@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed bug where the grid view would fail hard if a cell is selected and the component\nis destroyed.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,15 @@
+{
+    "type": "feature",
+    "message": "New templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Copy Management",
+        "Hiking Guide",
+        "New Hire Onboarding",
+        "Property Showings",
+        "QA Test Scripts",
+        "Risk Assessment and Management",
+        "Web App UAT"
+    ],
+    "created_at": "2023-02-10"
+}

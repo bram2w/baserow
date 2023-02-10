@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Plugins can now change any and all Django settings instead of just the ones set previously by Baserow.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

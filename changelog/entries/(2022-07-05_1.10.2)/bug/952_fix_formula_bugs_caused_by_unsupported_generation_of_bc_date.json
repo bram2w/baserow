@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix formula bugs caused by unsupported generation of BC dates.",
+    "issue_number": 952,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

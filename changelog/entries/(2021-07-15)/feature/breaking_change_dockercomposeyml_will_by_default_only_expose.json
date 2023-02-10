@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "**Breaking Change**: `docker-compose.yml` will by default only expose Baserow on\n`localhost` and not `0.0.0.0`, meaning it will not be accessible remotely unless\nmanually configured.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

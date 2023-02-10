@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "Concurrent field updates will now respond with a 409 instead of blocking until the previous update finished, set the env var BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR to revert to the old behaviour.",
+    "issue_number": 1097,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

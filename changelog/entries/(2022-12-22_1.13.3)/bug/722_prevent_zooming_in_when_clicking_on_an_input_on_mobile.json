@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Prevent zooming in when clicking on an input on mobile.",
+    "issue_number": 722,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

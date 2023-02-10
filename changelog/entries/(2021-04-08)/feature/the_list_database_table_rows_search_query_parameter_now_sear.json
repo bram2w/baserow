@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "The list_database_table_rows search query parameter now searches all possible field\ntypes.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

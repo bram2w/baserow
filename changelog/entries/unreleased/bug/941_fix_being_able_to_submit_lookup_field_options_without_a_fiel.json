@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix being able to submit lookup field options without a field being selected",
+    "issue_number": 941,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

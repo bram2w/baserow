@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix dependant fields not being updated if the other side of a link row field changed. [918](https://gitlab.com/bramw/baserow/-/issues/918)",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

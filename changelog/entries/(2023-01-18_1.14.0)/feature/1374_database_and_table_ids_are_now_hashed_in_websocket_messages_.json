@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Database and table ids are now hashed in websocket messages to not leak sensitive data",
+    "issue_number": 1374,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

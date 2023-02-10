@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug that breaks the link row modal when a formula is referencing a single select field.",
+    "issue_number": 1111,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

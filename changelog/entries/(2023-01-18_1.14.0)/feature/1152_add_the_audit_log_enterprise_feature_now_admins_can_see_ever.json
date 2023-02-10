@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add the \"Audit Log\" enterprise feature. Now admins can see every action that has been done in the instance.",
+    "issue_number": 1152,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

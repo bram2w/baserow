@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Upgrade the images provided in our example docker-compose files to be the latest and most secure.",
+    "issue_number": 1056,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}
