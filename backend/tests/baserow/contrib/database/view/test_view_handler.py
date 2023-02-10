@@ -21,7 +21,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
     ViewNotInTable,
-    ViewOwnerhshipTypeDoesNotExist,
+    ViewOwnershipTypeDoesNotExist,
     ViewSortDoesNotExist,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
@@ -2325,7 +2325,7 @@ def test_create_view_ownership_type(data_fixture):
         grid = GridView.objects.first()
         assert grid.ownership_type == OWNERSHIP_TYPE_COLLABORATIVE
 
-        with pytest.raises(ViewOwnerhshipTypeDoesNotExist):
+        with pytest.raises(ViewOwnershipTypeDoesNotExist):
             handler.create_view(
                 user=user,
                 table=table,

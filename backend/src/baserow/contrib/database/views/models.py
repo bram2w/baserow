@@ -42,6 +42,7 @@ FORM_VIEW_SUBMIT_ACTION_CHOICES = (
 )
 
 OWNERSHIP_TYPE_COLLABORATIVE = "collaborative"
+DEFAULT_OWNERSHIP_TYPE = OWNERSHIP_TYPE_COLLABORATIVE
 VIEW_OWNERSHIP_TYPES = [OWNERSHIP_TYPE_COLLABORATIVE]
 
 
@@ -102,7 +103,7 @@ class View(
     created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     ownership_type = models.CharField(
         max_length=255,
-        default=OWNERSHIP_TYPE_COLLABORATIVE,
+        default=DEFAULT_OWNERSHIP_TYPE,
         help_text=(
             "Indicates how the access to the view is determined."
             " By default, views are collaborative and shared for all users"

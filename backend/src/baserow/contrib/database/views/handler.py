@@ -300,7 +300,7 @@ class ViewHandler:
         :param type_name: The type name of the view.
         :param kwargs: The fields that need to be set upon creation.
         :raises PermissionDenied: When not allowed.
-        :raises ViewOwnerhshipTypeDoesNotExist: When the provided
+        :raises ViewOwnershipTypeDoesNotExist: When the provided
             view ownership type in kwargs doesn't exist.
         :return: The created view instance.
         """
@@ -395,6 +395,12 @@ class ViewHandler:
         duplicated_view = view_type.import_serialized(
             original_view.table, serialized, id_mapping
         )
+
+        if duplicated_view is None:
+            # Somehow the user tried to duplicate a view they are not allowed to see
+            # due to the views ownership type. Tell them the view does not exist as it
+            # should not from their POV.
+            raise ViewDoesNotExist()
 
         # We want to order views from the same table with the same ownership_type only
         queryset = View.objects.filter(

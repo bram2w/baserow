@@ -45,7 +45,7 @@ from .exceptions import (
     DecoratorValueProviderTypeDoesNotExist,
     ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist,
-    ViewOwnerhshipTypeDoesNotExist,
+    ViewOwnershipTypeDoesNotExist,
     ViewTypeAlreadyRegistered,
     ViewTypeDoesNotExist,
 )
@@ -269,10 +269,12 @@ class ViewType(
         :param files_zip: A zip file buffer where files related to the export can be
             extracted from.
         :param storage: The storage where the files can be copied to.
-        :return: The newly created view instance.
+        :return: The newly created view instance or None if the view is not allowed to
+            be imported according to its ownership type or the imported view has an
+            unknown ownership type.
         """
 
-        from .models import ViewDecoration, ViewFilter, ViewSort
+        from .models import DEFAULT_OWNERSHIP_TYPE, ViewDecoration, ViewFilter, ViewSort
 
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}
@@ -301,7 +303,7 @@ class ViewType(
 
         try:
             ownership_type = view_ownership_type_registry.get(
-                serialized_values.get("ownership_type", None)
+                serialized_values.get("ownership_type", DEFAULT_OWNERSHIP_TYPE)
             )
         except view_ownership_type_registry.does_not_exist_exception_class:
             return None
@@ -1129,7 +1131,7 @@ class ViewOwnershipTypeRegistry(Registry):
     """
 
     name = "view_ownership_type"
-    does_not_exist_exception_class = ViewOwnerhshipTypeDoesNotExist
+    does_not_exist_exception_class = ViewOwnershipTypeDoesNotExist
 
 
 # A default view type registry is created here, this is the one that is used

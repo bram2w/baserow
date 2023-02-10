@@ -1524,7 +1524,7 @@ class CoreHandler:
         return template
 
     @transaction.atomic
-    def sync_templates(self, storage=None):
+    def sync_templates(self, storage=None, template_search_glob="*.json"):
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
@@ -1539,6 +1539,9 @@ class CoreHandler:
 
         :param storage:
         :type storage:
+        :param template_search_glob: A glob pattern used to select which template files
+            to sync. Defaults to just syncing all templates but can be used to restrict
+            the syncing to specific templates only.
         """
 
         installed_templates = (
@@ -1550,7 +1553,9 @@ class CoreHandler:
 
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
-        templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
+        templates = list(
+            Path(settings.APPLICATION_TEMPLATES_DIR).glob(template_search_glob)
+        )
         for template_file_path in tqdm(
             templates,
             desc="Syncing Baserow templates. Disable by setting "

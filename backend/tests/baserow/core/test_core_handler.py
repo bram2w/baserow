@@ -1100,6 +1100,23 @@ def test_sync_and_install_all_templates(data_fixture, tmpdir):
             )
 
 
+@pytest.mark.django_db(transaction=True)
+def test_sync_and_install_single_template(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = CoreHandler()
+
+    handler.sync_templates(
+        storage=storage, template_search_glob="new-hire-onboarding.json"
+    )
+
+    group_user = data_fixture.create_user_group()
+    template = Template.objects.get()
+    with transaction.atomic():
+        handler.install_template(
+            group_user.user, group_user.group, template, storage=storage
+        )
+
+
 @pytest.mark.django_db
 def test_sync_templates(data_fixture, tmpdir):
     old_templates = settings.APPLICATION_TEMPLATES_DIR
