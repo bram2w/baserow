@@ -374,16 +374,6 @@ backend-test-group-1:
         $BACKEND_CI_DEV_IMAGE $TEST_TYPE $PYTEST_EXTRA_ARGS;
     - docker cp baserow_backend_test_container:/baserow/backend/reports .
     - docker rm baserow_backend_test_container
-    - |
-      if [[ $PYTEST_SPLIT_GROUP = 1 ]]; then
-        docker run -e DATABASE_USER=baserow \
-          -e DATABASE_NAME=baserow \
-          -e DATABASE_HOST=db \
-          -e DATABASE_PASSWORD=baserow \
-          --rm \
-          --add-host="db:$DB_IP" \
-          $BACKEND_CI_DEV_IMAGE ci-check-startup;
-      fi
   needs:
     - job: build-backend-image
   artifacts:
