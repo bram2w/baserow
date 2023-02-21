@@ -22,6 +22,7 @@ services:
     environment:
       - BASEROW_BACKEND_DEBUGGER_ENABLED=${BASEROW_BACKEND_DEBUGGER_ENABLED:-True}
       - BASEROW_BACKEND_DEBUGGER_PORT=${BASEROW_BACKEND_DEBUGGER_PORT:-5678}
+      - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
     build:
       dockerfile: ./backend/Dockerfile
       context: .
@@ -79,6 +80,8 @@ services:
         UID: $UID
         GID: $GID
     command: "watch-py celery-worker"
+    environment:
+      - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -99,6 +102,8 @@ services:
         UID: $UID
         GID: $GID
     command: "watch-py celery-exportworker"
+    environment:
+      - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
