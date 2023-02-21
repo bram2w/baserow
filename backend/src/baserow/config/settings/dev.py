@@ -17,7 +17,20 @@ MIDDLEWARE += [  # noqa: F405
     "silk.middleware.SilkyMiddleware",
 ]
 
-SILKY_ANALYZE_QUERIES = True
+# Set this env var to any non-blank value in your dev env so django-silk will EXPLAIN
+# all queries run.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! MASSIVE WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# This setting is DANGEROUS and will cause ALL UPDATE statements run by Baserow to be
+# run twice.
+# Any update statements that are not idempotent will become buggy!
+# Only turn it on to analyse performance, it will break Baserow's business
+# logic and cause bugs and so don't ever have it on whilst testing Baserow's
+# functionality.
+# See https://github.com/jazzband/django-silk/issues/629.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SILKY_ANALYZE_QUERIES = bool(
+    os.getenv("BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES", False)  # noqa: F405
+)
 
 snoop.install()
 
