@@ -8,7 +8,7 @@ export default (client, $hasFeature) => {
             { uid: 'ADMIN', isBillable: true },
             { uid: 'BUILDER', isBillable: true },
             { uid: 'EDITOR', isBillable: true },
-            { uid: 'COMMENTER', isBillable: true },
+            { uid: 'COMMENTER', isBillable: false },
             { uid: 'VIEWER', isBillable: false },
             { uid: 'NO_ACCESS', isBillable: false },
             {
