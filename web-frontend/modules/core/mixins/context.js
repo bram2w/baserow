@@ -15,8 +15,14 @@ export default {
     toggle(...args) {
       this.getRootContext().toggle(...args)
     },
+    toggleNextToMouse(...args) {
+      this.getRootContext().toggleNextToMouse(...args)
+    },
     show(...args) {
       this.getRootContext().show(...args)
+    },
+    showNextToMouse(...args) {
+      this.getRootContext().showNextToMouse(...args)
     },
     hide(...args) {
       this.getRootContext().hide(...args)

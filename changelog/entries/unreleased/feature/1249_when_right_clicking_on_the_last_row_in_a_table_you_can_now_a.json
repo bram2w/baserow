@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "When right-clicking on the row add button in the grid view, you can now add multiple rows at a time.",
+    "issue_number": 1249,
+    "bullet_points": [],
+    "created_at": "2023-02-14"
+}
