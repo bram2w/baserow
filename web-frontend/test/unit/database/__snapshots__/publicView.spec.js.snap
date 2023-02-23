@@ -308,6 +308,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             </div>
           </div>
            
+           
           <div
             class="grid-view__divider"
             style="left: 70px;"

@@ -7,6 +7,7 @@
         @mouseover="setHover(true)"
         @mouseleave="setHover(false)"
         @click="addRow"
+        @click.right.prevent="addRows"
       >
         <i v-if="includeRowDetails" class="fas fa-plus"></i>
       </a>
@@ -60,6 +61,10 @@ export default {
     addRow(event) {
       event.preventFieldCellUnselect = true
       this.$emit('add-row')
+    },
+    addRows(event) {
+      event.preventFieldCellUnselect = true
+      this.$emit('add-rows', event)
     },
   },
 }

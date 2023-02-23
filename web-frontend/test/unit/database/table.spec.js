@@ -31,13 +31,17 @@ describe('Table Component Tests', () => {
 
     expect(tableComponent.html()).toContain('gridView.rowCount - 1')
 
-    mockServer.creatingRowInTableReturns(table, {
-      id: 2,
-      order: '2.00000000000000000000',
-      field_1: '',
-      field_2: '',
-      field_3: '',
-      field_4: false,
+    mockServer.creatingRowsInTableReturns(table, {
+      items: [
+        {
+          id: 2,
+          order: '2.00000000000000000000',
+          field_1: '',
+          field_2: '',
+          field_3: '',
+          field_4: false,
+        },
+      ],
     })
 
     const button = tableComponent.find('.grid-view__add-row')

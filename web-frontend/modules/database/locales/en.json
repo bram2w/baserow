@@ -554,7 +554,9 @@
         "deleteRow": "Delete row",
         "deleteRows": "Delete rows",
         "copyCells": "Copy cells",
-        "rowCount": "No rows | 1 row | {count} rows"
+        "rowCount": "No rows | 1 row | {count} rows",
+        "hiddenRowsInsertedTitle": "Rows added",
+        "hiddenRowsInsertedMessage": "{number} newly added rows have been added, but are not visible because of the active filters."
     },
     "gridViewFieldFile": {
         "dropHere": "Drop here",
@@ -566,6 +568,10 @@
     "gridViewIdentifierOptions": {
         "id": "Row identifier",
         "count": "Count"
+    },
+    "gridViewRowsAddContext": {
+        "title": "Create multiple rows",
+        "choice": "Add {rowAmountChoice} rows"
     },
     "formViewMeta": {
         "includeRowId": "Use {row_id} to include the newly created row id in the URL."
