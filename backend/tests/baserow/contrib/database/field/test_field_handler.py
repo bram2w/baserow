@@ -740,7 +740,6 @@ class ReversesWhenConvertsAwayTextField(LongTextFieldType):
 
 
 class AlwaysLowercaseTextField(TextFieldType):
-    type = "lowercase_text"
     model_class = LongTextField
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
@@ -792,7 +791,6 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
 
 
 class ReversesWhenConvertsAwayTextField2(LongTextFieldType):
-    type = "reserves_text"
     model_class = LongTextField
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
