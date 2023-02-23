@@ -3,7 +3,7 @@
     :default-values="{ name: defaultName }"
     @submitted="$emit('submitted', $event)"
   >
-    <FormElement class="builder-form__controls">
+    <div class="actions actions--right">
       <button
         class="button button--large"
         :class="{ 'button--loading': loading }"
@@ -12,7 +12,7 @@
       >
         {{ $t('builderForm.submit') }}
       </button>
-    </FormElement>
+    </div>
   </ApplicationForm>
 </template>
 
