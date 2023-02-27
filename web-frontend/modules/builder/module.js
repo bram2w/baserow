@@ -12,7 +12,7 @@ import pl from './locales/pl.json'
 export default function BuilderModule(options) {
   this.addPlugin({ src: path.resolve(__dirname, 'middleware.js') })
 
-  // Add the plugin to register the database application.
+  // Add the plugin to register the builder application.
   this.appendPlugin({
     src: path.resolve(__dirname, 'plugin.js'),
   })

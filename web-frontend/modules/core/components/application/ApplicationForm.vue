@@ -12,6 +12,7 @@
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input input--large"
+          @focus.once="$event.target.select()"
           @blur="$v.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">
@@ -34,7 +35,7 @@ export default {
   data() {
     return {
       values: {
-        name: '',
+        name: this.defaultValues.name,
       },
     }
   },
