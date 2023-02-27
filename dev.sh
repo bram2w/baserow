@@ -86,6 +86,10 @@ launch_tab_and_exec(){
   new_tab "$tab_name" "$command"
 }
 
+launch_e2e_tab(){
+  new_tab "e2e tests" "cd e2e-tests && bash --init-file <(echo 'history -s yarn run test-all-browsers;./run-e2e-tests-locally.sh')"
+}
+
 show_help() {
     echo """
 ./dev.sh starts the baserow development environment and by default attempts to
@@ -112,6 +116,7 @@ attach_all      : Attach to all launched containers.
 dont_build_deps : When building environments which require other environments to be
                   built first dev.sh will build them automatically, disable this by
                   passing this flag.
+no_e2e          : Disabled the e2e testing tab.
 help            : Show this message.
 """
 }
@@ -145,6 +150,7 @@ heroku=false
 env_set=false
 build_deps=true
 build_dependencies=()
+e2e_tests=true
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -256,6 +262,10 @@ case "${1:-noneleft}" in
     ;;
     dont_build_deps)
         build_deps=false
+        shift
+    ;;
+    no_e2e)
+        e2e_tests=false
         shift
     ;;
     help)
@@ -469,6 +479,9 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
       launch_tab_and_exec "backend lint" \
               "backend" \
               "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-shell"
+      if [ "$e2e_tests" = true ]; then
+        launch_e2e_tab
+      fi
     fi
 
     if [ "$attach_all" = true ] ; then

@@ -3,7 +3,7 @@ import { baserowConfig } from '../playwright.config'
 
 export class BaserowPage {
   readonly page: Page
-  readonly baseUrl = baserowConfig.frontendBaseUrl
+  readonly baseUrl = baserowConfig.PUBLIC_WEB_FRONTEND_URL
   readonly pageUrl: string
 
   constructor(page: Page) {
