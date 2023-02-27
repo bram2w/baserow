@@ -18,11 +18,15 @@ export default function () {
     const settingsRoute = configRoutes.find(
       (route) => route.name === 'settings'
     )
-    settingsRoute.children.push({
-      name: 'settings-teams',
-      path: 'teams',
-      component: path.resolve(__dirname, 'pages/settings/teams.vue'),
-    })
+
+    // Prevent for adding the route multiple times
+    if (!settingsRoute.children.find(({ path }) => path === 'teams')) {
+      settingsRoute.children.push({
+        name: 'settings-teams',
+        path: 'teams',
+        component: path.resolve(__dirname, 'pages/settings/teams.vue'),
+      })
+    }
 
     configRoutes.push(...routes)
   })

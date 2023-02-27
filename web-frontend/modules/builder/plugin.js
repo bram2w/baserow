@@ -1,4 +1,3 @@
-import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
 import en from '@baserow/modules/builder/locales/en.json'
 import fr from '@baserow/modules/builder/locales/fr.json'
 import nl from '@baserow/modules/builder/locales/nl.json'
@@ -6,10 +5,15 @@ import de from '@baserow/modules/builder/locales/de.json'
 import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
+
 import {
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
+
+import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
+
+import { PublicSiteErrorPageType } from '@baserow/modules/builder/errorPageTypes'
 
 export default (context) => {
   const { app, isDev } = context
@@ -38,4 +42,6 @@ export default (context) => {
     'builderSettings',
     new ThemeBuilderSettingsType(context)
   )
+
+  app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
 }
