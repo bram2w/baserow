@@ -262,3 +262,17 @@ class LastAdminOfGroup(Exception):
     """
     Raised when somebody tries to remove the last admin of a group.
     """
+
+
+class IdDoesNotExist(Exception):
+    """
+    Raised when an ID is queried that does not exist
+    """
+
+    def __init__(self, not_existing_id=None, *args, **kwargs):
+        self.not_existing_id = not_existing_id
+        super().__init__(
+            f"The id {not_existing_id} does not exist.",
+            *args,
+            **kwargs,
+        )

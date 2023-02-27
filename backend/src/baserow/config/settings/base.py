@@ -362,6 +362,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
+        {"name": "Builder pages"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {

@@ -8,6 +8,7 @@ from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.mixins import FieldCacheMixin
 from django.utils.functional import cached_property
 
+from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.managers import NoTrashManager, TrashOnlyManager, make_trash_manager
 
 
@@ -46,11 +47,17 @@ class OrderableMixin:
         :param new_order: A list containing the object ids in the desired order. This
             list can be partial.
         :param field: The name of the order column/field.
+        :raises IdDoesNotExist: If any of the new order ids provided do not exist in
+            the queryset provided
         :return: The full ordered list of ids.
         """
 
         new_order = list(new_order)
         previous_full_id_order = list(queryset.values_list("id", flat=True))
+
+        for new_order_id in new_order:
+            if new_order_id not in previous_full_id_order:
+                raise IdDoesNotExist(new_order_id)
 
         new_full_order = []
         current = 0

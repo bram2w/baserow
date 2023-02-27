@@ -3,6 +3,16 @@ from baserow_premium.row_comments.operations import (
     ReadRowCommentsOperationType,
 )
 
+from baserow.contrib.builder.operations import (
+    ListPagesBuilderOperationType,
+    OrderPagesBuilderOperationType,
+)
+from baserow.contrib.builder.pages.operations import (
+    CreatePageOperationType,
+    DeletePageOperationType,
+    ReadPageOperationType,
+    UpdatePageOperationType,
+)
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
@@ -154,6 +164,9 @@ from baserow_enterprise.teams.operations import (
 
 NO_ACCESS_OPS = []
 VIEWER_OPS = NO_ACCESS_OPS + [
+    ReadPageOperationType,
+    ListPagesBuilderOperationType,
+    OrderPagesBuilderOperationType,
     ReadGroupOperationType,
     ReadTeamOperationType,
     ListTeamsOperationType,
@@ -198,6 +211,9 @@ EDITOR_OPS = COMMENTER_OPS + [
     ReadTeamSubjectOperationType,
 ]
 BUILDER_OPS = EDITOR_OPS + [
+    CreatePageOperationType,
+    DeletePageOperationType,
+    UpdatePageOperationType,
     CreateTableDatabaseTableOperationType,
     UpdateDatabaseTableOperationType,
     DeleteDatabaseTableOperationType,

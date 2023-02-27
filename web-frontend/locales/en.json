@@ -42,7 +42,9 @@
         "builder": "Application",
         "builderDefaultName": "Untitled Application",
         "cantSelectTableTitle": "Couldn't select the database.",
-        "cantSelectTableDescription": "The database couldn't be selected because it doesn't have any tables. Use the sidebar to create one."
+        "cantSelectTableDescription": "The database couldn't be selected because it doesn't have any tables. Use the sidebar to create one.",
+        "cantSelectPageTitle": "Couldn't select the application.",
+        "cantSelectPageDescription": "The application builder couldn't be selected because it doesn't have any pages. Use the sidebar to create one."
     },
     "settingType": {
         "account": "Account",
