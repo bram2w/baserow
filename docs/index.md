@@ -96,6 +96,8 @@ Everything related to contributing and developing for Baserow.
   well with Baserow for development purposes.
 * [Feature flags](./development/feature-flags.md): How Baserow uses basic feature flags for optionally
   enabling unfinished or unready features.
+* [E2E Testing](./development/e2e-testing.md): How to run Baserow's end-to-end tests 
+  and when to add your own.
 
 ## Plugins
 

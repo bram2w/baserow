@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "test": "playwright test --project=chrome",
+    "test-fast-only": "playwright test --project=chrome --grep @fast",
     "test-headed": "playwright test --project=chrome --headed",
     "test-all-browsers": "playwright test"
   },

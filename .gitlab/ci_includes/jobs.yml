@@ -513,11 +513,9 @@
         echo "Can't immediately skip as there was no successful previous job for this commit, checking changes..."
 
         CHANGED_FILES=$(git diff --name-only --diff-filter=ADMR @~..@)
-        grep_exit_code=0
         found_changes=0
         for SEARCH_PATTERN in $RUN_WHEN_CHANGES_MADE_IN; do
-            echo $CHANGED_FILES | grep -q $SEARCH_PATTERN || grep_exit_code=$?;
-            if [ ${grep_exit_code} -eq 0 ]; then
+            if echo $CHANGED_FILES | grep -q $SEARCH_PATTERN; then
               echo -e "Found changes matching $GREEN $SEARCH_PATTERN $CLEAR in:"
               echo $CHANGED_FILES
               echo -e "$GREEN Running job normally without skipping due to the changes. $CLEAR"

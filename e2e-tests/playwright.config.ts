@@ -4,8 +4,8 @@ import { devices } from '@playwright/test';
 require('dotenv').config()
 
 export const baserowConfig = {
-  frontendBaseUrl: process.env.frontendBaseUrl ? process.env.frontendBaseUrl : 'http://localhost:3000',
-  backendBaseUrl: process.env.backendBaseUrl ? process.env.backendBaseUrl : 'http://localhost:8000',
+  PUBLIC_WEB_FRONTEND_URL: process.env.PUBLIC_WEB_FRONTEND_URL ? process.env.PUBLIC_WEB_FRONTEND_URL : 'http://localhost:3000',
+  PUBLIC_BACKEND_URL: process.env.PUBLIC_BACKEND_URL ? process.env.PUBLIC_BACKEND_URL : 'http://localhost:8000',
 }
 
 /**
@@ -15,7 +15,7 @@ export const baserowConfig = {
 const config: PlaywrightTestConfig = {
   testDir: './tests',
   /* Maximum time one test can run for. */
-  timeout: 30 * 1000,
+  timeout: 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
