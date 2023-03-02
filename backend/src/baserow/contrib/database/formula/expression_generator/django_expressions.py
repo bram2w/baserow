@@ -8,6 +8,11 @@ class BinaryOpExpr(Transform):
     arity = 2
 
 
+class IsNullExpr(Transform):
+    template = "(%(expressions)s) IS NULL"
+    arity = 1
+
+
 # Django provides no way of doing a SQL equals expression with an arbitrary Django
 # expression on both the LHS and RHS. Instead we have to define our own simple transform
 # which joins two expressions together with a single =.

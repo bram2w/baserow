@@ -370,6 +370,9 @@ class FieldFixtures:
         if "requires_refresh_after_insert" not in kwargs:
             kwargs["requires_refresh_after_insert"] = False
 
+        if "nullable" not in kwargs:
+            kwargs["nullable"] = False
+
         recalculate = kwargs.pop("recalculate", True)
 
         field = FormulaField(**kwargs)

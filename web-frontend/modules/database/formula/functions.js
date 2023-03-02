@@ -436,6 +436,29 @@ export class BaserowIsBlank extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowIsNull extends BaserowFunctionDefinition {
+  static getType() {
+    return 'is_null'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.isNullDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['is_null(any)']
+  }
+
+  getExamples() {
+    return ["is_null('10') "]
+  }
+
+  getFormulaType() {
+    return 'boolean'
+  }
+}
+
 export class BaserowT extends BaserowFunctionDefinition {
   static getType() {
     return 't'
@@ -1144,11 +1167,11 @@ export class BaserowGetLinkLabel extends BaserowFunctionDefinition {
   }
 
   getSyntaxUsage() {
-    return ['get_link_label(link)']
+    return ['get_link_label(button)']
   }
 
   getExamples() {
-    return ["get_link_url(field('formula link field')) = 'your-label'"]
+    return ["get_link_label(field('formula button field')) = 'your-label'"]
   }
 
   getFormulaType() {

@@ -136,9 +136,19 @@ class BaserowExpression(abc.ABC, Generic[A]):
         return self
 
     def with_valid_type(
-        self, expression_type: "formula_type.BaserowFormulaValidType"
+        self,
+        expression_type: "formula_type.BaserowFormulaValidType",
+        nullable: Optional[bool] = None,
     ) -> "BaserowExpression[formula_type.BaserowFormulaValidType]":
+        if nullable is not None:
+            expression_type = self.with_nullable(expression_type, nullable)
         return self.with_type(expression_type)
+
+    def with_nullable(
+        self, expression_type: "formula_type.BaserowFormulaValidType", nullable: bool
+    ) -> "BaserowExpression[formula_type.BaserowFormulaValidType]":
+        expression_type.nullable = nullable
+        return expression_type
 
     def with_invalid_type(
         self, error: str
@@ -386,6 +396,7 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
     """
 
     is_wrapper = False
+    try_coerce_nullable_args_to_not_null: bool = True
 
     @property
     @abc.abstractmethod

@@ -48,6 +48,7 @@ describe('Formula Functions Test', () => {
       'equal',
       'isblank',
       'is_nan',
+      'is_null',
       'not',
       'not_equal',
       'greater_than',

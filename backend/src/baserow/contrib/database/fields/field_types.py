@@ -59,7 +59,6 @@ from baserow.contrib.database.formula import (
     BaserowFormulaTextType,
     BaserowFormulaType,
     FormulaHandler,
-    literal,
 )
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
@@ -219,7 +218,7 @@ class TextFieldMatchingRegexFieldType(FieldType, ABC):
         return contains_word_filter(*args)
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaTextType()
+        return BaserowFormulaTextType(nullable=True)
 
     def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
         return self.model_class()
@@ -260,7 +259,7 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
         )
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaCharType()
+        return BaserowFormulaCharType(nullable=True)
 
 
 class TextFieldType(FieldType):
@@ -296,7 +295,7 @@ class TextFieldType(FieldType):
         return contains_word_filter(*args)
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaTextType()
+        return BaserowFormulaTextType(nullable=True)
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaTextType
@@ -332,7 +331,7 @@ class LongTextFieldType(FieldType):
         return contains_word_filter(*args)
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaTextType()
+        return BaserowFormulaTextType(nullable=True)
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaTextType
@@ -467,15 +466,8 @@ class NumberFieldType(FieldType):
 
     def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
         return BaserowFormulaNumberType(
-            number_decimal_places=field.number_decimal_places
+            number_decimal_places=field.number_decimal_places, nullable=True
         )
-
-    def to_baserow_formula_expression(self, field: NumberField) -> BaserowExpression:
-        from baserow.contrib.database.formula.ast.function_defs import BaserowWhenEmpty
-
-        # treat null values as zero for mathematical operations
-        expression = super().to_baserow_formula_expression(field)
-        return BaserowWhenEmpty()(expression, literal(0))
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaNumberType
@@ -863,7 +855,10 @@ class DateFieldType(FieldType):
 
     def to_baserow_formula_type(self, field: DateField) -> BaserowFormulaType:
         return BaserowFormulaDateType(
-            field.date_format, field.date_include_time, field.date_time_format
+            field.date_format,
+            field.date_include_time,
+            field.date_time_format,
+            nullable=True,
         )
 
     def from_baserow_formula_type(
@@ -2615,7 +2610,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         setattr(row, field_name + "_id", select_option_mapping[value])
 
     def to_baserow_formula_type(self, field):
-        return BaserowFormulaSingleSelectType()
+        return BaserowFormulaSingleSelectType(nullable=True)
 
     def from_baserow_formula_type(self, formula_type) -> Field:
         return self.model_class()
@@ -3025,9 +3020,8 @@ class FormulaFieldType(ReadOnlyFieldType):
     allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
     serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
     serializer_field_overrides = {
-        "error": serializers.CharField(
-            required=False, allow_blank=True, allow_null=True
-        ),
+        "error": serializers.CharField(required=False, read_only=True),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
     }
 
     @staticmethod
@@ -3475,6 +3469,7 @@ class LookupFieldType(FormulaFieldType):
             "through_field to lookup. Will override the `target_field_id` "
             "parameter if both are provided, however only one is required.",
         ),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
     }
 
     def before_create(

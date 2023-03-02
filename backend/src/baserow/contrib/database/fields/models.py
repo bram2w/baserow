@@ -386,6 +386,7 @@ class FormulaField(Field):
     requires_refresh_after_insert = models.BooleanField()
     old_formula_with_field_by_id = models.TextField(null=True, blank=True)
     error = models.TextField(null=True, blank=True)
+    nullable = models.BooleanField()
 
     formula_type = models.TextField(
         choices=BASEROW_FORMULA_TYPE_CHOICES,
