@@ -318,6 +318,12 @@ class FormulaTypingVisitor(
             arg_expr = expr.accept(self)
             if arg_expr.requires_aggregate_wrapper:
                 requires_aggregate_wrapper.append(str(index + 1))
+
+            function_def = function_call.function_def
+            expr_type = arg_expr.expression_type
+            if expr_type.nullable and function_def.try_coerce_nullable_args_to_not_null:
+                arg_expr = expr_type.try_coerce_to_not_null(arg_expr)
+
             typed_args.append(arg_expr)
 
         if requires_aggregate_wrapper and not function_call.function_def.aggregate:

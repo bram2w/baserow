@@ -113,6 +113,7 @@ import {
   BaserowGreaterThanOrEqual,
   BaserowIf,
   BaserowIsBlank,
+  BaserowIsNull,
   BaserowLessThan,
   BaserowLessThanOrEqual,
   BaserowLower,
@@ -415,6 +416,7 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowIf(context))
   app.$registry.register('formula_function', new BaserowEqual(context))
   app.$registry.register('formula_function', new BaserowIsBlank(context))
+  app.$registry.register('formula_function', new BaserowIsNull(context))
   app.$registry.register('formula_function', new BaserowNot(context))
   app.$registry.register('formula_function', new BaserowNotEqual(context))
   app.$registry.register('formula_function', new BaserowGreaterThan(context))
