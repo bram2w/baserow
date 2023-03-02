@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add links in docs to new community maintained Baserow helm chart at https://artifacthub.io/packages/helm/christianknell/baserow.",
+    "issue_number": 1549,
+    "bullet_points": [],
+    "created_at": "2023-02-15"
+}

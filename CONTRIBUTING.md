@@ -36,7 +36,7 @@ repository on GitHub, but this is not the official one.
 * JavaScript code must be compliant with the eslint:recommended rules.
 * In code documentation is required for every function or class that is not self-evident.
 * Documentation for every concept that can used by a plugin.
-* [changelog.md](changelog.md) should be updated with any new features.
+* A new changelog entry file should be generated using the script found in the changelog folder.
 * The pipeline must pass.
 * Try to apply the **rule of 10s**: MRs should aim to have no more than 10 code files with more than 10 lines modified. 
   A code file doesn't include tests/css/text/migrations/translations/configuration/ etc.

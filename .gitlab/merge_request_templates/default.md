@@ -6,8 +6,7 @@
 
 ### Merge Request Checklist
 
-- [ ] [changelog.md](https://gitlab.com/bramw/baserow/-/blob/develop/changelog.md) has
-  been updated if required.
+- [ ] A changelog entry has been added to `changelog/entries/unreleased` using `changelog/src/changelog.py`
 - [ ] New/updated **Premium/Enterprise features** are separated correctly in the premium or enterprise folder
 - [ ] The latest **Chrome and Firefox** have been used to test any new frontend features
 - [ ] [Documentation](https://gitlab.com/bramw/baserow/-/tree/develop/docs) has been
