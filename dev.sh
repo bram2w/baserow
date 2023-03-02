@@ -87,7 +87,8 @@ launch_tab_and_exec(){
 }
 
 launch_e2e_tab(){
-  new_tab "e2e tests" "cd e2e-tests && bash --init-file <(echo 'history -s yarn run test-all-browsers;./run-e2e-tests-locally.sh')"
+  PWD=$(pwd)
+  new_tab "e2e tests" "cd $PWD/e2e-tests && bash --init-file <(echo 'history -s yarn run test-all-browsers;./run-e2e-tests-locally.sh')"
 }
 
 show_help() {
