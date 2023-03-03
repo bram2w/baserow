@@ -1,4 +1,3 @@
-import logging
 import uuid
 from io import BytesIO
 from os.path import join
@@ -9,6 +8,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.utils import timezone
+
+from loguru import logger
 
 from baserow.contrib.database.export.models import (
     EXPORT_JOB_CANCELLED_STATUS,
@@ -34,8 +35,6 @@ from .exceptions import (
 )
 from .file_writer import PaginatedExportJobFileWriter
 from .registries import TableExporter, table_exporter_registry
-
-logger = logging.getLogger(__name__)
 
 User = get_user_model()
 

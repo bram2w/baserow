@@ -13,6 +13,7 @@ from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeTimedSerializer
+from opentelemetry import trace
 
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
@@ -32,6 +33,7 @@ from baserow.core.signals import (
 )
 from baserow.core.trash.handler import TrashHandler
 
+from ..telemetry.utils import baserow_trace_methods
 from .emails import (
     AccountDeleted,
     AccountDeletionCanceled,
@@ -52,8 +54,10 @@ from .utils import normalize_email_address
 
 User = get_user_model()
 
+tracer = trace.get_tracer(__name__)
 
-class UserHandler:
+
+class UserHandler(metaclass=baserow_trace_methods(tracer)):
     def get_active_user(
         self,
         user_id: Optional[int] = None,

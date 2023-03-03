@@ -23,6 +23,7 @@ services:
       - BASEROW_BACKEND_DEBUGGER_ENABLED=${BASEROW_BACKEND_DEBUGGER_ENABLED:-True}
       - BASEROW_BACKEND_DEBUGGER_PORT=${BASEROW_BACKEND_DEBUGGER_PORT:-5678}
       - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
     build:
       dockerfile: ./backend/Dockerfile
       context: .
@@ -43,6 +44,8 @@ services:
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+    depends_on:
+      - otel-collector
 
   web-frontend:
     image: baserow_web-frontend_dev:latest
@@ -81,6 +84,7 @@ services:
         GID: $GID
     command: "watch-py celery-worker"
     environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
     volumes:
       - ./backend:/baserow/backend
@@ -89,9 +93,14 @@ services:
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+    depends_on:
+      - otel-collector
 
   celery-export-worker:
     image: baserow_backend_dev:latest
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
     build:
       dockerfile: ./backend/Dockerfile
       context: .
@@ -102,8 +111,6 @@ services:
         UID: $UID
         GID: $GID
     command: "watch-py celery-exportworker"
-    environment:
-      - BASEROW_DANGEROUS_SILKY_ANALYZE_QUERIES
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -111,9 +118,13 @@ services:
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+    depends_on:
+      - otel-collector
 
   celery-beat-worker:
     image: baserow_backend_dev:latest
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
     build:
       dockerfile: ./backend/Dockerfile
       context: .
@@ -171,3 +182,16 @@ services:
       - caddy_data:/data
     networks:
       local:
+
+  otel-collector:
+    image: otel/opentelemetry-collector
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    environment:
+      HONEYCOMB_API_KEY:
+      HONEYCOMB_METRICS_DATASET: baserow-dev-metrics
+    volumes:
+      - $PWD/deploy/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    networks:
+      local:
+    ports:
+      - "4318:4318"

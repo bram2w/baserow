@@ -14,6 +14,7 @@ from django.db.models import Count, F
 from django.db.models.query import QuerySet
 
 import jwt
+from opentelemetry import trace
 from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
@@ -59,6 +60,7 @@ from baserow.contrib.database.views.operations import (
 from baserow.contrib.database.views.registries import view_ownership_type_registry
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     MirrorDict,
@@ -124,8 +126,11 @@ FieldOptionsDict = Dict[int, Dict[str, Any]]
 
 ending_number_regex = re.compile(r"(.+) (\d+)$")
 
+tracer = trace.get_tracer(__name__)
 
-class ViewHandler:
+
+class ViewHandler(metaclass=baserow_trace_methods(tracer)):
+
     PUBLIC_VIEW_TOKEN_ALGORITHM = "HS256"  # nosec
 
     def list_views(

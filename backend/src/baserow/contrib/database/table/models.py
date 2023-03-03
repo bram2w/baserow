@@ -6,6 +6,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models import F, JSONField, Q, QuerySet
 
+from opentelemetry import trace
+
 from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
     OrderByFieldNotFound,
@@ -38,11 +40,14 @@ from baserow.core.mixins import (
     OrderableMixin,
     TrashableModelMixin,
 )
+from baserow.core.telemetry.utils import baserow_trace
 from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(
     r"filter__field_([0-9]+|created_on|updated_on)__([a-zA-Z0-9_]*)$"
 )
+
+tracer = trace.get_tracer(__name__)
 
 
 class TableModelQuerySet(models.QuerySet):
@@ -433,6 +438,7 @@ class Table(
     def get_database_table_name(self):
         return f"{self.USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
 
+    @baserow_trace(tracer)
     def get_model(
         self,
         fields=None,
@@ -586,6 +592,12 @@ class Table(
             attrs,
         )
 
+        self._after_model_generation(attrs, manytomany_models, model)
+
+        return model
+
+    @baserow_trace(tracer)
+    def _after_model_generation(self, attrs, manytomany_models, model):
         # In some situations the field can only be added once the model class has been
         # generated. So for each field we will call the after_model_generation with
         # the generated model as argument in order to do this. This is for example used
@@ -600,8 +612,7 @@ class Table(
                 field_object["field"], model, field_object["name"], manytomany_models
             )
 
-        return model
-
+    @baserow_trace(tracer)
     def _fetch_and_generate_field_attrs(
         self,
         add_dependencies,

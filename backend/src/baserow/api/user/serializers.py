@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 
 from drf_spectacular.utils import extend_schema_serializer
+from opentelemetry import metrics
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework_simplejwt.serializers import (
@@ -31,6 +32,13 @@ from baserow.core.user.utils import (
 )
 
 User = get_user_model()
+
+meter = metrics.get_meter(__name__)
+token_refreshes_counter = meter.create_counter(
+    "baserow.token_refreshes",
+    unit="1",
+    description="The number of token refreshes.",
+)
 
 
 class SubjectUserSerializer(serializers.ModelSerializer):
@@ -250,6 +258,7 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
         user = get_user_from_token(attrs["refresh"], RefreshToken)
         data = generate_session_tokens_for_user(user)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
+        token_refreshes_counter.add(1, {"baserow.user_id": user.id})
         return data
 
 
