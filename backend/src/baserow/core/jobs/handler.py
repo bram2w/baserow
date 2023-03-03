@@ -11,7 +11,7 @@ from django.utils import timezone
 from baserow.core.utils import Progress
 
 from .cache import job_progress_key
-from .constants import JOB_FAILED
+from .constants import JOB_FAILED, JOB_PENDING
 from .exceptions import JobDoesNotExist, MaxJobCountExceeded
 from .models import Job
 from .registries import job_type_registry
@@ -174,7 +174,25 @@ class JobHandler:
             run_async_job(job.id)
             job.refresh_from_db()
         else:
-            transaction.on_commit(lambda: run_async_job.delay(job.id))
+
+            # This wrapper ensure the job doesn't stay in pending state if something
+            # goes wrong during the delay call. This is related to the redis connection
+            # failure that triggers a sys.exit(1) to be called in gunicorn.
+            def call_async_job_safe():
+                try:
+                    run_async_job.delay(job.id)
+                except BaseException as e:
+                    job.refresh_from_db()
+                    if job.state == JOB_PENDING:
+                        job.state = JOB_FAILED
+                        job.error = str(e)
+                        job.human_readable_error = (
+                            f"Something went wrong during the job({job.id}) execution."
+                        )
+                        job.save()
+                    raise
+
+            transaction.on_commit(call_async_job_safe)
 
         return job
 
@@ -201,7 +219,7 @@ class JobHandler:
 
         (
             Job.objects.filter(created_on__lte=limit_date)
-            .is_running()
+            .is_pending_or_running()
             .update(
                 state=JOB_FAILED,
                 human_readable_error=(

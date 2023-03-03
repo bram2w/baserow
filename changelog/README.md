@@ -22,7 +22,7 @@ python3 -m pip install -r requirements.txt
 
 ### Add a new entry
 ```shell
-python3 src/changelog.py add
+./src/changelog.py add
 ```
 The command will ask you for the required information to create a new changelog entry.
 
@@ -33,7 +33,7 @@ your workflow.
 
 ### Make a release
 ```shell
-python3 src/changelog.py release <name-of-the-release>
+./src/changelog.py release <name-of-the-release>
 ```
 
 The command will do the following:
@@ -45,7 +45,7 @@ The command will do the following:
 ## Additional commands
 ### Purge
 ```shell
-python3 src/changelog.py purge
+./src/changelog.py purge
 ```
 
 This command will delete:

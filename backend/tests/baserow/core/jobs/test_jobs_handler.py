@@ -1,3 +1,4 @@
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -23,6 +24,26 @@ def test_create_and_start_job(mock_run_async_job, data_fixture):
     mock_run_async_job.delay.assert_called_once()
     args = mock_run_async_job.delay.call_args
     assert args[0][0] == job.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_create_and_start_job_with_system_exit(mock_run_async_job, data_fixture):
+    data_fixture.register_temp_job_types()
+
+    user = data_fixture.create_user()
+
+    # Simulate a SystemExit during the delay call
+    mock_run_async_job.delay.side_effect = lambda x: sys.exit(-1)
+
+    with pytest.raises(SystemExit):
+        JobHandler().create_and_start_job(user, "tmp_job_type_1")
+
+    job = Job.objects.first()
+    assert job.user_id == user.id
+    assert job.progress_percentage == 0
+    assert job.state == "failed"
+    assert job.error == "-1"
 
 
 @pytest.mark.django_db

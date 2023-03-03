@@ -116,6 +116,28 @@ def test_run_task_with_exception(mock_get_by_model, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.core.jobs.registries.JobTypeRegistry.get_by_model")
+def test_run_task_with_sytemexit(mock_get_by_model, data_fixture):
+    job_type = TmpCustomJobType()
+    # Simulate a SystemExit during the run.
+    job_type.run = Mock(side_effect=SystemExit(-1))
+    mock_get_by_model.return_value = job_type
+
+    job = data_fixture.create_fake_job()
+
+    with pytest.raises(SystemExit):
+        run_async_job(job.id)
+
+    job.refresh_from_db()
+    assert job.state == JOB_FAILED
+    assert job.error == "-1"
+    assert (
+        job.human_readable_error
+        == "Something went wrong during the custom_job_type job execution."
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.jobs.registries.JobTypeRegistry.get_by_model")
 def test_run_task_failing_time_limit(mock_get_by_model, data_fixture):
     job_type = TmpCustomJobType()
     job_type.run = Mock(side_effect=SoftTimeLimitExceeded("test"))
@@ -185,14 +207,14 @@ def test_cleanup_file_import_job(storage_mock, data_fixture, settings):
 
     assert Job.objects.count() == 8
     assert Job.objects.is_running().count() == 2
-    assert Job.objects.is_finished().count() == 4
-    assert Job.objects.is_pending_or_running().count() == 4
+    assert Job.objects.is_finished().count() == 5
+    assert Job.objects.is_pending_or_running().count() == 3
 
     # Should delete the job that has been automatically expired by the previous cleanup
     with freeze_time(now):
         clean_up_jobs()
 
-    assert Job.objects.count() == 6
+    assert Job.objects.count() == 5
     assert Job.objects.is_running().count() == 2
     assert Job.objects.is_finished().count() == 2
-    assert Job.objects.is_pending_or_running().count() == 4
+    assert Job.objects.is_pending_or_running().count() == 3
