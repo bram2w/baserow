@@ -1,10 +1,10 @@
-import logging
 import traceback
 from datetime import datetime
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from loguru import logger
 from pytz import UTC
 from pytz import timezone as pytz_timezone
 
@@ -31,8 +31,6 @@ from baserow.contrib.database.fields.registries import field_type_registry
 
 from .helpers import import_airtable_date_type_options, set_select_options_on_field
 from .registry import AirtableColumnType
-
-logger = logging.getLogger(__name__)
 
 
 class TextAirtableColumnType(AirtableColumnType):

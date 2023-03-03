@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Generator, Optional, Set
 
 from django.contrib.auth import get_user_model
@@ -9,7 +8,6 @@ from baserow_premium.license.exceptions import InvalidLicenseError
 from baserow_premium.license.models import License
 from baserow_premium.license.registries import LicenseType
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 

@@ -1,4 +1,3 @@
-import logging
 import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -22,6 +21,7 @@ from django.utils.timezone import make_aware
 
 from dateutil import parser
 from dateutil.parser import ParserError
+from loguru import logger
 from pytz import all_timezones, timezone
 from rest_framework import serializers
 
@@ -139,8 +139,6 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import GeneratedTableModel
-
-logger = logging.getLogger(__name__)
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):

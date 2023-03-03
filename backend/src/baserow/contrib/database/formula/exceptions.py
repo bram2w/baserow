@@ -1,13 +1,10 @@
-import logging
-
 from django.conf import settings
+
+from loguru import logger
 
 
 class BaserowFormulaException(Exception):
     pass
-
-
-logger = logging.getLogger(__name__)
 
 
 def formula_exception_handler(e):

@@ -1,4 +1,3 @@
-import logging
 import traceback
 from datetime import datetime
 from typing import List, Optional, Set, Tuple
@@ -9,7 +8,11 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from loguru import logger
+from opentelemetry import trace
+
 from baserow.core.exceptions import LockConflict
+from baserow.core.telemetry.utils import baserow_trace, baserow_trace_methods
 
 from .models import Action
 from .registries import (
@@ -19,7 +22,7 @@ from .registries import (
 )
 from .signals import ActionCommandType
 
-logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 def scopes_to_q_filter(scopes: List[ActionScopeStr]):
@@ -40,7 +43,8 @@ class OneActionHasErrorAndCannotBeRedone(Exception):
     """
 
 
-class ActionHandler:
+class ActionHandler(metaclass=baserow_trace_methods(tracer)):
+
     """
     Contains methods to do high level operations on ActionType's like undoing or
     redoing them.
@@ -86,6 +90,7 @@ class ActionHandler:
             raise exc
 
     @classmethod
+    @baserow_trace(tracer)
     def undo(
         cls, user: AbstractUser, scopes: List[ActionScopeStr], session: str
     ) -> List[Action]:
@@ -162,6 +167,7 @@ class ActionHandler:
             raise exc
 
     @classmethod
+    @baserow_trace(tracer)
     def redo(
         cls, user: AbstractUser, scopes: List[ActionScopeStr], session: str
     ) -> List[Action]:

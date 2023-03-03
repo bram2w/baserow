@@ -1,4 +1,3 @@
-import logging
 import math
 import traceback
 import typing
@@ -8,6 +7,7 @@ from typing import Set
 from django.db import transaction
 from django.db.models import Min, Q, QuerySet
 
+from loguru import logger
 from tqdm import tqdm
 
 from baserow.contrib.database.fields.field_cache import FieldCache
@@ -24,7 +24,6 @@ from baserow.core.utils import ChildProgressBuilder, Progress
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
 
-logger = logging.getLogger(__name__)
 
 DEFAULT_FORMULA_MIGRATION_BATCH_SIZE = 100
 

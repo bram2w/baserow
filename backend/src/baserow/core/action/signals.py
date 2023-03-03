@@ -1,6 +1,8 @@
 from enum import Enum
 
-from django.dispatch import Signal
+from django.dispatch import Signal, receiver
+
+from loguru import logger
 
 
 class ActionCommandType(Enum):
@@ -10,3 +12,23 @@ class ActionCommandType(Enum):
 
 
 action_done = Signal()
+
+
+@receiver(action_done)
+def log_action_receiver(
+    sender,
+    user,
+    action_type,
+    action_params,
+    action_timestamp,
+    action_command_type,
+    group,
+    **kwargs,
+):
+    logger.info(
+        "{action_command_type}: group={group_id} action_type={action_type} user={user_id}",
+        action_command_type=action_command_type.name.lower(),
+        group_id=group.id if group else "",
+        action_type=action_type.type,
+        user_id=user.id,
+    )

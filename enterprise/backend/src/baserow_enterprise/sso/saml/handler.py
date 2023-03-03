@@ -1,12 +1,12 @@
 import base64
 import binascii
-import logging
 from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 
 from defusedxml import ElementTree
+from loguru import logger
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT, entity
 from saml2.client import Saml2Client
 from saml2.config import Config as Saml2Config
@@ -22,8 +22,6 @@ from .exceptions import (
     InvalidSamlRequest,
     InvalidSamlResponse,
 )
-
-logger = logging.getLogger(__name__)
 
 
 class SamlAuthProviderHandler:

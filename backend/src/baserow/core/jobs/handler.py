@@ -1,4 +1,3 @@
-import logging
 from typing import List, Optional, Type
 
 from django.conf import settings
@@ -17,8 +16,6 @@ from .models import Job
 from .registries import job_type_registry
 from .tasks import run_async_job
 from .types import AnyJob
-
-logger = logging.getLogger(__name__)
 
 
 class JobHandler:

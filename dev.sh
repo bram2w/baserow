@@ -359,6 +359,7 @@ if [[ "$dev" = true ]]; then
   export PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
 
   export MEDIA_URL=http://localhost:4000/media/
+  export BASEROW_DEPLOYMENT_ENV="development-$USER"
 fi
 
 
@@ -490,6 +491,7 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
       launch_tab_and_attach "db" "db"
       launch_tab_and_attach "redis" "redis"
       launch_tab_and_attach "mailhog" "mailhog"
+      launch_tab_and_attach "otel-collector" "otel-collector"
       if [ "$dev" = true ] ; then
         launch_tab_and_attach "mjml compiler" "mjml-email-compiler"
       fi

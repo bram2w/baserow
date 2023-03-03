@@ -1,4 +1,3 @@
-import logging
 from collections import OrderedDict
 from typing import Dict
 from uuid import uuid4
@@ -11,6 +10,7 @@ from django.utils.translation import override as translation_override
 
 import unicodecsv as csv
 from baserow_premium.license.handler import LicenseHandler
+from loguru import logger
 from rest_framework import serializers
 
 from baserow.contrib.database.api.export.serializers import (
@@ -29,8 +29,6 @@ from baserow.core.utils import ChildProgressBuilder
 from baserow_enterprise.features import AUDIT_LOG
 
 from .models import AuditLogEntry, AuditLogExportJob
-
-logger = logging.getLogger(__name__)
 
 
 class AuditLogExportJobType(JobType):

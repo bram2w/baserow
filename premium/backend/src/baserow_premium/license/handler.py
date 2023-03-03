@@ -2,7 +2,6 @@ import base64
 import binascii
 import hashlib
 import json
-import logging
 from os.path import dirname, join
 from typing import Any, Dict, List, Optional, Union
 
@@ -25,6 +24,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from dateutil import parser
+from loguru import logger
 from requests.exceptions import RequestException
 from rest_framework.status import HTTP_200_OK
 
@@ -53,7 +53,6 @@ from .exceptions import (
 from .models import LicenseUser
 from .registries import license_type_registry
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 

@@ -1,18 +1,16 @@
-import logging
 from copy import deepcopy
 from typing import Dict, List
 
 from django.conf import settings
 from django.db.models.base import ModelBase
 
+from loguru import logger
 from rest_framework import serializers
 
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.registries import row_metadata_registry
-
-logger = logging.getLogger(__name__)
 
 
 class RowSerializer(serializers.ModelSerializer):
