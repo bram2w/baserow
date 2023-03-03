@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import transaction
 
 from baserow.config.celery import app
 from baserow.core.jobs.registries import job_type_registry
@@ -25,11 +24,10 @@ def run_async_job(self, job_id: int):
 
     from .cache import job_progress_key
 
-    with transaction.atomic():
-        job = Job.objects.get(id=job_id).specific
-        job_type = job_type_registry.get_by_model(job)
-        job.state = JOB_STARTED
-        job.save(update_fields=("state",))
+    job = Job.objects.get(id=job_id).specific
+    job_type = job_type_registry.get_by_model(job)
+    job.state = JOB_STARTED
+    job.save(update_fields=("state",))
 
     try:
         with job_type.transaction_atomic_context(job):
@@ -39,7 +37,7 @@ def run_async_job(self, job_id: int):
         # Don't override the other properties that have been set during the
         # progress update.
         job.save(update_fields=("state",))
-    except Exception as e:
+    except BaseException as e:  # We also want to catch SystemExit exception here.
         error = f"Something went wrong during the {job_type.type} job execution."
 
         exception_mapping = {
@@ -70,10 +68,10 @@ def run_async_job(self, job_id: int):
         # Allow a job_type to modify job after an error
         job_type.on_error(job.specific, e)
 
-        raise e
+        raise
     finally:
         # Delete the import job cached entry because the transaction has been committed
-        # and the AirtableImportJob entry now contains the latest data.
+        # and the Job entry now contains the latest data.
         cache.delete(job_progress_key(job.id))
 
 
