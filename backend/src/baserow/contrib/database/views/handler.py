@@ -154,7 +154,11 @@ class ViewHandler:
         views = View.objects.filter(table=table)
 
         views = CoreHandler().filter_queryset(
-            user, ListViewsOperationType.type, views, table.database.group
+            user,
+            ListViewsOperationType.type,
+            views,
+            table.database.group,
+            allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
 
