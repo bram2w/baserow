@@ -253,20 +253,24 @@ variables:
   # level variable to whichever project you want.
   PROJECT_PATH_FOR_CI_UTIL_IMAGE: bramw/baserow
   PROJECT_PATH_FOR_E2E_TEST_IMAGE: bramw/baserow
+  PROJECT_PATH_FOR_CI_DIND_IMAGE: bramw/baserow
   # The image path for the helper CI util image that will be built and pushed to.
   CI_UTIL_IMAGE: $CI_REGISTRY/$PROJECT_PATH_FOR_CI_UTIL_IMAGE/ci/ci_util_image:latest
   # The image path for the E2E testing image that will be built and pushed to.
   E2E_TEST_IMAGE: $CI_REGISTRY/$PROJECT_PATH_FOR_E2E_TEST_IMAGE/ci/baserow_e2e-tests:latest
+  # The image path for the dind CI image that will be built and pushed to.
+  CI_DIND_IMAGE: $CI_REGISTRY/$PROJECT_PATH_FOR_E2E_TEST_IMAGE/ci/ci_dind_image:latest
 
 # ==================================== CI UTIL ====================================
 
 # A simple util image used by the other jobs containing some helper tools like git, jq,
 # coverage etc.
 build-ci-util-image:
-  image: docker:20.10.12
+  image: docker:20.10.18
   stage: build
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
@@ -294,10 +298,11 @@ build-ci-util-image:
 
 # An image used by the e2e tests.
 build-e2e-tests-image:
-  image: docker:20.10.12
+  image: docker:20.10.18
   stage: build
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
@@ -324,6 +329,36 @@ build-e2e-tests-image:
       # When a pipeline is triggered by a git commit tag we don't want to rebuild.
       - tags
 
+# An image used by the e2e tests.
+build-ci-dind-image:
+  image: docker:20.10.18
+  stage: build
+  services:
+    - $CI_DIND_IMAGE
+  variables:
+    DOCKER_BUILDKIT: 1
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - cd e2e-tests
+    - docker build -t $CI_DIND_IMAGE .
+    - docker push $CI_DIND_IMAGE
+  # Only trigger this job manually to prevent it running every single time a new branch
+  # is made. See https://gitlab.com/gitlab-org/gitlab/-/issues/11427
+  when:
+    manual
+  # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
+  only:
+    changes:
+      - .gitlab/ci_dind_image/*
+      - .gitlab-ci.yml
+  except:
+    refs:
+      # When a pipeline is triggered by an upstream project we don't want to rebuild.
+      - pipelines
+      # When a pipeline is triggered by a git commit tag we don't want to rebuild.
+      - tags
 # ==================================== BACKEND ====================================
 
 # If pipeline not triggered by tag :
@@ -356,7 +391,8 @@ backend-test-group-1:
     - .docker-image-test-stage
     - .skippable-job
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
     - name: postgres:11
       alias: db
   variables:
@@ -366,11 +402,10 @@ backend-test-group-1:
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
     PYTEST_SPLIT_GROUP: 1
-    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/ enterprise/backend/"
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/ enterprise/backend/ .gitlab-ci.yml"
     DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP: 'true'
+    FF_NETWORK_PER_BUILD: 1
   script:
-    - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
-    - ping -w 2 $DB_IP
     - mkdir -p reports
     - TEST_TYPE=$([[ "$ENABLE_COVERAGE" = "true" ]] && echo "ci-test" || echo "test")
     - PYTEST_EXTRA_ARGS=$([[ "$RUN_MORNING_TESTS" = "true" ]] && echo '--run-once-per-day-in-ci' || echo "")
@@ -379,7 +414,7 @@ backend-test-group-1:
         -e PYTEST_SPLITS=4 \
         -e PYTEST_SPLIT_GROUP=$PYTEST_SPLIT_GROUP \
         --name=baserow_backend_test_container \
-        --add-host="db:$DB_IP" \
+        --network=host \
         $BACKEND_CI_DEV_IMAGE $TEST_TYPE $PYTEST_EXTRA_ARGS;
     - docker cp baserow_backend_test_container:/baserow/backend/reports .
     - docker rm baserow_backend_test_container
