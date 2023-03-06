@@ -1996,7 +1996,7 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
                     "rows": [
                         {
                             "id": visible_moving_row.id,
-                            "order": "0.99999999999999999999",
+                            "order": "0.50000000000000000000",
                             # Only the visible field should be sent
                             f"field_{visible_field.id}": "Visible",
                         }

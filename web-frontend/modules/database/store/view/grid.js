@@ -346,27 +346,6 @@ export const mutations = {
         ? maximumBufferLimit
         : potentialNewBufferLimit
 
-    const max = new BigNumber(rows[rows.length - 1].order)
-    const min = new BigNumber(rows[rows.length - 1].order).integerValue(
-      BigNumber.ROUND_FLOOR
-    )
-
-    const isBeforeInsertion = index < state.rows.length
-    if (isBeforeInsertion) {
-      // Decrease the order of every row coming before the inserted rows
-      state.rows.forEach((row) => {
-        const orderCurrent = new BigNumber(row.order)
-        if (
-          orderCurrent.isGreaterThan(min) &&
-          orderCurrent.isLessThanOrEqualTo(max)
-        ) {
-          row.order = orderCurrent
-            .minus(new BigNumber(ORDER_STEP_BEFORE * rows.length))
-            .toString()
-        }
-      })
-    }
-
     // Insert the new rows
     state.rows.splice(index, 0, ...rows)
 
@@ -1377,6 +1356,9 @@ export const actions = {
       .plus(step)
       .toString()
     if (before !== null) {
+      // It's okay to temporary set an order that just subtracts the
+      // ORDER_STEP_BEFORE because there will never be a conflict with rows because
+      // of the fraction ordering.
       order = new BigNumber(before.order)
         .minus(new BigNumber(step * rows.length))
         .toString()
@@ -1579,6 +1561,9 @@ export const actions = {
       // If the row has been placed before another row we can specifically insert to
       // the row at a calculated index.
       const change = new BigNumber(ORDER_STEP_BEFORE)
+      // It's okay to temporary set an order that just subtracts the
+      // ORDER_STEP_BEFORE because there will never be a conflict with rows because
+      // of the fraction ordering.
       order = new BigNumber(before.order).minus(change).toString()
     }
 

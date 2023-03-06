@@ -177,3 +177,17 @@ def test_row_deleted(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["table_id"] == table.id
     assert args[0][1]["rows"][0]["id"] == row_id
     assert args[0][1]["rows"][0][f"field_{field.id}"] == "Value"
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_row_orders_recalculated(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    RowHandler().recalculate_row_orders(table=table)
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{table.id}"
+    assert args[0][1]["type"] == "row_orders_recalculated"
+    assert args[0][1]["table_id"] == table.id

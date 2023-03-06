@@ -86,6 +86,17 @@ def rows_deleted(sender, rows, user, table, model, before_return, **kwargs):
     )
 
 
+@receiver(row_signals.row_orders_recalculated)
+def row_orders_recalculated(sender, table, **kwargs):
+    table_page_type = page_registry.get("table")
+    transaction.on_commit(
+        lambda: table_page_type.broadcast(
+            RealtimeRowMessages.row_orders_recalculated(table_id=table.id),
+            table_id=table.id,
+        )
+    )
+
+
 class RealtimeRowMessages:
     """
     A collection of functions which construct the payloads for the realtime
@@ -134,4 +145,11 @@ class RealtimeRowMessages:
             "rows_before_update": serialized_rows_before_update,
             "rows": serialized_rows,
             "metadata": metadata,
+        }
+
+    @staticmethod
+    def row_orders_recalculated(table_id: int) -> Dict[str, Any]:
+        return {
+            "type": "row_orders_recalculated",
+            "table_id": table_id,
         }
