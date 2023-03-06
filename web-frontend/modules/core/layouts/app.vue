@@ -48,6 +48,31 @@ export default {
       isCollapsed: 'sidebar/isCollapsed',
     }),
   },
+  created() {
+    /*
+     The authentication middleware supports loading a refresh token from a query
+     param called token. If used we don't want to fill up the users URL bar with a
+     massive token, so we want remove it.
+
+     However, crucially, we cannot remove it by issuing a 302 redirect from nuxt
+     server as this completely throws away vuex's state, which will
+     throw away any authorization obtained by the query param in the auth store.
+
+     Normally this is fine as the client can just reload the token from a cookie,
+     however when Baserow is embedded in an iframe on a 3rd party site it cannot
+     access these cookies as they are sameSite:lax. So by not issuing a redirect in
+     the server to remove the query.token, but instead doing it here, we preserve
+     the auth stores state as nuxt will populate it server side and ship it to client.
+
+     This way the client does not need to read the token from the cookies unless they
+     refresh the page.
+    */
+    if (this.$route.query.token) {
+      const queryWithoutToken = { ...this.$route.query }
+      delete queryWithoutToken.token
+      this.$router.replace({ query: queryWithoutToken })
+    }
+  },
   mounted() {
     // Connect to the web socket so we can start receiving real time updates.
     this.$realtime.connect()

@@ -13,10 +13,4 @@ export default function ({ req, store, route, redirect }) {
     }
     return redirect({ name: 'login', query })
   }
-
-  // remove the token if encoded in the URL and continue to the requested page.
-  if (route.query.token) {
-    delete route.query.token
-    return redirect({ path: route.path, query: route.query })
-  }
 }

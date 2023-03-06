@@ -32,7 +32,7 @@ export default {
 
     // in case the view is password protected, use the token saved in the cookies (if any)
     const publicAuthToken = await store.dispatch(
-      'page/view/public/setAuthTokenFromCookies',
+      'page/view/public/setAuthTokenFromCookiesIfNotSet',
       { slug }
     )
 
