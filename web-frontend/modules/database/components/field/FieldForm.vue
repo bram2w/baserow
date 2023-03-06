@@ -45,8 +45,10 @@
     <div v-if="forcedType === null" class="control">
       <div class="control__elements">
         <Dropdown
+          ref="fieldTypesDropdown"
           v-model="values.type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
+          class="field-form-context__dropdown"
           @hide="$v.values.type.$touch()"
         >
           <DropdownItem
@@ -131,6 +133,15 @@ export default {
       fields: 'field/getAll',
     }),
   },
+  watch: {
+    'values.type'(newValueType, oldValueType) {
+      if (
+        this.values.name === '' ||
+        this.values.name === this.fieldTypes[oldValueType]?.getName()
+      )
+        this.values.name = this.fieldTypes[newValueType]?.getName()
+    },
+  },
   validations() {
     return {
       values: {
@@ -157,6 +168,9 @@ export default {
     },
     getFormComponent(type) {
       return this.$registry.get('field', type).getFormComponent()
+    },
+    showFieldTypesDropdown(target) {
+      this.$refs.fieldTypesDropdown.show(target)
     },
   },
 }
