@@ -55,6 +55,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 ALLOWED_HOSTS += os.getenv("BASEROW_EXTRA_ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -63,7 +64,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
-    "channels",
     "drf_spectacular",
     "djcelery_email",
     "health_check",
