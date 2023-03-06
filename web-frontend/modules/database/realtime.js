@@ -222,6 +222,14 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('row_orders_recalculated', ({ store, app }, data) => {
+    if (store.getters['table/getSelectedId'] === data.table_id) {
+      app.$bus.$emit('table-refresh', {
+        tableId: store.getters['table/getSelectedId'],
+      })
+    }
+  })
+
   realtime.registerEvent('view_created', ({ store }, data) => {
     if (store.getters['table/getSelectedId'] === data.view.table_id) {
       store.dispatch('view/forceCreate', { data: data.view })

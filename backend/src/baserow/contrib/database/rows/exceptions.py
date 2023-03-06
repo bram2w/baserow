@@ -24,3 +24,10 @@ class ReportMaxErrorCountExceeded(Exception):
     def __init__(self, report, *args, **kwargs):
         self.report = report
         super().__init__("Too many errors", *args, **kwargs)
+
+
+class CannotCalculateIntermediateOrder(Exception):
+    """
+    Raised when an intermediate order can't be calculated. This could be because the
+    fractions are equal.
+    """

@@ -8,3 +8,5 @@ before_rows_delete = Signal()
 rows_created = Signal()
 rows_updated = Signal()
 rows_deleted = Signal()
+
+row_orders_recalculated = Signal()

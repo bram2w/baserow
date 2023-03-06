@@ -538,12 +538,12 @@ def test_batch_create_rows_ordering_before_row(api_client, data_fixture):
             {
                 "id": 3,
                 f"field_{number_field.id}": "120",
-                "order": "1.99999999999999999998",
+                "order": "1.50000000000000000000",
             },
             {
                 "id": 4,
                 f"field_{number_field.id}": "240",
-                "order": "1.99999999999999999999",
+                "order": "1.66666666666666674068",
             },
         ]
     }
