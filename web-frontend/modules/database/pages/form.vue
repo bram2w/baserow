@@ -53,7 +53,7 @@ export default {
   async asyncData({ params, error, app, route, redirect, store }) {
     const slug = params.slug
     const publicAuthToken = await store.dispatch(
-      'page/view/public/setAuthTokenFromCookies',
+      'page/view/public/setAuthTokenFromCookiesIfNotSet',
       { slug }
     )
 
