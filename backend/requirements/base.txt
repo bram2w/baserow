@@ -6,15 +6,13 @@
 #
 advocate==1.0.0
     # via -r base.in
-aioredis==1.3.1
-    # via channels-redis
 amqp==5.1.1
     # via kombu
 antlr4-python3-runtime==4.9.3
     # via -r base.in
 anyio==3.6.1
-    # via watchgod
-asgiref==3.4.1
+    # via watchfiles
+asgiref==3.6.0
     # via
     #   -r base.in
     #   channels
@@ -22,16 +20,15 @@ asgiref==3.4.1
     #   daphne
     #   django
     #   opentelemetry-instrumentation-asgi
-    #   uvicorn
 async-timeout==4.0.2
-    # via aioredis
+    # via redis
 attrs==22.1.0
     # via
     #   automat
     #   jsonschema
     #   service-identity
     #   twisted
-autobahn==22.7.1
+autobahn==23.1.2
     # via daphne
 automat==20.2.0
     # via twisted
@@ -39,15 +36,15 @@ backoff==2.2.1
     # via opentelemetry-exporter-otlp-proto-http
 billiard==3.6.4.0
     # via celery
-boto3==1.20.38
+boto3==1.26.83
     # via -r base.in
-botocore==1.23.54
+botocore==1.29.83
     # via
     #   boto3
     #   s3transfer
 brotli==1.0.9
     # via -r base.in
-celery[redis]==5.2.3
+celery[redis]==5.2.7
     # via
     #   -r base.in
     #   celery-redbeat
@@ -59,11 +56,11 @@ certifi==2022.9.24
     # via requests
 cffi==1.15.1
     # via cryptography
-channels==3.0.4
+channels[daphne]==4.0.0
     # via
     #   -r base.in
     #   channels-redis
-channels-redis==3.3.0
+channels-redis==4.0.0
     # via -r base.in
 charset-normalizer==2.0.12
     # via requests
@@ -88,19 +85,17 @@ cryptography==38.0.1
     #   pyopenssl
     #   pysaml2
     #   service-identity
-daphne==3.0.2
+daphne==4.0.0
     # via channels
 decorator==5.1.1
     # via validators
 defusedxml==0.7.1
     # via pysaml2
 deprecated==1.2.13
-    # via
-    #   opentelemetry-api
-    #   redis
+    # via opentelemetry-api
 dj-database-url==0.5.0
     # via -r base.in
-django==3.2.13
+django==3.2.18
     # via
     #   -r base.in
     #   channels
@@ -111,17 +106,16 @@ django==3.2.13
     #   django-health-check
     #   django-redis
     #   django-storages
-    #   django-timezone-field
     #   djangorestframework
     #   djangorestframework-simplejwt
     #   drf-spectacular
 django-appconf==1.0.5
     # via django-celery-email
-django-celery-beat==2.2.1
+django-celery-beat==2.4.0
     # via -r base.in
 django-celery-email==3.0.0
     # via -r base.in
-django-cors-headers==3.8.0
+django-cors-headers==3.14.0
     # via -r base.in
 django-health-check==3.16.5
     # via -r base.in
@@ -129,16 +123,16 @@ django-redis==5.2.0
     # via -r base.in
 django-storages==1.12.3
     # via -r base.in
-django-timezone-field==4.2.3
+django-timezone-field==5.0
     # via django-celery-beat
-djangorestframework==3.13.1
+djangorestframework==3.14.0
     # via
     #   -r base.in
     #   djangorestframework-simplejwt
     #   drf-spectacular
-djangorestframework-simplejwt==5.2.0
+djangorestframework-simplejwt==5.2.2
     # via -r base.in
-drf-spectacular==0.21.2
+drf-spectacular==0.25.1
     # via -r base.in
 elementpath==3.0.2
     # via xmlschema
@@ -150,9 +144,7 @@ gunicorn==20.1.0
     # via -r base.in
 h11==0.14.0
     # via uvicorn
-hiredis==2.0.0
-    # via aioredis
-httptools==0.2.0
+httptools==0.5.0
     # via uvicorn
 hyperlink==21.0.0
     # via
@@ -168,7 +160,7 @@ incremental==21.3.0
     # via twisted
 inflection==0.5.1
     # via drf-spectacular
-itsdangerous==2.0.1
+itsdangerous==2.1.2
     # via -r base.in
 jmespath==0.10.0
     # via
@@ -282,8 +274,6 @@ opentelemetry-util-http==0.36b0
     #   opentelemetry-instrumentation-django
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
-packaging==21.3
-    # via redis
 pillow==9.0.0
     # via -r base.in
 prompt-toolkit==3.0.31
@@ -292,9 +282,9 @@ protobuf==4.21.12
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==5.9.0
+psutil==5.9.4
     # via -r base.in
-psycopg2==2.9.1
+psycopg2==2.9.5
     # via -r base.in
 pyasn1==0.4.8
     # via
@@ -314,11 +304,9 @@ pyopenssl==22.1.0
     #   ndg-httpsclient
     #   pysaml2
     #   twisted
-pyparsing==3.0.9
-    # via packaging
 pyrsistent==0.18.1
     # via jsonschema
-pysaml2==7.2.1
+pysaml2==7.4.1
     # via -r base.in
 python-crontab==2.6.0
     # via django-celery-beat
@@ -342,15 +330,16 @@ pyyaml==6.0
     # via
     #   drf-spectacular
     #   uvicorn
-redis==4.1.4
+redis==4.5.1
     # via
     #   -r base.in
     #   celery
     #   celery-redbeat
+    #   channels-redis
     #   django-redis
 regex==2021.8.3
     # via -r base.in
-requests==2.26.0
+requests==2.28.2
     # via
     #   -r base.in
     #   advocate
@@ -359,7 +348,7 @@ requests==2.26.0
     #   requests-oauthlib
 requests-oauthlib==1.3.1
     # via -r base.in
-s3transfer==0.5.2
+s3transfer==0.6.0
     # via boto3
 service-identity==21.1.0
     # via
@@ -370,7 +359,6 @@ six==1.16.0
     #   advocate
     #   automat
     #   click-repl
-    #   pysaml2
     #   python-dateutil
     #   service-identity
 sniffio==1.3.0
@@ -381,18 +369,20 @@ tenacity==8.1.0
     # via celery-redbeat
 text-unidecode==1.3
     # via faker
-tqdm==4.62.3
+tqdm==4.64.1
     # via -r base.in
-twisted[tls]==22.1.0
+twisted[tls]==22.10.0
     # via
     #   -r base.in
     #   daphne
-txaio==22.2.1
+txaio==23.1.1
     # via autobahn
 typing-extensions==4.4.0
     # via
     #   opentelemetry-sdk
     #   twisted
+tzdata==2022.7
+    # via django-celery-beat
 unicodecsv==0.14.1
     # via -r base.in
 uritemplate==4.1.1
@@ -402,7 +392,7 @@ urllib3==1.26.12
     #   advocate
     #   botocore
     #   requests
-uvicorn[standard]==0.15.0
+uvicorn[standard]==0.20.0
     # via -r base.in
 uvloop==0.17.0
     # via uvicorn
@@ -413,11 +403,11 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-watchgod==0.8.2
+watchfiles==0.18.1
     # via uvicorn
 wcwidth==0.2.5
     # via prompt-toolkit
-websockets==10.3
+websockets==10.4
     # via
     #   -r base.in
     #   uvicorn

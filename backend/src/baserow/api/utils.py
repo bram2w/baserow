@@ -399,12 +399,13 @@ class DiscriminatorCustomFieldsMappingSerializer:
 
     def __init__(
         self,
-        registry,
-        base_class,
+        registry=None,
+        base_class=None,
         type_field_name="type",
         many=False,
         help_text=None,
         request=False,
+        context=None,
     ):
         self.read_only = False
         self.registry = registry
@@ -414,6 +415,12 @@ class DiscriminatorCustomFieldsMappingSerializer:
         self.help_text = help_text
         self.partial = False
         self.request = request
+        self.context = {} if context is None else context
+
+    # Trick spectacular into thinking we are not a customized list serializer so it
+    # doesn't attempt to use its own customized list serializer extension code which
+    # doesn't work with our custom extension
+    to_representation = serializers.ListSerializer.to_representation
 
 
 class DiscriminatorMappingSerializer:
@@ -422,10 +429,23 @@ class DiscriminatorMappingSerializer:
     class.
     """
 
-    def __init__(self, component_name, mapping, type_field_name="type", many=False):
+    def __init__(
+        self,
+        component_name=None,
+        mapping=None,
+        type_field_name="type",
+        many=False,
+        context=None,
+    ):
         self.read_only = False
         self.component_name = component_name
         self.mapping = mapping
         self.type_field_name = type_field_name
         self.many = many
         self.partial = False
+        self.context = {} if context is None else context
+
+    # Trick spectacular into thinking we are not a customized list serializer so it
+    # doesn't attempt to use its own customized list serializer extension code which
+    # doesn't work with our custom extension
+    to_representation = serializers.ListSerializer.to_representation
