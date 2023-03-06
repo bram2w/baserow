@@ -6,7 +6,7 @@
 #
 # To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
 .build-baserow-image:
-  image: docker:20.10.12
+  image: docker:20.10.18
   stage: build
   interruptible: true
   # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
@@ -17,7 +17,8 @@
       # When a pipeline is triggered by a git commit tag we don't want to rebuild.
       - tags
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
@@ -153,7 +154,8 @@
       # When a pipeline is triggered by a git commit tag we don't want to rebuild.
       - tags
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
@@ -329,7 +331,8 @@
       # When a pipeline is triggered by a git commit tag we don't want to retest.
       - tags
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
 
 # Set $SKIP_IF_TAG_NOT_ON_BRANCH to make the job skip if the commit is not on
 # the specified branch. Useful for TAG pipelines when $CI_COMMIT_BRANCH is not set
@@ -393,7 +396,8 @@
   image: $CI_UTIL_IMAGE
   stage: publish
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   except:
     refs:
       - pipelines
