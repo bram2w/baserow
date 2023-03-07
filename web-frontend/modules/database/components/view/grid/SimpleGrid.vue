@@ -137,6 +137,7 @@
           </div>
         </div>
       </div>
+      <div v-if="withFooter" class="simple-grid__right-wrapper-footer"></div>
     </div>
   </div>
 </template>
