@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Union
+
+from django.contrib.auth.models import AbstractUser
 
 from rest_framework import serializers
 
@@ -90,7 +92,10 @@ class MemberDataType(Instance):
     method is added to the payload under the key containing the type name.
     """
 
-    def get_request_serializer_field(self) -> serializers.Field:
+    def get_request_serializer_field(
+        self,
+    ) -> Union[serializers.Field, Dict[str, serializers.Field]]:
+
         """
         Should be given a `serializers.Field` object, which the `MemberDataType`
         will annotate on `GroupUserSerializer`.
@@ -100,7 +105,9 @@ class MemberDataType(Instance):
             "The get_request_serializer_field must be implemented and should return a Field."
         )
 
-    def annotate_serialized_data(self, group: "Group", serialized_data: dict) -> dict:
+    def annotate_serialized_data(
+        self, group: "Group", serialized_data: dict, user: AbstractUser
+    ) -> dict:
         """
         Should be given a `Serializer.data` object, which the `MemberDataType`
         implementation will annotate with its own data. Should return the same

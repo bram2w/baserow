@@ -57,6 +57,44 @@ export default {
         true
       ),
       new CrudTableColumn(
+        'free_users',
+        () => this.$t('groupsAdminTable.freeUsers'),
+        SimpleField
+      ),
+      new CrudTableColumn(
+        'seats_taken',
+        () => this.$t('groupsAdminTable.seatsTaken'),
+        SimpleField,
+        false,
+        false,
+        false,
+        {},
+        '',
+        this.$t('groupsAdminTable.usageHelpText')
+      ),
+      new CrudTableColumn(
+        'row_count',
+        () => this.$t('groupsAdminTable.rowCount'),
+        SimpleField,
+        true,
+        false,
+        false,
+        {},
+        '',
+        this.$t('groupsAdminTable.usageHelpText')
+      ),
+      new CrudTableColumn(
+        'storage_usage',
+        () => this.$t('groupsAdminTable.storageUsage'),
+        SimpleField,
+        true,
+        false,
+        false,
+        {},
+        '',
+        this.$t('groupsAdminTable.usageHelpText')
+      ),
+      new CrudTableColumn(
         'created_on',
         () => this.$t('groupsAdminTable.created'),
         LocalDateField,

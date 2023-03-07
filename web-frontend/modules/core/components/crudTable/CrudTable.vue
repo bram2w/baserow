@@ -82,6 +82,7 @@
                   v-on="$listeners"
                   @row-update="updateRow"
                   @row-delete="deleteRow"
+                  @refresh="refresh"
                 />
               </div>
             </td>
@@ -308,6 +309,9 @@ export default {
     deleteRow(rowId) {
       const i = this.rows.findIndex((u) => u[this.rowIdKey] === rowId)
       this.rows.splice(i, 1)
+    },
+    refresh() {
+      this.fetch(this.page)
     },
   },
 }

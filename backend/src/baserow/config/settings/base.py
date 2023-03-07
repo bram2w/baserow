@@ -136,15 +136,10 @@ REDIS_URL = os.getenv(
     f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0",
 )
 
-BASEROW_GROUP_STORAGE_USAGE_ENABLED = (
-    os.getenv("BASEROW_GROUP_STORAGE_USAGE_ENABLED", "false") == "true"
-)
-
 BASEROW_GROUP_STORAGE_USAGE_QUEUE = os.getenv(
     "BASEROW_GROUP_STORAGE_USAGE_QUEUE", "export"
 )
-
-BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
+BASEROW_ROLE_USAGE_QUEUE = os.getenv("BASEROW_GROUP_STORAGE_USAGE_QUEUE", "export")
 
 CELERY_BROKER_URL = REDIS_URL
 CELERY_TASK_ROUTES = {
@@ -539,9 +534,36 @@ EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
 
-USAGE_CALCULATION_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
-ROW_COUNT_INTERVAL = crontab(minute=0, hour=3)  # 3am
+def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
+    """
+    Parses a crontab from an environment variable if present or instead uses the
+    default.
+
+    Celeries crontab constructor takes the arguments in a different order than the
+    actual crontab spec so we expand and re-order the arguments to match.
+    """
+
+    minute, hour, day_of_month, month_of_year, day_of_week = os.getenv(
+        env_var_name, default_crontab
+    ).split(" ")
+    return crontab(minute, hour, day_of_week, day_of_month, month_of_year)
+
+
+MIDNIGHT_CRONTAB_STR = "0 0 * * *"
+BASEROW_STORAGE_USAGE_JOB_CRONTAB = get_crontab_from_env(
+    "BASEROW_STORAGE_USAGE_JOB_CRONTAB", default_crontab=MIDNIGHT_CRONTAB_STR
+)
+
+ONE_AM_CRONTRAB_STR = "0 1 * * *"
+BASEROW_SEAT_USAGE_JOB_CRONTAB = get_crontab_from_env(
+    "BASEROW_SEAT_USAGE_JOB_CRONTAB", default_crontab=ONE_AM_CRONTRAB_STR
+)
+
+THREE_AM_CRONTAB_STR = "0 3 * * *"
+BASEROW_ROW_COUNT_JOB_CRONTAB = get_crontab_from_env(
+    "BASEROW_ROW_COUNT_JOB_CRONTAB", default_crontab=THREE_AM_CRONTAB_STR
+)
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 

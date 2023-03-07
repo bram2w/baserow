@@ -1,9 +1,10 @@
 import abc
 import dataclasses
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from baserow_premium.license.models import License
 
+from baserow.core.models import Group
 from baserow.core.registry import Instance, Registry
 
 
@@ -11,7 +12,10 @@ from baserow.core.registry import Instance, Registry
 class SeatUsageSummary:
     seats_taken: int
     free_users_count: int
-    num_users_with_highest_role: Dict[str, int]
+    num_users_with_highest_role: Dict[str, int] = dataclasses.field(
+        default_factory=dict
+    )
+    highest_role_per_user_id: Dict[int, str] = dataclasses.field(default_factory=dict)
 
 
 class LicenseType(abc.ABC, Instance):
@@ -42,21 +46,31 @@ class LicenseType(abc.ABC, Instance):
     def has_feature(self, feature: str):
         return feature in self.features
 
-    @abc.abstractmethod
     def get_seat_usage_summary(
         self, license_object_of_this_type: License
-    ) -> SeatUsageSummary:
-        pass
+    ) -> Optional[SeatUsageSummary]:
+        """
+        If it makes sense for a license to have seat usage then it should be calculated
+        and returned herre.
+        If it doesn't make sense for this license type then this should return None.
+        """
+
+        return None
+
+    def get_seat_usage_summary_for_group(
+        self, group: Group
+    ) -> Optional[SeatUsageSummary]:
+        """
+        If it makes sense for a group to have seat usage, then this should return
+        a summary of it. If it doesn't make sense for this license type then this
+        should return None.
+        """
+
+        return None
 
     @abc.abstractmethod
     def handle_seat_overflow(self, seats_taken: int, license_object: License):
         pass
-
-    def get_seats_taken(self, license_object_of_this_type: License) -> int:
-        return self.get_seat_usage_summary(license_object_of_this_type).seats_taken
-
-    def get_free_users_count(self, license_object_of_this_type: License) -> int:
-        return self.get_seat_usage_summary(license_object_of_this_type).free_users_count
 
 
 class LicenseTypeRegistry(Registry[LicenseType]):

@@ -148,6 +148,29 @@
           </div>
         </div>
       </div>
+      <div class="admin-settings__group">
+        <h2 class="admin-settings__group-title">
+          {{ $t('settings.maintenance') }}
+        </h2>
+        <div class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.settingTrackGroupUsage') }}
+            </div>
+            <div class="admin-settings__description">
+              {{ $t('settings.settingTrackGroupUsageDescription') }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            <SwitchInput
+              :value="settings.track_group_usage"
+              :large="true"
+              @input="updateSettings({ track_group_usage: $event })"
+              >{{ $t('settings.enabled') }}</SwitchInput
+            >
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

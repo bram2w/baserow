@@ -28,7 +28,9 @@ class ActiveLicensesDataType(UserDataType):
         }
         instance_wide_licenses = {
             license_type.type: True
-            for license_type in license_plugin.get_active_instance_wide_licenses(user)
+            for license_type in license_plugin.get_active_instance_wide_license_types(
+                user
+            )
         }
         return {
             "instance_wide": instance_wide_licenses,

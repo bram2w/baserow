@@ -2,7 +2,9 @@ import pytest
 from pyinstrument import Profiler
 
 from baserow.contrib.database.views.usage_types import FormViewGroupStorageUsageItem
+from baserow.core.models import Group
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.usage.handler import UsageHandler
 
 
 @pytest.mark.django_db
@@ -158,3 +160,84 @@ def test_form_view_group_storage_usage_item_performance(data_fixture):
     print(profiler.output_text(unicode=True, color=True))
 
     assert usage == form_views_amount * 600
+
+
+@pytest.mark.django_db
+def test_get_group_row_count_annotation_sums_all_database_tables_row_counts(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    # One with no tables
+    data_fixture.create_database_application(group=group)
+
+    # One with a mix of tables with and without the count
+    database = data_fixture.create_database_application(group=group)
+    data_fixture.create_database_table(user=user, database=database, row_count=10)
+    data_fixture.create_database_table(user=user, database=database, row_count=None)
+
+    # One with a single table
+    database_single_table = data_fixture.create_database_application(group=group)
+    data_fixture.create_database_table(
+        user=user, database=database_single_table, row_count=50
+    )
+
+    # And a second group with its own different tables
+    group2 = data_fixture.create_group(user=user)
+    database_other_group = data_fixture.create_database_application(group=group2)
+    data_fixture.create_database_table(
+        user=user, database=database_other_group, row_count=1234
+    )
+
+    annotated_groups = Group.objects.annotate(
+        row_count=UsageHandler().get_group_row_count_annotation()
+    )
+    with django_assert_num_queries(1):
+        assert list(annotated_groups.values("id", "row_count")) == [
+            {"id": group.id, "row_count": 60},
+            {"id": group2.id, "row_count": 1234},
+        ]
+
+
+@pytest.mark.django_db
+def test_get_group_row_count_annotation_ignores_trashed_databases(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    database = data_fixture.create_database_application(group=group, trashed=True)
+    data_fixture.create_database_table(user=user, database=database, row_count=10)
+    data_fixture.create_database_table(user=user, database=database, row_count=None)
+
+    annotated_groups = Group.objects.annotate(
+        row_count=UsageHandler().get_group_row_count_annotation()
+    )
+    with django_assert_num_queries(1):
+        assert list(annotated_groups.values("id", "row_count")) == [
+            {"id": group.id, "row_count": 0},
+        ]
+
+
+@pytest.mark.django_db
+def test_get_group_row_count_annotation_ignores_trashed_tables(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    database = data_fixture.create_database_application(group=group)
+    data_fixture.create_database_table(user=user, database=database, row_count=10)
+    data_fixture.create_database_table(user=user, database=database, row_count=None)
+    data_fixture.create_database_table(
+        user=user, database=database, row_count=20, trashed=True
+    )
+
+    annotated_groups = Group.objects.annotate(
+        row_count=UsageHandler().get_group_row_count_annotation()
+    )
+    with django_assert_num_queries(1):
+        assert list(annotated_groups.values("id", "row_count")) == [
+            {"id": group.id, "row_count": 10},
+        ]

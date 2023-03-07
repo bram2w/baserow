@@ -69,7 +69,12 @@
         "name": "Name",
         "members": "Members",
         "applications": "Applications",
-        "created": "Created"
+        "created": "Created",
+        "rowCount": "Row count",
+        "freeUsers": "Free users",
+        "seatsTaken": "Seats taken",
+        "storageUsage": "Storage Used (MB)",
+        "usageHelpText": "Calculated nightly when the track group usage setting is enabled"
     },
     "editGroupContext": {
         "delete": "Permanently delete"

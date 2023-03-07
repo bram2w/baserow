@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import List, OrderedDict
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import AbstractUser, Group, User
 from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers
@@ -22,7 +22,7 @@ class EnterpriseMemberTeamsDataType(MemberDataType):
         )
 
     def annotate_serialized_data(
-        self, group: Group, serialized_data: List[OrderedDict]
+        self, group: Group, serialized_data: List[OrderedDict], user: AbstractUser
     ) -> List[OrderedDict]:
         """
         Responsible for annotating team data on `GroupUser` responses.

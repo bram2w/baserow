@@ -154,6 +154,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "allow_reset_password",
                 "allow_global_group_creation",
                 "account_deletion_grace_delay",
+                "track_group_usage",
             ],
             settings_instance,
         )

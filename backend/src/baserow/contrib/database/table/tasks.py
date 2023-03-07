@@ -9,6 +9,7 @@ from baserow.contrib.database.table.operations import (
 )
 from baserow.contrib.database.ws.pages import TablePageType
 from baserow.core.exceptions import PermissionException
+from baserow.core.handler import CoreHandler
 from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Group
 from baserow.core.object_scopes import GroupObjectScopeType
@@ -29,16 +30,16 @@ def run_row_count_job():
 
     from baserow.contrib.database.table.handler import TableHandler
 
-    TableHandler.count_rows()
+    if CoreHandler().get_settings().track_group_usage:
+        TableHandler.count_rows()
 
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    if settings.BASEROW_COUNT_ROWS_ENABLED:
-        sender.add_periodic_task(
-            settings.ROW_COUNT_INTERVAL,
-            run_row_count_job.s(),
-        )
+    sender.add_periodic_task(
+        settings.BASEROW_ROW_COUNT_JOB_CRONTAB,
+        run_row_count_job.s(),
+    )
 
 
 def unsubscribe_subject_from_tables_currently_subscribed_to(
