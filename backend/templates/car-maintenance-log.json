@@ -1423,15 +1423,6 @@
                   "aggregation_raw_type": ""
                 },
                 {
-                  "id": 212809,
-                  "field_id": 192289,
-                  "width": 200,
-                  "hidden": false,
-                  "order": 32767,
-                  "aggregation_type": "",
-                  "aggregation_raw_type": ""
-                },
-                {
                   "id": 212812,
                   "field_id": 192291,
                   "width": 200,
@@ -1729,15 +1720,6 @@
                   "id": 212797,
                   "field_id": 192274,
                   "width": 147,
-                  "hidden": false,
-                  "order": 32767,
-                  "aggregation_type": "",
-                  "aggregation_raw_type": ""
-                },
-                {
-                  "id": 212808,
-                  "field_id": 192287,
-                  "width": 200,
                   "hidden": false,
                   "order": 32767,
                   "aggregation_type": "",
