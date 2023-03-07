@@ -342,6 +342,11 @@ def test_enterprise_license_counts_viewers_as_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user.id: "ADMIN",
+            user2.id: "VIEWER",
+            user3.id: "VIEWER",
+        },
     )
 
 
@@ -383,6 +388,7 @@ def test_user_who_is_editor_in_one_group_and_viewer_in_another_is_not_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "ADMIN", user2.id: "EDITOR"},
     )
 
 
@@ -427,6 +433,7 @@ def test_user_marked_for_deletion_is_not_counted_as_a_paid_user(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "ADMIN"},
     )
 
 
@@ -471,6 +478,7 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "ADMIN"},
     )
 
 
@@ -606,6 +614,7 @@ def test_user_with_paid_table_role_is_not_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
 
@@ -640,6 +649,7 @@ def test_user_with_free_table_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -674,6 +684,7 @@ def test_user_with_paid_database_role_is_not_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
 
@@ -708,6 +719,7 @@ def test_user_with_free_database_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -745,6 +757,7 @@ def test_user_with_paid_table_role_is_not_free_from_team(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
 
@@ -782,6 +795,7 @@ def test_user_with_free_table_role_is_free_from_team(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -819,6 +833,7 @@ def test_user_with_paid_database_role_is_not_free_from_team(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
 
@@ -856,6 +871,7 @@ def test_user_with_free_database_role_is_free_from_team(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -895,6 +911,7 @@ def test_user_in_deleted_team_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -929,6 +946,7 @@ def test_inactive_user_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
     user.is_active = False
@@ -948,6 +966,7 @@ def test_inactive_user_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={},
     )
 
 
@@ -985,6 +1004,7 @@ def test_inactive_user_in_team_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
     user.is_active = False
@@ -1004,6 +1024,7 @@ def test_inactive_user_in_team_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={},
     )
 
 
@@ -1038,6 +1059,7 @@ def test_user_to_be_deleted_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
     user.profile.to_be_deleted = True
@@ -1057,6 +1079,7 @@ def test_user_to_be_deleted_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={},
     )
 
 
@@ -1094,6 +1117,7 @@ def test_user_to_be_deleted_in_team_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "EDITOR"},
     )
 
     user.profile.to_be_deleted = True
@@ -1113,6 +1137,7 @@ def test_user_to_be_deleted_in_team_with_paid_role_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={},
     )
 
 
@@ -1195,6 +1220,11 @@ def test_complex_free_vs_paid_scenario(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user1_paid_in_grp1.id: "EDITOR",
+            user2_free_in_grp1_paid_grp2.id: "EDITOR",
+            user3_free_both_grps.id: "VIEWER",
+        },
     )
 
 
@@ -1229,6 +1259,9 @@ def test_user_with_role_paid_on_trashed_database_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user.id: "EDITOR",
+        },
     )
 
     TrashHandler().trash(user, group, database, database)
@@ -1247,6 +1280,7 @@ def test_user_with_role_paid_on_trashed_database_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -1281,6 +1315,9 @@ def test_user_with_role_paid_on_database_in_trashed_group_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user.id: "EDITOR",
+        },
     )
 
     TrashHandler().trash(user, group, None, group)
@@ -1299,6 +1336,7 @@ def test_user_with_role_paid_on_database_in_trashed_group_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={},
     )
 
 
@@ -1333,6 +1371,9 @@ def test_user_with_role_paid_on_trashed_table_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user.id: "EDITOR",
+        },
     )
 
     TrashHandler().trash(user, group, database, table)
@@ -1351,6 +1392,7 @@ def test_user_with_role_paid_on_trashed_table_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -1388,6 +1430,9 @@ def test_user_in_team_with_role_paid_on_trashed_database_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user.id: "EDITOR",
+        },
     )
 
     TrashHandler().trash(user, group, database, database)
@@ -1406,6 +1451,7 @@ def test_user_in_team_with_role_paid_on_trashed_database_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -1443,6 +1489,9 @@ def test_user_in_team_with_role_paid_on_trashed_table_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user.id: "EDITOR",
+        },
     )
 
     TrashHandler().trash(user, group, database, table)
@@ -1461,6 +1510,7 @@ def test_user_in_team_with_role_paid_on_trashed_table_is_free(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -1504,6 +1554,9 @@ def test_user_summary_calculation_for_enterprise_doesnt_do_n_plus_one_queries(
                 "NO_ACCESS": 0,
                 "NO_ROLE_LOW_PRIORITY": 0,
             },
+            highest_role_per_user_id={
+                user.id: "EDITOR",
+            },
         )
 
     user2 = data_fixture.create_user()
@@ -1542,6 +1595,7 @@ def test_user_summary_calculation_for_enterprise_doesnt_do_n_plus_one_queries(
                 "NO_ACCESS": 0,
                 "NO_ROLE_LOW_PRIORITY": 0,
             },
+            highest_role_per_user_id={user.id: "ADMIN", user2.id: "ADMIN"},
         )
 
 
@@ -1624,6 +1678,11 @@ def test_can_query_for_summary_per_group(
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={
+            user1_paid_in_grp1.id: "EDITOR",
+            user2_free_in_grp1_paid_grp2.id: "EDITOR",
+            user3_free_both_grps.id: "VIEWER",
+        },
     )
     assert RoleBasedSeatUsageSummaryCalculator.get_seat_usage_for_group(
         group2
@@ -1638,6 +1697,10 @@ def test_can_query_for_summary_per_group(
             "VIEWER": 1,
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
+        },
+        highest_role_per_user_id={
+            user2_free_in_grp1_paid_grp2.id: "EDITOR",
+            user3_free_both_grps.id: "VIEWER",
         },
     )
 
@@ -1678,6 +1741,9 @@ def test_user_with_team_and_user_role_picks_highest_of_either(
             "VIEWER": 0,
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
+        },
+        highest_role_per_user_id={
+            user.id: "EDITOR",
         },
     )
 
@@ -1750,6 +1816,7 @@ def test_weird_group_user_permission_doesnt_break_usage_check(
             "NO_ROLE_LOW_PRIORITY": 0,
             "WEIRD_VALUE": 1,
         },
+        highest_role_per_user_id={user.id: "WEIRD_VALUE"},
     )
 
 
@@ -1804,6 +1871,7 @@ def test_weird_ras_for_wrong_group_not_counted_when_querying_for_single_group_us
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "VIEWER"},
     )
 
 
@@ -1813,11 +1881,11 @@ def test_missing_roles_doesnt_cause_crash_and_members_admins_are_treated_as_non_
     enterprise_data_fixture, data_fixture, synced_roles
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
+    member_user = data_fixture.create_user()
     admin_user = data_fixture.create_user()
-    builder_user = data_fixture.create_user()
     group = data_fixture.create_group()
-    data_fixture.create_user_group(user=admin_user, group=group, permissions="MEMBER")
-    data_fixture.create_user_group(user=builder_user, group=group, permissions="ADMIN")
+    data_fixture.create_user_group(user=member_user, group=group, permissions="MEMBER")
+    data_fixture.create_user_group(user=admin_user, group=group, permissions="ADMIN")
     Role.objects.all().delete()
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1834,6 +1902,7 @@ def test_missing_roles_doesnt_cause_crash_and_members_admins_are_treated_as_non_
             "NO_ACCESS": 0,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={member_user.id: "BUILDER", admin_user.id: "ADMIN"},
     )
 
 
@@ -1921,6 +1990,7 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
             "NO_ACCESS": 1,
             "NO_ROLE_LOW_PRIORITY": 0,
         },
+        highest_role_per_user_id={user.id: "NO_ACCESS"},
     )
 
 

@@ -99,6 +99,11 @@ class Settings(models.Model):
         help_text="Indicates that there are no admin users in the database yet, "
         "so in the frontend the signup form will be shown instead of the login page.",
     )
+    track_group_usage = models.BooleanField(
+        default=False,
+        help_text="Runs a job once per day which calculates per group row counts and "
+        "file storage usage, displayed on the admin group page.",
+    )
 
 
 class UserProfile(models.Model):
@@ -127,6 +132,8 @@ class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixi
     users = models.ManyToManyField(User, through="GroupUser")
     storage_usage = models.IntegerField(null=True)
     storage_usage_updated_at = models.DateTimeField(null=True)
+    seats_taken = models.IntegerField(null=True)
+    seats_taken_updated_at = models.DateTimeField(null=True)
 
     def get_parent(self):
         return None

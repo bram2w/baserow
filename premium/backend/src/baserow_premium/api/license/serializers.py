@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Optional
 
 from django.contrib.auth import get_user_model
 
@@ -65,16 +66,18 @@ class LicenseSerializer(serializers.ModelSerializer):
         )
 
     @lru_cache(maxsize=128)
-    def get_cached_seat_usage_summary(self, obj) -> SeatUsageSummary:
+    def get_cached_seat_usage_summary(self, obj) -> Optional[SeatUsageSummary]:
         return obj.license_type.get_seat_usage_summary(obj)
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_seats_taken(self, obj):
-        return self.get_cached_seat_usage_summary(obj).seats_taken
+        return getattr(self.get_cached_seat_usage_summary(obj), "seats_taken", None)
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_free_users_count(self, obj):
-        return self.get_cached_seat_usage_summary(obj).free_users_count
+        return getattr(
+            self.get_cached_seat_usage_summary(obj), "free_users_count", None
+        )
 
 
 class RegisterLicenseSerializer(serializers.Serializer):

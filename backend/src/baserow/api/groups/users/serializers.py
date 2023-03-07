@@ -54,7 +54,12 @@ def get_member_data_types_request_serializer():
     attrs = {}
 
     for data_type in member_data_registry.get_all():
-        attrs[data_type.type] = data_type.get_request_serializer_field()
+        field = data_type.get_request_serializer_field()
+        if isinstance(field, serializers.Field):
+            attrs[data_type.type] = field
+        else:
+            for key, field in field.items():
+                attrs[key] = field
 
     class Meta:
         fields = tuple(attrs.keys())

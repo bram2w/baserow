@@ -357,12 +357,15 @@
         "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
         "settingAllowNonStaffCreateGroupOperation":  "Allow everyone to create new groups",
         "settingAllowNonStaffCreateGroupOperationDescription":  "By default, everyone can create new groups. Disable this to only allow staff to create new groups.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "With this setting enabled, new users will have a group automatically created for them where they are an Admin, so for billing purposes they will be reported as an Admin. To prevent this, disable this setting and newly invited users will only start with the role they were invited with.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "New users will have a group automatically created for them where they are an Admin.",
+        "settingTrackGroupUsage": "Track group usage",
+        "settingTrackGroupUsageDescription": "Enables a nightly job that counts row and file usage per group, displayed on the premium group admin page.",
         "userDeletionGraceDelay": "User deletion",
         "settingUserDeletionGraceDelay": "Grace delay",
         "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
         "invalidAccountDeletionGraceDelay": "This value is required and must be a positive integer smaller than 32000",
-        "enabled": "enabled"
+        "enabled": "enabled",
+        "maintenance": "Maintenance"
     },
     "formSidebar": {
         "actions": {
@@ -459,6 +462,8 @@
                 "name": "Name",
                 "email": "Email",
                 "role": "Default role",
+                "highestRole": "Highest Role",
+                "highestRoleHelpText": "The highest role this user assigned to them directly or from a team, on anything in this group",
                 "teams": "Teams"
             },
             "actions": {
@@ -506,5 +511,8 @@
     },
     "editRoleContext": {
         "billableRolesLink": "Billable roles documentation"
+    },
+    "highestPaidRoleField": {
+        "billable": "Billable"
     }
 }

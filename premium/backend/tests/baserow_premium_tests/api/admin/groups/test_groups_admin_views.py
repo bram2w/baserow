@@ -33,7 +33,9 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
     group_1 = premium_data_fixture.create_group(name="A")
     group_1.created_on = created
     group_1.save()
-    group_2 = premium_data_fixture.create_group(name="B", created_on=created)
+    group_2 = premium_data_fixture.create_group(
+        name="B", created_on=created, storage_usage=1000
+    )
     group_2.created_on = created
     group_2.save()
     template_group = premium_data_fixture.create_group(
@@ -47,7 +49,8 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
         group=group_2, user=normal_user, permissions="ADMIN"
     )
     premium_data_fixture.create_database_application(group=group_1)
-    premium_data_fixture.create_database_application(group=group_1)
+    database = premium_data_fixture.create_database_application(group=group_1)
+    premium_data_fixture.create_database_table(database=database, row_count=2000)
 
     response = api_client.get(
         reverse("api:premium:admin:groups:list"),
@@ -81,6 +84,10 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
                     }
                 ],
                 "application_count": 2,
+                "free_users": None,
+                "seats_taken": None,
+                "row_count": 2000,
+                "storage_usage": None,
                 "created_on": "2020-04-10T00:00:00Z",
             },
             {
@@ -94,6 +101,10 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
                     }
                 ],
                 "application_count": 0,
+                "free_users": None,
+                "seats_taken": None,
+                "row_count": 0,
+                "storage_usage": 1000,
                 "created_on": "2020-04-10T00:00:00Z",
             },
         ],
@@ -121,6 +132,10 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
                         "permissions": "MEMBER",
                     }
                 ],
+                "row_count": 2000,
+                "storage_usage": None,
+                "free_users": None,
+                "seats_taken": None,
                 "application_count": 2,
                 "created_on": "2020-04-10T00:00:00Z",
             },
@@ -149,6 +164,10 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
                         "permissions": "ADMIN",
                     }
                 ],
+                "row_count": 0,
+                "storage_usage": 1000,
+                "free_users": None,
+                "seats_taken": None,
                 "application_count": 0,
                 "created_on": "2020-04-10T00:00:00Z",
             },
@@ -163,6 +182,10 @@ def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_q
                     }
                 ],
                 "application_count": 2,
+                "row_count": 2000,
+                "storage_usage": None,
+                "free_users": None,
+                "seats_taken": None,
                 "created_on": "2020-04-10T00:00:00Z",
             },
         ],

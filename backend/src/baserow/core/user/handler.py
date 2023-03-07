@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser, update_last_login
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
@@ -512,3 +512,15 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
                 email = AccountDeleted(username, to=[email])
                 email.send()
             user_permanently_deleted.send(self, user_id=id, group_ids=group_ids)
+
+    def get_all_active_users_qs(self) -> QuerySet:
+        """
+        Returns a queryset of all users which are considered active and usable in a
+        Baserow instance. Will filter out users who have be "banned/deactivated" by an
+        admin or users who have scheduled their account for a deletion.
+        """
+
+        return User.objects.filter(
+            profile__to_be_deleted=False,
+            is_active=True,
+        )
