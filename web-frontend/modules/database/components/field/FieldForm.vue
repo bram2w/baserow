@@ -161,10 +161,10 @@ export default {
       if (this.existingFieldId !== null) {
         fields = fields.filter((f) => f.id !== this.existingFieldId)
       }
-      return !fields.map((f) => f.name).includes(param.trim())
+      return !fields.map((f) => f.name).includes(param?.trim())
     },
     mustNotClashWithReservedName(param) {
-      return !RESERVED_BASEROW_FIELD_NAMES.includes(param.trim())
+      return !RESERVED_BASEROW_FIELD_NAMES.includes(param?.trim())
     },
     getFormComponent(type) {
       return this.$registry.get('field', type).getFormComponent()
