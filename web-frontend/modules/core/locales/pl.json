@@ -82,7 +82,9 @@
         "disabledAccountMessage": "To konto użytkownika zostało wyłączone.",
         "incorrectCredentialTitle": "Nieprawidłowe poświadczenia",
         "incorrectCredentialMessage": "Podany adres e-mail lub hasło są nieprawidłowe.",
-        "inputRequired": "Dane wejściowe są wymagane."
+        "inputRequired": "Dane wejściowe są wymagane.",
+        "disabledPasswordProviderTitle": "Uwierzytelnianie za pomocą hasła jest wyłączone.",
+        "disabledPasswordProviderMessage": "Proszę użyć innego dostawcy uwierzytelniania."
     },
     "field": {
         "language": "Język",
@@ -123,7 +125,8 @@
     "groupInviteForm": {
         "invitationFormTitle": "Zaproś przez e-mail",
         "optionalMessagePlaceholder": "Opcjonalna wiadomość",
-        "errorInvalidEmail": "Podaj poprawny adres e-mail."
+        "errorInvalidEmail": "Podaj poprawny adres e-mail.",
+        "errorTooLongMessage": "Wiadomości są ograniczone do {amount} znaków."
     },
     "groupsContext": {
         "search": "Wyszukaj grupy",
@@ -140,7 +143,9 @@
     "createGroupModal": {
         "createNew": "Utwórz nową grupę",
         "add": "Dodaj grupę",
-        "defaultName": "Grupa bez nazwy"
+        "defaultName": "Grupa bez nazwy",
+        "permissionDeniedBody": "Nie masz wymaganych uprawnień do tworzenia nowej grupy.",
+        "permissionDeniedTitle": "Odmowa zezwolenia"
     },
     "templateCategories": {
         "search": "Wyszukaj szablony",
@@ -178,7 +183,8 @@
     },
     "trashModal": {
         "emptyTitle": "Nie znaleziono grup",
-        "emptyMessage": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę."
+        "emptyMessage": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę.",
+        "emptyMessageWithoutCreatePermission": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć, musisz najpierw zostać zaproszony do grupy przez administratora."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Prześlij z adresu URL",
@@ -266,7 +272,8 @@
         "shareOnTwitter": "Tweetuj o Baserow",
         "shareOnReddit": "Udostępnij na Reddicie",
         "shareOnFacebook": "Udostępnij na Facebooku",
-        "shareOnLinkedIn": "Udostępnij na LinkedIn"
+        "shareOnLinkedIn": "Udostępnij na LinkedIn",
+        "noGroupTextWithoutCreatePermission": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć, musisz najpierw zostać zaproszony do grupy przez administratora."
     },
     "dashboardSidebar": {
         "groups": "Grupy",
@@ -283,7 +290,9 @@
         "emailPlaceholder": "Wpisz swój adres e-mail..",
         "passwordPlaceholder": "Wprowadź swoje hasło.",
         "signUpText": "Nie masz konta?",
-        "signUp": "Zarejestruj się"
+        "signUp": "Zarejestruj się",
+        "displayPasswordLogin": "Zaloguj się za pomocą adresu e-mail i hasła",
+        "redirecting": "Przekierowanie do dostawcy uwierzytelniania..."
     },
     "resetPassword": {
         "title": "Zresetuj hasło",
@@ -337,7 +346,13 @@
         "settingUserDeletionGraceDelay": "Okres karencji",
         "settingUserDeletionGraceDelayDescription": "Jest to liczba dni bez logowania, po których konto zaplanowane do usunięcia zostaje trwale usunięte.",
         "invalidAccountDeletionGraceDelay": "Ta wartość jest wymagana i musi być dodatnią liczbą całkowitą mniejszą niż 32000",
-        "enabled": "włączony"
+        "enabled": "włączony",
+        "settingAllowNonStaffCreateGroupOperationDescription": "Domyślnie każdy może tworzyć nowe grupy. Wyłącz to, aby umożliwić tworzenie nowych grup tylko pracownikom.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "Nowi użytkownicy będą mieli automatycznie utworzoną dla nich grupę, w której są Adminami.",
+        "settingAllowNonStaffCreateGroupOperation": "Pozwól każdemu na tworzenie nowych grup",
+        "settingTrackGroupUsage": "Śledź użycie grupy",
+        "settingTrackGroupUsageDescription": "Włącza nocne zadanie zliczające użycie wierszy i plików dla grupy, wyświetlane na stronie administratora grupy premium.",
+        "maintenance": "Konserwacja"
     },
     "formSidebar": {
         "actions": {
@@ -417,7 +432,10 @@
     "datetime": {
         "daysAgo": "0 dni temu | 1 dzień temu | {n} dni temu",
         "monthsAgo": "0 miesięcy temu | 1 miesiąc temu | {n} miesięcy temu",
-        "yearsAgo": "0 lat temu | 1 rok temu | {n} lat temu"
+        "yearsAgo": "0 lat temu | 1 rok temu | {n} lat temu",
+        "secondsAgo": "Przed chwilą | 1 sekunda temu | {n} sekund temu",
+        "minutesAgo": "0 minut temu | 1 minuta temu | {n} minut temu",
+        "hoursAgo": "0 godzin temu | 1 godzina temu | {n} godzin temu"
     },
     "duplicateApplicationJobType": {
         "duplicating": "Powielanie",
@@ -438,7 +456,10 @@
             "columns": {
                 "email": "Email",
                 "name": "Nazwa",
-                "role": "Domyślna rola"
+                "role": "Domyślna rola",
+                "teams": "Zespoły",
+                "highestRole": "Najwyższa rola",
+                "highestRoleHelpText": "Najwyższa rola przypisana temu użytkownikowi bezpośrednio lub z zespołu, na czymkolwiek w tej grupie"
             }
         },
         "invitesTable": {
@@ -462,7 +483,8 @@
                     "title": "Użytkownik jest już w grupie."
                 }
             },
-            "title": "Zaproś członków grupy"
+            "title": "Zaproś członków grupy",
+            "helpIconText": "Wybrana rola będzie domyślną rolą użytkownika w tej grupie."
         },
         "membersTabTitle": "Członkowie"
     },
@@ -478,11 +500,24 @@
         "selectedAmountLabel": "{count} zaznaczone"
     },
     "memberAssignmentModalFooter": {
-        "invite": "Zaproś {count}"
+        "invite": "Zaproś {count}",
+        "selectAll": "Wybierz wszystko",
+        "deselectAll": "Odznacz wszystkie"
     },
     "removeFromGroupModal": {
         "title": "Potwierdź usunięcie z grupy",
         "confirmation": "Czy na pewno chcesz usunąć {name} z {group_name}? Tej czynności nie można cofnąć.",
         "remove": "Usuń"
+    },
+    "permissionsUpdatedNotification": {
+        "content": "Może to mieć wpływ na to, do czego masz dostęp, proszę przeładować stronę.",
+        "title": "Zaktualizowano uprawnienia",
+        "action": "Przeładuj"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "Dokumentacja ról podlegających rozliczeniu"
+    },
+    "highestPaidRoleField": {
+        "billable": "Płatny"
     }
 }

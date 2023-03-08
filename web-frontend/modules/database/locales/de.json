@@ -374,7 +374,8 @@
     },
     "viewsContext": {
         "searchView": "Suchen nach Ansichten",
-        "noViews": "Keine Ansichten gefunden"
+        "noViews": "Keine Ansichten gefunden",
+        "collaborative": "Kollaborativ"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "unbenannte Zeile {value}",
@@ -455,7 +456,8 @@
         "delete": "Ansicht löschen"
     },
     "viewForm": {
-        "name": "Name"
+        "name": "Name",
+        "whoCanEdit": "Wer kann bearbeiten"
     },
     "galleryViewHeader": {
         "customizeCards": "Karten individuell gestalten"
@@ -485,7 +487,9 @@
         "selectRow": "Zeile auswählen",
         "duplicateRow": "Zeile duplizieren",
         "deleteRows": "Zeilen löschen",
-        "copyCells": "Zellen kopieren"
+        "copyCells": "Zellen kopieren",
+        "hiddenRowsInsertedTitle": "Zeilen hinzugefügt",
+        "hiddenRowsInsertedMessage": "{number} neu hinzugefügte Zeilen wurden hinzugefügt, sind aber wegen der aktiven Filter nicht sichtbar."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
@@ -541,10 +545,10 @@
         "min": "Min",
         "max": "Max",
         "earliestDate": "Frühestes Datum",
-        "checkedCount": "Markiert",
-        "notCheckedCount": "Nicht markiert",
+        "checkedCount": "Geprüft",
+        "notCheckedCount": "Ungeprüft",
         "checkedPercentage": "Prozent markiert",
-        "notCheckedPercentage": "Prozent nicht markiert",
+        "notCheckedPercentage": "Prozentsatz nicht geprüft",
         "earliestDateShort": "Früheste",
         "latestDate": "Letztes Datum",
         "latestDateShort": "Letztes",
@@ -741,5 +745,13 @@
     "fileField": {
         "errorEmptyFileNameMessage": "Sie können keinen leeren Namen für eine Datei angeben.",
         "errorEmptyFileNameTitle": "Ungültiger Dateiname"
+    },
+    "gridViewRowsAddContext": {
+        "title": "Mehrere Zeilen erstellen",
+        "choice": "Fügen Sie {rowAmountChoice} Zeilen hinzu"
+    },
+    "viewOwnershipType": {
+        "personal": "Persönlich",
+        "collaborative": "Kollaborativ"
     }
 }

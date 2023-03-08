@@ -374,7 +374,8 @@
     },
     "viewsContext": {
         "searchView": "Recherche",
-        "noViews": "Aucune vue trouvée"
+        "noViews": "Aucune vue trouvée",
+        "collaborative": "Collaboratif"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "Ligne sans nom {value}",
@@ -455,7 +456,8 @@
         "delete": "Supprimer la vue"
     },
     "viewForm": {
-        "name": "Nom"
+        "name": "Nom",
+        "whoCanEdit": "Qui peut modifier"
     },
     "galleryViewHeader": {
         "customizeCards": "Configurer les cartes"
@@ -485,7 +487,9 @@
         "duplicateRow": "Dupliquer la ligne",
         "selectRow": "Sélectionner la ligne",
         "copyCells": "Copier les cellules",
-        "deleteRows": "Supprimer les lignes"
+        "deleteRows": "Supprimer les lignes",
+        "hiddenRowsInsertedTitle": "Lignes ajoutées",
+        "hiddenRowsInsertedMessage": "{number} nouvelles lignes ont été ajoutées, mais ne sont pas visibles en raison des filtres actifs."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -741,5 +745,13 @@
     "fileField": {
         "errorEmptyFileNameTitle": "Nom du fichier invalide",
         "errorEmptyFileNameMessage": "Vous ne pouvez pas définir un nom de fichier vide."
+    },
+    "gridViewRowsAddContext": {
+        "title": "Créer plusieurs lignes",
+        "choice": "Ajouter les {rowAmountChoice} lignes"
+    },
+    "viewOwnershipType": {
+        "collaborative": "Collaboratif",
+        "personal": "Personnel"
     }
 }

@@ -64,7 +64,12 @@
         "name": "Nombre",
         "members": "Miembros",
         "applications": "Aplicaciones",
-        "created": "Creado"
+        "created": "Creado",
+        "seatsTaken": "Asientos ocupados",
+        "storageUsage": "Almacenamiento utilizado (MB)",
+        "usageHelpText": "Calculado por la noche cuando la configuración de uso grupal está habilitada",
+        "rowCount": "Número de filas",
+        "freeUsers": "Usuarios gratuitos"
     },
     "editGroupContext": {
         "delete": "Eliminado permanentemente"
@@ -274,7 +279,8 @@
         "rowColoring": "Coloración de las filas",
         "admin": "Funciones de administración",
         "surveyForm": "Formulario de encuesta",
-        "publicLogoRemoval": "Eliminación del logo público"
+        "publicLogoRemoval": "Eliminación del logo público",
+        "personalViews": "Vistas personales"
     },
     "formViewModeType": {
         "surveyDescription": "Un campo es visible al mismo tiempo.",
@@ -291,5 +297,8 @@
             "label": "Esconder el logo de Baserow en la vista compartida",
             "premiumModalName": "eliminación del logo público"
         }
+    },
+    "viewsContext": {
+        "personal": "Personal"
     }
 }

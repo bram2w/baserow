@@ -3,14 +3,15 @@
         "yes": "sí",
         "no": "no",
         "wrong": "Algo salió mal",
-        "none": "Ninguno"
+        "none": "Ninguno",
+        "free": "Gratis"
     },
     "action": {
         "upload": "Subir",
         "back": "Atrás",
         "backToLogin": "Atrás para iniciar sesión",
         "signUp": "Inscribirse",
-        "signIn": "Registrarse",
+        "signIn": "Iniciar sesión",
         "createNew": "Crear nuevo",
         "create": "Crear",
         "edit": "Editar",
@@ -39,7 +40,11 @@
         "database": "Base de datos",
         "cantSelectTableTitle": "No se pudo seleccionar la base de datos.",
         "cantSelectTableDescription": "No se pudo seleccionar la base de datos porque no tiene tablas. Usa la barra lateral para crear uno.",
-        "databaseDefaultName": "Base de datos sin título"
+        "databaseDefaultName": "Base de datos sin título",
+        "builder": "Aplicación",
+        "builderDefaultName": "Aplicación sin título",
+        "cantSelectPageTitle": "No se pudo seleccionar la aplicación.",
+        "cantSelectPageDescription": "No se ha podido seleccionar al creador de las aplicaciones porque no tiene ninguna página. Utilice la barra lateral para crear una."
     },
     "settingType": {
         "account": "Cuenta",
@@ -100,7 +105,7 @@
         "readOnly": "Este es un campo de sólo lectura.",
         "text": "Acepta texto de una sola línea.",
         "longText": "Acepta texto de varias líneas.",
-        "linkRow": "Acepta una matriz que contiene los identificadores de las filas relacionadas de la tabla id {tabla}. Todos los identificadores deben proporcionarse cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones.",
+        "linkRow": "Acepta una matriz que contiene los identificadores o los valores de texto del campo principal de las filas relacionadas del id de la tabla {tabla}. Todos los identificadores deben proporcionarse cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones. En el caso de un valor de texto en lugar de un identificador, se buscará una fila con el valor coincidente para su campo principal. Si se encuentra más de una coincidencia, se selecciona la primera en el orden de la tabla.",
         "number": "Acepta un número.",
         "numberPositive": "Acepta un número positivo.",
         "decimal": "Acepta un decimal con {places} decimales después del punto.",
@@ -116,8 +121,8 @@
         "url": "Acepta una cadena que debe ser una URL.",
         "email": "Acepta una cadena que debe ser una dirección de correo electrónico.",
         "file": "Acepta una matriz de objetos que contienen al menos el nombre del archivo de usuario.",
-        "singleSelect": "Acepta un número entero que representa la identificación de la opción de selección elegida o un valor nulo si no se selecciona ninguna.",
-        "multipleSelect": "Acepta una matriz de enteros, cada uno de los cuales representa la identificación de la opción de selección elegida.",
+        "singleSelect": "Acepta un número entero o un valor de texto que representa el ID de la opción seleccionada o el valor de la opción. Un valor nulo significa que no se ha seleccionado ninguno. En el caso de un valor de texto, se selecciona la primera opción coincidente.",
+        "multipleSelect": "Acepta una matriz de enteros mixtos o valores de texto, cada uno de los cuales representa el ID o el valor de la opción de selección elegida. En el caso de un valor de texto, se selecciona la primera opción coincidente.",
         "phoneNumber": "Acepta un número de teléfono que tenga una longitud máxima de 100 caracteres que consista únicamente en dígitos, espacios y los siguientes caracteres: Nx,._+*()#=;/- .",
         "formula": "Un campo de solo lectura definido por una fórmula escrita en el lenguaje de fórmulas de Baserow.",
         "lookup": "Un campo de solo lectura conectado a un campo de fila de vínculo que devuelve una matriz de valores e ID de fila del campo de búsqueda elegido en la tabla vinculada.",
@@ -150,7 +155,9 @@
         "isYearsAgo": "es hace años",
         "inThisWeek": "en esta semana",
         "afterToday": "es después de hoy",
-        "beforeToday": "es antes de hoy"
+        "beforeToday": "es antes de hoy",
+        "containsWord": "contiene palabras",
+        "doesntContainWord": "no contiene palabras"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -255,7 +262,9 @@
         "disabledPasswordProviderTitle": "La autentificación por contraseña está deshabilitada.",
         "disabledPasswordProviderMessage": "Utiliza otro proveedor de autentificación.",
         "lastAdminTitle": "No se puede eliminar el último administrador del grupo",
-        "lastAdminMessage": "Un grupo debe tener al menos un administrador."
+        "lastAdminMessage": "Un grupo debe tener al menos un administrador.",
+        "maxLocksPerTransactionExceededTitle": "Problema detectado con PostgreSQL",
+        "maxLocksPerTransactionExceededDescription": "Baserow intentó eliminar permanentemente los elementos de la papelera, pero excedió los bloqueos disponibles especificados en `max_locks_per_transaction`."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -322,7 +331,7 @@
         "toNumberDescription": "Convierte la entrada en un número si es posible.",
         "fieldDescription": "Devuelve el campo nombrado por el argumento de texto único.",
         "lookupDescription": "Busca los valores de un campo en otra tabla para filas en un campo de fila de enlace. El primer argumento debe ser el nombre de un campo de fila de vínculo en la tabla actual y el segundo debe ser el nombre de un campo en la tabla vinculada.",
-        "isBlankDescription": "Devuelve verdadero si el argumento está vacío o en blanco, de lo contrario, devuelve falso.",
+        "isBlankDescription": "Devuelve verdadero si el argumento está vacío o no se usa; de lo contrario, devuelve falso.",
         "tDescription": "Devuelve el valor de los argumentos si es texto, pero de lo contrario ''.",
         "notDescription": "Devuelve falso si el argumento es verdadero y verdadero si el argumento es falso.",
         "greaterThanDescription": "Devuelve verdadero si el primer argumento es mayor que el segundo; de lo contrario, devuelve falso.",
@@ -383,7 +392,10 @@
         "signDescription": "Devuelve 1 si el argumento es un número positivo, -1 si el argumento es negativo, 0 en caso contrario.",
         "sqrtDescription": "Devuelve la raíz cuadrada del argumento proporcionado.",
         "ceilDescription": "Devuelve el número entero más pequeño que sea mayor o igual que el número de argumento proporcionado.",
-        "floorDescription": "Devuelve el entero más grande que es menor o igual que el número de argumento proporcionado."
+        "floorDescription": "Devuelve el entero más grande que es menor o igual que el número de argumento proporcionado.",
+        "isNanDescription": "Devuelve verdadero si el argumento es 'NaN', devuelve falso en caso contrario.",
+        "wheNanDescription": "Devuelve el primer argumento si no es 'NaN'. Devuelve el segundo argumento si el primer argumento es 'NaN'",
+        "isNullDescription": "Devuelve verdadero si el argumento es nulo, falso en caso contrario."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"

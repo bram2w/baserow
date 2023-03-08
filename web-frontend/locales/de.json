@@ -3,7 +3,8 @@
         "yes": "ja",
         "no": "nein",
         "wrong": "Etwas ist schief gegangen",
-        "none": "Kein"
+        "none": "Kein",
+        "free": "Kostenlos"
     },
     "action": {
         "upload": "Hochladen",
@@ -39,7 +40,11 @@
         "database": "Datenbank",
         "cantSelectTableTitle": "Es konnte keine Datenbank ausgewählt werden.",
         "cantSelectTableDescription": "Diese Datenbank konnte nicht ausgewählt werden weil sie keine Tabelle enthält. Nutzen Sie die Seitenleiste um eine Tabelle zu erstellen.",
-        "databaseDefaultName": "Unbenannte Datenbank"
+        "databaseDefaultName": "Unbenannte Datenbank",
+        "builder": "Anwendung",
+        "cantSelectPageDescription": "Der Application Builder konnte nicht ausgewählt werden, weil er keine Seiten hat. Verwenden Sie die Seitenleiste, um eine zu erstellen.",
+        "builderDefaultName": "Unbenannte Anwendung",
+        "cantSelectPageTitle": "Die Anwendung konnte nicht ausgewählt werden."
     },
     "settingType": {
         "account": "Konto",
@@ -100,7 +105,7 @@
         "readOnly": "Dies ist ein schreibgeschütztes Feld.",
         "text": "Akzeptiert einzeiligen Text.",
         "longText": "Akzeptiert mehrzeiligen Text.",
-        "linkRow": "Akzeptiert ein Feld, das die Identifikatoren der verwandten Zeilen der Tabelle id {table} enthält. Alle Identifikatoren müssen jedes Mal angegeben werden, wenn die Beziehungen aktualisiert werden. Wenn ein leeres Feld angegeben wird, werden alle Beziehungen gelöscht.",
+        "linkRow": "Akzeptiert ein Array mit den Bezeichnern oder Hauptfeldtextwerten der verbundenen Zeilen der Tabelle id {table}. Alle Bezeichner müssen jedes Mal angegeben werden, wenn die Beziehungen aktualisiert werden. Wenn ein leeres Array angegeben wird, werden alle Relationen gelöscht. Bei Angabe eines Textwerts anstelle eines Bezeichners wird eine Zeile mit dem übereinstimmenden Wert für ihr Hauptfeld gesucht. Wenn mehr als eine Übereinstimmung gefunden wird, wird die erste in der Reihenfolge der Tabelle ausgewählt.",
         "number": "Akzeptiert eine Nummer.",
         "numberPositive": "Akzeptiert eine positive Zahl.",
         "decimal": "Akzeptiert eine Dezimalzahl mit {Stellen} Dezimalstellen nach dem Punkt.",
@@ -116,8 +121,8 @@
         "url": "Akzeptiert eine Zeichenfolge, die eine URL sein muss.",
         "email": "Akzeptiert eine Zeichenkette, die eine E-Mail-Adresse sein muss.",
         "file": "Akzeptiert ein Array von Objekten, das mindestens den Namen der Benutzerdatei enthält. Sie können die \"File uploads\"-Endpunkte verwenden, um die Datei hochzuladen. Die Antwort auf diese Aufrufe kann hier direkt als Objekt bereitgestellt werden. Die Endpunkte sind in der linken Seitenleiste zu finden.",
-        "singleSelect": "Akzeptiert eine ganze Zahl, die für die gewählte Auswahloption id steht, oder null, wenn keine ausgewählt ist.",
-        "multipleSelect": "Akzeptiert ein Feld von Integerwerten, die jeweils die gewählte Auswahloption id darstellen.",
+        "singleSelect": "Akzeptiert eine Ganzzahl oder einen Textwert, der die gewählte Select-Option-ID oder den Optionswert darstellt. Ein Nullwert bedeutet, dass keine Option ausgewählt ist. Im Falle eines Textwerts wird die erste übereinstimmende Option ausgewählt.",
+        "multipleSelect": "Akzeptiert ein Array von gemischten Ganzzahlen oder Textwerten, die jeweils die gewählte Select-Option id oder den Wert darstellen. Im Falle eines Textwertes wird die erste passende Option ausgewählt.",
         "phoneNumber": "Akzeptiert eine Telefonnummer mit einer maximalen Länge von 100 Zeichen, die nur aus Ziffern, Leerzeichen und den folgenden Zeichen besteht: Nx,._+*()#=;/- .",
         "formula": "Ein schreibgeschütztes Feld, das durch eine in der Formelsprache Baserow geschriebene Formel definiert ist.",
         "lookup": "Ein schreibgeschütztes Feld, das mit einem verknüpften Zeilenfeld verbunden ist und ein Feld von Werten und Zeilennummern aus dem gewählten Nachschlagefeld in der verknüpften Tabelle zurückgibt.",
@@ -150,7 +155,9 @@
         "isMonthsAgo": "ist Monate her",
         "isYearsAgo": "ist Jahre her",
         "beforeToday": "ist vor heute",
-        "afterToday": "ist nach heute"
+        "afterToday": "ist nach heute",
+        "containsWord": "enthält Wort",
+        "doesntContainWord": "enthält nicht das Wort"
     },
     "viewType": {
         "grid": "Gitternetz",
@@ -255,7 +262,9 @@
         "disabledPasswordProviderMessage": "Bitte verwenden Sie einen anderen Authentifizierungsanbieter.",
         "disabledPasswordProviderTitle": "Die Passwortauthentifizierung ist deaktiviert.",
         "lastAdminMessage": "Eine Gruppe muss mindestens einen Administrator haben.",
-        "lastAdminTitle": "Kann den letzten Gruppenadmin nicht entfernen"
+        "lastAdminTitle": "Kann den letzten Gruppenadmin nicht entfernen",
+        "maxLocksPerTransactionExceededTitle": "PostgreSQL-Problem entdeckt",
+        "maxLocksPerTransactionExceededDescription": "Baserow versuchte, die gelöschten Objekte dauerhaft zu löschen, überschritt aber die in `max_locks_per_transaction` angegebenen verfügbaren Sperren."
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",
@@ -383,7 +392,10 @@
         "powerDescription": "Gibt das Ergebnis des ersten Arguments zum Exponenten des zweiten Arguments zurück.",
         "sqrtDescription": "Gibt die Quadratwurzel aus dem angegebenen Argument zurück.",
         "ceilDescription": "Gibt die kleinste ganze Zahl zurück, die größer oder gleich der angegebenen Argumentnummer ist.",
-        "floorDescription": "Gibt die größte ganze Zahl zurück, die kleiner oder gleich der angegebenen Argumentnummer ist."
+        "floorDescription": "Gibt die größte ganze Zahl zurück, die kleiner oder gleich der angegebenen Argumentnummer ist.",
+        "isNullDescription": "Gibt true zurück, wenn das Argument null ist, andernfalls false.",
+        "isNanDescription": "Gibt true zurück, wenn das Argument 'NaN' ist, andernfalls false.",
+        "wheNanDescription": "Gibt das erste Argument zurück, wenn es nicht 'NaN' ist. Gibt das zweite Argument zurück, wenn das erste Argument 'NaN' ist"
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"

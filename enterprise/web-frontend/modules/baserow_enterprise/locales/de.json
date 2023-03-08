@@ -1,5 +1,275 @@
 {
     "enterprise": {
-        "license": ""
+        "license": "Enterprise",
+        "overflowWarning": "Sie haben zu viele Nicht-Beobachter-Benutzer und haben alle Ihre bezahlten Plätze aufgebraucht. Ändern Sie die Benutzer auf der Mitgliederseite jeder Gruppe, damit sie zu Beobachtern werden.",
+        "rbac": "RBAC",
+        "sidebarTooltip": "Ihr Konto hat Zugriff auf die Enterprise-Funktionen",
+        "deactivated": "Verfügbar in der Enterprise-Version",
+        "sso": "SSO",
+        "licenseDescription": "Betrachter sind bei Baserow Enterprise kostenlos. Wenn ein Benutzer eine andere Rolle in einer Gruppe hat, wird er automatisch einen kostenpflichtigen Platz verwenden."
+    },
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Zuletzt aktivierter Anbieter",
+        "cannotDisableAllAuthProvidersDescription": "Es ist nicht möglich, den zuletzt aktivierten Anbieter zu deaktivieren oder zu löschen."
+    },
+    "trashType": {
+        "team": "Team"
+    },
+    "updateTeamModal": {
+        "invalidNameTitle": "Bitte verwenden Sie einen anderen Namen",
+        "invalidNameMessage": "Dieser Teamname wird bereits in der angegebenen Gruppe verwendet.",
+        "title": "{teamName} aktualisieren"
+    },
+    "manageTeamForm": {
+        "submit": "Speichern",
+        "nameTitle": "Name",
+        "roleTitle": "Standard-Rolle",
+        "inviteMembers": "Mitglieder hinzufügen",
+        "membersTitle": "Mitglieder",
+        "noSubjectsSelected": "Klicken Sie auf '{buttonLabel}', um optional Teambenutzer hinzuzufügen.",
+        "roleHelpText": "Benutzerspezifische Rollen haben immer Vorrang vor Teamrollen."
+    },
+    "teamsTable": {
+        "createNew": "Team erstellen",
+        "nameColumn": "Name",
+        "createdColumn": "Erstellt am",
+        "subjectsColumn": "Mitglieder",
+        "roleColumn": "Standard-Rolle",
+        "roleHelpText": "Kann mit Rollen für Datenbanken und Tabellen überschrieben werden.",
+        "title": "{teamCount} Teams in {groupName}"
+    },
+    "subjectSampleField": {
+        "titleAttr": "{subjectCount} Mitglieder in diesem Team."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Teams"
+    },
+    "adminType": {
+        "AuditLog": "Audit-Log",
+        "Authentication": "Authentifizierung"
+    },
+    "auditLog": {
+        "title": "Audit-Log",
+        "filterUserTitle": "Benutzer",
+        "filterGroupTitle": "Gruppe",
+        "filterActionTypeTitle": "Ereignistyp",
+        "filterFromTimestampTitle": "Ab Datum",
+        "filterFromTimestamp": "Von Datum",
+        "filterToTimestampTitle": "Bis Datum",
+        "filterToTimestamp": "Bis Datum",
+        "user": "Benutzer",
+        "group": "Gruppe",
+        "actionType": "Ereignistyp",
+        "description": "Beschreibung",
+        "ip_address": "IP-Adresse",
+        "exportToCsv": "Exportieren in CSV",
+        "exportModalTitle": "Exportieren in CSV",
+        "clearFilters": "Zurücksetzen",
+        "allUsers": "Alle Nutzer",
+        "allGroups": "Alle Gruppen",
+        "allActionTypes": "Alle Ereignistypen",
+        "timestamp": "Zeitstempel"
+    },
+    "auditLogExportModal": {
+        "exportFilename": "Audit Log Export - {date}",
+        "cancelledTitle": "Export fehlgeschlagen",
+        "cancelledDescription": "Etwas ging schief, während das Audit-Log exportiert wurde. Bitte versuchen Sie es noch mal.",
+        "title": "Exportieren in CSV"
+    },
+    "authProviders": {
+        "title": "Authentifizierungsanbieter",
+        "addProvider": "Anbieter hinzufügen",
+        "noProviders": "Es wurden noch keine Authentifizierungsanbieter konfiguriert."
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+    },
+    "samlSettingsForm": {
+        "domainPlaceholder": "Geben Sie den Domainnamen des Unternehmens ein...",
+        "domainAlreadyExists": "Es existiert bereits ein SAML-Anbieter für diese Domain",
+        "invalidMetadata": "Ungültige XML-Metadaten für den Identity Provider",
+        "relayStateUrl": "Standard-Relaystatus-URL",
+        "acsUrl": "Single Sign On-URL",
+        "domain": "Domain",
+        "metadataPlaceholder": "Fügen Sie die Metadaten des Identitätsanbieters ein...",
+        "invalidDomain": "Ungültiger Domainname",
+        "metadata": "Metadaten",
+        "providerIsVerified": "Der Anbieter wurde verifiziert"
+    },
+    "deleteAuthProviderModal": {
+        "comment": "Möchten Sie diesen {type} wirklich löschen?",
+        "title": "{name} löschen"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Anmeldung mit SAML SSO",
+        "continueWithSaml": "Weiter zum SAML SSO-Anbieter",
+        "requestError": "Diese Domain ist nicht mit SAML SSO konfiguriert",
+        "loginText": "Haben Sie schon ein Passwort?",
+        "redirecting": "Umleitung zum Identitätsanbieter..."
+    },
+    "loginError": {
+        "title": "Etwas ist schief gelaufen:",
+        "loginText": "Sie haben bereits ein Konto?",
+        "defaultErrorMessage": "Es war nicht möglich, den SSO-Anmeldevorgang abzuschließen.",
+        "errorSsoFeatureNotActive": "SSO Funktion ist nicht aktiv. Bitte kontaktieren Sie Ihren Administrator.",
+        "errorInvalidSamlResponse": "SAML-Antwort ist ungültig.",
+        "errorUserDeactivated": "Benutzer wurde deaktiviert.",
+        "errorGroupInvitationEmailMismatch": "ihre e-mail-adresse stimmt nicht mit der einladung überein.",
+        "errorSignupDisabled": "Die Registrierung wurde vom Administrator deaktiviert.",
+        "errorDifferentProvider": "verwenden Sie bitte den Anbieter, bei dem Sie sich ursprünglich angemeldet haben.",
+        "help": "Bitte kontaktieren Sie Ihren Administrator für Hilfe.",
+        "errorInvalidSamlRequest": "SAML-Anfrage ist ungültig.",
+        "errorProviderDoesNotExist": "Dieser Authentifizierungsanbieter ist nicht vorhanden oder nicht verfügbar.",
+        "errorAuthFlowError": "Während des Authentifizierungsvorgangs mit dem ausgewählten Anbieter ist ein Fehler aufgetreten."
+    },
+    "roles": {
+        "admin": {
+            "name": "Administrator",
+            "description": "Sie können Gruppen und Anwendungen vollständig konfigurieren und bearbeiten."
+        },
+        "builder": {
+            "name": "Ersteller",
+            "description": "Kann Anwendungen vollständig konfigurieren und bearbeiten."
+        },
+        "editor": {
+            "name": "Bearbeiter",
+            "description": "Kann Daten vollständig bearbeiten, aber keine Anwendungen oder Gruppen konfigurieren."
+        },
+        "viewer": {
+            "name": "Betrachter",
+            "description": "Kann nur Daten lesen."
+        },
+        "noAccess": {
+            "name": "Kein Zugriff",
+            "description": "Kann auf nichts zugreifen."
+        },
+        "commenter": {
+            "description": "Kann nur Daten lesen und kommentieren.",
+            "name": "Kommentator"
+        },
+        "noRoleLowPriority": {
+            "name": "Keine Rolle",
+            "description": "Holen Sie sich die Standard-Gruppenrolle aus ihren Teams."
+        }
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Datenbank",
+        "memberRolesTableTabTitle": "Aktuelle Tabelle",
+        "error": {
+            "title": "Daten konnten nicht abgerufen werden",
+            "description": "Beim Abrufen der Mitgliedsdaten ist ein Fehler aufgetreten."
+        }
+    },
+    "manageTeamModals": {
+        "subheading": "Mit Teams können Sie Berechtigungen in großen Mengen an mehrere Personen vergeben oder einschränken."
+    },
+    "createTeamModal": {
+        "invalidNameMessage": "Dieser Teamname wird bereits in der angegebenen Gruppe verwendet.",
+        "title": "Team erstellen",
+        "invalidNameTitle": "Bitte verwenden Sie einen anderen Namen"
+    },
+    "editTeamContext": {
+        "edit": "Team bearbeiten",
+        "remove": "Team löschen"
+    },
+    "authProviderTypes": {
+        "password": "E-Mail und Passwort-Authentifizierung"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Neuen {type} hinzufügen"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "{name} bearbeiten"
+    },
+    "memberRolesTab": {
+        "database": {
+            "title": "{name} Datenbank",
+            "selectMembers": "Mitglieder auswählen",
+            "everyoneHasAccess": "Jeder im Workspace {name} kann auf diese Datenbank zugreifen.",
+            "onlyYouHaveAccess": "Nur Sie können auf diese Datenbank zugreifen.",
+            "warningTitle": "Andere Benutzer könnten den Zugang erben!",
+            "warningMessage": "Andere Benutzer erben möglicherweise den Zugriff über ihre jeweiligen Rollen in der übergeordneten Gruppe.",
+            "headerTooltip": "Datenbankrollen überschreiben Gruppenrollen."
+        },
+        "table": {
+            "title": "{name} Tabelle",
+            "selectMembers": "Mitglieder auswählen",
+            "warningMessage": "Andere Benutzer können den Zugriff über ihre jeweiligen Rollen in der übergeordneten Datenbank oder Gruppe erben.",
+            "everyoneHasAccess": "Jeder im Workspace {name} kann auf diese Datenbank zugreifen.",
+            "onlyYouHaveAccess": "Nur Sie können auf diese Tabelle zugreifen.",
+            "warningTitle": "Andere Benutzer könnten den Zugriff erben!",
+            "headerTooltip": "Tabellenrollen haben Vorrang vor Gruppen- und Datenbankrollen."
+        }
+    },
+    "memberRolesShareToggle": {
+        "label": "Teilen Sie mit allen bei {name}",
+        "subLabel": "{totalUserAmount} Workspace-Mitglieder"
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Mitglieder verwalten"
+    },
+    "memberRolesTableContexItem": {
+        "label": "Mitglieder verwalten"
+    },
+    "memberRolesMembersList": {
+        "adminHelpText": "Admins können die Rollen anderer Admins einschränken.",
+        "remove": "Entfernen",
+        "teamMembersCount": "{count} Teammitglieder"
+    },
+    "roleAssignmentModal": {
+        "membersTab": "Mitglieder",
+        "teamsTab": "Teams",
+        "subjectTypeNameMembers": "Mitglieder",
+        "subjectTypeNameTeams": "Teams"
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Mitglieder finden...",
+        "selectedAmountLabel": "{count} Mitglieder ausgewählt"
+    },
+    "selectTeamsList": {
+        "searchPlaceholder": "Teams finden...",
+        "selectedAmountLabel": "{count} Teams ausgewählt"
+    },
+    "selectSubjectsListFooter": {
+        "types": {
+            "teams": "Teams",
+            "members": "Mitglieder"
+        },
+        "roleSelectorBuilderDataWarningTooltip": "Sie werden in der Lage sein, Formel- und Nachschlagefelder zu erstellen, die beliebige Felder in verknüpften Tabellen anzeigen.",
+        "invite": "{count} {type} einladen",
+        "helpTooltip": "Mitglieds-Rollenzuweisungen überschreiben Team-Rollenzuweisungen."
+    },
+    "oauthSettingsForm": {
+        "baseUrl": "URL",
+        "baseUrlPlaceholder": "Basis-URL des Anbieters",
+        "invalidBaseUrl": "Die eingegebene URL ist keine gültige Provider-URL",
+        "callbackUrl": "Rückruf-URL",
+        "providerName": "Name",
+        "secretPlaceholder": "Provider's secret",
+        "secret": "Secret",
+        "clientId": "Client-ID",
+        "clientIdPlaceholder": "Client-ID des Anbieters",
+        "providerNamePlaceholder": "Benutzerdefinierter Anbietername"
+    },
+    "loginButton": {
+        "continueWith": "Weitermachen mit"
+    },
+    "enterpriseFeatures": {
+        "sso": "Single Sign On",
+        "rbac": "Role-based access control"
+    },
+    "chatwootSuportSidebarGroup": {
+        "directSupport": "Direkte Unterstützung"
+    },
+    "userTeamsField": {
+        "no_records": "Keine Teams"
+    },
+    "membersPagePlugin": {
+        "roleHelpText": "Kann mit Rollen für Datenbanken und Tabellen überschrieben werden."
+    },
+    "membersRoleField": {
+        "noAccessHelpText": "Dieser Benutzer benötigt expliziten Zugriff auf Ressourcen.",
+        "adminHelpText": "Administratoren können die Rollen anderer Administratoren einschränken."
     }
 }

@@ -394,7 +394,8 @@
     },
     "viewsContext": {
         "searchView": "Wyszukaj widoki",
-        "noViews": "Nie znaleziono widoków"
+        "noViews": "Nie znaleziono widoków",
+        "collaborative": "Współpraca"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "nienazwany rząd {value}",
@@ -500,7 +501,8 @@
         "delete": "Usuń widok"
     },
     "viewForm": {
-        "name": "Nazwa"
+        "name": "Nazwa",
+        "whoCanEdit": "Kto może edytować"
     },
     "galleryViewHeader": {
         "customizeCards": "Dostosuj karty"
@@ -530,7 +532,9 @@
         "deleteRow": "Usuń wiersz",
         "deleteRows": "Usuń wiersze",
         "copyCells": "Kopiuj komórki",
-        "rowCount": "Brak wierszy | 1 wiersz | {count} wierszy"
+        "rowCount": "Brak wierszy | 1 wiersz | {count} wierszy",
+        "hiddenRowsInsertedTitle": "Dodano wiersze",
+        "hiddenRowsInsertedMessage": "Dodano {number} nowych wierszy, ale nie są one widoczne z powodu aktywnych filtrów."
     },
     "gridViewFieldFile": {
         "dropHere": "Upuść tutaj",
@@ -741,5 +745,13 @@
     "fileField": {
         "errorEmptyFileNameTitle": "Nieprawidłowa nazwa pliku",
         "errorEmptyFileNameMessage": "Nie można ustawić pustej nazwy pliku."
+    },
+    "viewOwnershipType": {
+        "collaborative": "Współpraca",
+        "personal": "Osobisty"
+    },
+    "gridViewRowsAddContext": {
+        "title": "Utwórz wiele wierszy",
+        "choice": "Dodawanie {rowAmountChoice} wierszy"
     }
 }

@@ -288,7 +288,10 @@
         "invalidAccountDeletionGraceDelay": "Este valor es obligatorio y debe ser un entero positivo menor que 32000",
         "settingAllowNonStaffCreateGroupOperation": "Permitir a todos crear nuevos grupos",
         "settingAllowNonStaffCreateGroupOperationDescription": "Por defecto, todos pueden crear grupos nuevos. Desactívalo para que sólo el equipo pueda crear nuevos grupos.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Con esta opción activada, a los nuevos usuarios se les creará automáticamente un grupo en el que serán administradores, por lo que a efectos de facturación se les considerará administradores. Para evitarlo, desactiva esta opción y los nuevos usuarios invitados solo empezarán con el rol con el que fueron invitados."
+        "settingAllowNonStaffCreateGroupOperationWarning": "A los nuevos usuarios se les creará automáticamente un grupo en el que serán administradores.",
+        "maintenance": "Mantenimiento",
+        "settingTrackGroupUsage": "Seguimiento del uso del grupo",
+        "settingTrackGroupUsageDescription": "Activa un trabajo nocturno que cuenta el uso de filas y archivos por grupo, mostrado en la página de administración de grupos premium."
     },
     "copyingNotification": {
         "title": "Copiando...",
@@ -451,7 +454,9 @@
                 "email": "Correo electrónico",
                 "role": "Rol predeterminado",
                 "name": "Nombre",
-                "teams": "Equipos"
+                "teams": "Equipos",
+                "highestRole": "Cargo más alto",
+                "highestRoleHelpText": "El rol más alto que este usuario tiene asignado directamente o desde un equipo, sobre cualquier cosa en este grupo"
             },
             "actions": {
                 "remove": "Eliminar del grupo",
@@ -491,7 +496,9 @@
         "content": "Se ha cerrado la sesión porque el token de autenticación ha caducado. Por favor, inicie sesión de nuevo."
     },
     "memberAssignmentModalFooter": {
-        "invite": "Invita a {count}"
+        "invite": "Invita a {count}",
+        "selectAll": "Seleccionar todo",
+        "deselectAll": "Deseleccionar todo"
     },
     "memberSelectionList": {
         "searchPlaceholder": "Encuentra...",
@@ -506,5 +513,11 @@
         "title": "Permisos actualizados",
         "content": "Esto puede afectar a lo que tienes acceso. Por favor recarga la página.",
         "action": "Recargar"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "Documentación sobre funciones facturables"
+    },
+    "highestPaidRoleField": {
+        "billable": "Facturable"
     }
 }

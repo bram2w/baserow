@@ -3,7 +3,8 @@
         "yes": "ja",
         "no": "nee",
         "wrong": "Er is iets misgegaan",
-        "none": "Geen"
+        "none": "Geen",
+        "free": "Gratis"
     },
     "action": {
         "upload": "Uploaden",
@@ -39,7 +40,11 @@
         "database": "Database",
         "cantSelectTableTitle": "Kan de database niet selecteren.",
         "cantSelectTableDescription": "De database kan niet worden geselecteerd omdat deze geen tabellen bevat. Gebruik de zijbalk om een tabel aan te maken.",
-        "databaseDefaultName": "Naamloze databank"
+        "databaseDefaultName": "Naamloze databank",
+        "builder": "Applicatie",
+        "builderDefaultName": "Naamloze applicatie",
+        "cantSelectPageTitle": "Kan de applicatie niet selecteren.",
+        "cantSelectPageDescription": "De applicatiebouwer kon niet worden geselecteerd omdat het geen pagina's heeft. Gebruik de zijbalk om er een te maken."
     },
     "settingType": {
         "account": "Account",
@@ -150,7 +155,9 @@
         "isMonthsAgo": "is maanden geleden",
         "isYearsAgo": "is jaren geleden",
         "afterToday": "is na vandaag",
-        "beforeToday": "is voor vandaag"
+        "beforeToday": "is voor vandaag",
+        "containsWord": "bevat woord",
+        "doesntContainWord": "bevat geen woord"
     },
     "viewType": {
         "grid": "Raster",
@@ -255,7 +262,9 @@
         "disabledPasswordProviderMessage": "Gebruik een andere authenticatieprovider.",
         "disabledPasswordProviderTitle": "Wachtwoordverificatie is uitgeschakeld.",
         "lastAdminTitle": "Kan laatste groepsbeheerder niet verwijderen",
-        "lastAdminMessage": "Een groep moet minstens één beheerder hebben."
+        "lastAdminMessage": "Een groep moet minstens één beheerder hebben.",
+        "maxLocksPerTransactionExceededTitle": "PostgreSQL probleem ontdekt",
+        "maxLocksPerTransactionExceededDescription": "Baserow probeerde de weggegooide items permanent te verwijderen, maar overschreed de beschikbare sloten gespecificeerd in `max_locks_per_transaction`."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",
@@ -383,7 +392,10 @@
         "powerDescription": "Retourneert het resultaat van het eerste argument dat is verheven tot de exponent van het tweede argument.",
         "signDescription": "Geeft 1 als het argument een positief getal is, -1 als het argument een negatief getal is, 0 anders.",
         "absDescription": "Geeft de absolute waarde voor het opgegeven argumentnummer.",
-        "floorDescription": "Geeft het grootste gehele getal dat kleiner of gelijk is aan het opgegeven argumentnummer."
+        "floorDescription": "Geeft het grootste gehele getal dat kleiner of gelijk is aan het opgegeven argumentnummer.",
+        "wheNanDescription": "Geeft het eerste argument als het niet 'NaN' is. Geeft het tweede argument als het eerste argument 'NaN' is.",
+        "isNanDescription": "Geeft true als het argument 'NaN' is, anders false.",
+        "isNullDescription": "Geeft true als het argument nul is, anders false."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

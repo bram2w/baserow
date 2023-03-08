@@ -1,5 +1,129 @@
 {
     "enterprise": {
-        "license": ""
+        "license": "Enterprise",
+        "sidebarTooltip": "Il tuo account ha accesso alle funzionalità enterprise",
+        "rbac": "RBAC",
+        "sso": "SSO",
+        "deactivated": "Disponibile con licenza enterprise",
+        "licenseDescription": "I Viewers sono gratuiti. Se un utente ha un altro ruolo, una licenza a pagamento verrà assegnata in automatico.",
+        "overflowWarning": "Le licenze disponibili sono terminate. Imposta gli utenti come \"viewers\" per liberare le licenze necessarie."
+    },
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Ultimo provider attivo",
+        "cannotDisableAllAuthProvidersDescription": "Non è possibile disabilitare o cancellare l'ultimo provider attivo."
+    },
+    "trashType": {
+        "team": "team"
+    },
+    "createTeamModal": {
+        "title": "Crea team",
+        "invalidNameTitle": "Per favore, usa un nome diverso",
+        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del gruppo."
+    },
+    "updateTeamModal": {
+        "title": "Modifica {teamName}",
+        "invalidNameTitle": "Per favore, usa un nome diverso",
+        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del gruppo."
+    },
+    "manageTeamModals": {
+        "subheading": "I Team permettono di dare gli stessi permessi a gruppi di persone."
+    },
+    "manageTeamForm": {
+        "submit": "Salva",
+        "nameTitle": "Nome",
+        "roleTitle": "Ruolo di default",
+        "inviteMembers": "Aggiungi membri",
+        "membersTitle": "Membri",
+        "noSubjectsSelected": "Clicca '{buttonLabel}' per aggiungere utenti al team.",
+        "roleHelpText": "I permessi specifici dell'utente hanno la precedenza rispetto ai permessi dati al team."
+    },
+    "editTeamContext": {
+        "remove": "Elimina team",
+        "edit": "Modifica team"
+    },
+    "teamsTable": {
+        "title": "{teamCount} team in {groupName}",
+        "createNew": "Crea team",
+        "nameColumn": "Nome",
+        "createdColumn": "Creato il",
+        "subjectsColumn": "Membri",
+        "roleColumn": "Ruolo di default",
+        "roleHelpText": "Può essere sovrascritto dai ruoli del singolo database o della tabella."
+    },
+    "subjectSampleField": {
+        "titleAttr": "{subjectCount} membri in questo team."
+    },
+    "adminType": {
+        "Authentication": "Autenticazione",
+        "AuditLog": "Audit log"
+    },
+    "auditLog": {
+        "title": "Audit log",
+        "filterUserTitle": "Utente",
+        "filterGroupTitle": "Gruppo",
+        "filterActionTypeTitle": "Tipo Evento",
+        "filterFromTimestampTitle": "Data inizio",
+        "filterFromTimestamp": "Data fine",
+        "filterToTimestampTitle": "Data inizio",
+        "filterToTimestamp": "Data fine",
+        "user": "Utente",
+        "description": "Descrizione",
+        "timestamp": "Data e ora",
+        "ip_address": "Indirizzo IP",
+        "exportToCsv": "Esporta in CSV",
+        "exportModalTitle": "Esporta in CSV",
+        "clearFilters": "Pulisci",
+        "allUsers": "Tutti gli utenti",
+        "actionType": "Tipo di evento",
+        "group": "Gruppo",
+        "allGroups": "Tutti i gruppi",
+        "allActionTypes": "Tutti gli eventi"
+    },
+    "auditLogExportModal": {
+        "exportFilename": "Audit Log Export - {date}",
+        "cancelledTitle": "Esportazione fallita",
+        "cancelledDescription": "Qualcosa è andato storto durante l'esportazione. Riprova più tardi.",
+        "title": "Esporta in CSV"
+    },
+    "authProviders": {
+        "title": "Provider di autenticazione",
+        "noProviders": "Nessun provider per l'autenticazione è configurato al momento.",
+        "addProvider": "Aggiungi provider"
+    },
+    "samlSettingsForm": {
+        "domainPlaceholder": "Inserisci il nome dominio dell'azienda...",
+        "invalidDomain": "Nome dominio invalido",
+        "metadata": "Metadati",
+        "metadataPlaceholder": "Incolla qui i metadati forniti dal tuo Identity Provider...",
+        "invalidMetadata": "XML non valido",
+        "relayStateUrl": "Default Relay State URL",
+        "providerIsVerified": "Il provider è stato verificato",
+        "domain": "Dominio",
+        "domainAlreadyExists": "Un provider SAML per questo dominio esiste giá",
+        "acsUrl": "Single Sign On URL"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Aggiungi un nuovo {type}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Modifica {name}"
+    },
+    "deleteAuthProviderModal": {
+        "title": "Elimina {name}",
+        "comment": "Vuoi davvero eliminare questo {type}?"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Accedi con SAML SSO",
+        "redirecting": "Reindirizzando il tuo browser all'Identity Provider..."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Team"
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Modifica",
+        "delete": "Elimina"
+    },
+    "authProviderTypes": {
+        "password": "Autenticazione tramite email e password"
     }
 }
