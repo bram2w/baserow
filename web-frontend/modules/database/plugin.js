@@ -124,6 +124,9 @@ import {
   BaserowReplace,
   BaserowRowId,
   BaserowT,
+  BaserowNow,
+  BaserowToday,
+  BaserowToDateTz,
   BaserowToDate,
   BaserowToNumber,
   BaserowToText,
@@ -434,6 +437,9 @@ export default (context) => {
   // Date functions
   app.$registry.register('formula_function', new BaserowDatetimeFormat(context))
   app.$registry.register('formula_function', new BaserowDay(context))
+  app.$registry.register('formula_function', new BaserowNow(context))
+  app.$registry.register('formula_function', new BaserowToday(context))
+  app.$registry.register('formula_function', new BaserowToDateTz(context))
   app.$registry.register('formula_function', new BaserowToDate(context))
   app.$registry.register('formula_function', new BaserowDateDiff(context))
   // Date interval functions

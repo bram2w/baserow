@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q, UniqueConstraint
+from django.utils import timezone
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -134,9 +135,19 @@ class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixi
     storage_usage_updated_at = models.DateTimeField(null=True)
     seats_taken = models.IntegerField(null=True)
     seats_taken_updated_at = models.DateTimeField(null=True)
+    now = models.DateTimeField(null=True)
 
     def get_parent(self):
         return None
+
+    def refresh_now(self):
+        self.now = timezone.now()
+        self.save(update_fields=["now"])
+
+    def get_now_or_set_if_null(self):
+        if self.now is None:
+            self.refresh_now()
+        return self.now
 
     def application_set_including_trash(self):
         """

@@ -342,11 +342,11 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
         :param filter_value: The value that has been provided by the user.
         :param timezone: The timezone that should be used to convert the date to
             an aware date.
-        :return: a date or an aware datetime that should be used to compare with
-            the field value.
         :raises ValueError: If the provided value is not valid.
         :raise OverflowError: If the provided value is out of range.
         :raise ParserError: If the provided value is not a valid date to parse.
+        :return: a date or an aware datetime that should be used to compare with
+            the field value.
         """
 
         try:

@@ -1415,3 +1415,95 @@ def test_formula_field_adjacent_row(data_fixture):
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id
+
+
+@pytest.mark.django_db
+def test_updating_formula_field_doesnt_reset_all_fields(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_date_field(table=table, name="jaar_van")
+
+    f = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="datum",
+        formula="todate(concat(totext(year(field('jaar_van'))),'-01-01'),'YYYY-MM-DD')",
+    )
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": f.id}),
+        {
+            "type": "formula",
+            "formula": "todate('1000-01-01','YYYY-MM-DD')",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    expected = {
+        "array_formula_type": None,
+        "date_force_timezone": None,
+        "date_format": "ISO",
+        "date_include_time": False,
+        "date_show_tzinfo": False,
+        "date_time_format": "24",
+        "error": None,
+        "formula": "todate('1000-01-01','YYYY-MM-DD')",
+        "formula_type": "date",
+        "nullable": True,
+        "number_decimal_places": None,
+    }
+    actual = {key: value for key, value in response.json().items() if key in expected}
+    assert actual == expected
+    f.refresh_from_db()
+    assert f.date_format is not None
+
+
+@pytest.mark.django_db
+def test_user_can_change_date_force_timezone_on_formula(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_date_field(table=table, name="jaar_van")
+
+    f = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="datum",
+        formula="todate(concat(totext(year(field('jaar_van'))),'-01-01'),'YYYY-MM-DD')",
+    )
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": f.id}),
+        {
+            "type": "formula",
+            "formula": "todate('1000-01-01','YYYY-MM-DD')",
+            "date_force_timezone": "GMT",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    expected = {
+        "date_force_timezone": "GMT",
+    }
+    actual = {key: value for key, value in response.json().items() if key in expected}
+    assert actual == expected
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": f.id}),
+        {
+            "type": "formula",
+            "formula": "todate('1000-01-01','YYYY-MM-DD')",
+            "date_force_timezone": None,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    expected = {
+        "date_force_timezone": None,
+    }
+    actual = {key: value for key, value in response.json().items() if key in expected}
+    assert actual == expected

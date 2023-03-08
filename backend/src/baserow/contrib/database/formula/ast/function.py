@@ -1,5 +1,5 @@
 import abc
-from typing import List, Optional, Type
+from typing import List, Type
 
 from django.db.models import (
     DecimalField,
@@ -15,6 +15,7 @@ from django.db.models.functions import Coalesce
 from baserow.contrib.database.formula.ast.tree import (
     ArgCountSpecifier,
     BaserowExpression,
+    BaserowExpressionContext,
     BaserowFunctionCall,
     BaserowFunctionDefinition,
 )
@@ -118,13 +119,12 @@ class ZeroArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
         expr = WrappedExpressionWithMetadata(self.to_django_expression())
         if self.aggregate:
-            return aggregate_wrapper(expr, model)
+            return aggregate_wrapper(expr, context.model)
         else:
             return expr
 
@@ -218,16 +218,15 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
         expr = WrappedExpressionWithMetadata.from_args(
             self.to_django_expression(args[0].expression), args
         )
 
         if self.aggregate:
-            return aggregate_wrapper(expr, model)
+            return aggregate_wrapper(expr, context.model)
         else:
             return expr
 
@@ -371,15 +370,14 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
         expr = WrappedExpressionWithMetadata.from_args(
             self.to_django_expression(args[0].expression, args[1].expression), args
         )
         if self.aggregate:
-            return aggregate_wrapper(expr, model)
+            return aggregate_wrapper(expr, context.model)
         else:
             return expr
 
@@ -502,10 +500,9 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
         expr = WrappedExpressionWithMetadata.from_args(
             self.to_django_expression(
                 args[0].expression, args[1].expression, args[2].expression
@@ -513,7 +510,7 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
             args,
         )
         if self.aggregate:
-            return aggregate_wrapper(expr, model)
+            return aggregate_wrapper(expr, context.model)
         else:
             return expr
 

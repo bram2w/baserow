@@ -1029,6 +1029,40 @@ class FieldType(
 
         return []
 
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        """
+        Returns a queryset of all fields that need to be periodically updated.
+        This method should return all the fields that need to be updated
+        periodically.
+
+        :return: A queryset of all the fields that need to be periodically updated.
+        """
+
+        return None
+
+    def run_periodic_update(
+        self,
+        field: Field,
+        update_collector: "Optional[FieldUpdateCollector]" = None,
+        field_cache: "Optional[FieldCache]" = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+    ):
+        """
+        This method is called periodically for all the fields of the same type
+        that need to be periodically updated. It should be possible to call this method
+        recursively for all the fields that depend on the field passed as argument.
+
+        :param field: The field that needs to be updated.
+        :param update_collector: Any update statements should be passed to this
+            collector so they are run correctly at the right time. You should not be
+            manually updating field values yourself in this method.
+        :param field_cache: A field cache to be used when fetching fields.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the row was created.
+        """
+
+        pass
+
     def restore_failed(self, field_instance, restore_exception):
         """
         Called when restoring field_instance has caused an exception. Return True if

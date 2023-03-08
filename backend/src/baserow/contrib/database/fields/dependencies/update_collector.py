@@ -8,6 +8,7 @@ from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.signals import field_updated
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.signals import table_updated
 
 StartingRowIdsType = Optional[List[int]]
 
@@ -199,6 +200,7 @@ class FieldUpdateCollector:
         """
 
         self._updated_fields_per_table: Dict[int, Dict[int, Field]] = defaultdict(dict)
+        self._updated_tables = {}
         self._starting_row_ids = starting_row_ids
         self._starting_table = starting_table
         self._deleted_m2m_rels_per_link_field = deleted_m2m_rels_per_link_field
@@ -230,6 +232,8 @@ class FieldUpdateCollector:
 
         # noinspection PyTypeChecker
         self._updated_fields_per_table[field.table_id][field.id] = field
+        if field.table_id not in self._updated_tables:
+            self._updated_tables[field.table_id] = field.table
         self._update_statement_collector.add_update_statement(
             field, update_statement, via_path_to_starting_table
         )
@@ -267,6 +271,10 @@ class FieldUpdateCollector:
                     related_fields=related_fields,
                     user=None,
                 )
+
+    def send_force_refresh_signals_for_all_updated_tables(self):
+        for table in self._updated_tables.values():
+            table_updated.send(self, table=table, user=None, force_table_refresh=True)
 
     def _get_updated_fields_per_table(self) -> List[Tuple[Field, List[Field]]]:
         result = []

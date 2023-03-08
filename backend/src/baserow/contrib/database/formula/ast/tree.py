@@ -300,6 +300,16 @@ class ArgCountSpecifier(abc.ABC):
         pass
 
 
+class BaserowExpressionContext:
+    def __init__(self, model: Type[Model], model_instance: Optional[Model]):
+        self.model = model
+        self.model_instance = model_instance
+        self.group = model.get_root()
+
+    def get_utc_now(self):
+        return self.group.get_now_or_set_if_null()
+
+
 class BaserowFunctionCall(BaserowExpression[A]):
     """
     Represents a function call with arguments to the function defined by function_def.
@@ -355,12 +365,9 @@ class BaserowFunctionCall(BaserowExpression[A]):
     def to_django_expression_given_args(
         self,
         args: List["WrappedExpressionWithMetadata"],
-        model: Type[Model],
-        model_instance: Optional[Model],
+        context: BaserowExpressionContext,
     ) -> "WrappedExpressionWithMetadata":
-        return self.function_def.to_django_expression_given_args(
-            args, model, model_instance
-        )
+        return self.function_def.to_django_expression_given_args(args, context)
 
     def check_arg_type_valid(
         self,
@@ -479,8 +486,7 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
     def to_django_expression_given_args(
         self,
         args: List["WrappedExpressionWithMetadata"],
-        model: Type[Model],
-        model_instance: Optional[Model],
+        context: BaserowExpressionContext,
     ) -> "WrappedExpressionWithMetadata":
         """
         Given the args already converted to Django Expressions should return a Django
