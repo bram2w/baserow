@@ -3,15 +3,16 @@
         "yes": "是",
         "no": "否",
         "wrong": "出了点差错",
-        "none": "无"
+        "none": "无",
+        "free": "免费的"
     },
     "action": {
         "upload": "上传",
         "back": "返回",
         "backToLogin": "回到登录页面",
         "signUp": "注册",
-        "signIn": "登入",
-        "createNew": "创建新的",
+        "signIn": "签到",
+        "createNew": "新建",
         "create": "创建",
         "edit": "编辑",
         "change": "变更",
@@ -25,7 +26,12 @@
         "search": "搜索",
         "copy": "拷贝",
         "activate": "启用",
-        "deactivate": "停用"
+        "deactivate": "停用",
+        "duplicate": "复制",
+        "paste": "粘贴",
+        "download": "下载",
+        "remove": "移除",
+        "login": "登录"
     },
     "adminType": {
         "settings": "设置"
@@ -33,12 +39,14 @@
     "applicationType": {
         "database": "数据库",
         "cantSelectTableTitle": "无法选择数据库。",
-        "cantSelectTableDescription": "无法选择该数据库，因为它没有任何表。使用侧边栏按钮创建一个。"
+        "cantSelectTableDescription": "无法选择该数据库，因为它没有任何表。使用侧边栏按钮创建一个。",
+        "databaseDefaultName": "无标题数据库"
     },
     "settingType": {
         "account": "帐户",
         "password": "密码",
-        "tokens": "API 令牌"
+        "tokens": "API 令牌",
+        "deleteAccount": "删除用户"
     },
     "userFileUploadType": {
         "file": "我的设备",
@@ -54,14 +62,12 @@
         "maxLength": "此处最多允许{max}个字符。",
         "minMaxLength": "此处需要{min}至{max}个字符。",
         "requiredField": "此字段必填。"
-
     },
     "permission": {
         "admin": "管理员",
         "adminDescription": "能够全权配置和编辑群组和应用。",
         "member": "成员",
         "memberDescription": "能够全权配置和编辑应用。"
-
     },
     "fieldType": {
         "singleLineText": "单行文本",
@@ -82,7 +88,6 @@
         "formula": "函数",
         "lookup": "查找",
         "multipleCollaborators": "协作者"
-
     },
     "fieldErrors": {
         "invalidNumber": "数值无效",
@@ -247,7 +252,11 @@
         "snapshotNameNotUniqueTitle": "快照名称必须是唯一的。",
         "snapshotNameNotUniqueDescription": "每个应用程序的所有快照名称都必须是唯一的。",
         "snapshotOperationLimitExceededTitle": "达到限制",
-        "snapshotOperationLimitExceededDescription": "您已达到运行快照操作的数量限制。请等待上一个操作完成。"
+        "snapshotOperationLimitExceededDescription": "您已达到运行快照操作的数量限制。请等待上一个操作完成。",
+        "disabledPasswordProviderTitle": "密码验证已禁用.",
+        "disabledPasswordProviderMessage": "请使用其他身份验证提供程序.",
+        "lastAdminTitle": "无法移除最后的组管理员",
+        "lastAdminMessage": "一个组必须至少有一个管理员."
     },
     "importerType": {
         "csv": "导入 CSV 文件",
@@ -362,7 +371,19 @@
         "getLinkLabelDescription": "使用链接或按钮函数从公式中获取标签。",
         "getLinkUrlDescription": "使用链接或按钮功能从公式中获取 url。",
         "roundDescription": "返回第一个参数四舍五入到第二个参数指定的位数。",
-        "truncDescription": "仅返回通过截断任何小数位转换为整数的第一个参数。"
+        "truncDescription": "仅返回通过截断任何小数位转换为整数的第一个参数。",
+        "evenDescription": "如果提供的参数是偶数,则返回true,否则返回false.",
+        "oddDescription": "如果提供的参数是奇数,则返回true,否则返回false.",
+        "modDescription": "返回第一个参数和第二个参数相除的余数.",
+        "powerDescription": "返回第一个参数升为第二个参数指数的结果.",
+        "logDescription": "对数函数:返回必须将第一个参数提高到的指数,才能产生第二个参数.",
+        "lnDescription": "自然对数函数:返回常数e≈2.718必须提高到的指数,才能产生参数.",
+        "expDescription": "返回常数e≈2.718与提供的参数数的乘积.",
+        "signDescription": "如果参数是正数则返回 1,如果参数是负数则返回 -1,否则返回 0.",
+        "sqrtDescription": "返回所提供参数的平方根.",
+        "absDescription": "返回所提供参数编号的绝对值.",
+        "ceilDescription": "返回大于或等于提供的参数数的最小整数.",
+        "floorDescription": "返回小于或等于提供的参数数的最大整数."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "未命名行 {value}"

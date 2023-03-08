@@ -1,5 +1,275 @@
 {
     "enterprise": {
-        "license": ""
+        "license": "Empresa",
+        "sidebarTooltip": "Su cuenta tiene acceso a las funciones de empresa a nivel mundial",
+        "rbac": "RBAC",
+        "sso": "SSO",
+        "deactivated": "Disponible en versión para empresas",
+        "overflowWarning": "Tienes demasiados usuarios no espectadores y has agotado todas tus plazas de pago. Cambia los usuarios a espectadores en la página de miembros de cada grupo.",
+        "licenseDescription": "Los visores son gratuitos con Baserow empresarial. Si un usuario tiene cualquier otro rol, en cualquier grupo, entonces utilizará un asiento de pago automáticamente."
+    },
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Último proveedor habilitado",
+        "cannotDisableAllAuthProvidersDescription": "No es posible desactivar o eliminar el último proveedor activado."
+    },
+    "trashType": {
+        "team": "equipo"
+    },
+    "createTeamModal": {
+        "title": "Crear equipo",
+        "invalidNameTitle": "Por favor, utilice un nombre diferente",
+        "invalidNameMessage": "Este nombre de equipo ya está en uso en el grupo especificado."
+    },
+    "updateTeamModal": {
+        "title": "Actualizar {teamName}",
+        "invalidNameTitle": "Por favor, utilice un nombre diferente",
+        "invalidNameMessage": "Este nombre de equipo ya está en uso en el grupo especificado."
+    },
+    "manageTeamForm": {
+        "nameTitle": "Nombre",
+        "roleTitle": "Rol por defecto",
+        "inviteMembers": "Añadir miembros",
+        "membersTitle": "Miembros",
+        "noSubjectsSelected": "Haz clic en '{buttonLabel}' para añadir opcionalmente usuarios del equipo.",
+        "roleHelpText": "Los roles específicos de usuario siempre prevalecerán sobre los roles de equipo.",
+        "submit": "Guardar"
+    },
+    "editTeamContext": {
+        "edit": "Editar equipo",
+        "remove": "Borrar equipo"
+    },
+    "teamsTable": {
+        "title": "{teamCount} equipos en {groupName}",
+        "createNew": "Crear equipo",
+        "nameColumn": "Nombre",
+        "roleHelpText": "Puede anularse con roles en bases de datos y tablas.",
+        "subjectsColumn": "Miembros",
+        "createdColumn": "Creado en",
+        "roleColumn": "Rol por defecto"
+    },
+    "subjectSampleField": {
+        "titleAttr": "{subjectCount} miembros en este equipo."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Equipos"
+    },
+    "adminType": {
+        "AuditLog": "Registro de auditoría",
+        "Authentication": "Autenticación"
+    },
+    "auditLog": {
+        "title": "Registro de auditoría",
+        "filterUserTitle": "Usuario",
+        "filterGroupTitle": "Grupo",
+        "filterActionTypeTitle": "Tipo de evento",
+        "filterFromTimestampTitle": "De fecha",
+        "filterFromTimestamp": "De fecha",
+        "filterToTimestampTitle": "Hasta la fecha",
+        "filterToTimestamp": "Hasta la fecha",
+        "user": "Usuario",
+        "group": "Grupo",
+        "actionType": "Tipo de evento",
+        "description": "Descripción",
+        "timestamp": "Marca de tiempo",
+        "exportModalTitle": "Exportar a CSV",
+        "clearFilters": "Despejar",
+        "allUsers": "Todos los usuarios",
+        "allGroups": "Todos los grupos",
+        "allActionTypes": "Todos los tipos de actos",
+        "ip_address": "Dirección IP",
+        "exportToCsv": "Exportar a CSV"
+    },
+    "auditLogExportModal": {
+        "title": "Exportar a CSV",
+        "exportFilename": "Exportación de registros de auditoría - {fecha}",
+        "cancelledTitle": "Error de exportación",
+        "cancelledDescription": "Algo ha ido mal al exportar el registro de auditoría. Por favor, inténtalo de nuevo."
+    },
+    "authProviders": {
+        "addProvider": "Añadir proveedor",
+        "title": "Proveedores de autenticación",
+        "noProviders": "Aún no hay proveedores de autenticación configurados."
+    },
+    "authProviderTypes": {
+        "password": "Autenticación de correo electrónico y contraseña"
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Editar",
+        "delete": "Borrar"
+    },
+    "samlSettingsForm": {
+        "domainPlaceholder": "Insertar el nombre de dominio de la empresa...",
+        "invalidDomain": "Nombre de dominio inválido",
+        "domainAlreadyExists": "Ya existe un proveedor SAML para este dominio",
+        "invalidMetadata": "Metadatos XML inválidos para el proveedor de identidades",
+        "relayStateUrl": "URL de estado de retransmisión por defecto",
+        "acsUrl": "URL de inicio de sesión único",
+        "providerIsVerified": "El proveedor ha sido verificado",
+        "domain": "Dominio",
+        "metadata": "Metadatos",
+        "metadataPlaceholder": "Pegue los metadatos del proveedor de identidad..."
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Añadir un nuevo {tipo}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Editar {nombre}"
+    },
+    "deleteAuthProviderModal": {
+        "title": "Borrar {nombre}",
+        "comment": "¿Realmente quieres borrar este {tipo}?"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Inicio de sesión con SAML SSO",
+        "continueWithSaml": "Continuar con el proveedor SAML SSO",
+        "requestError": "Este dominio no está configurado con SAML SSO",
+        "loginText": "¿Ya tienes contraseña?",
+        "redirecting": "Redirigiendo al proveedor de identidad..."
+    },
+    "loginError": {
+        "title": "Algo salió mal:",
+        "loginText": "¿Ya tienes una cuenta?",
+        "help": "Contacta a tu administrador para obtener ayuda.",
+        "defaultErrorMessage": "no fue posible completar el flujo de inicio de sesión SSO.",
+        "errorInvalidSamlRequest": "La solicitud SAML no es válida.",
+        "errorInvalidSamlResponse": "La respuesta SAML no es válida.",
+        "errorUserDeactivated": "usuario ha sido desactivado.",
+        "errorProviderDoesNotExist": "este proveedor de autenticación no existe o no está disponible.",
+        "errorAuthFlowError": "se ha producido un error durante el flujo de autenticación con el proveedor seleccionado.",
+        "errorDifferentProvider": "utilice el proveedor con el que se registró originalmente.",
+        "errorSsoFeatureNotActive": "La función SSO no está activa. Consulta a tu administrador.",
+        "errorSignupDisabled": "El administrador ha desactivado el registro.",
+        "errorGroupInvitationEmailMismatch": "su dirección de correo electrónico no coincide con la invitación."
+    },
+    "roles": {
+        "builder": {
+            "description": "Puede completamente configurar y editar las aplicaciones.",
+            "name": "Constructor"
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "Puede editar completamente los datos pero no configurar aplicaciones o grupos."
+        },
+        "commenter": {
+            "name": "Comentador",
+            "description": "Sólo puede leer y comentar datos."
+        },
+        "viewer": {
+            "name": "Visor",
+            "description": "Sólo puede leer datos."
+        },
+        "noRoleLowPriority": {
+            "name": "Sin rol",
+            "description": "Obtener el rol de grupo por defecto de sus equipos."
+        },
+        "noAccess": {
+            "description": "No se puede acceder a nada.",
+            "name": "Sin acceso"
+        },
+        "admin": {
+            "name": "Admin",
+            "description": "Puede completamente configurar y editar grupos y aplicaciones."
+        }
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Base de datos",
+        "memberRolesTableTabTitle": "Tabla actual",
+        "error": {
+            "title": "No se han podido obtener los datos",
+            "description": "Se ha producido un error al obtener los datos de los miembros."
+        }
+    },
+    "memberRolesTab": {
+        "database": {
+            "title": "{nombre} base de datos",
+            "selectMembers": "Seleccionar miembros",
+            "everyoneHasAccess": "Todos en el espacio de trabajo {nombre} pueden acceder a esta base de datos.",
+            "onlyYouHaveAccess": "Sólo tú puedes acceder a esta base de datos.",
+            "warningTitle": "¡Otros usuarios podrían heredar el acceso!",
+            "warningMessage": "Otros usuarios podrían heredar el acceso a través de sus respectivos roles en el grupo padre.",
+            "headerTooltip": "Los roles de base de datos prevalecerán sobre los roles de grupo."
+        },
+        "table": {
+            "title": "{nombre} tabla",
+            "selectMembers": "Seleccionar miembros",
+            "onlyYouHaveAccess": "Sólo tú puedes acceder a esta tabla.",
+            "warningMessage": "Otros usuarios podrían heredar el acceso a través de sus respectivos roles en la base de datos o grupo padre.",
+            "everyoneHasAccess": "Todos en el espacio de trabajo {nombre} pueden acceder a esta tabla.",
+            "warningTitle": "¡Otros usuarios podrían heredar el acceso!",
+            "headerTooltip": "Los roles de tabla prevalecerán sobre los roles de grupo y de base de datos."
+        }
+    },
+    "memberRolesShareToggle": {
+        "subLabel": "{totalUsuarioCantidad} miembros del espacio de trabajo",
+        "label": "Compartir con todos en {nombre}"
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Gestionar miembros"
+    },
+    "roleAssignmentModal": {
+        "membersTab": "Miembros",
+        "subjectTypeNameMembers": "miembros",
+        "subjectTypeNameTeams": "equipos",
+        "teamsTab": "Equipos"
+    },
+    "selectTeamsList": {
+        "searchPlaceholder": "Encontrar equipos...",
+        "selectedAmountLabel": "{cuenta} equipos seleccionados"
+    },
+    "selectSubjectsListFooter": {
+        "invite": "Invitar {cuenta} {tipo}",
+        "types": {
+            "members": "miembros",
+            "teams": "equipos"
+        },
+        "helpTooltip": "La asignación de funciones a los miembros anula la asignación de funciones a los equipos.",
+        "roleSelectorBuilderDataWarningTooltip": "Podrán crear fórmulas y campos de búsqueda que expongan cualquier campo de cualquier tabla vinculada."
+    },
+    "membersRoleField": {
+        "noAccessHelpText": "Este usuario necesita acceso explícito a los recursos.",
+        "adminHelpText": "Los administradores pueden restringir las funciones de otros administradores."
+    },
+    "membersPagePlugin": {
+        "roleHelpText": "Puede anularse con roles en bases de datos y tablas."
+    },
+    "oauthSettingsForm": {
+        "clientId": "ID de cliente",
+        "providerNamePlaceholder": "Nombre personalizado del proveedor",
+        "providerName": "Nombre",
+        "clientIdPlaceholder": "ID de cliente del proveedor",
+        "secret": "Secreto",
+        "secretPlaceholder": "El secreto del proveedor",
+        "baseUrl": "URL",
+        "baseUrlPlaceholder": "URL base del proveedor",
+        "invalidBaseUrl": "La URL introducida no es una URL de proveedor válida",
+        "callbackUrl": "URL de devolución de llamada"
+    },
+    "manageTeamModals": {
+        "subheading": "Los equipos permiten conceder o restringir permisos en bloque a varias personas."
+    },
+    "memberRolesTableContexItem": {
+        "label": "Gestionar miembros"
+    },
+    "memberRolesMembersList": {
+        "remove": "Quitar",
+        "adminHelpText": "Los administradores pueden restringir las funciones de otros administradores.",
+        "teamMembersCount": "{cuenta} miembros del equipo"
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Buscar miembros...",
+        "selectedAmountLabel": "{cuenta} miembros seleccionados"
+    },
+    "enterpriseFeatures": {
+        "sso": "Inicio de sesión único",
+        "rbac": "Control de acceso basado en funciones"
+    },
+    "chatwootSuportSidebarGroup": {
+        "directSupport": "Apoyo directo"
+    },
+    "userTeamsField": {
+        "no_records": "No hay equipos"
+    },
+    "loginButton": {
+        "continueWith": "Continuar con"
     }
 }

@@ -27,7 +27,8 @@
         "admin": "管理员",
         "dashboard": "仪表板",
         "trash": "回收站",
-        "settings": "设置"
+        "settings": "设置",
+        "members": "成员"
     },
     "accountForm": {
         "nameLabel": "你的名字",
@@ -84,7 +85,9 @@
         "disabledAccountMessage": "此用户帐户已被禁用。",
         "incorrectCredentialTitle": "不正确的凭据",
         "incorrectCredentialMessage": "提供的电子邮件地址或密码不正确。",
-        "inputRequired": "需要输入。"
+        "inputRequired": "需要输入。",
+        "disabledPasswordProviderTitle": "密码验证被禁用.",
+        "disabledPasswordProviderMessage": "请使用其它认证方式."
     },
     "field": {
         "language": "语言",
@@ -125,7 +128,8 @@
     "groupInviteForm": {
         "invitationFormTitle": "通过电子邮件邀请",
         "optionalMessagePlaceholder": "可选消息",
-        "errorInvalidEmail": "请输入有效的电子邮件地址。"
+        "errorInvalidEmail": "请输入有效的电子邮件地址。",
+        "errorTooLongMessage": "消息限制为 {amount} 个字符."
     },
     "groupsContext": {
         "search": "搜索群组",
@@ -141,7 +145,10 @@
     },
     "createGroupModal": {
         "createNew": "创建新群组",
-        "add": "添加群组"
+        "add": "添加群组",
+        "defaultName": "无标题组",
+        "permissionDeniedTitle": "权限被拒绝",
+        "permissionDeniedBody": "您没有创建新组所需的权限."
     },
     "templateCategories": {
         "search": "搜索模板",
@@ -179,7 +186,8 @@
     },
     "trashModal": {
         "emptyTitle": "没有找到组",
-        "emptyMessage": "您不是任何组的成员。数据库等应用程序属于一个组，因此要创建它们，您需要创建一个组。"
+        "emptyMessage": "您不是任何组的成员。数据库等应用程序属于一个组，因此要创建它们，您需要创建一个组。",
+        "emptyMessageWithoutCreatePermission": "您不是任何组的成员.像数据库这样的应用程序来自于一个组，因此要创建它们，您首先需要由管理员发出邀请并加入该组。"
     },
     "uploadViaURLUserFileUpload": {
         "title": "从 URL 上传",
@@ -230,7 +238,6 @@
         "title": "正在清除...",
         "content": "准备数据中"
     },
-
     "undoRedoNotification": {
         "undoingTitle": "正在撤消...",
         "undoingText": "撤消你的动作中",
@@ -251,10 +258,11 @@
         "error": "加载页面时出现问题。我们的开发人员已收到此问题的通知。请尝试刷新或返回仪表板。",
         "backDashboard": "返回仪表板",
         "backLogin": "返回登录",
-        "wrong": "出了点问题"
+        "wrong": "出了点问题",
+        "refresh": "刷新页面"
     },
     "dashboard": {
-        "title": "仪表板",
+        "title": "仪表盘",
         "alertTitle": "我们需要你的帮助！",
         "alertText": "如果您觉得 Baserow 有用，我们非常感谢您加注星标或分享我们。通过分享 Baserow，您正在帮助我们改进产品并使其对您更有用。",
         "tweetContent": "看看@baserow 一个开源的无代码数据库工具和 Airtable 替代品！",
@@ -267,7 +275,8 @@
         "shareOnTwitter": "关于 Baserow 的推文",
         "shareOnReddit": "在 Reddit 上分享",
         "shareOnFacebook": "在 Facebook 上分享",
-        "shareOnLinkedIn": "在 LinkedIn 上分享"
+        "shareOnLinkedIn": "在 LinkedIn 上分享",
+        "noGroupTextWithoutCreatePermission": "您不是任何组的成员.像数据库这样的应用程序应属于一个组，因此为了创建它们，您需要首先由管理员邀请您加入一个组."
     },
     "dashboardSidebar": {
         "groups": "群组",
@@ -280,7 +289,13 @@
     },
     "login": {
         "title": "登录",
-        "forgotPassword": "忘记密码"
+        "forgotPassword": "忘记密码?",
+        "signUp": "注册",
+        "emailPlaceholder": "输入您的电子邮箱地址..",
+        "passwordPlaceholder": "输入您的密码..",
+        "signUpText": "没有注册用户?",
+        "displayPasswordLogin": "使用电子邮件和密码登录",
+        "redirecting": "正在重定向到身份验证提供程序..."
     },
     "resetPassword": {
         "title": "重置密码",
@@ -301,7 +316,13 @@
         "disabled": "注册被禁用",
         "disabledMessage": "无法创建帐户，因为注册已被禁用。",
         "requireFirstUser": "欢迎来到 Baserow！",
-        "requireFirstUserMessage": "请填写下表创建管理员用户。"
+        "requireFirstUserMessage": "请填写下表创建管理员用户。",
+        "emailPlaceholder": "输入您的电子邮箱地址..",
+        "login": "登录",
+        "namePlaceholder": "输入您的名字..",
+        "passwordPlaceholder": "输入您的密码..",
+        "passwordRepeatPlaceholder": "确认您的密码..",
+        "loginText": "用户已注册?"
     },
     "forgotPassword": {
         "title": "忘记密码",
@@ -309,7 +330,8 @@
         "submit": "发送链接",
         "confirmation": "如果您的电子邮件地址存在于我们的数据库中，您将在几分钟后在您的电子邮件地址收到一个密码重置链接。",
         "disabled": "忘记密码被禁用",
-        "disabledMessage": "无法重置密码，因为该功能已被禁用。"
+        "disabledMessage": "无法重置密码，因为该功能已被禁用。",
+        "loginText": "已经存在用户和密码?"
     },
     "settings": {
         "settingsTitle": "管理员设置",
@@ -327,7 +349,10 @@
         "settingUserDeletionGraceDelay": "宽限延迟",
         "settingUserDeletionGraceDelayDescription": "这是未登录的天数，在此之后计划删除的帐户将被永久删除。",
         "invalidAccountDeletionGraceDelay": "此值为必填项，必须是小于 32000 的正整数",
-        "enabled": "启用"
+        "enabled": "启用",
+        "settingAllowNonStaffCreateGroupOperationDescription": "默认情况下，每个人都可以创建新组.禁用此选项仅允许员工创建新组.",
+        "settingAllowNonStaffCreateGroupOperationWarning": "启用此设置后，新用户将在他们是管理员的身份时自动创建一个组，因此出于计费目的，他们将被通知给管理员.若要防止出现这种情况，请禁用此设置，新邀请的用户将仅以他们被邀请的角色开始.",
+        "settingAllowNonStaffCreateGroupOperation": "允许任何人创建一个新组"
     },
     "formSidebar": {
         "actions": {
@@ -388,10 +413,14 @@
                     "description": "一个日期字段可以接受以下格式的日期，并将使用该字段的日期格式来解析日期。",
                     "codeSnippet": "\n// 标准\nISO_8601\n\n// 通用格式\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM -DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm' \n\n// 美国\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
+            },
+            "howToHide": {
+                "title": "如何隐藏字段",
+                "description": "如果您想动态隐藏字段,可以通过从url添加到公共的查询参数来实现.这些查询参数前缀为“hide_”，以避免与未来可能的查询参数冲突."
             }
-        }
+        },
+        "prefillOrHideInfoLink": "动态填充或隐藏"
     },
-
     "job": {
         "statePending": "等待开始...",
         "stateStarted": "开始...",
@@ -403,6 +432,83 @@
     "datetime": {
         "daysAgo": "0 天前 | 1 天前 | {n} 天前",
         "monthsAgo": "0 个月前 | 1 个月前 | {n} 个月前",
-        "yearsAgo": "0 年前 | 1 年前 | {n} 年前"
+        "yearsAgo": "0 年前 | 1 年前 | {n} 年前",
+        "secondsAgo": "刚刚 |1秒前| {n} 秒前",
+        "minutesAgo": "0 分钟前 | 1 分钟前 | {n} 分钟前",
+        "hoursAgo": "0 小时前 | 1 小时前 | {n} 小时前"
+    },
+    "membersSettings": {
+        "membersInviteModal": {
+            "title": "邀请组成员",
+            "submit": "发送邀请",
+            "errors": {
+                "userAlreadyInGroup": {
+                    "title": "用户已在组中存在.",
+                    "text": "当用户已成为组中成员时，无法发送邀请."
+                }
+            },
+            "helpIconText": "所选角色将是此组中的用户的默认角色."
+        },
+        "membersTabTitle": "成员",
+        "membersTable": {
+            "columns": {
+                "teams": "团队",
+                "email": "电子邮箱",
+                "role": "默认角色",
+                "name": "名字"
+            },
+            "actions": {
+                "remove": "从组中移除",
+                "copyEmail": "复制电子邮件"
+            },
+            "title": "{userAmount} 成员在 {groupName}",
+            "inviteMember": "邀请为成员"
+        },
+        "invitesTable": {
+            "columns": {
+                "role": "默认角色",
+                "email": "电子邮件",
+                "message": "消息"
+            },
+            "actions": {
+                "copyEmail": "复制电子邮件",
+                "remove": "取消邀请"
+            },
+            "title": "{invitesAmount} 待定邀请在 {groupName}"
+        },
+        "invitesTabTitle": "邀请"
+    },
+    "UserSessionExpiredNotification": {
+        "content": "由于您的认证令牌过期导致被强制注销. 请重新登录",
+        "title": "会话过期"
+    },
+    "crudTableSearch": {
+        "search": "搜索"
+    },
+    "removeFromGroupModal": {
+        "remove": "移除",
+        "title": "确认从组中移除",
+        "confirmation": "是否确实要从{group_name}中删除{name}?此操作无法撤消."
+    },
+    "InstallTemplateJobType": {
+        "installing": "安装",
+        "installedTitle": "已安装模板"
+    },
+    "permissionsUpdatedNotification": {
+        "title": "权限已更新",
+        "content": "当前访问的内容可能受到影响，请重新加载页面。",
+        "action": "重载"
+    },
+    "memberSelectionList": {
+        "searchPlaceholder": "查找...",
+        "selectedAmountLabel": "{count} 选择"
+    },
+    "memberAssignmentModalFooter": {
+        "invite": "邀请{count}",
+        "deselectAll": "全部取消",
+        "selectAll": "全选"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "计费角色文档"
     }
 }

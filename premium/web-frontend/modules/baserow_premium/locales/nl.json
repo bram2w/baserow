@@ -64,7 +64,12 @@
         "name": "Naam",
         "members": "Leden",
         "applications": "Applicaties",
-        "created": "Aangemaakt"
+        "created": "Aangemaakt",
+        "seatsTaken": "Plekken bezet",
+        "usageHelpText": "Wordt 's nachts berekend wanneer de instelling voor het gebruik van groepen is ingeschakeld",
+        "rowCount": "Aantal rijen",
+        "freeUsers": "Gratis gebruikers",
+        "storageUsage": "Opslag gebruikt (MB)"
     },
     "editGroupContext": {
         "delete": "Permanent verwijderen"
@@ -268,7 +273,8 @@
         "exports": "JSON- en XML-export",
         "admin": "Admin functionaliteit",
         "surveyForm": "Enquêteformulier",
-        "publicLogoRemoval": "Publiek logo verwijderen"
+        "publicLogoRemoval": "Publiek logo verwijderen",
+        "personalViews": "Persoonlijke weergave"
     },
     "premiumModal": {
         "title": "Upgrade om de {name} te gebruiken",
@@ -290,5 +296,8 @@
             "label": "Verberg Baserow logo in gedeelde weergave",
             "premiumModalName": "publieke logo verwijderen"
         }
+    },
+    "viewsContext": {
+        "personal": "Persoonlijk"
     }
 }

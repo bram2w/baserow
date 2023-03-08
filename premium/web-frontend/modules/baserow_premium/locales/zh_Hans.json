@@ -18,16 +18,20 @@
         "exporterType": {
             "json": "导出为 JSON",
             "xml": "导出为 XML"
-        }
+        },
+        "deactivated": "可用的高级版本"
     },
     "rowCommentSidebar": {
         "onlyPremium": "行中评论功能在高级版本中可用。",
         "readOnlyNoComment": "此行没有评论。",
         "noComment": "此行尚无评论。使用下面的表格添加评论。",
-        "comment": "评论"
+        "comment": "评论",
+        "more": "更多消息",
+        "name": "行注释"
     },
     "rowComment": {
-        "you": "你"
+        "you": "你",
+        "anonymous": "匿名的"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "注册一个许可证",
@@ -36,44 +40,44 @@
         "licenseDescription": "只能在 baserow.io 上获得许可证。如果你已购买许可证，它将通过电子邮件发送给你，也可以从帐户概览中获取。将许可证密钥复制并粘贴到下面的框中，然后单击按钮将许可证密钥注册到此实例。安装两个不同实例时不可以使用相同的密钥。 如果你还没有密钥可以点此购买：{pricingLink} 。",
         "licenseError": {
             "invalidTitle": "无效的",
-            "invalid": "",
-            "unsupportedTitle": "",
-            "unsupported": "",
-            "expiredTitle": "",
-            "expired": "",
-            "duplicateTitle": "",
-            "duplicate": "",
-            "instanceMismatchTitle": "",
-            "instanceMismatch": ""
+            "invalid": "无效的许可证.",
+            "unsupportedTitle": "不支持",
+            "unsupported": "当前许可证与您的Baserow版本不兼容.请更新到最新版本,然后重试.",
+            "expiredTitle": "已到期",
+            "expired": "当前许可证已过期.",
+            "duplicateTitle": "复制",
+            "duplicate": "当前许可证已注册到此实例.",
+            "instanceMismatchTitle": "实例不匹配",
+            "instanceMismatch": "当前许可证不属于此实例."
         }
     },
     "disconnectLicenseModal": {
-        "disconnectLicense": "",
-        "disconnectDescription": ""
+        "disconnectLicense": "断开许可证",
+        "disconnectDescription": "您确定要断开此许可吗? 如果您在该许可证处于活动状态时断开连接,相关用户将无法访问该计划. 它将有效地删除许可证, 如果您想在另一个自托管实例中使用此许可证,请通过 {contact} 联系我们的技术团队."
     },
     "registerLicenseForm": {
         "licenseKey": "许可证码"
     },
     "groupsAdminTable": {
         "allGroups": "所有集体",
-        "id": "",
+        "id": "ID",
         "name": "名字",
         "members": "成员",
         "applications": "应用",
         "created": "创建"
     },
     "editGroupContext": {
-        "delete": ""
+        "delete": "永久删除"
     },
     "deleteGroupModal": {
         "title": "删除 {name}",
         "confirmation": "你确定要删除集体：{name}？",
-        "comment": "",
+        "comment": "该组将被永久删除,包括相关应用程序.此操作无法撤销.",
         "delete": "删除集体{name}"
     },
     "activeUsers": {
         "newUsers": "新用户",
-        "activeUsers": ""
+        "activeUsers": "活跃用户"
     },
     "usersAdminTable": {
         "allUsers": "所有用户",
@@ -83,32 +87,33 @@
         "groups": "集体",
         "lastLogin": "上次登录",
         "dateJoined": "注册",
-        "active": ""
+        "active": "活跃的"
     },
     "editUserContext": {
         "changePassword": "更改密码",
-        "delete": ""
+        "delete": "永久删除",
+        "impersonate": "扮演"
     },
     "changePasswordForm": {
         "newPassword": "新密码",
-        "repeatPassword": "",
+        "repeatPassword": "重复密码",
         "changePassword": "更改密码",
         "error": {
-            "doesntMatch": ""
+            "doesntMatch": "此字段必须与密码字段匹配."
         }
     },
     "userForm": {
         "fullName": "全名",
         "email": "邮箱",
-        "isActive": "",
+        "isActive": "活动状态",
         "warning": {
-            "changeEmail": "",
-            "inactiveUser": "",
-            "userStaff": ""
+            "changeEmail": "更改此用户的电子邮件地址意味着当他们登录时,必须使用新的电子邮件地址.这必须与该用户进行沟通.",
+            "inactiveUser": "当用户被标记为非活跃时,他们将无法登录.",
+            "userStaff": "让用户成为员工可以让他们对所有用户,所有组进行管理访问,并可以撤销您自己的员工权限."
         },
         "error": {
-            "invalidName": "",
-            "invalidEmail": ""
+            "invalidName": "请输入有效的全名,其长度必须大于2个字符,小于150个字符.",
+            "invalidEmail": "请输入有效的电子邮件地址."
         }
     },
     "changeUserPasswordModal": {
@@ -117,8 +122,8 @@
     "deleteUserModal": {
         "title": "删除{username}",
         "confirmation": "你确定要删除这个用户：{name}？",
-        "comment1": "",
-        "comment2": "",
+        "comment1": "用户帐户将被删除,但用户所属的组将继续存在.即使此用户是组中的最后一个用户,也不会删除用户组.删除组中的最后一个用户将阻止任何人访问该组.",
+        "comment2": "删除用户后,新用户可以使用删除的用户电子邮件地址再次注册.为了确保他们不能再次注册,请禁用用户并不要删除他们.",
         "delete": "删除用户{username}"
     },
     "editUserModal": {
@@ -126,80 +131,80 @@
         "edit": "编辑{ username }"
     },
     "tableJSONExporter": {
-        "encoding": ""
+        "encoding": "编码"
     },
     "tableXMLExporter": {
-        "encoding": ""
+        "encoding": "编码中"
     },
     "kanbanViewStackContext": {
         "createCard": "新建卡",
-        "editStack": "",
-        "deleteStack": "",
+        "editStack": "编辑堆栈",
+        "deleteStack": "删除堆栈",
         "delete": "删除 {name}",
-        "deleteDescription": ""
+        "deleteDescription": "是否确实要删除堆栈{name}?删除堆栈会导致删除单个选择字段的选择选项,这可能会导致数据丢失,因为行值将设置为空."
     },
     "kanbanViewHeader": {
-        "stackBy": "",
-        "stackedBy": "",
-        "customizeCards": ""
+        "stackBy": "堆叠方式",
+        "stackedBy": "堆叠自 {fieldName}",
+        "customizeCards": "自定义卡片"
     },
     "kanbanViewOptionForm": {
-        "selectOption": ""
+        "selectOption": "选项"
     },
     "kanbanViewStakedBy": {
-        "title": "",
-        "chooseField": ""
+        "title": "组字段",
+        "chooseField": "卡片应按哪个单选字段堆叠?"
     },
     "kanbanViewStack": {
-        "uncategorized": "",
+        "uncategorized": "未分类",
         "tryAgain": "重试",
         "new": "新"
     },
     "dashboard": {
-        "title": "",
-        "totals": "",
-        "totalUsers": "",
-        "totalGroups": "",
-        "totalApplications": "",
+        "title": "仪表盘",
+        "totals": "总计",
+        "totalUsers": "用户总数",
+        "totalGroups": "组总数",
+        "totalApplications": "应用程序总数",
         "newUsers": "新用户",
-        "newUsers24h": "",
-        "newUsers7days": "",
-        "newUsers30days": "",
-        "activeUsers": "",
-        "activeUsers24h": "",
-        "activeUsers7days": "",
-        "activeUsers30days": "",
+        "newUsers24h": "最新 24 小时的新用户",
+        "newUsers7days": "最近7天的新用户",
+        "newUsers30days": "最近30天的新用户",
+        "activeUsers": "活跃用户",
+        "activeUsers24h": "活跃用户持续 24 小时",
+        "activeUsers7days": "活跃用户最近 7 天",
+        "activeUsers30days": "活跃用户最近 30 天",
         "viewAll": "查看全部"
     },
     "licenses": {
-        "titleNoLicenses": "",
-        "titleLicenses": "",
-        "noLicensesDescription": "",
+        "titleNoLicenses": "未找到许可证",
+        "titleLicenses": "许可证",
+        "noLicensesDescription": "您的 Baserow 实例未注册任何许可证.高级许可证使您可以立即访问所有附加功能.如果您已经拥有许可证,可以在此处注册.或者,您可以通过单击下面的按钮来获取一个.",
         "rowComments": "",
         "kanbanView": "",
         "exports": "",
         "admin": "",
         "rowColoring": "",
-        "getLicense": "",
-        "baserowInstanceId": "",
-        "registerLicense": "",
-        "licenceId": "",
-        "premium": "",
-        "expired": "",
-        "validity": "",
-        "seats": "",
+        "getLicense": "获取许可证",
+        "baserowInstanceId": "您的Baserow实例ID为:",
+        "registerLicense": "注册许可证",
+        "licenceId": "许可证ID",
+        "premium": "高级版",
+        "expired": "过期",
+        "validity": "有效期从{start}到{end}",
+        "seats": "座席",
         "premiumFeatures": ""
     },
     "license": {
-        "title": "",
-        "users": "",
-        "description": "",
-        "seatLeft": "",
-        "fillSeats": "",
-        "removeAll": "",
-        "licenseId": "",
-        "addUser": "",
-        "plan": "",
+        "title": "{name} 计划",
+        "users": "用户",
+        "description": "选择可以使用 {product_code} 计划的用户.此许可证允许您向最多 {seats} 用户授予 {product_code}.",
+        "seatLeft": "您没有席位了|你还剩下一个席位|您还剩 {count} 个席位",
+        "fillSeats": "用不在计划中的用户填补席位",
+        "removeAll": "移除所有用户",
+        "licenseId": "许可证ID",
+        "addUser": "添加用户",
+        "plan": "计划",
         "premium": "",
         "expired": "",
         "validFrom": "",
@@ -217,5 +222,19 @@
         "storeUsage": "",
         "disconnectLicense": "",
         "disconnectDescription": ""
+    },
+    "premiumModal": {
+        "description": "您的帐户无法访问高级功能.升级到高级版本以开始使用 {name}.您可以通过获取许可证来升级您的帐户.单击下面的按钮以查看定价.",
+        "viewPricing": "查看定价",
+        "title": "升级以使用{name}"
+    },
+    "premiumFeatures": {
+        "exports": "JSON and XML输出",
+        "admin": "管理功能",
+        "rowColoring": "行着色",
+        "kanbanView": "看板视图",
+        "surveyForm": "调查表格",
+        "publicLogoRemoval": "公共标志删除",
+        "rowComments": "行注释"
     }
 }

@@ -374,7 +374,8 @@
     },
     "viewsContext": {
         "searchView": "Zoek weergaven",
-        "noViews": "Geen weergaven gevonden"
+        "noViews": "Geen weergaven gevonden",
+        "collaborative": "Samenwerkend"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "onbenoemde rij {value}",
@@ -455,7 +456,8 @@
         "delete": "Weergave verwijderen"
     },
     "viewForm": {
-        "name": "Naam"
+        "name": "Naam",
+        "whoCanEdit": "Wie kan bewerken"
     },
     "galleryViewHeader": {
         "customizeCards": "Kaarten aanpassen"
@@ -485,7 +487,9 @@
         "duplicateRow": "Rij dupliceren",
         "selectRow": "Rij selecteren",
         "deleteRows": "Rijen verwijderen",
-        "copyCells": "Kopieer cellen"
+        "copyCells": "Kopieer cellen",
+        "hiddenRowsInsertedMessage": "{number} nieuw toegevoegde rijen zijn toegevoegd, maar zijn niet zichtbaar vanwege de actieve filters.",
+        "hiddenRowsInsertedTitle": "Rijen toegevoegd"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
@@ -741,5 +745,13 @@
     "fileField": {
         "errorEmptyFileNameMessage": "U kunt geen lege naam voor een bestand instellen.",
         "errorEmptyFileNameTitle": "Ongeldige bestandsnaam"
+    },
+    "viewOwnershipType": {
+        "collaborative": "Samenwerkend",
+        "personal": "Persoonlijk"
+    },
+    "gridViewRowsAddContext": {
+        "title": "Maak meerdere rijen",
+        "choice": "Voeg {rijAmountChoice} rijen toe"
     }
 }

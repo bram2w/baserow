@@ -288,7 +288,10 @@
         "settingUserDeletionGraceDelayDescription": "Il s'agit du nombre de jours sans connexion après lequel un compte planifié pour être supprimé est définitivement supprimé.",
         "settingAllowNonStaffCreateGroupOperation": "Autoriser tout le monde à créer de nouveaux groupes",
         "settingAllowNonStaffCreateGroupOperationDescription": "Par défaut, tout le monde peut créer de nouveaux groupes. Désactivez cette option pour permettre uniquement aux collaborateurs de créer de nouveaux groupes.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Avec ce paramètre activé, les nouveaux utilisateurs auront un groupe automatiquement créé pour eux pour lequel ils sont administrateur, donc à des fins de facturation, ils seront signalés comme un administrateur. Pour éviter cela, désactivez ce paramètre afin que les utilisateurs nouvellement invités commencent uniquement avec le rôle avec lequel ils ont été invités."
+        "settingAllowNonStaffCreateGroupOperationWarning": "Un groupe sera automatiquement créé pour les nouveaux utilisateurs s'ils sont administrateurs.",
+        "settingTrackGroupUsage": "Suivi de l'utilisation du groupe",
+        "settingTrackGroupUsageDescription": "Active un travail nocturne qui compte l'utilisation des lignes et des fichiers par groupe, affiché sur la page d'administration du groupe premium.",
+        "maintenance": "Maintenance"
     },
     "copyingNotification": {
         "title": "Copie en cours...",
@@ -475,7 +478,9 @@
                 "name": "Nom",
                 "role": "Rôle par défaut",
                 "email": "Courriel",
-                "teams": "Équipes"
+                "teams": "Équipes",
+                "highestRole": "Rôle le plus élevé",
+                "highestRoleHelpText": "Le rôle le plus élevé attribué à cet utilisateur, directement ou par une équipe, sur tout ce qui se trouve dans ce groupe"
             },
             "title": "{userAmount} Membres dans {nom du groupe}",
             "inviteMember": "Inviter un membre"
@@ -487,7 +492,9 @@
         "search": "Recherche"
     },
     "memberAssignmentModalFooter": {
-        "invite": "Inviter {count}"
+        "invite": "Inviter {count}",
+        "selectAll": "Sélectionner tout",
+        "deselectAll": "Désélectionner tout"
     },
     "removeFromGroupModal": {
         "title": "Confirmer le retrait du groupe",
@@ -506,5 +513,11 @@
         "title": "Permissions mises à jour",
         "content": "Cela pourrait affecter ce à quoi vous avez accès, veuillez recharger la page.",
         "action": "Recharger"
+    },
+    "highestPaidRoleField": {
+        "billable": "Facturable"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "Documentation sur les rôles facturables"
     }
 }

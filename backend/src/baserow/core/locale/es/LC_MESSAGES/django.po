@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-16 14:17+0000\n"
-"PO-Revision-Date: 2023-01-18 11:38+0000\n"
-"Last-Translator: Hiram <hiram@swyftlight.com>\n"
+"PO-Revision-Date: 2023-01-19 13:51+0000\n"
+"Last-Translator: gallegonovato <fran-carro@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/baserow/"
 "backend-core/es/>\n"
 "Language: es\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.15.1-dev\n"
+"X-Generator: Weblate 4.15.1\n"
 
 #: src/baserow/core/action/scopes.py:9
 #, python-format
@@ -48,7 +48,7 @@ msgid ""
 "\"%(group_name)s.\""
 msgstr ""
 "El nombre del grupo (%(group_id)s) ha cambiado de \"%(original_group_name)s\""
-" a \"%(group_name)s\"."
+" a \"%(group_name)s.\""
 
 #: src/baserow/core/actions.py:230
 msgid "Order groups"

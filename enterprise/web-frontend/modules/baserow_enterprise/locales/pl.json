@@ -1,5 +1,70 @@
 {
     "enterprise": {
-        "license": ""
+        "license": "Wersja Enterprise",
+        "sidebarTooltip": "Twoje konto ma globalny dostęp do funkcji korporacyjnych",
+        "rbac": "RBAC",
+        "sso": "SSO",
+        "deactivated": "Dostępne w wersji enterprise",
+        "licenseDescription": "Przeglądarki są bezpłatne w Baserow Enterprise. Jeśli użytkownik ma jakąkolwiek inną rolę, w jakiejkolwiek grupie, wtedy automatycznie użyje płatnego miejsca.",
+        "overflowWarning": "Masz zbyt wielu użytkowników niebędących widzami i wykorzystałeś wszystkie swoje płatne miejsca. Zmień użytkowników na widzów na stronie członków każdej grupy."
+    },
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Ostatni włączony dostawca",
+        "cannotDisableAllAuthProvidersDescription": "Nie można wyłączyć ani usunąć ostatniego aktywnego dostawcy."
+    },
+    "updateTeamModal": {
+        "title": "Aktualizacja {teamName}",
+        "invalidNameTitle": "Użyj innej nazwy",
+        "invalidNameMessage": "Ta nazwa zespołu jest już używana w określonej grupie."
+    },
+    "manageTeamForm": {
+        "nameTitle": "Nazwa",
+        "roleTitle": "Domyślna rola",
+        "inviteMembers": "Dodaj członków",
+        "membersTitle": "Członkowie",
+        "noSubjectsSelected": "Kliknij \"{buttonLabel}\", aby opcjonalnie dodać użytkowników zespołu.",
+        "roleHelpText": "Role użytkownika są zawsze nadrzędne w stosunku do ról zespołu.",
+        "submit": "Zapisz"
+    },
+    "editTeamContext": {
+        "edit": "Edytuj zespół",
+        "remove": "Usuń zespół"
+    },
+    "teamsTable": {
+        "title": "{teamCount} zespoły w {groupName}",
+        "createNew": "Utwórz zespół",
+        "nameColumn": "Nazwa",
+        "createdColumn": "Utworzono dnia",
+        "roleHelpText": "Można nadpisać role na bazach danych i tabelach.",
+        "subjectsColumn": "Członków",
+        "roleColumn": "Domyślna rola"
+    },
+    "subjectSampleField": {
+        "titleAttr": "{subjectCount} członków tego zespołu."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Zespoły"
+    },
+    "adminType": {
+        "AuditLog": "Dziennik kontroli",
+        "Authentication": "Uwierzytelnianie"
+    },
+    "auditLog": {
+        "title": "Dziennik kontrolny",
+        "filterUserTitle": "Użytkownik",
+        "filterGroupTitle": "Grupa",
+        "filterActionTypeTitle": "Typ zdarzenia",
+        "filterFromTimestampTitle": "Od daty"
+    },
+    "manageTeamModals": {
+        "subheading": "Zespoły pozwalają na masowe nadawanie lub ograniczanie uprawnień wielu osobom."
+    },
+    "trashType": {
+        "team": "zespół"
+    },
+    "createTeamModal": {
+        "title": "Utwórz zespół",
+        "invalidNameTitle": "Proszę użyć innej nazwy",
+        "invalidNameMessage": "Nazwa zespołu jest już używana w określonej grupie."
     }
 }

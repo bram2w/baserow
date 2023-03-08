@@ -3,7 +3,8 @@
         "yes": "tak",
         "no": "nie",
         "wrong": "Coś poszło nie tak",
-        "none": "Brak"
+        "none": "Brak",
+        "free": "Bezpłatnie"
     },
     "action": {
         "upload": "Prześlij",
@@ -39,7 +40,11 @@
         "database": "Baza danych",
         "cantSelectTableTitle": "Nie można wybrać bazy danych.",
         "cantSelectTableDescription": "Baza danych nie mogła zostać wybrana, ponieważ nie posiada żadnych tabel. Użyj paska bocznego, aby je utworzyć.",
-        "databaseDefaultName": "Baza danych bez tytułu"
+        "databaseDefaultName": "Baza danych bez tytułu",
+        "builder": "Aplikacja",
+        "builderDefaultName": "Aplikacja bez tytułu",
+        "cantSelectPageTitle": "Nie można było wybrać aplikacji.",
+        "cantSelectPageDescription": "Nie można wybrać kreatora aplikacji, ponieważ nie ma on żadnych stron. Użyj paska bocznego, aby go utworzyć."
     },
     "settingType": {
         "account": "Konto",
@@ -100,7 +105,7 @@
         "readOnly": "To jest pole tylko do odczytu.",
         "text": "Akceptuje tekst jednowierszowy.",
         "longText": "Akceptuje tekst wielowierszowy.",
-        "linkRow": "Przyjmuje tablicę zawierającą identyfikatory powiązanych wierszy z tabeli id {tabeli}. Wszystkie identyfikatory muszą być podane za każdym razem, gdy relacje są aktualizowane. Jeśli podana zostanie pusta tablica, wszystkie relacje zostaną usunięte.",
+        "linkRow": "Przyjmuje tablicę zawierającą identyfikatory lub wartości tekstowe pola głównego powiązanych wierszy z tabeli id {table}. Wszystkie identyfikatory muszą być podane za każdym razem, gdy relacje są aktualizowane. Jeśli podana zostanie pusta tablica, wszystkie relacje zostaną usunięte. W przypadku podania wartości tekstowej zamiast identyfikatora, zostanie wyszukany wiersz z pasującą wartością dla jego pola głównego. Jeśli zostanie znalezione więcej niż jedno dopasowanie, zostanie wybrane pierwsze w kolejności w tabeli.",
         "number": "Akceptuje liczbę.",
         "numberPositive": "Akceptuje liczbę dodatnią.",
         "decimal": "Przyjmuje liczbę dziesiętną z {places} miejscami dziesiętnymi po kropce.",
@@ -116,8 +121,8 @@
         "url": "Przyjmuje ciąg znaków, który musi być adresem URL.",
         "email": "Przyjmuje ciąg znaków, który musi być adresem e-mail.",
         "file": "Akceptuje tablicę obiektów zawierających co najmniej nazwę pliku użytkownika. Możesz użyć punktów końcowych \"Przesyłanie plików\", aby przesłać plik. Odpowiedź tych wywołań może być przekazana bezpośrednio jako obiekt tutaj. Punkty końcowe można znaleźć na lewym pasku bocznym.",
-        "singleSelect": "Przyjmuje liczbę całkowitą reprezentującą wybrane id opcji select lub null, jeśli żadna nie została wybrana.",
-        "multipleSelect": "Przyjmuje tablicę liczb całkowitych, z których każda reprezentuje wybrane id opcji select.",
+        "singleSelect": "Przyjmuje liczbę całkowitą lub wartość tekstową reprezentującą wybrany identyfikator opcji wyboru lub wartość opcji. Wartość null oznacza, że żadna nie zostanie wybrana. W przypadku wartości tekstowej, wybrana zostanie pierwsza pasująca opcja.",
+        "multipleSelect": "Przyjmuje tablicę mieszanych liczb całkowitych lub wartości tekstowych, z których każda reprezentuje wybrany id lub wartość opcji select. W przypadku wartości tekstowej, wybierana jest pierwsza pasująca opcja.",
         "phoneNumber": "Akceptuje numer telefonu o maksymalnej długości 100 znaków składający się wyłącznie z cyfr, spacji i następujących znaków: Nx,._+*()#=;/- .",
         "formula": "Pole tylko do odczytu zdefiniowane przez formułę napisaną w języku formuł Baserow.",
         "lookup": "Pole tylko do odczytu połączone z polem wiersza powiązanego, które zwraca tablicę wartości i identyfikatorów wierszy z wybranego pola lookup w tabeli powiązanej.",
@@ -150,7 +155,9 @@
         "lengthIsLowerThan": "długość jest mniejsza niż",
         "hasFileType": "ma typ pliku",
         "beforeToday": "jest przed dniem dzisiejszym",
-        "afterToday": "jest po dzisiejszym dniu"
+        "afterToday": "jest po dzisiejszym dniu",
+        "containsWord": "zawiera słowo",
+        "doesntContainWord": "nie zawiera słowa"
     },
     "viewType": {
         "grid": "Siatka",
@@ -248,7 +255,13 @@
         "snapshotNameNotUniqueTitle": "Nazwa migawki musi być unikatowa.",
         "snapshotNameNotUniqueDescription": "Wszystkie nazwy migawek muszą być unikatowe dla każdej aplikacji.",
         "snapshotOperationLimitExceededTitle": "Limit osiągnięty",
-        "snapshotOperationLimitExceededDescription": "Osiągnięto limit liczby uruchomionych operacji migawek. Poczekaj na zakończenie poprzedniej operacji."
+        "snapshotOperationLimitExceededDescription": "Osiągnięto limit liczby uruchomionych operacji migawek. Poczekaj na zakończenie poprzedniej operacji.",
+        "disabledPasswordProviderTitle": "Uwierzytelnianie hasłem jest wyłączone.",
+        "disabledPasswordProviderMessage": "Użyj innego dostawcy uwierzytelniania.",
+        "lastAdminTitle": "Nie można usunąć ostatniego administratora grupy",
+        "lastAdminMessage": "Grupa musi mieć co najmniej jednego administratora.",
+        "maxLocksPerTransactionExceededTitle": "Wykryto problem z PostgreSQL",
+        "maxLocksPerTransactionExceededDescription": "Baserow próbował trwale usunąć wyrzucone elementy, ale przekroczył dostępne blokady określone w `max_locks_per_transaction`."
     },
     "importerType": {
         "csv": "Importuj plik CSV",
@@ -315,7 +328,7 @@
         "toNumberDescription": "Konwertuje dane wejściowe na liczbę, jeśli to możliwe.",
         "fieldDescription": "Zwraca pole nazwane przez pojedynczy argument tekstowy.",
         "lookupDescription": "Wyszukuje wartości z pola w innej tabeli dla wierszy w polu wiersza powiązanego. Pierwszy argument powinien być nazwą pola wiersza łącza w bieżącej tabeli, a drugi nazwą pola w połączonej tabeli.",
-        "isBlankDescription": "Zwraca true jeśli argument jest pusty lub czysty, a false w przeciwnym wypadku.",
+        "isBlankDescription": "Zwraca true jeśli argument jest null, empty lub blank, false w przeciwnym wypadku.",
         "tDescription": "Zwraca wartość argumentów, jeśli jest to tekst, a w przeciwnym razie ''.",
         "notDescription": "Zwraca false jeśli argument jest true i true jeśli argument jest false.",
         "greaterThanDescription": "Zwraca prawdę, jeśli pierwszy argument jest większy od drugiego, w przeciwnym razie fałsz.",
@@ -364,7 +377,22 @@
         "linkDescription": "Tworzy hiperłącze używając URI podanego w pierwszym argumencie.",
         "buttonDescription": "Tworzy przycisk przy użyciu identyfikatora URI (pierwszy argument) i etykiety (drugi argument).",
         "getLinkLabelDescription": "Pobiera etykietę z formuły przy użyciu funkcji łącza lub przycisku.",
-        "getLinkUrlDescription": "Pobiera adres URL z formuły przy użyciu funkcji łącza lub przycisku."
+        "getLinkUrlDescription": "Pobiera adres URL z formuły przy użyciu funkcji łącza lub przycisku.",
+        "evenDescription": "Zwraca wartość true, jeśli podany argument jest liczbą parzystą, a w przeciwnym razie wartość false.",
+        "lnDescription": "Funkcja logarytmu naturalnego: zwraca wykładnik, do którego należy podnieść stałą e ≈ 2,718, aby otrzymać argument.",
+        "powerDescription": "Zwraca wynik pierwszego argumentu podniesiony do wykładnika drugiego argumentu.",
+        "logDescription": "Funkcja logarytmu: zwraca wykładnik, do którego należy podnieść pierwszy argument, aby otrzymać drugi argument.",
+        "expDescription": "Zwraca wynik działania stałej e ≈ 2,718 podniesionej do podanego numeru argumentu.",
+        "signDescription": "Zwraca 1 jeśli argument jest liczbą dodatnią, -1 jeśli argument jest ujemny, 0 w przeciwnym razie.",
+        "sqrtDescription": "Powraca pierwiastek kwadratowy argumentu.",
+        "absDescription": "Zwraca wartość bezwzględną dla podanego numeru argumentu.",
+        "ceilDescription": "Zwraca najmniejszą liczbę całkowitą, która jest większa lub równa podanej liczbie argumentów.",
+        "floorDescription": "Zwraca największą liczbę całkowitą, która jest mniejsza lub równa podanej liczbie argumentów.",
+        "oddDescription": "Zwraca wartość true, jeśli podany argument jest liczbą parzystą, a w przeciwnym razie wartość false.",
+        "modDescription": "Zwraca resztę z podziału między pierwszym argumentem a drugim argumentem.",
+        "isNullDescription": "Zwraca true jeśli argument jest null, false w przeciwnym wypadku.",
+        "isNanDescription": "Zwraca wartość true, jeśli argument jest 'NaN', w przeciwnym razie zwraca wartość false.",
+        "wheNanDescription": "Zwraca pierwszy argument, jeśli nie jest on 'NaN'. Zwraca drugi argument, jeśli pierwszy argument jest 'NaN'"
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "nienazwany wiersz {value}"
