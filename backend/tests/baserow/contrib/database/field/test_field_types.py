@@ -515,20 +515,24 @@ def test_human_readable_values(data_fixture):
         )
         blank_results[field["field"].name] = blank_value
 
-    assert blank_results == {
+    blank_expected = {
         "boolean": "False",
         "date_eu": "",
         "date_us": "",
         "datetime_eu": "",
         "datetime_us": "",
+        "datetime_eu_tzone_visible": "",
+        "datetime_eu_tzone_hidden": "",
         "last_modified_date_eu": "02/01/2021",
         "last_modified_date_us": "01/02/2021",
-        "last_modified_datetime_eu": "02/01/2021 13:00",
-        "last_modified_datetime_us": "01/02/2021 13:00",
+        "last_modified_datetime_eu": "02/01/2021 12:00",
+        "last_modified_datetime_us": "01/02/2021 12:00",
+        "last_modified_datetime_eu_tzone": "02/01/2021 13:00",
         "created_on_date_eu": "02/01/2021",
         "created_on_date_us": "01/02/2021",
-        "created_on_datetime_eu": "02/01/2021 13:00",
-        "created_on_datetime_us": "01/02/2021 13:00",
+        "created_on_datetime_eu": "02/01/2021 12:00",
+        "created_on_datetime_us": "01/02/2021 12:00",
+        "created_on_datetime_eu_tzone": "02/01/2021 13:00",
         "decimal_link_row": "",
         "email": "",
         "file": "",
@@ -560,20 +564,28 @@ def test_human_readable_values(data_fixture):
         "formula_link_with_label": "label (https://google.com)",
         "lookup": "",
     }
-    assert results == {
+
+    for key, value in blank_expected.items():
+        assert blank_results[key] == value, (key, blank_results[key], value)
+
+    expected = {
         "boolean": "True",
         "date_eu": "01/02/2020",
         "date_us": "02/01/2020",
         "datetime_eu": "01/02/2020 01:23",
         "datetime_us": "02/01/2020 01:23",
+        "datetime_eu_tzone_visible": "01/02/2020 02:23",
+        "datetime_eu_tzone_hidden": "01/02/2020 02:23",
         "last_modified_date_eu": "02/01/2021",
         "last_modified_date_us": "01/02/2021",
-        "last_modified_datetime_eu": "02/01/2021 13:00",
-        "last_modified_datetime_us": "01/02/2021 13:00",
+        "last_modified_datetime_eu": "02/01/2021 12:00",
+        "last_modified_datetime_us": "01/02/2021 12:00",
+        "last_modified_datetime_eu_tzone": "02/01/2021 13:00",
         "created_on_date_eu": "02/01/2021",
         "created_on_date_us": "01/02/2021",
-        "created_on_datetime_eu": "02/01/2021 13:00",
-        "created_on_datetime_us": "01/02/2021 13:00",
+        "created_on_datetime_eu": "02/01/2021 12:00",
+        "created_on_datetime_us": "01/02/2021 12:00",
+        "created_on_datetime_eu_tzone": "02/01/2021 13:00",
         "decimal_link_row": "1.234, -123.456, unnamed row 3",
         "email": "test@example.com",
         "file": "a.txt, b.txt",
@@ -605,6 +617,9 @@ def test_human_readable_values(data_fixture):
         "formula_link_with_label": "label (https://google.com)",
         "lookup": "linked_row_1, linked_row_2, ",
     }
+
+    for key, value in expected.items():
+        assert results[key] == value, (key, results[key], value)
 
 
 @pytest.mark.django_db

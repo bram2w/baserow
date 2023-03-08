@@ -68,7 +68,7 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
 
     filter.type = compatibleType.type
     const viewFilterType = registry.get('viewFilter', filter.type)
-    filter.value = viewFilterType.getDefaultValue()
+    filter.value = viewFilterType.getDefaultValue(field)
     filter.preload_values = {}
     filter.id = uuid()
 

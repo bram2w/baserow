@@ -92,6 +92,13 @@
   }
 }
 
+.filters__value-date-timezone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-direction: row;
+}
+
 .filters__value-timezone {
   font-size: 11px;
   color: $color-neutral-400;

@@ -31,7 +31,7 @@ from baserow.contrib.database.fields.exceptions import (
     MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
 )
-from baserow.contrib.database.file_import.job_type import FileImportJobType
+from baserow.contrib.database.file_import.job_types import FileImportJobType
 from baserow.contrib.database.handler import DatabaseHandler
 from baserow.contrib.database.operations import (
     CreateTableDatabaseTableOperationType,

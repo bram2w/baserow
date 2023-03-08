@@ -47,33 +47,54 @@ def construct_all_possible_field_kwargs(
         "date": [
             {"name": "datetime_us", "date_include_time": True, "date_format": "US"},
             {"name": "date_us", "date_include_time": False, "date_format": "US"},
-            {"name": "datetime_eu", "date_include_time": True, "date_format": "EU"},
+            {
+                "name": "datetime_eu",
+                "date_include_time": True,
+                "date_format": "EU",
+            },
             {"name": "date_eu", "date_include_time": False, "date_format": "EU"},
+            {
+                "name": "datetime_eu_tzone_visible",
+                "date_include_time": True,
+                "date_format": "EU",
+                "date_force_timezone": "Europe/Amsterdam",
+                "date_show_tzinfo": True,
+            },
+            {
+                "name": "datetime_eu_tzone_hidden",
+                "date_include_time": True,
+                "date_format": "EU",
+                "date_force_timezone": "Europe/Amsterdam",
+                "date_show_tzinfo": False,
+            },
         ],
         "last_modified": [
             {
                 "name": "last_modified_datetime_us",
                 "date_include_time": True,
                 "date_format": "US",
-                "timezone": "Europe/Berlin",
             },
             {
                 "name": "last_modified_date_us",
                 "date_include_time": False,
                 "date_format": "US",
-                "timezone": "Europe/Berlin",
             },
             {
                 "name": "last_modified_datetime_eu",
                 "date_include_time": True,
                 "date_format": "EU",
-                "timezone": "Europe/Berlin",
             },
             {
                 "name": "last_modified_date_eu",
                 "date_include_time": False,
                 "date_format": "EU",
-                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "last_modified_datetime_eu_tzone",
+                "date_include_time": True,
+                "date_format": "EU",
+                "date_force_timezone": "Europe/Amsterdam",
+                "date_show_tzinfo": True,
             },
         ],
         "created_on": [
@@ -81,25 +102,28 @@ def construct_all_possible_field_kwargs(
                 "name": "created_on_datetime_us",
                 "date_include_time": True,
                 "date_format": "US",
-                "timezone": "Europe/Berlin",
             },
             {
                 "name": "created_on_date_us",
                 "date_include_time": False,
                 "date_format": "US",
-                "timezone": "Europe/Berlin",
             },
             {
                 "name": "created_on_datetime_eu",
                 "date_include_time": True,
                 "date_format": "EU",
-                "timezone": "Europe/Berlin",
             },
             {
                 "name": "created_on_date_eu",
                 "date_include_time": False,
                 "date_format": "EU",
-                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "created_on_datetime_eu_tzone",
+                "date_include_time": True,
+                "date_format": "EU",
+                "date_force_timezone": "Europe/Amsterdam",
+                "date_show_tzinfo": True,
             },
         ],
         "link_row": [

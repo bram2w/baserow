@@ -4,7 +4,11 @@ import {
   getTimeMomentFormat,
   getDateHumanReadableFormat,
   getTimeHumanReadableFormat,
+  getFieldTimezone,
+  getCellTimezoneAbbr,
 } from '@baserow/modules/database/utils/date'
+
+const DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 
 /**
  * Mixin that introduces methods for the date field. This can both be used for a row
@@ -14,7 +18,9 @@ export default {
   data() {
     return {
       date: '',
+      pickerDate: '',
       time: '',
+      momentDate: null,
     }
   },
   computed: {
@@ -23,7 +29,10 @@ export default {
      * with a computed property.
      */
     valueAndFormats() {
-      return `${this.value}|${this.field.date_format}|${this.field.date_time_format}`
+      return `${this.value}|${this.field.date_format}|${this.field.date_time_format}|${this.field.date_force_timezone}`
+    },
+    fieldDateFormat() {
+      return getDateMomentFormat(this.field.date_format)
     },
   },
   watch: {
@@ -42,23 +51,37 @@ export default {
     this.setDateAndTime(this.field, this.value)
   },
   methods: {
+    updateDateValue() {
+      this.pickerDate = this.momentDate.format(DATE_PICKER_FORMAT)
+      this.date = this.momentDate.format(this.fieldDateFormat)
+    },
+    updateTimeValue() {
+      const timeFormat = getTimeMomentFormat(this.field.date_time_format)
+      this.time = this.momentDate.format(timeFormat)
+    },
     /**
      * When the date part is updated we also need to update the copy data which
      * contains the whole date(time) in the correct format. The copy contains the
      * value that is actually going to be saved.
      */
     updateDate(field, value) {
-      const dateFormat = getDateMomentFormat(field.date_format)
-      const newDate = moment.utc(value, dateFormat)
-      this.updateCopy(
-        field,
-        {
+      const dateFormats = [DATE_PICKER_FORMAT, this.fieldDateFormat]
+      const timezone = getFieldTimezone(field)
+      let newDate = moment.utc(value, dateFormats, true)
+      if (timezone !== null) {
+        newDate = newDate.clone().tz(timezone, true)
+      }
+
+      if (newDate.isValid()) {
+        this.updateCopy(field, {
           year: newDate.year(),
           month: newDate.month(),
           date: newDate.date(),
-        },
-        newDate
-      )
+        })
+        this.updateDateValue()
+      } else {
+        this.date = value
+      }
     },
     /**
      * When the time part is updated we also need to update the copy data which
@@ -66,26 +89,35 @@ export default {
      * value that is actually going to be saved.
      */
     updateTime(field, value) {
-      const newTime = moment.utc(value, ['h:m a', 'H:m'])
-      this.updateCopy(
-        field,
-        {
+      const timeFormats = ['hh:mm a', 'HH:mm']
+      const timezone = getFieldTimezone(field)
+      let newTime = moment.utc(value, timeFormats, true)
+      if (timezone !== null) {
+        newTime = newTime.clone().tz(timezone, true)
+      }
+
+      if (newTime.isValid()) {
+        this.updateCopy(field, {
           hour: newTime.hour(),
           minute: newTime.minute(),
           second: 0,
-        },
-        newTime
-      )
+        })
+        this.updateTimeValue()
+      } else {
+        this.time = value
+      }
     },
     /**
-     * When the user uses the datapicker to choose a date, we also need to update
+     * When the user uses the datepicker to choose a date, we also need to update
      * date data and the copy so that the correct date is visible for the user.
      */
     chooseDate(field, value) {
-      const dateFormat = getDateMomentFormat(field.date_format)
-      value = moment.utc(value).format(dateFormat)
-      this.date = value
-      this.updateDate(field, value)
+      const timezone = getFieldTimezone(field)
+      let pickerDate = moment.utc(value)
+      if (timezone !== null) {
+        pickerDate = pickerDate.clone().tz(timezone, true)
+      }
+      this.updateDate(field, pickerDate.format(DATE_PICKER_FORMAT))
     },
     /**
      * When the user uses the time context to choose a time, we also need to update
@@ -99,36 +131,40 @@ export default {
      * A helper method that allows updating the copy data by only changing certain
      * properties of a datetime. For example only the month could be updated.
      */
-    updateCopy(field, values, newDate) {
-      if (!newDate.isValid()) {
-        return
-      }
-
-      const existing = moment.utc(this.copy || undefined).seconds(0)
-      existing.set(values)
-      let newValue = existing.format()
-      if (!field.date_include_time) {
-        newValue = existing.format('YYYY-MM-DD')
-      }
-      this.copy = newValue
+    updateCopy(field, values) {
+      const existing = this.momentDate.set(values)
+      this.copy = field.date_include_time
+        ? existing.format()
+        : existing.format('YYYY-MM-DD')
     },
     /**
      * Updates the date and time data by converting the value to the correct formats.
      */
     setDateAndTime(field, value) {
+      const timezone = getFieldTimezone(field)
       if (value === null) {
-        this.date = ''
-        this.time = ''
+        this.date = this.time = ''
+        this.momentDate = moment.utc()
+        if (timezone) {
+          this.momentDate = this.momentDate
+            .clone()
+            .utcOffset(moment.tz(timezone).utcOffset())
+        }
+        this.pickerDate = ''
         return
       }
 
-      const existing = moment.utc(value || undefined).seconds(0)
+      let existing = moment.utc(value, moment.ISO_8601, true)
+      if (timezone) {
+        existing = existing.clone().utcOffset(moment.tz(timezone).utcOffset())
+      }
 
-      const dateFormat = getDateMomentFormat(this.field.date_format)
-      const timeFormat = getTimeMomentFormat(this.field.date_time_format)
-
-      this.date = existing.format(dateFormat)
-      this.time = existing.format(timeFormat)
+      this.momentDate = existing
+      this.updateDateValue()
+      this.updateTimeValue()
+    },
+    getCellTimezoneAbbr(field, value, force) {
+      return getCellTimezoneAbbr(field, value, { force })
     },
     /**
      * Returns a human readable date placeholder of the format for the input.

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 from typing import cast
 
@@ -1411,3 +1412,82 @@ def test_can_undo_redo_duplicate_fields_of_interesting_table(api_client, data_fi
                 row_2_value,
                 field_name=field.name,
             )
+
+
+@pytest.mark.django_db
+def test_date_field_type_undo_redo_fix_timezone_offset(api_client, data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table = data_fixture.create_database_table(user=user)
+    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    table_model = table.get_model()
+
+    row_1 = table_model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-01 00:00Z"}
+    )
+    row_2 = table_model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-01 23:30Z"}
+    )
+    row_3 = table_model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-02 15:00Z"}
+    )
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    original_datetime_1 = getattr(row_1, f"field_{datetime_field.id}")
+    original_datetime_2 = getattr(row_2, f"field_{datetime_field.id}")
+    original_datetime_3 = getattr(row_3, f"field_{datetime_field.id}")
+
+    utc_offset = 60
+    action_type_registry.get_by_type(UpdateFieldActionType).do(
+        user,
+        datetime_field,
+        name="test",
+        date_force_timezone="Europe/Rome",
+        date_force_timezone_offset=utc_offset,
+    )
+
+    def row_datetime_updated(row):
+        prev_datetime = getattr(row, f"field_{datetime_field.id}")
+        row.refresh_from_db()
+        new_datetime = getattr(row, f"field_{datetime_field.id}")
+        return new_datetime == (prev_datetime + timedelta(minutes=utc_offset))
+
+    # all the rows has been updated, adding 60 minutes to the time
+    assert row_datetime_updated(row_1)
+    assert row_datetime_updated(row_2)
+    assert row_datetime_updated(row_3)
+
+    actions = ActionHandler.undo(
+        user, [UpdateFieldActionType.scope(table_id=table.id)], session_id
+    )
+    assert len(actions) == 1
+    assert actions[0].type == UpdateFieldActionType.type
+
+    utc_offset = -utc_offset
+    assert row_datetime_updated(row_1)
+    assert row_datetime_updated(row_2)
+    assert row_datetime_updated(row_3)
+    assert getattr(row_1, f"field_{datetime_field.id}") == original_datetime_1
+    assert getattr(row_2, f"field_{datetime_field.id}") == original_datetime_2
+    assert getattr(row_3, f"field_{datetime_field.id}") == original_datetime_3
+
+    actions = ActionHandler.redo(
+        user, [UpdateFieldActionType.scope(table_id=table.id)], session_id
+    )
+    assert len(actions) == 1
+    assert actions[0].type == UpdateFieldActionType.type
+
+    utc_offset = -utc_offset
+    assert row_datetime_updated(row_1)
+    assert row_datetime_updated(row_2)
+    assert row_datetime_updated(row_3)
+    assert getattr(
+        row_1, f"field_{datetime_field.id}"
+    ) == original_datetime_1 + timedelta(minutes=utc_offset)
+    assert getattr(
+        row_2, f"field_{datetime_field.id}"
+    ) == original_datetime_2 + timedelta(minutes=utc_offset)
+    assert getattr(
+        row_3, f"field_{datetime_field.id}"
+    ) == original_datetime_3 + timedelta(minutes=utc_offset)

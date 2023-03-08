@@ -10,8 +10,6 @@ from django.core.files.storage import FileSystemStorage
 
 import pytest
 import responses
-from pytz import UTC, UnknownTimeZoneError
-from pytz import timezone as pytz_timezone
 
 from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
 from baserow.contrib.database.airtable.handler import AirtableHandler
@@ -182,7 +180,7 @@ def test_to_baserow_database_export():
 
     schema, tables = AirtableHandler.extract_schema([user_table_json, data_table_json])
     baserow_database_export, files_buffer = AirtableHandler.to_baserow_database_export(
-        init_data, schema, tables, pytz_timezone("Europe/Amsterdam")
+        init_data, schema, tables
     )
 
     with ZipFile(files_buffer, "r", ZIP_DEFLATED, False) as zip_file:
@@ -259,7 +257,7 @@ def test_to_baserow_database_export():
     }
     assert (
         baserow_database_export["tables"][1]["rows"][0]["field_fldEB5dp0mNjVZu0VJI"]
-        == "2022-01-21T01:00:00+00:00"
+        == "2022-01-21T00:00:00+00:00"
     )
     assert baserow_database_export["tables"][0]["views"] == [
         {
@@ -312,14 +310,14 @@ def test_to_baserow_database_export_without_primary_value():
 
     schema, tables = AirtableHandler.extract_schema(deepcopy([user_table_json]))
     baserow_database_export, files_buffer = AirtableHandler.to_baserow_database_export(
-        init_data, schema, tables, UTC
+        init_data, schema, tables
     )
     assert baserow_database_export["tables"][0]["fields"][0]["primary"] is True
 
     user_table_json["data"]["tableSchemas"][0]["columns"] = []
     schema, tables = AirtableHandler.extract_schema(deepcopy([user_table_json]))
     baserow_database_export, files_buffer = AirtableHandler.to_baserow_database_export(
-        init_data, schema, tables, UTC
+        init_data, schema, tables
     )
     assert baserow_database_export["tables"][0]["fields"] == [
         {
@@ -394,7 +392,6 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
     database = AirtableHandler.import_from_airtable_to_group(
         group,
         "shrXxmp0WmqsTkFWTzv",
-        timezone=UTC,
         storage=storage,
         progress_builder=progress.create_child_builder(represents_progress=1000),
     )
@@ -451,7 +448,7 @@ def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
 
     with pytest.raises(AirtableShareIsNotABase):
         AirtableHandler.import_from_airtable_to_group(
-            group, "shrXxmp0WmqsTkFWTzv", timezone=UTC, storage=storage
+            group, "shrXxmp0WmqsTkFWTzv", storage=storage
         )
 
 
@@ -481,44 +478,12 @@ def test_create_and_start_airtable_import_job(mock_run_async_job, data_fixture):
     assert job.group_id == group.id
     assert job.airtable_share_id == "shrXxmp0WmqsTkFWTz"
     assert job.progress_percentage == 0
-    assert job.timezone is None
     assert job.state == "pending"
     assert job.error == ""
 
     mock_run_async_job.delay.assert_called_once()
     args = mock_run_async_job.delay.call_args
     assert args[0][0] == job.id
-
-
-@pytest.mark.django_db(transaction=True)
-@responses.activate
-@patch("baserow.core.jobs.handler.run_async_job")
-def test_create_and_start_airtable_import_job_with_timezone(
-    mock_run_async_job, data_fixture
-):
-    user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-
-    with pytest.raises(UnknownTimeZoneError):
-        JobHandler().create_and_start_job(
-            user,
-            "airtable",
-            group_id=group.id,
-            airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
-            timezone="UNKNOWN",
-        )
-
-    assert AirtableImportJob.objects.all().count() == 0
-
-    job = JobHandler().create_and_start_job(
-        user,
-        "airtable",
-        group_id=group.id,
-        airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
-        timezone="Europe/Amsterdam",
-    )
-
-    assert job.timezone.zone == "Europe/Amsterdam"
 
 
 @pytest.mark.django_db

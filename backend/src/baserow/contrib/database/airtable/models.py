@@ -15,7 +15,6 @@ class AirtableImportJob(JobWithUserIpAddress, Job):
         max_length=18,
         help_text="Public ID of the shared Airtable base that must be imported.",
     )
-    timezone = models.CharField(null=True, max_length=255)
     database = models.ForeignKey(
         Application,
         null=True,

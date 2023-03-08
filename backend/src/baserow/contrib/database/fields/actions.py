@@ -89,6 +89,9 @@ class UpdateFieldActionType(UndoableActionCustomCleanupMixin, UndoableActionType
         original_exported_values = cls._get_prepared_field_attrs(
             field, kwargs, to_field_type_name
         )
+        original_exported_values.update(
+            from_field_type.get_request_kwargs_to_backup(field, kwargs)
+        )
 
         optional_backup_data = cls._backup_field_if_required(
             field, kwargs, to_field_type_name, backup_uuid
@@ -272,12 +275,17 @@ class UpdateFieldActionType(UndoableActionCustomCleanupMixin, UndoableActionType
         handler = FieldHandler()
         field = handler.get_specific_field_for_update(params.field_id)
 
+        from_field_type = field_type_registry.get_by_model(field)
+        from_field_type_name = from_field_type.type
+
         updated_field_attrs = set(new_field_attributes.keys())
+        request_kwargs = from_field_type.get_request_kwargs_to_backup(
+            field, new_field_attributes
+        )
         original_field_params = cls._get_prepared_field_attrs(
             field, updated_field_attrs, to_field_type_name
         )
-        from_field_type = field_type_registry.get_by_model(field)
-        from_field_type_name = from_field_type.type
+        original_field_params.update(request_kwargs)
 
         backup_uid = params.backup_uid or action.id
         optional_backup_data = cls._backup_field_if_required(

@@ -22,271 +22,239 @@ import {
   DateEqualsCurrentYearViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 
-const dateBeforeCasesWithTimezone = [
+const dateBeforeCases = [
   {
     rowValue: '2021-08-10T21:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-10T22:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10T22:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-10T23:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: false,
   },
-]
-
-const dateBeforeCasesWithoutTimezone = [
   {
     rowValue: '2021-08-10T23:59:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11T00:01:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
 ]
 
-const dateAfterCasesWithTimezone = [
+const dateAfterCases = [
   {
     rowValue: '2021-08-11T22:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-12',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-11T23:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11T21:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-11T22:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
-    expected: false,
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
   },
-]
-
-const dateAfterCasesWithoutTimezone = [
   {
     rowValue: '2021-08-12T00:01:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-12',
-    filterValue: '2021-08-11',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11T23:59:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
 ]
 
-const dateEqualCasesWithTimezone = [
+const dateEqualCases = [
   {
     rowValue: '2021-08-11T21:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11T22:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10T22:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10T23:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10T21:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-10T22:59:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: false,
   },
-]
-
-const dateEqualWithoutTimezone = [
   {
     rowValue: '2021-08-11T23:59:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
+    filterValue: 'CET?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11T00:01:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-12T00:01:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-12',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
 ]
 
-const dateNotEqualCasesWithTimezone = [
+const dateNotEqualCases = [
   {
     rowValue: '2021-08-11T22:30:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
+    rowValue: '2021-08-11T21:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: false,
+  },
+  {
     rowValue: '2021-08-12',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-11T23:30:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-10T22:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-10T23:01:37.940086Z',
-    filterValue: '2021-08-11',
-    timezone: 'Europe/London',
+    filterValue: 'Europe/London?2021-08-11',
     expected: false,
   },
-]
-
-const dateNotEqualCasesWithoutTimezone = [
   {
     rowValue: '2021-08-11T23:59:37.940086Z',
-    filterValue: '2021-08-12',
+    filterValue: 'UTC?2021-08-12',
     expected: true,
   },
   {
     rowValue: '2021-08-13T00:01:37.940086Z',
-    filterValue: '2021-08-12',
+    filterValue: 'UTC?2021-08-12',
     expected: true,
   },
   {
     rowValue: '2021-08-10',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-12',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: true,
   },
   {
     rowValue: '2021-08-11T22:59:37.940086Z',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
   {
     rowValue: '2021-08-11',
-    filterValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-11',
     expected: false,
   },
 ]
@@ -376,12 +344,32 @@ const dateInThisWeek = [
 const dateInThisMonth = [
   {
     rowValue: '2022-05-01T12:00:00.000000Z',
-    filterValue: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?',
+    expected: false,
+  },
+  {
+    rowValue: '2022-05-31T21:59:00.000000Z',
+    filterValue: 'Europe/Berlin?',
     expected: false,
   },
   {
     rowValue: '2022-06-01T12:00:00.000000Z',
-    filterValue: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?',
+    expected: true,
+  },
+  {
+    rowValue: '2022-06-30T21:59:00.000000Z',
+    filterValue: 'Europe/Berlin?',
+    expected: true,
+  },
+  {
+    rowValue: '2022-07-01T00:01:00.000000Z',
+    filterValue: 'Europe/Berlin?',
+    expected: false,
+  },
+  {
+    rowValue: '2022-05-31T23:59:00.000000Z',
+    filterValue: 'Europe/London?',
     expected: true,
   },
 ]
@@ -389,12 +377,12 @@ const dateInThisMonth = [
 const dateInThisYear = [
   {
     rowValue: '2021-06-01T12:00:00.000000Z',
-    filterValue: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?',
     expected: false,
   },
   {
     rowValue: '2022-06-01T12:00:00.000000Z',
-    filterValue: 'Europe/Berlin',
+    filterValue: 'Europe/Berlin?',
     expected: true,
   },
 ]
@@ -616,8 +604,8 @@ describe('Date in this week, month and year tests', () => {
 
   beforeAll(() => {
     testApp = new TestApp()
-    // Wed Jun 01 2022 00:00:00
-    dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => 1654038000000)
+    // Wed Jun 01 2022 00:00:00 UTC
+    dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => 1654041600000)
   })
 
   afterAll(() => {
@@ -632,7 +620,7 @@ describe('Date in this week, month and year tests', () => {
     const result = new DateEqualsCurrentWeekViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {
-      timezone: values.timezone,
+      date_include_time: true,
     })
     expect(result).toBe(values.expected)
   })
@@ -736,97 +724,41 @@ describe('All Tests', () => {
     testApp.afterEach()
   })
 
-  test.each(dateBeforeCasesWithTimezone)(
-    'BeforeViewFilter with Timezone',
-    (values) => {
-      const result = new DateBeforeViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        { timezone: values.timezone }
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
-
-  test.each(dateBeforeCasesWithoutTimezone)(
-    'BeforeViewFilter without Timezone',
-    (values) => {
-      const result = new DateBeforeViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        {}
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
-
-  test.each(dateAfterCasesWithTimezone)(
-    'AfterViewFilter with Timezone',
-    (values) => {
-      const result = new DateAfterViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        { timezone: values.timezone }
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
-
-  test.each(dateAfterCasesWithoutTimezone)(
-    'AfterViewFilter without Timezone',
-    (values) => {
-      const result = new DateAfterViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        {}
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
-
-  test.each(dateEqualCasesWithTimezone)('DateEqual with Timezone', (values) => {
-    const result = new DateEqualViewFilterType({ app: testApp }).matches(
+  test.each(dateBeforeCases)('BeforeViewFilter', (values) => {
+    const result = new DateBeforeViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
-      { timezone: values.timezone }
+      { date_include_time: true }
     )
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateEqualWithoutTimezone)(
-    'DateEqual without Timezone',
-    (values) => {
-      const result = new DateEqualViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        { timezone: values.timezone }
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
-  test.each(dateNotEqualCasesWithTimezone)(
-    'DateNotEqual with Timezone',
-    (values) => {
-      const result = new DateNotEqualViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        { timezone: values.timezone }
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
-  test.each(dateNotEqualCasesWithoutTimezone)(
-    'DateNotEqual without Timezone',
-    (values) => {
-      const result = new DateNotEqualViewFilterType({ app: testApp }).matches(
-        values.rowValue,
-        values.filterValue,
-        {}
-      )
-      expect(result).toBe(values.expected)
-    }
-  )
+  test.each(dateAfterCases)('AfterViewFilter with Timezone', (values) => {
+    const result = new DateAfterViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      { date_include_time: true }
+    )
+    expect(result).toBe(values.expected)
+  })
 
+  test.each(dateEqualCases)('DateEqual', (values) => {
+    const result = new DateEqualViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      { date_include_time: true }
+    )
+    expect(result).toBe(values.expected)
+  })
+  test.each(dateNotEqualCases)('DateNotEqual', (values) => {
+    const result = new DateNotEqualViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      { date_include_time: true }
+    )
+
+    expect(result).toBe(values.expected)
+  })
   test.each(dateToday)('DateToday', (values) => {
     const result = new DateEqualsTodayViewFilterType({ app: testApp }).matches(
       values.rowValue,

@@ -235,6 +235,11 @@
         "dateFormatUS": "US",
         "dateFormatISO": "ISO",
         "includeTimeLabel": "Include time",
+        "showTimezoneLabel": "Show timezone",
+        "forceTimezoneLabel": "Set timezone for all collaborators",
+        "forceTimezoneValue": "Timezone",
+        "addTimezoneOffsetLabel": "Convert values (add {utcOffsetDiff} minutes)",
+        "subTimezoneOffsetLabel": "Convert values (subtract {utcOffsetDiff} minutes)",
         "timeFormatLabel": "Time format",
         "24Hour": "24 hour",
         "12Hour": "12 hour"

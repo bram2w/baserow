@@ -1740,7 +1740,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
 
     # last modified is readonly but the auto update shouldn't produce n+1 queries
     last_modified_field = data_fixture.create_last_modified_field(
-        table=table_b, date_include_time=True, timezone="Europe/Berlin"
+        table=table_b, date_include_time=True
     )
 
     # setup the tables

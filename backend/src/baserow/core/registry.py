@@ -112,6 +112,12 @@ class CustomFieldsInstanceMixin:
     useful if you want to add some custom SerializerMethodField for example.
     """
 
+    serializer_extra_kwargs = None
+    """
+    The extra kwargs that must be added to the serializer fields. This property is
+    useful if you want to add some custom `write_only` field for example.
+    """
+
     def __init__(self):
         """
         :raises ValueError: If the object does not have a `model_class` attribute.
@@ -151,6 +157,7 @@ class CustomFieldsInstanceMixin:
             field_names,
             field_overrides=field_overrides,
             base_mixins=mixins,
+            meta_extra_kwargs=self.serializer_extra_kwargs,
             *args,
             **kwargs,
         )

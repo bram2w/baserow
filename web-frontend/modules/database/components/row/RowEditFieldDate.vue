@@ -27,7 +27,7 @@
               :inline="true"
               :monday-first="true"
               :use-utc="true"
-              :value="copy"
+              :value="pickerDate"
               :language="datePickerLang[$i18n.locale]"
               class="datepicker"
               @input="chooseDate(field, $event)"
@@ -61,6 +61,9 @@
           :notation="field.date_time_format"
           @input="chooseTime(field, $event)"
         ></TimeSelectContext>
+      </div>
+      <div class="field-date__tzinfo">
+        {{ getCellTimezoneAbbr(field, value, { force: true }) }}
       </div>
     </div>
     <div v-show="touched && !valid" class="error">

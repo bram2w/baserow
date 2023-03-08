@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
@@ -19,13 +19,15 @@ from django.db.models import CharField, DateTimeField, F, Func, Q, Value
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
+import pytz
 from dateutil import parser
 from dateutil.parser import ParserError
 from loguru import logger
-from pytz import all_timezones, timezone
+from pytz import timezone
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
+    ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     ERROR_INVALID_LOOKUP_TARGET_FIELD,
     ERROR_INVALID_LOOKUP_THROUGH_FIELD,
@@ -81,6 +83,7 @@ from .exceptions import (
     AllProvidedCollaboratorIdsMustBeValidUsers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     AllProvidedValuesMustBeIntegersOrStrings,
+    DateForceTimezoneOffsetValueError,
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
     InvalidLookupTargetField,
@@ -662,11 +665,105 @@ class BooleanFieldType(FieldType):
         return BooleanField()
 
 
+def valid_utc_offset_value_validator(value):
+    if value != 0 and value % 30 != 0:
+        raise serializers.ValidationError(
+            "The UTC offset must be different from 0 and a multiple of 30 minutes."
+        )
+
+
 class DateFieldType(FieldType):
     type = "date"
     model_class = DateField
-    allowed_fields = ["date_format", "date_include_time", "date_time_format"]
-    serializer_field_names = ["date_format", "date_include_time", "date_time_format"]
+    allowed_fields = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "date_show_tzinfo",
+        "date_force_timezone",
+    ]
+    serializer_field_names = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "date_show_tzinfo",
+        "date_force_timezone",
+    ]
+    request_serializer_field_names = serializer_field_names + [
+        "date_force_timezone_offset",
+    ]
+    request_serializer_field_overrides = {
+        "date_force_timezone_offset": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text=(
+                "A UTC offset in minutes to add to all the field datetimes values.",
+            ),
+        )
+    }
+    serializer_extra_kwargs = {"date_force_timezone_offset": {"write_only": True}}
+    api_exceptions_map = {
+        DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
+    }
+
+    def get_request_kwargs_to_backup(self, field, kwargs) -> Dict[str, Any]:
+        date_force_timezone_offset = kwargs.get("date_force_timezone_offset", None)
+        if date_force_timezone_offset:
+            return {"date_force_timezone_offset": -date_force_timezone_offset}
+        return {}
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        force_timezone_offset = field_kwargs.get("date_force_timezone_offset", None)
+        if force_timezone_offset is not None:
+            raise DateForceTimezoneOffsetValueError(
+                "date_force_timezone_offset is not allowed when creating a date field."
+            )
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
+        force_timezone_offset = field_kwargs.get("date_force_timezone_offset", None)
+        if not isinstance(from_field, DateField):
+            return
+
+        if force_timezone_offset is not None and not to_field_values.get(
+            "date_include_time", from_field.date_include_time
+        ):
+            raise DateForceTimezoneOffsetValueError(
+                "date_include_time must be set to true"
+            )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        """
+        If the date_force_timezone field is changed and
+        date_force_timezone_offset is set to an integer value, we need to
+        replace the timezone of all the values in the database by adding the
+        utcOffset accordingly.
+        """
+
+        timezone_offset_to_add_to_replace_tz = to_field_kwargs.get(
+            "date_force_timezone_offset", None
+        )
+        if timezone_offset_to_add_to_replace_tz is None:
+            return
+
+        to_model.objects.filter(**{f"{to_field.db_column}__isnull": False}).update(
+            **{
+                to_field.db_column: models.F(to_field.db_column)
+                + timedelta(minutes=timezone_offset_to_add_to_replace_tz)
+            }
+        )
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -726,8 +823,11 @@ class DateFieldType(FieldType):
         if value is None:
             return value if rich_value else ""
 
-        python_format = field_object["field"].get_python_format()
-        return value.strftime(python_format)
+        field = field_object["field"]
+        if isinstance(value, datetime) and field.date_force_timezone is not None:
+            value = value.astimezone(pytz.timezone(field.date_force_timezone))
+
+        return value.strftime(field.get_python_format())
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -755,32 +855,24 @@ class DateFieldType(FieldType):
         else:
             return fake.date_object()
 
-    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-        """
-        If the field type has changed then we want to convert the date or timestamp to
-        a human readable text following the old date format.
-        """
-
-        to_field_type = field_type_registry.get_by_model(to_field)
-        if to_field_type.type != self.type and connection.vendor == "postgresql":
-            sql_format = from_field.get_psql_format()
-            sql_type = from_field.get_psql_type()
-            return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
-
-        return super().get_alter_column_prepare_old_value(
-            connection, from_field, to_field
-        )
-
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
         # If an empty value has been provided we do not want to filter at all.
         if value == "":
             return Q()
+
+        # No user input goes into the RawSQL, safe to use.
         return AnnotatedQ(
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
                     Func(
-                        F(field_name),
+                        Func(
+                            # FIXME: what if date_force_timezone is None(user timezone)?
+                            Value(field.date_force_timezone or "UTC"),
+                            F(field_name),
+                            function="timezone",
+                            output_field=DateTimeField(),
+                        ),
                         Value(field.get_psql_format()),
                         function="to_char",
                         output_field=CharField(),
@@ -789,6 +881,41 @@ class DateFieldType(FieldType):
                 )
             },
             q={f"formatted_date_{field_name}__icontains": value},
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type:
+            sql_format = from_field.get_psql_format()
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            # FIXME: what if date_force_timezone is None(user timezone)?
+            variables[variable_name] = from_field.date_force_timezone or "UTC"
+            return (
+                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
+                '{sql_format}');""",
+                variables,
+            )
+
+        if (
+            to_field.date_include_time is False
+            and from_field.date_force_timezone is not None
+        ):
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            variables[variable_name] = from_field.date_force_timezone or "UTC"
+            return (
+                f"""p_in = (p_in::timestamptz at time zone %({variable_name})s)::date;""",
+                variables,
+            )
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
         )
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
@@ -856,6 +983,8 @@ class DateFieldType(FieldType):
             field.date_format,
             field.date_include_time,
             field.date_time_format,
+            date_force_timezone=field.date_force_timezone,
+            date_show_tzinfo=field.date_show_tzinfo,
             nullable=True,
         )
 
@@ -866,6 +995,8 @@ class DateFieldType(FieldType):
             date_format=formula_type.date_format,
             date_include_time=formula_type.date_include_time,
             date_time_format=formula_type.date_time_format,
+            date_force_timezone=formula_type.date_force_timezone,
+            date_show_tzinfo=formula_type.date_show_tzinfo,
         )
 
     def should_backup_field_data_for_same_type_update(
@@ -881,92 +1012,22 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     can_be_in_form_view = False
     field_data_is_derived_from_attrs = True
 
-    allowed_fields = DateFieldType.allowed_fields + ["timezone"]
-    serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
-    serializer_field_overrides = {
-        "timezone": serializers.ChoiceField(choices=all_timezones, required=True)
-    }
     source_field_name = None
     model_field_class = models.DateTimeField
     model_field_kwargs = {}
     populate_from_field = None
 
-    def get_export_value(self, value, field_object, rich_value=False):
-        if value is None:
-            return value if rich_value else ""
-
-        python_format = field_object["field"].get_python_format()
-        field = field_object["field"]
-        field_timezone = timezone(field.get_timezone())
-        return value.astimezone(field_timezone).strftime(python_format)
-
     def get_serializer_field(self, instance, **kwargs):
         if not instance.date_include_time:
             kwargs["format"] = "%Y-%m-%d"
-            kwargs["default_timezone"] = timezone(instance.timezone)
 
-        return serializers.DateTimeField(
-            **{
-                "required": False,
-                **kwargs,
-            }
-        )
+        return serializers.DateTimeField(**{"required": False, **kwargs})
 
     def get_model_field(self, instance, **kwargs):
         kwargs["null"] = True
         kwargs["blank"] = True
         kwargs.update(self.model_field_kwargs)
         return self.model_field_class(**kwargs)
-
-    def contains_query(self, field_name, value, model_field, field):
-        value = value.strip()
-        # If an empty value has been provided we do not want to filter at all.
-        if value == "":
-            return Q()
-        # No user input goes into the RawSQL, safe to use.
-        return AnnotatedQ(
-            annotation={
-                f"formatted_date_{field_name}": Coalesce(
-                    Func(
-                        Func(
-                            Value(
-                                field.get_timezone(),
-                            ),
-                            F(field_name),
-                            function="timezone",
-                            output_field=DateTimeField(),
-                        ),
-                        Value(field.get_psql_format()),
-                        function="to_char",
-                        output_field=CharField(),
-                    ),
-                    Value(""),
-                )
-            },
-            q={f"formatted_date_{field_name}__icontains": value},
-        )
-
-    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-        """
-        If the field type has changed then we want to convert the date or timestamp to
-        a human readable text following the old date format.
-        """
-
-        to_field_type = field_type_registry.get_by_model(to_field)
-        if to_field_type.type != self.type:
-            sql_format = from_field.get_psql_format()
-            variables = {}
-            variable_name = f"{from_field.db_column}_timezone"
-            variables[variable_name] = from_field.get_timezone()
-            return (
-                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
-                '{sql_format}');""",
-                variables,
-            )
-
-        return super().get_alter_column_prepare_old_value(
-            connection, from_field, to_field
-        )
 
     def after_create(self, field, model, user, connection, before, field_kwargs):
         """

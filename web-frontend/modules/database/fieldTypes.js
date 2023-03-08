@@ -14,7 +14,6 @@ import FieldNumberSubForm from '@baserow/modules/database/components/field/Field
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
-import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 
@@ -84,6 +83,7 @@ import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
   getDateMomentFormat,
+  getFieldTimezone,
   getTimeMomentFormat,
 } from '@baserow/modules/database/utils/date'
 import {
@@ -1409,7 +1409,11 @@ class BaseDateFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value) {
-    const date = moment.tz(value, field.timezone)
+    const timezone = getFieldTimezone(field)
+    const date = moment.utc(value)
+    if (timezone !== null) {
+      date.tz(timezone)
+    }
 
     if (date.isValid()) {
       const dateFormat = getDateMomentFormat(field.date_format)
@@ -1419,7 +1423,6 @@ class BaseDateFieldType extends FieldType {
         const timeFormat = getTimeMomentFormat(field.date_time_format)
         dateString = `${dateString} ${date.format(timeFormat)}`
       }
-
       return dateString
     } else {
       return ''
@@ -1438,27 +1441,25 @@ class BaseDateFieldType extends FieldType {
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
    */
-  prepareValueForPaste(field, clipboardData) {
-    if (!clipboardData) {
-      clipboardData = ''
-    }
-    return DateFieldType.formatDate(field, clipboardData)
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    const dateValue = DateFieldType.parseDate(field, clipboardData || '')
+    return DateFieldType.formatDate(field, dateValue)
   }
 
-  static formatDate(field, dateString) {
+  static parseDate(field, dateString) {
     const value = dateString.toUpperCase()
 
     // Formats for ISO dates
     let formats = [
       moment.ISO_8601,
-      'YYYY-MM-DD',
       'YYYY-MM-DD hh:mm A',
       'YYYY-MM-DD HH:mm',
+      'YYYY-MM-DD',
     ]
     // Formats for EU dates
-    const EUFormat = ['DD/MM/YYYY', 'DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm']
+    const EUFormat = ['DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY']
     // Formats for US dates
-    const USFormat = ['MM/DD/YYYY', 'MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm']
+    const USFormat = ['MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm', 'MM/DD/YYYY']
 
     // Interpret the pasted date based on the field's current date format
     if (field.date_format === 'EU') {
@@ -1467,10 +1468,23 @@ class BaseDateFieldType extends FieldType {
       formats = formats.concat(USFormat).concat(EUFormat)
     }
 
-    const date = moment.utc(value, formats)
+    const date = moment.utc(value, formats, true)
+    if (!date.isValid()) {
+      return null
+    }
+    const timezone = getFieldTimezone(field)
+    if (timezone) {
+      date.tz(timezone, true)
+    }
+    return date
+  }
 
-    if (date.isValid()) {
-      return field.date_include_time ? date.format() : date.format('YYYY-MM-DD')
+  static formatDate(field, date) {
+    const momentDate = moment.utc(date)
+    if (momentDate.isValid()) {
+      return field.date_include_time
+        ? momentDate.format()
+        : momentDate.format('YYYY-MM-DD')
     } else {
       return null
     }
@@ -1540,7 +1554,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   }
 
   getFormComponent() {
-    return FieldCreatedOnLastModifiedSubForm
+    return FieldDateSubForm
   }
 
   getFormViewFieldComponent() {
@@ -1564,7 +1578,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
    * is simply the current time.
    */
   getNewRowValue() {
-    return moment().utc().format()
+    return moment().local().format()
   }
 
   shouldFetchDataWhenAdded() {
