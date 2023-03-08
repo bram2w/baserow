@@ -1,9 +1,11 @@
+import traceback
 from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import QuerySet
 
+from loguru import logger
 from opentelemetry import trace
 
 from baserow.config.celery import app
@@ -70,7 +72,17 @@ def _run_periodic_field_type_update_per_group(
     add_baserow_trace_attrs(update_now=update_now, group_id=group.id)
 
     for field in qs.filter(table__database__group_id=group.id):
-        _run_periodic_field_update(field, field_type_instance)
+        # noinspection PyBroadException
+        try:
+            _run_periodic_field_update(field, field_type_instance)
+        except Exception:
+            tb = traceback.format_exc()
+            logger.error(
+                "Failed to periodically update {field_id} because of: \n{tb}",
+                field_id=field.id,
+                tb=tb,
+            )
+            continue
 
 
 @baserow_trace(tracer)
