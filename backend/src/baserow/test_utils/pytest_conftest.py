@@ -4,16 +4,16 @@ import os
 from pathlib import Path
 from typing import Dict, Optional
 
-from django.apps import apps
+from django.conf import settings
 from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS
+from django.db import DEFAULT_DB_ALIAS, OperationalError
 
 import pytest
 from pyinstrument import Profiler
 
-from baserow.core.apps import sync_operations_after_migrate
-from baserow_enterprise.apps import sync_default_roles_after_migrate
-from baserow_enterprise.role.handler import RoleAssignmentHandler
+from baserow.contrib.database.application_types import DatabaseApplicationType
+from baserow.core.permission_manager import CorePermissionManagerType
+from baserow.core.trash.trash_types import GroupTrashableItemType
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
@@ -34,13 +34,6 @@ def data_fixture():
     from .fixtures import Fixtures
 
     return Fixtures()
-
-
-@pytest.fixture
-def synced_roles(db):
-    sync_operations_after_migrate(None, apps=apps)
-    sync_default_roles_after_migrate(None, apps=apps)
-    RoleAssignmentHandler._init = False
 
 
 @pytest.fixture()
@@ -70,7 +63,9 @@ def mutable_field_type_registry():
     from baserow.contrib.database.fields.registries import field_type_registry
 
     before = field_type_registry.registry.copy()
+    field_type_registry.get_for_class.cache_clear()
     yield field_type_registry
+    field_type_registry.get_for_class.cache_clear()
     field_type_registry.registry = before
 
 
@@ -81,6 +76,37 @@ def mutable_action_registry():
     before = action_type_registry.registry.copy()
     yield action_type_registry
     action_type_registry.registry = before
+
+
+@pytest.fixture
+def mutable_application_registry():
+    from baserow.core.registries import application_type_registry
+
+    before = application_type_registry.registry.copy()
+    application_type_registry.get_for_class.cache_clear()
+    yield application_type_registry
+    application_type_registry.get_for_class.cache_clear()
+    application_type_registry.registry = before
+
+
+@pytest.fixture
+def mutable_trash_item_type_registry():
+    from baserow.core.trash.registries import trash_item_type_registry
+
+    before = trash_item_type_registry.registry.copy()
+    trash_item_type_registry.get_for_class.cache_clear()
+    yield trash_item_type_registry
+    trash_item_type_registry.get_for_class.cache_clear()
+    trash_item_type_registry.registry = before
+
+
+@pytest.fixture
+def mutable_permission_manager_registry():
+    from baserow.core.registries import permission_manager_type_registry
+
+    before = permission_manager_type_registry.registry.copy()
+    yield permission_manager_type_registry
+    permission_manager_type_registry.registry = before
 
 
 @pytest.fixture()
@@ -222,3 +248,102 @@ def profiler():
         profiler.reset()
 
     return profile_this
+
+
+class BaseMaxLocksPerTransactionStub:
+    # Determines whether we raise an `OperationalError` about
+    # `max_locks_per_transaction` or something else.
+    raise_transaction_exception: bool = True
+
+    def get_message(self) -> str:
+        message = "An operational error has occurred."
+        if self.raise_transaction_exception:
+            message = "HINT:  You might need to increase max_locks_per_transaction."
+        return message
+
+
+class MaxLocksPerTransactionExceededApplicationType(
+    DatabaseApplicationType, BaseMaxLocksPerTransactionStub
+):
+    def export_serialized(self, *args, **kwargs):
+        raise OperationalError(self.get_message())
+
+
+class MaxLocksPerTransactionExceededGroupTrashableItemType(
+    GroupTrashableItemType, BaseMaxLocksPerTransactionStub
+):
+    def permanently_delete_item(self, *args, **kwargs):
+        raise OperationalError(self.get_message())
+
+
+@pytest.fixture
+def application_type_serialized_raising_operationalerror(
+    mutable_application_registry,
+) -> callable:
+    """
+    Overrides the existing `DatabaseApplicationType` with a test only stub version that
+    optionally (if `raise_transaction_exception` is `True`) raises an `OperationalError`
+    about `max_locks_per_transaction` being exceeded when `export_serialized` is called.
+    """
+
+    @contextlib.contextmanager
+    def _perform_stub(raise_transaction_exception: bool = True):
+        stub_application_type = MaxLocksPerTransactionExceededApplicationType()
+        stub_application_type.raise_transaction_exception = raise_transaction_exception
+        mutable_application_registry.get_for_class.cache_clear()
+        mutable_application_registry.registry[
+            DatabaseApplicationType.type
+        ] = stub_application_type
+
+        yield stub_application_type
+
+    return _perform_stub
+
+
+@pytest.fixture
+def trash_item_type_perm_delete_item_raising_operationalerror(
+    mutable_trash_item_type_registry,
+) -> callable:
+    """
+    Overrides the existing `GroupTrashableItemType` with a test only stub version that
+    optionally (if `raise_transaction_exception` is `True`) raises an `OperationalError`
+    about `max_locks_per_transaction` being exceeded when `permanently_delete_item`
+    is called.
+    """
+
+    @contextlib.contextmanager
+    def _perform_stub(raise_transaction_exception: bool = True):
+        stub_trash_item_type = MaxLocksPerTransactionExceededGroupTrashableItemType()
+        stub_trash_item_type.raise_transaction_exception = raise_transaction_exception
+        mutable_trash_item_type_registry.get_for_class.cache_clear()
+        mutable_trash_item_type_registry.registry[
+            GroupTrashableItemType.type
+        ] = stub_trash_item_type
+
+        yield stub_trash_item_type
+
+    return _perform_stub
+
+
+class StubbedCorePermissionManagerType(CorePermissionManagerType):
+    def check_permissions(
+        self, actor, operation, group=None, context=None, include_trash=False
+    ):
+        return True
+
+
+@pytest.fixture
+def bypass_check_permissions(
+    mutable_permission_manager_registry,
+) -> CorePermissionManagerType:
+    """
+    Overrides the existing `CorePermissionManagerType` so that
+    we can always `return True` on a `check_permissions` call.
+    """
+
+    stub_core_permission_manager = StubbedCorePermissionManagerType()
+    first_manager = settings.PERMISSION_MANAGERS[0]
+    mutable_permission_manager_registry.registry[
+        first_manager
+    ] = stub_core_permission_manager
+    yield stub_core_permission_manager

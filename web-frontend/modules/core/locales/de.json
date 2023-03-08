@@ -296,7 +296,10 @@
         "invalidAccountDeletionGraceDelay": "Dieser Wert ist erforderlich und muss eine positive ganze Zahl kleiner als 32000 sein",
         "settingAllowNonStaffCreateGroupOperation": "Jedem die Möglichkeit geben, neue Gruppen zu erstellen",
         "settingAllowNonStaffCreateGroupOperationDescription": "Standardmäßig kann jeder neue Gruppen erstellen. Deaktivieren Sie diese Option, damit nur Mitglieder neue Gruppen erstellen können.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Wenn diese Einstellung aktiviert ist, wird für neue Benutzer automatisch eine Gruppe erstellt, in der sie Administrator sind, so dass sie für Abrechnungszwecke als Administrator ausgewiesen werden. Um dies zu verhindern, deaktivieren Sie diese Einstellung und neu eingeladene Benutzer starten nur mit der Rolle, mit der sie eingeladen wurden."
+        "settingAllowNonStaffCreateGroupOperationWarning": "Für neue Benutzer wird automatisch eine Gruppe erstellt, in der sie Administrator sind.",
+        "maintenance": "Wartung",
+        "settingTrackGroupUsage": "Gruppennutzung verfolgen",
+        "settingTrackGroupUsageDescription": "Aktiviert einen nächtlichen Job, der die Zeilen- und Dateinutzung pro Gruppe zählt und auf der Verwaltungsseite für Premium-Gruppen angezeigt wird."
     },
     "undoRedoNotification": {
         "redoingText": "Deine Aktion wird wieder hergestellt",
@@ -409,14 +412,14 @@
         "links": "Links",
         "groups": "Gruppen",
         "knowledgeBase": "Wissensdatenbank",
-        "tutorials": "Tutorials",
+        "tutorials": "Anleitungen",
         "userSettings": "Benutzereinstellungen",
         "trash": "Papierkorb",
         "logoff": "Ausloggen"
     },
     "clearingNotification": {
         "content": "Aufbereitung Ihrer Daten",
-        "title": "Clearing..."
+        "title": "Ausräumen..."
     },
     "job": {
         "statePending": "Warten auf den Start...",
@@ -459,7 +462,9 @@
                 "name": "Name",
                 "email": "E-Mail",
                 "role": "Standard-Rolle",
-                "teams": "Teams"
+                "teams": "Teams",
+                "highestRole": "Höchste Rolle",
+                "highestRoleHelpText": "Die höchste Rolle, die diesem Benutzer direkt oder von einem Team für etwas in dieser Gruppe zugewiesen wurde"
             }
         },
         "invitesTable": {
@@ -487,7 +492,9 @@
         }
     },
     "memberAssignmentModalFooter": {
-        "invite": "{count} einladen"
+        "invite": "{count} einladen",
+        "deselectAll": "Alle abwählen",
+        "selectAll": "Alle auswählen"
     },
     "removeFromGroupModal": {
         "title": "Entfernen aus Gruppe bestätigen",
@@ -506,5 +513,11 @@
         "content": "Dies könnte Ihren Zugang beeinträchtigen, bitte laden Sie die Seite neu.",
         "action": "Neu laden",
         "title": "Berechtigungen aktualisiert"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "Dokumentation zu abrechenbaren Rollen"
+    },
+    "highestPaidRoleField": {
+        "billable": "Verrechenbar"
     }
 }

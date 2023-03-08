@@ -31,7 +31,7 @@ class ApplicationObjectScopeType(ObjectScopeType):
         return context.group
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related("group")
+        return self.get_base_queryset().prefetch_related("group")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == GroupObjectScopeType.type:
@@ -51,7 +51,7 @@ class GroupInvitationObjectScopeType(ObjectScopeType):
         return context.group
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related("group")
+        return self.get_base_queryset().prefetch_related("group")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == GroupObjectScopeType.type:
@@ -71,7 +71,7 @@ class GroupUserObjectScopeType(ObjectScopeType):
         return context.group
 
     def get_enhanced_queryset(self):
-        return self.model_class.objects.prefetch_related("group")
+        return self.get_base_queryset().prefetch_related("group")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == GroupObjectScopeType.type:

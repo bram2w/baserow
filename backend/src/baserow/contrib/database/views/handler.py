@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import models as django_models
@@ -13,6 +14,7 @@ from django.db.models import Count, F
 from django.db.models.query import QuerySet
 
 import jwt
+from opentelemetry import trace
 from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
@@ -26,6 +28,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
+    CreateViewDecorationOperationType,
     CreateViewFilterOperationType,
     CreateViewOperationType,
     CreateViewSortOperationType,
@@ -34,18 +37,30 @@ from baserow.contrib.database.views.operations import (
     DeleteViewOperationType,
     DeleteViewSortOperationType,
     DuplicateViewOperationType,
+    ListAggregationsViewOperationType,
+    ListViewDecorationOperationType,
+    ListViewFilterOperationType,
+    ListViewsOperationType,
+    ListViewSortOperationType,
     OrderViewsOperationType,
+    ReadAggregationsViewOperationType,
+    ReadViewDecorationOperationType,
+    ReadViewFieldOptionsOperationType,
     ReadViewFilterOperationType,
     ReadViewOperationType,
     ReadViewsOrderOperationType,
     ReadViewSortOperationType,
+    UpdateViewDecorationOperationType,
     UpdateViewFieldOptionsOperationType,
     UpdateViewFilterOperationType,
     UpdateViewOperationType,
     UpdateViewSlugOperationType,
     UpdateViewSortOperationType,
 )
+from baserow.contrib.database.views.registries import view_ownership_type_registry
+from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     MirrorDict,
@@ -74,7 +89,13 @@ from .exceptions import (
     ViewSortFieldNotSupported,
     ViewSortNotSupported,
 )
-from .models import View, ViewDecoration, ViewFilter, ViewSort
+from .models import (
+    OWNERSHIP_TYPE_COLLABORATIVE,
+    View,
+    ViewDecoration,
+    ViewFilter,
+    ViewSort,
+)
 from .registries import (
     decorator_type_registry,
     decorator_value_provider_type_registry,
@@ -105,9 +126,100 @@ FieldOptionsDict = Dict[int, Dict[str, Any]]
 
 ending_number_regex = re.compile(r"(.+) (\d+)$")
 
+tracer = trace.get_tracer(__name__)
 
-class ViewHandler:
+
+class ViewHandler(metaclass=baserow_trace_methods(tracer)):
+
     PUBLIC_VIEW_TOKEN_ALGORITHM = "HS256"  # nosec
+
+    def list_views(
+        self,
+        user: AbstractUser,
+        table: Table,
+        _type: str,
+        filters: bool,
+        sortings: bool,
+        decorations: bool,
+        limit: int,
+    ) -> Iterable[View]:
+        """
+        Lists available views for a user/table combination.
+
+        :user: The user on whose behalf we want to return views.
+        :table: The table for which the views should be returned.
+        :_type: The view type to get.
+        :filters: If filters should be prefetched.
+        :sortings: If sorts should be prefetched.
+        :decorations: If view decorations should be prefetched.
+        :limit: To limit the number of returned views.
+        :return: Iterator over returned views.
+        """
+
+        views = View.objects.filter(table=table)
+
+        views = CoreHandler().filter_queryset(
+            user,
+            ListViewsOperationType.type,
+            views,
+            table.database.group,
+            allow_if_template=True,
+        )
+        views = views.select_related("content_type", "table")
+
+        if _type:
+            view_type = view_type_registry.get(_type)
+            content_type = ContentType.objects.get_for_model(view_type.model_class)
+            views = views.filter(content_type=content_type)
+
+        if filters:
+            views = views.prefetch_related("viewfilter_set")
+
+        if sortings:
+            views = views.prefetch_related("viewsort_set")
+
+        if decorations:
+            views = views.prefetch_related("viewdecoration_set")
+
+        if limit:
+            views = views[:limit]
+
+        views = specific_iterator(views)
+        return views
+
+    def get_view_as_user(
+        self,
+        user: AbstractUser,
+        view_id: int,
+        view_model: Optional[Type[View]] = None,
+        base_queryset: Optional[QuerySet] = None,
+    ) -> View:
+        """
+        Selects a view and checks if the user has access to that view.
+        If everything is fine the view is returned.
+
+        :param user: User on whose behalf to get the view.
+        :param view_id: The identifier of the view that must be returned.
+        :param view_model: If provided that models objects are used to select the
+            view. This can for example be useful when you want to select a GridView or
+            other child of the View model.
+        :param base_queryset: The base queryset from where to select the view
+            object. This can for example be used to do a `select_related`. Note that
+            if this is used the `view_model` parameter doesn't work anymore.
+        :raises ViewDoesNotExist: When the view with the provided id does not exist.
+        :raises PermissionDenied: When not allowed.
+        :return: the view instance.
+        """
+
+        view = self.get_view(view_id, view_model, base_queryset)
+        CoreHandler().check_permissions(
+            user,
+            ReadViewOperationType.type,
+            group=view.table.database.group,
+            context=view,
+            allow_if_template=True,
+        )
+        return view
 
     def get_view(
         self,
@@ -152,6 +264,7 @@ class ViewHandler:
 
     def get_view_for_update(
         self,
+        user: AbstractUser,
         view_id: int,
         view_model: Optional[Type[View]] = None,
         base_queryset: Optional[QuerySet] = None,
@@ -160,6 +273,7 @@ class ViewHandler:
         Selects a view for update and checks if the user has access to that view.
         If everything is fine the view is returned.
 
+        :param: User on whose behalf to get the view.
         :param view_id: The identifier of the view that must be returned.
         :param view_model: If provided that models objects are used to select the
             view. This can for example be useful when you want to select a GridView or
@@ -182,7 +296,7 @@ class ViewHandler:
                 tables_to_lock = ("self", "view_ptr_id")
             base_queryset = view_model.objects.select_for_update(of=tables_to_lock)
 
-        return self.get_view(view_id, view_model, base_queryset)
+        return self.get_view_as_user(user, view_id, view_model, base_queryset)
 
     def create_view(
         self, user: AbstractUser, table: Table, type_name: str, **kwargs
@@ -194,6 +308,9 @@ class ViewHandler:
         :param table: The table that the view instance belongs to.
         :param type_name: The type name of the view.
         :param kwargs: The fields that need to be set upon creation.
+        :raises PermissionDenied: When not allowed.
+        :raises ViewOwnershipTypeDoesNotExist: When the provided
+            view ownership type in kwargs doesn't exist.
         :return: The created view instance.
         """
 
@@ -208,8 +325,13 @@ class ViewHandler:
 
         model_class = view_type.model_class
         view_values = view_type.prepare_values(kwargs, table, user)
+
+        view_ownership_type = kwargs.get("ownership_type", OWNERSHIP_TYPE_COLLABORATIVE)
+        view_ownership_type_registry.get(view_ownership_type)
+
         allowed_fields = [
             "name",
+            "ownership_type",
             "filter_type",
             "filters_disabled",
         ] + view_type.allowed_fields
@@ -217,7 +339,7 @@ class ViewHandler:
         last_order = model_class.get_last_order(table)
 
         instance = model_class.objects.create(
-            table=table, order=last_order, **view_values
+            table=table, order=last_order, created_by=user, **view_values
         )
 
         view_type.view_created(view=instance)
@@ -283,7 +405,16 @@ class ViewHandler:
             original_view.table, serialized, id_mapping
         )
 
-        queryset = View.objects.filter(table_id=original_view.table.id)
+        if duplicated_view is None:
+            # Somehow the user tried to duplicate a view they are not allowed to see
+            # due to the views ownership type. Tell them the view does not exist as it
+            # should not from their POV.
+            raise ViewDoesNotExist()
+
+        # We want to order views from the same table with the same ownership_type only
+        queryset = View.objects.filter(
+            table_id=original_view.table.id, ownership_type=original_view.ownership_type
+        )
         view_ids = queryset.values_list("id", flat=True)
 
         ordered_ids = []
@@ -300,7 +431,10 @@ class ViewHandler:
             self, view=duplicated_view, user=user, type_name=view_type.type
         )
         views_reordered.send(
-            self, table=original_view.table, order=full_order, user=None
+            self,
+            table=original_view.table,
+            order=full_order,
+            user=user,
         )
 
         return duplicated_view
@@ -364,14 +498,17 @@ class ViewHandler:
             user, OrderViewsOperationType.type, group=group, context=table
         )
 
-        all_views = View.objects.filter(table_id=table.id)
+        try:
+            first_view = self.get_view(order[0])
+        except ViewDoesNotExist:
+            raise ViewNotInTable()
+
+        all_views = View.objects.filter(table_id=table.id).filter(
+            ownership_type=first_view.ownership_type
+        )
 
         user_views = CoreHandler().filter_queryset(
-            user,
-            OrderViewsOperationType.type,
-            all_views,
-            group=group,
-            context=table,
+            user, ListViewsOperationType.type, all_views, group=table.database.group
         )
 
         view_ids = user_views.values_list("id", flat=True)
@@ -380,25 +517,39 @@ class ViewHandler:
             if view_id not in view_ids:
                 raise ViewNotInTable(view_id)
 
-        full_order = View.order_objects(all_views, order)
-        views_reordered.send(self, table=table, order=full_order, user=user)
+        full_order = View.order_objects(user_views, order)
+        views_reordered.send(
+            self,
+            table=table,
+            order=full_order,
+            user=user,
+        )
 
-    def get_views_order(self, user: AbstractUser, table: Table):
+    def get_views_order(self, user: AbstractUser, table: Table, ownership_type: str):
         """
         Returns the order of the views in the given table.
 
         :param user: The user on whose behalf the views are ordered.
         :param table: The table of which the views must be updated.
+        :param ownership_type: The type of views for which to return the order.
         :raises ViewNotInTable: If one of the view ids in the order does not belong
             to the table.
         """
+
+        if ownership_type is None:
+            ownership_type = OWNERSHIP_TYPE_COLLABORATIVE
 
         group = table.database.group
         CoreHandler().check_permissions(
             user, ReadViewsOrderOperationType.type, group=group, context=table
         )
 
-        queryset = View.objects.filter(table_id=table.id)
+        queryset = View.objects.filter(table_id=table.id).filter(
+            ownership_type=ownership_type
+        )
+        queryset = CoreHandler().filter_queryset(
+            user, ListViewsOperationType.type, queryset, table.database.group
+        )
 
         order = queryset.values_list("id", flat=True)
         order = list(order)
@@ -413,7 +564,7 @@ class ViewHandler:
         :param view_id: The view instance id that needs to be deleted.
         """
 
-        view = self.get_view_for_update(view_id)
+        view = self.get_view_for_update(user, view_id)
         self.delete_view(user, view)
 
     def delete_view(self, user: AbstractUser, view: View):
@@ -438,6 +589,26 @@ class ViewHandler:
         TrashHandler().trash(user, group, view.table.database, view)
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
+
+    def get_field_options_as_user(self, user: AbstractUser, view: View):
+        """
+        Returns a serializer class to get field options stored for the view.
+
+        :param user: The user on whose behalf the options are requested.
+        :param view: The view for which the options should be returned.
+        :returns: View type that has get_field_options_serializer_class().
+        """
+
+        group = view.table.database.group
+        CoreHandler().check_permissions(
+            user,
+            ReadViewFieldOptionsOperationType.type,
+            group=group,
+            context=view,
+            allow_if_template=True,
+        )
+        view_type = view_type_registry.get_by_model(view)
+        return view_type
 
     def update_field_options(
         self,
@@ -683,6 +854,23 @@ class ViewHandler:
 
         filter_builder = self._get_filter_builder(view, model)
         return filter_builder.apply_to_queryset(queryset)
+
+    def list_filters(self, user: AbstractUser, view_id: int) -> QuerySet[ViewFilter]:
+        """
+        Returns the ViewFilter queryset for the provided view_id.
+
+        :param user: The user on whose behalf the filters are requested.
+        :param view_id: The id of the view for which we want to return filters.
+        :returns: ViewFilter queryset for the view_id.
+        """
+
+        view = self.get_view(view_id)
+        group = view.table.database.group
+        CoreHandler().check_permissions(
+            user, ListViewFilterOperationType.type, group=group, context=view
+        )
+        filters = ViewFilter.objects.filter(view=view)
+        return filters
 
     def get_filter(
         self,
@@ -977,6 +1165,25 @@ class ViewHandler:
 
         return queryset
 
+    def list_sorts(self, user: AbstractUser, view_id: int) -> QuerySet[ViewSort]:
+        """
+        Returns the ViewSort queryset for provided view_id.
+
+        :param user: The user on whose behalf the sorts are requested.
+        :param view_id: The id of the view for which to return sorts.
+        :return: ViewSort queryset of the view's sorts.
+        """
+
+        view = ViewHandler().get_view(view_id)
+        CoreHandler().check_permissions(
+            user,
+            ListViewSortOperationType.type,
+            group=view.table.database.group,
+            context=view,
+        )
+        sortings = ViewSort.objects.filter(view=view)
+        return sortings
+
     def get_sort(self, user, view_sort_id, base_queryset=None):
         """
         Returns an existing view sort with the given id.
@@ -1195,10 +1402,19 @@ class ViewHandler:
         :param value_provider_conf: The configuration used by the value provider to
             compute the values for the decorator.
         :param order: The order of the decoration.
-        :param user: Optional user who have created the decoration.
+        :param user: Optional user who is creating the decoration.
         :param primary_key: An optional primary key to give to the new view sort.
         :return: The created view decoration instance.
         """
+
+        if user:
+            group = view.table.database.group
+            CoreHandler().check_permissions(
+                user,
+                CreateViewDecorationOperationType.type,
+                group=group,
+                context=view,
+            )
 
         # Check if view supports decoration
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -1238,14 +1454,37 @@ class ViewHandler:
 
         return view_decoration
 
+    def list_decorations(
+        self, user: AbstractUser, view_id: int
+    ) -> QuerySet[ViewDecoration]:
+        """
+        Lists view's decorations.
+
+        :param user: The user on whose behalf are the decorations requested.
+        :param view_id: The id of the view for which to list decorations.
+        :return: ViewDecoration queryset for the particular view.
+        """
+
+        view = ViewHandler().get_view(view_id)
+        CoreHandler().check_permissions(
+            user,
+            ListViewDecorationOperationType.type,
+            group=view.table.database.group,
+            context=view,
+        )
+        decorations = ViewDecoration.objects.filter(view=view)
+        return decorations
+
     def get_decoration(
         self,
+        user: AbstractUser,
         view_decoration_id: int,
         base_queryset: QuerySet = None,
     ) -> ViewDecoration:
         """
         Returns an existing view decoration with the given id.
 
+        :param user: The user on whose behalf is the decoration requested.
         :param view_decoration_id: The id of the view decoration.
         :param base_queryset: The base queryset from where to select the view decoration
             object from. This can for example be used to do a `select_related`.
@@ -1261,6 +1500,13 @@ class ViewHandler:
             view_decoration = base_queryset.select_related(
                 "view__table__database__group"
             ).get(pk=view_decoration_id)
+            group = view_decoration.view.table.database.group
+            CoreHandler().check_permissions(
+                user,
+                ReadViewDecorationOperationType.type,
+                group=group,
+                context=view_decoration,
+            )
         except ViewDecoration.DoesNotExist:
             raise ViewDecorationDoesNotExist(
                 f"The view decoration with id {view_decoration_id} does not exist."
@@ -1288,7 +1534,7 @@ class ViewHandler:
         Updates the values of an existing view decoration.
 
         :param view_decoration: The view decoration that needs to be updated.
-        :param user: Optional user who have created the decoration..
+        :param user: Optionally a user on whose behalf the decoration is updated.
         :param decorator_type_name: The type of the decorator.
         :param value_provider_type_name: The value provider that provides the value
             to the decorator.
@@ -1301,6 +1547,15 @@ class ViewHandler:
             provided is not compatible with the decorator type.
         :return: The updated view decoration instance.
         """
+
+        if user:
+            group = view_decoration.view.table.database.group
+            CoreHandler().check_permissions(
+                user,
+                UpdateViewDecorationOperationType.type,
+                group=group,
+                context=view_decoration,
+            )
 
         if decorator_type_name is None:
             decorator_type_name = view_decoration.type
@@ -1519,6 +1774,7 @@ class ViewHandler:
 
     def get_view_field_aggregations(
         self,
+        user: AbstractUser,
         view: View,
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
@@ -1532,6 +1788,7 @@ class ViewHandler:
         The dict keys are field names and value are aggregation values. The total is
         included in result if the with_total is specified.
 
+        :param user: The user on whose behalf we are requesting the aggregations.
         :param view: The view to get the field aggregation for.
         :param model: The model for this view table to generate the aggregation
             query from, if not specified then the model will be generated
@@ -1544,6 +1801,14 @@ class ViewHandler:
             field aggregation.
         :return: A dict of aggregation value
         """
+
+        CoreHandler().check_permissions(
+            user,
+            ListAggregationsViewOperationType.type,
+            group=view.table.database.group,
+            context=view,
+            allow_if_template=True,
+        )
 
         view_type = view_type_registry.get_by_model(view.specific_class)
 
@@ -1581,6 +1846,7 @@ class ViewHandler:
         # Do we need to compute some aggregations?
         if need_computation or with_total:
             db_result = self.get_field_aggregations(
+                user,
                 view,
                 [
                     (n["instance"], n["aggregation_type"])
@@ -1619,6 +1885,7 @@ class ViewHandler:
 
     def get_field_aggregations(
         self,
+        user: AbstractUser,
         view: View,
         aggregations: Iterable[Tuple[django_models.Field, str]],
         model: Union[GeneratedTableModel, None] = None,
@@ -1630,6 +1897,7 @@ class ViewHandler:
         The dict keys are field names and value are aggregation values. The total is
         included in result if the with_total is specified.
 
+        :param user: The user on whose behalf we are requesting the aggregations.
         :param view: The view to get the field aggregation for.
         :param aggregations: A list of (field_instance, aggregation_type).
         :param model: The model for this view table to generate the aggregation
@@ -1644,6 +1912,14 @@ class ViewHandler:
             view.
         :return: A dict of aggregation values
         """
+
+        CoreHandler().check_permissions(
+            user,
+            ReadAggregationsViewOperationType.type,
+            group=view.table.database.group,
+            context=view,
+            allow_if_template=True,
+        )
 
         if model is None:
             model = view.table.get_model()
@@ -1779,7 +2055,7 @@ class ViewHandler:
             ReadViewOperationType.type,
             group=view.table.database.group,
             context=view,
-            raise_error=False,
+            raise_permission_exceptions=False,
         )
         if not user_in_group:
             if not view.public:

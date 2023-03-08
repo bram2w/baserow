@@ -2,6 +2,8 @@ from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractUser
 
+from opentelemetry import trace
+
 from baserow.core.db import transaction_atomic
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
@@ -12,11 +14,14 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.utils import Progress
 
 from .exceptions import JobTypeAlreadyRegistered, JobTypeDoesNotExist
 from .models import Job
 from .types import AnyJob
+
+tracer = trace.get_tracer(__name__)
 
 
 class JobType(
@@ -24,7 +29,9 @@ class JobType(
     ModelInstanceMixin,
     MapAPIExceptionsInstanceMixin,
     Instance,
+    metaclass=baserow_trace_methods(tracer, only="do"),
 ):
+
     """
     This abstract class represents a custom job type that can be added to the
     job type registry. It must be extended so customization can be done. Each job
@@ -68,7 +75,7 @@ class JobType(
         instance creation. For example, files can be saved, or relationship can be
         added.
 
-        :param Job: The created job.
+        :param job: The created job.
         :param values: The provided values.
         """
 

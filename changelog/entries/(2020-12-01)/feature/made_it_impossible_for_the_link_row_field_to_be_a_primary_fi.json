@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Made it impossible for the `link_row` field to be a primary field because that can\ncause the primary field to be deleted.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "disable silky_analyze_queries by default in developer env as it causes double data updates",
+    "issue_number": 1591,
+    "bullet_points": [],
+    "created_at": "2023-02-17"
+}

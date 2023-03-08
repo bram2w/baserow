@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed an issue where customers with malformed file extensions were unable to snapshot or duplicate properly",
+    "issue_number": 1194,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

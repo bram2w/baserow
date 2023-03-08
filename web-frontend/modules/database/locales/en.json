@@ -235,6 +235,11 @@
         "dateFormatUS": "US",
         "dateFormatISO": "ISO",
         "includeTimeLabel": "Include time",
+        "showTimezoneLabel": "Show timezone",
+        "forceTimezoneLabel": "Set timezone for all collaborators",
+        "forceTimezoneValue": "Timezone",
+        "addTimezoneOffsetLabel": "Convert values (add {utcOffsetDiff} minutes)",
+        "subTimezoneOffsetLabel": "Convert values (subtract {utcOffsetDiff} minutes)",
         "timeFormatLabel": "Time format",
         "24Hour": "24 hour",
         "12Hour": "12 hour"
@@ -412,7 +417,8 @@
     },
     "viewsContext": {
         "searchView": "Search views",
-        "noViews": "No views found"
+        "noViews": "No views found",
+        "collaborative": "Collaborative"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "unnamed row {value}",
@@ -518,7 +524,12 @@
         "delete": "Delete view"
     },
     "viewForm": {
-        "name": "Name"
+        "name": "Name",
+        "whoCanEdit": "Who can edit"
+    },
+    "viewOwnershipType": {
+        "collaborative": "Collaborative",
+        "personal": "Personal"
     },
     "galleryViewHeader": {
         "customizeCards": "Customize cards"
@@ -548,7 +559,9 @@
         "deleteRow": "Delete row",
         "deleteRows": "Delete rows",
         "copyCells": "Copy cells",
-        "rowCount": "No rows | 1 row | {count} rows"
+        "rowCount": "No rows | 1 row | {count} rows",
+        "hiddenRowsInsertedTitle": "Rows added",
+        "hiddenRowsInsertedMessage": "{number} newly added rows have been added, but are not visible because of the active filters."
     },
     "gridViewFieldFile": {
         "dropHere": "Drop here",
@@ -560,6 +573,10 @@
     "gridViewIdentifierOptions": {
         "id": "Row identifier",
         "count": "Count"
+    },
+    "gridViewRowsAddContext": {
+        "title": "Create multiple rows",
+        "choice": "Add {rowAmountChoice} rows"
     },
     "formViewMeta": {
         "includeRowId": "Use {row_id} to include the newly created row id in the URL."

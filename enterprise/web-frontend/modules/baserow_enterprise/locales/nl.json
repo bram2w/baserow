@@ -1,5 +1,275 @@
 {
     "enterprise": {
-        "license": ""
+        "license": "Enterprise",
+        "sidebarTooltip": "Je account heeft globaal toegang tot de enterprise functies",
+        "rbac": "RBAC",
+        "sso": "SSO",
+        "deactivated": "Beschikbaar in enterprise-versie",
+        "licenseDescription": "Kijkers zijn gratis met Baserow Enterprise. Als een gebruiker een andere rol heeft, in een groep, dan gebruikt hij automatisch een betaalde seat.",
+        "overflowWarning": "Je hebt te veel niet-kijkers en hebt al je betaalde plaatsen opgebruikt. Verander gebruikers in kijkers op de ledenpagina van elke groep."
+    },
+    "trashType": {
+        "team": "team"
+    },
+    "createTeamModal": {
+        "title": "Team maken",
+        "invalidNameTitle": "Gebruik alsjeblieft een andere naam",
+        "invalidNameMessage": "Deze teamnaam wordt al gebruikt in de opgegeven groep."
+    },
+    "updateTeamModal": {
+        "title": "{teamName} bijwerken",
+        "invalidNameTitle": "Gebruik alsjeblieft een andere naam",
+        "invalidNameMessage": "Deze teamnaam wordt al gebruikt in de opgegeven groep."
+    },
+    "manageTeamModals": {
+        "subheading": "Met teams kun je machtigingen in bulk aan meerdere mensen geven of beperken."
+    },
+    "manageTeamForm": {
+        "submit": "Opslaan",
+        "nameTitle": "Naam",
+        "roleTitle": "Standaard rol",
+        "inviteMembers": "Leden toevoegen",
+        "membersTitle": "Leden",
+        "roleHelpText": "Gebruikersspecifieke rollen hebben altijd voorrang op Teamrollen.",
+        "noSubjectsSelected": "Klik op '{buttonLabel}' om eventueel teamgebruikers toe te voegen."
+    },
+    "editTeamContext": {
+        "remove": "Verwijder team",
+        "edit": "Team bewerken"
+    },
+    "teamsTable": {
+        "createNew": "Team maken",
+        "nameColumn": "Naam",
+        "createdColumn": "Gemaakt op",
+        "subjectsColumn": "Leden",
+        "roleColumn": "Standaard rol",
+        "title": "{teamCount} teams in {groupName}",
+        "roleHelpText": "Kan worden overschreven met rollen in databases en tabellen."
+    },
+    "subjectSampleField": {
+        "titleAttr": "{subjectCount} leden in dit team."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Teams"
+    },
+    "adminType": {
+        "AuditLog": "Audit log",
+        "Authentication": "Authenticatie"
+    },
+    "auditLog": {
+        "title": "Audit log",
+        "filterUserTitle": "Gebruiker",
+        "filterGroupTitle": "Groep",
+        "filterActionTypeTitle": "Type evenement",
+        "filterToTimestampTitle": "Tot Datum",
+        "filterToTimestamp": "Tot Datum",
+        "user": "Gebruiker",
+        "group": "Groep",
+        "actionType": "Type event",
+        "description": "Beschrijving",
+        "timestamp": "Timestamp",
+        "ip_address": "IP adres",
+        "clearFilters": "Wis",
+        "allUsers": "Alle gebruikers",
+        "filterFromTimestampTitle": "Van Datum",
+        "filterFromTimestamp": "Van Datum",
+        "exportToCsv": "Exporteren naar CSV",
+        "exportModalTitle": "Exporteren naar CSV",
+        "allGroups": "Alle groepen",
+        "allActionTypes": "Alle soorten events"
+    },
+    "auditLogExportModal": {
+        "cancelledTitle": "Export mislukt",
+        "cancelledDescription": "Er is iets misgegaan bij het exporteren van de audit log. Probeer het opnieuw.",
+        "title": "Exporteren naar CSV",
+        "exportFilename": "Audit Log Export - {date}"
+    },
+    "authProviders": {
+        "title": "Authenticatie Providers",
+        "addProvider": "Provider toevoegen",
+        "noProviders": "Er zijn nog geen authenticatie providers geconfigureerd."
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Bewerk",
+        "delete": "Verwijder"
+    },
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Laatst ingeschakelde provider",
+        "cannotDisableAllAuthProvidersDescription": "Het is niet mogelijk de laatst ingeschakelde provider uit te schakelen of te verwijderen."
+    },
+    "samlSettingsForm": {
+        "domain": "Domein",
+        "domainPlaceholder": "Voer de bedrijfsdomeinnaam in...",
+        "invalidDomain": "Ongeldige domeinnaam",
+        "metadata": "Metadata",
+        "metadataPlaceholder": "Plak de identiteitprovider metadata...",
+        "domainAlreadyExists": "Er bestaat al een SAML provider voor dit domein",
+        "invalidMetadata": "Ongeldige XML-metadata voor de identiteitsprovider",
+        "relayStateUrl": "Standaard Relay State URL",
+        "providerIsVerified": "De provider is geverifieerd",
+        "acsUrl": "URL voor Single Sign On"
+    },
+    "authProviderTypes": {
+        "password": "E-mail- en wachtwoordverificatie"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Een nieuw {type} toevoegen"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Inloggen met SAML SSO",
+        "redirecting": "Omleiden naar de identiteitsprovider...",
+        "continueWithSaml": "Doorgaan naar de SAML SSO provider",
+        "requestError": "Dit domein is niet geconfigureerd met SAML SSO",
+        "loginText": "Heb je al een wachtwoord?"
+    },
+    "loginError": {
+        "title": "Er is iets fout gegaan:",
+        "help": "Neem contact op met je beheerder voor hulp.",
+        "defaultErrorMessage": "het was niet mogelijk om de SSO loginstroom te voltooien.",
+        "errorProviderDoesNotExist": "deze authenticatie provider bestaat niet of is niet beschikbaar.",
+        "errorAuthFlowError": "er is een fout opgetreden tijdens de authenticatie flow met de geselecteerde provider.",
+        "errorDifferentProvider": "gebruik de provider waarmee u zich oorspronkelijk hebt aangemeld.",
+        "errorGroupInvitationEmailMismatch": "je e-mailadres komt niet overeen met de uitnodiging.",
+        "loginText": "Heb je al een account?",
+        "errorSsoFeatureNotActive": "De SSO-functie is niet actief. Neem contact op met je beheerder.",
+        "errorInvalidSamlResponse": "SAML antwoord is ongeldig.",
+        "errorSignupDisabled": "aanmelden is uitgeschakeld door de beheerder.",
+        "errorInvalidSamlRequest": "SAML verzoek is ongeldig.",
+        "errorUserDeactivated": "gebruiker is uitgeschakeld."
+    },
+    "roles": {
+        "admin": {
+            "description": "Kan groepen en applicaties volledig configureren en bewerken.",
+            "name": "Beheerder"
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "Kan gegevens volledig bewerken, maar geen applicaties of groepen configureren."
+        },
+        "viewer": {
+            "description": "Kan alleen gegevens lezen.",
+            "name": "Kijker"
+        },
+        "noRoleLowPriority": {
+            "description": "Krijg standaard groepsrol van hun teams.",
+            "name": "Geen rol"
+        },
+        "noAccess": {
+            "name": "Geen toegang",
+            "description": "Kan nergens bij."
+        },
+        "builder": {
+            "name": "Bouwer",
+            "description": "Kan applicaties volledig configureren en bewerken."
+        },
+        "commenter": {
+            "name": "Commentator",
+            "description": "Kan alleen lezen en commentaar geven op data."
+        }
+    },
+    "memberRolesTab": {
+        "database": {
+            "warningTitle": "Andere gebruikers kunnen toegang erven!",
+            "warningMessage": "Andere gebruikers kunnen toegang erven via hun respectieve rollen in de bovenliggende groep.",
+            "headerTooltip": "Databaserollen overschrijven groepsrollen.",
+            "title": "{name} database",
+            "selectMembers": "Selecteer leden",
+            "everyoneHasAccess": "Iedereen in de werkruimte {name} heeft toegang tot deze database.",
+            "onlyYouHaveAccess": "Alleen jij hebt toegang tot deze database."
+        },
+        "table": {
+            "headerTooltip": "Tabel rollen gaan boven groeps- en databaserollen.",
+            "selectMembers": "Selecteer leden",
+            "title": "{name} tabel",
+            "onlyYouHaveAccess": "Alleen u heeft toegang tot deze tabel.",
+            "warningTitle": "Andere gebruikers kunnen toegang erven!",
+            "warningMessage": "Andere gebruikers kunnen toegang erven via hun respectieve rollen in de bovenliggende database of groep.",
+            "everyoneHasAccess": "Iedereen in {name} werkruimte heeft toegang tot deze tabel."
+        }
+    },
+    "memberRolesMembersList": {
+        "remove": "Verwijder",
+        "teamMembersCount": "{count} teamleden",
+        "adminHelpText": "Beheerders kunnen rollen van andere beheerders beperken."
+    },
+    "roleAssignmentModal": {
+        "membersTab": "Leden",
+        "teamsTab": "Teams",
+        "subjectTypeNameMembers": "leden",
+        "subjectTypeNameTeams": "teams"
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Leden zoeken...",
+        "selectedAmountLabel": "{count} leden geselecteerd"
+    },
+    "selectTeamsList": {
+        "searchPlaceholder": "Teams zoeken...",
+        "selectedAmountLabel": "{count} teams geselecteerd"
+    },
+    "selectSubjectsListFooter": {
+        "invite": "Nodig {count} {type} uit",
+        "types": {
+            "members": "leden",
+            "teams": "teams"
+        },
+        "helpTooltip": "Toewijzingen van leden rollen hebben voorrang op toewijzingen van team rollen.",
+        "roleSelectorBuilderDataWarningTooltip": "Ze kunnen formule- en opzoekvelden maken die alle velden in gekoppelde tabellen blootleggen."
+    },
+    "membersRoleField": {
+        "noAccessHelpText": "Deze gebruiker vereist expliciete toegang tot middelen.",
+        "adminHelpText": "Beheerders kunnen rollen van andere beheerders beperken."
+    },
+    "oauthSettingsForm": {
+        "providerName": "Naam",
+        "providerNamePlaceholder": "Aangepaste provider naam",
+        "clientId": "Klant ID",
+        "clientIdPlaceholder": "Klant ID van de provider",
+        "secret": "Geheim",
+        "secretPlaceholder": "Het geheim van de provider",
+        "baseUrlPlaceholder": "De basis URL van de provider",
+        "invalidBaseUrl": "De ingevoerde URL is geen geldige provider URL",
+        "callbackUrl": "Callback URL",
+        "baseUrl": "URL"
+    },
+    "enterpriseFeatures": {
+        "sso": "Single Sign On",
+        "rbac": "Rol gebaseerde toegangscontrole"
+    },
+    "chatwootSuportSidebarGroup": {
+        "directSupport": "Directe ondersteuning"
+    },
+    "userTeamsField": {
+        "no_records": "Geen teams"
+    },
+    "deleteAuthProviderModal": {
+        "comment": "Wil je dit {type} echt verwijderen?",
+        "title": "Verwijder {name}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Bewerk {naam}"
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Database",
+        "error": {
+            "description": "Er is een fout opgetreden bij het ophalen van de ledengegevens.",
+            "title": "Kon geen gegevens ophalen"
+        },
+        "memberRolesTableTabTitle": "Huidige tabel"
+    },
+    "memberRolesShareToggle": {
+        "subLabel": "{totalUserAmount} werkruimte leden",
+        "label": "Deel met iedereen op {name}"
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Leden beheren"
+    },
+    "memberRolesTableContexItem": {
+        "label": "Leden beheren"
+    },
+    "membersPagePlugin": {
+        "roleHelpText": "Kan worden overschreven met rollen in databases en tabellen."
+    },
+    "loginButton": {
+        "continueWith": "Doorgaan met"
     }
 }

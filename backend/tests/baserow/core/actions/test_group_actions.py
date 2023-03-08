@@ -7,9 +7,11 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.action.scopes import RootActionScopeType
 from baserow.core.actions import (
     CreateGroupActionType,
+    LeaveGroupActionType,
     OrderGroupsActionType,
     UpdateGroupActionType,
 )
+from baserow.core.exceptions import GroupUserIsLastAdmin
 from baserow.core.handler import CoreHandler, GroupForUpdate
 from baserow.core.models import Group
 
@@ -154,3 +156,17 @@ def test_can_undo_redo_ordering_group(data_fixture, django_assert_num_queries):
     order = CoreHandler().get_groups_order(user)
 
     assert order == order_new
+
+
+@pytest.mark.django_db
+def test_leave_group(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    with pytest.raises(GroupUserIsLastAdmin):
+        action_type_registry.get(LeaveGroupActionType.type).do(user, group)
+
+    second_user = data_fixture.create_user(group=group)
+    action_type_registry.get(LeaveGroupActionType.type).do(second_user, group)
+
+    assert group.users.count() == 1

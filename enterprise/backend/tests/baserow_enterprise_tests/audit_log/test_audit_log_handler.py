@@ -1,60 +1,85 @@
+from datetime import datetime
+
 from django.test.utils import override_settings
-from django.utils import timezone
 
 import pytest
+from freezegun import freeze_time
 
+from baserow.core.action.handler import ActionHandler
+from baserow.core.actions import CreateGroupActionType
 from baserow_enterprise.audit_log.handler import AuditLogHandler
 from baserow_enterprise.audit_log.models import AuditLogEntry
 
 
 @pytest.mark.django_db(transaction=True)
 @override_settings(DEBUG=True)
-def test_actions_are_not_inserted_as_audit_log_entries_without_enterprise(
+def test_actions_are_not_inserted_as_audit_log_entries_without_license(
     api_client, enterprise_data_fixture
 ):
 
     user = enterprise_data_fixture.create_user()
-    actions = enterprise_data_fixture.submit_actions_via_api(api_client, user)
-    assert len(actions) > 0
+
+    with freeze_time("2023-01-01 12:00:00"):
+        CreateGroupActionType.do(user, "group 1")
+
     assert AuditLogEntry.objects.count() == 0
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_actions_are_inserted_as_audit_log_entries_with_enterprise(
+def test_actions_are_inserted_as_audit_log_entries_with_license(
     api_client, enterprise_data_fixture, synced_roles
 ):
     enterprise_data_fixture.enable_enterprise()
-
     user = enterprise_data_fixture.create_user()
-    actions = enterprise_data_fixture.submit_actions_via_api(api_client, user)
-    assert len(actions) > 0
 
-    # the entries are sorted in reverse order
-    delete_older_than, delete_last = None, 10
-    for i, entry in enumerate(AuditLogEntry.objects.all(), start=1):
-        action = actions[len(actions) - i]
-        assert entry.action_type == action["action_type"].type, (entry, action)
-        assert entry.user_id == user.id
-        assert entry.user_email == user.email
-        assert (
-            entry.original_action_short_descr == action["action_type"].description.short
-        )
-        assert (
-            entry.original_action_long_descr == action["action_type"].description.long
-        )
-        assert (
-            entry.original_action_context_descr
-            == action["action_type"].description.context
-        )
-        # ensure the original description can be formatted correctly
-        assert entry.original_action_long_descr % entry.action_params
-        if i == delete_last:
-            delete_older_than = entry.action_timestamp
+    with freeze_time("2023-01-01 12:00:00"):
+        CreateGroupActionType.do(user, "group 1")
 
-    # ensure the older entries are deleted correctly
-    AuditLogHandler.delete_entries_older_than(delete_older_than)
-    assert AuditLogEntry.objects.count() == delete_last
+    with freeze_time("2023-01-01 12:00:01"):
+        CreateGroupActionType.do(user, "group 2")
 
-    AuditLogHandler.delete_entries_older_than(timezone.now())
+    assert AuditLogEntry.objects.count() == 2
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_audit_log_handler_can_clear_entries_older_than(
+    api_client, enterprise_data_fixture, synced_roles
+):
+    enterprise_data_fixture.enable_enterprise()
+    user = enterprise_data_fixture.create_user()
+
+    with freeze_time("2023-01-01 12:00:00"):
+        CreateGroupActionType.do(user, "group 1")
+
+    with freeze_time("2023-01-01 12:00:10"):
+        CreateGroupActionType.do(user, "group 2")
+
+    AuditLogHandler.delete_entries_older_than(datetime(2023, 1, 1, 12, 0, 1))
+    assert AuditLogEntry.objects.count() == 1
+
+    AuditLogHandler.delete_entries_older_than(datetime(2023, 1, 2, 12, 0, 0))
     assert AuditLogEntry.objects.count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@override_settings(DEBUG=True)
+def test_audit_log_handler_add_entries_for_undone_redone_actions(
+    api_client, enterprise_data_fixture, synced_roles
+):
+    enterprise_data_fixture.enable_enterprise()
+    session_id = "session-id"
+    user = enterprise_data_fixture.create_user(session_id=session_id)
+
+    with freeze_time("2023-01-01 12:00:00"):
+        CreateGroupActionType.do(user, "group 1")
+
+    assert AuditLogEntry.objects.count() == 1
+
+    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    assert AuditLogEntry.objects.count() == 2
+
+    ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    assert AuditLogEntry.objects.count() == 3

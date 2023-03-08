@@ -1,8 +1,8 @@
-import logging
+import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
@@ -15,16 +15,28 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import CharField, DateTimeField, F, Func, Q, Value
+from django.db.models import (
+    CharField,
+    Count,
+    DateTimeField,
+    F,
+    Func,
+    Q,
+    QuerySet,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
+import pytz
 from dateutil import parser
 from dateutil.parser import ParserError
-from pytz import all_timezones, timezone
+from loguru import logger
+from pytz import timezone
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
+    ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     ERROR_INVALID_LOOKUP_TARGET_FIELD,
     ERROR_INVALID_LOOKUP_THROUGH_FIELD,
@@ -38,6 +50,7 @@ from baserow.contrib.database.api.fields.serializers import (
     CollaboratorSerializer,
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
+    IntegerOrStringField,
     LinkRowValueSerializer,
     MustBeEmptyField,
     SelectOptionSerializer,
@@ -57,7 +70,6 @@ from baserow.contrib.database.formula import (
     BaserowFormulaTextType,
     BaserowFormulaType,
     FormulaHandler,
-    literal,
 )
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
@@ -78,8 +90,9 @@ from .dependencies.models import FieldDependency
 from .dependencies.types import FieldDependencies
 from .exceptions import (
     AllProvidedCollaboratorIdsMustBeValidUsers,
-    AllProvidedMultipleSelectValuesMustBeIntegers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
+    AllProvidedValuesMustBeIntegersOrStrings,
+    DateForceTimezoneOffsetValueError,
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
     InvalidLookupTargetField,
@@ -88,7 +101,12 @@ from .exceptions import (
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
-from .field_filters import AnnotatedQ, contains_filter, filename_contains_filter
+from .field_filters import (
+    AnnotatedQ,
+    contains_filter,
+    contains_word_filter,
+    filename_contains_filter,
+)
 from .field_sortings import AnnotatedOrder
 from .fields import (
     BaserowExpressionField,
@@ -133,8 +151,6 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import GeneratedTableModel
-
-logger = logging.getLogger(__name__)
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):
@@ -208,8 +224,11 @@ class TextFieldMatchingRegexFieldType(FieldType, ABC):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
+
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaTextType()
+        return BaserowFormulaTextType(nullable=True)
 
     def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
         return self.model_class()
@@ -250,7 +269,7 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
         )
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaCharType()
+        return BaserowFormulaCharType(nullable=True)
 
 
 class TextFieldType(FieldType):
@@ -282,8 +301,11 @@ class TextFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
+
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaTextType()
+        return BaserowFormulaTextType(nullable=True)
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaTextType
@@ -315,8 +337,11 @@ class LongTextFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
+
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        return BaserowFormulaTextType()
+        return BaserowFormulaTextType(nullable=True)
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaTextType
@@ -451,15 +476,8 @@ class NumberFieldType(FieldType):
 
     def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
         return BaserowFormulaNumberType(
-            number_decimal_places=field.number_decimal_places
+            number_decimal_places=field.number_decimal_places, nullable=True
         )
-
-    def to_baserow_formula_expression(self, field: NumberField) -> BaserowExpression:
-        from baserow.contrib.database.formula.ast.function_defs import BaserowWhenEmpty
-
-        # treat null values as zero for mathematical operations
-        expression = super().to_baserow_formula_expression(field)
-        return BaserowWhenEmpty()(expression, literal(0))
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaNumberType
@@ -492,6 +510,9 @@ class RatingFieldType(FieldType):
     def prepare_value_for_db(self, instance, value):
         if not value:
             return 0
+
+        # Ensure the value is an int
+        value = int(value)
 
         if value < 0:
             raise ValidationError(
@@ -582,6 +603,9 @@ class RatingFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def contains_word_query(self, *args):
+        return contains_word_filter(*args)
+
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaNumberType(0)
 
@@ -653,8 +677,95 @@ class BooleanFieldType(FieldType):
 class DateFieldType(FieldType):
     type = "date"
     model_class = DateField
-    allowed_fields = ["date_format", "date_include_time", "date_time_format"]
-    serializer_field_names = ["date_format", "date_include_time", "date_time_format"]
+    allowed_fields = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "date_show_tzinfo",
+        "date_force_timezone",
+    ]
+    serializer_field_names = [
+        "date_format",
+        "date_include_time",
+        "date_time_format",
+        "date_show_tzinfo",
+        "date_force_timezone",
+    ]
+    request_serializer_field_names = serializer_field_names + [
+        "date_force_timezone_offset",
+    ]
+    request_serializer_field_overrides = {
+        "date_force_timezone_offset": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text=(
+                "A UTC offset in minutes to add to all the field datetimes values.",
+            ),
+        )
+    }
+    serializer_extra_kwargs = {"date_force_timezone_offset": {"write_only": True}}
+    api_exceptions_map = {
+        DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
+    }
+
+    def get_request_kwargs_to_backup(self, field, kwargs) -> Dict[str, Any]:
+        date_force_timezone_offset = kwargs.get("date_force_timezone_offset", None)
+        if date_force_timezone_offset:
+            return {"date_force_timezone_offset": -date_force_timezone_offset}
+        return {}
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        force_timezone_offset = field_kwargs.get("date_force_timezone_offset", None)
+        if force_timezone_offset is not None:
+            raise DateForceTimezoneOffsetValueError(
+                "date_force_timezone_offset is not allowed when creating a date field."
+            )
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
+        force_timezone_offset = field_kwargs.get("date_force_timezone_offset", None)
+        if not isinstance(from_field, DateField):
+            return
+
+        if force_timezone_offset is not None and not to_field_values.get(
+            "date_include_time", from_field.date_include_time
+        ):
+            raise DateForceTimezoneOffsetValueError(
+                "date_include_time must be set to true"
+            )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        """
+        If the date_force_timezone field is changed and
+        date_force_timezone_offset is set to an integer value, we need to
+        replace the timezone of all the values in the database by adding the
+        utcOffset accordingly.
+        """
+
+        timezone_offset_to_add_to_replace_tz = to_field_kwargs.get(
+            "date_force_timezone_offset", None
+        )
+        if timezone_offset_to_add_to_replace_tz is None:
+            return
+
+        to_model.objects.filter(**{f"{to_field.db_column}__isnull": False}).update(
+            **{
+                to_field.db_column: models.F(to_field.db_column)
+                + timedelta(minutes=timezone_offset_to_add_to_replace_tz)
+            }
+        )
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -714,8 +825,11 @@ class DateFieldType(FieldType):
         if value is None:
             return value if rich_value else ""
 
-        python_format = field_object["field"].get_python_format()
-        return value.strftime(python_format)
+        field = field_object["field"]
+        if isinstance(value, datetime) and field.date_force_timezone is not None:
+            value = value.astimezone(pytz.timezone(field.date_force_timezone))
+
+        return value.strftime(field.get_python_format())
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -743,32 +857,24 @@ class DateFieldType(FieldType):
         else:
             return fake.date_object()
 
-    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-        """
-        If the field type has changed then we want to convert the date or timestamp to
-        a human readable text following the old date format.
-        """
-
-        to_field_type = field_type_registry.get_by_model(to_field)
-        if to_field_type.type != self.type and connection.vendor == "postgresql":
-            sql_format = from_field.get_psql_format()
-            sql_type = from_field.get_psql_type()
-            return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
-
-        return super().get_alter_column_prepare_old_value(
-            connection, from_field, to_field
-        )
-
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
         # If an empty value has been provided we do not want to filter at all.
         if value == "":
             return Q()
+
+        # No user input goes into the RawSQL, safe to use.
         return AnnotatedQ(
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
                     Func(
-                        F(field_name),
+                        Func(
+                            # FIXME: what if date_force_timezone is None(user timezone)?
+                            Value(field.date_force_timezone or "UTC"),
+                            F(field_name),
+                            function="timezone",
+                            output_field=DateTimeField(),
+                        ),
                         Value(field.get_psql_format()),
                         function="to_char",
                         output_field=CharField(),
@@ -777,6 +883,41 @@ class DateFieldType(FieldType):
                 )
             },
             q={f"formatted_date_{field_name}__icontains": value},
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type:
+            sql_format = from_field.get_psql_format()
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            # FIXME: what if date_force_timezone is None(user timezone)?
+            variables[variable_name] = from_field.date_force_timezone or "UTC"
+            return (
+                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
+                '{sql_format}');""",
+                variables,
+            )
+
+        if (
+            to_field.date_include_time is False
+            and from_field.date_force_timezone is not None
+        ):
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            variables[variable_name] = from_field.date_force_timezone or "UTC"
+            return (
+                f"""p_in = (p_in::timestamptz at time zone %({variable_name})s)::date;""",
+                variables,
+            )
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
         )
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
@@ -841,7 +982,12 @@ class DateFieldType(FieldType):
 
     def to_baserow_formula_type(self, field: DateField) -> BaserowFormulaType:
         return BaserowFormulaDateType(
-            field.date_format, field.date_include_time, field.date_time_format
+            field.date_format,
+            field.date_include_time,
+            field.date_time_format,
+            date_force_timezone=field.date_force_timezone,
+            date_show_tzinfo=field.date_show_tzinfo,
+            nullable=True,
         )
 
     def from_baserow_formula_type(
@@ -851,6 +997,8 @@ class DateFieldType(FieldType):
             date_format=formula_type.date_format,
             date_include_time=formula_type.date_include_time,
             date_time_format=formula_type.date_time_format,
+            date_force_timezone=formula_type.date_force_timezone,
+            date_show_tzinfo=formula_type.date_show_tzinfo,
         )
 
     def should_backup_field_data_for_same_type_update(
@@ -866,92 +1014,22 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     can_be_in_form_view = False
     field_data_is_derived_from_attrs = True
 
-    allowed_fields = DateFieldType.allowed_fields + ["timezone"]
-    serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
-    serializer_field_overrides = {
-        "timezone": serializers.ChoiceField(choices=all_timezones, required=True)
-    }
     source_field_name = None
     model_field_class = models.DateTimeField
     model_field_kwargs = {}
     populate_from_field = None
 
-    def get_export_value(self, value, field_object, rich_value=False):
-        if value is None:
-            return value if rich_value else ""
-
-        python_format = field_object["field"].get_python_format()
-        field = field_object["field"]
-        field_timezone = timezone(field.get_timezone())
-        return value.astimezone(field_timezone).strftime(python_format)
-
     def get_serializer_field(self, instance, **kwargs):
         if not instance.date_include_time:
             kwargs["format"] = "%Y-%m-%d"
-            kwargs["default_timezone"] = timezone(instance.timezone)
 
-        return serializers.DateTimeField(
-            **{
-                "required": False,
-                **kwargs,
-            }
-        )
+        return serializers.DateTimeField(**{"required": False, **kwargs})
 
     def get_model_field(self, instance, **kwargs):
         kwargs["null"] = True
         kwargs["blank"] = True
         kwargs.update(self.model_field_kwargs)
         return self.model_field_class(**kwargs)
-
-    def contains_query(self, field_name, value, model_field, field):
-        value = value.strip()
-        # If an empty value has been provided we do not want to filter at all.
-        if value == "":
-            return Q()
-        # No user input goes into the RawSQL, safe to use.
-        return AnnotatedQ(
-            annotation={
-                f"formatted_date_{field_name}": Coalesce(
-                    Func(
-                        Func(
-                            Value(
-                                field.get_timezone(),
-                            ),
-                            F(field_name),
-                            function="timezone",
-                            output_field=DateTimeField(),
-                        ),
-                        Value(field.get_psql_format()),
-                        function="to_char",
-                        output_field=CharField(),
-                    ),
-                    Value(""),
-                )
-            },
-            q={f"formatted_date_{field_name}__icontains": value},
-        )
-
-    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-        """
-        If the field type has changed then we want to convert the date or timestamp to
-        a human readable text following the old date format.
-        """
-
-        to_field_type = field_type_registry.get_by_model(to_field)
-        if to_field_type.type != self.type:
-            sql_format = from_field.get_psql_format()
-            variables = {}
-            variable_name = f"{from_field.db_column}_timezone"
-            variables[variable_name] = from_field.get_timezone()
-            return (
-                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
-                '{sql_format}');""",
-                variables,
-            )
-
-        return super().get_alter_column_prepare_old_value(
-            connection, from_field, to_field
-        )
 
     def after_create(self, field, model, user, connection, before, field_kwargs):
         """
@@ -1133,6 +1211,153 @@ class LinkRowFieldType(FieldType):
             models.Prefetch(name, queryset=related_queryset)
         )
 
+    def prepare_value_for_db(self, instance, value):
+        return self.prepare_value_for_db_in_bulk(
+            instance, {0: value}, continue_on_error=False
+        )[0]
+
+    def prepare_value_for_db_in_bulk(
+        self, instance, values_by_row, continue_on_error=False
+    ):
+        # Create a map {value -> row_indexes} for ids and strings
+        name_map = defaultdict(list)
+        invalid_values = []
+        for row_index, values in values_by_row.items():
+            for row_name_or_id in values:
+                if isinstance(row_name_or_id, int):
+                    continue
+                elif isinstance(row_name_or_id, str):
+                    name_map[row_name_or_id].append(row_index)
+                else:
+                    invalid_values.append(values)
+                    break
+
+        if invalid_values:
+            if continue_on_error:
+                # Replace values by error for failing rows
+                for row_index in invalid_values:
+                    values_by_row[row_index] = AllProvidedValuesMustBeIntegersOrStrings(
+                        values_by_row[row_index]
+                    )
+            else:
+                raise ValidationError(
+                    f"The provided link row values {invalid_values} are not "
+                    "valid integer or string.",
+                    code="invalid_value",
+                )
+
+        if name_map:
+            # It's a row name -> try to get the corresponding row
+            (
+                related_model,
+                primary_field,
+            ) = self._get_related_model_and_primary_field(instance)
+
+            primary_field_type = field_type_registry.get_by_model(
+                primary_field["field"]
+            )
+
+            # Here we use the can_get_unique_values flag as it seems to filter out
+            # the field types we don't want. For now we don't want the field type
+            # That can't be filtered easily later like multiple_select, file field
+            # or another link row field.
+            # Maybe this property isn't a good fit or maybe the name can be improve
+            # later.
+            if not primary_field_type.can_get_unique_values:
+                error = ValidationError(
+                    f"The primary field type '{primary_field_type.type}' of the "
+                    "linked table doesn't support text values.",
+                    code="invalid_value",
+                )
+                if continue_on_error:
+                    for row_ids in name_map.values():
+                        for row_index in row_ids:
+                            values_by_row[row_index] = error
+                else:
+                    raise error
+
+            search_values = []
+            for name, row_ids in name_map.items():
+                try:
+                    search_values.append(
+                        primary_field_type.prepare_value_for_db(
+                            primary_field["field"], name
+                        )
+                    )
+                except ValidationError as e:
+                    error = ValidationError(
+                        f"The value '{name}' is an invalid value for the primary field "
+                        "of the linked table.",
+                        code="invalid_value",
+                    )
+                    if continue_on_error:
+                        # Replace values by error for failing rows
+                        for row_index in row_ids:
+                            values_by_row[row_index] = error
+                    else:
+                        raise e
+
+            # Get all matching rows
+            rows = related_model.objects.filter(
+                **{f"{primary_field['name']}__in": search_values}
+            )
+
+            # Map value with row id. Order is reversed to let the first row wins
+            # Values are mapped back to their string representation to be compared
+            # by the given text value
+            row_map = {
+                (
+                    str(
+                        primary_field["type"].get_export_value(
+                            getattr(r, primary_field["name"]), primary_field
+                        )
+                    )
+                ): r.id
+                for r in rows[::-1]
+            }
+
+            rows_that_needs_name_replacement = {
+                val for value in name_map.values() for val in value
+            }
+
+            # Replace all row names with actual row ids
+            for row_index in rows_that_needs_name_replacement:
+                values = values_by_row[row_index]
+                if not isinstance(values, list):  # filter rows with exceptions
+                    continue
+
+                new_values = []
+                for val in values:
+                    if isinstance(val, int):
+                        new_values.append(val)
+                        continue
+
+                    if val in row_map:
+                        new_values.append(row_map[val])
+                        continue
+
+                    # If we get there, it's a name that doesn't exist in the linked
+                    # table
+                    error = ValidationError(
+                        f"The provided text value '{val}' doesn't match any row in "
+                        "the linked table.",
+                        code="missing_row",
+                    )
+                    if continue_on_error:
+                        values_by_row[row_index] = error
+                        break
+                    else:
+                        raise error
+
+                values_by_row[row_index] = new_values
+
+        # Removes duplicate ids keeping ordering
+        values_by_row = {
+            k: list(dict.fromkeys(v)) if isinstance(v, list) else v
+            for k, v in values_by_row.items()
+        }
+        return values_by_row
+
     def get_export_value(self, value, field_object, rich_value=False):
         def map_to_export_value(inner_value, inner_field_object):
             return inner_field_object["type"].get_export_value(
@@ -1255,7 +1480,7 @@ class LinkRowFieldType(FieldType):
 
         return serializers.ListField(
             **{
-                "child": serializers.IntegerField(min_value=0),
+                "child": IntegerOrStringField(min_value=0),
                 "required": False,
                 **kwargs,
             }
@@ -1275,7 +1500,9 @@ class LinkRowFieldType(FieldType):
 
     def get_serializer_help_text(self, instance):
         return (
-            "This field accepts an `array` containing the ids of the related rows."
+            "This field accepts an `array` containing the ids or the names of the "
+            "related rows. In case of names, if the name is not found, this name "
+            "is ignored. A name is the value of the primary key of the related row."
             "The response contains a list of objects containing the `id` and "
             "the primary field's `value` as a string for display purposes."
         )
@@ -2172,12 +2399,12 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
-        field_serializer = serializers.IntegerField(
+        field_serializer = IntegerOrStringField(
             **{
                 "required": required,
                 "allow_null": not required,
                 **kwargs,
-            }
+            },
         )
         return field_serializer
 
@@ -2206,61 +2433,75 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         return getattr(row, f"{field_name}_id")
 
     def prepare_value_for_db(self, instance, value):
-        if value is None:
-            return value
-
-        if isinstance(value, int):
-            try:
-                return SelectOption.objects.get(field=instance, id=value)
-            except SelectOption.DoesNotExist:
-                pass
-
-        if isinstance(value, SelectOption) and value.field_id == instance.id:
-            return value
-
-        # If the select option is not found or if it does not belong to the right field
-        # then the provided value is invalid and a validation error can be raised.
-        raise ValidationError(
-            f"The provided value is not a valid option.", code="invalid_option"
-        )
+        return self.prepare_value_for_db_in_bulk(
+            instance, {0: value}, continue_on_error=False
+        )[0]
 
     def prepare_value_for_db_in_bulk(
         self, instance, values_by_row, continue_on_error=False
     ):
 
-        # Create a map {value -> row_indexes}
-        value_map = defaultdict(list)
+        # Create a map {names/ids -> row_indexes} and extract unique int and text values
+        unique_ids = set()
+        unique_names = set()
+        invalid_values_by_index = {}
+
         for row_index, value in values_by_row.items():
-            if value is not None:
-                value_map[value].append(row_index)
+            if value is None:
+                continue
 
-        unique_values = set(value_map.keys())
+            if isinstance(value, SelectOption):
+                continue
+            elif isinstance(value, int):
+                unique_ids.add(value)
+            elif isinstance(value, str):
+                unique_names.add(value)
+            else:
+                error = ValidationError(
+                    f"The provided value {value} is not a valid option.",
+                    code="invalid_option",
+                )
+                if continue_on_error:
+                    invalid_values_by_index[row_index] = error
+                else:
+                    raise error
 
-        # Query database with all these gathered ids
-        select_options = SelectOption.objects.filter(
-            field=instance, id__in=unique_values
+        invalid_values_by_index.update(invalid_values_by_index)
+
+        # Query database with all these gathered values
+        select_options = SelectOption.objects.filter(field=instance).filter(
+            Q(id__in=unique_ids) | Q(value__in=unique_names)
         )
 
-        # Create a map {id -> option}
-        option_map = {opt.id: opt for opt in select_options}
-        found_option_ids = set(option_map.keys())
+        # Create a map {id|value -> option}
+        # Here we reverse the select_options list to let the first option
+        # win in the map in case of duplicate for text values.
+        option_map = {opt.value: opt for opt in select_options[::-1]}
+        option_map.update({opt.id: opt for opt in select_options})
+
+        found_option_values = set(option_map.keys())
+        unique_values = unique_ids | unique_names
+
+        invalid_values = sorted(
+            [str(val) for val in list(unique_values - found_option_values)]
+        )
 
         # Whether invalid values exists ?
-        if len(found_option_ids) != len(unique_values):
-            invalid_ids = sorted(list(unique_values - found_option_ids))
+        if invalid_values:
             if not continue_on_error:
                 # Fail fast
-                raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+                raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_values)
 
         # Replace original values by real option object if possible
         for row_index, value in values_by_row.items():
-            # Ignore empty values
-            if value is None:
+            # Ignore empty and select values
+            if value is None or isinstance(value, SelectOption):
                 continue
             if continue_on_error and value not in option_map:
-                values_by_row[
-                    row_index
-                ] = AllProvidedMultipleSelectValuesMustBeSelectOption(value)
+                values_by_row[row_index] = ValidationError(
+                    f"The provided value {value} is not a valid option.",
+                    code="invalid_option",
+                )
             else:
                 values_by_row[row_index] = option_map[value]
 
@@ -2276,7 +2517,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value if rich_value else ""
+            return None if rich_value else ""
         return value.value
 
     def get_model_field(self, instance, **kwargs):
@@ -2409,8 +2650,15 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         # If an empty value has been provided we do not want to filter at all.
         if value == "":
             return Q()
-
         return Q(**{f"{field_name}__value__icontains": value})
+
+    def contains_word_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        value = re.escape(value)
+        return Q(**{f"{field_name}__value__iregex": rf"\m{value}\M"})
 
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
@@ -2423,7 +2671,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         setattr(row, field_name + "_id", select_option_mapping[value])
 
     def to_baserow_formula_type(self, field):
-        return BaserowFormulaSingleSelectType()
+        return BaserowFormulaSingleSelectType(nullable=True)
 
     def from_baserow_formula_type(self, formula_type) -> Field:
         return self.model_class()
@@ -2436,14 +2684,16 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
-        field_serializer = serializers.IntegerField(
+        field_serializer = IntegerOrStringField(
             **{
                 "required": required,
                 "allow_null": not required,
                 **kwargs,
-            }
+            },
         )
-        return serializers.ListSerializer(child=field_serializer, required=required)
+        return serializers.ListSerializer(
+            child=field_serializer, required=required, **kwargs
+        )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> str:
         related_objects = getattr(row, field_name)
@@ -2471,52 +2721,106 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         return queryset.prefetch_related(name)
 
     def prepare_value_for_db(self, instance, value):
-        if value is None:
-            return value
-
-        for x in value:
-            if not isinstance(x, int):
-                raise AllProvidedMultipleSelectValuesMustBeIntegers(x)
-
-        options = SelectOption.objects.filter(field=instance, id__in=value)
-
-        if len(options) != len(value):
-            raise AllProvidedMultipleSelectValuesMustBeSelectOption(value)
-
-        return value
+        return self.prepare_value_for_db_in_bulk(
+            instance, {0: value}, continue_on_error=False
+        )[0]
 
     def prepare_value_for_db_in_bulk(
         self, instance, values_by_row, continue_on_error=False
     ):
-        # Create a map {value -> row_indexes}
-        value_map = defaultdict(list)
+        # Create a map {value -> row_indexes} for ids and strings
+        id_map = defaultdict(list)
+        name_map = defaultdict(list)
+        invalid_values = []
         for row_index, values in values_by_row.items():
             for value in values:
-                value_map[value].append(row_index)
+                if isinstance(value, int):
+                    id_map[value].append(row_index)
+                elif isinstance(value, str):
+                    name_map[value].append(row_index)
+                else:
+                    if continue_on_error:
+                        invalid_values.append(values)
+                        break
+                    else:
+                        # Fail on first error
+                        raise AllProvidedValuesMustBeIntegersOrStrings(values)
 
-        unique_values = set(value_map.keys())
+        if invalid_values:
+            # Replace values by error for failing rows
+            for row_index in invalid_values:
+                values_by_row[row_index] = AllProvidedValuesMustBeIntegersOrStrings(
+                    values_by_row[row_index]
+                )
 
-        # Query database for existing options
-        selected_ids = SelectOption.objects.filter(
-            field=instance, id__in=unique_values
-        ).values_list("id", flat=True)
+        if id_map:
+            # Query database for existing options
+            option_from_ids = SelectOption.objects.filter(
+                field=instance, id__in=id_map.keys()
+            ).values_list("id", flat=True)
 
-        if len(selected_ids) != len(unique_values):
-            invalid_ids = sorted(list(unique_values - set(selected_ids)))
-            if continue_on_error:
-                # Replace values by error for failing rows
-                for invalid_id in invalid_ids:
-                    for row_index in value_map[invalid_id]:
-                        values_by_row[
-                            row_index
-                        ] = AllProvidedMultipleSelectValuesMustBeSelectOption(
-                            invalid_id
-                        )
+            if len(option_from_ids) != len(id_map):
+                invalid_ids = sorted(list(set(id_map.keys()) - set(option_from_ids)))
+                if continue_on_error:
+                    # Replace values by error for failing rows
+                    for invalid_name in invalid_ids:
+                        for row_index in id_map[invalid_name]:
+                            values_by_row[
+                                row_index
+                            ] = AllProvidedMultipleSelectValuesMustBeSelectOption(
+                                invalid_name
+                            )
+                else:
+                    # or fail fast
+                    raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
 
-            else:
-                # or fail fast
-                raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+        if name_map:
+            # Query database for existing options
+            options_from_names = list(
+                SelectOption.objects.filter(field=instance, value__in=name_map.keys())
+            )
+            # Remove duplicate names
+            found_option_names = set([opt.value for opt in options_from_names])
 
+            if len(name_map) != len(found_option_names):
+                invalid_names = sorted(list(set(name_map.keys()) - found_option_names))
+                if continue_on_error:
+                    # Replace values by error for failing rows
+                    for invalid_name in invalid_names:
+                        for row_index in name_map[invalid_name]:
+                            values_by_row[
+                                row_index
+                            ] = AllProvidedMultipleSelectValuesMustBeSelectOption(
+                                invalid_name
+                            )
+
+                else:
+                    # or fail fast
+                    raise AllProvidedMultipleSelectValuesMustBeSelectOption(
+                        invalid_names
+                    )
+
+            # Map {name -> opt} reverse list to let the first value win in the map
+            opt_map = {opt.value: opt for opt in options_from_names[::-1]}
+
+            rows_that_needs_name_replacement = {
+                val for value in name_map.values() for val in value
+            }
+
+            # Replace all option names with actual option ids
+            for row_index in rows_that_needs_name_replacement:
+                value = values_by_row[row_index]
+                if isinstance(value, list):  # filter rows with exceptions
+                    values_by_row[row_index] = [
+                        opt_map[val].id if isinstance(val, str) else val
+                        for val in value
+                    ]
+
+        # Removes duplicate ids while keeping ordering
+        values_by_row = {
+            k: list(dict.fromkeys(v)) if isinstance(v, list) else v
+            for k, v in values_by_row.items()
+        }
         return values_by_row
 
     def get_serializer_help_text(self, instance):
@@ -2539,7 +2843,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         select_options = cache[cache_entry_name]
 
-        # if the select_options are empty return None
+        # if the select_options are empty return empty list
         if not select_options:
             return None
 
@@ -2548,7 +2852,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         # reasons.
         random_choice = randint(1, len(select_options))  # nosec
 
-        return sample(set([x.id for x in select_options]), random_choice)
+        return sample([x.id for x in select_options], random_choice)
 
     def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
@@ -2665,6 +2969,21 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
             q={f"select_option_value_{field_name}__icontains": value},
         )
 
+    def contains_word_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        value = re.escape(value)
+        query = StringAgg(f"{field_name}__value", " ")
+
+        return AnnotatedQ(
+            annotation={
+                f"select_option_value_{field_name}": Coalesce(query, Value(""))
+            },
+            q={f"select_option_value_{field_name}__iregex": rf"\m{value}\M"},
+        )
+
     def get_order(self, field, field_name, order_direction):
         """
         If the user wants to sort the results he expects them to be ordered
@@ -2762,9 +3081,8 @@ class FormulaFieldType(ReadOnlyFieldType):
     allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
     serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
     serializer_field_overrides = {
-        "error": serializers.CharField(
-            required=False, allow_blank=True, allow_null=True
-        ),
+        "error": serializers.CharField(required=False, read_only=True),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
     }
 
     @staticmethod
@@ -2893,6 +3211,15 @@ class FormulaFieldType(ReadOnlyFieldType):
         ) = self._get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_query(field_name, value, model_field, field_instance)
 
+    def contains_word_query(self, field_name, value, model_field, field):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+        return field_type.contains_word_query(
+            field_name, value, model_field, field_instance
+        )
+
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         (
             field_instance,
@@ -2945,6 +3272,58 @@ class FormulaFieldType(ReadOnlyFieldType):
             return True
         else:
             return False
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+
+        return (
+            FormulaField.objects.filter(needs_periodic_update=True)
+            .annotate(num_dependencies=Count("field_dependencies"))
+            .filter(num_dependencies=0)
+        )
+
+    def run_periodic_update(
+        self,
+        field: Field,
+        update_collector: "Optional[FieldUpdateCollector]" = None,
+        field_cache: "Optional[FieldCache]" = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+    ):
+        from baserow.contrib.database.fields.dependencies.update_collector import (
+            FieldUpdateCollector,
+        )
+
+        should_send_signals_at_end = False
+
+        if update_collector is None:
+            # We are the outermost call, and so we should send all the signals
+            # when we finish.
+            should_send_signals_at_end = True
+            update_collector = FieldUpdateCollector(field.table)
+
+        if field_cache is None:
+            field_cache = FieldCache()
+        if via_path_to_starting_table is None:
+            via_path_to_starting_table = []
+
+        self._refresh_row_values(
+            field, update_collector, field_cache, via_path_to_starting_table
+        )
+
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
+            dependant_field_type.run_periodic_update(
+                dependant_field,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
+            )
+
+        if should_send_signals_at_end:
+            update_collector.apply_updates_and_get_updated_fields(field_cache)
+            update_collector.send_force_refresh_signals_for_all_updated_tables()
 
     def row_of_dependency_updated(
         self,
@@ -3203,6 +3582,7 @@ class LookupFieldType(FormulaFieldType):
             "through_field to lookup. Will override the `target_field_id` "
             "parameter if both are provided, however only one is required.",
         ),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
     }
 
     def before_create(
@@ -3212,6 +3592,9 @@ class LookupFieldType(FormulaFieldType):
             table,
             allowed_field_values,
         )
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        return None
 
     def before_update(self, from_field, to_field_values, user, kwargs):
         if isinstance(from_field, LookupField):
@@ -3389,7 +3772,9 @@ class MultipleCollaboratorsFieldType(FieldType):
                 **kwargs,
             }
         )
-        return serializers.ListSerializer(child=field_serializer, required=required)
+        return serializers.ListSerializer(
+            child=field_serializer, required=required, **kwargs
+        )
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str

@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from django.shortcuts import reverse
@@ -220,6 +220,98 @@ def test_url_field_type(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_200_OK
     assert URLField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_date_field_type_invalid_force_timezone_offset(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    date_field = data_fixture.create_date_field(table=table)
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "date",
+            "type": "date",
+            "date_include_time": True,
+            "date_force_timezone_offset": 60,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert "date_force_timezone_offset" in response.json()["detail"]
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": date_field.id}),
+        {"date_force_timezone_offset": 60},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert "date_force_timezone_offset" in response.json()["detail"]
+
+    date_field.date_include_time = True
+    date_field.save()
+
+
+@pytest.mark.django_db
+def test_date_field_type_force_timezone_offset(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    table_model = table.get_model()
+
+    row_1 = table_model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-01 00:00Z"}
+    )
+    row_2 = table_model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-01 23:30Z"}
+    )
+    row_3 = table_model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-02 15:00Z"}
+    )
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+
+    utc_offset = 60
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": datetime_field.id}),
+        {
+            "date_force_timezone": "Europe/Rome",
+            "date_force_timezone_offset": utc_offset,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    def row_datetime_updated(row):
+        prev_datetime = getattr(row, f"field_{datetime_field.id}")
+        row.refresh_from_db()
+        new_datetime = getattr(row, f"field_{datetime_field.id}")
+        return new_datetime == (prev_datetime + timedelta(minutes=utc_offset))
+
+    # all the rows has been updated, adding 60 minutes to the time
+    assert row_datetime_updated(row_1)
+    assert row_datetime_updated(row_2)
+    assert row_datetime_updated(row_3)
+
+    # the offset can be negative
+    utc_offset = -180
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": datetime_field.id}),
+        {"date_force_timezone": "Etc/GMT-2", "date_force_timezone_offset": utc_offset},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # all the rows has been updated, adding 60 minutes to the time
+    assert row_datetime_updated(row_1)
+    assert row_datetime_updated(row_2)
+    assert row_datetime_updated(row_3)
 
 
 @pytest.mark.django_db
@@ -1015,7 +1107,6 @@ def test_created_on_field_type(api_client, data_fixture):
             "name": "Create",
             "type": "created_on",
             "date_include_time": True,
-            "timezone": "Europe/Berlin",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1242,7 +1333,7 @@ def test_multiple_select_field_type(api_client, data_fixture):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response_json["detail"]
-        == "The provided select option id [999999] is not a valid select option."
+        == "The provided select option value '999999' is not a valid select option."
     )
 
     response = api_client.post(

@@ -130,7 +130,7 @@ class KanbanViewView(APIView):
         """Responds with the rows grouped by the view's select option field value."""
 
         view_handler = ViewHandler()
-        view = view_handler.get_view(view_id, KanbanView)
+        view = view_handler.get_view_as_user(request.user, view_id, KanbanView)
         group = view.table.database.group
 
         # We don't want to check if there is an active premium license if the group

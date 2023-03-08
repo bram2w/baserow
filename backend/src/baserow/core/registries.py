@@ -1,7 +1,7 @@
 import abc
 from collections import defaultdict
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
@@ -12,8 +12,8 @@ from django.db.transaction import Atomic
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
+from baserow.core.exceptions import SubjectTypeNotExist
 from baserow.core.utils import ChildProgressBuilder
-from baserow_enterprise.exceptions import SubjectTypeNotExist
 
 from .exceptions import (
     ApplicationTypeAlreadyRegistered,
@@ -24,7 +24,7 @@ from .exceptions import (
     ObjectScopeTypeDoesNotExist,
     OperationTypeAlreadyRegistered,
     OperationTypeDoesNotExist,
-    PermissionDenied,
+    PermissionException,
     PermissionManagerTypeAlreadyRegistered,
     PermissionManagerTypeDoesNotExist,
 )
@@ -39,7 +39,7 @@ from .registry import (
     ModelRegistryMixin,
     Registry,
 )
-from .types import ContextObject, ScopeObject
+from .types import Actor, ContextObject, PermissionCheck, ScopeObject, Subject
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
@@ -372,7 +372,7 @@ class AuthenticationProviderTypeRegistry(
         return login_options
 
 
-class PermissionManagerType(Instance):
+class PermissionManagerType(abc.ABC, Instance):
     """
     A permission manager is responsible to permit or disallow a specific operation
     according to the given context.
@@ -386,26 +386,36 @@ class PermissionManagerType(Instance):
     See each PermissionManager method and `CoreHandler` methods for more details.
     """
 
+    # A list of subject types that are supported by this permission manager.
+    supported_actor_types = []
+
+    def actor_is_supported(self, actor: Actor):
+        """
+        Returns whether the actor given in parameter is handled by this manager type or
+        not.
+        """
+
+        actor_type = subject_type_registry.get_by_model(actor)
+        return actor_type.type in self.supported_actor_types
+
     def check_permissions(
         self,
-        actor: "AbstractUser",
+        actor: Actor,
         operation_name: str,
         group: Optional["Group"] = None,
         context: Optional[Any] = None,
         include_trash: Boolean = False,
     ) -> Optional[Boolean]:
         """
-        This method is called each time a permission on an operation is checked by the
-        `CoreHandler().check_permissions()` method if the current permission manager is
-        listed in the `settings.PERMISSION_MANAGERS` list.
+        This method is a helper to check permission with this permission manager when
+        you need to do only one check. It calls `.check_multiple_permissions` behind
+        the scene.
 
-        It should:
-            - return `True` if the operation is permitted given the other parameters
-            - raise a `PermissionDenied` exception if the operation is disallowed
-            - return `None` if the condition required by the permission manager are not
-              met.
-
-        By default, this method raises a PermissionDenied exception.
+        It:
+            - returns `True` if the operation is permitted given the other parameters
+            - raise a `PermissionException` exception if the operation is disallowed
+            - return `None` if the pre-condition required by the permission manager
+              are not met.
 
         :param actor: The actor who wants to execute the operation. Generally a `User`,
             but can be a `Token`.
@@ -415,16 +425,60 @@ class PermissionManagerType(Instance):
             if you are updating a `Table` object, the context is this `Table` object.
         :param include_trash: If true then also checks if the given group has been
             trashed instead of raising a DoesNotExist exception.
-        :raise PermissionDenied: If the operation is disallowed a PermissionDenied is
-            raised.
+        :raise PermissionException: If the operation is disallowed.
         :return: `True` if the operation is permitted, None if the permission manager
             can't decide.
         """
 
-        raise PermissionDenied()
+        check = PermissionCheck(actor, operation_name, context)
+        result = self.check_multiple_permissions(
+            [check],
+            group,
+            include_trash=include_trash,
+        ).get(check, None)
+
+        if isinstance(result, PermissionException):
+            raise result
+
+        return result
+
+    @abc.abstractmethod
+    def check_multiple_permissions(
+        self,
+        checks: List[PermissionCheck],
+        group: "Group" = None,
+        include_trash: bool = False,
+    ) -> Dict[PermissionCheck, Union[bool, PermissionException]]:
+        """
+        This method is called each time multiple permissions are checked at once
+        by the `CoreHandler().check_multiple_permissions()` method if the current
+        permission manager is listed in the `settings.PERMISSION_MANAGERS` list.
+
+        It should return a map (dict) with for each check as key, if the related
+        triplet (actor, permission_name, scope) is allowed (True) or disallowed
+        (A permission exception).
+        If a check is omitted in the result, it means that the check is not supported
+        by this permission manager.
+
+        This method MUST be implemented by each permission manager type.
+
+        :param checks: The list of check to do. Each check is a triplet of
+            (actor, permission_name, scope).
+        :param group: The optional group in which the operations take place.
+        :param include_trash: If true then also checks if the given group has been
+            trashed instead of raising a DoesNotExist exception.
+        :return: A dictionary with one entry for each check of the parameter as key and
+            whether the operation is allowed or not as value. Check entries can be
+            omitted in the response dict if the check allowance can't be decided by this
+            permission manager.
+        """
+
+        raise NotImplementedError(
+            "Must be implemented by the specific application type"
+        )
 
     def get_permissions_object(
-        self, actor: "AbstractUser", group: Optional["Group"] = None
+        self, actor: Actor, group: Optional["Group"] = None
     ) -> Any:
         """
         This method should return the data necessary to easily check a permission from
@@ -450,7 +504,7 @@ class PermissionManagerType(Instance):
 
     def filter_queryset(
         self,
-        actor: "AbstractUser",
+        actor: Actor,
         operation_name: str,
         queryset: QuerySet,
         group: Optional["Group"] = None,
@@ -504,14 +558,6 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
     An `ObjectScopeType` must be registered for each object that can be a scope or a
     context.
     """
-
-    def get_content_type(self):
-        from django.contrib.contenttypes.models import ContentType
-
-        return ContentType.objects.get_for_model(self.model_class)
-
-    def get_object_for_this_type(self, **kwargs):
-        return self.get_content_type().get_object_for_this_type(**kwargs)
 
     def get_parent_scope(self) -> Optional["ObjectScopeType"]:
         """
@@ -595,13 +641,47 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
             f"Must be implemented by the specific type <{self.type}>"
         )
 
-    def get_enhanced_queryset(self) -> QuerySet:
+    def get_base_queryset(self) -> QuerySet:
         """
-        Returns the base queryset for the objects of this scope enhanced for better
-        performances.
+        Returns the base queryset for the objects of this scope
         """
 
         return self.model_class.objects.all()
+
+    def get_enhanced_queryset(self) -> QuerySet:
+        """
+        Returns the enhanced queryset for the objects of this scope enhanced for better
+        performances.
+        """
+
+        return self.get_base_queryset()
+
+    def are_objects_child_of(
+        self, child_objects: List[Any], parent_object: ScopeObject
+    ) -> List[bool]:
+        """
+        Checks whether the given list of objects are all children of the given
+        parent object.
+
+        :param child_objects: The list of objects we want to check the scope belonging.
+        :param parent_object: The parent object. The parent object must be an instance
+            of the current model_class.
+        :return: A boolean list that represents whether the object is child of the given
+            parent for each object from parameter.
+        """
+
+        if not all([self.contains(child) for child in child_objects]):
+            raise TypeError(
+                f"The given child objects must be instance of {self.model_class}"
+            )
+
+        ids_in_scope = (
+            self.get_base_queryset()
+            .filter(self.get_filter_for_scopes(scopes=[parent_object]))
+            .values_list("id", flat=True)
+        )
+
+        return [o.id in ids_in_scope for o in child_objects]
 
     def get_filter_for_scopes(self, scopes: List[Any]) -> Dict[Any, Any]:
         """
@@ -798,11 +878,20 @@ class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
     can execute an operation.
     """
 
-    @abc.abstractmethod
-    def is_in_group(self, subject_id: int, group: "Group") -> bool:
+    def is_in_group(self, subject: Subject, group: "Group") -> bool:
         """
         This function checks if a subject belongs to a group
         :return: If the subject belongs to the group
+        """
+
+        return self.are_in_group([subject], group)[0]
+
+    @abc.abstractmethod
+    def are_in_group(self, subjects: List[Subject], group: "Group") -> List[bool]:
+        """
+        This function checks if the subjects belongs to a group
+        :return: a list of bool. For each index whether the user at the same index
+            belongs to the group or not
         """
 
         pass
@@ -820,7 +909,7 @@ class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
         pass
 
     @abc.abstractmethod
-    def get_associated_users(self, subject) -> List["AbstractUser"]:
+    def get_users_included_in_subject(self, subject) -> List["AbstractUser"]:
         """
         Returns a list of Users which are associated with this subject.
         And associated user is any user that receives permissions in Baserow based

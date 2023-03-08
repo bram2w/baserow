@@ -152,6 +152,7 @@ exports[`GridView component with decoration Default component with first_cell de
     </div>
   </div>
    
+   
   <div
     class="grid-view__divider"
     style="left: 70px;"
@@ -578,6 +579,7 @@ exports[`GridView component with decoration Default component with row wrapper d
       />
     </div>
   </div>
+   
    
   <div
     class="grid-view__divider"
@@ -1008,6 +1010,7 @@ exports[`GridView component with decoration Default component with unavailable d
       />
     </div>
   </div>
+   
    
   <div
     class="grid-view__divider"

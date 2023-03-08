@@ -6,6 +6,8 @@ set -euo pipefail
 # ENVIRONMENT VARIABLES USED DIRECTLY BY THIS ENTRYPOINT
 # ======================================================
 
+export BASEROW_VERSION="1.15.0"
+
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
 BASEROW_BACKEND_PORT="${BASEROW_BACKEND_PORT:-8000}"
@@ -155,7 +157,7 @@ run_setup_commands_if_configured(){
   startup_plugin_setup
   if [ "$MIGRATE_ON_STARTUP" = "true" ] ; then
     echo "python /baserow/backend/src/baserow/manage.py migrate"
-    python /baserow/backend/src/baserow/manage.py migrate
+    OTEL_SERVICE_NAME=backend-migrate python /baserow/backend/src/baserow/manage.py migrate
   fi
 }
 
@@ -216,6 +218,24 @@ run_backend_server(){
     "${@:2}"
 }
 
+setup_otel_vars(){
+  # These key value pairs will be exported on every log/metric/trace by any otel
+  # exporters running in subprocesses launched by this script.
+  EXTRA_OTEL_RESOURCE_ATTRIBUTES="service.namespace=Baserow,"
+  EXTRA_OTEL_RESOURCE_ATTRIBUTES+="service.version=${BASEROW_VERSION},"
+  EXTRA_OTEL_RESOURCE_ATTRIBUTES+="deployment.environment=${BASEROW_DEPLOYMENT_ENV:-unknown}"
+
+  if [[ -n "${OTEL_RESOURCE_ATTRIBUTES:-}" ]]; then
+    # If the container has been launched with some extra otel attributes, make sure not
+    # to override them with our Baserow specific ones.
+    OTEL_RESOURCE_ATTRIBUTES="${EXTRA_OTEL_RESOURCE_ATTRIBUTES},${OTEL_RESOURCE_ATTRIBUTES}"
+  else
+    OTEL_RESOURCE_ATTRIBUTES="$EXTRA_OTEL_RESOURCE_ATTRIBUTES"
+  fi
+  export OTEL_RESOURCE_ATTRIBUTES
+  echo "OTEL_RESOURCE_ATTRIBUTES=$OTEL_RESOURCE_ATTRIBUTES"
+}
+
 # ======================================================
 # COMMANDS
 # ======================================================
@@ -229,24 +249,30 @@ fi
 source /baserow/venv/bin/activate
 source /baserow/plugins/utils.sh
 
+setup_otel_vars
+
 case "$1" in
     django-dev)
         wait_for_postgres
         run_setup_commands_if_configured
         echo "Running Development Server on 0.0.0.0:${BASEROW_BACKEND_PORT}"
         echo "Press CTRL-p CTRL-q to close this session without stopping the container."
+        export OTEL_SERVICE_NAME=backend-dev
         attachable_exec python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
     ;;
     django-dev-no-attach)
         wait_for_postgres
         run_setup_commands_if_configured
         echo "Running Development Server on 0.0.0.0:${BASEROW_BACKEND_PORT}"
+        export OTEL_SERVICE_NAME=backend-dev
         python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
     ;;
     gunicorn)
+      export OTEL_SERVICE_NAME="backend-asgi"
       run_backend_server asgi "${@:2}"
     ;;
     gunicorn-wsgi)
+      export OTEL_SERVICE_NAME="backend-wsgi"
       run_backend_server wsgi "${@:2}"
     ;;
     backend-healthcheck)
@@ -264,6 +290,7 @@ case "$1" in
         exec /bin/bash -c "${@:2}"
     ;;
     manage)
+        export OTEL_SERVICE_NAME=backend-manage
         exec python3 /baserow/backend/src/baserow/manage.py "${@:2}"
     ;;
     python)
@@ -271,11 +298,12 @@ case "$1" in
     ;;
     setup)
       echo "python3 /baserow/backend/src/baserow/manage.py migrate"
-      DONT_UPDATE_FORMULAS_AFTER_MIGRATION=yes python3 /baserow/backend/src/baserow/manage.py migrate
+      OTEL_SERVICE_NAME=backend-migrate DONT_UPDATE_FORMULAS_AFTER_MIGRATION=yes python3 /baserow/backend/src/baserow/manage.py migrate
       echo "python3 /baserow/backend/src/baserow/manage.py update_formulas"
-      python3 /baserow/backend/src/baserow/manage.py update_formulas
+      OTEL_SERVICE_NAME=backend-update-formulas python3 /baserow/backend/src/baserow/manage.py update_formulas
     ;;
     shell)
+        export OTEL_SERVICE_NAME=backend-shell
         exec python3 /baserow/backend/src/baserow/manage.py shell
     ;;
     lint-shell)
@@ -292,9 +320,11 @@ case "$1" in
     ;;
     celery-worker)
       if [[ -n "${BASEROW_RUN_MINIMAL}" && $BASEROW_AMOUNT_OF_WORKERS == "1" ]]; then
+        export OTEL_SERVICE_NAME="celery-worker-combined"
         echo "Starting combined celery and export worker..."
         start_celery_worker -Q celery,export -n default-worker@%h "${@:2}"
       else
+        export OTEL_SERVICE_NAME="celery-worker"
         start_celery_worker -Q celery -n default-worker@%h "${@:2}"
       fi
     ;;
@@ -308,6 +338,7 @@ case "$1" in
              "to reduce memory usage"
         while true; do sleep 2073600; done
       else
+        export OTEL_SERVICE_NAME="celery-exportworker"
         start_celery_worker -Q export -n export-worker@%h "${@:2}"
       fi
     ;;
@@ -322,6 +353,7 @@ case "$1" in
       echo "Sleeping for $BASEROW_CELERY_BEAT_STARTUP_DELAY before starting beat to prevent "\
            "startup errors."
       sleep "$BASEROW_CELERY_BEAT_STARTUP_DELAY"
+      export OTEL_SERVICE_NAME="celery-beat"
       exec celery -A baserow beat -l "${BASEROW_CELERY_BEAT_DEBUG_LEVEL}" -S redbeat.RedBeatScheduler "${@:2}"
     ;;
     watch-py)

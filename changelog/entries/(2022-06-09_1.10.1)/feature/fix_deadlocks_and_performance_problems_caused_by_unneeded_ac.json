@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fix deadlocks and performance problems caused by un-needed accidental row locks.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

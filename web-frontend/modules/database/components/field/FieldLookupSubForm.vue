@@ -15,6 +15,7 @@
               :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
               @hide="$v.values.through_field_id.$touch()"
               @input="throughFieldSelected"
+              @change="values.target_field_id = null"
             >
               <DropdownItem
                 v-for="field in linkRowFieldsInThisTable"

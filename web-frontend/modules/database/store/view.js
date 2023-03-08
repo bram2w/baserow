@@ -94,8 +94,15 @@ export const mutations = {
       populateView(state.items[index], this.$registry)
     }
   },
-  ORDER_ITEMS(state, order) {
-    state.items.forEach((view) => {
+  ORDER_ITEMS(state, { ownershipType, order }) {
+    if (ownershipType === undefined) {
+      const firstView = state.items.find((item) => item.id === order[0])
+      ownershipType = firstView.ownership_type
+    }
+    const items = state.items.filter(
+      (view) => view.ownership_type === ownershipType
+    )
+    items.forEach((view) => {
       const index = order.findIndex((value) => value === view.id)
       view.order = index === -1 ? 0 : index + 1
     })
@@ -315,13 +322,13 @@ export const actions = {
   /**
    * Updates the order of all the views in a table.
    */
-  async order({ commit, getters }, { table, order, oldOrder }) {
-    commit('ORDER_ITEMS', order)
+  async order({ commit, getters }, { table, ownershipType, order, oldOrder }) {
+    commit('ORDER_ITEMS', { ownershipType, order })
 
     try {
-      await ViewService(this.$client).order(table.id, order)
+      await ViewService(this.$client).order(table.id, ownershipType, order)
     } catch (error) {
-      commit('ORDER_ITEMS', oldOrder)
+      commit('ORDER_ITEMS', { ownershipType, oldOrder })
       throw error
     }
   },
@@ -473,7 +480,7 @@ export const actions = {
     // If the value is not provided, then we use the default value related to the type.
     if (!Object.prototype.hasOwnProperty.call(values, 'value')) {
       const viewFilterType = this.$registry.get('viewFilter', values.type)
-      values.value = viewFilterType.getDefaultValue()
+      values.value = viewFilterType.getDefaultValue(field)
     }
 
     // Some filter input components expect the preload values to exist, that's why we

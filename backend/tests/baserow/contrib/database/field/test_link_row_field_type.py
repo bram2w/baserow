@@ -5,6 +5,7 @@ from django.db import connections
 from django.shortcuts import reverse
 
 import pytest
+from faker import Faker
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.dependencies.exceptions import (
@@ -17,6 +18,7 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, LinkRowField, TextField
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.handler import CoreHandler
@@ -234,6 +236,101 @@ def test_link_row_field_type(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.field_link_row
+def test_link_row_field_type_with_text_values(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    fake = Faker()
+    Faker.seed(4324)
+    cache = {}
+
+    data = []
+    row_values = {}
+
+    for field_type in [
+        f
+        for f in field_type_registry.get_all()
+        if f.can_get_unique_values and not f.read_only
+    ]:
+        field_type_name = field_type.type
+        field_name = f"Field {field_type_name}"
+        field_table = data_fixture.create_database_table(
+            name=f"Link table {field_type_name}", database=database
+        )
+        # Create a primary field and some example data for the events table.
+        primary_field = field_handler.create_field(
+            user=user,
+            table=field_table,
+            type_name=field_type.type,
+            name=field_name,
+            primary=True,
+        )
+        if field_type.can_have_select_options:
+            for order in range(10):
+                data_fixture.create_select_option(
+                    None, field=primary_field, order=order, value=f"Option {order}"
+                )
+
+        value1 = field_type.random_value(primary_field, fake, cache)
+        value2 = field_type.random_value(primary_field, fake, cache)
+
+        # To be sure we have different values
+        while value1 == value2:
+            value2 = field_type.random_value(primary_field, fake, cache)
+
+        row_1 = row_handler.create_row(
+            user=user,
+            table=field_table,
+            values={primary_field.db_column: value1},
+        )
+        row_2 = row_handler.create_row(
+            user=user,
+            table=field_table,
+            values={primary_field.db_column: value2},
+        )
+
+        link_field = field_handler.create_field(
+            user=user,
+            table=table,
+            type_name="link_row",
+            name=f"Link field {field_type_name}",
+            link_row_table=field_table,
+        )
+
+        field_object = {
+            "field": primary_field,
+            "type": field_type,
+            "name": field_name,
+        }
+
+        text_value = field_type.get_export_value(
+            getattr(row_2, primary_field.db_column), field_object
+        )
+
+        data.append((link_field, row_1, row_2, field_type_name))
+        row_values[link_field.db_column] = [
+            row_1.id,
+            str(text_value),
+        ]
+
+    # If we mix ids and text values, we should still get the right result
+    row = row_handler.create_row(user=user, table=table, values=row_values)
+
+    for link_field, row_1, row_2, field_type_name in data:
+        assert list(
+            getattr(row, link_field.db_column).all().values_list("id", flat=True)
+        ) == [
+            row_1.id,
+            row_2.id,
+        ], f"Failed to import a {field_type_name} link"
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_field_type_rows(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
@@ -364,7 +461,7 @@ def test_link_row_field_type_rows(data_fixture):
     assert getattr(row, f"field_{link_row_field.id}").all().count() == 0
     assert getattr(row_2, f"field_{link_row_field.id}").all().count() == 0
 
-    # Just check if the field can be deleted can be deleted.
+    # Just check if the field can be deleted.
     field_handler.delete_field(user=user, field=link_row_field)
     # We expect only the primary field to be left.
     objects_all = Field.objects.all()
@@ -658,7 +755,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
         {
-            f"field_{link_row_field.id}": ["a"],
+            f"field_{link_row_field.id}": [{}],
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",

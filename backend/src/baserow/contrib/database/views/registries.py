@@ -5,6 +5,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Optional,
     Set,
     Tuple,
@@ -21,6 +22,7 @@ from rest_framework.fields import CharField
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
+from baserow.core.models import Group, GroupUser
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -43,6 +45,7 @@ from .exceptions import (
     DecoratorValueProviderTypeDoesNotExist,
     ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist,
+    ViewOwnershipTypeDoesNotExist,
     ViewTypeAlreadyRegistered,
     ViewTypeDoesNotExist,
 )
@@ -203,6 +206,8 @@ class ViewType(
             "type": self.type,
             "name": view.name,
             "order": view.order,
+            "ownership_type": view.ownership_type,
+            "created_by": view.created_by.email if view.created_by else None,
         }
 
         if self.can_filter:
@@ -250,7 +255,7 @@ class ViewType(
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-    ) -> "View":
+    ) -> Optional["View"]:
         """
         Imported an exported serialized view dict that was exported via the
         `export_serialized` method. Note that all the fields must be imported first
@@ -264,16 +269,50 @@ class ViewType(
         :param files_zip: A zip file buffer where files related to the export can be
             extracted from.
         :param storage: The storage where the files can be copied to.
-        :return: The newly created view instance.
+        :return: The newly created view instance or None if the view is not allowed to
+            be imported according to its ownership type or the imported view has an
+            unknown ownership type.
         """
 
-        from .models import ViewDecoration, ViewFilter, ViewSort
+        from .models import DEFAULT_OWNERSHIP_TYPE, ViewDecoration, ViewFilter, ViewSort
 
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}
             id_mapping["database_view_filters"] = {}
             id_mapping["database_view_sortings"] = {}
             id_mapping["database_view_decorations"] = {}
+
+        if "created_by" not in id_mapping:
+            id_mapping["created_by"] = {}
+
+            created_by_group = table.database.group
+
+            if (
+                id_mapping.get("import_group_id", None) is not None
+                and created_by_group is None
+            ):
+                created_by_group = Group.objects.get(id=id_mapping["import_group_id"])
+
+            if created_by_group is not None:
+                groupusers_from_group = GroupUser.objects.filter(
+                    group_id=created_by_group.id
+                ).select_related("user")
+
+                for groupuser in groupusers_from_group:
+                    id_mapping["created_by"][groupuser.user.email] = groupuser.user
+
+        try:
+            ownership_type = view_ownership_type_registry.get(
+                serialized_values.get("ownership_type", DEFAULT_OWNERSHIP_TYPE)
+            )
+        except view_ownership_type_registry.does_not_exist_exception_class:
+            return None
+
+        if not ownership_type.can_import_view(serialized_values, id_mapping):
+            return None
+
+        email = serialized_values.get("created_by", None)
+        serialized_values["created_by"] = id_mapping["created_by"].get(email, None)
 
         serialized_copy = serialized_values.copy()
         view_id = serialized_copy.pop("id")
@@ -1054,6 +1093,47 @@ class FormViewModeRegistry(Registry):
         return [(t, t) for t in form_view_mode_registry.get_types()]
 
 
+class ViewOwnershipType(Instance):
+    """
+    A `ViewOwnershipType` represents allowed style of view ownership.
+    """
+
+    def can_import_view(self, serialized_data: Dict, id_mapping: Dict) -> bool:
+        """
+        Returns True if the a view with this ownership can be imported.
+        """
+
+        return True
+
+    def should_broadcast_signal_to(
+        self, view: "View"
+    ) -> Tuple[Literal["table", "users", ""], Optional[List[int]]]:
+        """
+        Returns a tuple that represent the kind of signaling that must be done for the
+        given view.
+
+        :param view: the view we want to send the signal for.
+        :return: The first element of the tuple must be "" if no signaling is needed,
+            "users" if signal has to be send to a list of users and "table" if the
+            signal can be send to all the users of the view table.
+            The second member of the tuple can be any object necessary for the signal
+            depending of the type.
+            If the signal type is "users", it must be a list of user ids.
+            For other type it's None.
+        """
+
+        return "table", None
+
+
+class ViewOwnershipTypeRegistry(Registry):
+    """
+    Contains all registered view ownership types.
+    """
+
+    name = "view_ownership_type"
+    does_not_exist_exception_class = ViewOwnershipTypeDoesNotExist
+
+
 # A default view type registry is created here, this is the one that is used
 # throughout the whole Baserow application to add a new view type.
 view_type_registry = ViewTypeRegistry()
@@ -1062,3 +1142,4 @@ view_aggregation_type_registry = ViewAggregationTypeRegistry()
 decorator_type_registry = DecoratorTypeRegistry()
 decorator_value_provider_type_registry = DecoratorValueProviderTypeRegistry()
 form_view_mode_registry = FormViewModeRegistry()
+view_ownership_type_registry: ViewOwnershipTypeRegistry = ViewOwnershipTypeRegistry()

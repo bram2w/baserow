@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed failing webhook call log creation when a table has more than one webhooks.",
+    "issue_number": 1100,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

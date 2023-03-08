@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from baserow.core.action.registries import ActionScopeStr, ActionScopeType
 
-GROUP_CONTEXT = _('in group "%(group_name)s" (%(group_id)s).')
+GROUP_ACTION_CONTEXT = _('in group "%(group_name)s" (%(group_id)s).')
 
 
 class RootActionScopeType(ActionScopeType):

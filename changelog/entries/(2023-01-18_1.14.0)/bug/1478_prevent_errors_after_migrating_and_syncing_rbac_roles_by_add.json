@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Prevent errors after migrating and syncing RBAC roles by adding migration to rename NO_ROLE to NO_ACCESS",
+    "issue_number": 1478,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

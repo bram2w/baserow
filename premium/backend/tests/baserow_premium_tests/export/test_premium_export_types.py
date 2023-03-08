@@ -52,14 +52,18 @@ def test_can_export_every_interesting_different_field_to_json(
     "date_us": "",
     "datetime_eu": "",
     "date_eu": "",
-    "last_modified_datetime_us": "01/02/2021 13:00",
+    "datetime_eu_tzone_visible": "",
+    "datetime_eu_tzone_hidden": "",
+    "last_modified_datetime_us": "01/02/2021 12:00",
     "last_modified_date_us": "01/02/2021",
-    "last_modified_datetime_eu": "02/01/2021 13:00",
+    "last_modified_datetime_eu": "02/01/2021 12:00",
     "last_modified_date_eu": "02/01/2021",
-    "created_on_datetime_us": "01/02/2021 13:00",
+    "last_modified_datetime_eu_tzone": "02/01/2021 13:00",
+    "created_on_datetime_us": "01/02/2021 12:00",
     "created_on_date_us": "01/02/2021",
-    "created_on_datetime_eu": "02/01/2021 13:00",
+    "created_on_datetime_eu": "02/01/2021 12:00",
     "created_on_date_eu": "02/01/2021",
+    "created_on_datetime_eu_tzone": "02/01/2021 13:00",
     "link_row": [],
     "self_link_row": [],
     "link_row_without_related": [],
@@ -103,14 +107,18 @@ def test_can_export_every_interesting_different_field_to_json(
     "date_us": "02/01/2020",
     "datetime_eu": "01/02/2020 01:23",
     "date_eu": "01/02/2020",
-    "last_modified_datetime_us": "01/02/2021 13:00",
+    "datetime_eu_tzone_visible": "01/02/2020 02:23",
+    "datetime_eu_tzone_hidden": "01/02/2020 02:23",
+    "last_modified_datetime_us": "01/02/2021 12:00",
     "last_modified_date_us": "01/02/2021",
-    "last_modified_datetime_eu": "02/01/2021 13:00",
+    "last_modified_datetime_eu": "02/01/2021 12:00",
     "last_modified_date_eu": "02/01/2021",
-    "created_on_datetime_us": "01/02/2021 13:00",
+    "last_modified_datetime_eu_tzone": "02/01/2021 13:00",
+    "created_on_datetime_us": "01/02/2021 12:00",
     "created_on_date_us": "01/02/2021",
-    "created_on_datetime_eu": "02/01/2021 13:00",
+    "created_on_datetime_eu": "02/01/2021 12:00",
     "created_on_date_eu": "02/01/2021",
+    "created_on_datetime_eu_tzone": "02/01/2021 13:00",
     "link_row": [
         "linked_row_1",
         "linked_row_2",
@@ -257,147 +265,157 @@ def test_can_export_every_interesting_different_field_to_xml(
     )
     expected_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
 <rows>
-<row>
-    <id>1</id>
-    <text/>
-    <long-text/>
-    <url/>
-    <email/>
-    <negative-int/>
-    <positive-int/>
-    <negative-decimal/>
-    <positive-decimal/>
-    <rating>0</rating>
-    <boolean>false</boolean>
-    <datetime-us/>
-    <date-us/>
-    <datetime-eu/>
-    <date-eu/>
-    <last-modified-datetime-us>01/02/2021 13:00</last-modified-datetime-us>
-    <last-modified-date-us>01/02/2021</last-modified-date-us>
-    <last-modified-datetime-eu>02/01/2021 13:00</last-modified-datetime-eu>
-    <last-modified-date-eu>02/01/2021</last-modified-date-eu>
-    <created-on-datetime-us>01/02/2021 13:00</created-on-datetime-us>
-    <created-on-date-us>01/02/2021</created-on-date-us>
-    <created-on-datetime-eu>02/01/2021 13:00</created-on-datetime-eu>
-    <created-on-date-eu>02/01/2021</created-on-date-eu>
-    <link-row/>
-    <self-link-row/>
-    <link-row-without-related/>
-    <decimal-link-row/>
-    <file-link-row/>
-    <file/>
-    <single-select/>
-    <multiple-select/>
-    <multiple-collaborators/>
-    <phone-number/>
-    <formula-text>test FORMULA</formula-text>
-    <formula-int>1</formula-int>
-    <formula-bool>true</formula-bool>
-    <formula-decimal>33.3333333333</formula-decimal>
-    <formula-dateinterval>1 day</formula-dateinterval>
-    <formula-date>2020-01-01</formula-date>
-    <formula-singleselect/>
-    <formula-email/>
-    <formula-link-with-label>
-        <url>https://google.com</url>
-        <label>label</label>
-    </formula-link-with-label>
-    <formula-link-url-only>
-        <url>https://google.com</url>
-    </formula-link-url-only>
-    <lookup/>
-</row>
-<row>
-    <id>2</id>
-    <text>text</text>
-    <long-text>long_text</long-text>
-    <url>https://www.google.com</url>
-    <email>test@example.com</email>
-    <negative-int>-1</negative-int>
-    <positive-int>1</positive-int>
-    <negative-decimal>-1.2</negative-decimal>
-    <positive-decimal>1.2</positive-decimal>
-    <rating>3</rating>
-    <boolean>true</boolean>
-    <datetime-us>02/01/2020 01:23</datetime-us>
-    <date-us>02/01/2020</date-us>
-    <datetime-eu>01/02/2020 01:23</datetime-eu>
-    <date-eu>01/02/2020</date-eu>
-    <last-modified-datetime-us>01/02/2021 13:00</last-modified-datetime-us>
-    <last-modified-date-us>01/02/2021</last-modified-date-us>
-    <last-modified-datetime-eu>02/01/2021 13:00</last-modified-datetime-eu>
-    <last-modified-date-eu>02/01/2021</last-modified-date-eu>
-    <created-on-datetime-us>01/02/2021 13:00</created-on-datetime-us>
-    <created-on-date-us>01/02/2021</created-on-date-us>
-    <created-on-datetime-eu>02/01/2021 13:00</created-on-datetime-eu>
-    <created-on-date-eu>02/01/2021</created-on-date-eu>
-    <link-row>
-        <item>linked_row_1</item>
-        <item>linked_row_2</item>
-        <item>unnamed row 3</item>
-    </link-row>
-    <self-link-row>
-        <item>unnamed row 1</item>
-    </self-link-row>
-    <link-row-without-related>
-        <item>linked_row_1</item>
-        <item>linked_row_2</item>
-    </link-row-without-related>
-    <decimal-link-row>
-        <item>1.234</item>
-        <item>-123.456</item>
-        <item>unnamed row 3</item>
-    </decimal-link-row>
-    <file-link-row>
-        <item>
+   <row>
+      <id>1</id>
+      <text/>
+      <long-text/>
+      <url/>
+      <email/>
+      <negative-int/>
+      <positive-int/>
+      <negative-decimal/>
+      <positive-decimal/>
+      <rating>0</rating>
+      <boolean>false</boolean>
+      <datetime-us/>
+      <date-us/>
+      <datetime-eu/>
+      <date-eu/>
+      <datetime-eu-tzone-visible/>
+      <datetime-eu-tzone-hidden/>
+      <last-modified-datetime-us>01/02/2021 12:00</last-modified-datetime-us>
+      <last-modified-date-us>01/02/2021</last-modified-date-us>
+      <last-modified-datetime-eu>02/01/2021 12:00</last-modified-datetime-eu>
+      <last-modified-date-eu>02/01/2021</last-modified-date-eu>
+      <last-modified-datetime-eu-tzone>02/01/2021 13:00</last-modified-datetime-eu-tzone>
+      <created-on-datetime-us>01/02/2021 12:00</created-on-datetime-us>
+      <created-on-date-us>01/02/2021</created-on-date-us>
+      <created-on-datetime-eu>02/01/2021 12:00</created-on-datetime-eu>
+      <created-on-date-eu>02/01/2021</created-on-date-eu>
+      <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
+      <link-row/>
+      <self-link-row/>
+      <link-row-without-related/>
+      <decimal-link-row/>
+      <file-link-row/>
+      <file/>
+      <single-select/>
+      <multiple-select/>
+      <multiple-collaborators/>
+      <phone-number/>
+      <formula-text>test FORMULA</formula-text>
+      <formula-int>1</formula-int>
+      <formula-bool>true</formula-bool>
+      <formula-decimal>33.3333333333</formula-decimal>
+      <formula-dateinterval>1 day</formula-dateinterval>
+      <formula-date>2020-01-01</formula-date>
+      <formula-singleselect/>
+      <formula-email/>
+      <formula-link-with-label>
+         <url>https://google.com</url>
+         <label>label</label>
+      </formula-link-with-label>
+      <formula-link-url-only>
+         <url>https://google.com</url>
+      </formula-link-url-only>
+      <lookup/>
+   </row>
+   <row>
+      <id>2</id>
+      <text>text</text>
+      <long-text>long_text</long-text>
+      <url>https://www.google.com</url>
+      <email>test@example.com</email>
+      <negative-int>-1</negative-int>
+      <positive-int>1</positive-int>
+      <negative-decimal>-1.2</negative-decimal>
+      <positive-decimal>1.2</positive-decimal>
+      <rating>3</rating>
+      <boolean>true</boolean>
+      <datetime-us>02/01/2020 01:23</datetime-us>
+      <date-us>02/01/2020</date-us>
+      <datetime-eu>01/02/2020 01:23</datetime-eu>
+      <date-eu>01/02/2020</date-eu>
+      <datetime-eu-tzone-visible>01/02/2020 02:23</datetime-eu-tzone-visible>
+      <datetime-eu-tzone-hidden>01/02/2020 02:23</datetime-eu-tzone-hidden>
+      <last-modified-datetime-us>01/02/2021 12:00</last-modified-datetime-us>
+      <last-modified-date-us>01/02/2021</last-modified-date-us>
+      <last-modified-datetime-eu>02/01/2021 12:00</last-modified-datetime-eu>
+      <last-modified-date-eu>02/01/2021</last-modified-date-eu>
+      <last-modified-datetime-eu-tzone>02/01/2021 13:00</last-modified-datetime-eu-tzone>
+      <created-on-datetime-us>01/02/2021 12:00</created-on-datetime-us>
+      <created-on-date-us>01/02/2021</created-on-date-us>
+      <created-on-datetime-eu>02/01/2021 12:00</created-on-datetime-eu>
+      <created-on-date-eu>02/01/2021</created-on-date-eu>
+      <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
+      <link-row>
+         <item>linked_row_1</item>
+         <item>linked_row_2</item>
+         <item>unnamed row 3</item>
+      </link-row>
+      <self-link-row>
+         <item>unnamed row 1</item>
+      </self-link-row>
+      <link-row-without-related>
+         <item>linked_row_1</item>
+         <item>linked_row_2</item>
+      </link-row-without-related>
+      <decimal-link-row>
+         <item>1.234</item>
+         <item>-123.456</item>
+         <item>unnamed row 3</item>
+      </decimal-link-row>
+      <file-link-row>
+         <item>
             <item>
-                <visible_name>name.txt</visible_name>
-                <url>http://localhost:8000/media/user_files/test_hash.txt</url>
+               <visible_name>name.txt</visible_name>
+               <url>http://localhost:8000/media/user_files/test_hash.txt</url>
             </item>
-        </item>
-        <item>
-            unnamed row 2
-        </item>
-    </file-link-row>
-    <file>
-        <item>
+         </item>
+         <item>unnamed row 2</item>
+      </file-link-row>
+      <file>
+         <item>
             <visible_name>a.txt</visible_name>
             <url>http://localhost:8000/media/user_files/hashed_name.txt</url>
-        </item>
-        <item>
+         </item>
+         <item>
             <visible_name>b.txt</visible_name>
             <url>http://localhost:8000/media/user_files/other_name.txt</url>
-        </item>
-    </file>
-    <single-select>A</single-select>
-    <multiple-select>
-        <item>D</item>
-        <item>C</item>
-        <item>E</item>
-    </multiple-select>
-    <multiple-collaborators>
-        <item>user2@example.com</item>
-        <item>user3@example.com</item>
-    </multiple-collaborators>
-    <phone-number>+4412345678</phone-number>
-    <formula-text>test FORMULA</formula-text>
-    <formula-int>1</formula-int>
-    <formula-bool>true</formula-bool>
-    <formula-decimal>33.3333333333</formula-decimal>
-    <formula-dateinterval>1 day</formula-dateinterval>
-    <formula-date>2020-01-01</formula-date>
-    <formula-singleselect>A</formula-singleselect>
-    <formula-email>test@example.com</formula-email>
-    <formula-link-with-label>
-        <url>https://google.com</url>
-        <label>label</label>
-    </formula-link-with-label>
-    <formula-link-url-only>
-        <url>https://google.com</url>
-    </formula-link-url-only>
-    <lookup><item>linked_row_1</item><item>linked_row_2</item><item/></lookup>
-</row>
+         </item>
+      </file>
+      <single-select>A</single-select>
+      <multiple-select>
+         <item>D</item>
+         <item>C</item>
+         <item>E</item>
+      </multiple-select>
+      <multiple-collaborators>
+         <item>user2@example.com</item>
+         <item>user3@example.com</item>
+      </multiple-collaborators>
+      <phone-number>+4412345678</phone-number>
+      <formula-text>test FORMULA</formula-text>
+      <formula-int>1</formula-int>
+      <formula-bool>true</formula-bool>
+      <formula-decimal>33.3333333333</formula-decimal>
+      <formula-dateinterval>1 day</formula-dateinterval>
+      <formula-date>2020-01-01</formula-date>
+      <formula-singleselect>A</formula-singleselect>
+      <formula-email>test@example.com</formula-email>
+      <formula-link-with-label>
+         <url>https://google.com</url>
+         <label>label</label>
+      </formula-link-with-label>
+      <formula-link-url-only>
+         <url>https://google.com</url>
+      </formula-link-url-only>
+      <lookup>
+         <item>linked_row_1</item>
+         <item>linked_row_2</item>
+         <item/>
+      </lookup>
+   </row>
 </rows>
 """
     assert strip_indents_and_newlines(xml) == strip_indents_and_newlines(expected_xml)

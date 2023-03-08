@@ -116,3 +116,10 @@ ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT = (
     "The requested field is already being updated or used by another operation, "
     "please try again after other concurrent operations have finished.",
 )
+ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR = (
+    "ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR",
+    HTTP_400_BAD_REQUEST,
+    "The field date should already exists and date_include_time  "
+    "must be set to True on the field to convert values with "
+    "the utc_offset provided in date_force_timezone_offset.",
+)

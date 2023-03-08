@@ -37,7 +37,7 @@ class PerGroupLicensePlugin(LicensePlugin):
         super().__init__()
         self.per_group_licenses = defaultdict(lambda: defaultdict(set))
 
-    def get_active_instance_wide_licenses(
+    def get_active_instance_wide_license_types(
         self, user: AbstractUser
     ) -> Generator[LicenseType, None, None]:
         return

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add now() and today() formula with periodic updates",
+    "issue_number": 1251,
+    "bullet_points": [],
+    "created_at": "2023-02-28"
+}

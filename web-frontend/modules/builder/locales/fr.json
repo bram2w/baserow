@@ -1,0 +1,25 @@
+{
+    "sidebarComponentBuilder": {
+        "settings": "Paramètres",
+        "createPage": "Créer une page"
+    },
+    "createPageModal": {
+        "header": "Créer une page",
+        "submit": "Ajouter une page"
+    },
+    "pageForm": {
+        "errorNameNotUnique": "Une page avec le même nom existe déjà",
+        "defaultName": "Page",
+        "nameLabel": "Titre"
+    },
+    "builderSettingTypes": {
+        "integrationsName": "Intégrations",
+        "themeName": "Thème"
+    },
+    "builderForm": {
+        "submit": "Ajouter une application"
+    },
+    "builderSettingsModal": {
+        "title": "Application"
+    }
+}

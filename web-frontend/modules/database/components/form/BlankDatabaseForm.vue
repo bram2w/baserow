@@ -19,19 +19,19 @@
           {{ $t('error.requiredField') }}
         </div>
       </div>
-      <div class="actions">
-        <div class="align-right">
-          <button
-            class="button button--large"
-            :class="{ 'button--loading': loading }"
-            :disabled="loading"
-          >
-            {{ $t('action.add') }}
-            {{ databaseApplicationType.getName() | lowercase }}
-          </button>
-        </div>
-      </div>
     </FormElement>
+    <div class="actions">
+      <div class="align-right">
+        <button
+          class="button button--large"
+          :class="{ 'button--loading': loading }"
+          :disabled="loading"
+        >
+          {{ $t('action.add') }}
+          {{ databaseApplicationType.getName() | lowercase }}
+        </button>
+      </div>
+    </div>
   </form>
 </template>
 

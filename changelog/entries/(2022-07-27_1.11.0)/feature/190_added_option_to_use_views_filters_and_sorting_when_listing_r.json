@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added option to use view's filters and sorting when listing rows.",
+    "issue_number": 190,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

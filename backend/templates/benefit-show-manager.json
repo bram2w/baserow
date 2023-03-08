@@ -290,7 +290,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432851,
@@ -738,6 +738,111 @@
                                     "conditions": []
                                 }
                             ]
+                        },
+                        {
+                            "id": 214809,
+                            "type": "kanban",
+                            "name": "By status",
+                            "order": 4,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 350795,
+                            "field_options": [
+                                {
+                                    "id": 67011,
+                                    "field_id": 350750,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67012,
+                                    "field_id": 350751,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67013,
+                                    "field_id": 350752,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67014,
+                                    "field_id": 350780,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67015,
+                                    "field_id": 350783,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67016,
+                                    "field_id": 350784,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67017,
+                                    "field_id": 350786,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67018,
+                                    "field_id": 350787,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67019,
+                                    "field_id": 350789,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67020,
+                                    "field_id": 350791,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67021,
+                                    "field_id": 350793,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67022,
+                                    "field_id": 350795,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67023,
+                                    "field_id": 350803,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67024,
+                                    "field_id": 350899,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 67025,
+                                    "field_id": 350910,
+                                    "hidden": true,
+                                    "order": 32767
+                                }
+                            ]
                         }
                     ],
                     "rows": [
@@ -925,7 +1030,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432854,
@@ -984,10 +1089,97 @@
                             ]
                         },
                         {
+                            "id": 214813,
+                            "type": "grid",
+                            "name": "Is tax accredited",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 86725,
+                                    "field_id": 350810,
+                                    "type": "boolean",
+                                    "value": "1"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 70544,
+                                    "field_id": 350753,
+                                    "order": "ASC"
+                                },
+                                {
+                                    "id": 70545,
+                                    "field_id": 350810,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "count",
+                            "field_options": [
+                                {
+                                    "id": 1328314,
+                                    "field_id": 350753,
+                                    "width": 253,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "unique_count",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1328315,
+                                    "field_id": 350754,
+                                    "width": 263,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1328316,
+                                    "field_id": 350755,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1328317,
+                                    "field_id": 350781,
+                                    "width": 200,
+                                    "hidden": true,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1328318,
+                                    "field_id": 350808,
+                                    "width": 148,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1328319,
+                                    "field_id": 350810,
+                                    "width": 162,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
                             "id": 78794,
                             "type": "gallery",
                             "name": "Beneficiaries",
-                            "order": 2,
+                            "order": 3,
                             "filter_type": "AND",
                             "filters_disabled": false,
                             "filters": [],
@@ -1043,7 +1235,7 @@
                             "id": 78813,
                             "type": "form",
                             "name": "Add a beneficiary",
-                            "order": 3,
+                            "order": 4,
                             "public": false,
                             "title": "Add a new beneficiary",
                             "description": "",
@@ -1323,7 +1515,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432857,
@@ -2219,7 +2411,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432860,
@@ -2228,7 +2420,7 @@
                                     "hidden": false,
                                     "order": 9,
                                     "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "unique_count"
                                 },
                                 {
                                     "id": 432858,
@@ -2364,7 +2556,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 442466,
@@ -2515,7 +2707,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 442496,
@@ -2660,7 +2852,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 442970,
@@ -2811,7 +3003,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 442983,
@@ -3584,7 +3776,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432863,
@@ -3593,7 +3785,7 @@
                                     "hidden": false,
                                     "order": 6,
                                     "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "unique_count"
                                 },
                                 {
                                     "id": 432861,
@@ -4215,11 +4407,18 @@
                     "fields": [
                         {
                             "id": 350765,
-                            "type": "text",
+                            "type": "formula",
                             "name": "ID",
                             "order": 0,
                             "primary": true,
-                            "text_default": ""
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": null,
+                            "formula": "concat( \n  if( \n    isblank(field(\"Deadline\")), \n    \"YYYYMMDD\", \n    datetime_format(field(\"Deadline\"), \"YYYYMMDD\") \n  ), \n  if( \n    isblank(field(\"Deadline\")), \n    \"-\", \n    left( \n      upper(field(\"Name\")), \n      1 \n    ) \n  ), \n  if( \n    row_id() < 10, \n    concat(\"0000\", row_id()), \n    if( \n      row_id() < 100, \n      concat(\"000\", row_id()), \n      if( \n        row_id() < 1000, \n        concat(\"00\", row_id()), \n        if( \n          row_id() < 10000, \n          concat(\"0\", row_id()), \n          row_id() \n        ) \n      ) \n    ) \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 350766,
@@ -4378,23 +4577,23 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432866,
                                     "field_id": 350765,
-                                    "width": 112,
+                                    "width": 135,
                                     "hidden": false,
-                                    "order": 9,
+                                    "order": 10,
                                     "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "unique_count"
                                 },
                                 {
                                     "id": 432864,
                                     "field_id": 350766,
                                     "width": 139,
                                     "hidden": false,
-                                    "order": 1,
+                                    "order": 2,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4403,7 +4602,7 @@
                                     "field_id": 350767,
                                     "width": 287,
                                     "hidden": false,
-                                    "order": 0,
+                                    "order": 1,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4412,7 +4611,7 @@
                                     "field_id": 350820,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 8,
+                                    "order": 9,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4421,7 +4620,7 @@
                                     "field_id": 350856,
                                     "width": 167,
                                     "hidden": false,
-                                    "order": 2,
+                                    "order": 3,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4430,7 +4629,7 @@
                                     "field_id": 350863,
                                     "width": 115,
                                     "hidden": false,
-                                    "order": 3,
+                                    "order": 4,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4439,7 +4638,7 @@
                                     "field_id": 350870,
                                     "width": 118,
                                     "hidden": false,
-                                    "order": 4,
+                                    "order": 5,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4448,7 +4647,7 @@
                                     "field_id": 350874,
                                     "width": 176,
                                     "hidden": false,
-                                    "order": 5,
+                                    "order": 6,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4457,7 +4656,7 @@
                                     "field_id": 350878,
                                     "width": 147,
                                     "hidden": false,
-                                    "order": 6,
+                                    "order": 7,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4466,7 +4665,7 @@
                                     "field_id": 350886,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 7,
+                                    "order": 8,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4475,9 +4674,191 @@
                                     "field_id": 350916,
                                     "width": 200,
                                     "hidden": true,
-                                    "order": 10,
+                                    "order": 11,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 214818,
+                            "type": "kanban",
+                            "name": "By type",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [
+                                {
+                                    "id": 12513,
+                                    "type": "left_border_color",
+                                    "value_provider_type": "single_select_color",
+                                    "value_provider_conf": {
+                                        "field_id": 350856
+                                    },
+                                    "order": 1
+                                }
+                            ],
+                            "public": false,
+                            "single_select_field_id": 350766,
+                            "field_options": [
+                                {
+                                    "id": 67026,
+                                    "field_id": 350765,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 67028,
+                                    "field_id": 350767,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 67033,
+                                    "field_id": 350874,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 67031,
+                                    "field_id": 350863,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 67030,
+                                    "field_id": 350856,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 67027,
+                                    "field_id": 350766,
+                                    "hidden": true,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 67029,
+                                    "field_id": 350820,
+                                    "hidden": true,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 67032,
+                                    "field_id": 350870,
+                                    "hidden": false,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 67034,
+                                    "field_id": 350878,
+                                    "hidden": false,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 67035,
+                                    "field_id": 350886,
+                                    "hidden": true,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 67036,
+                                    "field_id": 350916,
+                                    "hidden": true,
+                                    "order": 11
+                                }
+                            ]
+                        },
+                        {
+                            "id": 214819,
+                            "type": "kanban",
+                            "name": "By status",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [
+                                {
+                                    "id": 12514,
+                                    "type": "left_border_color",
+                                    "value_provider_type": "single_select_color",
+                                    "value_provider_conf": {
+                                        "field_id": 350766
+                                    },
+                                    "order": 1
+                                }
+                            ],
+                            "public": false,
+                            "single_select_field_id": 350856,
+                            "field_options": [
+                                {
+                                    "id": 67037,
+                                    "field_id": 350765,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 67038,
+                                    "field_id": 350767,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 67039,
+                                    "field_id": 350874,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 67040,
+                                    "field_id": 350863,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 67042,
+                                    "field_id": 350766,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 67041,
+                                    "field_id": 350856,
+                                    "hidden": true,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 67043,
+                                    "field_id": 350820,
+                                    "hidden": true,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 67044,
+                                    "field_id": 350870,
+                                    "hidden": false,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 67045,
+                                    "field_id": 350878,
+                                    "hidden": false,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 67046,
+                                    "field_id": 350886,
+                                    "hidden": true,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 67047,
+                                    "field_id": 350916,
+                                    "hidden": true,
+                                    "order": 11
                                 }
                             ]
                         }
@@ -4488,7 +4869,7 @@
                             "order": "1.00000000000000000000",
                             "created_on": "2022-04-22T11:26:23.583745+00:00",
                             "updated_on": "2022-04-29T07:10:44.548278+00:00",
-                            "field_350765": "202201121530",
+                            "field_350765": null,
                             "field_350766": 89283,
                             "field_350767": "Humphries Corporation CSR 2022",
                             "field_350820": [
@@ -4511,7 +4892,7 @@
                             "order": "2.00000000000000000000",
                             "created_on": "2022-04-22T11:26:23.586313+00:00",
                             "updated_on": "2022-04-29T07:10:51.616740+00:00",
-                            "field_350765": "202112201230",
+                            "field_350765": null,
                             "field_350766": 89283,
                             "field_350767": "Bramahn Law, Inc. CSR 2022",
                             "field_350820": [
@@ -4533,8 +4914,8 @@
                             "id": 3,
                             "order": "3.00000000000000000000",
                             "created_on": "2022-04-29T05:57:45.789468+00:00",
-                            "updated_on": "2022-04-29T07:11:27.546528+00:00",
-                            "field_350765": "202203151730",
+                            "updated_on": "2023-02-09T14:26:47.747839+00:00",
+                            "field_350765": null,
                             "field_350766": 89285,
                             "field_350767": "Oldmahn's Equipment Mover, Co. CSR 2022",
                             "field_350820": [
@@ -4557,7 +4938,7 @@
                             "order": "4.00000000000000000000",
                             "created_on": "2022-04-29T06:09:10.483753+00:00",
                             "updated_on": "2022-04-29T07:11:22.937684+00:00",
-                            "field_350765": "202203171130",
+                            "field_350765": null,
                             "field_350766": 89283,
                             "field_350767": "Carter Group of Companies, Inc. CSR 2022",
                             "field_350820": [
@@ -4580,7 +4961,7 @@
                             "order": "5.00000000000000000000",
                             "created_on": "2022-04-29T06:09:40.150763+00:00",
                             "updated_on": "2022-04-29T07:11:14.897061+00:00",
-                            "field_350765": "202202281700",
+                            "field_350765": null,
                             "field_350766": 89283,
                             "field_350767": "Cisneros Enterprises CSR 2022",
                             "field_350820": [
@@ -4607,11 +4988,18 @@
                     "fields": [
                         {
                             "id": 350768,
-                            "type": "text",
+                            "type": "formula",
                             "name": "Name",
                             "order": 0,
                             "primary": true,
-                            "text_default": ""
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": null,
+                            "formula": "upper( \n  join( \n    concat( \n      left( \n        regex_replace( \n          field(\"Show\"), \n          \"(/|-|:|\\s|\\t)\", \n          \"\" \n        ), \n        5\n      ), \n      year(lookup(\"Show\", \"Show start\")), \n      \"Q\", \n      if( \n        and( \n          month(lookup(\"Show\", \"Show start\")) >= 1, \n          month(lookup(\"Show\", \"Show start\")) <= 3 \n        ), \n        1, \n        if( \n          and( \n            month(lookup(\"Show\", \"Show start\")) >= 4, \n            month(lookup(\"Show\", \"Show start\")) <= 6 \n          ), \n          2, \n          if( \n            and( \n              month(lookup(\"Show\", \"Show start\")) >= 7, \n              month(lookup(\"Show\", \"Show start\")) <= 9 \n            ), \n            3, \n            if( \n              and( \n                month(lookup(\"Show\", \"Show start\")) >= 10, \n                month(lookup(\"Show\", \"Show start\")) <= 12 \n              ), \n              4, \n              0 \n            ) \n          ) \n        )\n      ), \n      \"-\", \n      if( \n        row_id() < 10, \n        concat(\"0000\", row_id()), \n        if( \n          row_id() < 100, \n          concat(\"000\", row_id()), \n          if( \n            row_id() < 1000, \n            concat(\"00\", row_id()), \n            if( \n              row_id() < 10000, \n              concat(\"0\", row_id()), \n              row_id() \n            ) \n          ) \n        ) \n      ) \n    ), \n    \"\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 350769,
@@ -4810,14 +5198,14 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432869,
                                     "field_id": 350768,
-                                    "width": 200,
+                                    "width": 148,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 0,
                                     "aggregation_type": "unique_count",
                                     "aggregation_raw_type": "unique_count"
                                 },
@@ -4826,7 +5214,7 @@
                                     "field_id": 350769,
                                     "width": 166,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 2,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4835,7 +5223,7 @@
                                     "field_id": 350770,
                                     "width": 130,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 3,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4844,7 +5232,7 @@
                                     "field_id": 350901,
                                     "width": 135,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 4,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4853,7 +5241,7 @@
                                     "field_id": 350903,
                                     "width": 152,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 5,
                                     "aggregation_type": "sum",
                                     "aggregation_raw_type": "sum"
                                 },
@@ -4862,7 +5250,7 @@
                                     "field_id": 350904,
                                     "width": 128,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 6,
                                     "aggregation_type": "sum",
                                     "aggregation_raw_type": "sum"
                                 },
@@ -4871,7 +5259,7 @@
                                     "field_id": 350905,
                                     "width": 124,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 7,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4880,7 +5268,7 @@
                                     "field_id": 350906,
                                     "width": 200,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 8,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4889,7 +5277,7 @@
                                     "field_id": 350907,
                                     "width": 131,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 9,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4898,7 +5286,7 @@
                                     "field_id": 350909,
                                     "width": 165,
                                     "hidden": false,
-                                    "order": 32767,
+                                    "order": 10,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 },
@@ -4907,7 +5295,7 @@
                                     "field_id": 350918,
                                     "width": 176,
                                     "hidden": true,
-                                    "order": 32767,
+                                    "order": 11,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
                                 }
@@ -4936,7 +5324,7 @@
                                     "field_id": 350768,
                                     "name": "",
                                     "description": "Please describe briefly this expense.",
-                                    "enabled": true,
+                                    "enabled": false,
                                     "required": true,
                                     "order": 32767,
                                     "show_when_matching_conditions": false,
@@ -5064,6 +5452,188 @@
                                     "conditions": []
                                 }
                             ]
+                        },
+                        {
+                            "id": 214820,
+                            "type": "kanban",
+                            "name": "By category",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [
+                                {
+                                    "id": 12515,
+                                    "type": "left_border_color",
+                                    "value_provider_type": "single_select_color",
+                                    "value_provider_conf": {
+                                        "field_id": 350905
+                                    },
+                                    "order": 1
+                                }
+                            ],
+                            "public": false,
+                            "single_select_field_id": 350770,
+                            "field_options": [
+                                {
+                                    "id": 67048,
+                                    "field_id": 350768,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 67049,
+                                    "field_id": 350769,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 67054,
+                                    "field_id": 350905,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 67053,
+                                    "field_id": 350904,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 67056,
+                                    "field_id": 350907,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 67050,
+                                    "field_id": 350770,
+                                    "hidden": true,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 67051,
+                                    "field_id": 350901,
+                                    "hidden": true,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 67052,
+                                    "field_id": 350903,
+                                    "hidden": true,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 67055,
+                                    "field_id": 350906,
+                                    "hidden": true,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 67057,
+                                    "field_id": 350909,
+                                    "hidden": true,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 67058,
+                                    "field_id": 350918,
+                                    "hidden": true,
+                                    "order": 11
+                                }
+                            ]
+                        },
+                        {
+                            "id": 214821,
+                            "type": "kanban",
+                            "name": "By status",
+                            "order": 4,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [
+                                {
+                                    "id": 12516,
+                                    "type": "left_border_color",
+                                    "value_provider_type": "single_select_color",
+                                    "value_provider_conf": {
+                                        "field_id": 350770
+                                    },
+                                    "order": 1
+                                }
+                            ],
+                            "public": false,
+                            "single_select_field_id": 350905,
+                            "field_options": [
+                                {
+                                    "id": 67059,
+                                    "field_id": 350768,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 67064,
+                                    "field_id": 350770,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 67061,
+                                    "field_id": 350905,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 67062,
+                                    "field_id": 350904,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 67063,
+                                    "field_id": 350907,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 67060,
+                                    "field_id": 350769,
+                                    "hidden": true,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 67065,
+                                    "field_id": 350901,
+                                    "hidden": true,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 67066,
+                                    "field_id": 350903,
+                                    "hidden": true,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 67067,
+                                    "field_id": 350906,
+                                    "hidden": true,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 67068,
+                                    "field_id": 350909,
+                                    "hidden": true,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 67069,
+                                    "field_id": 350918,
+                                    "hidden": true,
+                                    "order": 11
+                                }
+                            ]
                         }
                     ],
                     "rows": [
@@ -5072,7 +5642,7 @@
                             "order": "1.00000000000000000000",
                             "created_on": "2022-04-22T11:26:35.112465+00:00",
                             "updated_on": "2022-04-29T08:08:47.387800+00:00",
-                            "field_350768": "FGHC 2022Q2 MTalent",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5097,7 +5667,7 @@
                             "order": "2.00000000000000000000",
                             "created_on": "2022-04-22T11:26:35.115044+00:00",
                             "updated_on": "2022-04-29T07:10:20.909093+00:00",
-                            "field_350768": "FGHC 2022Q2 BTalent",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5122,7 +5692,7 @@
                             "order": "3.00000000000000000000",
                             "created_on": "2022-04-29T07:49:11.393882+00:00",
                             "updated_on": "2022-04-29T07:50:53.497970+00:00",
-                            "field_350768": "FGHC 2022Q2 Location",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5147,7 +5717,7 @@
                             "order": "4.00000000000000000000",
                             "created_on": "2022-04-29T07:51:00.187032+00:00",
                             "updated_on": "2022-04-29T07:59:11.326000+00:00",
-                            "field_350768": "FGHC 2022Q2 Decor",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5172,7 +5742,7 @@
                             "order": "5.00000000000000000000",
                             "created_on": "2022-04-29T07:54:21.931140+00:00",
                             "updated_on": "2022-04-29T07:59:14.928448+00:00",
-                            "field_350768": "FGHC 2022Q2 Sounds",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5197,7 +5767,7 @@
                             "order": "6.00000000000000000000",
                             "created_on": "2022-04-29T08:00:01.900594+00:00",
                             "updated_on": "2022-04-29T08:12:28.768543+00:00",
-                            "field_350768": "FGHC 2022Q2 F&D",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5222,7 +5792,7 @@
                             "order": "7.00000000000000000000",
                             "created_on": "2022-04-29T08:13:18.700410+00:00",
                             "updated_on": "2022-04-29T08:15:26.330281+00:00",
-                            "field_350768": "FGHC 2022Q2 Tickets",
+                            "field_350768": null,
                             "field_350769": [
                                 1
                             ],
@@ -5251,11 +5821,18 @@
                     "fields": [
                         {
                             "id": 350771,
-                            "type": "text",
+                            "type": "formula",
                             "name": "ID",
                             "order": 0,
                             "primary": true,
-                            "text_default": ""
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": null,
+                            "formula": "upper( \n  join( \n    concat( \n      left( \n        regex_replace( \n          field(\"Show\"), \n          \"(/|-|:|\\s|\\t)\", \n          \"\" \n        ), \n        5\n      ), \n      year(lookup(\"Show\", \"Show start\")), \n      \"Q\", \n      if( \n        and( \n          month(lookup(\"Show\", \"Show start\")) >= 1, \n          month(lookup(\"Show\", \"Show start\")) <= 3 \n        ), \n        1, \n        if( \n          and( \n            month(lookup(\"Show\", \"Show start\")) >= 4, \n            month(lookup(\"Show\", \"Show start\")) <= 6 \n          ), \n          2, \n          if( \n            and( \n              month(lookup(\"Show\", \"Show start\")) >= 7, \n              month(lookup(\"Show\", \"Show start\")) <= 9 \n            ), \n            3, \n            if( \n              and( \n                month(lookup(\"Show\", \"Show start\")) >= 10, \n                month(lookup(\"Show\", \"Show start\")) <= 12 \n              ), \n              4, \n              0 \n            ) \n          ) \n        )\n      ), \n      \"-\", \n      if( \n        row_id() < 10, \n        concat(\"00\", row_id()), \n        if( \n          row_id() < 100, \n          concat(\"0\", row_id()), \n          row_id() \n        ) \n      ) \n    ), \n    \"\" \n  ) \n)",
+                            "formula_type": "text"
                         },
                         {
                             "id": 350772,
@@ -5394,21 +5971,15 @@
                             "filter_type": "AND",
                             "filters_disabled": false,
                             "filters": [],
-                            "sortings": [
-                                {
-                                    "id": 15079,
-                                    "field_id": 350771,
-                                    "order": "ASC"
-                                }
-                            ],
+                            "sortings": [],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432872,
                                     "field_id": 350771,
-                                    "width": 200,
+                                    "width": 136,
                                     "hidden": false,
                                     "order": 8,
                                     "aggregation_type": "unique_count",
@@ -5513,7 +6084,7 @@
                             "order": "1.00000000000000000000",
                             "created_on": "2022-04-22T11:26:47.411191+00:00",
                             "updated_on": "2022-04-29T07:40:10.880656+00:00",
-                            "field_350771": "FGHC 2022Q2",
+                            "field_350771": null,
                             "field_350772": [
                                 1
                             ],
@@ -5546,7 +6117,7 @@
                             "order": "2.00000000000000000000",
                             "created_on": "2022-04-22T11:26:47.414889+00:00",
                             "updated_on": "2022-04-29T08:37:30.490411+00:00",
-                            "field_350771": "GLC 2022Q2",
+                            "field_350771": null,
                             "field_350772": [
                                 2
                             ],
@@ -5672,7 +6243,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432875,
@@ -5681,7 +6252,7 @@
                                     "hidden": false,
                                     "order": 32767,
                                     "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "unique_count"
                                 },
                                 {
                                     "id": 432873,
@@ -5872,7 +6443,7 @@
                             ],
                             "decorations": [],
                             "public": false,
-                            "row_identifier_type": "id",
+                            "row_identifier_type": "count",
                             "field_options": [
                                 {
                                     "id": 432878,
@@ -5881,7 +6452,7 @@
                                     "hidden": false,
                                     "order": 32767,
                                     "aggregation_type": "unique_count",
-                                    "aggregation_raw_type": ""
+                                    "aggregation_raw_type": "unique_count"
                                 },
                                 {
                                     "id": 432876,

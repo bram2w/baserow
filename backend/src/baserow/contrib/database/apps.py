@@ -67,6 +67,38 @@ class DatabaseConfig(AppConfig):
         action_scope_registry.register(TableActionScopeType())
         action_scope_registry.register(ViewActionScopeType())
 
+        from baserow.contrib.database.tokens.actions import (
+            CreateDbTokenActionType,
+            DeleteDbTokenActionType,
+            RotateDbTokenKeyActionType,
+            UpdateDbTokenNameActionType,
+            UpdateDbTokenPermissionsActionType,
+        )
+
+        action_type_registry.register(CreateDbTokenActionType())
+        action_type_registry.register(UpdateDbTokenNameActionType())
+        action_type_registry.register(UpdateDbTokenPermissionsActionType())
+        action_type_registry.register(RotateDbTokenKeyActionType())
+        action_type_registry.register(DeleteDbTokenActionType())
+
+        from baserow.contrib.database.webhooks.actions import (
+            CreateWebhookActionType,
+            DeleteWebhookActionType,
+            UpdateWebhookActionType,
+        )
+
+        action_type_registry.register(CreateWebhookActionType())
+        action_type_registry.register(DeleteWebhookActionType())
+        action_type_registry.register(UpdateWebhookActionType())
+
+        from .export.actions import ExportTableActionType
+
+        action_type_registry.register(ExportTableActionType())
+
+        from .airtable.actions import ImportDatabaseFromAirtableActionType
+
+        action_type_registry.register(ImportDatabaseFromAirtableActionType())
+
         from .table.actions import (
             CreateTableActionType,
             DeleteTableActionType,
@@ -146,6 +178,7 @@ class DatabaseConfig(AppConfig):
             form_view_mode_registry,
             view_aggregation_type_registry,
             view_filter_type_registry,
+            view_ownership_type_registry,
             view_type_registry,
         )
         from .webhooks.registries import webhook_event_type_registry
@@ -238,6 +271,7 @@ class DatabaseConfig(AppConfig):
             BooleanViewFilterType,
             ContainsNotViewFilterType,
             ContainsViewFilterType,
+            ContainsWordViewFilterType,
             DateAfterTodayViewFilterType,
             DateAfterViewFilterType,
             DateBeforeTodayViewFilterType,
@@ -252,6 +286,7 @@ class DatabaseConfig(AppConfig):
             DateEqualsYearsAgoViewFilterType,
             DateEqualViewFilterType,
             DateNotEqualViewFilterType,
+            DoesntContainWordViewFilterType,
             EmptyViewFilterType,
             EqualViewFilterType,
             FilenameContainsViewFilterType,
@@ -279,6 +314,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(HasFileTypeViewFilterType())
         view_filter_type_registry.register(ContainsViewFilterType())
         view_filter_type_registry.register(ContainsNotViewFilterType())
+        view_filter_type_registry.register(ContainsWordViewFilterType())
+        view_filter_type_registry.register(DoesntContainWordViewFilterType())
         view_filter_type_registry.register(LengthIsLowerThanViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
@@ -339,6 +376,10 @@ class DatabaseConfig(AppConfig):
         from .views.form_view_mode_types import FormViewModeTypeForm
 
         form_view_mode_registry.register(FormViewModeTypeForm())
+
+        from .views.view_ownership_types import CollaborativeViewOwnershipType
+
+        view_ownership_type_registry.register(CollaborativeViewOwnershipType())
 
         from .application_types import DatabaseApplicationType
 
@@ -431,9 +472,9 @@ class DatabaseConfig(AppConfig):
 
         from baserow.core.jobs.registries import job_type_registry
 
-        from .airtable.job_type import AirtableImportJobType
+        from .airtable.job_types import AirtableImportJobType
         from .fields.job_types import DuplicateFieldJobType
-        from .file_import.job_type import FileImportJobType
+        from .file_import.job_types import FileImportJobType
         from .table.job_types import DuplicateTableJobType
 
         job_type_registry.register(AirtableImportJobType())
@@ -476,7 +517,6 @@ class DatabaseConfig(AppConfig):
             DeleteRelatedLinkRowFieldOperationType,
             DuplicateFieldOperationType,
             ListFieldsOperationType,
-            ReadAggregationDatabaseTableOperationType,
             ReadFieldOperationType,
             RestoreFieldOperationType,
             UpdateFieldOperationType,
@@ -500,7 +540,6 @@ class DatabaseConfig(AppConfig):
             DeleteDatabaseTableOperationType,
             DuplicateDatabaseTableOperationType,
             ImportRowsDatabaseTableOperationType,
-            ListAggregationDatabaseTableOperationType,
             ListenToAllDatabaseTableEventsOperationType,
             ListRowNamesDatabaseTableOperationType,
             ListRowsDatabaseTableOperationType,
@@ -523,11 +562,13 @@ class DatabaseConfig(AppConfig):
             DeleteViewOperationType,
             DeleteViewSortOperationType,
             DuplicateViewOperationType,
+            ListAggregationsViewOperationType,
             ListViewDecorationOperationType,
             ListViewFilterOperationType,
             ListViewsOperationType,
             ListViewSortOperationType,
             OrderViewsOperationType,
+            ReadAggregationsViewOperationType,
             ReadViewDecorationOperationType,
             ReadViewFieldOptionsOperationType,
             ReadViewFilterOperationType,
@@ -601,8 +642,8 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(TypeFormulaOperationType())
         operation_type_registry.register(ListRowNamesDatabaseTableOperationType())
         operation_type_registry.register(ReadAdjacentRowDatabaseRowOperationType())
-        operation_type_registry.register(ReadAggregationDatabaseTableOperationType())
-        operation_type_registry.register(ListAggregationDatabaseTableOperationType())
+        operation_type_registry.register(ReadAggregationsViewOperationType())
+        operation_type_registry.register(ListAggregationsViewOperationType())
         operation_type_registry.register(ExportTableOperationType())
         operation_type_registry.register(ListFieldsOperationType())
         operation_type_registry.register(ListViewsOperationType())
@@ -626,12 +667,20 @@ class DatabaseConfig(AppConfig):
 
         permission_manager_type_registry.register(TokenPermissionManagerType())
 
+        from baserow.core.registries import subject_type_registry
+
+        from .tokens.subjects import TokenSubjectType
+
+        subject_type_registry.register(TokenSubjectType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
+
+        import baserow.contrib.database.fields.tasks  # noqa: F401
 
 
 # noinspection PyPep8Naming

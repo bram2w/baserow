@@ -43,7 +43,11 @@ export default (client) => {
       return client.get(`/database/views/table/${tableId}/`, config)
     },
     create(tableId, values) {
-      return client.post(`/database/views/table/${tableId}/`, values)
+      return client.post(`/database/views/table/${tableId}/`, {
+        name: values.name,
+        ownership_type: values.ownershipType,
+        type: values.type,
+      })
     },
     get(
       viewId,
@@ -78,9 +82,10 @@ export default (client) => {
     duplicate(viewId) {
       return client.post(`/database/views/${viewId}/duplicate/`)
     },
-    order(tableId, order) {
+    order(tableId, ownershipType, order) {
       return client.post(`/database/views/table/${tableId}/order/`, {
         view_ids: order,
+        ownership_type: ownershipType,
       })
     },
     delete(viewId) {

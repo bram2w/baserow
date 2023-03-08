@@ -35,6 +35,7 @@ import es from '@baserow_premium/locales/es.json'
 import it from '@baserow_premium/locales/it.json'
 import pl from '@baserow_premium/locales/pl.json'
 import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
+import { PersonalViewOwnershipType } from '@baserow_premium/viewOwnershipTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -87,6 +88,11 @@ export default (context) => {
   app.$registry.register(
     'decoratorValueProvider',
     new ConditionalColorValueProviderType(context)
+  )
+
+  app.$registry.register(
+    'viewOwnershipType',
+    new PersonalViewOwnershipType(context)
   )
 
   app.$registry.register('formViewMode', new FormViewSurveyModeType(context))

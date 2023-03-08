@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix backspace and delete keys breaking after selecting a formula text cell.",
+    "issue_number": 1085,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

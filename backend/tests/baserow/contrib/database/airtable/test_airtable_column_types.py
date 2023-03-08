@@ -1,6 +1,5 @@
 import pytest
 import responses
-from pytz import UTC, timezone
 
 from baserow.contrib.database.airtable.airtable_column_types import (
     CheckboxAirtableColumnType,
@@ -45,7 +44,7 @@ def test_unknown_column_type():
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert baserow_field is None
     assert baserow_field is None
@@ -60,7 +59,7 @@ def test_unknown_column_type():
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert baserow_field is None
     assert baserow_field is None
@@ -78,7 +77,7 @@ def test_airtable_import_text_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, TextField)
     assert isinstance(airtable_column_type, TextAirtableColumnType)
@@ -97,7 +96,7 @@ def test_airtable_import_checkbox_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, BooleanField)
     assert isinstance(airtable_column_type, CheckboxAirtableColumnType)
@@ -125,14 +124,14 @@ def test_airtable_import_created_on_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, CreatedOnField)
     assert isinstance(airtable_column_type, FormulaAirtableColumnType)
     assert baserow_field.date_format == "ISO"
     assert baserow_field.date_include_time is False
     assert baserow_field.date_time_format == "24"
-    assert baserow_field.timezone == "UTC"
+    assert baserow_field.date_force_timezone is None
 
     airtable_field = {
         "id": "fldcTpJuoUVpsDNoszO",
@@ -154,18 +153,18 @@ def test_airtable_import_created_on_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, CreatedOnField)
     assert isinstance(airtable_column_type, FormulaAirtableColumnType)
     assert baserow_field.date_format == "EU"
     assert baserow_field.date_include_time is True
     assert baserow_field.date_time_format == "12"
-    assert baserow_field.timezone == "Europe/Amsterdam"
+    assert baserow_field.date_force_timezone == "Europe/Amsterdam"
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", UTC, {}
+            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", {}
         )
         is None
     )
@@ -184,7 +183,7 @@ def test_airtable_import_date_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, DateField)
     assert isinstance(airtable_column_type, DateAirtableColumnType)
@@ -194,19 +193,19 @@ def test_airtable_import_date_column(data_fixture, api_client):
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", UTC, {}
+            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", {}
         )
         == "2022-01-03"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "0999-02-04T14:51:00.000Z", UTC, {}
+            {}, airtable_field, baserow_field, "0999-02-04T14:51:00.000Z", {}
         )
         == "0999-02-04"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, None, UTC, {}
+            {}, airtable_field, baserow_field, None, {}
         )
         is None
     )
@@ -228,7 +227,7 @@ def test_airtable_import_european_date_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, DateField)
     assert isinstance(airtable_column_type, DateAirtableColumnType)
@@ -238,19 +237,19 @@ def test_airtable_import_european_date_column(data_fixture, api_client):
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", UTC, {}
+            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", {}
         )
         == "2022-01-03"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2020-08-27T21:10:24.828Z", UTC, {}
+            {}, airtable_field, baserow_field, "2020-08-27T21:10:24.828Z", {}
         )
         == "2020-08-27"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, None, UTC, {}
+            {}, airtable_field, baserow_field, None, {}
         )
         is None
     )
@@ -274,7 +273,7 @@ def test_airtable_import_datetime_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, DateField)
     assert isinstance(airtable_column_type, DateAirtableColumnType)
@@ -284,19 +283,19 @@ def test_airtable_import_datetime_column(data_fixture, api_client):
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", UTC, {}
+            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", {}
         )
         == "2022-01-03T14:51:00+00:00"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2020-08-27T21:10:24.828Z", UTC, {}
+            {}, airtable_field, baserow_field, "2020-08-27T21:10:24.828Z", {}
         )
         == "2020-08-27T21:10:24.828000+00:00"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, None, UTC, {}
+            {}, airtable_field, baserow_field, None, {}
         )
         is None
     )
@@ -304,74 +303,7 @@ def test_airtable_import_datetime_column(data_fixture, api_client):
 
 @pytest.mark.django_db
 @responses.activate
-def test_airtable_import_date_with_different_default_timezone_column(
-    data_fixture, api_client
-):
-    airtable_field = {
-        "id": "fldyAXIzheHfugGhuFD",
-        "name": "ISO DATE",
-        "type": "date",
-        "typeOptions": {"isDateTime": False, "dateFormat": "ISO"},
-    }
-    (
-        baserow_field,
-        airtable_column_type,
-    ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
-    )
-    assert isinstance(baserow_field, DateField)
-    assert isinstance(airtable_column_type, DateAirtableColumnType)
-    assert baserow_field.date_format == "ISO"
-    assert baserow_field.date_include_time is False
-    assert baserow_field.date_time_format == "24"
-
-    amsterdam = timezone("Europe/Amsterdam")
-    assert (
-        airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T23:51:00.000Z", amsterdam, {}
-        )
-        == "2022-01-04"
-    )
-
-
-@pytest.mark.django_db
-@responses.activate
-def test_airtable_import_date_with_different_airtable_timezone_column(
-    data_fixture, api_client
-):
-    airtable_field = {
-        "id": "fldyAXIzheHfugGhuFD",
-        "name": "ISO DATE",
-        "type": "date",
-        "typeOptions": {
-            "isDateTime": False,
-            "dateFormat": "ISO",
-            "timeZone": "Europe/Amsterdam",
-        },
-    }
-    (
-        baserow_field,
-        airtable_column_type,
-    ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
-    )
-    assert isinstance(baserow_field, DateField)
-    assert isinstance(airtable_column_type, DateAirtableColumnType)
-    assert baserow_field.date_format == "ISO"
-    assert baserow_field.date_include_time is False
-    assert baserow_field.date_time_format == "24"
-
-    assert (
-        airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T23:51:00.000Z", UTC, {}
-        )
-        == "2022-01-04"
-    )
-
-
-@pytest.mark.django_db
-@responses.activate
-def test_airtable_import_datetime_with_different_default_timezone_column(
+def test_airtable_import_datetime_with_default_timezone_column(
     data_fixture, api_client
 ):
     airtable_field = {
@@ -389,20 +321,57 @@ def test_airtable_import_datetime_with_different_default_timezone_column(
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, DateField)
     assert isinstance(airtable_column_type, DateAirtableColumnType)
     assert baserow_field.date_format == "ISO"
     assert baserow_field.date_include_time is True
     assert baserow_field.date_time_format == "24"
+    assert baserow_field.date_force_timezone is None
 
-    amsterdam = timezone("Europe/Amsterdam")
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T23:51:00.000Z", amsterdam, {}
+            {}, airtable_field, baserow_field, "2022-01-03T23:51:00.000Z", {}
         )
-        == "2022-01-04T00:51:00+00:00"
+        == "2022-01-03T23:51:00+00:00"
+    )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_airtable_import_datetime_with_different_default_timezone_column(
+    data_fixture, api_client
+):
+    airtable_field = {
+        "id": "fldEB5dp0mNjVZu0VJI",
+        "name": "Date",
+        "type": "date",
+        "typeOptions": {
+            "isDateTime": True,
+            "dateFormat": "Local",
+            "timeFormat": "24hour",
+            "timeZone": "Europe/Amsterdam",
+        },
+    }
+    (
+        baserow_field,
+        airtable_column_type,
+    ) = airtable_column_type_registry.from_airtable_column_to_serialized(
+        {}, airtable_field
+    )
+    assert isinstance(baserow_field, DateField)
+    assert isinstance(airtable_column_type, DateAirtableColumnType)
+    assert baserow_field.date_format == "ISO"
+    assert baserow_field.date_include_time is True
+    assert baserow_field.date_time_format == "24"
+    assert baserow_field.date_force_timezone == "Europe/Amsterdam"
+
+    assert (
+        airtable_column_type.to_baserow_export_serialized_value(
+            {}, airtable_field, baserow_field, "2022-01-03T23:51:00.000Z", {}
+        )
+        == "2022-01-03T23:51:00+00:00"
     )
 
 
@@ -424,7 +393,7 @@ def test_airtable_import_datetime_edge_case_1(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, DateField)
     assert isinstance(airtable_column_type, DateAirtableColumnType)
@@ -432,15 +401,9 @@ def test_airtable_import_datetime_edge_case_1(data_fixture, api_client):
     assert baserow_field.date_include_time is True
     assert baserow_field.date_time_format == "24"
 
-    amsterdam = timezone("Europe/Amsterdam")
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {},
-            airtable_field,
-            baserow_field,
-            "+020222-03-28T00:00:00.000Z",
-            amsterdam,
-            {},
+            {}, airtable_field, baserow_field, "+020222-03-28T00:00:00.000Z", {}
         )
         is None
     )
@@ -459,20 +422,20 @@ def test_airtable_import_email_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, EmailField)
     assert isinstance(airtable_column_type, TextAirtableColumnType)
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "NOT_EMAIL", UTC, {}
+            {}, airtable_field, baserow_field, "NOT_EMAIL", {}
         )
         == ""
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "test@test.nl", UTC, {}
+            {}, airtable_field, baserow_field, "test@test.nl", {}
         )
         == "test@test.nl"
     )
@@ -491,7 +454,7 @@ def test_airtable_import_multiple_attachment_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, FileField)
     assert isinstance(airtable_column_type, MultipleAttachmentAirtableColumnType)
@@ -525,7 +488,6 @@ def test_airtable_import_multiple_attachment_column(data_fixture, api_client):
                 "size": 503296,
             },
         ],
-        UTC,
         files_to_download,
     ) == [
         {
@@ -570,14 +532,14 @@ def test_airtable_import_last_modified_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, LastModifiedField)
     assert isinstance(airtable_column_type, FormulaAirtableColumnType)
     assert baserow_field.date_format == "ISO"
     assert baserow_field.date_include_time is False
     assert baserow_field.date_time_format == "24"
-    assert baserow_field.timezone == "UTC"
+    assert baserow_field.date_force_timezone is None
 
     airtable_field = {
         "id": "fldws6n8xdrEJrMxJFJ",
@@ -602,18 +564,18 @@ def test_airtable_import_last_modified_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, LastModifiedField)
     assert isinstance(airtable_column_type, FormulaAirtableColumnType)
     assert baserow_field.date_format == "US"
     assert baserow_field.date_include_time is True
     assert baserow_field.date_time_format == "12"
-    assert baserow_field.timezone == "Europe/Amsterdam"
+    assert baserow_field.date_force_timezone == "Europe/Amsterdam"
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", UTC, {}
+            {}, airtable_field, baserow_field, "2022-01-03T14:51:00.000Z", {}
         )
         == "2022-01-03T14:51:00+00:00"
     )
@@ -637,7 +599,7 @@ def test_airtable_import_foreign_key_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {"id": "tblxxx"}, airtable_field, UTC
+        {"id": "tblxxx"}, airtable_field
     )
     assert isinstance(baserow_field, LinkRowField)
     assert isinstance(airtable_column_type, ForeignKeyAirtableColumnType)
@@ -663,7 +625,6 @@ def test_airtable_import_foreign_key_column(data_fixture, api_client):
                 "foreignRowDisplayName": "Bram 2",
             },
         ],
-        UTC,
         {},
     ) == [1, 2]
 
@@ -683,7 +644,7 @@ def test_airtable_import_foreign_key_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {"id": "tblRpq315qnnIcg5IjI"}, airtable_field, UTC
+        {"id": "tblRpq315qnnIcg5IjI"}, airtable_field
     )
     assert isinstance(baserow_field, LinkRowField)
     assert isinstance(airtable_column_type, ForeignKeyAirtableColumnType)
@@ -703,14 +664,14 @@ def test_airtable_import_multiline_text_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, LongTextField)
     assert isinstance(airtable_column_type, MultilineTextAirtableColumnType)
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "test", UTC, {}
+            {}, airtable_field, baserow_field, "test", {}
         )
         == "test"
     )
@@ -728,7 +689,7 @@ def test_airtable_import_rich_text_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, LongTextField)
     assert isinstance(airtable_column_type, RichTextTextAirtableColumnType)
@@ -745,7 +706,7 @@ def test_airtable_import_rich_text_column(data_fixture, api_client):
     }
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, content, UTC, {}
+            {}, airtable_field, baserow_field, content, {}
         )
         == "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere "
         "cubilia curae; Class aptent taciti sociosqu ad litora."
@@ -782,7 +743,7 @@ def test_airtable_import_multi_select_column(
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, MultipleSelectField)
     assert isinstance(airtable_column_type, MultiSelectAirtableColumnType)
@@ -818,7 +779,7 @@ def test_airtable_import_number_integer_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
@@ -827,31 +788,31 @@ def test_airtable_import_number_integer_column(data_fixture, api_client):
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "10", UTC, {}
+            {}, airtable_field, baserow_field, "10", {}
         )
         == "10"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, 10, UTC, {}
+            {}, airtable_field, baserow_field, 10, {}
         )
         == "10"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "-10", UTC, {}
+            {}, airtable_field, baserow_field, "-10", {}
         )
         is None
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, -10, UTC, {}
+            {}, airtable_field, baserow_field, -10, {}
         )
         is None
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, None, UTC, {}
+            {}, airtable_field, baserow_field, None, {}
         )
         is None
     )
@@ -874,7 +835,7 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
@@ -895,7 +856,7 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
@@ -904,31 +865,31 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "10.22", UTC, {}
+            {}, airtable_field, baserow_field, "10.22", {}
         )
         == "10.22"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, 10, UTC, {}
+            {}, airtable_field, baserow_field, 10, {}
         )
         == "10"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "-10.555", UTC, {}
+            {}, airtable_field, baserow_field, "-10.555", {}
         )
         == "-10.555"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, -10, UTC, {}
+            {}, airtable_field, baserow_field, -10, {}
         )
         == "-10"
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, None, UTC, {}
+            {}, airtable_field, baserow_field, None, {}
         )
         is None
     )
@@ -947,7 +908,7 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
@@ -963,20 +924,20 @@ def test_airtable_import_phone_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, PhoneNumberField)
     assert isinstance(airtable_column_type, PhoneAirtableColumnType)
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "NOT_PHONE", UTC, {}
+            {}, airtable_field, baserow_field, "NOT_PHONE", {}
         )
         == ""
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "1234", UTC, {}
+            {}, airtable_field, baserow_field, "1234", {}
         )
         == "1234"
     )
@@ -995,14 +956,14 @@ def test_airtable_import_rating_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, RatingField)
     assert isinstance(airtable_column_type, RatingAirtableColumnType)
     assert baserow_field.max_value == 5
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, 5, UTC, {}
+            {}, airtable_field, baserow_field, 5, {}
         )
         == 5
     )
@@ -1038,7 +999,7 @@ def test_airtable_import_select_column(
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, SingleSelectField)
     assert isinstance(airtable_column_type, SelectAirtableColumnType)
@@ -1070,20 +1031,20 @@ def test_airtable_import_url_column(data_fixture, api_client):
         baserow_field,
         airtable_column_type,
     ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-        {}, airtable_field, UTC
+        {}, airtable_field
     )
     assert isinstance(baserow_field, URLField)
     assert isinstance(airtable_column_type, TextAirtableColumnType)
 
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "NOT_URL", UTC, {}
+            {}, airtable_field, baserow_field, "NOT_URL", {}
         )
         == ""
     )
     assert (
         airtable_column_type.to_baserow_export_serialized_value(
-            {}, airtable_field, baserow_field, "https://test.nl", UTC, {}
+            {}, airtable_field, baserow_field, "https://test.nl", {}
         )
         == "https://test.nl"
     )

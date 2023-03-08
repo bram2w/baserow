@@ -1,0 +1,15 @@
+{
+    "type": "feature",
+    "message": "New templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Non-profit Organization Management",
+        "Elementary School Management",
+        "Call Center Log",
+        "Individual Medical Record",
+        "Trip History",
+        "Favorite Food Places",
+        "Wedding Client Planner"
+    ],
+    "created_at": "2023-02-10"
+}

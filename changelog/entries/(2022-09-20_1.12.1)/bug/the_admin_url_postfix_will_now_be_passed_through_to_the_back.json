@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "The /admin url postfix will now be passed through to the backend API for plugins to use.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

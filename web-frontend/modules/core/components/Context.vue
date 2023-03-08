@@ -153,6 +153,50 @@ export default {
       this.$emit('shown')
     },
     /**
+     * Toggles context menu next to mouse when click event has happened
+     */
+    toggleNextToMouse(
+      clickEvent,
+      vertical = 'bottom',
+      horizontal = 'right',
+      verticalOffset = 10,
+      horizontalOffset = 0,
+      value = true
+    ) {
+      this.toggle(
+        {
+          top: clickEvent.pageY,
+          left: clickEvent.pageX,
+        },
+        vertical,
+        horizontal,
+        verticalOffset,
+        horizontalOffset,
+        value
+      )
+    },
+    /**
+     * Shows context menu next to mouse when click event has happened
+     */
+    showNextToMouse(
+      clickEvent,
+      vertical = 'bottom',
+      horizontal = 'right',
+      verticalOffset = 10,
+      horizontalOffset = 0
+    ) {
+      this.show(
+        {
+          top: clickEvent.pageY,
+          left: clickEvent.pageX,
+        },
+        vertical,
+        horizontal,
+        verticalOffset,
+        horizontalOffset
+      )
+    },
+    /**
      * Forces the child elements to render by setting `openedOnce` to `true`. This
      * could be useful when children of the context must be accessed before the context
      * has been opened.
@@ -204,30 +248,123 @@ export default {
       }
 
       const targetRect = target.getBoundingClientRect()
-      const contextRect = this.$el.getBoundingClientRect()
-      const positions = { top: null, right: null, bottom: null, left: null }
 
-      if (!visible) {
-        target.classList.remove('forced-block')
-      }
+      const positions = { top: null, right: null, bottom: null, left: null }
 
       // Take into account that the document might be scrollable.
       verticalOffset += document.documentElement.scrollTop
       horizontalOffset += document.documentElement.scrollLeft
 
-      // Calculate if top, bottom, left and right positions are possible.
+      const { vertical: verticalAdjusted, horizontal: horizontalAdjusted } =
+        this.checkForEdges(
+          targetRect,
+          vertical,
+          horizontal,
+          verticalOffset,
+          horizontalOffset
+        )
+
+      // Calculate the correct positions for horizontal and vertical values.
+      if (horizontalAdjusted === 'left') {
+        positions.left = targetRect.left + horizontalOffset
+      }
+
+      if (horizontalAdjusted === 'right') {
+        positions.right =
+          window.innerWidth - targetRect.right - horizontalOffset
+      }
+
+      if (verticalAdjusted === 'bottom') {
+        positions.top = targetRect.bottom + verticalOffset
+      }
+
+      if (verticalAdjusted === 'top') {
+        positions.bottom = window.innerHeight - targetRect.top + verticalOffset
+      }
+
+      if (!visible) {
+        target.classList.remove('forced-block')
+      }
+
+      return positions
+    },
+    /**
+     * Calculates the desired position based on the provided coordinates. For now this
+     * is only used by the row context menu, but because of the reserved space of the
+     * grid on the right and bottom there is always room for the context. Therefore we
+     * do not need to check if the context fits.
+     */
+    calculatePositionFixed(
+      coordinates,
+      vertical,
+      horizontal,
+      verticalOffset,
+      horizontalOffset
+    ) {
+      const targetTop = coordinates.top
+      const targetLeft = coordinates.left
+      const targetBottom = window.innerHeight - targetTop
+      const targetRight = window.innerWidth - targetLeft
+
+      const contextRect = this.$el.getBoundingClientRect()
+      const positions = { top: null, right: null, bottom: null, left: null }
+
+      // Take into account that the document might be scrollable.
+      verticalOffset += document.documentElement.scrollTop
+      horizontalOffset += document.documentElement.scrollLeft
+
+      const { vertical: verticalAdjusted, horizontal: horizontalAdjusted } =
+        this.checkForEdges(
+          {
+            top: targetTop,
+            left: targetLeft,
+            bottom: targetBottom,
+            right: targetRight,
+          },
+          vertical,
+          horizontal,
+          verticalOffset,
+          horizontalOffset
+        )
+
+      // Calculate the correct positions for horizontal and vertical values.
+      if (horizontalAdjusted === 'left') {
+        positions.left = targetLeft - contextRect.width + horizontalOffset
+      }
+
+      if (horizontalAdjusted === 'right') {
+        positions.right = targetRight - contextRect.width - horizontalOffset
+      }
+
+      if (verticalAdjusted === 'bottom') {
+        positions.top = targetTop + verticalOffset
+      }
+
+      if (verticalAdjusted === 'top') {
+        positions.bottom = targetBottom + verticalOffset
+      }
+
+      return positions
+    },
+    /**
+     * Checks if we need to adjust the horizontal/vertical value of where the context
+     * menu will be placed. This might happen if the screen size would cause the context
+     * to clip out of the screen if positioned in a certain position.
+     *
+     * @returns {{horizontal: string, vertical: string}}
+     */
+    checkForEdges(
+      targetRect,
+      vertical,
+      horizontal,
+      verticalOffset,
+      horizontalOffset
+    ) {
+      const contextRect = this.$el.getBoundingClientRect()
       const canTop = targetRect.top - contextRect.height - verticalOffset > 0
       const canBottom =
         window.innerHeight -
-          targetRect.bottom -
-          contextRect.height -
-          verticalOffset >
-        0
-      const canOverTop =
-        targetRect.bottom - contextRect.height - verticalOffset > 0
-      const canOverBottom =
-        window.innerHeight -
-          targetRect.bottom -
+          targetRect.top -
           contextRect.height -
           verticalOffset >
         0
@@ -235,7 +372,7 @@ export default {
         targetRect.right - contextRect.width - horizontalOffset > 0
       const canLeft =
         window.innerWidth -
-          targetRect.left -
+          targetRect.right -
           contextRect.width -
           horizontalOffset >
         0
@@ -250,14 +387,6 @@ export default {
         vertical = 'bottom'
       }
 
-      if (vertical === 'over-bottom' && !canOverBottom && canOverTop) {
-        vertical = 'over-top'
-      }
-
-      if (vertical === 'over-top' && !canOverTop) {
-        vertical = 'over-bottom'
-      }
-
       if (horizontal === 'left' && !canLeft && canRight) {
         horizontal = 'right'
       }
@@ -266,48 +395,7 @@ export default {
         horizontal = 'left'
       }
 
-      // Calculate the correct positions for horizontal and vertical values.
-      if (horizontal === 'left') {
-        positions.left = targetRect.left + horizontalOffset
-      }
-
-      if (horizontal === 'right') {
-        positions.right =
-          window.innerWidth - targetRect.right - horizontalOffset
-      }
-
-      if (vertical === 'bottom') {
-        positions.top = targetRect.bottom + verticalOffset
-      }
-
-      if (vertical === 'top') {
-        positions.bottom = window.innerHeight - targetRect.top + verticalOffset
-      }
-
-      if (vertical === 'over-bottom') {
-        positions.top = targetRect.top + verticalOffset
-      }
-
-      if (vertical === 'over-top') {
-        positions.bottom =
-          window.innerHeight - targetRect.bottom + verticalOffset
-      }
-
-      return positions
-    },
-    /**
-     * Calculates the desired position based on the provided coordinates. For now this
-     * is only used by the row context menu, but because of the reserved space of the
-     * grid on the right and bottom there is always room for the context. Therefore we
-     * do not need to check if the context fits.
-     */
-    calculatePositionFixed(coordinates) {
-      return {
-        left: coordinates.left,
-        top: coordinates.top,
-        right: null,
-        bottom: null,
-      }
+      return { vertical, horizontal }
     },
   },
 }

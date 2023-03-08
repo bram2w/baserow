@@ -2,7 +2,6 @@ import base64
 import binascii
 import hashlib
 import json
-import logging
 from os.path import dirname, join
 from typing import Any, Dict, List, Optional, Union
 
@@ -25,6 +24,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from dateutil import parser
+from loguru import logger
 from requests.exceptions import RequestException
 from rest_framework.status import HTTP_200_OK
 
@@ -53,7 +53,6 @@ from .exceptions import (
 from .models import LicenseUser
 from .registries import license_type_registry
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
@@ -254,13 +253,14 @@ class LicenseHandler:
             try:
                 license_type = license_object.license_type
                 usage = license_type.get_seat_usage_summary(license_object)
-                extra_info = {
-                    "id": license_object.license_id,
-                    "seats_taken": usage.seats_taken,
-                    "free_users_count": usage.free_users_count,
-                    "num_users_with_highest_role": usage.num_users_with_highest_role,
-                }
-                extra_license_info.append(extra_info)
+                if usage is not None:
+                    extra_info = {
+                        "id": license_object.license_id,
+                        "seats_taken": usage.seats_taken,
+                        "free_users_count": usage.free_users_count,
+                        "highest_role_per_user_id": usage.highest_role_per_user_id,
+                    }
+                    extra_license_info.append(extra_info)
             except (InvalidLicenseError, UnsupportedLicenseError, DatabaseError):
                 pass
 
@@ -389,12 +389,10 @@ class LicenseHandler:
                 license_object.delete()
                 continue
 
-            seats_taken = license_object.license_type.get_seat_usage_summary(
-                license_object
-            ).seats_taken
-            if seats_taken > license_object.seats:
+            summary = license_object.license_type.get_seat_usage_summary(license_object)
+            if summary is not None and summary.seats_taken > license_object.seats:
                 license_object.license_type.handle_seat_overflow(
-                    seats_taken, license_object
+                    summary.seats_taken, license_object
                 )
 
             license_object.last_check = now()

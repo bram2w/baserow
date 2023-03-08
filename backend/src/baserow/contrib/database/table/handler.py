@@ -1,4 +1,3 @@
-import logging
 import traceback
 from typing import Any, Dict, List, NewType, Optional, Tuple, cast
 
@@ -8,6 +7,9 @@ from django.db import DatabaseError, ProgrammingError
 from django.db.models import QuerySet, Sum
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
+
+from loguru import logger
+from opentelemetry import trace
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
@@ -30,6 +32,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import application_type_registry
+from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
 
@@ -54,10 +57,10 @@ BATCH_SIZE = 1024
 
 TableForUpdate = NewType("TableForUpdate", Table)
 
-logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
-class TableHandler:
+class TableHandler(metaclass=baserow_trace_methods(tracer)):
     def get_table(
         self, table_id: int, base_queryset: Optional[QuerySet] = None
     ) -> Table:

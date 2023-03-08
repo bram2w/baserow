@@ -1,6 +1,7 @@
 import secrets
 
 from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.db.models import Q
@@ -40,6 +41,10 @@ FORM_VIEW_SUBMIT_ACTION_CHOICES = (
     (FORM_VIEW_SUBMIT_ACTION_REDIRECT, "Redirect"),
 )
 
+OWNERSHIP_TYPE_COLLABORATIVE = "collaborative"
+DEFAULT_OWNERSHIP_TYPE = OWNERSHIP_TYPE_COLLABORATIVE
+VIEW_OWNERSHIP_TYPES = [OWNERSHIP_TYPE_COLLABORATIVE]
+
 
 def get_default_view_content_type():
     return ContentType.objects.get_for_model(View)
@@ -53,6 +58,7 @@ class View(
     PolymorphicContentTypeMixin,
     models.Model,
 ):
+
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -93,6 +99,16 @@ class View(
     show_logo = models.BooleanField(
         default=True,
         help_text="Indicates whether the logo should be shown in the public view.",
+    )
+    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    ownership_type = models.CharField(
+        max_length=255,
+        default=DEFAULT_OWNERSHIP_TYPE,
+        help_text=(
+            "Indicates how the access to the view is determined."
+            " By default, views are collaborative and shared for all users"
+            " that have access to the table."
+        ),
     )
 
     @property

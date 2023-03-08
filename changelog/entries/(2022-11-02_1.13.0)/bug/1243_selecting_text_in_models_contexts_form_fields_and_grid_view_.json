@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Selecting text in models, contexts, form fields and grid view cells no longer unselects when releasing the mouse outside.",
+    "issue_number": 1243,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

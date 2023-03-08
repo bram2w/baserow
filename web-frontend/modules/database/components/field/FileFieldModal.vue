@@ -25,7 +25,7 @@
               v-if="!readOnly"
               v-show="!renaming"
               class="file-field-modal__rename"
-              @click="$refs.rename.edit()"
+              @click.stop="$refs.rename.edit()"
             >
               <i class="fa fa-pen"></i>
             </a>
@@ -40,18 +40,22 @@
           class="
             file-field-modal__body-nav file-field-modal__body-nav--previous
           "
-          @click="previous()"
+          @click.stop="previous()"
         >
           <i class="fas fa-chevron-left"></i>
         </a>
         <a
           class="file-field-modal__body-nav file-field-modal__body-nav--next"
-          @click="next()"
+          @click.stop="next()"
         >
           <i class="fas fa-chevron-right"></i>
         </a>
         <div v-if="preview !== null" class="file-field-modal__preview">
-          <PreviewAny :mime-type="preview.mime_type" :url="preview.url">
+          <PreviewAny
+            ref="modalPreview"
+            :mime-type="preview.mime_type"
+            :url="preview.url"
+          >
             <template #fallback>
               <div class="file-field-modal__preview-icon">
                 <i class="fas" :class="getIconClass(preview.mime_type)"></i>
@@ -70,7 +74,7 @@
             <a
               class="file-field-modal__nav-link"
               :class="{ active: index === selected }"
-              @click="selected = index"
+              @click.stop="selected = index"
             >
               <img
                 v-if="file.is_image"
@@ -91,12 +95,12 @@
             :url="preview.url"
             :filename="preview.visible_name"
             :loading-class="'file-field-modal__action--loading'"
-            ><i class="fas fa-download"></i
+            ><i class="fas fa-download" @click.stop=""></i
           ></DownloadLink>
           <a
             v-if="!readOnly"
             class="file-field-modal__action"
-            @click="remove(selected)"
+            @click.stop="remove(selected)"
           >
             <i class="fas fa-trash"></i>
           </a>
@@ -186,6 +190,18 @@ export default {
         this.next()
       }
       return baseModal.methods.keyup.call(this, event)
+    },
+    outside(event) {
+      if (event.target === this.$refs.rename.$el) {
+        return
+      }
+      const modalPreview = this.$refs.modalPreview.$el
+      const targetClassname = event.target.className
+      const isPreviewImage =
+        !!modalPreview.getElementsByClassName(targetClassname).length
+      if (!isPreviewImage && this.canClose) {
+        this.hide()
+      }
     },
   },
 }

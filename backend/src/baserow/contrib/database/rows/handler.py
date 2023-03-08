@@ -2,15 +2,18 @@ import re
 from collections import defaultdict
 from copy import copy
 from decimal import Decimal
-from math import ceil, floor
+from math import ceil
 from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import F, Max, Q, QuerySet
+from django.db import connection, transaction
+from django.db.models import Max, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 from django.utils.encoding import force_str
+
+from opentelemetry import metrics, trace
+from psycopg2 import sql
 
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
@@ -31,12 +34,17 @@ from baserow.contrib.database.table.operations import (
 )
 from baserow.contrib.database.trash.models import TrashedRows
 from baserow.core.handler import CoreHandler
+from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
-from .exceptions import RowDoesNotExist, RowIdsNotUnique
+from .exceptions import (
+    CannotCalculateIntermediateOrder,
+    RowDoesNotExist,
+    RowIdsNotUnique,
+)
 from .operations import (
     DeleteDatabaseRowOperationType,
     MoveRowDatabaseRowOperationType,
@@ -46,10 +54,14 @@ from .operations import (
 from .signals import (
     before_rows_delete,
     before_rows_update,
+    row_orders_recalculated,
     rows_created,
     rows_deleted,
     rows_updated,
 )
+from .utils import find_intermediate_order
+
+tracer = trace.get_tracer(__name__)
 
 GeneratedTableModelForUpdate = NewType(
     "GeneratedTableModelForUpdate", GeneratedTableModel
@@ -59,6 +71,23 @@ RowsForUpdate = NewType("RowsForUpdate", QuerySet)
 
 
 BATCH_SIZE = 1024
+
+meter = metrics.get_meter(__name__)
+rows_created_counter = meter.create_counter(
+    "baserow.rows_created",
+    unit="1",
+    description="The number of rows created in user tables.",
+)
+rows_updated_counter = meter.create_counter(
+    "baserow.rows_updated",
+    unit="1",
+    description="The number of rows updated in user tables.",
+)
+rows_deleted_counter = meter.create_counter(
+    "baserow.rows_deleted",
+    unit="1",
+    description="The number of rows deleted in user tables.",
+)
 
 
 def serialize_errors_recursive(error):
@@ -90,7 +119,7 @@ def prepare_field_errors(field_errors):
     }
 
 
-class RowHandler:
+class RowHandler(metaclass=baserow_trace_methods(tracer)):
     def prepare_values(self, fields, values):
         """
         Prepares a set of values so that they can be created or updated in the database.
@@ -257,51 +286,84 @@ class RowHandler:
 
         return values, manytomany_values
 
-    def get_order_before_row(
+    def _get_unique_orders_before_row(
         self,
-        before: GeneratedTableModel,
+        before_row: GeneratedTableModel,
         model: Type[GeneratedTableModel],
         amount: int = 1,
-    ) -> Tuple[Decimal, Decimal]:
+    ) -> List[Decimal]:
         """
-        Calculates a new unique order lower than the provided before row
-        order and a step representing the change needed between multiple rows if
-        multiple rows are being placed at once.
-        This order can be used by existing or new rows. Several other rows
-        could be updated as their order might need to change.
+        Calculates a list of unique decimal orders that can safely be used before the
+        provided `before_row`.
 
-        :param before: The row instance where the before order must be calculated for.
+        :param before_row: The row instance where the before orders must be
+            calculated for.
         :param model: The model of the related table
-        :param amount: The number of rows being placed.
-        :return: The order for the last inserted row and the
-            step (change) that should be used between all new rows.
-        :rtype: tuple(Decimal, Decimal)
+        :param amount: The number of orders that must be requested. Can be higher if
+            multiple rows are inserted or moved.
+        :return: A list of decimals containing safe to use orders in order.
         """
 
-        if before:
-            # When the rows are being inserted before an existing row, the order
-            # of the last new row is calculated by subtracting a fraction of
-            # the "before" row order.
-            # The same fraction is also going to be subtracted from the other
-            # rows that have been placed before. By using these fractions we don't
-            # have to re-order every row in the table.
-            step = Decimal("0.00000000000000000001")
-            order_last_row = before.order - step
-            model.objects.filter(
-                order__gt=floor(order_last_row), order__lte=order_last_row
-            ).update(order=F("order") - (step * amount))
+        # In order to find the intermediate order, we need to figure out what the
+        # order of the before adjacent row is. This queryset finds it in an
+        # efficient way.
+        adjacent_order = (
+            model.objects.filter(order__lt=before_row.order)
+            .aggregate(max=Max("order"))
+            .get("max")
+        ) or Decimal("0")
+        new_orders = []
+        new_order = adjacent_order
+        for i in range(0, amount):
+            float_order = find_intermediate_order(new_order, before_row.order)
+            # Row orders "only" store 20 decimal places. We're already rounding it,
+            # so that the `order` will be set immediately.
+            new_order = round(Decimal(float_order), 20)
+            new_orders.append(new_order)
+        return new_orders
+
+    def get_unique_orders_before_row(
+        self,
+        before_row: Optional[GeneratedTableModel],
+        model: Type[GeneratedTableModel],
+        amount: int = 1,
+    ) -> List[Decimal]:
+        """
+        Calculates a list of unique decimal orders that can safely be used before the
+        provided `before_row` or at the end of the table, depending on whether the
+        `before_row` value is provided.
+
+        Note that this method can trigger an update of all the rows in the table in
+        the event all the orders must be recalculated.
+
+        :param before_row: The row instance where the before orders must be
+            calculated for. If `None`, then it's assumed that the orders are for
+            the end of the table.
+        :param model: The model of the related table
+        :param amount: The number of orders that must be requested. Can be higher if
+            multiple rows are inserted or moved.
+        :return: A list of decimals containing safe to use orders in order.
+        """
+
+        if before_row:
+            try:
+                return self._get_unique_orders_before_row(before_row, model, amount)
+            except CannotCalculateIntermediateOrder:
+                # If the `find_intermediate_order` fails with a
+                # `CannotCalculateIntermediateOrder`, it means that it's not possible
+                # calculate an intermediate fraction. Therefore, must reset all the
+                # orders of the table (while respecting their original order),
+                # so that we can then can find the fraction any many more after.
+                self.recalculate_row_orders(model.baserow_table, model)
+                return self._get_unique_orders_before_row(before_row, model, amount)
         else:
-            # Because the rows are by default added as last, we have to figure out
-            # what the highest order in the table is currently and increase that by
-            # the number of rows being inserted.
-            # The order of new rows should always be a whole number so the number is
-            # rounded up.
+            # If no `before_row` is provided, we can just find the highest value and
+            # add one to it.
             step = Decimal("1.00000000000000000000")
             order_last_row = ceil(
                 model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
-            ) + (step * amount)
-
-        return order_last_row, step
+            )
+            return [order_last_row + (step * i) for i in range(1, amount + 1)]
 
     def get_row(
         self,
@@ -653,8 +715,15 @@ class RowHandler:
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
-        values["order"] = self.get_order_before_row(before, model)[0]
+        values["order"] = self.get_unique_orders_before_row(before, model)[0]
         instance = model.objects.create(**values)
+        rows_created_counter.add(
+            1,
+            {
+                "baserow.table_id": table.id,
+                "baserow.database_id": table.database_id,
+            },
+        )
 
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
@@ -833,6 +902,13 @@ class RowHandler:
             getattr(row, name).set(value)
 
         row.save()
+        rows_updated_counter.add(
+            1,
+            {
+                "baserow.table_id": table.id,
+                "baserow.database_id": table.database_id,
+            },
+        )
 
         update_collector = FieldUpdateCollector(
             table,
@@ -914,7 +990,7 @@ class RowHandler:
         if model is None:
             model = table.get_model()
 
-        highest_order, step = self.get_order_before_row(
+        unique_orders = self.get_unique_orders_before_row(
             before_row, model, amount=len(rows_values)
         )
 
@@ -929,7 +1005,7 @@ class RowHandler:
         rows_relationships = []
         for index, row in enumerate(rows, start=-len(rows)):
             values, manytomany_values = self.extract_manytomany_values(row, model)
-            values["order"] = highest_order - (step * (abs(index + 1)))
+            values["order"] = unique_orders[index]
             instance = model(**values)
 
             relations = {
@@ -941,6 +1017,13 @@ class RowHandler:
 
         inserted_rows = model.objects.bulk_create(
             [row for (row, relations) in rows_relationships]
+        )
+        rows_created_counter.add(
+            len(rows_relationships),
+            {
+                "baserow.table_id": table.id,
+                "baserow.database_id": table.database_id,
+            },
         )
 
         many_to_many = defaultdict(list)
@@ -1472,6 +1555,13 @@ class RowHandler:
 
         if len(bulk_update_fields) > 0:
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
+            rows_updated_counter.add(
+                len(rows_to_update),
+                {
+                    "baserow.table_id": table.id,
+                    "baserow.database_id": table.database_id,
+                },
+            )
 
         update_collector = FieldUpdateCollector(
             table,
@@ -1594,7 +1684,7 @@ class RowHandler:
             self, rows=[row], user=user, table=table, model=model, updated_field_ids=[]
         )
 
-        row.order = self.get_order_before_row(before_row, model)[0]
+        row.order = self.get_unique_orders_before_row(before_row, model)[0]
         row.save()
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
@@ -1699,6 +1789,13 @@ class RowHandler:
         )
 
         TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
+        rows_deleted_counter.add(
+            1,
+            {
+                "baserow.table_id": table.id,
+                "baserow.database_id": table.database_id,
+            },
+        )
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
         field_cache = FieldCache()
@@ -1795,6 +1892,13 @@ class RowHandler:
         TrashHandler.trash(
             user, group, table.database, trashed_rows, parent_id=table.id
         )
+        rows_deleted_counter.add(
+            len(row_ids),
+            {
+                "baserow.table_id": table.id,
+                "baserow.database_id": table.database_id,
+            },
+        )
 
         updated_field_ids = []
         updated_fields = []
@@ -1838,3 +1942,64 @@ class RowHandler:
         )
 
         return trashed_rows
+
+    def recalculate_row_orders(self, table: Table, model: GeneratedTableModel = None):
+        """
+        Recalculates the order to whole numbers of all rows based on the existing
+        position for the provided table.
+
+        id     old_order    new_order
+        1      1.5000       2.0000
+        2      1.7500       3.0000
+        3      0.7500       1.0000
+
+        :param table: The table object for which the rows orders must be recalculated.
+        :param model: The already
+        """
+
+        if model is None:
+            model = table.get_model()
+
+        table_name = table.get_database_table_name()
+        ordering = model._meta.ordering
+
+        if len(ordering) != 2:
+            raise Exception(
+                "The ordering of the auto generated model has changed and must be "
+                "updated in the `recalculate_row_orders` method."
+            )
+
+        # Unfortunately, it's not possible to do this via the Django ORM. I've
+        # tried various ways, but ran into "Window expressions are not allowed" or
+        # 'NoneType' object has no attribute 'get_source_expressions' errors.
+        # More information can be found here:
+        # https://stackoverflow.com/questions/66022483/update-django-model-based-on-the-row-number-of-rows-produced-by-a-subquery-on-th
+        #
+        # model.objects_and_trash.annotate(
+        #     row_number=Window(
+        #         expression=RowNumber(),
+        #         order_by=[F(order) for order in model._meta.ordering],
+        #         )
+        #     ).update(order=F('row_number')
+        # )
+        with connection.cursor() as cursor:
+            raw_query = """
+                update {table_name} c1
+                  set "order" = c2.seqnum from (
+                    select c2.*, row_number() over (
+                        ORDER BY c2.{order_1}, c2.{order_2}
+                    ) as seqnum from {table_name} c2
+                  ) c2
+                where c2.id = c1.id
+            """
+            sql_query = sql.SQL(raw_query).format(
+                table_name=sql.Identifier(table_name),
+                order_1=sql.Identifier(ordering[0]),
+                order_2=sql.Identifier(ordering[1]),
+            )
+            cursor.execute(sql_query)
+
+        row_orders_recalculated.send(
+            self,
+            table=table,
+        )

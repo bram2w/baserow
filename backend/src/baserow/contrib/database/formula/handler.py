@@ -3,6 +3,8 @@ from typing import Dict, Optional, Set, Type
 
 from django.db.models import Expression, Model
 
+from opentelemetry import trace
+
 from baserow.contrib.database.fields.dependencies.types import FieldDependencies
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.formula import BaserowFormulaException
@@ -39,9 +41,20 @@ from baserow.contrib.database.formula.types.visitors import (
     FieldDependencyExtractingVisitor,
     FunctionsUsedVisitor,
 )
+from baserow.core.telemetry.utils import baserow_trace_methods
 
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import FormulaField
+
+
+tracer = trace.get_tracer(__name__)
+
+
+def _needs_periodic_update(expression: BaserowExpression):
+    functions_used: Set[BaserowFunctionDefinition] = expression.accept(
+        FunctionsUsedVisitor()
+    )
+    return any(getattr(f, "needs_periodic_update", False) for f in functions_used)
 
 
 def _expression_requires_refresh_after_insert(expression: BaserowExpression):
@@ -70,7 +83,7 @@ def _expression_requires_refresh_after_insert(expression: BaserowExpression):
     return any(f.requires_refresh_after_insert for f in functions_used)
 
 
-class FormulaHandler:
+class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
     """
     Contains all the methods used to interact with formulas and formula fields in
     Baserow.
@@ -333,6 +346,8 @@ class FormulaHandler:
 
         formula_field.internal_formula = internal_formula
         formula_field.version = BASEROW_FORMULA_VERSION
+
+        formula_field.needs_periodic_update = _needs_periodic_update(expression)
         expression_type.persist_onto_formula_field(formula_field)
         formula_field.requires_refresh_after_insert = refresh_after_insert
         return expression

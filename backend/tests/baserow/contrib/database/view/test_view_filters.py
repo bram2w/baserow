@@ -1,5 +1,5 @@
 import random
-from datetime import date, timedelta
+from datetime import date
 
 from django.db.models import Q
 from django.utils import timezone as django_timezone
@@ -8,6 +8,7 @@ from django.utils.timezone import datetime, make_aware
 import pytest
 from freezegun import freeze_time
 from pyinstrument import Profiler
+from pytest_unordered import unordered
 from pytz import timezone
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
@@ -18,7 +19,6 @@ from baserow.contrib.database.views.registries import (
     ViewFilterType,
     view_filter_type_registry,
 )
-from baserow.contrib.database.views.view_filters import BaseDateFieldLookupFilterType
 
 
 @pytest.mark.django_db
@@ -763,6 +763,389 @@ def test_contains_not_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_contains_word_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    long_text_field = data_fixture.create_long_text_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    field_handler = FieldHandler()
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula",
+        formula=f"field('{text_field.name}')",  # mimic the text field as it is, just to test the filter
+        formula_type="text",
+    )
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Multiple Select",
+        type_name="multiple_select",
+        select_options=[
+            {"value": "CC", "color": "blue"},
+            {"value": "DC", "color": "blue"},
+        ],
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="AC", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="BC", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="CE", color="green"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field, value="DE", color="yellow"
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{text_field.id}": "My name is John Doe.",
+            f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
+            f"field_{url_field.id}": "https://www.example.com",
+            f"field_{email_field.id}": "test.user@example.com",
+            f"field_{single_select_field.id}": option_a,
+        }
+    )
+    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "",
+            f"field_{long_text_field.id}": "",
+            f"field_{url_field.id}": "",
+            f"field_{email_field.id}": "",
+            f"field_{single_select_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "This is a test field with the word Johny.",
+            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+            "contains.\n A multiline approach.",
+            f"field_{url_field.id}": "https://www.examplewebsite.com",
+            f"field_{email_field.id}": "test.user@examplewebsite.com",
+            f"field_{single_select_field.id}": option_b,
+        }
+    )
+    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="contains_word", value="John"
+    )
+    # check for whole word in text field
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    # check for multiple words in text field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    # check for case insensitive in text field
+    view_filter.value = "JOHNY"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.value = "random"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = formula_field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = long_text_field
+    view_filter.value = "multiLINE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.field = url_field
+    view_filter.value = "exAmPle"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = url_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = email_field
+    view_filter.value = "ExamplE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = email_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = single_select_field
+    view_filter.value = "A"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = single_select_field
+    view_filter.value = "AC"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    view_filter.field = single_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "E"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = multiple_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    # multiple select field with multiple values does not work
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE,CE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
+def test_doesnt_contain_word_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    long_text_field = data_fixture.create_long_text_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    field_handler = FieldHandler()
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula",
+        formula=f"field('{text_field.name}')",  # mimic the text field as it is, just to test the filter
+        formula_type="text",
+    )
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Multiple Select",
+        type_name="multiple_select",
+        select_options=[
+            {"value": "CC", "color": "blue"},
+            {"value": "DC", "color": "blue"},
+        ],
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="AC", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="BC", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="CE", color="green"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field, value="DE", color="yellow"
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{text_field.id}": "My name is John Doe.",
+            f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
+            f"field_{url_field.id}": "https://www.example.com",
+            f"field_{email_field.id}": "test.user@example.com",
+            f"field_{single_select_field.id}": option_a,
+        }
+    )
+    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "",
+            f"field_{long_text_field.id}": "",
+            f"field_{url_field.id}": "",
+            f"field_{email_field.id}": "",
+            f"field_{single_select_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "This is a test field with the word Johny.",
+            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+            "contains.\n A multiline approach.",
+            f"field_{url_field.id}": "https://www.examplewebsite.com",
+            f"field_{email_field.id}": "test.user@examplewebsite.com",
+            f"field_{single_select_field.id}": option_b,
+        }
+    )
+    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="doesnt_contain_word", value="John"
+    )
+    # check for whole word in text field
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    # check for multiple words in text field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    # check for case insensitive in text field
+    view_filter.value = "JOHNY"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_3.id not in ids
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.value = "random"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = formula_field
+    view_filter.value = "John Doe"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = long_text_field
+    view_filter.value = "multiLINE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_3.id not in ids
+
+    view_filter.field = url_field
+    view_filter.value = "exAmPle"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = url_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = email_field
+    view_filter.value = "ExamplE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = email_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = single_select_field
+    view_filter.value = "A"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = single_select_field
+    view_filter.value = "AC"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    view_filter.field = single_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    view_filter.field = multiple_select_field
+    view_filter.value = "E"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    # multiple select field with multiple values does not work
+    view_filter.field = multiple_select_field
+    view_filter.value = "DE,CE"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+
+@pytest.mark.django_db
 def test_single_select_equal_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -1264,6 +1647,62 @@ def test_lower_than_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_date_equal_filter_type_with_timezone(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    date_time_field = data_fixture.create_date_field(
+        table=table, date_include_time=True
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+    utc = timezone("UTC")
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2020, 6, 17),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2023, 3, 3, 0, 0, 0), utc
+            ),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2019, 1, 1),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2020, 6, 17, 1, 30, 5), utc
+            ),
+        }
+    )
+    model.objects.create(
+        **{f"field_{date_field.id}": None, f"field_{date_time_field.id}": None}
+    )
+    model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2010, 1, 1),
+            f"field_{date_time_field.id}": make_aware(
+                datetime(2010, 2, 4, 2, 45, 45), utc
+            ),
+        }
+    )
+    FieldHandler().update_field(
+        user, date_time_field, date_force_timezone="Europe/Chisinau"
+    )
+    ViewHandler().create_filter(
+        user,
+        grid_view,
+        date_time_field,
+        "date_equal",
+        "Europe/Chisinau?2023-03-03 02:00",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+
+@pytest.mark.django_db
 def test_date_equal_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -1391,10 +1830,10 @@ def test_last_modified_date_equal_filter_type(data_fixture):
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
     last_modified_field_date = data_fixture.create_last_modified_field(
-        table=table, date_include_time=False, timezone="Europe/Berlin"
+        table=table, date_include_time=False
     )
     last_modified_field_datetime = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/Berlin"
+        table=table, date_include_time=True
     )
     model = table.get_model()
 
@@ -1404,8 +1843,8 @@ def test_last_modified_date_equal_filter_type(data_fixture):
     with freeze_time("2021-08-04 22:01", tz_offset=+2):
         row_1 = model.objects.create(**{})
 
-    with freeze_time("2021-08-04 23:01", tz_offset=+2):
-        row_2 = model.objects.create(**{})
+    with freeze_time("2021-08-05 00:01", tz_offset=+2):
+        model.objects.create(**{})
 
     handler = ViewHandler()
     model = table.get_model()
@@ -1417,16 +1856,12 @@ def test_last_modified_date_equal_filter_type(data_fixture):
         value="2021-08-04",
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 1
-    assert row.id in ids
+    assert ids == unordered([row.id, row_1.id])
 
     filter.field = last_modified_field_date
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 1
-    assert row.id in ids
-    assert row_1.id not in ids
-    assert row_2.id not in ids
+    assert ids == unordered([row.id, row_1.id])
 
 
 @pytest.mark.django_db
@@ -1434,36 +1869,29 @@ def test_last_modified_datetime_equals_days_ago_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
-    tzone = "Europe/Berlin"
     last_modified_field_date = data_fixture.create_last_modified_field(
-        table=table, date_include_time=False, timezone=tzone
+        table=table, date_include_time=False
     )
     last_modified_field_datetime = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone=tzone
+        table=table, date_include_time=True, date_force_timezone="Europe/Rome"
     )
 
     model = table.get_model()
 
-    days_ago = 1
-    when = datetime.utcnow().astimezone(timezone(tzone)) - timedelta(days=days_ago)
-
-    # the first and only object created with the correct amount of days ago
-    with freeze_time(when.replace(hour=4, minute=59)):
+    with freeze_time("2023-02-19 12:00"):
         row = model.objects.create(**{})
 
-    # one day after the filter
-    day_after = when + timedelta(days=1)
-    with freeze_time(day_after):
+    with freeze_time("2023-02-19 18:00"):
         row_2 = model.objects.create(**{})
 
-    # one day before the filter
-    with freeze_time(when - timedelta(hours=(when.hour + 2))):
+    with freeze_time("2023-02-20 13:00"):
         row_3 = model.objects.create(**{})
 
-    with freeze_time(when.strftime("%Y-%m-%d")):
+    with freeze_time("2023-02-20 22:00"):
         row_4 = model.objects.create(**{})
 
-    with freeze_time(day_after.strftime("%Y-%m-%d")):
+    with freeze_time("2023-02-20 23:30"):
+        # 2023-02-21 0:30 in Europe/Rome
         row_5 = model.objects.create(**{})
 
     handler = ViewHandler()
@@ -1478,36 +1906,49 @@ def test_last_modified_datetime_equals_days_ago_filter_type(data_fixture):
         view=grid_view,
         field=last_modified_field_datetime,
         type="date_equals_days_ago",
-        value=f"{tzone}?{days_ago}",
+        value="Europe/Rome?{days_ago}".format(days_ago=1),
     )
 
-    ids = apply_filter()
-    assert len(ids) == 2
-    assert row.id in ids
-    assert row_4.id in ids
+    with freeze_time("2023-02-21 12:00"):
+        ids = apply_filter()
+        assert ids == [row_3.id, row_4.id]
 
-    filter.field = last_modified_field_date
-    filter.save()
-    ids = apply_filter()
-    assert len(ids) == 2
-    assert row.id in ids
-    assert row_4.id in ids
-
-    # an invalid value results in an empty filter
-    for invalid_value in ["", f"?", f"{tzone}?1?", f"{tzone}?"]:
-        filter.value = invalid_value
+        filter.value = "Europe/Rome?{days_ago}".format(days_ago=2)
         filter.save()
         ids = apply_filter()
-        assert len(ids) == 5
-        for r in [row, row_2, row_3, row_4, row_5]:
-            assert r.id in ids
+        assert ids == [row.id, row_2.id]
 
-    # if `days_ago` value results in a BC date, no results are returned
-    max_days_ago = (datetime.utcnow() - datetime(1, 1, 1)).days
-    filter.value = f"UTC?{max_days_ago + 1}"
-    filter.save()
-    ids = apply_filter()
-    assert len(ids) == 0
+        filter.value = "Europe/Rome?0"
+        filter.save()
+        ids = apply_filter()
+        assert ids == [row_5.id]
+
+        filter.field = last_modified_field_date
+        filter.value = "UTC?0"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 0
+
+        filter.value = "UTC?1"
+        filter.save()
+        ids = apply_filter()
+        assert ids == [row_3.id, row_4.id, row_5.id]
+
+        # an invalid value results in an empty filter
+        for invalid_value in ["", "UTC?1?", "UTC?"]:
+            filter.value = invalid_value
+            filter.save()
+            ids = apply_filter()
+            assert len(ids) == 5
+            for r in [row, row_2, row_3, row_4]:
+                assert r.id in ids
+
+        # if `days_ago` value results in a BC date, no results are returned
+        max_days_ago = (datetime.utcnow() - datetime(1, 1, 1)).days
+        filter.value = f"UTC?{max_days_ago + 1}"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -1516,7 +1957,6 @@ def test_last_modified_date_equals_days_ago_filter_type(data_fixture):
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
     date_field = data_fixture.create_date_field(table=table)
-    tzone = "Europe/Berlin"
 
     handler = ViewHandler()
     model = table.get_model()
@@ -1564,7 +2004,7 @@ def test_last_modified_date_equals_days_ago_filter_type(data_fixture):
         view=grid_view,
         field=date_field,
         type="date_equals_days_ago",
-        value=f"{tzone}?{days_ago}",
+        value=f"UTC?{days_ago}",
     )
 
     ids = apply_filter()
@@ -1576,15 +2016,8 @@ def test_last_modified_date_equals_days_ago_filter_type(data_fixture):
     ids = apply_filter()
     assert len(ids) == 0
 
-    filter.value = f"?"
-    filter.save()
-    ids = apply_filter()
-    assert len(ids) == 5
-    for r in [row, row_2, row_3, row_4, row_5]:
-        assert r.id in ids
-
     # an invalid value results in an empty filter
-    for invalid_value in ["", f"?", f"{tzone}?1?", f"{tzone}?"]:
+    for invalid_value in ["", "UTC?1?", "UTC?"]:
         filter.value = invalid_value
         filter.save()
         ids = apply_filter()
@@ -1608,29 +2041,39 @@ def test_date_equals_months_ago_filter_type(data_fixture):
     date_field = data_fixture.create_date_field(table=table, date_include_time=False)
     handler = ViewHandler()
     model = table.get_model()
-    row_jan = model.objects.create(
+    row_jan_1 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2022, 1, 1),
         }
     )
-    row_feb = model.objects.create(
+    row_jan_18 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 1, 18),
+        }
+    )
+    row_feb_3 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2022, 2, 3),
         }
     )
-    row_march = model.objects.create(
+    row_feb_17 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2022, 2, 17),
+        }
+    )
+    row_march_1 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2022, 3, 1),
         }
     )
-    row_march_2 = model.objects.create(
+    row_march_15 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2022, 3, 15),
         }
     )
-    row_may = model.objects.create(
+    row_april_2 = model.objects.create(
         **{
-            f"field_{date_field.id}": date(2022, 4, 1),
+            f"field_{date_field.id}": date(2022, 4, 2),
         }
     )
     row_none = model.objects.create(
@@ -1644,43 +2087,33 @@ def test_date_equals_months_ago_filter_type(data_fixture):
         }
     )
 
-    day_in_march = "2022-03-31 10:00"
-
-    months_ago = 0
-    with freeze_time(day_in_march):
+    with freeze_time("2022-03-15 10:00"):
         filter = data_fixture.create_view_filter(
             view=grid_view,
             field=date_field,
             type="date_equals_months_ago",
-            value=f"Europe/Berlin?{months_ago}",
+            value="{months_ago}".format(months_ago=0),
         )
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 2
-        assert row_march in rows
-        assert row_march_2 in rows
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_march_1, row_march_15]
 
-    months_ago = 1
-    with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+    with freeze_time("2022-03-15 10:00"):
+        filter.value = "UTC?{months_ago}".format(months_ago=1)
         filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 1
-        assert row_feb in rows
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_feb_3, row_feb_17]
 
-    months_ago = 2
-    with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+    with freeze_time("2022-03-15 10:00"):
+        filter.value = "UTC?{months_ago}".format(months_ago=2)
         filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 1
-        assert row_jan in rows
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_jan_1, row_jan_18]
 
-    months_ago = 3
-    with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+    with freeze_time("2022-03-15 10:00"):
+        filter.value = "UTC?{months_ago}".format(months_ago=3)
         filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 0
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == []
 
 
 @pytest.mark.django_db
@@ -1691,30 +2124,26 @@ def test_datetime_equals_months_ago_filter_type(data_fixture):
     datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
     handler = ViewHandler()
     model = table.get_model()
-    row_jan = model.objects.create(
-        **{
-            f"field_{datetime_field.id}": "2022-01-01 00:00",
-        }
+    row_jan_1 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-01 00:00Z"}
     )
-    row_feb = model.objects.create(
-        **{
-            f"field_{datetime_field.id}": "2022-02-03 23:59",
-        }
+    row_jan_18 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-01-18 05:00Z"}
     )
-    row_march = model.objects.create(
-        **{
-            f"field_{datetime_field.id}": "2022-03-01 15:15",
-        }
+    row_feb_3 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-02-03 23:59Z"}
     )
-    row_march_2 = model.objects.create(
-        **{
-            f"field_{datetime_field.id}": "2022-03-31 23:59",
-        }
+    row_feb_18 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-02-18 21:59Z"}
     )
-    row_may = model.objects.create(
-        **{
-            f"field_{datetime_field.id}": "2022-04-01 00:00",
-        }
+    row_march_01 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-03-01 15:15Z"}
+    )
+    row_march_17 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-03-17 23:59Z"}
+    )
+    row_april_1 = model.objects.create(
+        **{f"field_{datetime_field.id}": "2022-04-01 00:00Z"}
     )
     row_none = model.objects.create(
         **{
@@ -1722,48 +2151,36 @@ def test_datetime_equals_months_ago_filter_type(data_fixture):
         }
     )
     row_old_year = model.objects.create(
-        **{
-            f"field_{datetime_field.id}": "2010-01-01 15:15",
-        }
+        **{f"field_{datetime_field.id}": "2010-01-01 15:15Z"}
     )
 
-    day_in_march = "2022-03-31 10:00"
-
-    months_ago = 0
-    with freeze_time(day_in_march):
+    with freeze_time("2022-03-16 10:00"):
         filter = data_fixture.create_view_filter(
             view=grid_view,
             field=datetime_field,
             type="date_equals_months_ago",
-            value=f"Europe/Berlin?{months_ago}",
+            value="{months_ago}".format(months_ago=0),
         )
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 2
-        assert row_march in rows
-        assert row_march_2 in rows
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_march_01, row_march_17]
 
-    months_ago = 1
-    with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+    with freeze_time("2022-03-16 10:00"):
+        filter.value = "UTC?{months_ago}".format(months_ago=1)
         filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 1
-        assert row_feb in rows
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_feb_3, row_feb_18]
 
-    months_ago = 2
-    with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+    with freeze_time("2022-03-16 10:00"):
+        filter.value = "UTC?{months_ago}".format(months_ago=2)
         filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 1
-        assert row_jan in rows
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_jan_1, row_jan_18]
 
-    months_ago = 3
-    with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+    with freeze_time("2022-03-16 10:00"):
+        filter.value = "UTC?{months_ago}".format(months_ago=3)
         filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 0
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == []
 
 
 @pytest.mark.django_db
@@ -1771,36 +2188,32 @@ def test_datetime_equals_months_ago_filter_type_timezone(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
-    datetime_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    datetime_field = data_fixture.create_date_field(
+        table=table, date_include_time=True, date_force_timezone="Europe/Rome"
+    )
     handler = ViewHandler()
     model = table.get_model()
-    row_jan = model.objects.create(
+    row_jan_1 = model.objects.create(
         **{
-            f"field_{datetime_field.id}": "2022-01-01 00:00",
+            f"field_{datetime_field.id}": "2022-01-01 00:00+01:00",
         }
     )
 
-    day_in_feb = "2022-02-01 00:00"
-
-    # without timezone shifting the day
-    months_ago = 0
-
-    with freeze_time(day_in_feb):
+    # 2022-02-01 00:00 UTC is 2022-02-01 01:00 Europe/Rome
+    with freeze_time("2022-02-01 00:00"):
         filter = data_fixture.create_view_filter(
             view=grid_view,
             field=datetime_field,
             type="date_equals_months_ago",
-            value=f"Europe/Berlin?{months_ago}",
+            value="Europe/Rome?{months_ago}".format(months_ago=1),
         )
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 0
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_jan_1]
 
-    # with timezone moving the day to january
-    with freeze_time(day_in_feb):
-        filter.value = f"America/Havana?{months_ago}"
-        filter.save()
-        rows = handler.apply_filters(grid_view, model.objects.all()).all()
-        assert len(rows) == 1
+    # 2022-02-31 23:00 UTC is 2022-02-01 00:00 Europe/Rome
+    with freeze_time("2022-01-31 23:00"):
+        rows = list(handler.apply_filters(grid_view, model.objects.all()).all())
+        assert rows == [row_jan_1]
 
 
 @pytest.mark.django_db
@@ -1845,7 +2258,7 @@ def test_date_equals_years_ago_filter_type(data_fixture):
             view=grid_view,
             field=date_field,
             type="date_equals_years_ago",
-            value=f"Europe/Berlin?{years_ago}",
+            value=f"UTC?{years_ago}",
         )
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 2
@@ -1854,7 +2267,7 @@ def test_date_equals_years_ago_filter_type(data_fixture):
 
     years_ago = 1
     with freeze_time(day_in_2022):
-        filter.value = f"Europe/Berlin?{years_ago}"
+        filter.value = f"UTC?{years_ago}"
         filter.save()
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 1
@@ -1862,7 +2275,7 @@ def test_date_equals_years_ago_filter_type(data_fixture):
 
     years_ago = 2
     with freeze_time(day_in_2022):
-        filter.value = f"Europe/Berlin?{years_ago}"
+        filter.value = f"UTC?{years_ago}"
         filter.save()
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 1
@@ -1870,7 +2283,7 @@ def test_date_equals_years_ago_filter_type(data_fixture):
 
     years_ago = 3
     with freeze_time(day_in_2022):
-        filter.value = f"Europe/Berlin?{years_ago}"
+        filter.value = f"UTC?{years_ago}"
         filter.save()
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 0
@@ -1918,7 +2331,7 @@ def test_datetime_equals_years_ago_filter_type(data_fixture):
             view=grid_view,
             field=datetime_field,
             type="date_equals_years_ago",
-            value=f"Europe/Berlin?{months_ago}",
+            value=f"UTC?{months_ago}",
         )
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 2
@@ -1927,7 +2340,7 @@ def test_datetime_equals_years_ago_filter_type(data_fixture):
 
     months_ago = 1
     with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.value = f"UTC?{months_ago}"
         filter.save()
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 1
@@ -1935,7 +2348,7 @@ def test_datetime_equals_years_ago_filter_type(data_fixture):
 
     months_ago = 2
     with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.value = f"UTC?{months_ago}"
         filter.save()
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 1
@@ -1943,7 +2356,7 @@ def test_datetime_equals_years_ago_filter_type(data_fixture):
 
     months_ago = 3
     with freeze_time(day_in_march):
-        filter.value = f"Europe/Berlin?{months_ago}"
+        filter.value = f"UTC?{months_ago}"
         filter.save()
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 0
@@ -1973,7 +2386,7 @@ def test_datetime_equals_years_ago_filter_type_timezone(data_fixture):
             view=grid_view,
             field=datetime_field,
             type="date_equals_years_ago",
-            value=f"Europe/Berlin?{months_ago}",
+            value=f"UTC?{months_ago}",
         )
         rows = handler.apply_filters(grid_view, model.objects.all()).all()
         assert len(rows) == 0
@@ -1987,16 +2400,19 @@ def test_datetime_equals_years_ago_filter_type_timezone(data_fixture):
 
 
 @pytest.mark.django_db
-def test_last_modified_day_filter_type(data_fixture):
+def test_last_modified_date_equals_today_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
+
     last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/Berlin"
+        table=table, date_include_time=True, date_force_timezone="Europe/Berlin"
     )
+
     last_modified_field_datetime_london = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/London"
+        table=table, date_include_time=True, date_force_timezone="Europe/London"
     )
+
     handler = ViewHandler()
     model = table.get_model()
 
@@ -2005,137 +2421,55 @@ def test_last_modified_day_filter_type(data_fixture):
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
         ]
 
-    with freeze_time("2021-08-04 21:59"):
+    with freeze_time("2023-08-04 21:59"):
+        # 2023-08-04 22:59 in London
+        # 2023-08-04 23:59 in Berlin
         row = model.objects.create(**{})
 
-    with freeze_time("2021-08-04 22:01"):
+    with freeze_time("2023-08-04 22:01"):
+        # 2023-08-04 23:01 in London
+        # 2023-08-05 00:01 in Berlin
         row_1 = model.objects.create(**{})
 
-    with freeze_time("2021-08-04 23:01"):
+    with freeze_time("2023-08-04 23:01"):
+        # 2023-08-05 00:01 in London
+        # 2023-08-05 01:01 in Berlin
         row_2 = model.objects.create(**{})
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=last_modified_field_datetime_london,
         type="date_equals_today",
         value="Europe/London",
     )
 
-    with freeze_time("2021-08-04 01:00"):
+    # 2023-08-04 02:00 in London
+    with freeze_time("2023-08-04 01:00"):
+        assert apply_filter() == unordered([row.id, row_1.id])
 
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
+    # 2023-08-04 23:59 in London
+    with freeze_time("2023-08-04 22:59"):
+        assert apply_filter() == unordered([row.id, row_1.id])
 
-    with freeze_time("2021-08-04 22:59"):
+    # 2023-08-05 00:59 in London
+    with freeze_time("2023-08-04 23:59"):
+        assert apply_filter() == [row_2.id]
 
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
+    view_filter.field = last_modified_field_datetime_berlin
+    view_filter.value = "Europe/Berlin"
+    view_filter.save()
 
-    with freeze_time("2021-08-04 23:59"):
+    # 2023-08-04 03:00 in Berlin
+    with freeze_time("2023-08-04 01:00"):
+        assert apply_filter() == [row.id]
 
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
+    # 2023-08-05 00:59 in Berlin
+    with freeze_time("2023-08-04 22:59"):
+        assert apply_filter() == unordered([row_1.id, row_2.id])
 
-    with freeze_time("2021-08-04"):
-
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
-
-        # LastModified Column is based on London Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id in ids
-        assert row_1.id not in ids
-        assert row_2.id not in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_berlin
-        filter.value = "Europe/London"
-        filter.save()
-
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id in ids
-        assert row_1.id not in ids
-        assert row_2.id not in ids
-
-    with freeze_time("2021-08-05"):
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_london
-        filter.value = "Europe/London"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on London Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id not in ids
-        assert row_1.id in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_berlin
-        filter.value = "Europe/London"
-        filter.save()
-
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id not in ids
-        assert row_1.id in ids
-        assert row_2.id in ids
+    # 2023-08-05 01:59 in Berlin
+    with freeze_time("2023-08-04 23:59"):
+        assert apply_filter() == unordered([row_1.id, row_2.id])
 
 
 @pytest.mark.django_db
@@ -2143,11 +2477,13 @@ def test_last_modified_month_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
+
     last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/Berlin"
+        table=table, date_include_time=True, date_force_timezone="Europe/Berlin"
     )
+
     last_modified_field_datetime_london = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/London"
+        table=table, date_include_time=True, date_force_timezone="Europe/London"
     )
     handler = ViewHandler()
     model = table.get_model()
@@ -2157,107 +2493,47 @@ def test_last_modified_month_filter_type(data_fixture):
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
         ]
 
-    with freeze_time("2021-08-31 21:59"):
+    with freeze_time("2023-08-31 21:59"):
+        # 2023-08-31 22:59 in London
+        # 2023-08-31 23:59 in Berlin
         row = model.objects.create(**{})
 
-    with freeze_time("2021-08-31 22:01"):
+    with freeze_time("2023-08-31 22:01"):
+        # 2023-08-31 23:01 in London
+        # 2023-09-01 00:01 in Berlin
         row_1 = model.objects.create(**{})
 
-    with freeze_time("2021-08-31 23:01"):
+    with freeze_time("2023-08-31 23:01"):
+        # 2023-09-01 00:01 in London
+        # 2023-09-01 01:01 in Berlin
         row_2 = model.objects.create(**{})
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=last_modified_field_datetime_london,
         type="date_equals_month",
         value="Europe/London",
     )
 
-    with freeze_time("2021-08-31"):
+    # 2023-08-31 01:00 in London
+    with freeze_time("2023-08-31"):
+        assert apply_filter() == unordered([row.id, row_1.id])
 
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
+    # 2023-09-01 01:00 in London
+    with freeze_time("2023-09-01"):
+        assert apply_filter() == [row_2.id]
 
-        # LastModified Column is based on London Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id in ids
-        assert row_1.id not in ids
-        assert row_2.id not in ids
+    view_filter.field = last_modified_field_datetime_berlin
+    view_filter.value = "Europe/Berlin"
+    view_filter.save()
 
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_berlin
-        filter.value = "Europe/London"
-        filter.save()
+    # 2023-08-31 02:00 in Berlin
+    with freeze_time("2023-08-31"):
+        assert apply_filter() == [row.id]
 
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id in ids
-        assert row_1.id not in ids
-        assert row_2.id not in ids
-
-    with freeze_time("2021-09-01"):
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_london
-        filter.value = "Europe/London"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on London Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id not in ids
-        assert row_1.id in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_berlin
-        filter.value = "Europe/London"
-        filter.save()
-
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id not in ids
-        assert row_1.id in ids
-        assert row_2.id in ids
+    # 2023-09-01 02:00 in Berlin
+    with freeze_time("2023-09-01"):
+        assert apply_filter() == unordered([row_1.id, row_2.id])
 
 
 @pytest.mark.django_db
@@ -2265,12 +2541,17 @@ def test_last_modified_year_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
+
     last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/Berlin"
+        table=table, date_include_time=True, date_force_timezone="Europe/Berlin"
     )
+
     last_modified_field_datetime_london = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/London"
+        table=table, date_include_time=True, date_force_timezone="Europe/London"
     )
+    handler = ViewHandler()
+    model = table.get_model()
+
     handler = ViewHandler()
     model = table.get_model()
 
@@ -2279,107 +2560,43 @@ def test_last_modified_year_filter_type(data_fixture):
             r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
         ]
 
-    with freeze_time("2021-12-31 22:59"):
+    with freeze_time("2023-12-31 22:59"):
+        # 2023-12-31 22:59 in London
+        # 2024-01-01 23:59 in Berlin
         row = model.objects.create(**{})
 
-    with freeze_time("2021-12-31 23:01"):
+    with freeze_time("2023-12-31 23:01"):
+        # 2024-01-01 23:01 in London
+        # 2024-01-01 00:01 in Berlin
         row_1 = model.objects.create(**{})
 
-    with freeze_time("2022-01-01 00:01"):
+    with freeze_time("2024-01-01 00:01"):
+        # 2024-01-01 00:01 in London
+        # 2024-01-01 01:01 in Berlin
         row_2 = model.objects.create(**{})
 
-    filter = data_fixture.create_view_filter(
+    view_filter = data_fixture.create_view_filter(
         view=grid_view,
         field=last_modified_field_datetime_london,
         type="date_equals_year",
         value="Europe/London",
     )
 
-    with freeze_time("2021-12-31"):
+    with freeze_time("2023-12-31"):
+        assert apply_filter() == unordered([row.id, row_1.id])
 
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
+    with freeze_time("2024-01-01"):
+        assert apply_filter() == [row_2.id]
 
-        # LastModified Column is based on London Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id in ids
-        assert row_1.id not in ids
-        assert row_2.id not in ids
+    view_filter.field = last_modified_field_datetime_berlin
+    view_filter.value = "Europe/Berlin"
+    view_filter.save()
 
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_berlin
-        filter.value = "Europe/London"
-        filter.save()
+    with freeze_time("2023-12-31"):
+        assert apply_filter() == [row.id]
 
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id in ids
-        assert row_1.id in ids
-        assert row_2.id not in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id in ids
-        assert row_1.id not in ids
-        assert row_2.id not in ids
-
-    with freeze_time("2022-01-01"):
-        # LastModified Column is based on London Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_london
-        filter.value = "Europe/London"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on London Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id not in ids
-        assert row_1.id in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on London Time
-        filter.field = last_modified_field_datetime_berlin
-        filter.value = "Europe/London"
-        filter.save()
-
-        ids = apply_filter()
-        assert len(ids) == 1
-        assert row.id not in ids
-        assert row_1.id not in ids
-        assert row_2.id in ids
-
-        # LastModified Column is based on Berlin Time
-        # Filter value is based on Berlin Time
-        filter.value = "Europe/Berlin"
-        filter.save()
-        ids = apply_filter()
-        assert len(ids) == 2
-        assert row.id not in ids
-        assert row_1.id in ids
-        assert row_2.id in ids
+    with freeze_time("2024-01-01"):
+        assert apply_filter() == unordered([row_1.id, row_2.id])
 
 
 @pytest.mark.django_db
@@ -2477,7 +2694,7 @@ def test_date_equals_day_week_month_year_filter_type(data_fixture):
         assert len(ids) == 1
         assert row_3.id in ids
 
-        view_filter.value = "Etc/GMT+2"
+        view_filter.value = "Etc/UTC+2"
         view_filter.save()
 
         ids = [
@@ -2662,16 +2879,22 @@ def test_date_not_equal_filter_type(data_fixture):
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
-    assert row_2.id not in ids
+    assert row.id in ids
+    assert row_3.id in ids
+    assert row_4.id in ids
 
     view_filter.field = date_time_field
-    view_filter.value = "2020-06-17 01:30:10"
+    view_filter.value = "Europe/Rome?2020-06-17 02:30:10"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+    assert row.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+    assert row_4.id in ids
 
     view_filter.field = date_time_field
-    view_filter.value = "2020-06-17"
+    view_filter.value = "UTC?2020-06-17"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
@@ -2693,29 +2916,6 @@ def test_date_not_equal_filter_type(data_fixture):
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
-
-
-def test_date_parser_mixin():
-    date_parser = BaseDateFieldLookupFilterType()
-    date_string = "2021-07-05"
-    parsed_date = date_parser.parse_date(date_string)
-    assert parsed_date.year == 2021
-    assert parsed_date.month == 7
-    assert parsed_date.day == 5
-
-    date_string = " 2021-07-06 "
-    parsed_date = date_parser.parse_date(date_string)
-    assert parsed_date.year == 2021
-    assert parsed_date.month == 7
-    assert parsed_date.day == 6
-
-    date_string = ""
-    with pytest.raises(ValueError):
-        date_parser.parse_date(date_string)
-
-    date_string = "2021-15-15"
-    with pytest.raises(ValueError):
-        date_parser.parse_date(date_string)
 
 
 @pytest.mark.django_db
@@ -4249,10 +4449,7 @@ def test_date_equals_day_of_month_filter_type(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     date_field = data_fixture.create_date_field(table=table)
     last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/Berlin"
-    )
-    last_modified_field_datetime_london = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True, timezone="Europe/London"
+        table=table, date_include_time=True
     )
 
     handler = ViewHandler()
@@ -4298,7 +4495,7 @@ def test_date_equals_day_of_month_filter_type(data_fixture):
     view_filter.value = "-1"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
     # Datetime (With timezone)
 
@@ -4310,24 +4507,12 @@ def test_date_equals_day_of_month_filter_type(data_fixture):
     with freeze_time("2019-1-01 23:01"):
         row_3_tz = model.objects.create(**{})
 
-    # Testing with Berlin time, only one row should be accepted
     view_filter.field = last_modified_field_datetime_berlin
     view_filter.value = "1"
     view_filter.save()
 
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 1
-    assert row_2_tz.id in ids
-    assert row_3_tz.id not in ids
-
-    # Testing with London time, both rows should be accepted
-    view_filter.field = last_modified_field_datetime_london
-    view_filter.save()
-
-    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 2
-    assert row_2_tz.id in ids
-    assert row_3_tz.id in ids
+    assert ids == unordered([row_2_tz.id, row_3_tz.id])
 
 
 @pytest.mark.django_db

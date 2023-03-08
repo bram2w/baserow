@@ -1,0 +1,3907 @@
+{
+    "baserow_template_version": 1,
+    "name": "Home Remodeling",
+    "icon": "house-damage",
+    "keywords": [
+        "home remodeling",
+        "remodeling",
+        "home reparation",
+        "remodeling budget",
+        "home fixings",
+        "remodeling",
+        "reparations"
+    ],
+    "categories": [
+        "Personal",
+        "Hobbies"
+    ],
+    "export": [
+        {
+            "id": 38131,
+            "name": "Home Remodeling",
+            "order": 1,
+            "type": "database",
+            "tables": [
+                {
+                    "id": 91392,
+                    "name": "Rooms",
+                    "order": 1,
+                    "fields": [
+                        {
+                            "id": 562463,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 562464,
+                            "type": "single_select",
+                            "name": "Floor",
+                            "order": 1,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 222730,
+                                    "value": "Basement",
+                                    "color": "orange",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 222731,
+                                    "value": "First",
+                                    "color": "blue",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 222732,
+                                    "value": "Second",
+                                    "color": "gray",
+                                    "order": 2
+                                }
+                            ]
+                        },
+                        {
+                            "id": 562465,
+                            "type": "number",
+                            "name": "Size (m\u00b2)",
+                            "order": 2,
+                            "primary": false,
+                            "number_decimal_places": 1,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 562478,
+                            "type": "link_row",
+                            "name": "Related tasks",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 91393,
+                            "link_row_related_field_id": 562479,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 562481,
+                            "type": "file",
+                            "name": "Photo",
+                            "order": 4,
+                            "primary": false
+                        },
+                        {
+                            "id": 562496,
+                            "type": "formula",
+                            "name": "Number of tasks",
+                            "order": 5,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "array_formula_type": null,
+                            "formula": "count(field('Related tasks'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 578463,
+                            "type": "formula",
+                            "name": "Total spent",
+                            "order": 6,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 2,
+                            "array_formula_type": null,
+                            "formula": "sum(lookup('Related tasks','Amount charged'))",
+                            "formula_type": "number"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 127365,
+                            "type": "grid",
+                            "name": "All rooms",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 35000,
+                                    "field_id": 562463,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 764496,
+                                    "field_id": 562463,
+                                    "width": 139,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764494,
+                                    "field_id": 562464,
+                                    "width": 106,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764495,
+                                    "field_id": 562465,
+                                    "width": 118,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764511,
+                                    "field_id": 562478,
+                                    "width": 290,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764512,
+                                    "field_id": 562481,
+                                    "width": 103,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764527,
+                                    "field_id": 562496,
+                                    "width": 170,
+                                    "hidden": false,
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 791016,
+                                    "field_id": 578463,
+                                    "width": 132,
+                                    "hidden": false,
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130999,
+                            "type": "gallery",
+                            "name": "Rooms gallery",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 35002,
+                                    "field_id": 562463,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 562481,
+                            "field_options": [
+                                {
+                                    "id": 36176,
+                                    "field_id": 562463,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 36177,
+                                    "field_id": 562464,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 36178,
+                                    "field_id": 562465,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 36179,
+                                    "field_id": 562478,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 36180,
+                                    "field_id": 562481,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 36181,
+                                    "field_id": 562496,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 41863,
+                                    "field_id": 578463,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 131003,
+                            "type": "grid",
+                            "name": "High task count",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 49116,
+                                    "field_id": 562496,
+                                    "type": "higher_than",
+                                    "value": "1"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 35003,
+                                    "field_id": 562463,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 790914,
+                                    "field_id": 562463,
+                                    "width": 110,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790915,
+                                    "field_id": 562464,
+                                    "width": 112,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790916,
+                                    "field_id": 562465,
+                                    "width": 121,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790917,
+                                    "field_id": 562478,
+                                    "width": 323,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790918,
+                                    "field_id": 562481,
+                                    "width": 105,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790919,
+                                    "field_id": 562496,
+                                    "width": 163,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 834294,
+                                    "field_id": 578463,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 131005,
+                            "type": "kanban",
+                            "name": "By floor",
+                            "order": 5,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 562464,
+                            "card_cover_image_field_id": 562481,
+                            "field_options": [
+                                {
+                                    "id": 21425,
+                                    "field_id": 562463,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 21426,
+                                    "field_id": 562464,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 21427,
+                                    "field_id": 562465,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 21428,
+                                    "field_id": 562478,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 21429,
+                                    "field_id": 562481,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 21430,
+                                    "field_id": 562496,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 24031,
+                                    "field_id": 578463,
+                                    "hidden": true,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130347,
+                            "type": "form",
+                            "name": "New room",
+                            "order": 6,
+                            "public": false,
+                            "title": "Add a new room!",
+                            "description": "",
+                            "cover_image": null,
+                            "logo_image": {
+                                "name": "dfzLGl143vNHls1lgLCK5BmUHp2NHHIn_61ddba0b3f539b03e66253594ee69b23920b743a31e279ba5cb2cd8db05da69c.jpeg",
+                                "original_name": "newroom.jpeg"
+                            },
+                            "submit_text": "Submit",
+                            "submit_action": "MESSAGE",
+                            "submit_action_message": "Added! To add a new room, reload this page.",
+                            "submit_action_redirect_url": "",
+                            "field_options": [
+                                {
+                                    "id": 54412,
+                                    "field_id": 562463,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54413,
+                                    "field_id": 562464,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54414,
+                                    "field_id": 562465,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54415,
+                                    "field_id": 562478,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54416,
+                                    "field_id": 562481,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54417,
+                                    "field_id": 562496,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 64462,
+                                    "field_id": 578463,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "created_on": "2022-08-16T20:12:20.572709+00:00",
+                            "updated_on": "2022-08-23T18:24:50.371655+00:00",
+                            "field_562463": "Kitchen",
+                            "field_562464": 222731,
+                            "field_562465": "26.6",
+                            "field_562478": [
+                                11
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "rSYQOaKWfB6RFymgEe5IUkxcv2Ar24G8_00129bd8022dd308e42deec3faca07bf6eed223d01cf8abc708b758a7c106217.jpeg",
+                                    "visible_name": "kitchen.jpeg",
+                                    "original_name": "kitchen.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2022-08-16T20:12:20.572763+00:00",
+                            "updated_on": "2022-08-23T18:24:52.000589+00:00",
+                            "field_562463": "Kitchen 2",
+                            "field_562464": 222732,
+                            "field_562465": "34.3",
+                            "field_562478": [
+                                2,
+                                12
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "IAAXJfO82u0lWw5PleBdkanNjnxswvDl_1f4ce00faeb52db96c5ed6833cea1797f950f793ff8ae9df54c1c4362c910e03.jpeg",
+                                    "visible_name": "kitchen2.jpeg",
+                                    "original_name": "kitchen2.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:06.571306+00:00",
+                            "updated_on": "2022-09-08T19:04:41.953422+00:00",
+                            "field_562463": "Living room",
+                            "field_562464": 222731,
+                            "field_562465": "42.9",
+                            "field_562478": [
+                                10
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "WTve783JgGscLsIjGSjtkvecZsJ7HepR_9593424e86b0447505ee883807e448ddfa43920b133374da8f40cf0507d01732.jpeg",
+                                    "visible_name": "livingroom.jpeg",
+                                    "original_name": "livingroom.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:13.558802+00:00",
+                            "updated_on": "2022-08-23T18:24:56.285877+00:00",
+                            "field_562463": "Bedroom 1",
+                            "field_562464": 222731,
+                            "field_562465": "25.5",
+                            "field_562478": [
+                                9
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "6RAMIW4w0Q9TzDQat0TUBghcIh6CyXGW_d1f56a23be9ac4c4d91190870d4195a538d074832b9bea73683333bfdee82251.jpeg",
+                                    "visible_name": "bedroom1.jpeg",
+                                    "original_name": "bedroom1.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:20.385610+00:00",
+                            "updated_on": "2022-08-23T18:24:59.697892+00:00",
+                            "field_562463": "Bedroom 2",
+                            "field_562464": 222732,
+                            "field_562465": "25.8",
+                            "field_562478": [
+                                4,
+                                7
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "llW5L4zZ4WqbIsNewHLzysn0mryzINTU_2bf9b3a0c2a98de2101b96e8a13172bd266913ad1a87ecf8ed502d9299fb0227.jpeg",
+                                    "visible_name": "bedroom2.jpeg",
+                                    "original_name": "bedroom2.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:27.553273+00:00",
+                            "updated_on": "2022-08-23T18:25:06.415764+00:00",
+                            "field_562463": "Bedroom 3",
+                            "field_562464": 222732,
+                            "field_562465": "28.9",
+                            "field_562478": [
+                                8
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "NJDsl6rj6jxfyFZJxK1uso4jXdf5FOIl_f17262d417491f42161416b10cbe672ae1979c58f1f4668b59095d2e1ce742a8.jpeg",
+                                    "visible_name": "bedroom3.jpeg",
+                                    "original_name": "bedroom3.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 7,
+                            "order": "7.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:33.854010+00:00",
+                            "updated_on": "2022-08-23T18:25:11.671321+00:00",
+                            "field_562463": "Bathroom 1",
+                            "field_562464": 222730,
+                            "field_562465": "17.0",
+                            "field_562478": [
+                                6,
+                                1
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "HDndtOuE3CF9xeM1m8r94FYzd9Sy5qkQ_c71cc61806d275732ad40b7f45585b350a538051913341871767651a8bca4bd1.jpeg",
+                                    "visible_name": "bathroom.jpeg",
+                                    "original_name": "bathroom.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 8,
+                            "order": "8.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:39.644756+00:00",
+                            "updated_on": "2022-08-23T18:26:12.340685+00:00",
+                            "field_562463": "Bathroom 2",
+                            "field_562464": 222731,
+                            "field_562465": "9.8",
+                            "field_562478": [
+                                3
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "xlb3s3DfvdANxoX4GyN8oGlN6nDbo6Tt_8e40542407d66a6deaa9a0c0320b5445a9f104e734f2d5750e4362939ab9aaea.jpeg",
+                                    "visible_name": "bathroom2.jpeg",
+                                    "original_name": "bathroom2.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 9,
+                            "order": "9.00000000000000000000",
+                            "created_on": "2022-08-16T20:23:44.978999+00:00",
+                            "updated_on": "2022-08-23T18:26:17.707717+00:00",
+                            "field_562463": "Bathroom 3",
+                            "field_562464": 222732,
+                            "field_562465": "9.7",
+                            "field_562478": [
+                                5
+                            ],
+                            "field_562481": [
+                                {
+                                    "name": "avpS20Q8YnU1qsOyaiJmzymLYdZ1n1tw_c7830e76e02cf5409548c3ef59d7864f4b32dc2db33e6c2bd02f23d2c055c30f.jpeg",
+                                    "visible_name": "bathroom4.jpeg",
+                                    "original_name": "bathroom4.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        },
+                        {
+                            "id": 10,
+                            "order": "10.00000000000000000000",
+                            "created_on": "2022-08-16T20:24:00.318086+00:00",
+                            "updated_on": "2022-08-23T18:26:26.365755+00:00",
+                            "field_562463": "Garage",
+                            "field_562464": 222730,
+                            "field_562465": "12.5",
+                            "field_562478": [],
+                            "field_562481": [
+                                {
+                                    "name": "XPDvhz5TZrHGu1Ot3Xjb0zGiLW6eW6yz_0a9059d323d20cc0d18cceceefb62929be6d641baaebf1543025474d30c1b202.jpeg",
+                                    "visible_name": "garage.jpeg",
+                                    "original_name": "garage.jpeg"
+                                }
+                            ],
+                            "field_562496": null,
+                            "field_578463": null
+                        }
+                    ]
+                },
+                {
+                    "id": 91393,
+                    "name": "Tasks",
+                    "order": 2,
+                    "fields": [
+                        {
+                            "id": 562466,
+                            "type": "text",
+                            "name": "Title",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 562467,
+                            "type": "text",
+                            "name": "Description",
+                            "order": 1,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 562468,
+                            "type": "rating",
+                            "name": "Priority",
+                            "order": 2,
+                            "primary": false,
+                            "max_value": 5,
+                            "color": "dark-red",
+                            "style": "flag"
+                        },
+                        {
+                            "id": 562479,
+                            "type": "link_row",
+                            "name": "Room",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 91392,
+                            "link_row_related_field_id": 562478,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 562480,
+                            "type": "single_select",
+                            "name": "Status",
+                            "order": 4,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 222733,
+                                    "value": "To be started",
+                                    "color": "light-orange",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 222734,
+                                    "value": "Booked appointment",
+                                    "color": "light-green",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 222735,
+                                    "value": "Work in progress",
+                                    "color": "gray",
+                                    "order": 2
+                                },
+                                {
+                                    "id": 222736,
+                                    "value": "Waiting on parts",
+                                    "color": "blue",
+                                    "order": 3
+                                },
+                                {
+                                    "id": 222737,
+                                    "value": "Waiting on permit",
+                                    "color": "red",
+                                    "order": 4
+                                },
+                                {
+                                    "id": 222738,
+                                    "value": "Finished",
+                                    "color": "dark-green",
+                                    "order": 5
+                                }
+                            ]
+                        },
+                        {
+                            "id": 562482,
+                            "type": "boolean",
+                            "name": "Requires permit",
+                            "order": 5,
+                            "primary": false
+                        },
+                        {
+                            "id": 562486,
+                            "type": "number",
+                            "name": "Budget",
+                            "order": 6,
+                            "primary": false,
+                            "number_decimal_places": 2,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 562487,
+                            "type": "formula",
+                            "name": "Labor cost",
+                            "order": 7,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 1,
+                            "array_formula_type": "number",
+                            "formula": "lookup('Completed by','Hourly rate')*field('Estimated time (hours)')",
+                            "formula_type": "array"
+                        },
+                        {
+                            "id": 562488,
+                            "type": "link_row",
+                            "name": "Completed by",
+                            "order": 8,
+                            "primary": false,
+                            "link_row_table_id": 91399,
+                            "link_row_related_field_id": 562489,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 562490,
+                            "type": "date",
+                            "name": "Completed on",
+                            "order": 9,
+                            "primary": false,
+                            "date_format": "ISO",
+                            "date_include_time": false,
+                            "date_time_format": "24"
+                        },
+                        {
+                            "id": 562495,
+                            "type": "link_row",
+                            "name": "Related permit",
+                            "order": 10,
+                            "primary": false,
+                            "link_row_table_id": 91397,
+                            "link_row_related_field_id": 562494,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 562497,
+                            "type": "number",
+                            "name": "Estimated time (hours)",
+                            "order": 11,
+                            "primary": false,
+                            "number_decimal_places": 1,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 562498,
+                            "type": "formula",
+                            "name": "Over/under budget",
+                            "order": 12,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 2,
+                            "array_formula_type": null,
+                            "formula": "field('Amount charged')-field('Budget')",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 573731,
+                            "type": "lookup",
+                            "name": "Vendor name",
+                            "order": 14,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": "text",
+                            "through_field_id": 562488,
+                            "through_field_name": "Completed by",
+                            "target_field_id": 573727,
+                            "target_field_name": "Representing"
+                        },
+                        {
+                            "id": 573740,
+                            "type": "number",
+                            "name": "Amount charged",
+                            "order": 15,
+                            "primary": false,
+                            "number_decimal_places": 2,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 573741,
+                            "type": "formula",
+                            "name": "Cost of materials",
+                            "order": 16,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 2,
+                            "array_formula_type": "number",
+                            "formula": "field('Amount charged')-field('Labor cost')",
+                            "formula_type": "array"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 127366,
+                            "type": "grid",
+                            "name": "All tasks",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 34988,
+                                    "field_id": 562490,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 764499,
+                                    "field_id": 562466,
+                                    "width": 247,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764497,
+                                    "field_id": 562467,
+                                    "width": 201,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764498,
+                                    "field_id": 562468,
+                                    "width": 113,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764509,
+                                    "field_id": 562479,
+                                    "width": 118,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764510,
+                                    "field_id": 562480,
+                                    "width": 144,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764513,
+                                    "field_id": 562482,
+                                    "width": 165,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764517,
+                                    "field_id": 562486,
+                                    "width": 111,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764523,
+                                    "field_id": 562487,
+                                    "width": 129,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764524,
+                                    "field_id": 562488,
+                                    "width": 148,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764525,
+                                    "field_id": 562490,
+                                    "width": 152,
+                                    "hidden": false,
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764526,
+                                    "field_id": 562495,
+                                    "width": 160,
+                                    "hidden": false,
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764528,
+                                    "field_id": 562497,
+                                    "width": 201,
+                                    "hidden": false,
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764529,
+                                    "field_id": 562498,
+                                    "width": 181,
+                                    "hidden": false,
+                                    "order": 15,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 783578,
+                                    "field_id": 573731,
+                                    "width": 160,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 783588,
+                                    "field_id": 573740,
+                                    "width": 172,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 783589,
+                                    "field_id": 573741,
+                                    "width": 165,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130964,
+                            "type": "grid",
+                            "name": "Over budget",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 49108,
+                                    "field_id": 562498,
+                                    "type": "higher_than",
+                                    "value": "0"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 34989,
+                                    "field_id": 562498,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 790694,
+                                    "field_id": 562466,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790695,
+                                    "field_id": 562467,
+                                    "width": 363,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790696,
+                                    "field_id": 562468,
+                                    "width": 128,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790697,
+                                    "field_id": 562479,
+                                    "width": 110,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790698,
+                                    "field_id": 562480,
+                                    "width": 110,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790699,
+                                    "field_id": 562482,
+                                    "width": 163,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790700,
+                                    "field_id": 562486,
+                                    "width": 109,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790701,
+                                    "field_id": 562487,
+                                    "width": 126,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790702,
+                                    "field_id": 562488,
+                                    "width": 151,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790703,
+                                    "field_id": 562490,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790704,
+                                    "field_id": 562495,
+                                    "width": 153,
+                                    "hidden": false,
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790705,
+                                    "field_id": 562497,
+                                    "width": 201,
+                                    "hidden": false,
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790706,
+                                    "field_id": 562498,
+                                    "width": 182,
+                                    "hidden": false,
+                                    "order": 15,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790707,
+                                    "field_id": 573731,
+                                    "width": 166,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790708,
+                                    "field_id": 573740,
+                                    "width": 164,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790709,
+                                    "field_id": 573741,
+                                    "width": 170,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130968,
+                            "type": "grid",
+                            "name": "Require permit",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 49112,
+                                    "field_id": 562482,
+                                    "type": "boolean",
+                                    "value": "1"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 35001,
+                                    "field_id": 562490,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 790726,
+                                    "field_id": 562466,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790727,
+                                    "field_id": 562467,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790728,
+                                    "field_id": 562468,
+                                    "width": 125,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790729,
+                                    "field_id": 562479,
+                                    "width": 117,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790730,
+                                    "field_id": 562480,
+                                    "width": 162,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790731,
+                                    "field_id": 562482,
+                                    "width": 162,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790732,
+                                    "field_id": 562486,
+                                    "width": 115,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790733,
+                                    "field_id": 562487,
+                                    "width": 129,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790734,
+                                    "field_id": 562488,
+                                    "width": 156,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790735,
+                                    "field_id": 562490,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790736,
+                                    "field_id": 562495,
+                                    "width": 165,
+                                    "hidden": false,
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790737,
+                                    "field_id": 562497,
+                                    "width": 205,
+                                    "hidden": false,
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790738,
+                                    "field_id": 562498,
+                                    "width": 178,
+                                    "hidden": false,
+                                    "order": 15,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790739,
+                                    "field_id": 573731,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790740,
+                                    "field_id": 573740,
+                                    "width": 163,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790741,
+                                    "field_id": 573741,
+                                    "width": 166,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130993,
+                            "type": "grid",
+                            "name": "Top priority",
+                            "order": 4,
+                            "filter_type": "OR",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 49113,
+                                    "field_id": 562468,
+                                    "type": "equal",
+                                    "value": "4"
+                                },
+                                {
+                                    "id": 49114,
+                                    "field_id": 562468,
+                                    "type": "equal",
+                                    "value": "5"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 34999,
+                                    "field_id": 562490,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 790862,
+                                    "field_id": 562466,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790863,
+                                    "field_id": 562467,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790864,
+                                    "field_id": 562468,
+                                    "width": 123,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790865,
+                                    "field_id": 562479,
+                                    "width": 116,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790866,
+                                    "field_id": 562480,
+                                    "width": 139,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790867,
+                                    "field_id": 562482,
+                                    "width": 160,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790868,
+                                    "field_id": 562486,
+                                    "width": 112,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790869,
+                                    "field_id": 562487,
+                                    "width": 126,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790870,
+                                    "field_id": 562488,
+                                    "width": 147,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790871,
+                                    "field_id": 562490,
+                                    "width": 151,
+                                    "hidden": false,
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790872,
+                                    "field_id": 562495,
+                                    "width": 155,
+                                    "hidden": false,
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790873,
+                                    "field_id": 562497,
+                                    "width": 205,
+                                    "hidden": false,
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790874,
+                                    "field_id": 562498,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 15,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790875,
+                                    "field_id": 573731,
+                                    "width": 177,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790876,
+                                    "field_id": 573740,
+                                    "width": 166,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 790877,
+                                    "field_id": 573741,
+                                    "width": 165,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130994,
+                            "type": "kanban",
+                            "name": "By status",
+                            "order": 5,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 562480,
+                            "field_options": [
+                                {
+                                    "id": 21409,
+                                    "field_id": 562466,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 21410,
+                                    "field_id": 562467,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 21411,
+                                    "field_id": 562468,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 21412,
+                                    "field_id": 562479,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 21413,
+                                    "field_id": 562480,
+                                    "hidden": true,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 21414,
+                                    "field_id": 562482,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 21415,
+                                    "field_id": 562486,
+                                    "hidden": false,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 21423,
+                                    "field_id": 573740,
+                                    "hidden": false,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 21416,
+                                    "field_id": 562487,
+                                    "hidden": false,
+                                    "order": 9
+                                },
+                                {
+                                    "id": 21424,
+                                    "field_id": 573741,
+                                    "hidden": false,
+                                    "order": 10
+                                },
+                                {
+                                    "id": 21417,
+                                    "field_id": 562488,
+                                    "hidden": false,
+                                    "order": 11
+                                },
+                                {
+                                    "id": 21422,
+                                    "field_id": 573731,
+                                    "hidden": false,
+                                    "order": 12
+                                },
+                                {
+                                    "id": 21418,
+                                    "field_id": 562490,
+                                    "hidden": false,
+                                    "order": 13
+                                },
+                                {
+                                    "id": 21419,
+                                    "field_id": 562495,
+                                    "hidden": false,
+                                    "order": 14
+                                },
+                                {
+                                    "id": 21420,
+                                    "field_id": 562497,
+                                    "hidden": false,
+                                    "order": 15
+                                },
+                                {
+                                    "id": 21421,
+                                    "field_id": 562498,
+                                    "hidden": true,
+                                    "order": 16
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130348,
+                            "type": "form",
+                            "name": "New task",
+                            "order": 6,
+                            "public": false,
+                            "title": "Add a new task to the list of improvements!",
+                            "description": "",
+                            "cover_image": null,
+                            "logo_image": {
+                                "name": "Es7J9TTEXTLRgM6EDUKFmv8yRzF6bhK8_cea521e4a35c0cd230e295627994d7a0d950bdce5fca5bba1b0c1f66dd4cb7f6.jpeg",
+                                "original_name": "newtask.jpeg"
+                            },
+                            "submit_text": "Submit",
+                            "submit_action": "MESSAGE",
+                            "submit_action_message": "The task has been added to the list!",
+                            "submit_action_redirect_url": "",
+                            "field_options": [
+                                {
+                                    "id": 54418,
+                                    "field_id": 562466,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54419,
+                                    "field_id": 562467,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54420,
+                                    "field_id": 562468,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54421,
+                                    "field_id": 562479,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54422,
+                                    "field_id": 562480,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54423,
+                                    "field_id": 562482,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54424,
+                                    "field_id": 562486,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54425,
+                                    "field_id": 562487,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54426,
+                                    "field_id": 562488,
+                                    "name": "Worker hired",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": false,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54427,
+                                    "field_id": 562490,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54428,
+                                    "field_id": 562495,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54429,
+                                    "field_id": 562497,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54430,
+                                    "field_id": 562498,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54431,
+                                    "field_id": 573731,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54432,
+                                    "field_id": 573740,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54433,
+                                    "field_id": 573741,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "created_on": "2022-08-16T20:12:26.893585+00:00",
+                            "updated_on": "2022-09-08T19:28:55.374323+00:00",
+                            "field_562466": "Re-tile bathroom 1 floor",
+                            "field_562467": "Retile the bathroom floor with new black marble tiles.",
+                            "field_562468": 4,
+                            "field_562479": [
+                                7
+                            ],
+                            "field_562480": 222738,
+                            "field_562482": "false",
+                            "field_562486": "4500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                1
+                            ],
+                            "field_562490": "2022-07-12",
+                            "field_562495": [],
+                            "field_562497": "20.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": "5600.00",
+                            "field_573741": null
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2022-08-16T20:12:26.893659+00:00",
+                            "updated_on": "2022-08-22T20:36:05.721383+00:00",
+                            "field_562466": "Fix cabinet doors in kitchen 2",
+                            "field_562467": "The cabinet doors are coming off of their hinges. We need to fix them so they dont fall off.",
+                            "field_562468": 2,
+                            "field_562479": [
+                                2
+                            ],
+                            "field_562480": 222733,
+                            "field_562482": "false",
+                            "field_562486": "500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                2
+                            ],
+                            "field_562490": null,
+                            "field_562495": [],
+                            "field_562497": "5.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": null,
+                            "field_573741": null
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2022-08-17T14:08:50.298582+00:00",
+                            "updated_on": "2022-08-22T20:39:26.734615+00:00",
+                            "field_562466": "Expand bathroom 2",
+                            "field_562467": "Tear down a wall to allow more room in the bathroom.",
+                            "field_562468": 4,
+                            "field_562479": [
+                                8
+                            ],
+                            "field_562480": 222735,
+                            "field_562482": "true",
+                            "field_562486": "10000.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                5
+                            ],
+                            "field_562490": null,
+                            "field_562495": [
+                                2
+                            ],
+                            "field_562497": "150.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": null,
+                            "field_573741": null
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2022-08-22T20:13:47.381149+00:00",
+                            "updated_on": "2022-08-22T20:36:14.022249+00:00",
+                            "field_562466": "Repaint walls in bedroom 2",
+                            "field_562467": "Repaint the walls in bedroom 2.",
+                            "field_562468": 2,
+                            "field_562479": [
+                                5
+                            ],
+                            "field_562480": 222736,
+                            "field_562482": "false",
+                            "field_562486": "500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                5
+                            ],
+                            "field_562490": null,
+                            "field_562495": [],
+                            "field_562497": "8.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": null,
+                            "field_573741": null
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2022-08-22T20:18:15.215310+00:00",
+                            "updated_on": "2022-08-24T18:57:16.453377+00:00",
+                            "field_562466": "Caulk in bathroom 3",
+                            "field_562467": "Caulk the bath tub and the windows in bathroom 3.",
+                            "field_562468": 4,
+                            "field_562479": [
+                                9
+                            ],
+                            "field_562480": 222738,
+                            "field_562482": "false",
+                            "field_562486": "450.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                6
+                            ],
+                            "field_562490": "2022-05-29",
+                            "field_562495": [],
+                            "field_562497": "4.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": "500.00",
+                            "field_573741": null
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "created_on": "2022-08-22T20:29:16.471157+00:00",
+                            "updated_on": "2022-08-22T20:37:15.673859+00:00",
+                            "field_562466": "Water pressure in bathroom 1",
+                            "field_562467": "Increase the pressure of the shower head and the faucet in bathroom 1.",
+                            "field_562468": 3,
+                            "field_562479": [
+                                7
+                            ],
+                            "field_562480": 222734,
+                            "field_562482": "false",
+                            "field_562486": "4500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                7
+                            ],
+                            "field_562490": null,
+                            "field_562495": [],
+                            "field_562497": "38.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": null,
+                            "field_573741": null
+                        },
+                        {
+                            "id": 7,
+                            "order": "7.00000000000000000000",
+                            "created_on": "2022-08-22T20:31:38.795953+00:00",
+                            "updated_on": "2022-08-22T20:36:25.944103+00:00",
+                            "field_562466": "Add skylights to bedroom 2",
+                            "field_562467": "Add skylights to bedroom 2.",
+                            "field_562468": 3,
+                            "field_562479": [
+                                5
+                            ],
+                            "field_562480": 222737,
+                            "field_562482": "true",
+                            "field_562486": "2500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                8
+                            ],
+                            "field_562490": null,
+                            "field_562495": [
+                                1,
+                                6
+                            ],
+                            "field_562497": "15.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": null,
+                            "field_573741": null
+                        },
+                        {
+                            "id": 8,
+                            "order": "8.00000000000000000000",
+                            "created_on": "2022-08-22T20:33:09.966993+00:00",
+                            "updated_on": "2022-08-22T20:39:41.952343+00:00",
+                            "field_562466": "Add skylights to bedroom 3",
+                            "field_562467": "Add skylights to bedroom 3",
+                            "field_562468": 3,
+                            "field_562479": [
+                                6
+                            ],
+                            "field_562480": 222737,
+                            "field_562482": "true",
+                            "field_562486": "2500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                8
+                            ],
+                            "field_562490": null,
+                            "field_562495": [
+                                3
+                            ],
+                            "field_562497": "15.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": null,
+                            "field_573741": null
+                        },
+                        {
+                            "id": 9,
+                            "order": "9.00000000000000000000",
+                            "created_on": "2022-08-22T20:33:39.174452+00:00",
+                            "updated_on": "2022-08-24T18:58:00.897277+00:00",
+                            "field_562466": "Add additional outlets in bedroom 1",
+                            "field_562467": "Add 2 more electrical outlets to bedroom 1.",
+                            "field_562468": 3,
+                            "field_562479": [
+                                4
+                            ],
+                            "field_562480": 222738,
+                            "field_562482": "true",
+                            "field_562486": "2800.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                9
+                            ],
+                            "field_562490": "2022-05-20",
+                            "field_562495": [
+                                4
+                            ],
+                            "field_562497": "24.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": "3200.00",
+                            "field_573741": null
+                        },
+                        {
+                            "id": 10,
+                            "order": "10.00000000000000000000",
+                            "created_on": "2022-08-22T20:38:17.676576+00:00",
+                            "updated_on": "2022-08-24T18:57:27.892725+00:00",
+                            "field_562466": "Install hardwood floor in living room",
+                            "field_562467": "Install hardwood floor in the living room.",
+                            "field_562468": 4,
+                            "field_562479": [
+                                3
+                            ],
+                            "field_562480": 222738,
+                            "field_562482": "false",
+                            "field_562486": "5500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                3
+                            ],
+                            "field_562490": "2022-01-31",
+                            "field_562495": [],
+                            "field_562497": "48.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": "5350.00",
+                            "field_573741": null
+                        },
+                        {
+                            "id": 11,
+                            "order": "11.00000000000000000000",
+                            "created_on": "2022-08-22T20:40:46.921897+00:00",
+                            "updated_on": "2022-08-24T18:57:35.878583+00:00",
+                            "field_562466": "Install new gas stove in kitchen",
+                            "field_562467": "Install the new gas stove in the kitchen and connect the gas line.",
+                            "field_562468": 5,
+                            "field_562479": [
+                                1
+                            ],
+                            "field_562480": 222738,
+                            "field_562482": "true",
+                            "field_562486": "5800.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                7
+                            ],
+                            "field_562490": "2022-06-30",
+                            "field_562495": [
+                                5
+                            ],
+                            "field_562497": "24.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": "5750.00",
+                            "field_573741": null
+                        },
+                        {
+                            "id": 12,
+                            "order": "12.00000000000000000000",
+                            "created_on": "2022-08-23T18:27:21.805653+00:00",
+                            "updated_on": "2022-08-23T18:30:13.312936+00:00",
+                            "field_562466": "Install new dishwasher kitchen 2",
+                            "field_562467": "Install the new dishwasher in kitchen 2",
+                            "field_562468": 5,
+                            "field_562479": [
+                                2
+                            ],
+                            "field_562480": 222738,
+                            "field_562482": "true",
+                            "field_562486": "1500.00",
+                            "field_562487": null,
+                            "field_562488": [
+                                6
+                            ],
+                            "field_562490": "2022-06-30",
+                            "field_562495": [],
+                            "field_562497": "10.0",
+                            "field_562498": null,
+                            "field_573731": null,
+                            "field_573740": "2300.00",
+                            "field_573741": null
+                        }
+                    ]
+                },
+                {
+                    "id": 91394,
+                    "name": "Vendors",
+                    "order": 3,
+                    "fields": [
+                        {
+                            "id": 562469,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 562470,
+                            "type": "phone_number",
+                            "name": "Phone number",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 562471,
+                            "type": "email",
+                            "name": "Email",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 562499,
+                            "type": "link_row",
+                            "name": "Related contacts",
+                            "order": 4,
+                            "primary": false,
+                            "link_row_table_id": 91399,
+                            "link_row_related_field_id": 573727,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 562510,
+                            "type": "url",
+                            "name": "Website",
+                            "order": 5,
+                            "primary": false
+                        },
+                        {
+                            "id": 576011,
+                            "type": "formula",
+                            "name": "Number of tasks contracted",
+                            "order": 6,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "array_formula_type": null,
+                            "formula": "count(lookup('Related contacts','Related tasks'))",
+                            "formula_type": "number"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 127367,
+                            "type": "grid",
+                            "name": "All vendors",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 35678,
+                                    "field_id": 562469,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 764502,
+                                    "field_id": 562469,
+                                    "width": 209,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764500,
+                                    "field_id": 562470,
+                                    "width": 155,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764501,
+                                    "field_id": 562471,
+                                    "width": 242,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764530,
+                                    "field_id": 562499,
+                                    "width": 266,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764537,
+                                    "field_id": 562510,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 787038,
+                                    "field_id": 576011,
+                                    "width": 239,
+                                    "hidden": false,
+                                    "order": 32767,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 133097,
+                            "type": "grid",
+                            "name": "Most frequently used",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 49903,
+                                    "field_id": 576011,
+                                    "type": "higher_than",
+                                    "value": "2"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 35679,
+                                    "field_id": 576011,
+                                    "order": "DESC"
+                                },
+                                {
+                                    "id": 35680,
+                                    "field_id": 562469,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 803993,
+                                    "field_id": 562469,
+                                    "width": 220,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 803994,
+                                    "field_id": 562470,
+                                    "width": 161,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 803995,
+                                    "field_id": 562471,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 803996,
+                                    "field_id": 562499,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 803997,
+                                    "field_id": 562510,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 803998,
+                                    "field_id": 576011,
+                                    "width": 239,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130349,
+                            "type": "form",
+                            "name": "New vendor",
+                            "order": 3,
+                            "public": false,
+                            "title": "Add a new vendor to the list!",
+                            "description": "",
+                            "cover_image": null,
+                            "logo_image": {
+                                "name": "4iU8mgGmmrAe2gvZk37sGoxfGSyP9hQj_645259aa781af5f37dcff4170abe02e2fd9d40d4ee2b46b77bc5126261b62642.jpeg",
+                                "original_name": "newvendor.jpeg"
+                            },
+                            "submit_text": "Submit",
+                            "submit_action": "MESSAGE",
+                            "submit_action_message": "This vendor has been added.",
+                            "submit_action_redirect_url": "",
+                            "field_options": [
+                                {
+                                    "id": 54434,
+                                    "field_id": 562469,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54435,
+                                    "field_id": 562470,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54436,
+                                    "field_id": 562471,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54437,
+                                    "field_id": 562499,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54438,
+                                    "field_id": 562510,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54439,
+                                    "field_id": 576011,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2022-08-16T20:12:36.947084+00:00",
+                            "updated_on": "2022-08-22T20:17:12.953560+00:00",
+                            "field_562469": "Carmen's fixing company",
+                            "field_562470": "(248) 103-1099",
+                            "field_562471": "hello@carmensfixingcompany.com",
+                            "field_562499": [
+                                1,
+                                2
+                            ],
+                            "field_562510": "carmensfixingcompany.com",
+                            "field_576011": null
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2022-08-17T14:10:08.603789+00:00",
+                            "updated_on": "2022-08-22T20:17:23.960219+00:00",
+                            "field_562469": "Lali's Construction Co",
+                            "field_562470": "(102) 494-1099",
+                            "field_562471": "hello@lalisconstructionco.com",
+                            "field_562499": [
+                                3,
+                                4,
+                                5
+                            ],
+                            "field_562510": "lalisconstructionco.com",
+                            "field_576011": null
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2022-08-17T14:10:25.606547+00:00",
+                            "updated_on": "2022-08-22T20:17:43.446275+00:00",
+                            "field_562469": "Welu Plumbing LLC",
+                            "field_562470": "(864) 387-1735",
+                            "field_562471": "hello@weluplumbing.com",
+                            "field_562499": [
+                                7,
+                                6
+                            ],
+                            "field_562510": "weluplumbing.com",
+                            "field_576011": null
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2022-08-17T14:10:45.253879+00:00",
+                            "updated_on": "2022-08-22T20:17:59.088990+00:00",
+                            "field_562469": "Big and Little Construction LLC",
+                            "field_562470": "(346) 484-2933",
+                            "field_562471": "hello@bigandlittleconstruction.com",
+                            "field_562499": [
+                                9,
+                                8
+                            ],
+                            "field_562510": "bigandlittleconstruction.com",
+                            "field_576011": null
+                        }
+                    ]
+                },
+                {
+                    "id": 91399,
+                    "name": "Contacts",
+                    "order": 4,
+                    "fields": [
+                        {
+                            "id": 562500,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 562501,
+                            "type": "email",
+                            "name": "Email",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 562502,
+                            "type": "phone_number",
+                            "name": "Phone number",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 563490,
+                            "type": "single_select",
+                            "name": "Role",
+                            "order": 4,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 223088,
+                                    "value": "General carpenter",
+                                    "color": "light-red",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 223089,
+                                    "value": "Plumber",
+                                    "color": "light-blue",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 223090,
+                                    "value": "Electrictian",
+                                    "color": "light-green",
+                                    "order": 2
+                                },
+                                {
+                                    "id": 223091,
+                                    "value": "Heating/cooling",
+                                    "color": "gray",
+                                    "order": 3
+                                }
+                            ]
+                        },
+                        {
+                            "id": 573727,
+                            "type": "link_row",
+                            "name": "Representing",
+                            "order": 5,
+                            "primary": false,
+                            "link_row_table_id": 91394,
+                            "link_row_related_field_id": 562499,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 562489,
+                            "type": "link_row",
+                            "name": "Related tasks",
+                            "order": 6,
+                            "primary": false,
+                            "link_row_table_id": 91393,
+                            "link_row_related_field_id": 562488,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 573739,
+                            "type": "number",
+                            "name": "Hourly rate",
+                            "order": 7,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 127372,
+                            "type": "grid",
+                            "name": "All contacts",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 35681,
+                                    "field_id": 562500,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 783586,
+                                    "field_id": 562489,
+                                    "width": 319,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764533,
+                                    "field_id": 562500,
+                                    "width": 145,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764531,
+                                    "field_id": 562501,
+                                    "width": 282,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764532,
+                                    "field_id": 562502,
+                                    "width": 159,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 783574,
+                                    "field_id": 563490,
+                                    "width": 150,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 783576,
+                                    "field_id": 573727,
+                                    "width": 190,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 783587,
+                                    "field_id": 573739,
+                                    "width": 139,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 133098,
+                            "type": "grid",
+                            "name": "Most affordable",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 49904,
+                                    "field_id": 573739,
+                                    "type": "lower_than",
+                                    "value": "95"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 35682,
+                                    "field_id": 573739,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 804004,
+                                    "field_id": 562489,
+                                    "width": 324,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 803999,
+                                    "field_id": 562500,
+                                    "width": 153,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 804000,
+                                    "field_id": 562501,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 804001,
+                                    "field_id": 562502,
+                                    "width": 156,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 804002,
+                                    "field_id": 563490,
+                                    "width": 157,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 804003,
+                                    "field_id": 573727,
+                                    "width": 168,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 804005,
+                                    "field_id": 573739,
+                                    "width": 131,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 133099,
+                            "type": "kanban",
+                            "name": "By role",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 563490,
+                            "field_options": [
+                                {
+                                    "id": 22120,
+                                    "field_id": 562500,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 22124,
+                                    "field_id": 573727,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 22121,
+                                    "field_id": 562501,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 22122,
+                                    "field_id": 562502,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 22123,
+                                    "field_id": 563490,
+                                    "hidden": true,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 22126,
+                                    "field_id": 573739,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 22125,
+                                    "field_id": 562489,
+                                    "hidden": false,
+                                    "order": 7
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130350,
+                            "type": "form",
+                            "name": "New contact",
+                            "order": 4,
+                            "public": false,
+                            "title": "Add a new contact!",
+                            "description": "",
+                            "cover_image": null,
+                            "logo_image": {
+                                "name": "gzrWDsgVvtAha8Tj6D3JTvuLAvH457Fm_4a12d55f1cdb9ce9f68b774523a37af4764e323e69262a8c232ed82fe432ac42.jpeg",
+                                "original_name": "newcontact.jpeg"
+                            },
+                            "submit_text": "Submit",
+                            "submit_action": "MESSAGE",
+                            "submit_action_message": "The contact has been submitted!",
+                            "submit_action_redirect_url": "",
+                            "field_options": [
+                                {
+                                    "id": 54445,
+                                    "field_id": 562489,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54440,
+                                    "field_id": 562500,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54441,
+                                    "field_id": 562501,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54442,
+                                    "field_id": 562502,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54443,
+                                    "field_id": 563490,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54444,
+                                    "field_id": 573727,
+                                    "name": "Representing company",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54446,
+                                    "field_id": 573739,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": false,
+                                    "order": 32767,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "created_on": "2022-08-16T20:43:36.891843+00:00",
+                            "updated_on": "2022-08-22T20:45:32.460022+00:00",
+                            "field_562500": "Claire Thompkins",
+                            "field_562501": "cthompkins@carmensfixingcompany.com",
+                            "field_562502": "(523) 847-0482",
+                            "field_563490": 223088,
+                            "field_573727": [
+                                2
+                            ],
+                            "field_562489": [
+                                1
+                            ],
+                            "field_573739": "70"
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2022-08-16T20:43:36.891894+00:00",
+                            "updated_on": "2022-08-22T20:45:34.908086+00:00",
+                            "field_562500": "Janice Perova",
+                            "field_562501": "jperova@carmensfixingcompany.com",
+                            "field_562502": "(827) 575-3938",
+                            "field_563490": 223088,
+                            "field_573727": [
+                                2
+                            ],
+                            "field_562489": [
+                                2
+                            ],
+                            "field_573739": "85"
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2022-08-17T14:12:44.302591+00:00",
+                            "updated_on": "2022-08-22T20:45:39.657454+00:00",
+                            "field_562500": "Martin Jackle",
+                            "field_562501": "mjackle@lalisconstruction.com",
+                            "field_562502": "(894) 9092-1938",
+                            "field_563490": 223088,
+                            "field_573727": [
+                                3
+                            ],
+                            "field_562489": [
+                                10
+                            ],
+                            "field_573739": "121"
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2022-08-17T14:13:23.846766+00:00",
+                            "updated_on": "2022-08-22T20:45:44.897752+00:00",
+                            "field_562500": "Pedro Juarez",
+                            "field_562501": "pjuarez@lalisconstruction.com",
+                            "field_562502": "(837) 435-5256",
+                            "field_563490": 223090,
+                            "field_573727": [
+                                3
+                            ],
+                            "field_562489": [],
+                            "field_573739": "90"
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2022-08-17T14:13:48.873176+00:00",
+                            "updated_on": "2022-08-22T20:45:48.295919+00:00",
+                            "field_562500": "Christian Sherman",
+                            "field_562501": "csherman@lalisconstruction.com",
+                            "field_562502": "(732) 900-0918",
+                            "field_563490": 223091,
+                            "field_573727": [
+                                3
+                            ],
+                            "field_562489": [
+                                3,
+                                4
+                            ],
+                            "field_573739": "78"
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "created_on": "2022-08-22T20:09:40.040652+00:00",
+                            "updated_on": "2022-08-22T20:45:53.868287+00:00",
+                            "field_562500": "Viviana Electra",
+                            "field_562501": "velectra@weluplumbing.com",
+                            "field_562502": "(347) 204-2984",
+                            "field_563490": 223089,
+                            "field_573727": [
+                                4
+                            ],
+                            "field_562489": [
+                                5,
+                                12
+                            ],
+                            "field_573739": "150"
+                        },
+                        {
+                            "id": 7,
+                            "order": "7.00000000000000000000",
+                            "created_on": "2022-08-22T20:09:46.001201+00:00",
+                            "updated_on": "2022-08-22T20:46:01.455516+00:00",
+                            "field_562500": "Ben Peljung",
+                            "field_562501": "bpeljung@weluplumbing.com",
+                            "field_562502": "(384) 349-2938",
+                            "field_563490": 223089,
+                            "field_573727": [
+                                4
+                            ],
+                            "field_562489": [
+                                6,
+                                11
+                            ],
+                            "field_573739": "145"
+                        },
+                        {
+                            "id": 8,
+                            "order": "8.00000000000000000000",
+                            "created_on": "2022-08-22T20:09:51.879490+00:00",
+                            "updated_on": "2022-08-22T20:46:05.006589+00:00",
+                            "field_562500": "Corrine Plymouth",
+                            "field_562501": "cplymouth@bigandlittle.com",
+                            "field_562502": "(927) 475-0920",
+                            "field_563490": 223088,
+                            "field_573727": [
+                                5
+                            ],
+                            "field_562489": [
+                                7,
+                                8
+                            ],
+                            "field_573739": "95"
+                        },
+                        {
+                            "id": 9,
+                            "order": "9.00000000000000000000",
+                            "created_on": "2022-08-22T20:12:13.347929+00:00",
+                            "updated_on": "2022-08-22T20:46:09.722981+00:00",
+                            "field_562500": "Jeremiah Puth",
+                            "field_562501": "jputh@bigandlittle.com",
+                            "field_562502": "(452) 452-9184",
+                            "field_563490": 223090,
+                            "field_573727": [
+                                5
+                            ],
+                            "field_562489": [
+                                9
+                            ],
+                            "field_573739": "165"
+                        }
+                    ]
+                },
+                {
+                    "id": 91397,
+                    "name": "Permits",
+                    "order": 5,
+                    "fields": [
+                        {
+                            "id": 562483,
+                            "type": "number",
+                            "name": "Number",
+                            "order": 0,
+                            "primary": true,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 562484,
+                            "type": "single_select",
+                            "name": "Issue status",
+                            "order": 1,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 222739,
+                                    "value": "Denied",
+                                    "color": "red",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 222740,
+                                    "value": "Pending",
+                                    "color": "orange",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 222741,
+                                    "value": "Approved",
+                                    "color": "dark-green",
+                                    "order": 2
+                                }
+                            ]
+                        },
+                        {
+                            "id": 562485,
+                            "type": "lookup",
+                            "name": "Issued to",
+                            "order": 2,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": "text",
+                            "through_field_id": 562494,
+                            "through_field_name": "Used for",
+                            "target_field_id": 573731,
+                            "target_field_name": "Vendor name"
+                        },
+                        {
+                            "id": 562494,
+                            "type": "link_row",
+                            "name": "Used for",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 91393,
+                            "link_row_related_field_id": 562495,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 574078,
+                            "type": "lookup",
+                            "name": "Description of work",
+                            "order": 4,
+                            "primary": false,
+                            "error": null,
+                            "date_format": null,
+                            "date_include_time": null,
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "array_formula_type": "text",
+                            "through_field_id": 562494,
+                            "through_field_name": "Used for",
+                            "target_field_id": 562467,
+                            "target_field_name": "Description"
+                        },
+                        {
+                            "id": 574079,
+                            "type": "date",
+                            "name": "Expiration date",
+                            "order": 5,
+                            "primary": false,
+                            "date_format": "ISO",
+                            "date_include_time": false,
+                            "date_time_format": "24"
+                        },
+                        {
+                            "id": 574080,
+                            "type": "text",
+                            "name": "Notes",
+                            "order": 6,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 574081,
+                            "type": "single_select",
+                            "name": "Type",
+                            "order": 7,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 229277,
+                                    "value": "Residential construction",
+                                    "color": "dark-blue",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 229278,
+                                    "value": "Electric",
+                                    "color": "light-green",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 229279,
+                                    "value": "Plumbing",
+                                    "color": "light-orange",
+                                    "order": 2
+                                }
+                            ]
+                        },
+                        {
+                            "id": 574082,
+                            "type": "file",
+                            "name": "Copy",
+                            "order": 8,
+                            "primary": false
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 127370,
+                            "type": "grid",
+                            "name": "All permits",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 35683,
+                                    "field_id": 574079,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 764516,
+                                    "field_id": 562483,
+                                    "width": 111,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764514,
+                                    "field_id": 562484,
+                                    "width": 148,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764515,
+                                    "field_id": 562485,
+                                    "width": 172,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 764522,
+                                    "field_id": 562494,
+                                    "width": 189,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 784212,
+                                    "field_id": 574078,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 784213,
+                                    "field_id": 574079,
+                                    "width": 164,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 784214,
+                                    "field_id": 574080,
+                                    "width": 262,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 784215,
+                                    "field_id": 574081,
+                                    "width": 192,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 784216,
+                                    "field_id": 574082,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 133100,
+                            "type": "kanban",
+                            "name": "By issue status",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 562484,
+                            "field_options": [
+                                {
+                                    "id": 22127,
+                                    "field_id": 562483,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 22134,
+                                    "field_id": 574081,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 22128,
+                                    "field_id": 562484,
+                                    "hidden": true,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 22129,
+                                    "field_id": 562485,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 22130,
+                                    "field_id": 562494,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 22131,
+                                    "field_id": 574078,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 22132,
+                                    "field_id": 574079,
+                                    "hidden": false,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 22133,
+                                    "field_id": 574080,
+                                    "hidden": false,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 22135,
+                                    "field_id": 574082,
+                                    "hidden": false,
+                                    "order": 9
+                                }
+                            ]
+                        },
+                        {
+                            "id": 133103,
+                            "type": "kanban",
+                            "name": "By type",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 574081,
+                            "field_options": [
+                                {
+                                    "id": 22136,
+                                    "field_id": 562483,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 22140,
+                                    "field_id": 574078,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 22137,
+                                    "field_id": 562484,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 22138,
+                                    "field_id": 562485,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 22139,
+                                    "field_id": 562494,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 22141,
+                                    "field_id": 574079,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 22142,
+                                    "field_id": 574080,
+                                    "hidden": false,
+                                    "order": 7
+                                },
+                                {
+                                    "id": 22143,
+                                    "field_id": 574081,
+                                    "hidden": true,
+                                    "order": 8
+                                },
+                                {
+                                    "id": 22144,
+                                    "field_id": 574082,
+                                    "hidden": false,
+                                    "order": 9
+                                }
+                            ]
+                        },
+                        {
+                            "id": 130351,
+                            "type": "form",
+                            "name": "New permit",
+                            "order": 4,
+                            "public": false,
+                            "title": "Enter all details for your new permit below!",
+                            "description": "",
+                            "cover_image": null,
+                            "logo_image": {
+                                "name": "RBBJUrNxQMMsaeX0NDFRwJtiHqRvOZq3_d28af7f9f995b62ab93b25032602088b7c0a68b8e9adbe17a2604041f5a24fa6.jpeg",
+                                "original_name": "newpermit.jpeg"
+                            },
+                            "submit_text": "Submit",
+                            "submit_action": "MESSAGE",
+                            "submit_action_message": "This permit has been added to the list.",
+                            "submit_action_redirect_url": "",
+                            "field_options": [
+                                {
+                                    "id": 54447,
+                                    "field_id": 562483,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54454,
+                                    "field_id": 574081,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54448,
+                                    "field_id": 562484,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54450,
+                                    "field_id": 562494,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54452,
+                                    "field_id": 574079,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54453,
+                                    "field_id": 574080,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54449,
+                                    "field_id": 562485,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54451,
+                                    "field_id": 574078,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                },
+                                {
+                                    "id": 54455,
+                                    "field_id": 574082,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": []
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "created_on": "2022-08-16T20:25:07.580715+00:00",
+                            "updated_on": "2022-08-30T01:06:34.284480+00:00",
+                            "field_562483": "93854355",
+                            "field_562484": 222740,
+                            "field_562485": null,
+                            "field_562494": [
+                                7
+                            ],
+                            "field_574078": null,
+                            "field_574079": null,
+                            "field_574080": "This permit was resubmitted due to a denial.",
+                            "field_574081": 229277,
+                            "field_574082": [
+                                {
+                                    "name": "8iV3X7gRZS8LHgQug9a5fcZ3y9Vw7cY9_5d3152fc95eb51a2a28ea74a5ac7efc85146dfdeb4cc5137200ee4665125fb63.docx",
+                                    "visible_name": "Permit_93854355.docx",
+                                    "original_name": "Permit_93854355.docx"
+                                }
+                            ]
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2022-08-16T20:25:07.580768+00:00",
+                            "updated_on": "2022-08-30T01:14:21.257868+00:00",
+                            "field_562483": "97329533",
+                            "field_562484": 222741,
+                            "field_562485": null,
+                            "field_562494": [
+                                3
+                            ],
+                            "field_574078": null,
+                            "field_574079": "2022-07-30",
+                            "field_574080": "Approved with the possibility of extension.",
+                            "field_574081": 229277,
+                            "field_574082": [
+                                {
+                                    "name": "xgbC3stHrv865Gkz74b3oN839w5PEvs0_e5287f8348c0d35569663ee0d5b7a6d08680aa7779dc7727114449d70b023402.docx",
+                                    "visible_name": "Permit_97329533.docx",
+                                    "original_name": "Permit_97329533.docx"
+                                }
+                            ]
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2022-08-22T20:39:31.286993+00:00",
+                            "updated_on": "2022-08-30T01:15:15.096649+00:00",
+                            "field_562483": "58754764",
+                            "field_562484": 222740,
+                            "field_562485": null,
+                            "field_562494": [
+                                8
+                            ],
+                            "field_574078": null,
+                            "field_574079": null,
+                            "field_574080": "Need to call to check the status.",
+                            "field_574081": 229277,
+                            "field_574082": [
+                                {
+                                    "name": "8V6GAp5AezYjK1SrZmbIbIg8M1Afaf1I_5d3152fc95eb51a2a28ea74a5ac7efc85146dfdeb4cc5137200ee4665125fb63.docx",
+                                    "visible_name": "Permit_58754764.docx",
+                                    "original_name": "Permit_58754764.docx"
+                                }
+                            ]
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2022-08-22T20:39:32.063431+00:00",
+                            "updated_on": "2022-08-30T01:14:24.751537+00:00",
+                            "field_562483": "30843735",
+                            "field_562484": 222741,
+                            "field_562485": null,
+                            "field_562494": [
+                                9
+                            ],
+                            "field_574078": null,
+                            "field_574079": "2022-08-12",
+                            "field_574080": "Approved with the possibility of extension.",
+                            "field_574081": 229278,
+                            "field_574082": [
+                                {
+                                    "name": "cWXgbA1CxTK3erhsg5sX0DTSrN6lkF2I_5d3152fc95eb51a2a28ea74a5ac7efc85146dfdeb4cc5137200ee4665125fb63.docx",
+                                    "visible_name": "Permit_30843735.docx",
+                                    "original_name": "Permit_30843735.docx"
+                                }
+                            ]
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2022-08-22T20:39:33.245641+00:00",
+                            "updated_on": "2022-08-30T01:08:36.312109+00:00",
+                            "field_562483": "52408343",
+                            "field_562484": 222741,
+                            "field_562485": null,
+                            "field_562494": [
+                                11
+                            ],
+                            "field_574078": null,
+                            "field_574079": "2022-07-04",
+                            "field_574080": null,
+                            "field_574081": 229279,
+                            "field_574082": [
+                                {
+                                    "name": "pF8c4knz1TY9sRe704lfVImbGdA5Hudc_5d3152fc95eb51a2a28ea74a5ac7efc85146dfdeb4cc5137200ee4665125fb63.docx",
+                                    "visible_name": "Permit_52408343.docx",
+                                    "original_name": "Permit_52408343.docx"
+                                }
+                            ]
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "created_on": "2022-08-23T01:36:14.174817+00:00",
+                            "updated_on": "2022-08-30T01:09:12.348881+00:00",
+                            "field_562483": "38538563",
+                            "field_562484": 222739,
+                            "field_562485": null,
+                            "field_562494": [
+                                7
+                            ],
+                            "field_574078": null,
+                            "field_574079": null,
+                            "field_574080": "Permit was submitted incorrectly. Received notice to resubmit with a different code.",
+                            "field_574081": 229277,
+                            "field_574082": [
+                                {
+                                    "name": "hksFAuyMTHs0HfO64JeK0Rb4OpAVFM1s_5d3152fc95eb51a2a28ea74a5ac7efc85146dfdeb4cc5137200ee4665125fb63.docx",
+                                    "visible_name": "Permit_38538563.docx",
+                                    "original_name": "Permit_38538563.docx"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

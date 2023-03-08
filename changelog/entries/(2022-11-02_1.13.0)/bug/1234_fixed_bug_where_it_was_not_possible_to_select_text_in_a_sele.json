@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed bug where it was not possible to select text in a selected and editing cell in Chrome.",
+    "issue_number": 1234,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed Brotli decoding issue where you sometimes cannot import from Airtable.",
+    "issue_number": 1555,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

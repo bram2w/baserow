@@ -61,9 +61,10 @@ class CoreConfig(AppConfig):
 
         from baserow.core.registries import subject_type_registry
 
-        from .subjects import UserSubjectType
+        from .subjects import AnonymousUserSubjectType, UserSubjectType
 
         subject_type_registry.register(UserSubjectType())
+        subject_type_registry.register(AnonymousUserSubjectType())
 
         from .operations import (
             CreateApplicationsGroupOperationType,
@@ -136,16 +137,22 @@ class CoreConfig(AppConfig):
         operation_type_registry.register(ReadApplicationOperationType())
 
         from baserow.core.actions import (
+            AcceptGroupInvitationActionType,
             CreateApplicationActionType,
             CreateGroupActionType,
+            CreateGroupInvitationActionType,
             DeleteApplicationActionType,
             DeleteGroupActionType,
+            DeleteGroupInvitationActionType,
             DuplicateApplicationActionType,
             InstallTemplateActionType,
+            LeaveGroupActionType,
             OrderApplicationsActionType,
             OrderGroupsActionType,
+            RejectGroupInvitationActionType,
             UpdateApplicationActionType,
             UpdateGroupActionType,
+            UpdateGroupInvitationActionType,
         )
 
         action_type_registry.register(CreateGroupActionType())
@@ -158,6 +165,12 @@ class CoreConfig(AppConfig):
         action_type_registry.register(OrderApplicationsActionType())
         action_type_registry.register(DuplicateApplicationActionType())
         action_type_registry.register(InstallTemplateActionType())
+        action_type_registry.register(CreateGroupInvitationActionType())
+        action_type_registry.register(DeleteGroupInvitationActionType())
+        action_type_registry.register(AcceptGroupInvitationActionType())
+        action_type_registry.register(RejectGroupInvitationActionType())
+        action_type_registry.register(UpdateGroupInvitationActionType())
+        action_type_registry.register(LeaveGroupActionType())
 
         from baserow.core.snapshots.actions import (
             CreateSnapshotActionType,
@@ -169,10 +182,22 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DeleteSnapshotActionType())
         action_type_registry.register(RestoreSnapshotActionType())
 
+        from baserow.core.trash.actions import (
+            EmptyTrashActionType,
+            RestoreFromTrashActionType,
+        )
+
+        action_type_registry.register(EmptyTrashActionType())
+        action_type_registry.register(RestoreFromTrashActionType())
+
         from baserow.core.user.actions import (
             CancelUserDeletionActionType,
+            ChangeUserPasswordActionType,
             CreateUserActionType,
+            ResetUserPasswordActionType,
             ScheduleUserDeletionActionType,
+            SendResetUserPasswordActionType,
+            SignInUserActionType,
             UpdateUserActionType,
         )
 
@@ -180,6 +205,10 @@ class CoreConfig(AppConfig):
         action_type_registry.register(UpdateUserActionType())
         action_type_registry.register(ScheduleUserDeletionActionType())
         action_type_registry.register(CancelUserDeletionActionType())
+        action_type_registry.register(SignInUserActionType())
+        action_type_registry.register(ChangeUserPasswordActionType())
+        action_type_registry.register(SendResetUserPasswordActionType())
+        action_type_registry.register(ResetUserPasswordActionType())
 
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,

@@ -1067,8 +1067,8 @@ def test_batch_update_rows_visible_in_public_view_to_some_not_be_visible_event_s
         [initially_visible_row, initially_visible_row2]
     ) == [
         PublicViewRows(
-            ViewHandler().get_view(
-                public_view_with_filters_initially_hiding_all_rows.id
+            ViewHandler().get_view_as_user(
+                user, public_view_with_filters_initially_hiding_all_rows.id
             ),
             allowed_row_ids={1, 2},
         )
@@ -1288,7 +1288,7 @@ def test_batch_update_rows_visible_in_public_view_to_be_not_visible_event_sent(
         [initially_visible_row, initially_visible_row2]
     ) == [
         PublicViewRows(
-            ViewHandler().get_view(public_view_with_row_showing.id),
+            ViewHandler().get_view_as_user(user, public_view_with_row_showing.id),
             allowed_row_ids={1, 2},
         )
     ]
@@ -1500,7 +1500,7 @@ def test_batch_update_rows_visible_in_public_view_still_be_visible_event_sent(
         [initially_visible_row, initially_visible_row2]
     ) == [
         PublicViewRows(
-            ViewHandler().get_view(public_view_with_row_showing.id),
+            ViewHandler().get_view_as_user(user, public_view_with_row_showing.id),
             allowed_row_ids={1, 2},
         )
     ]
@@ -1602,7 +1602,7 @@ def test_batch_update_subset_rows_visible_in_public_view_no_filters(
         [initially_visible_row, initially_visible_row2]
     ) == [
         PublicViewRows(
-            ViewHandler().get_view(public_view_with_row_showing.id),
+            ViewHandler().get_view_as_user(user, public_view_with_row_showing.id),
             allowed_row_ids=PublicViewRows.ALL_ROWS_ALLOWED,
         )
     ]
@@ -1996,7 +1996,7 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
                     "rows": [
                         {
                             "id": visible_moving_row.id,
-                            "order": "0.99999999999999999999",
+                            "order": "0.50000000000000000000",
                             # Only the visible field should be sent
                             f"field_{visible_field.id}": "Visible",
                         }

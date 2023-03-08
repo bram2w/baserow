@@ -1,22 +1,24 @@
 .grid-field-date {
   display: flex;
   width: 100%;
+  justify-content: space-between;
+  gap: 8px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 %grid-field-date__date {
-  flex: 0 0 100%;
   width: 100%;
-
-  .grid-field-date--has-time & {
-    width: 60%;
-    flex-basis: 60%;
-  }
+  max-width: 75px;
+  padding: 0;
 }
 
 %grid-field-date__time {
-  flex: 0 0 40%;
-  width: 40%;
-  padding-left: 0;
+  width: 100%;
+  max-width: 65px;
+  padding: 0;
+  flex-shrink: 2;
+  text-align: center;
 }
 
 .grid-field-date__date {
@@ -29,16 +31,23 @@
   @extend %grid-field-date__time;
 }
 
+.grid-field-date__tzinfo {
+  @extend .grid-field-text;
+
+  flex-shrink: 5;
+  padding: 0;
+  color: $color-neutral-500;
+  font-size: 0.8em;
+  width: 100%;
+  max-width: 50px;
+}
+
 .grid-field-date__date-input {
   @extend .grid-field-text__input;
   @extend %grid-field-date__date;
-
-  min-width: 0;
 }
 
 .grid-field-date__time-input {
   @extend .grid-field-text__input;
   @extend %grid-field-date__time;
-
-  min-width: 0;
 }

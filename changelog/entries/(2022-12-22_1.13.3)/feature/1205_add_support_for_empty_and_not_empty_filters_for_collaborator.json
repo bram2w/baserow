@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for \"Empty\" and \"Not Empty\" filters for Collaborator field.",
+    "issue_number": 1205,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

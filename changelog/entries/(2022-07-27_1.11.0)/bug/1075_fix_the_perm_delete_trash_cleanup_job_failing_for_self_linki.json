@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix the perm delete trash cleanup job failing for self linking tables.",
+    "issue_number": 1075,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed bug where the backend would fail hard when an invalid integer was provided as\n'before_id' when moving a row by introducing a decorator to validate query parameters.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

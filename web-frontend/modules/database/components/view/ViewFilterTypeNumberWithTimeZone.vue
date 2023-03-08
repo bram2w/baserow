@@ -2,7 +2,7 @@
   <div class="filters__multi-value">
     <input
       ref="input"
-      v-model="copy"
+      v-model="xAgo"
       type="text"
       class="
         input
@@ -10,65 +10,49 @@
         filters__value-input
         filters__value-input--small
       "
-      :class="{ 'input--error': $v.copy.$error }"
+      :class="{ 'input--error': $v.xAgo.$error }"
       :disabled="disabled"
-      @input="combinedDelayedUpdate($event.target.value)"
-      @keydown.enter="combinedDelayedUpdate($event.target.value, true)"
+      @input="
+        ;[
+          setCopy($event.target.value),
+          delayedUpdate($event.target.value, true),
+        ]
+      "
+      @keydown.enter="
+        ;[
+          setCopy($event.target.value),
+          delayedUpdate($event.target.value, true),
+        ]
+      "
     />
-    <span class="filters__value-timezone">{{ timezoneValue }}</span>
+    <span class="filters__value-timezone">{{ getTimezoneAbbr() }}</span>
   </div>
 </template>
 
 <script>
-import viewFilter from '@baserow/modules/database/mixins/viewFilter'
-import { integer } from 'vuelidate/lib/validators'
-
-import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
+import { integer, required } from 'vuelidate/lib/validators'
+import filterTypeDateInput from '@baserow/modules/database/mixins/filterTypeDateInput'
 
 export default {
   name: 'ViewFilterTypeNumberWithTimeZone',
-  mixins: [filterTypeInput, viewFilter],
-  computed: {
-    timezoneValue() {
-      const [timezone] = this.splitCombinedValue(this.filter.value)
-      return timezone
-    },
-  },
-  watch: {
-    'filter.value'(value) {
-      this.copy = this.getDaysAgo(value)
-    },
-  },
-  created() {
-    this.copy = this.getDaysAgo(this.filter.value)
+  mixins: [filterTypeDateInput],
+  data() {
+    return {
+      xAgo: '',
+    }
   },
   methods: {
-    getSeparator() {
-      return '?'
+    isInputValid() {
+      return !this.$v.xAgo.$error
     },
-    splitCombinedValue(value) {
-      const separator = this.getSeparator()
-      const [timezone, daysAgo] = value.split(separator)
-      return [timezone, daysAgo]
-    },
-    getDaysAgo(value) {
-      const [, daysAgo] = this.splitCombinedValue(value)
-      return daysAgo
-    },
-    prepareValue(timezoneValue, daysAgo) {
-      const separator = this.getSeparator()
-      return `${timezoneValue}${separator}${daysAgo}`
-    },
-    combinedDelayedUpdate(value, immediately = false) {
-      const preparedValue = this.prepareValue(this.timezoneValue, value)
-      return this.delayedUpdate(preparedValue, immediately)
-    },
-    focus() {
-      this.$refs.input.focus()
+    setCopy(value, sender) {
+      const [, xAgo] = this.splitCombinedValue(value)
+      this.xAgo = xAgo
     },
   },
   validations: {
-    copy: { integer },
+    copy: { required },
+    xAgo: { integer },
   },
 }
 </script>

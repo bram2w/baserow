@@ -69,7 +69,12 @@
         "name": "Name",
         "members": "Members",
         "applications": "Applications",
-        "created": "Created"
+        "created": "Created",
+        "rowCount": "Row count",
+        "freeUsers": "Free users",
+        "seatsTaken": "Seats taken",
+        "storageUsage": "Storage Used (MB)",
+        "usageHelpText": "Calculated nightly when the track group usage setting is enabled"
     },
     "editGroupContext": {
         "delete": "Permanently delete"
@@ -187,7 +192,8 @@
         "admin": "Admin functionality",
         "rowColoring": "Row coloring",
         "surveyForm": "Survey form",
-        "publicLogoRemoval": "Public logo removal"
+        "publicLogoRemoval": "Public logo removal",
+        "personalViews": "Personal views"
     },
     "licenses": {
         "titleNoLicenses": "No licenses found",
@@ -282,5 +288,8 @@
             "label": "Hide Baserow logo on shared view",
             "premiumModalName": "public logo removal"
         }
+    },
+    "viewsContext": {
+        "personal": "Personal"
     }
 }

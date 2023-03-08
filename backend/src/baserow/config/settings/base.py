@@ -1,6 +1,5 @@
 import datetime
 import importlib
-import logging
 import os
 import re
 from decimal import Decimal
@@ -13,6 +12,21 @@ from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
 from baserow.version import VERSION
+
+# A comma separated list of feature flags used to enable in-progress or not ready
+# features for developers. See docs/development/feature-flags.md for more info.
+FEATURE_FLAGS = [
+    flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
+]
+
+
+class Everything(object):
+    def __contains__(self, other):
+        return True
+
+
+if "*" in FEATURE_FLAGS:
+    FEATURE_FLAGS = Everything()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -41,6 +55,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 ALLOWED_HOSTS += os.getenv("BASEROW_EXTRA_ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -49,7 +64,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
-    "channels",
     "drf_spectacular",
     "djcelery_email",
     "health_check",
@@ -63,6 +77,9 @@ INSTALLED_APPS = [
     "baserow.contrib.database",
     *BASEROW_BUILT_IN_PLUGINS,
 ]
+
+if "builder" in FEATURE_FLAGS:
+    INSTALLED_APPS.append("baserow.contrib.builder")
 
 BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
 if BASEROW_FULL_HEALTHCHECKS is not None:
@@ -119,15 +136,10 @@ REDIS_URL = os.getenv(
     f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0",
 )
 
-BASEROW_GROUP_STORAGE_USAGE_ENABLED = (
-    os.getenv("BASEROW_GROUP_STORAGE_USAGE_ENABLED", "false") == "true"
-)
-
 BASEROW_GROUP_STORAGE_USAGE_QUEUE = os.getenv(
     "BASEROW_GROUP_STORAGE_USAGE_QUEUE", "export"
 )
-
-BASEROW_COUNT_ROWS_ENABLED = os.getenv("BASEROW_COUNT_ROWS_ENABLED", "false") == "true"
+BASEROW_ROLE_USAGE_QUEUE = os.getenv("BASEROW_GROUP_STORAGE_USAGE_QUEUE", "export")
 
 CELERY_BROKER_URL = REDIS_URL
 CELERY_TASK_ROUTES = {
@@ -317,7 +329,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.14.0",
+    "VERSION": "1.15.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -344,6 +356,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
+        {"name": "Builder pages"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -521,9 +534,36 @@ EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
 
-USAGE_CALCULATION_INTERVAL = crontab(minute=0, hour=0)  # Midnight
 
-ROW_COUNT_INTERVAL = crontab(minute=0, hour=3)  # 3am
+def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
+    """
+    Parses a crontab from an environment variable if present or instead uses the
+    default.
+
+    Celeries crontab constructor takes the arguments in a different order than the
+    actual crontab spec so we expand and re-order the arguments to match.
+    """
+
+    minute, hour, day_of_month, month_of_year, day_of_week = os.getenv(
+        env_var_name, default_crontab
+    ).split(" ")
+    return crontab(minute, hour, day_of_week, day_of_month, month_of_year)
+
+
+MIDNIGHT_CRONTAB_STR = "0 0 * * *"
+BASEROW_STORAGE_USAGE_JOB_CRONTAB = get_crontab_from_env(
+    "BASEROW_STORAGE_USAGE_JOB_CRONTAB", default_crontab=MIDNIGHT_CRONTAB_STR
+)
+
+ONE_AM_CRONTRAB_STR = "0 1 * * *"
+BASEROW_SEAT_USAGE_JOB_CRONTAB = get_crontab_from_env(
+    "BASEROW_SEAT_USAGE_JOB_CRONTAB", default_crontab=ONE_AM_CRONTRAB_STR
+)
+
+THREE_AM_CRONTAB_STR = "0 3 * * *"
+BASEROW_ROW_COUNT_JOB_CRONTAB = get_crontab_from_env(
+    "BASEROW_ROW_COUNT_JOB_CRONTAB", default_crontab=THREE_AM_CRONTAB_STR
+)
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
@@ -575,6 +615,16 @@ MAX_FORMULA_STRING_LENGTH = 10000
 MAX_FIELD_REFERENCE_DEPTH = 1000
 DONT_UPDATE_FORMULAS_AFTER_MIGRATION = bool(
     os.getenv("DONT_UPDATE_FORMULAS_AFTER_MIGRATION", "")
+)
+EVERY_TEN_MINUTES = "*/10 * * * *"
+PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES = int(
+    os.getenv("BASEROW_PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES", 9)
+)
+PERIODIC_FIELD_UPDATE_CRONTAB = get_crontab_from_env(
+    "BASEROW_PERIODIC_FIELD_UPDATE_CRONTAB", default_crontab=EVERY_TEN_MINUTES
+)
+PERIODIC_FIELD_UPDATE_QUEUE_NAME = os.getenv(
+    "BASEROW_PERIODIC_FIELD_UPDATE_QUEUE_NAME", "export"
 )
 
 BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = int(
@@ -652,25 +702,16 @@ BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
     os.getenv("BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS", 360)  # 360 days
 )
 
-# A comma separated list of feature flags used to enable in-progress or not ready
-# features for developers. See docs/development/feature-flags.md for more info.
-FEATURE_FLAGS = [
-    flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
+PERMISSION_MANAGERS = [
+    "view_ownership",
+    "core",
+    "setting_operation",
+    "staff",
+    "member",
+    "token",
+    "role",
+    "basic",
 ]
-
-
-class Everything(object):
-    def __contains__(self, other):
-        return True
-
-
-if "*" in FEATURE_FLAGS:
-    FEATURE_FLAGS = Everything()
-
-PERMISSION_MANAGERS = os.getenv(
-    "BASEROW_PERMISSION_MANAGERS",
-    "core,setting_operation,staff,member,token,role,basic",
-).split(",")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
@@ -719,6 +760,7 @@ LOGGING = {
         "level": BASEROW_BACKEND_LOG_LEVEL,
     },
 }
+
 
 # Now incorrectly named old variable, previously we would run `sync_templates` prior
 # to starting the gunicorn server in Docker. This variable would prevent that from
@@ -774,6 +816,6 @@ for plugin in [*BASEROW_BUILT_IN_PLUGINS, *BASEROW_BACKEND_PLUGIN_NAMES]:
         # This settings object is an AttrDict shadowing our local variables so the
         # plugin can access the Django settings and modify them prior to startup.
         result = mod.setup(AttrDict(vars()))
-    except ImportError:
-        logger = logging.getLogger(__name__)
-        logger.warning("Could not import %s", plugin)
+    except ImportError as e:
+        print("Could not import %s", plugin)
+        print(e)

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Prevent row context menu when right clicking on a field that's being edited.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

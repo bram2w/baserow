@@ -1,37 +1,38 @@
 <template>
-  <div>
-    <input
-      ref="date"
-      v-model="dateString"
-      type="text"
-      class="input filters__value-input"
-      :disabled="disabled"
-      :class="{ 'input--error': $v.copy.$error }"
-      :placeholder="getDatePlaceholder(field)"
-      @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
-      @blur="$refs.dateContext.hide()"
-      @input="
-        ;[setCopyFromDateString(dateString, 'dateString'), delayedUpdate(copy)]
-      "
-      @keydown.enter="delayedUpdate(copy, true)"
-    />
-    <Context
-      ref="dateContext"
-      :hide-on-click-outside="false"
-      class="datepicker-context"
-    >
-      <client-only>
-        <date-picker
-          :inline="true"
-          :monday-first="true"
-          :use-utc="true"
-          :value="dateObject"
-          :language="datePickerLang[$i18n.locale]"
-          class="datepicker"
-          @input=";[setCopy($event, 'dateObject'), delayedUpdate(copy, true)]"
-        ></date-picker>
-      </client-only>
-    </Context>
+  <div class="filters__value-date-timezone">
+    <div>
+      <input
+        ref="date"
+        v-model="dateString"
+        type="text"
+        class="input filters__value-input"
+        :disabled="disabled"
+        :class="{ 'input--error': $v.dateString.$error }"
+        :placeholder="getDatePlaceholder(field)"
+        @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
+        @blur="$refs.dateContext.hide()"
+        @input=";[setCopyFromDateString(dateString, 'dateString')]"
+        @keydown.enter="delayedUpdate(copy, true)"
+      />
+      <Context
+        ref="dateContext"
+        :hide-on-click-outside="false"
+        class="datepicker-context"
+      >
+        <client-only>
+          <date-picker
+            :inline="true"
+            :monday-first="true"
+            :use-utc="true"
+            :value="dateObject"
+            :language="datePickerLang[$i18n.locale]"
+            class="datepicker"
+            @input="chooseDate($event)"
+          ></date-picker>
+        </client-only>
+      </Context>
+    </div>
+    <div class="filters__value-timezone">{{ getTimezoneAbbr() }}</div>
   </div>
 </template>
 
@@ -41,15 +42,14 @@ import {
   getDateMomentFormat,
   getDateHumanReadableFormat,
 } from '@baserow/modules/database/utils/date'
-import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
+import filterTypeDateInput from '@baserow/modules/database/mixins/filterTypeDateInput'
 import { en, fr } from 'vuejs-datepicker/dist/locale'
 
 export default {
   name: 'ViewFilterTypeDate',
-  mixins: [filterTypeInput],
+  mixins: [filterTypeDateInput],
   data() {
     return {
-      copy: '',
       dateString: '',
       dateObject: '',
       datePickerLang: {
@@ -58,26 +58,42 @@ export default {
       },
     }
   },
-  watch: {
-    'filter.value'(value) {
-      this.setCopy(value)
-    },
-  },
-  created() {
-    this.setCopy(this.filter.value)
-  },
   mounted() {
     this.$v.$touch()
   },
   methods: {
+    isInputValid() {
+      return !this.$v.dateString.$error
+    },
+    chooseDate(value) {
+      const timezone = this.getTimezone()
+      const pickerDate = moment.utc(value)
+      if (!pickerDate.isValid()) {
+        return
+      } else if (timezone !== null) {
+        pickerDate.tz(timezone, true)
+      }
+
+      this.setCopy(pickerDate.format('YYYY-MM-DD'), 'dateObject')
+      this.delayedUpdate(this.copy, true)
+    },
     setCopy(value, sender) {
-      const newDate = moment.utc(value)
+      const [timezone, filterValue] = this.splitCombinedValue(value)
+      this.timezoneValue = timezone
+      const newDate = moment.utc(
+        filterValue,
+        ['YYYY-MM-DD', getDateMomentFormat(this.field.date_format)],
+        true
+      )
+      if (timezone !== null) {
+        newDate.tz(timezone, true)
+      }
 
       if (newDate.isValid()) {
         this.copy = newDate.format('YYYY-MM-DD')
 
         if (sender !== 'dateObject') {
-          this.dateObject = newDate.toDate()
+          this.dateObject = newDate.format('YYYY-MM-DD')
         }
 
         if (sender !== 'dateString') {
@@ -93,10 +109,15 @@ export default {
       }
 
       const dateFormat = getDateMomentFormat(this.field.date_format)
-      const newDate = moment.utc(value, dateFormat)
+      const timezone = this.getTimezone()
+      const newDate = moment.utc(value, dateFormat, true)
+      if (timezone !== null) {
+        newDate.tz(timezone)
+      }
 
       if (newDate.isValid()) {
-        this.setCopy(newDate, sender)
+        this.setCopy(newDate.format('YYYY-MM-DD'), sender)
+        this.delayedUpdate(this.copy, true)
       } else {
         this.copy = value
       }
@@ -111,9 +132,11 @@ export default {
     },
   },
   validations: {
-    copy: {
-      date(value) {
-        return value === '' || moment(value).isValid()
+    copy: {},
+    dateString: {
+      isValidDate(value) {
+        const dateFormat = getDateMomentFormat(this.field.date_format)
+        return value === '' || moment.utc(value, dateFormat).isValid()
       },
     },
   },

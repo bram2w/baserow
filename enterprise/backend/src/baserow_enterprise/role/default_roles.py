@@ -3,6 +3,16 @@ from baserow_premium.row_comments.operations import (
     ReadRowCommentsOperationType,
 )
 
+from baserow.contrib.builder.operations import (
+    ListPagesBuilderOperationType,
+    OrderPagesBuilderOperationType,
+)
+from baserow.contrib.builder.pages.operations import (
+    CreatePageOperationType,
+    DeletePageOperationType,
+    ReadPageOperationType,
+    UpdatePageOperationType,
+)
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
@@ -13,7 +23,6 @@ from baserow.contrib.database.fields.operations import (
     DeleteRelatedLinkRowFieldOperationType,
     DuplicateFieldOperationType,
     ListFieldsOperationType,
-    ReadAggregationDatabaseTableOperationType,
     ReadFieldOperationType,
     RestoreFieldOperationType,
     UpdateFieldOperationType,
@@ -37,7 +46,6 @@ from baserow.contrib.database.table.operations import (
     DeleteDatabaseTableOperationType,
     DuplicateDatabaseTableOperationType,
     ImportRowsDatabaseTableOperationType,
-    ListAggregationDatabaseTableOperationType,
     ListenToAllDatabaseTableEventsOperationType,
     ListRowNamesDatabaseTableOperationType,
     ListRowsDatabaseTableOperationType,
@@ -61,11 +69,13 @@ from baserow.contrib.database.views.operations import (
     DeleteViewOperationType,
     DeleteViewSortOperationType,
     DuplicateViewOperationType,
+    ListAggregationsViewOperationType,
     ListViewDecorationOperationType,
     ListViewFilterOperationType,
     ListViewsOperationType,
     ListViewSortOperationType,
     OrderViewsOperationType,
+    ReadAggregationsViewOperationType,
     ReadViewDecorationOperationType,
     ReadViewFieldOptionsOperationType,
     ReadViewFilterOperationType,
@@ -154,6 +164,9 @@ from baserow_enterprise.teams.operations import (
 
 NO_ACCESS_OPS = []
 VIEWER_OPS = NO_ACCESS_OPS + [
+    ReadPageOperationType,
+    ListPagesBuilderOperationType,
+    OrderPagesBuilderOperationType,
     ReadGroupOperationType,
     ReadTeamOperationType,
     ListTeamsOperationType,
@@ -172,8 +185,8 @@ VIEWER_OPS = NO_ACCESS_OPS + [
     ListViewFilterOperationType,
     ListViewsOperationType,
     ListFieldsOperationType,
-    ListAggregationDatabaseTableOperationType,
-    ReadAggregationDatabaseTableOperationType,
+    ListAggregationsViewOperationType,
+    ReadAggregationsViewOperationType,
     ReadAdjacentRowDatabaseRowOperationType,
     ListRowNamesDatabaseTableOperationType,
     ReadViewFilterOperationType,
@@ -198,6 +211,9 @@ EDITOR_OPS = COMMENTER_OPS + [
     ReadTeamSubjectOperationType,
 ]
 BUILDER_OPS = EDITOR_OPS + [
+    CreatePageOperationType,
+    DeletePageOperationType,
+    UpdatePageOperationType,
     CreateTableDatabaseTableOperationType,
     UpdateDatabaseTableOperationType,
     DeleteDatabaseTableOperationType,

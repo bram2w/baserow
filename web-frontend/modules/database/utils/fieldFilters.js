@@ -33,3 +33,19 @@ export function genericContainsFilter(
   filterValue = filterValue.toString().toLowerCase().trim()
   return humanReadableRowValue.includes(filterValue)
 }
+
+export function genericContainsWordFilter(
+  rowValue,
+  humanReadableRowValue,
+  filterValue
+) {
+  if (humanReadableRowValue == null) {
+    return false
+  }
+  humanReadableRowValue = humanReadableRowValue.toString().toLowerCase().trim()
+  filterValue = filterValue.toString().toLowerCase().trim()
+  // check using regex to match whole words
+  // make sure to escape the filterValue as it may contain regex special characters
+  filterValue = filterValue.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
+  return humanReadableRowValue.match(new RegExp(`\\b${filterValue}\\b`))
+}

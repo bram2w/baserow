@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Allow not creating a reversed relationship with the link row field.",
+    "issue_number": 1063,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

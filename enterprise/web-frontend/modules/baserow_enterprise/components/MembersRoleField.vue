@@ -101,6 +101,7 @@ export default {
           'group',
           permissionsNew
         )
+        this.$emit('refresh')
       } catch (error) {
         this.$emit('row-update', oldMember)
         notifyIf(error)

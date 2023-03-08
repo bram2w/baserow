@@ -562,7 +562,7 @@ def test_changing_type_of_reference_field_to_valid_one_for_formula(
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_200_OK, response.json()
 
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -573,7 +573,7 @@ def test_changing_type_of_reference_field_to_valid_one_for_formula(
     response_json = response.json()
     assert response_json["count"] == 2
     assert response_json["results"][0][f"field_{formula_field_id}"] == "1test"
-    assert response_json["results"][1][f"field_{formula_field_id}"] == "0test"
+    assert response_json["results"][1][f"field_{formula_field_id}"] == "test"
 
 
 @pytest.mark.django_db
@@ -958,9 +958,12 @@ def test_can_type_a_valid_formula_field(data_fixture, api_client):
         "date_format": None,
         "date_include_time": None,
         "date_time_format": None,
+        "date_show_tzinfo": None,
+        "date_force_timezone": None,
         "error": None,
         "formula": "1+1",
         "formula_type": "number",
+        "nullable": False,
         "array_formula_type": None,
         "number_decimal_places": 0,
     }

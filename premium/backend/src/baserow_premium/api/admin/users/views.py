@@ -1,5 +1,3 @@
-import logging
-
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
@@ -23,6 +21,7 @@ from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from loguru import logger
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -37,7 +36,6 @@ from baserow.core.user.utils import generate_session_tokens_for_user
 
 from .serializers import BaserowImpersonateAuthTokenSerializer
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 

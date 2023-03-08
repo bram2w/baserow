@@ -1,5 +1,11 @@
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.errors import (
+    ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
+    ERROR_USER_NOT_IN_GROUP,
+)
 from baserow.api.snapshots.errors import ERROR_SNAPSHOT_DOES_NOT_EXIST
+from baserow.contrib.database.exceptions import (
+    DatabaseSnapshotMaxLocksExceededException,
+)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
@@ -18,6 +24,11 @@ class CreateSnapshotJobType(JobType):
     api_exceptions_map = {
         UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         SnapshotDoesNotExist: ERROR_SNAPSHOT_DOES_NOT_EXIST,
+        DatabaseSnapshotMaxLocksExceededException: ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
+    }
+
+    job_exceptions_map = {
+        DatabaseSnapshotMaxLocksExceededException: DatabaseSnapshotMaxLocksExceededException.message
     }
 
     def transaction_atomic_context(self, job: CreateSnapshotJob):

@@ -50,6 +50,7 @@
         ref="createFieldContext"
         :table="table"
         @field-created="$emit('field-created', $event)"
+        @shown="onShownCreateFieldContext"
       ></CreateFieldContext>
     </div>
   </div>
@@ -149,6 +150,9 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       }
+    },
+    onShownCreateFieldContext() {
+      this.$refs.createFieldContext.showFieldTypesDropdown(this.$el)
     },
   },
 }

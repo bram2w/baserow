@@ -1,15 +1,15 @@
-import logging
 from typing import Dict, Generator, Optional, Set
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser, Group
-from django.db.models import Q
+from django.contrib.auth.models import AbstractUser
+from django.db.models import Q, QuerySet
 
 from baserow_premium.license.exceptions import InvalidLicenseError
 from baserow_premium.license.models import License
-from baserow_premium.license.registries import LicenseType
+from baserow_premium.license.registries import LicenseType, SeatUsageSummary
 
-logger = logging.getLogger(__name__)
+from baserow.core.models import Group
+
 User = get_user_model()
 
 
@@ -18,6 +18,10 @@ class LicensePlugin:
     A collection of methods used to query for what licenses a user has access to and
     hence which features they can use.
     """
+
+    def __init__(self, cache_queries: bool = False):
+        self.cache_queries = cache_queries
+        self.queried_licenses_per_user = {}
 
     def user_has_feature(
         self,
@@ -56,7 +60,7 @@ class LicensePlugin:
 
         return any(
             feature in license_type.features
-            for license_type in self.get_active_instance_wide_licenses(user=None)
+            for license_type in self.get_active_instance_wide_license_types(user=None)
         )
 
     def group_has_feature(self, feature: str, group: Group) -> bool:
@@ -88,7 +92,7 @@ class LicensePlugin:
 
         return any(
             feature in license_type.features
-            for license_type in self.get_active_instance_wide_licenses(user)
+            for license_type in self.get_active_instance_wide_license_types(user)
         )
 
     def _has_license_feature_only_for_specific_group(
@@ -112,9 +116,15 @@ class LicensePlugin:
             )
         )
 
-    def get_active_instance_wide_licenses(
+    def get_active_instance_wide_license_types(
         self, user: Optional[AbstractUser]
     ) -> Generator[LicenseType, None, None]:
+        for available_license in self.get_active_instance_wide_licenses(user):
+            yield available_license.license_type
+
+    def get_active_instance_wide_licenses(
+        self, user: Optional[User]
+    ) -> Generator[License, None, None]:
         """
         For the provided user returns the active licenses they have instance wide.
         If no user is provided then returns any licenses that are globally active for
@@ -123,18 +133,31 @@ class LicensePlugin:
         :param user: The user to lookup active instance wide licenses for.
         """
 
-        available_license_q = Q(cached_untrusted_instance_wide=True)
-        if user is not None:
-            available_license_q |= Q(users__user_id__in=[user.id])
+        yield from self._get_active_instance_wide_licenses(
+            user.id if user is not None else None
+        )
 
-        available_licenses = License.objects.filter(available_license_q).distinct()
+    def _get_active_instance_wide_licenses(
+        self, user_id: Optional[int]
+    ) -> Generator[License, None, None]:
+        if self.cache_queries and user_id in self.queried_licenses_per_user:
+            available_licenses = self.queried_licenses_per_user[user_id]
+        else:
+            available_license_q = Q(cached_untrusted_instance_wide=True)
+            if user_id is not None:
+                available_license_q |= Q(users__user_id__in=[user_id])
+
+            available_licenses = License.objects.filter(available_license_q).distinct()
 
         for available_license in available_licenses:
             try:
                 if available_license.is_active:
-                    yield available_license.license_type
+                    yield available_license
             except InvalidLicenseError:
                 pass
+
+        if self.cache_queries:
+            self.queried_licenses_per_user[user_id] = available_licenses
 
     def get_active_specific_licenses_only_for_group(
         self, user: AbstractUser, group: Group
@@ -181,3 +204,31 @@ class LicensePlugin:
 
         return
         yield
+
+    def get_groups_to_periodically_update_seats_taken_for(self) -> QuerySet:
+        """
+        Should return a queryset of all the groups that should have their seats_taken
+        attribute periodically updated by the nightly usage job when enabled.
+        """
+
+        return Group.objects.filter(template__isnull=True)
+
+    def get_seat_usage_for_group(self, group: Group) -> Optional[SeatUsageSummary]:
+        """
+        Returns for the most important (the license type with the highest order) active
+        license type on a group the seat usage summary for that group.
+
+        If it doesn't make sense for that license type to have usage at the group level
+        None will be returned.
+        """
+
+        sorted_licenses = sorted(
+            self.get_active_instance_wide_license_types(user=None),
+            key=lambda t: t.order,
+            reverse=True,
+        )
+        if sorted_licenses:
+            most_relevant_license_type = sorted_licenses[0]
+            return most_relevant_license_type.get_seat_usage_summary_for_group(group)
+        else:
+            return None

@@ -1,3 +1,6 @@
+from django.db import OperationalError
+
+
 class PermissionException(Exception):
     """
     Every permission related exception should inherit from this one.
@@ -162,6 +165,10 @@ class OperationTypeDoesNotExist(InstanceTypeDoesNotExist):
     pass
 
 
+class SubjectTypeNotExist(Exception):
+    """Raised when trying to use a subject type that does not exist."""
+
+
 class BaseURLHostnameNotAllowed(Exception):
     """
     Raised when the provided base url is not allowed when requesting a password
@@ -213,7 +220,59 @@ class InvalidPermissionContext(Exception):
     """
 
 
+class MaxLocksPerTransactionExceededException(Exception):
+    """
+    Baserow can sometimes perform operations that require a Postgres LOCK on a large
+    number of tuples. If this quantity results in the lock count exceeding the value
+    set in `max_locks_per_transaction`, a subclass of this exception will be raised.
+    """
+
+    message = (
+        "Baserow has exceeded the maximum number of PostgreSQL locks per transaction. "
+        "Please read https://baserow.io/docs/technical/postgresql-locks"
+    )
+
+
+def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:
+    """
+    Returns whether the `OperationalError` which we've been given
+    is due to `max_locks_per_transaction` being exceeded.
+    """
+
+    return "You might need to increase max_locks_per_transaction" in exception.args[0]
+
+
+class DuplicateApplicationMaxLocksExceededException(
+    MaxLocksPerTransactionExceededException
+):
+    """
+    If someone tries to duplicate an application with a lot of tables in a single
+    transaction, it'll quickly exceed the `max_locks_per_transaction` value set
+    in Postgres. This exception is raised when we detect the scenario.
+    """
+
+    message = (
+        "Baserow attempted to duplicate an application, but exceeded the maximum "
+        "number of PostgreSQL locks per transaction. Please read "
+        "https://baserow.io/docs/technical/postgresql-locks"
+    )
+
+
 class LastAdminOfGroup(Exception):
     """
     Raised when somebody tries to remove the last admin of a group.
     """
+
+
+class IdDoesNotExist(Exception):
+    """
+    Raised when an ID is queried that does not exist
+    """
+
+    def __init__(self, not_existing_id=None, *args, **kwargs):
+        self.not_existing_id = not_existing_id
+        super().__init__(
+            f"The id {not_existing_id} does not exist.",
+            *args,
+            **kwargs,
+        )

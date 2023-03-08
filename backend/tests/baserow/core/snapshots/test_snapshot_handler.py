@@ -1,11 +1,17 @@
 import datetime
 
+from django.db import OperationalError
 from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
 
+from baserow.contrib.database.application_types import DatabaseApplicationType
+from baserow.contrib.database.exceptions import (
+    DatabaseSnapshotMaxLocksExceededException,
+)
 from baserow.contrib.database.table.models import Table
+from baserow.core.handler import CoreHandler
 from baserow.core.models import Snapshot
 from baserow.core.snapshots.handler import SnapshotHandler
 from baserow.core.utils import Progress
@@ -36,6 +42,37 @@ def test_perform_create(data_fixture: Fixtures):
     model = snapshotted_table.get_model()
     assert model.objects.count() == 2
     assert progress.progress == 100
+
+
+@pytest.mark.django_db
+def test_perform_create_export_serialized_raises_operationalerror(
+    data_fixture,
+    bypass_check_permissions,
+    application_type_serialized_raising_operationalerror,
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    database = CoreHandler().create_application(
+        user=user, group=group, type_name=DatabaseApplicationType.type, name="Database"
+    )
+    snapshot = data_fixture.create_snapshot(
+        user=user,
+        snapshot_from_application=database,
+        created_by=user,
+        name="Snapshot1",
+    )
+
+    with application_type_serialized_raising_operationalerror(
+        raise_transaction_exception=True
+    ):
+        with pytest.raises(DatabaseSnapshotMaxLocksExceededException):
+            SnapshotHandler().perform_create(snapshot, Progress(total=100))
+
+    with application_type_serialized_raising_operationalerror(
+        raise_transaction_exception=False
+    ):
+        with pytest.raises(OperationalError):
+            SnapshotHandler().perform_create(snapshot, Progress(total=100))
 
 
 @pytest.mark.django_db

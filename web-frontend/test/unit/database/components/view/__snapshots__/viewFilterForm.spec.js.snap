@@ -300,6 +300,42 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                     
+        viewFilter.containsWord
+      
+                  </div>
+                   
+                  <!---->
+                </a>
+              </li>
+              <li
+                class="select__item"
+              >
+                <a
+                  class="select__item-link"
+                >
+                  <div
+                    class="select__item-name"
+                  >
+                    <!---->
+                    
+        viewFilter.doesntContainWord
+      
+                  </div>
+                   
+                  <!---->
+                </a>
+              </li>
+              <li
+                class="select__item"
+              >
+                <a
+                  class="select__item-link"
+                >
+                  <div
+                    class="select__item-name"
+                  >
+                    <!---->
+                    
         viewFilter.lengthIsLowerThan
       
                   </div>

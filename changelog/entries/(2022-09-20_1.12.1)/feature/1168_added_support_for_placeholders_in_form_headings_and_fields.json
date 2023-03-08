@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added support for placeholders in form headings and fields.",
+    "issue_number": 1168,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

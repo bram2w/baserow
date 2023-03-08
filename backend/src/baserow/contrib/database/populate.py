@@ -102,20 +102,43 @@ def load_test_data():
                 ("Name", "text", {}),
                 ("Products", "link_row", {"link_row_table": products_table}),
                 ("Production", "rating", {}),
+                ("Certification", "multiple_select", {}),
                 ("Notes", "long_text", {"field_options": {"width": 400}}),
             ],
         )
 
         products = products_table.get_model(attribute_names=True)
 
+        select_field = Field.objects.get(table=suppliers_table, name="Certification")
+        for order, option in enumerate(
+            [
+                {"color": "dark-green", "value": "Organic"},
+                {"color": "light-orange", "value": "Fair trade"},
+                {"color": "light-green", "value": "Natural"},
+                {"color": "light-blue", "value": "Animal protection"},
+                {"color": "blue", "value": "Eco"},
+                {"color": "dark-blue", "value": "Equitable"},
+            ]
+        ):
+
+            select_option = SelectOption.objects.create(
+                field=select_field,
+                order=order,
+                value=option["value"],
+                color=option["color"],
+            )
+            select_by_name[select_option.value] = select_option.id
+
         products_by_name = {p.name: p.id for p in products.objects.all()}
+        certif_by_name = {p.value: p.id for p in select_field.select_options.all()}
 
         data = [
             (
                 "The happy cow",
                 [products_by_name["Milk"], products_by_name["Butter"]],
                 3,
-                "",
+                [certif_by_name["Animal protection"]],
+                "Animals here are happy.",
             ),
             (
                 "Jack's farm",
@@ -125,14 +148,25 @@ def load_test_data():
                     products_by_name["Chicken"],
                 ],
                 5,
+                [certif_by_name["Organic"], certif_by_name["Equitable"]],
+                "Good guy.",
+            ),
+            (
+                "Horse & crocodile",
+                [products_by_name["Beef"]],
+                2,
+                [certif_by_name["Fair trade"]],
                 "",
             ),
-            ("Horse & crocodile", [products_by_name["Beef"]], 2, ""),
             (
                 "Vines LTD",
                 [products_by_name["Vine"], products_by_name["Grapes"]],
                 4,
-                "",
+                [
+                    certif_by_name["Organic"],
+                    certif_by_name["Natural"],
+                ],
+                "Excellent white & red wines.",
             ),
         ]
 

@@ -50,6 +50,7 @@ class FieldType(
     ImportExportMixin,
     Instance,
 ):
+
     """
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
@@ -122,7 +123,6 @@ class FieldType(
         :param instance: The field instance.
         :param value: The value that needs to be inserted or updated.
         :return: The modified value that is going to be saved in the database.
-        :rtype: str
         """
 
         return value
@@ -254,6 +254,26 @@ class FieldType(
         :param field_name: The name of the field.
         :type field_name: str
         :param value: The value to check if this field contains or not.
+        :type value: str
+        :param model_field: The field's actual django field model instance.
+        :type model_field: models.Field
+        :param field: The related field's instance.
+        :type field: Field
+        :return: A Q or AnnotatedQ filter.
+            given value.
+        :rtype: OptionallyAnnotatedQ
+        """
+
+        return Q()
+
+    def contains_word_query(self, field_name, value, model_field, field):
+        """
+        Returns a Q or AnnotatedQ filter which performs a regex filter over the
+        provided field for this specific type of field.
+
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param value: The value to check if this field contains as a whole word or not.
         :type value: str
         :param model_field: The field's actual django field model instance.
         :type model_field: models.Field
@@ -434,6 +454,23 @@ class FieldType(
         """
 
         return values
+
+    def get_request_kwargs_to_backup(
+        self, field: Field, kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Returns a dict of attributes that should be backed up when the field is
+        updated. These attributes are sent in the request body but are not
+        stored in the database field model. This is for example used by the
+        DateField to replace the timezone adding/subtracting the corresponding
+        timedelta.
+
+        :param field: The field to update.
+        :param kwargs: The kwargs that are passed to the update request.
+        :return: A dict of attributes that should be backed up.
+        """
+
+        return {}
 
     def export_prepared_values(self, field: Field):
         """
@@ -991,6 +1028,40 @@ class FieldType(
         """
 
         return []
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        """
+        Returns a queryset of all fields that need to be periodically updated.
+        This method should return all the fields that need to be updated
+        periodically.
+
+        :return: A queryset of all the fields that need to be periodically updated.
+        """
+
+        return None
+
+    def run_periodic_update(
+        self,
+        field: Field,
+        update_collector: "Optional[FieldUpdateCollector]" = None,
+        field_cache: "Optional[FieldCache]" = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+    ):
+        """
+        This method is called periodically for all the fields of the same type
+        that need to be periodically updated. It should be possible to call this method
+        recursively for all the fields that depend on the field passed as argument.
+
+        :param field: The field that needs to be updated.
+        :param update_collector: Any update statements should be passed to this
+            collector so they are run correctly at the right time. You should not be
+            manually updating field values yourself in this method.
+        :param field_cache: A field cache to be used when fetching fields.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the row was created.
+        """
+
+        pass
 
     def restore_failed(self, field_instance, restore_exception):
         """

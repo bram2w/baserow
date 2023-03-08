@@ -1,5 +1,5 @@
 <template>
-  <Context ref="viewsContext" class="select" @shown="shown">
+  <Context ref="viewsContext" class="select views-context" @shown="shown">
     <div class="select__search">
       <i class="select__search-icon fas fa-search"></i>
       <input
@@ -12,35 +12,46 @@
     <div v-if="isLoading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <ul
-      v-if="!isLoading && views.length > 0"
-      ref="dropdown"
-      v-auto-overflow-scroll
-      class="select__items"
-    >
-      <ViewsContextItem
-        v-for="view in searchAndOrder(views)"
-        :ref="'view-' + view.id"
-        :key="view.id"
-        v-sortable="{
-          enabled:
-            !readOnly &&
-            $hasPermission(
-              'database.table.order_views',
-              table,
-              database.group.id
-            ),
-          id: view.id,
-          update: order,
-          marginTop: -1.5,
-        }"
-        :database="database"
-        :view="view"
-        :table="table"
-        :read-only="readOnly"
-        @selected="selectedView"
-      ></ViewsContextItem>
-    </ul>
+    <div class="views-context__select_items">
+      <div v-for="type in activeViewOwnershipTypes" :key="type.getType()">
+        <div
+          v-if="viewsByOwnership(views, type.getType()).length > 0"
+          class="section-header"
+        >
+          {{ type.getName() }}
+        </div>
+        <ul
+          v-if="
+            !isLoading && viewsByOwnership(views, type.getType()).length > 0
+          "
+          ref="dropdown"
+          class="select__items select__items--expanded"
+        >
+          <ViewsContextItem
+            v-for="view in viewsByOwnership(views, type.getType())"
+            :ref="'view-' + view.id"
+            :key="view.id"
+            v-sortable="{
+              enabled:
+                !readOnly &&
+                $hasPermission(
+                  'database.table.order_views',
+                  table,
+                  database.group.id
+                ),
+              id: view.id,
+              update: createOrderCall(view.ownership_type),
+              marginTop: -1.5,
+            }"
+            :database="database"
+            :view="view"
+            :table="table"
+            :read-only="readOnly"
+            @selected="selectedView"
+          ></ViewsContextItem>
+        </ul>
+      </div>
+    </div>
     <div v-if="!isLoading && views.length == 0" class="context__description">
       {{ $t('viewsContext.noViews') }}
     </div>
@@ -118,6 +129,20 @@ export default {
       isLoading: (state) => state.view.loading,
       isLoaded: (state) => state.view.loaded,
     }),
+    viewOwnershipTypes() {
+      return this.$registry.getAll('viewOwnershipType')
+    },
+    activeViewOwnershipTypes() {
+      return Object.fromEntries(
+        Object.entries(this.viewOwnershipTypes)
+          .filter(
+            ([key]) => this.viewOwnershipTypes[key].isDeactivated() === false
+          )
+          .sort(
+            (a, b) => a[1].getListViewTypeSort() - b[1].getListViewTypeSort()
+          )
+      )
+    },
   },
   methods: {
     shown() {
@@ -201,15 +226,26 @@ export default {
         })
         .sort((a, b) => a.order - b.order)
     },
-    async order(order, oldOrder) {
+    viewsByOwnership(views, ownershipType) {
+      return this.searchAndOrder(views).filter(
+        (view) => view.ownership_type === ownershipType
+      )
+    },
+    async order(ownershipType, order, oldOrder) {
       try {
         await this.$store.dispatch('view/order', {
           table: this.table,
+          ownershipType,
           order,
           oldOrder,
         })
       } catch (error) {
         notifyIf(error, 'view')
+      }
+    },
+    createOrderCall(ownershipType) {
+      return (...lastArgs) => {
+        return this.order(ownershipType, ...lastArgs)
       }
     },
   },

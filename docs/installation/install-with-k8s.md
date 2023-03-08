@@ -1,5 +1,12 @@
 # Install with K8S
 
+## Community Maintained Helm Chart
+
+We recommend you use the [community maintained helm chart](./install-with-helm.md) to
+install Baserow on K8S.
+
+## Raw K8S starting point
+
 See below for a starting point for a K8S configuration file which deploys a production
 ready Baserow.
 
@@ -9,6 +16,9 @@ so deploys separate wsgi and asgi backend services, separate async task workers 
 You will need to also provide a redis and postgres instance configured using the
 environment variables below. See [Configuring Baserow](./configuration.md) for more
 details on these variables.
+
+You should also set up and configure Baserow to use an S3 compatible storage service
+for uploading and serving user uploaded files.
 
 ## Example baserow.yml
 
@@ -161,7 +171,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-asgi
-          image: baserow/backend:1.14.0
+          image: baserow/backend:1.15.0
           workingDir: /baserow
           args:
             - "gunicorn"
@@ -218,7 +228,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-wsgi
-          image: baserow/backend:1.14.0
+          image: baserow/backend:1.15.0
           workingDir: /baserow
           args:
             - "gunicorn-wsgi"
@@ -277,7 +287,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-worker
-          image: baserow/backend:1.14.0
+          image: baserow/backend:1.15.0
           args:
             - "celery-worker"
           imagePullPolicy: Always
@@ -294,7 +304,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-export-worker
-          image: baserow/backend:1.14.0
+          image: baserow/backend:1.15.0
           args:
             - "celery-exportworker"
           imagePullPolicy: Always
@@ -311,7 +321,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-beat-worker
-          image: baserow/backend:1.14.0
+          image: baserow/backend:1.15.0
           args:
             - "celery-beat"
           imagePullPolicy: Always
@@ -352,7 +362,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: web-frontend
-          image: baserow/web-frontend:1.14.0
+          image: baserow/web-frontend:1.15.0
           args:
             - nuxt
           ports:

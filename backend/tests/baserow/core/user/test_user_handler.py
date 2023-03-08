@@ -590,3 +590,27 @@ def test_delete_expired_users_and_related_groups_if_last_admin(
     # Check mail sent
     assert len(mailoutbox) == 2
     assert mailoutbox[0].subject == "Account permanently deleted - Baserow"
+
+
+@pytest.mark.django_db
+def test_active_users_qs_excludes_deactivated_users(data_fixture):
+    deactivated_user = data_fixture.create_user(
+        email="test1@localhost", is_active=False
+    )
+    active_user = data_fixture.create_user(email="test2@localhost", is_active=True)
+    assert set(
+        UserHandler().get_all_active_users_qs().values_list("id", flat=True)
+    ) == {active_user.id}
+
+
+@pytest.mark.django_db
+def test_active_users_qs_excludes_pending_deletion_users(data_fixture):
+    user_pending_deletion = data_fixture.create_user(
+        email="test1@localhost", to_be_deleted=True
+    )
+    active_user = data_fixture.create_user(
+        email="test2@localhost", is_active=True, to_be_deleted=False
+    )
+    assert set(
+        UserHandler().get_all_active_users_qs().values_list("id", flat=True)
+    ) == {active_user.id}

@@ -1,6 +1,18 @@
 import contextlib
 import typing
-from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, ValuesView
+from functools import lru_cache
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    ValuesView,
+)
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -13,6 +25,9 @@ from .exceptions import InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
 
 if typing.TYPE_CHECKING:
     from django.contrib.contenttypes.models import ContentType
+
+
+T = TypeVar("T")
 
 
 class Instance(object):
@@ -29,22 +44,40 @@ class Instance(object):
             raise ImproperlyConfigured("The type of an instance must be set.")
 
 
-class ModelInstanceMixin:
+class ModelInstanceMixin(Generic[T]):
     """
     This mixin introduces a model_class that will be related to the instance. It is to
     be used in combination with a registry that extends the ModelRegistryMixin.
     """
 
-    model_class: Type
+    model_class: Type[T]
 
     def __init__(self):
         if not self.model_class:
             raise ImproperlyConfigured("The model_class of an instance must be set.")
 
     def get_content_type(self) -> "ContentType":
+        """
+        Returns the content_type related to the model_class.
+        """
+
         from django.contrib.contenttypes.models import ContentType
 
         return ContentType.objects.get_for_model(self.model_class)
+
+    def get_object_for_this_type(self, **kwargs) -> T:
+        """
+        Returns the object given the filters in parameter.
+        """
+
+        return self.get_content_type().get_object_for_this_type(**kwargs)
+
+    def get_all_objects_for_this_type(self, **kwargs) -> models.QuerySet:
+        """
+        Returns a queryset to get the objects given the filters in parameter.
+        """
+
+        return self.get_content_type().get_all_objects_for_this_type(**kwargs)
 
 
 class CustomFieldsInstanceMixin:
@@ -77,6 +110,12 @@ class CustomFieldsInstanceMixin:
     """
     The serializer mixins that must be added to the serializer. This property is
     useful if you want to add some custom SerializerMethodField for example.
+    """
+
+    serializer_extra_kwargs = None
+    """
+    The extra kwargs that must be added to the serializer fields. This property is
+    useful if you want to add some custom `write_only` field for example.
     """
 
     def __init__(self):
@@ -118,6 +157,7 @@ class CustomFieldsInstanceMixin:
             field_names,
             field_overrides=field_overrides,
             base_mixins=mixins,
+            meta_extra_kwargs=self.serializer_extra_kwargs,
             *args,
             **kwargs,
         )
@@ -381,25 +421,39 @@ P = TypeVar("P")
 
 
 class ModelRegistryMixin(Generic[P, T]):
-    def get_by_model(self, model_instance: P) -> T:
+    def get_by_model(self, model_instance: Union[P, type]) -> T:
         """
         Returns a registered instance of the given model class.
 
-        :param model_instance: The value that must be or must be an instance of the
-            model_class.
-        :type model_instance: Model or Model()
+        :param model_instance: The value that must be a Model class or
+            an instance of any model_class.
         :raises InstanceTypeDoesNotExist: When the provided model instance is not
             found in the registry.
         :return: The registered instance.
-        :rtype: Instance
+        """
+
+        if isinstance(model_instance, type):
+            clazz = model_instance
+        else:
+            clazz = type(model_instance)
+
+        return self.get_for_class(clazz)
+
+    @lru_cache
+    def get_for_class(self, clazz: type) -> T:
+        """
+        Returns a registered instance of the given model class.
+
+        :param model_instance: The value that must be a Model class.
+        :raises InstanceTypeDoesNotExist: When the provided model instance is not
+            found in the registry.
+        :return: The registered instance.
         """
 
         most_specific_value = None
         for value in self.registry.values():
             value_model_class = value.model_class
-            if value_model_class == model_instance or isinstance(
-                model_instance, value_model_class
-            ):
+            if value_model_class == clazz or issubclass(clazz, value_model_class):
                 if most_specific_value is None:
                     most_specific_value = value
                 else:
@@ -417,7 +471,7 @@ class ModelRegistryMixin(Generic[P, T]):
             return most_specific_value
 
         raise self.does_not_exist_exception_class(
-            f"The {self.name} model instance {model_instance} does not exist."
+            f"The {self.name} model {clazz} does not exist."
         )
 
     def get_all_by_model_isinstance(self, model_instance: P) -> List[T]:

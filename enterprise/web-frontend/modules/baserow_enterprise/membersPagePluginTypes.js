@@ -4,6 +4,7 @@ import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import InvitesRoleField from '@baserow_enterprise/components/InvitesRoleField'
 import EnterpriseFeatures from '@baserow_enterprise/features'
 import UserTeamsField from '@baserow_enterprise/components/crudTable/fields/UserTeamsField'
+import HighestPaidRoleField from '@baserow_enterprise/components/crudTable/fields/HighestPaidRoleField.vue'
 
 export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
   static getType() {
@@ -21,6 +22,19 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
     const roleColumnIndex = columns.findIndex(
       (column) => column.key === 'permissions'
     )
+    const highestRoleColumn = new CrudTableColumn(
+      'highest_role_uid',
+      this.app.i18n.t('membersSettings.membersTable.columns.highestRole'),
+      HighestPaidRoleField,
+      false,
+      false,
+      false,
+      { groupId: context.group.id },
+      20,
+      this.app.i18n.t(
+        'membersSettings.membersTable.columns.highestRoleHelpText'
+      )
+    )
     const teamsColumn = new CrudTableColumn(
       'teams',
       this.app.i18n.t('membersSettings.membersTable.columns.teams'),
@@ -31,6 +45,7 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
       {},
       20
     )
+    columns.splice(roleColumnIndex, 0, highestRoleColumn)
     columns.splice(roleColumnIndex, 0, teamsColumn)
 
     return columns

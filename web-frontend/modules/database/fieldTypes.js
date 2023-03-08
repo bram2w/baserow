@@ -14,7 +14,6 @@ import FieldNumberSubForm from '@baserow/modules/database/components/field/Field
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
-import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 
@@ -84,11 +83,13 @@ import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
   getDateMomentFormat,
+  getFieldTimezone,
   getTimeMomentFormat,
 } from '@baserow/modules/database/utils/date'
 import {
   filenameContainsFilter,
   genericContainsFilter,
+  genericContainsWordFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
@@ -216,7 +217,10 @@ export class FieldType extends Registerable {
     if (typeof val === 'object' && Object.keys(value).length === 0) {
       return true
     }
-    return [null, '', false].includes(value)
+    if (typeof value === 'string') {
+      return value.trim() === ''
+    }
+    return [null, false].includes(value)
   }
 
   /**
@@ -289,7 +293,7 @@ export class FieldType extends Registerable {
    * the single select or file field. In this case, the object might needs to be
    * converted to string.
    */
-  toHumanReadableString(field, value) {
+  toHumanReadableString(field, value, delimiter = ', ') {
     return value || ''
   }
 
@@ -432,6 +436,13 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Should return a contains word filter function unique for this field type.
+   */
+  getContainsWordFilterFunction(field) {
+    return (rowValue, humanReadableRowValue, filterValue) => false
+  }
+
+  /**
    * Converts rowValue to its human readable form first before applying the
    * filter returned from getContainsFilterFunction.
    */
@@ -454,6 +465,36 @@ export class FieldType extends Registerable {
     return (
       filterValue === '' ||
       !this.getContainsFilterFunction(field)(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the
+   * filter returned from getContainsWordFilterFunction.
+   */
+  containsWordFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      this.getContainsWordFilterFunction(field)(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the field
+   * filter returned by getContainsWordFilterFunction's notted.
+   */
+  doesntContainWordFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      !this.getContainsWordFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -628,6 +669,10 @@ export class TextFieldType extends FieldType {
     return genericContainsFilter
   }
 
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
   canBeReferencedByFormulaField() {
     return true
   }
@@ -700,6 +745,10 @@ export class LongTextFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   canBeReferencedByFormulaField() {
@@ -821,8 +870,14 @@ export class LinkRowFieldType extends FieldType {
       }
       return richClipboardData.value
     } else {
-      // No fallback to text for now
-      return []
+      // Fallback to text version
+      try {
+        const data = this.app.$papa.stringToArray(clipboardData)
+
+        return data.map((name) => ({ id: null, value: name }))
+      } catch (e) {
+        return []
+      }
     }
   }
 
@@ -892,6 +947,10 @@ export class LinkRowFieldType extends FieldType {
     const item = data.results.find((item) => item.value === value)
 
     return item ? [item] : this.getEmptyValue()
+  }
+
+  getCanImport() {
+    return true
   }
 }
 
@@ -1350,7 +1409,11 @@ class BaseDateFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value) {
-    const date = moment.tz(value, field.timezone)
+    const timezone = getFieldTimezone(field)
+    const date = moment.utc(value)
+    if (timezone !== null) {
+      date.tz(timezone)
+    }
 
     if (date.isValid()) {
       const dateFormat = getDateMomentFormat(field.date_format)
@@ -1360,7 +1423,6 @@ class BaseDateFieldType extends FieldType {
         const timeFormat = getTimeMomentFormat(field.date_time_format)
         dateString = `${dateString} ${date.format(timeFormat)}`
       }
-
       return dateString
     } else {
       return ''
@@ -1379,27 +1441,25 @@ class BaseDateFieldType extends FieldType {
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
    */
-  prepareValueForPaste(field, clipboardData) {
-    if (!clipboardData) {
-      clipboardData = ''
-    }
-    return DateFieldType.formatDate(field, clipboardData)
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    const dateValue = DateFieldType.parseDate(field, clipboardData || '')
+    return DateFieldType.formatDate(field, dateValue)
   }
 
-  static formatDate(field, dateString) {
+  static parseDate(field, dateString) {
     const value = dateString.toUpperCase()
 
     // Formats for ISO dates
     let formats = [
       moment.ISO_8601,
-      'YYYY-MM-DD',
       'YYYY-MM-DD hh:mm A',
       'YYYY-MM-DD HH:mm',
+      'YYYY-MM-DD',
     ]
     // Formats for EU dates
-    const EUFormat = ['DD/MM/YYYY', 'DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm']
+    const EUFormat = ['DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY']
     // Formats for US dates
-    const USFormat = ['MM/DD/YYYY', 'MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm']
+    const USFormat = ['MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm', 'MM/DD/YYYY']
 
     // Interpret the pasted date based on the field's current date format
     if (field.date_format === 'EU') {
@@ -1408,10 +1468,23 @@ class BaseDateFieldType extends FieldType {
       formats = formats.concat(USFormat).concat(EUFormat)
     }
 
-    const date = moment.utc(value, formats)
+    const date = moment.utc(value, formats, true)
+    if (!date.isValid()) {
+      return null
+    }
+    const timezone = getFieldTimezone(field)
+    if (timezone) {
+      date.tz(timezone, true)
+    }
+    return date
+  }
 
-    if (date.isValid()) {
-      return field.date_include_time ? date.format() : date.format('YYYY-MM-DD')
+  static formatDate(field, date) {
+    const momentDate = moment.utc(date)
+    if (momentDate.isValid()) {
+      return field.date_include_time
+        ? momentDate.format()
+        : momentDate.format('YYYY-MM-DD')
     } else {
       return null
     }
@@ -1481,7 +1554,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   }
 
   getFormComponent() {
-    return FieldCreatedOnLastModifiedSubForm
+    return FieldDateSubForm
   }
 
   getFormViewFieldComponent() {
@@ -1505,7 +1578,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
    * is simply the current time.
    */
   getNewRowValue() {
-    return moment().utc().format()
+    return moment().local().format()
   }
 
   shouldFetchDataWhenAdded() {
@@ -1665,6 +1738,10 @@ export class URLFieldType extends FieldType {
     return genericContainsFilter
   }
 
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
   canParseQueryParameter() {
     return true
   }
@@ -1751,6 +1828,10 @@ export class EmailFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   canBeReferencedByFormulaField() {
@@ -2066,7 +2147,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getDocsDataType() {
-    return 'integer'
+    return 'integer or string'
   }
 
   getDocsDescription(field) {
@@ -2103,6 +2184,10 @@ export class SingleSelectFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   canBeReferencedByFormulaField() {
@@ -2244,11 +2329,11 @@ export class MultipleSelectFieldType extends FieldType {
     }
   }
 
-  toHumanReadableString(field, value) {
+  toHumanReadableString(field, value, delimiter = ', ') {
     if (value === undefined || value === null || value === []) {
       return ''
     }
-    return value.map((item) => item.value).join(', ')
+    return value.map((item) => item.value).join(delimiter)
   }
 
   getDocsDataType() {
@@ -2291,6 +2376,21 @@ export class MultipleSelectFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  containsWordFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      this.getContainsWordFilterFunction(field)(
+        rowValue,
+        this.toHumanReadableString(field, rowValue, ' '),
+        filterValue
+      )
+    )
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
   }
 
   getEmptyValue() {
@@ -2518,6 +2618,14 @@ export class FormulaFieldType extends FieldType {
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
     return underlyingFieldType.getContainsFilterFunction()
+  }
+
+  getContainsWordFilterFunction(field) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getContainsWordFilterFunction()
   }
 
   toHumanReadableString(field, value) {

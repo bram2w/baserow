@@ -1,0 +1,12 @@
+{
+    "type": "feature",
+    "message": "Improve create and edit field context",
+    "issue_number": 1160,
+    "bullet_points": [
+        "Set field context menu width to 400px",
+        "Open field type dropdown when field context menu is opened",
+        "Set field name after field type when empty",
+        "Increase field context menu dropdown height"
+    ],
+    "created_at": "2023-03-03"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added API exception registry that allows plugins to provide custom exception mappings for the REST API.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -7,12 +7,10 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import (
-    ERROR_INVALID_FILTER_ATTRIBUTE,
     ERROR_INVALID_SORT_ATTRIBUTE,
     ERROR_INVALID_SORT_DIRECTION,
 )
 from baserow.api.exceptions import (
-    InvalidFilterAttributeException,
     InvalidSortAttributeException,
     InvalidSortDirectionException,
 )
@@ -38,7 +36,6 @@ class AdminListingView(
         {
             InvalidSortDirectionException: ERROR_INVALID_SORT_DIRECTION,
             InvalidSortAttributeException: ERROR_INVALID_SORT_ATTRIBUTE,
-            InvalidFilterAttributeException: ERROR_INVALID_FILTER_ATTRIBUTE,
         }
     )
     def get(self, request):
@@ -49,10 +46,9 @@ class AdminListingView(
 
         search = request.GET.get("search")
         sorts = request.GET.get("sorts")
-        filters = self.parse_filters(request.GET.get("filters"))
 
         queryset = self.get_queryset(request)
-        queryset = self.apply_filters(filters, queryset)
+        queryset = self.apply_filters(request.GET, queryset)
         queryset = self.apply_search(search, queryset)
         queryset = self.apply_sorts_or_default_sort(sorts, queryset)
 

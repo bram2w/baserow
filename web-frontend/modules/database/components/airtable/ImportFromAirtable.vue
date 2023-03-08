@@ -93,8 +93,7 @@ export default {
       try {
         const { data } = await AirtableService(this.$client).create(
           this.selectedGroupId,
-          this.airtableUrl,
-          new Intl.DateTimeFormat().resolvedOptions().timeZone
+          this.airtableUrl
         )
         this.startJobPoller(data)
       } catch (error) {

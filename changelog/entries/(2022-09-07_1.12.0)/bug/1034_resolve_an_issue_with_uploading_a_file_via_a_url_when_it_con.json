@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolve an issue with uploading a file via a URL when it contains a querystring.",
+    "issue_number": 1034,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -18,12 +18,18 @@ from baserow.contrib.database.api.webhooks.errors import (
 )
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.webhooks.actions import (
+    CreateWebhookActionType,
+    DeleteWebhookActionType,
+    UpdateWebhookActionType,
+)
 from baserow.contrib.database.webhooks.exceptions import (
     TableWebhookDoesNotExist,
     TableWebhookMaxAllowedCountExceeded,
 )
 from baserow.contrib.database.webhooks.handler import WebhookHandler
 from baserow.contrib.database.webhooks.models import TableWebhook
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 
 from .serializers import (
@@ -115,8 +121,7 @@ class TableWebhooksView(APIView):
         """Creates a new webhook for a given table."""
 
         table = TableHandler().get_table(table_id)
-        webhook_handler = WebhookHandler()
-        webhook = webhook_handler.create_table_webhook(
+        webhook = action_type_registry.get(CreateWebhookActionType.type).do(
             user=request.user, table=table, **data
         )
         return Response(TableWebhookSerializer(webhook).data)
@@ -193,7 +198,7 @@ class TableWebhookView(APIView):
             webhook_id,
             base_queryset=TableWebhook.objects.select_for_update(of=("self",)),
         )
-        webhook = handler.update_table_webhook(
+        webhook = action_type_registry.get(UpdateWebhookActionType.type).do(
             user=request.user, webhook=webhook, **data
         )
         return Response(TableWebhookSerializer(webhook).data)
@@ -227,13 +232,12 @@ class TableWebhookView(APIView):
     )
     @transaction.atomic
     def delete(self, request, webhook_id):
-        handler = WebhookHandler()
-        webhook = handler.get_table_webhook(
+        webhook = WebhookHandler().get_table_webhook(
             request.user,
             webhook_id,
             base_queryset=TableWebhook.objects.select_for_update(of=("self",)),
         )
-        handler.delete_table_webhook(webhook=webhook, user=request.user)
+        action_type_registry.get(DeleteWebhookActionType.type).do(request.user, webhook)
         return Response(status=204)
 
 

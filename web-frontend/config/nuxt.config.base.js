@@ -1,3 +1,8 @@
+import {
+  featureFlagIsEnabled,
+  getFeatureFlags,
+} from '../modules/core/utils/env'
+
 export default function (
   base = '@',
   premiumBase = '@/../premium/web-frontend',
@@ -22,6 +27,12 @@ export default function (
     premiumBase + '/modules/baserow_premium/module.js',
     enterpriseBase + '/modules/baserow_enterprise/module.js',
   ]
+
+  const featureFlags = getFeatureFlags()
+
+  if (featureFlagIsEnabled(featureFlags, 'builder')) {
+    baseModules.push(base + '/modules/builder/module.js')
+  }
 
   const modules = baseModules.concat(additionalModules)
   return {

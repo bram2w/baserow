@@ -14,5 +14,5 @@ class PremiumPlugin(Plugin):
             path("", include(api_urls, namespace=self.type)),
         ]
 
-    def get_license_plugin(self) -> LicensePlugin:
-        return LicensePlugin()
+    def get_license_plugin(self, cache_queries: bool = False) -> LicensePlugin:
+        return LicensePlugin(cache_queries)

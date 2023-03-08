@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for Date, Number and Single Select fields to the Contains and Not Contains\nview\nfilters.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

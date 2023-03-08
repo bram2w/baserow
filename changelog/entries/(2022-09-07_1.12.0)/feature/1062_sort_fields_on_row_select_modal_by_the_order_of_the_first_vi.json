@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Sort fields on row select modal by the order of the first view in the related table.",
+    "issue_number": 1062,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

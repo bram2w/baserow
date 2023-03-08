@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "API endpoint `/database/views/grid/${viewSlug}/public/info/` has been replaced by `/database/views/${viewSlug}/public/info/`",
+    "issue_number": 1057,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

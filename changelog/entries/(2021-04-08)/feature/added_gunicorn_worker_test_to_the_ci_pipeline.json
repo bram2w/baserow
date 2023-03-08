@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added gunicorn worker test to the CI pipeline.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

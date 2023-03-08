@@ -335,7 +335,7 @@ class RowsView(APIView):
 
         if view_id:
             view_handler = ViewHandler()
-            view = view_handler.get_view(view_id)
+            view = view_handler.get_view_as_user(request.user, view_id)
 
             if view.table_id != table.id:
                 raise ViewDoesNotExist()
@@ -1386,7 +1386,7 @@ class RowAdjacentView(APIView):
         view = None
         if view_id:
             view_handler = ViewHandler()
-            view = view_handler.get_view(view_id)
+            view = view_handler.get_view_as_user(request.user, view_id)
 
             if view.table_id != table.id:
                 raise ViewDoesNotExist()

@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 
 from baserow_premium.license.handler import LicenseHandler
-from rest_framework.exceptions import NotAuthenticated
 
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.models import Group
@@ -15,7 +14,10 @@ from baserow.core.registries import (
     PermissionManagerType,
     object_scope_type_registry,
     operation_type_registry,
+    subject_type_registry,
 )
+from baserow.core.subjects import UserSubjectType
+from baserow.core.types import PermissionCheck
 from baserow_enterprise.features import RBAC
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 
@@ -31,6 +33,7 @@ class OperationPermissionContent(TypedDict):
 
 class RolePermissionManagerType(PermissionManagerType):
     type = "role"
+    supported_actor_types = [UserSubjectType.type]
 
     def is_enabled(self, group: Group):
         """
@@ -63,42 +66,60 @@ class RolePermissionManagerType(PermissionManagerType):
             for op in RoleAssignmentHandler().get_role_by_uid("VIEWER").operations.all()
         )
 
-    def check_permissions(
-        self,
-        actor: AbstractUser,
-        operation_name: str,
-        group: Optional[Group] = None,
-        context: Optional[Any] = None,
-        include_trash: bool = False,
+    def check_multiple_permissions(
+        self, checks: List[PermissionCheck], group=None, include_trash=False
     ):
         """
-        Checks the permissions given the roles assigned to the actor.
+        Checks the permissions for each check.
         """
 
         if group is None or not self.is_enabled(group):
-            return
+            return {}
 
-        if hasattr(actor, "is_authenticated"):
+        # Group actor by subject_type
+        actors_by_subject_type = defaultdict(set)
+        for actor, _, _ in checks:
+            s_type = subject_type_registry.get_by_model(actor)
+            actors_by_subject_type[s_type].add(actor)
 
-            user = actor
-            if not user.is_authenticated:
-                raise NotAuthenticated()
-
-            operation_type = operation_type_registry.get(operation_name)
-
-            computed_roles = RoleAssignmentHandler().get_computed_roles(
-                group, actor, context, include_trash=include_trash
+        result = {}
+        scope_includes_cache = {}
+        for actor_subject_type, actors in actors_by_subject_type.items():
+            computed_role_cache = {}
+            roles_per_scope_by_actor = (
+                RoleAssignmentHandler().get_roles_per_scope_for_actors(
+                    group, actor_subject_type, actors, include_trash=include_trash
+                )
             )
 
-            if any(
-                [
-                    operation_type.type in self.get_role_operations(r)
-                    for r in computed_roles
-                ]
-            ):
-                return True
+            for check in checks:
+                actor, operation_name, context = check
+                cache_key = (
+                    actor.id,
+                    f"{type(context).__name__}__{context.id}",
+                )
+                if cache_key not in computed_role_cache:
+                    # Compute the actual role for this check
+                    computed_role_cache[
+                        cache_key
+                    ] = RoleAssignmentHandler().get_computed_roles(
+                        roles_per_scope_by_actor[actor],
+                        context,
+                        scope_includes_cache,
+                    )
+                computed_roles = computed_role_cache[cache_key]
 
-            raise PermissionDenied()
+                if any(
+                    [
+                        operation_name in self.get_role_operations(r)
+                        for r in computed_roles
+                    ]
+                ):
+                    result[check] = True
+                else:
+                    result[check] = PermissionDenied()
+
+        return result
 
     def get_operation_policy(
         self,
@@ -225,8 +246,9 @@ class RolePermissionManagerType(PermissionManagerType):
                 roles_by_scope, operation_type
             )
 
-            policy_per_operation[operation_type.type]["default"] = default
-            policy_per_operation[operation_type.type]["exceptions"] = exceptions
+            if default or exceptions:
+                policy_per_operation[operation_type.type]["default"] = default
+                policy_per_operation[operation_type.type]["exceptions"] = exceptions
 
             if exceptions:
                 # We store the exceptions by scope to get all objects at once later

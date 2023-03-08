@@ -21,6 +21,7 @@ from baserow.contrib.database.rows.registries import (
     RowMetadataType,
     row_metadata_registry,
 )
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.test_utils.helpers import register_instance_temporarily
@@ -1336,6 +1337,42 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         )
         == 19
     )
+
+
+@pytest.mark.django_db
+def test_can_get_aggregation_if_result_is_nan(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    # This formula will resolve  as NaN for every row
+    formula_field = data_fixture.create_formula_field(table=table, formula="1 / 0")
+
+    model = table.get_model()
+    model.objects.create()
+
+    ViewHandler().update_field_options(
+        view=grid_view,
+        field_options={
+            formula_field.id: {
+                "aggregation_type": "sum",
+                "aggregation_raw_type": "sum",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid_view.id},
+    )
+
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {f"field_{formula_field.id}": "NaN"}
 
 
 @pytest.mark.django_db

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for horizontal scrolling in grid views pressing Shift + mouse-wheel.",
+    "issue_number": 867,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

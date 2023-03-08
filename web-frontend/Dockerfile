@@ -37,6 +37,7 @@ USER $UID:$GID
 # Create and install the dependencies in separate COPY commands
 COPY --chown=$UID:$GID ./web-frontend/package.json ./web-frontend/yarn.lock /baserow/web-frontend/
 
+
 WORKDIR /baserow/web-frontend
 
 # We still need dev-dependencies as we will be running a nuxt build below

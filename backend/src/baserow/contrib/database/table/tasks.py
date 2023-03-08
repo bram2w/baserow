@@ -8,7 +8,8 @@ from baserow.contrib.database.table.operations import (
     ListenToAllDatabaseTableEventsOperationType,
 )
 from baserow.contrib.database.ws.pages import TablePageType
-from baserow.core.exceptions import PermissionDenied
+from baserow.core.exceptions import PermissionException
+from baserow.core.handler import CoreHandler
 from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Group
 from baserow.core.object_scopes import GroupObjectScopeType
@@ -18,6 +19,7 @@ from baserow.core.registries import (
     subject_type_registry,
 )
 from baserow.core.subjects import UserSubjectType
+from baserow.ws.tasks import closing_group_send
 
 
 @app.task(queue="export")
@@ -29,16 +31,16 @@ def run_row_count_job():
 
     from baserow.contrib.database.table.handler import TableHandler
 
-    TableHandler.count_rows()
+    if CoreHandler().get_settings().track_group_usage:
+        TableHandler.count_rows()
 
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    if settings.BASEROW_COUNT_ROWS_ENABLED:
-        sender.add_periodic_task(
-            settings.ROW_COUNT_INTERVAL,
-            run_row_count_job.s(),
-        )
+    sender.add_periodic_task(
+        settings.BASEROW_ROW_COUNT_JOB_CRONTAB,
+        run_row_count_job.s(),
+    )
 
 
 def unsubscribe_subject_from_tables_currently_subscribed_to(
@@ -78,7 +80,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     subject = subject_type_qs.get(pk=subject_id)
     scope = scope_type.model_class.objects.get(pk=scope_id)
 
-    users = subject_type.get_associated_users(subject)
+    users = subject_type.get_users_included_in_subject(subject)
     tables = DatabaseTableObjectScopeType().get_all_context_objects_in_scope(scope)
 
     channel_group_names_users_dict = defaultdict(set)
@@ -95,13 +97,14 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
                         group=group,
                         context=table,
                     )
-                except PermissionDenied:
+                except PermissionException:
                     channel_group_names_users_dict[channel_group_name].add(user.id)
 
     channel_layer = get_channel_layer()
 
     for channel_group_name, user_ids in channel_group_names_users_dict.items():
-        async_to_sync(channel_layer.group_send)(
+        async_to_sync(closing_group_send)(
+            channel_layer,
             channel_group_name,
             {
                 "type": "remove_user_from_group",

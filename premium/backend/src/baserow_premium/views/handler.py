@@ -3,6 +3,8 @@ from typing import Dict, Optional, Union
 
 from django.db.models import Count, Q, QuerySet
 
+from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
+
 from baserow.contrib.database.fields.models import SingleSelectField
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.handler import ViewHandler
@@ -126,3 +128,15 @@ def get_rows_grouped_by_single_select_field(
         rows[key]["count"] = value
 
     return rows
+
+
+def delete_personal_views(user_id: int):
+    """
+    Deletes all personal views associated with the provided user.
+
+    :param user_id: The id of the user for whom to delete personal views.
+    """
+
+    View.objects.filter(ownership_type=OWNERSHIP_TYPE_PERSONAL).filter(
+        created_by__id=user_id
+    ).delete()

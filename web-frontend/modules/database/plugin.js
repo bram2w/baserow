@@ -62,6 +62,8 @@ import {
   MultipleCollaboratorsHasNotFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
+  ContainsWordViewFilterType,
+  DoesntContainWordViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -111,6 +113,7 @@ import {
   BaserowGreaterThanOrEqual,
   BaserowIf,
   BaserowIsBlank,
+  BaserowIsNull,
   BaserowLessThan,
   BaserowLessThanOrEqual,
   BaserowLower,
@@ -121,6 +124,9 @@ import {
   BaserowReplace,
   BaserowRowId,
   BaserowT,
+  BaserowNow,
+  BaserowToday,
+  BaserowToDateTz,
   BaserowToDate,
   BaserowToNumber,
   BaserowToText,
@@ -155,6 +161,8 @@ import {
   BaserowContains,
   BaserowFilter,
   BaserowTrunc,
+  BaserowIsNaN,
+  BaserowWhenNaN,
   BaserowEven,
   BaserowOdd,
   BaserowCeil,
@@ -206,6 +214,7 @@ import {
   MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
 import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
+import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -300,12 +309,17 @@ export default (context) => {
   app.$registry.register('viewFilter', new DateBeforeViewFilterType(context))
   app.$registry.register('viewFilter', new DateAfterViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
+  app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
+  app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DoesntContainWordViewFilterType(context)
+  )
   app.$registry.register(
     'viewFilter',
     new FilenameContainsViewFilterType(context)
   )
   app.$registry.register('viewFilter', new HasFileTypeViewFilterType(context))
-  app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register(
     'viewFilter',
     new LengthIsLowerThanViewFilterType(context)
@@ -343,6 +357,12 @@ export default (context) => {
   )
   app.$registry.register('viewFilter', new EmptyViewFilterType(context))
   app.$registry.register('viewFilter', new NotEmptyViewFilterType(context))
+
+  app.$registry.register(
+    'viewOwnershipType',
+    new CollaborativeViewOwnershipType(context)
+  )
+
   app.$registry.register('field', new TextFieldType(context))
   app.$registry.register('field', new LongTextFieldType(context))
   app.$registry.register('field', new LinkRowFieldType(context))
@@ -399,6 +419,7 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowIf(context))
   app.$registry.register('formula_function', new BaserowEqual(context))
   app.$registry.register('formula_function', new BaserowIsBlank(context))
+  app.$registry.register('formula_function', new BaserowIsNull(context))
   app.$registry.register('formula_function', new BaserowNot(context))
   app.$registry.register('formula_function', new BaserowNotEqual(context))
   app.$registry.register('formula_function', new BaserowGreaterThan(context))
@@ -416,6 +437,9 @@ export default (context) => {
   // Date functions
   app.$registry.register('formula_function', new BaserowDatetimeFormat(context))
   app.$registry.register('formula_function', new BaserowDay(context))
+  app.$registry.register('formula_function', new BaserowNow(context))
+  app.$registry.register('formula_function', new BaserowToday(context))
+  app.$registry.register('formula_function', new BaserowToDateTz(context))
   app.$registry.register('formula_function', new BaserowToDate(context))
   app.$registry.register('formula_function', new BaserowDateDiff(context))
   // Date interval functions
@@ -451,6 +475,8 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
   app.$registry.register('formula_function', new BaserowTrunc(context))
+  app.$registry.register('formula_function', new BaserowIsNaN(context))
+  app.$registry.register('formula_function', new BaserowWhenNaN(context))
   app.$registry.register('formula_function', new BaserowEven(context))
   app.$registry.register('formula_function', new BaserowOdd(context))
   app.$registry.register('formula_function', new BaserowAbs(context))

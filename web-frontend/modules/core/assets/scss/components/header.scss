@@ -3,6 +3,10 @@
   justify-content: left;
   background-color: $white;
   border-bottom: 2px solid $color-neutral-200;
+
+  &.header--space-between {
+    justify-content: space-between;
+  }
 }
 
 @keyframes header-loading-loop {

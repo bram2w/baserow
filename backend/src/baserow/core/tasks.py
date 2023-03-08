@@ -4,6 +4,7 @@ from baserow.config.celery import app
 
 from .action.tasks import cleanup_old_actions, setup_periodic_action_tasks
 from .snapshots.tasks import delete_expired_snapshots
+from .telemetry.tasks import initialize_otel
 from .trash.tasks import (
     mark_old_trash_for_permanent_deletion,
     permanently_delete_marked_trash,
@@ -34,4 +35,5 @@ __all__ = [
     "run_calculate_storage",
     "check_pending_account_deletion",
     "delete_expired_snapshots",
+    "initialize_otel",
 ]

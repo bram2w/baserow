@@ -18,6 +18,8 @@ Baserow by following one the guides below:
   install Baserow using docker.
 * [Install with Docker Compose](installation/install-with-docker-compose.md): A
   step-by-step guide to install Baserow using Docker Compose.
+* [Install with Helm](installation/install-with-helm.md): A community maintained helm 
+  chart for installing Baserow on a K8S cluster easily.
 * [Install using Standalone images](installation/install-using-standalone-images.md): A
   general overview on how to run the Baserow standalone service images with your own
   container orchestration software.
@@ -42,6 +44,8 @@ Baserow by following one the guides below:
   on a fresh Ubuntu install. Please use the guides above instead.
 * [Supported runtime dependencies and environments](installation/supported.md): Learn about
   the supported and recommended runtime dependencies.
+* [Monitoring Baserow](installation/monitoring.md): Learn how to monitor your Baserow
+  server using open telemetry.
 
 ## Baserow Tutorials
 
@@ -70,6 +74,8 @@ Baserow provides various APIs detailed below:
   internals of Baserow formulas.
 * [Undo Redo Technical Guide](technical/undo-redo-guide.md): How Baserow implements undo
   redo technically.
+* [Permissions handling Guide](technical/permissions-guide.md): How Baserow implements
+  permission checking technically.
 
 ## Development
 
@@ -94,6 +100,10 @@ Everything related to contributing and developing for Baserow.
   well with Baserow for development purposes.
 * [Feature flags](./development/feature-flags.md): How Baserow uses basic feature flags for optionally
   enabling unfinished or unready features.
+* [E2E Testing](./development/e2e-testing.md): How to run Baserow's end-to-end tests 
+  and when to add your own.
+* [Metrics and Logs](./development/metrics-and-logs.md): How to work with metrics and logs
+  to aid with monitoring Baserow as a developer.
 
 ## Plugins
 

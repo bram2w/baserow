@@ -64,7 +64,12 @@
         "name": "Nome",
         "members": "Membri",
         "applications": "Applicazioni",
-        "created": "Creato"
+        "created": "Creato",
+        "freeUsers": "Utenti gratuiti",
+        "usageHelpText": "Calcolato ogni notte se l'impostazione è attiva",
+        "seatsTaken": "Licenze assegnate",
+        "rowCount": "Numero di righe",
+        "storageUsage": "Spazio disco utilizzato (MB)"
     },
     "editGroupContext": {
         "delete": "Eliminato in modo permanente"

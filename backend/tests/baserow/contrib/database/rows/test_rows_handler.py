@@ -173,7 +173,7 @@ def test_create_row(send_mock, data_fixture):
     row_2.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
-    assert row_3.order == Decimal("1.99999999999999999999")
+    assert row_3.order == Decimal("1.50000000000000000000")
     assert send_mock.call_args[1]["before"].id == row_2.id
 
     row_4 = handler.create_row(user=user, table=table, before_row=row_2)
@@ -182,8 +182,8 @@ def test_create_row(send_mock, data_fixture):
     row_3.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
-    assert row_3.order == Decimal("1.99999999999999999998")
-    assert row_4.order == Decimal("1.99999999999999999999")
+    assert row_3.order == Decimal("1.50000000000000000000")
+    assert row_4.order == Decimal("1.66666666666666674068")
 
     row_5 = handler.create_row(user=user, table=table, before_row=row_3)
     row_1.refresh_from_db()
@@ -192,9 +192,9 @@ def test_create_row(send_mock, data_fixture):
     row_4.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
-    assert row_3.order == Decimal("1.99999999999999999998")
-    assert row_4.order == Decimal("1.99999999999999999999")
-    assert row_5.order == Decimal("1.99999999999999999997")
+    assert row_3.order == Decimal("1.50000000000000000000")
+    assert row_4.order == Decimal("1.66666666666666674068")
+    assert row_5.order == Decimal("1.33333333333333325932")
 
     row_6 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
@@ -204,10 +204,10 @@ def test_create_row(send_mock, data_fixture):
     row_5.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
-    assert row_3.order == Decimal("1.99999999999999999997")
-    assert row_4.order == Decimal("1.99999999999999999998")
-    assert row_5.order == Decimal("1.99999999999999999996")
-    assert row_6.order == Decimal("1.99999999999999999999")
+    assert row_3.order == Decimal("1.50000000000000000000")
+    assert row_4.order == Decimal("1.66666666666666674068")
+    assert row_5.order == Decimal("1.33333333333333325932")
+    assert row_6.order == Decimal("1.75000000000000000000")
 
     row_7 = handler.create_row(user, table=table, before_row=row_1)
     row_1.refresh_from_db()
@@ -218,11 +218,11 @@ def test_create_row(send_mock, data_fixture):
     row_6.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
-    assert row_3.order == Decimal("1.99999999999999999997")
-    assert row_4.order == Decimal("1.99999999999999999998")
-    assert row_5.order == Decimal("1.99999999999999999996")
-    assert row_6.order == Decimal("1.99999999999999999999")
-    assert row_7.order == Decimal("0.99999999999999999999")
+    assert row_3.order == Decimal("1.50000000000000000000")
+    assert row_4.order == Decimal("1.66666666666666674068")
+    assert row_5.order == Decimal("1.33333333333333325932")
+    assert row_6.order == Decimal("1.75000000000000000000")
+    assert row_7.order == Decimal("0.50000000000000000000")
 
     with pytest.raises(ValidationError):
         handler.create_row(user=user, table=table, values={price_field.id: -10.22})
@@ -706,7 +706,7 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
-    assert row_1.order == Decimal("2.99999999999999999999")
+    assert row_1.order == Decimal("2.50000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
     assert row_3.order == Decimal("3.00000000000000000000")
 
@@ -884,3 +884,156 @@ def test_has_row(data_fixture):
 
     assert handler.has_row(user=user, table=table, row_id=row.id, raise_error=False)
     assert handler.has_row(user=user, table=table, row_id=row.id, raise_error=True)
+
+
+@pytest.mark.django_db
+def test_get_unique_orders_without_before_row(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Table", user=user, database=database
+    )
+
+    model = table.get_model()
+    model.objects.create(order=Decimal("1.00000000000000000000"))
+    model.objects.create(order=Decimal("2.00000000000000000000"))
+    model.objects.create(order=Decimal("3.00000000000000000000"))
+    model.objects.create(order=Decimal("4.00000000000000000000"))
+
+    handler = RowHandler()
+    assert handler.get_unique_orders_before_row(None, model) == [
+        Decimal("5.00000000000000000000")
+    ]
+    assert handler.get_unique_orders_before_row(None, model, 3) == [
+        Decimal("5.00000000000000000000"),
+        Decimal("6.00000000000000000000"),
+        Decimal("7.00000000000000000000"),
+    ]
+
+
+@pytest.mark.django_db
+def test_get_unique_orders_with_before_row(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Table", user=user, database=database
+    )
+
+    model = table.get_model()
+    model.objects.create(order=Decimal("1.00000000000000000000"))
+    row_2 = model.objects.create(order=Decimal("2.00000000000000000000"))
+    model.objects.create(order=Decimal("3.00000000000000000000"))
+    row_4 = model.objects.create(order=Decimal("4.00000000000000000000"))
+
+    handler = RowHandler()
+    assert handler.get_unique_orders_before_row(row_2, model) == [
+        Decimal("1.50000000000000000000")
+    ]
+    assert handler.get_unique_orders_before_row(row_2, model, 3) == [
+        Decimal("1.5"),
+        Decimal("1.66666666666666674068"),
+        Decimal("1.75"),
+    ]
+    assert handler.get_unique_orders_before_row(row_4, model) == [
+        Decimal("3.50000000000000000000")
+    ]
+
+
+@pytest.mark.django_db
+def test_get_unique_orders_first_before_row(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Table", user=user, database=database
+    )
+
+    model = table.get_model()
+    row_1 = model.objects.create(order=Decimal("1.00000000000000000000"))
+
+    handler = RowHandler()
+    assert handler.get_unique_orders_before_row(row_1, model) == [
+        Decimal("0.50000000000000000000")
+    ]
+    assert handler.get_unique_orders_before_row(row_1, model, 3) == [
+        Decimal("0.5"),
+        Decimal("0.66666666666666662966"),
+        Decimal("0.75"),
+    ]
+
+
+@pytest.mark.django_db
+def test_get_unique_orders_before_row_triggering_full_table_order_reset(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Table", user=user, database=database
+    )
+
+    model = table.get_model()
+    row_1 = model.objects.create(order=Decimal("1.00000000000000000000"))
+    row_2 = model.objects.create(order=Decimal("1.00000000000000001000"))
+    row_3 = model.objects.create(order=Decimal("2.99999999999999999999"))
+    row_4 = model.objects.create(order=Decimal("2.99999999999999999998"))
+
+    handler = RowHandler()
+    assert handler.get_unique_orders_before_row(row_3, model, 2) == [
+        Decimal("2.50000000000000000000"),
+        Decimal("2.66666666666666651864"),
+    ]
+
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    row_4.refresh_from_db()
+
+    assert row_1.order == Decimal("1.00000000000000000000")
+    assert row_2.order == Decimal("2.00000000000000000000")
+    assert row_3.order == Decimal("4.00000000000000000000")
+    assert row_4.order == Decimal("3.00000000000000000000")
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.row_orders_recalculated.send")
+def test_recalculate_row_orders(send_mock, data_fixture):
+    database = data_fixture.create_database_application()
+    table = data_fixture.create_database_table(database=database)
+    model = table.get_model()
+
+    row_1 = model.objects.create(order="1.99999999999999999999")
+    row_2 = model.objects.create(order="2.00000000000000000000")
+    row_3 = model.objects.create(order="1.99999999999999999999")
+    row_4 = model.objects.create(order="2.10000000000000000000")
+    row_5 = model.objects.create(order="3.00000000000000000000")
+    row_6 = model.objects.create(order="1.00000000000000000001")
+    row_7 = model.objects.create(order="3.99999999999999999999")
+    row_8 = model.objects.create(order="4.00000000000000000001")
+
+    RowHandler().recalculate_row_orders(table)
+
+    rows = model.objects.all()
+    assert rows[0].id == row_6.id
+    assert rows[0].order == Decimal("1.00000000000000000000")
+
+    assert rows[1].id == row_1.id
+    assert rows[1].order == Decimal("2.00000000000000000000")
+
+    assert rows[2].id == row_3.id
+    assert rows[2].order == Decimal("3.00000000000000000000")
+
+    assert rows[3].id == row_2.id
+    assert rows[3].order == Decimal("4.00000000000000000000")
+
+    assert rows[4].id == row_4.id
+    assert rows[4].order == Decimal("5.00000000000000000000")
+
+    assert rows[5].id == row_5.id
+    assert rows[5].order == Decimal("6.00000000000000000000")
+
+    assert rows[6].id == row_7.id
+    assert rows[6].order == Decimal("7.00000000000000000000")
+
+    assert rows[7].id == row_8.id
+    assert rows[7].order == Decimal("8.00000000000000000000")
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["table"].id == table.id

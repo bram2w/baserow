@@ -53,7 +53,7 @@ export default {
   async asyncData({ params, error, app, route, redirect, store }) {
     const slug = params.slug
     const publicAuthToken = await store.dispatch(
-      'page/view/public/setAuthTokenFromCookies',
+      'page/view/public/setAuthTokenFromCookiesIfNotSet',
       { slug }
     )
 
@@ -94,7 +94,11 @@ export default {
 
       const prefill = prefills[field.name]
       values[`field_${field.field.id}`] = fieldType.getEmptyValue(field.field) // Default value
-      if (prefill !== undefined && fieldType.canParseQueryParameter()) {
+      if (
+        prefill !== undefined &&
+        prefill !== null &&
+        fieldType.canParseQueryParameter()
+      ) {
         const result = fieldType.parseQueryParameter(field, prefill, {
           slug,
           client: app.$client,

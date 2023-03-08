@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Users with roles higher than viewer on tables and databases now counted as paid users\non the enterprise plan including users who get those roles from a team.",
+    "issue_number": 1322,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

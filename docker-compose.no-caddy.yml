@@ -91,6 +91,10 @@ x-backend-variables: &backend-variables
   BASEROW_BACKEND_DEBUG:
   BASEROW_BACKEND_LOG_LEVEL:
   FEATURE_FLAGS:
+  BASEROW_ENABLE_OTEL:
+  BASEROW_DEPLOYMENT_ENV:
+  OTEL_EXPORTER_OTLP_ENDPOINT:
+  OTEL_RESOURCE_ATTRIBUTES:
 
   PRIVATE_BACKEND_URL: http://backend:8000
   BASEROW_PUBLIC_URL:
@@ -101,9 +105,7 @@ x-backend-variables: &backend-variables
   HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
   OLD_ACTION_CLEANUP_INTERVAL_MINUTES:
   MINUTES_UNTIL_ACTION_CLEANED_UP:
-  BASEROW_GROUP_STORAGE_USAGE_ENABLED:
   BASEROW_GROUP_STORAGE_USAGE_QUEUE:
-  BASEROW_COUNT_ROWS_ENABLED:
   DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
   BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR:
   BASEROW_FULL_HEALTHCHECKS:
@@ -125,13 +127,18 @@ x-backend-variables: &backend-variables
   BASEROW_WEBHOOKS_MAX_PER_TABLE:
   BASEROW_WEBHOOKS_MAX_CALL_LOG_ENTRIES:
   BASEROW_WEBHOOKS_REQUEST_TIMEOUT_SECONDS:
-  BASEROW_PERMISSION_MANAGERS:
   BASEROW_ENTERPRISE_AUDIT_LOG_CLEANUP_INTERVAL_MINUTES:
   BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS:
+  BASEROW_ROW_COUNT_JOB_CRONTAB:
+  BASEROW_STORAGE_USAGE_JOB_CRONTAB:
+  BASEROW_SEAT_USAGE_JOB_CRONTAB:
+  BASEROW_PERIODIC_FIELD_UPDATE_CRONTAB:
+  BASEROW_PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES:
+  BASEROW_PERIODIC_FIELD_UPDATE_QUEUE_NAME:
 
 services:
   backend:
-    image: baserow/backend:1.14.0
+    image: baserow/backend:1.15.0
     restart: unless-stopped
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
@@ -146,12 +153,12 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.14.0
+    image: baserow/web-frontend:1.15.0
     restart: unless-stopped
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
     environment:
-      BASEROW_PUBLIC_URL: 
+      BASEROW_PUBLIC_URL:
       PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
       PUBLIC_BACKEND_URL:
       PUBLIC_WEB_FRONTEND_URL:
@@ -165,13 +172,15 @@ services:
       ADDITIONAL_MODULES:
       BASEROW_MAX_IMPORT_FILE_SIZE_MB:
       BASEROW_MAX_SNAPSHOTS_PER_GROUP:
+      BASEROW_ENABLE_OTEL:
+      BASEROW_DEPLOYMENT_ENV:
     depends_on:
       - backend
     networks:
       local:
 
   celery:
-    image: baserow/backend:1.14.0
+    image: baserow/backend:1.15.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -188,7 +197,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.14.0
+    image: baserow/backend:1.15.0
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -205,16 +214,13 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.14.0
+    image: baserow/backend:1.15.0
     restart: unless-stopped
     command: celery-beat
     environment:
       <<: *backend-variables
     # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237
     stop_signal: SIGQUIT
-    # We don't yet have a healthcheck for the beat worker, just assume it is healthy.
-    healthcheck:
-      test: [ "CMD-SHELL", "exit 0" ]
     depends_on:
       - backend
     volumes:

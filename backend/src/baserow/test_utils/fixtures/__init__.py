@@ -7,6 +7,7 @@ from .field import FieldFixtures
 from .file_import import FileImportFixtures
 from .group import GroupFixtures
 from .job import JobFixtures
+from .page import PageFixtures
 from .row import RowFixture
 from .settings import SettingsFixtures
 from .snapshots import SnapshotFixtures
@@ -37,5 +38,6 @@ class Fixtures(
     FileImportFixtures,
     SnapshotFixtures,
     AuthProviderFixtures,
+    PageFixtures,
 ):
     fake = Faker()

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed API docs for creating and updating rows are missing for Multiple Select and Multiple Collaborator fields.",
+    "issue_number": 1196,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -104,9 +104,10 @@ def test_admin_list_licenses(api_client, data_fixture, django_assert_num_queries
         )
         assert response.status_code == HTTP_403_FORBIDDEN
 
-        # We expect one query for the user check and one for the fetching the
-        # licenses, including the count of seats that are taken.
-        with django_assert_num_queries(2):
+        # We expect one to count the total number of users, one query for the user
+        # check, one for the fetching the licenses including the count of
+        # seats that are taken.
+        with django_assert_num_queries(3):
             response = api_client.get(
                 reverse("api:premium:license:list"),
                 format="json",
@@ -301,7 +302,7 @@ def test_admin_get_license(api_client, data_fixture, django_assert_num_queries):
     assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     with freeze_time("2021-09-01 00:00"):
-        with django_assert_num_queries(4):
+        with django_assert_num_queries(5):
             response = api_client.get(
                 reverse("api:premium:license:item", kwargs={"id": license.id}),
                 format="json",

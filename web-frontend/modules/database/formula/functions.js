@@ -436,6 +436,29 @@ export class BaserowIsBlank extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowIsNull extends BaserowFunctionDefinition {
+  static getType() {
+    return 'is_null'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.isNullDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['is_null(any)']
+  }
+
+  getExamples() {
+    return ["is_null('10') "]
+  }
+
+  getFormulaType() {
+    return 'boolean'
+  }
+}
+
 export class BaserowT extends BaserowFunctionDefinition {
   static getType() {
     return 't'
@@ -618,6 +641,52 @@ export class BaserowLessThanOrEqual extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowNow extends BaserowFunctionDefinition {
+  static getType() {
+    return 'now'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.nowDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['now()']
+  }
+
+  getExamples() {
+    return ['now() > todate("2021-12-12 13:00:00", "YYYY-MM-DD HH24:MI:SS")']
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
+export class BaserowToday extends BaserowFunctionDefinition {
+  static getType() {
+    return 'today'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.todayDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['today()']
+  }
+
+  getExamples() {
+    return ['today() > todate("2021-12-12", "YYYY-MM-DD")']
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
 export class BaserowToDate extends BaserowFunctionDefinition {
   static getType() {
     return 'todate'
@@ -634,6 +703,29 @@ export class BaserowToDate extends BaserowFunctionDefinition {
 
   getExamples() {
     return ["todate('20210101', 'YYYYMMDD')"]
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
+export class BaserowToDateTz extends BaserowFunctionDefinition {
+  static getType() {
+    return 'todate_tz'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.toDateTzDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['todate_tz(text, text, text)']
+  }
+
+  getExamples() {
+    return ["todate_tz('20210101', 'YYYYMMDD', 'Europe/Amsterdam')"]
   }
 
   getFormulaType() {
@@ -1144,11 +1236,11 @@ export class BaserowGetLinkLabel extends BaserowFunctionDefinition {
   }
 
   getSyntaxUsage() {
-    return ['get_link_label(link)']
+    return ['get_link_label(button)']
   }
 
   getExamples() {
-    return ["get_link_url(field('formula link field')) = 'your-label'"]
+    return ["get_link_label(field('formula button field')) = 'your-label'"]
   }
 
   getFormulaType() {
@@ -1587,6 +1679,52 @@ export class BaserowTrunc extends BaserowFunctionDefinition {
       'trunc(1/0) = NaN',
       'trunc(tonumber("invalid")) = NaN',
     ]
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowIsNaN extends BaserowFunctionDefinition {
+  static getType() {
+    return 'is_nan'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.isNanDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['is_nan(number)']
+  }
+
+  getExamples() {
+    return ['is_nan(1 / 0) = true', 'is_nan(1) = false']
+  }
+
+  getFormulaType() {
+    return 'number'
+  }
+}
+
+export class BaserowWhenNaN extends BaserowFunctionDefinition {
+  static getType() {
+    return 'when_nan'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.whenNanDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['when_nan(number, fallback)']
+  }
+
+  getExamples() {
+    return ['when_nan(1 / 0, 4) = 4', 'when_nan(1, 4) = 1']
   }
 
   getFormulaType() {

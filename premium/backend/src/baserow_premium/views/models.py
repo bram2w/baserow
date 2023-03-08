@@ -5,6 +5,8 @@ from baserow.contrib.database.fields.models import Field, FileField, SingleSelec
 from baserow.contrib.database.views.models import View
 from baserow.core.mixins import HierarchicalModelMixin
 
+OWNERSHIP_TYPE_PERSONAL = "personal"
+
 
 class KanbanView(View):
     field_options = models.ManyToManyField(Field, through="KanbanViewFieldOptions")

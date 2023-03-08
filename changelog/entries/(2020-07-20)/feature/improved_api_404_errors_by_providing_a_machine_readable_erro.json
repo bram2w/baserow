@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Improved API 404 errors by providing a machine readable error.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

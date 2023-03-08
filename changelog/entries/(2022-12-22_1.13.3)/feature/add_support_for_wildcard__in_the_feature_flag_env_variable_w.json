@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

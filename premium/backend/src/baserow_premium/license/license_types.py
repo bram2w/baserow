@@ -2,6 +2,8 @@ from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.models import License, LicenseUser
 from baserow_premium.license.registries import LicenseType, SeatUsageSummary
 
+from baserow.core.models import User
+
 
 class PremiumLicenseType(LicenseType):
     type = "premium"
@@ -12,10 +14,13 @@ class PremiumLicenseType(LicenseType):
         seats_taken = (
             obj.seats_taken if hasattr(obj, "seats_taken") else obj.users.all().count()
         )
+        total_users = (
+            obj.total_users if hasattr(obj, "total_users") else User.objects.count()
+        )
+        free_users = total_users - seats_taken
         return SeatUsageSummary(
             seats_taken=seats_taken,
-            free_users_count=0,
-            num_users_with_highest_role={},
+            free_users_count=free_users,
         )
 
     def handle_seat_overflow(self, seats_taken: int, license_object: License):

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add API token authentication support to multipart and via-URL file uploads.",
+    "issue_number": 255,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -3,7 +3,8 @@
         "yes": "sì",
         "no": "no",
         "wrong": "Si è verificato un errore",
-        "none": "Nessuno"
+        "none": "Nessuno",
+        "free": "Gratuito"
     },
     "action": {
         "upload": "Carica",
@@ -39,7 +40,11 @@
         "database": "Database",
         "cantSelectTableTitle": "Non è stato possibile selezionare il database.",
         "cantSelectTableDescription": "Il database non può essere selezionato perché non ha tabelle. Usa la barra laterale per crearne una.",
-        "databaseDefaultName": "Nuovo Database"
+        "databaseDefaultName": "Nuovo Database",
+        "builder": "Applicazione",
+        "builderDefaultName": "Applicazione senza nome",
+        "cantSelectPageTitle": "Non è possibile selezionare l'applicazione.",
+        "cantSelectPageDescription": "L'application builder non può essere selezionato perché non ci sono pagine. Utilizza il menu laterale per crearne una."
     },
     "settingType": {
         "account": "Account",

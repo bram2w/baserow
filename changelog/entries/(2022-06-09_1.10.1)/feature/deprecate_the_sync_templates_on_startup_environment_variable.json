@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Deprecate the SYNC_TEMPLATES_ON_STARTUP environment variable and no longer call the\nsync_templates command on startup in the docker images.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

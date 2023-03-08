@@ -49,6 +49,16 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
+@pytest.fixture(autouse=True)
+def clean_registry_cache():
+    """
+    Ensure no patched version stays in cache.
+    """
+
+    field_type_registry.get_for_class.cache_clear()
+    yield
+
+
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.disabled_in_ci
 def test_can_convert_between_all_fields(data_fixture):
@@ -470,13 +480,15 @@ def test_update_field(send_mock, data_fixture):
     assert getattr(field_with_max_length_name, "name") == field_name_with_ok_length
 
 
+# This failing field type triggers the CannotChangeFieldType error if a field is
+# changed into this type.
+class FailingFieldType(TextFieldType):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        return "p_in::NOT_VALID_SQL_SO_IT_WILL_FAIL("
+
+
 @pytest.mark.django_db
 def test_update_field_failing(data_fixture):
-    # This failing field type triggers the CannotChangeFieldType error if a field is
-    # changed into this type.
-    class FailingFieldType(TextFieldType):
-        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return "p_in::NOT_VALID_SQL_SO_IT_WILL_FAIL("
 
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -485,6 +497,9 @@ def test_update_field_failing(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(field_type_registry.registry, {"text": FailingFieldType()}):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         with pytest.raises(CannotChangeFieldType):
             handler.update_field(user=user, field=field, new_type_name="text")
 
@@ -520,6 +535,9 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
     with patch.dict(
         field_type_registry.registry, {"lowercase_text": AlwaysLowercaseTextField()}
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         handler.update_field(
             user=user, field=existing_text_field, new_type_name="lowercase_text"
         )
@@ -565,6 +583,9 @@ def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fi
         field_type_registry.registry,
         {"text": ReversingTextFieldUsingBothVarCharAndTextSqlTypes()},
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         # Update to the same baserow type, but due to this fields implementation of
         # get_model_field this will alter the underlying database column from type
         # of varchar to text, which should make our reversing alter sql run.
@@ -606,6 +627,9 @@ def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
     with patch.dict(
         field_type_registry.registry, {"text": AlwaysReverseOnUpdateField()}
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         handler.update_field(
             user=user, field=existing_text_field, new_type_name="text", name="new_name"
         )
@@ -646,6 +670,9 @@ def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fix
     with patch.dict(
         field_type_registry.registry, {"text": SameTypeAlwaysReverseOnUpdateField()}
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         handler.update_field(
             user=user,
             field=existing_text_field,
@@ -688,6 +715,9 @@ def test_update_field_with_type_error_on_conversion_should_null_field(data_fixtu
         field_type_registry.registry,
         {"throws_field": AlwaysThrowsSqlExceptionOnConversionField()},
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         handler.update_field(
             user=user, field=existing_text_field, new_type_name="throws_field"
         )
@@ -710,7 +740,6 @@ class ReversesWhenConvertsAwayTextField(LongTextFieldType):
 
 
 class AlwaysLowercaseTextField(TextFieldType):
-    type = "lowercase_text"
     model_class = LongTextField
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
@@ -745,6 +774,9 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
             "long_text": ReversesWhenConvertsAwayTextField(),
         },
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         handler.update_field(
             user=user,
             field=existing_field_with_old_value_prep,
@@ -759,7 +791,6 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
 
 
 class ReversesWhenConvertsAwayTextField2(LongTextFieldType):
-    type = "reserves_text"
     model_class = LongTextField
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
@@ -801,6 +832,9 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
             "long_text": ReversesWhenConvertsAwayTextField2(),
         },
     ):
+        # Need to clear the cache again
+        field_type_registry.get_for_class.cache_clear()
+
         handler.update_field(
             user=user,
             field=existing_field_with_old_value_prep,

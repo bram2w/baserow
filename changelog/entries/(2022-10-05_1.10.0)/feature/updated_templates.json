@@ -1,0 +1,29 @@
+{
+    "type": "feature",
+    "message": "Updated templates:",
+    "issue_number": null,
+    "bullet_points": [
+        "Book writing guide",
+        "Bucket List",
+        "Call Center Log",
+        "Company Asset Tracker",
+        "Email Marketing Campaigns",
+        "Home Inventory",
+        "House Search",
+        "Job Search",
+        "Nonprofit Organization Management",
+        "Personal Task Manager",
+        "Political Campaign Contributions",
+        "Project Tracker",
+        "Recipe Book",
+        "Restaurant Management",
+        "Single Trip Planner",
+        "Software Application Bug Tracker",
+        "Student Planner",
+        "Teacher Lesson Plans",
+        "Team Check-ins",
+        "University Admissions Management",
+        "Wedding Client Planner"
+    ],
+    "created_at": "2023-02-10"
+}

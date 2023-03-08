@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

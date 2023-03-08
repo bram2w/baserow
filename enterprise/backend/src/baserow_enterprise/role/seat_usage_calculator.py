@@ -166,7 +166,7 @@ class RoleBasedSeatUsageSummaryCalculator:
 
         num_paid_users = 0
         num_free_users = 0
-        for highest_role_a_user_has in highest_role_per_user_id.values():
+        for user_id, highest_role_a_user_has in highest_role_per_user_id.items():
             num_users_with_highest_role.setdefault(highest_role_a_user_has, 0)
             num_users_with_highest_role[highest_role_a_user_has] += 1
             if highest_role_a_user_has not in FREE_ROLE_UIDS:
@@ -178,4 +178,5 @@ class RoleBasedSeatUsageSummaryCalculator:
             seats_taken=num_paid_users,
             free_users_count=num_free_users,
             num_users_with_highest_role=num_users_with_highest_role,
+            highest_role_per_user_id=highest_role_per_user_id,
         )

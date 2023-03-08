@@ -1,12 +1,11 @@
 import dataclasses
-from typing import Any, Optional
+from collections import defaultdict
+from copy import deepcopy
+from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
-from baserow_premium.license.handler import LicenseHandler
-
-from baserow.contrib.database.views.models import ViewFilter
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
@@ -14,170 +13,189 @@ from baserow.core.action.registries import (
     UndoableActionType,
 )
 from baserow.core.action.scopes import GroupActionScopeType
-from baserow.core.handler import CoreHandler
 from baserow.core.models import Group
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
-from baserow_enterprise.features import RBAC
 from baserow_enterprise.role.handler import RoleAssignmentHandler
-from baserow_enterprise.role.models import Role
+from baserow_enterprise.role.types import NewRoleAssignment
 
-from .constants import ROLE_ASSIGNABLE_OBJECT_MAP
+from .models import RoleAssignment
+from .types import AssignmentTuple
 
 
-class AssignRoleActionType(UndoableActionType):
-    type = "assign_role"
+class BatchAssignRoleActionType(UndoableActionType):
+    type = "batch_assign_role"
     description = ActionTypeDescription(
-        _("Assign role"),
-        _(
-            "Role %(role_uid)s assigned to %(subject_type)s %(subject_id)s "
-            "on %(scope_type)s %(scope_id)s"
-        ),
+        _("Assign multiple roles"),
+        _("Multiple roles have been assigned"),
+    )
+    long_desc_if_one_assignment = _(
+        'Role %(role_uid)s assigned to subject type "%(subject_type_name)s" (%(subject_id)s) '
+        'on scope type "%(scope_type_name)s" (%(scope_id)s).'
     )
 
     @dataclasses.dataclass
     class Params:
-        subject_id: int
-        subject_type: str
         group_id: int
-        role_uid: Optional[str]
-        original_role_uid: Optional[str]
-        scope_id: int
-        scope_type: str
+        assignments: List[AssignmentTuple]
+
+    @classmethod
+    def get_long_description(cls, params_dict: Dict[str, Any], *args, **kwargs) -> str:
+        if len(params_dict["assignments"]) == 1:
+            return (
+                cls.long_desc_if_one_assignment
+                % AssignmentTuple(*params_dict["assignments"][0])._asdict()
+            )
+        else:
+            return super().get_long_description(params_dict, *args, **kwargs)
+
+    @classmethod
+    def serialized_to_params(cls, serialized_params):
+        """
+        Replace the assignment items by a named tuple for easier use.
+        """
+
+        serialized_params_copy = deepcopy(serialized_params)
+        serialized_params_copy["assignments"] = [
+            AssignmentTuple(*at) for at in serialized_params_copy["assignments"]
+        ]
+
+        return cls.Params(**serialized_params_copy)
 
     @classmethod
     def do(
         cls,
         user,
-        subject,
+        new_role_assignments: List[NewRoleAssignment],
         group: Group,
-        role: Optional[Role] = None,
-        scope: Optional[Any] = None,
-    ) -> ViewFilter:
+    ) -> List[Optional[RoleAssignment]]:
         """
-        Assigns a role to a subject into a group over a given scope.
+        Apply the given role assignments in an undoable action.
 
-        :param subject: The subject targeted by the role.
-        :param group: The group in which we want to assign the role.
-        :param role: The role we want to assign. If the role is `None` then we remove
-            the current role of the subject in the group for the given scope.
-        :param scope: An optional scope on which the role applies. If no scope is given
-            the group is used as scope.
-        :return: The created RoleAssignment if role is not `None` else `None`.
+        :param user: The user who do the action.
+        :param new_role_assignments: A list a new role assignments. A role assignment is
+            a triplet of (subject, role, scope).
+        :return: The result role assignment object related to the new_role_assignment.
+            If the role has been deleted the value is None instead of a role assignment.
         """
-
-        if scope is None:
-            scope = group
-
-        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
-
-        scope_type = object_scope_type_registry.get_by_model(scope)
-        CoreHandler().check_permissions(
-            user,
-            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
-            group=group,
-            context=scope,
-        )
 
         role_assignment_handler = RoleAssignmentHandler()
 
-        previous_role = role_assignment_handler.get_current_role_assignment(
-            subject, group, scope=scope
+        user_and_scope_set = {
+            (subject, scope) for subject, _, scope in new_role_assignments
+        }
+
+        # get current roles to be able to store them alongside with action
+        # for a later undo/redo
+        previous_roles = role_assignment_handler.get_current_role_assignments(
+            group, user_and_scope_set
         )
 
-        role_assignment = role_assignment_handler.assign_role(
-            subject, group, role, scope=scope
+        role_assignments = role_assignment_handler.assign_role_batch_for_user(
+            user, group, new_role_assignments
         )
 
-        scope_type = object_scope_type_registry.get_by_model(scope).type
-        subject_type = subject_type_registry.get_by_model(subject).type
+        # Build the list of assignment tuples we want to save in the action to be able
+        # to [un|re]do it later
+        param_assignments = []
+        for (subject, role, scope) in new_role_assignments:
+            subject_type = subject_type_registry.get_by_model(subject)
+            scope_type = object_scope_type_registry.get_by_model(scope)
+            previous_role_assignment = previous_roles[(subject, scope)]
+            previous_role_uid = (
+                previous_role_assignment.role.uid if previous_role_assignment else None
+            )
+
+            param_assignments.append(
+                AssignmentTuple(
+                    subject_type.type,
+                    subject.id,
+                    previous_role_uid,
+                    role.uid if role else None,
+                    scope_type.type,
+                    scope.id,
+                )
+            )
 
         cls.register_action(
             user=user,
-            params=cls.Params(
-                subject.id,
-                subject_type,
-                group.id,
-                role.uid if role else None,
-                previous_role.role.uid if previous_role else None,
-                scope.id,
-                scope_type,
-            ),
+            params=cls.Params(group.id, param_assignments),
             scope=cls.scope(group.id),
             group=group,
         )
-        return role_assignment
+
+        return role_assignments
 
     @classmethod
     def scope(cls, group_id: int) -> ActionScopeStr:
         return GroupActionScopeType.value(group_id)
 
     @classmethod
-    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+    def undo_redo(cls, user: AbstractUser, params: Params, undo=True):
+        """
+        Undo or redo the action depending of the undo parameter.
+
+        :param user: The user that tries to [un|re]do the action.
+        :param params: The params of the original action.
+        :param undo: True by default. If True then it's an undo action otherwise it's a
+            redo action.
+        """
 
         role_assignment_handler = RoleAssignmentHandler()
         group = Group.objects.get(id=params.group_id)
 
-        scope_type = object_scope_type_registry.get(params.scope_type)
-        scope = scope_type.get_object_for_this_type(id=params.scope_id)
+        # Gather all scopes ids and subjects ids grouped by their type to query them
+        # all at once per type
+        scope_ids_by_type = defaultdict(set)
+        subject_ids_by_type = defaultdict(set)
+        for assignment in params.assignments:
+            scope_ids_by_type[assignment.scope_type_name].add(assignment.scope_id)
+            subject_ids_by_type[assignment.subject_type_name].add(assignment.subject_id)
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
+        # Query all scopes
+        scope_by_type_and_id = {}
+        for scope_type_name, scope_ids in scope_ids_by_type.items():
+            for scope in object_scope_type_registry.get(
+                scope_type_name
+            ).get_all_objects_for_this_type(id__in=scope_ids):
+                scope_by_type_and_id[(scope_type_name, scope.id)] = scope
 
-        scope_type = object_scope_type_registry.get_by_model(scope)
-        CoreHandler().check_permissions(
-            user,
-            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
-            group=group,
-            context=scope,
-        )
+        # Query all subjects
+        subject_by_type_and_id = {}
+        for subject_type_name, subject_ids in subject_ids_by_type.items():
+            for subject in subject_type_registry.get(
+                subject_type_name
+            ).get_all_objects_for_this_type(id__in=subject_ids):
+                subject_by_type_and_id[(subject_type_name, subject.id)] = subject
 
-        subject = role_assignment_handler.get_subject(
-            params.subject_id, params.subject_type
-        )
+        # Build new role list from the action param
+        roles_to_assign = []
+        for (
+            subject_type_name,
+            subject_id,
+            original_role_uid,
+            role_uid,
+            scope_type_name,
+            scope_id,
+        ) in params.assignments:
 
-        role = (
-            role_assignment_handler.get_role_by_uid(params.original_role_uid)
-            if params.original_role_uid
-            else None
-        )
+            subject = subject_by_type_and_id[(subject_type_name, subject_id)]
 
-        role_assignment_handler.assign_role(
-            subject,
-            group,
-            role,
-            scope=scope,
-        )
+            role_uid = original_role_uid if undo else role_uid
+            role = (
+                role_assignment_handler.get_role_by_uid(role_uid) if role_uid else None
+            )
+
+            scope = scope_by_type_and_id[(scope_type_name, scope_id)]
+
+            roles_to_assign.append(NewRoleAssignment(subject, role, scope))
+
+        # And finally assign roles
+        role_assignment_handler.assign_role_batch_for_user(user, group, roles_to_assign)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        cls.undo_redo(user, params)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
-
-        role_assignment_handler = RoleAssignmentHandler()
-
-        group = Group.objects.get(id=params.group_id)
-        scope_type = object_scope_type_registry.get(params.scope_type)
-        scope = scope_type.get_object_for_this_type(id=params.scope_id)
-
-        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, user, group)
-
-        CoreHandler().check_permissions(
-            user,
-            ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["UPDATE"],
-            group=group,
-            context=scope,
-        )
-
-        subject = role_assignment_handler.get_subject(
-            params.subject_id, params.subject_type
-        )
-
-        role = (
-            role_assignment_handler.get_role_by_uid(params.role_uid)
-            if params.role_uid
-            else None
-        )
-
-        role_assignment_handler.assign_role(
-            subject,
-            group,
-            role,
-            scope=scope,
-        )
+        cls.undo_redo(user, params, undo=False)

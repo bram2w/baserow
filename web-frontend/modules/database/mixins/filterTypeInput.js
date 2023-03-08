@@ -28,6 +28,9 @@ export default {
     }
   },
   methods: {
+    isInputValid() {
+      return !this.$v.copy.$error
+    },
     delayedUpdate(value, immediately = false) {
       if (this.disabled) {
         return
@@ -36,7 +39,7 @@ export default {
       clearTimeout(delayTimeout)
       this.$v.$touch()
 
-      if (this.$v.copy.$error) {
+      if (!this.isInputValid()) {
         return
       }
 

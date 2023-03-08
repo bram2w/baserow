@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added a new setting to the Admin Settings page to enable/disable global group creation.",
+    "issue_number": 1311,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

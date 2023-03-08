@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Replaced all custom alert code with `Alert` component",
+    "issue_number": 1016,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

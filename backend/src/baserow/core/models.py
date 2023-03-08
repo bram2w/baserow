@@ -6,8 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q, UniqueConstraint
-
-from rest_framework.exceptions import NotAuthenticated
+from django.utils import timezone
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -18,7 +17,6 @@ from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
 from .action.models import Action
-from .exceptions import UserInvalidGroupPermissionsError, UserNotInGroup
 from .mixins import (
     CreatedAndUpdatedOnMixin,
     HierarchicalModelMixin,
@@ -102,6 +100,11 @@ class Settings(models.Model):
         help_text="Indicates that there are no admin users in the database yet, "
         "so in the frontend the signup form will be shown instead of the login page.",
     )
+    track_group_usage = models.BooleanField(
+        default=False,
+        help_text="Runs a job once per day which calculates per group row counts and "
+        "file storage usage, displayed on the admin group page.",
+    )
 
 
 class UserProfile(models.Model):
@@ -130,9 +133,21 @@ class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixi
     users = models.ManyToManyField(User, through="GroupUser")
     storage_usage = models.IntegerField(null=True)
     storage_usage_updated_at = models.DateTimeField(null=True)
+    seats_taken = models.IntegerField(null=True)
+    seats_taken_updated_at = models.DateTimeField(null=True)
+    now = models.DateTimeField(null=True)
 
     def get_parent(self):
         return None
+
+    def refresh_now(self):
+        self.now = timezone.now()
+        self.save(update_fields=["now"])
+
+    def get_now_or_set_if_null(self):
+        if self.now is None:
+            self.refresh_now()
+        return self.now
 
     def application_set_including_trash(self):
         """
@@ -143,70 +158,6 @@ class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixi
 
     def has_template(self):
         return self.template_set.all().exists()
-
-    def has_user(
-        self,
-        user,
-        permissions=None,
-        raise_error=False,
-        allow_if_template=False,
-        include_trash=False,
-    ):
-        """
-        Checks if the provided user belongs to the group.
-
-        :param user: The user that must be in the group.
-        :type user: User
-        :param permissions: One or multiple permissions can optionally be provided
-            and if so, the user must have one of those permissions.
-        :type permissions: None, str or list
-        :param raise_error: If True an error will be raised when the user does not
-            belong to the group or doesn't have the right permissions.
-        :type raise_error: bool
-        :param allow_if_template: If true and if the group is related to a template,
-            then True is always returned and no exception will be raised.
-        :type allow_if_template: bool
-        :param include_trash: If true then also checks if the group has been trashed
-            instead of raising a DoesNotExist exception.
-        :type include_trash: bool
-        :raises UserNotInGroup: If the user does not belong to the group.
-        :raises UserInvalidGroupPermissionsError: If the user does belong to the group,
-            but doesn't have the right permissions.
-        :return: Indicates if the user belongs to the group.
-        :rtype: bool
-        """
-
-        if permissions and not isinstance(permissions, list):
-            permissions = [permissions]
-
-        if allow_if_template and self.has_template():
-            return True
-        elif not bool(user and user.is_authenticated):
-            if raise_error:
-                raise NotAuthenticated()
-            else:
-                return False
-
-        if include_trash:
-            manager = GroupUser.objects_and_trash
-        else:
-            manager = GroupUser.objects
-
-        queryset = manager.filter(user_id=user.id, group_id=self.id)
-
-        if raise_error:
-            try:
-                group_user = queryset.get()
-            except GroupUser.DoesNotExist:
-                raise UserNotInGroup(user, self)
-
-            if permissions is not None and group_user.permissions not in permissions:
-                raise UserInvalidGroupPermissionsError(user, self, permissions)
-        else:
-            if permissions is not None:
-                queryset = queryset.filter(permissions__in=permissions)
-
-            return queryset.exists()
 
     def get_group_user(self, user: User, include_trash: bool = False) -> "GroupUser":
         """

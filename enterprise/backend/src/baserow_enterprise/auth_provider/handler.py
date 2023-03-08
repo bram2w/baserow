@@ -6,11 +6,14 @@ from django.db import connection
 
 from psycopg2 import sql
 
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import AcceptGroupInvitationActionType
 from baserow.core.auth_provider.auth_provider_types import AuthProviderType
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
 from baserow.core.auth_provider.models import AuthProviderModel
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import auth_provider_type_registry
+from baserow.core.user.actions import CreateUserActionType, SignInUserActionType
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user.handler import UserHandler
 from baserow_enterprise.auth_provider.exceptions import (
@@ -149,15 +152,20 @@ class AuthProviderHandler:
             if not is_original_provider:
                 raise DifferentAuthProvider()
 
+            action_type_registry.get(SignInUserActionType.type).do(user, auth_provider)
+
             if user_info.group_invitation_token:
                 core_handler = CoreHandler()
                 invitation = core_handler.get_group_invitation_by_token(
                     user_info.group_invitation_token
                 )
-                core_handler.accept_group_invitation(user, invitation)
+                action_type_registry.get(AcceptGroupInvitationActionType.type).do(
+                    user, invitation
+                )
+
             created = False
         except UserNotFound:
-            user = user_handler.create_user(
+            user = action_type_registry.get(CreateUserActionType.type).do(
                 name=user_info.name,
                 email=user_info.email,
                 password=None,

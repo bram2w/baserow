@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Prevent adding a new line to the long text field in the grid view when selecting the\ncell by pressing the enter key.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

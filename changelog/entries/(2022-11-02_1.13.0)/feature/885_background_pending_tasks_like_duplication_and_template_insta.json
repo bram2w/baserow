@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Background pending tasks like duplication and template_install are restored in a new frontend session if unfinished.",
+    "issue_number": 885,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

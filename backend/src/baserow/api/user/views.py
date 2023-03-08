@@ -32,7 +32,10 @@ from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
 )
 from baserow.api.schemas import get_error_schema
-from baserow.api.sessions import get_untrusted_client_session_id
+from baserow.api.sessions import (
+    get_untrusted_client_session_id,
+    set_user_session_data_from_request,
+)
 from baserow.api.user.registries import user_data_registry
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import ActionScopeStr, action_type_registry
@@ -46,8 +49,11 @@ from baserow.core.exceptions import (
 )
 from baserow.core.models import GroupInvitation, Template
 from baserow.core.user.actions import (
+    ChangeUserPasswordActionType,
     CreateUserActionType,
+    ResetUserPasswordActionType,
     ScheduleUserDeletionActionType,
+    SendResetUserPasswordActionType,
     UpdateUserActionType,
 )
 from baserow.core.user.exceptions import (
@@ -295,7 +301,11 @@ class SendResetPasswordEmailView(APIView):
             user = handler.get_active_user(email=data["email"])
             if not PasswordProviderHandler.get().enabled and user.is_staff is False:
                 raise AuthProviderDisabled()
-            handler.send_reset_password_email(user, data["base_url"])
+
+            set_user_session_data_from_request(user, request)
+            action_type_registry.get(SendResetUserPasswordActionType.type).do(
+                user, data["base_url"]
+            )
         except UserNotFound:
             pass
 
@@ -342,8 +352,9 @@ class ResetPasswordView(APIView):
     def post(self, request, data):
         """Changes users password if the provided reset token is valid."""
 
-        handler = UserHandler()
-        handler.reset_password(data["token"], data["password"])
+        action_type_registry.get(ResetUserPasswordActionType.type).do(
+            data["token"], data["password"]
+        )
 
         return Response("", status=204)
 
@@ -382,8 +393,7 @@ class ChangePasswordView(APIView):
 
         if not PasswordProviderHandler.get().enabled and request.user.is_staff is False:
             raise AuthProviderDisabled()
-        handler = UserHandler()
-        handler.change_password(
+        action_type_registry.get(ChangeUserPasswordActionType.type).do(
             request.user, data["old_password"], data["new_password"]
         )
 

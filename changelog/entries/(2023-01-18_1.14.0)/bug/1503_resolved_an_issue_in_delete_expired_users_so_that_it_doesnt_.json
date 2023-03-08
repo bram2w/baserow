@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an issue in `delete_expired_users` so that it doesn't delete groups when admins are deactivated and not marked for deletion.",
+    "issue_number": 1503,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

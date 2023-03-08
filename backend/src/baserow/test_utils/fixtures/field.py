@@ -142,6 +142,9 @@ class FieldFixtures:
         if "order" not in kwargs:
             kwargs["order"] = 0
 
+        if "date_show_tzinfo" not in kwargs:
+            kwargs["date_show_tzinfo"] = False
+
         field = DateField.objects.create(**kwargs)
 
         if create_field:
@@ -308,8 +311,8 @@ class FieldFixtures:
         if "date_include_time" not in kwargs:
             kwargs["date_include_time"] = False
 
-        if "timezone" not in kwargs:
-            kwargs["timezone"] = "Europe/Berlin"
+        if "date_show_tzinfo" not in kwargs:
+            kwargs["date_show_tzinfo"] = False
 
         field = LastModifiedField.objects.create(**kwargs)
 
@@ -331,8 +334,8 @@ class FieldFixtures:
         if "date_include_time" not in kwargs:
             kwargs["date_include_time"] = False
 
-        if "timezone" not in kwargs:
-            kwargs["timezone"] = "Europe/Berlin"
+        if "date_show_tzinfo" not in kwargs:
+            kwargs["date_show_tzinfo"] = False
 
         field = CreatedOnField.objects.create(**kwargs)
 
@@ -369,6 +372,12 @@ class FieldFixtures:
 
         if "requires_refresh_after_insert" not in kwargs:
             kwargs["requires_refresh_after_insert"] = False
+
+        if "nullable" not in kwargs:
+            kwargs["nullable"] = False
+
+        if "date_show_tzinfo" not in kwargs:
+            kwargs["date_show_tzinfo"] = False
 
         recalculate = kwargs.pop("recalculate", True)
 

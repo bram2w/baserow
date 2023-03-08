@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Value
 
 from baserow_premium.license.exceptions import (
     CantManuallyChangeSeatsError,
@@ -27,6 +27,7 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.user.errors import ERROR_USER_NOT_FOUND
 from baserow.core.db import LockedAtomicTransaction
+from baserow.core.user.handler import UserHandler
 
 from .errors import (
     ERROR_CANT_MANUALLY_CHANGE_SEATS,
@@ -68,7 +69,10 @@ class AdminLicensesView(APIView):
         },
     )
     def get(self, request):
-        licenses = License.objects.all().annotate(seats_taken=Count("users"))
+        total_users = UserHandler().get_all_active_users_qs().count()
+        licenses = License.objects.all().annotate(
+            seats_taken=Count("users"), total_users=Value(total_users)
+        )
         # We will sort the items in memory because we don't have access to the
         # `is_active` and `valid_from` property after the instance has been
         # generated. This is because it needs to decode the license. We first want to

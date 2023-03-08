@@ -51,7 +51,7 @@ def notify_users_about_updated_permissions(
     sender, subject: Subject, group: Group, **kwargs
 ):
     subject_type = subject_type_registry.get_by_model(subject)
-    associated_users = subject_type.get_associated_users(subject)
+    associated_users = subject_type.get_users_included_in_subject(subject)
     associated_user_ids = [user.id for user in associated_users]
 
     transaction.on_commit(

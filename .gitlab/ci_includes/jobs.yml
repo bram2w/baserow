@@ -6,7 +6,7 @@
 #
 # To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
 .build-baserow-image:
-  image: docker:20.10.12
+  image: docker:20.10.18
   stage: build
   interruptible: true
   # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
@@ -17,7 +17,8 @@
       # When a pipeline is triggered by a git commit tag we don't want to rebuild.
       - tags
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
@@ -153,7 +154,8 @@
       # When a pipeline is triggered by a git commit tag we don't want to rebuild.
       - tags
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
@@ -329,7 +331,8 @@
       # When a pipeline is triggered by a git commit tag we don't want to retest.
       - tags
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
 
 # Set $SKIP_IF_TAG_NOT_ON_BRANCH to make the job skip if the commit is not on
 # the specified branch. Useful for TAG pipelines when $CI_COMMIT_BRANCH is not set
@@ -393,7 +396,8 @@
   image: $CI_UTIL_IMAGE
   stage: publish
   services:
-    - docker:20.10.12-dind
+    - name: $CI_DIND_IMAGE
+      alias: docker
   except:
     refs:
       - pipelines
@@ -412,13 +416,19 @@
     - !reference [.skip-if-tag-not-on-branch, script]
     - !reference [.skip-if-not-latest-commit-on-branch, script]
     - |
-      echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
+      
+      # If that project registry isn't public then we must login first.
+      if [[ "$CI_PROJECT_VISIBILITY" != "public" ]]; then
+        echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+      fi
 
       if ! docker pull $SOURCE_IMAGE; then
         echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?" 2>&1;
         exit 1
       fi
       docker tag $SOURCE_IMAGE $TARGET_IMAGE
+      
+      echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
       docker push $TARGET_IMAGE
 
 .skippable-job:
@@ -433,6 +443,12 @@
           echo "Must provide RUN_WHEN_CHANGES_MADE_IN as a job variable" 2>&1
           exit 1
       fi
+      
+      # These jobs often pull from the projects CI_REGISTRY, but if that project registry isn't public then we must login first.
+      if [[ "$CI_PROJECT_VISIBILITY" != "public" ]]; then
+        echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+      fi
+
 
       if [[ -z "$PROJECT_READ_ONLY_API_TOKEN" && "$ENABLE_JOB_SKIPPING" = "true" ]]; then
         echo -e "$RED Disabling job skipping as PROJECT_READ_ONLY_API_TOKEN env variable not set. $CLEAR"
@@ -501,11 +517,9 @@
         echo "Can't immediately skip as there was no successful previous job for this commit, checking changes..."
 
         CHANGED_FILES=$(git diff --name-only --diff-filter=ADMR @~..@)
-        grep_exit_code=0
         found_changes=0
         for SEARCH_PATTERN in $RUN_WHEN_CHANGES_MADE_IN; do
-            echo $CHANGED_FILES | grep -q $SEARCH_PATTERN || grep_exit_code=$?;
-            if [ ${grep_exit_code} -eq 0 ]; then
+            if echo $CHANGED_FILES | grep -q $SEARCH_PATTERN; then
               echo -e "Found changes matching $GREEN $SEARCH_PATTERN $CLEAR in:"
               echo $CHANGED_FILES
               echo -e "$GREEN Running job normally without skipping due to the changes. $CLEAR"

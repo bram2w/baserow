@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from baserow.core.models import Group
 from baserow.core.registries import SubjectType
+from baserow.core.types import Subject
 from baserow_enterprise.api.role.serializers import SubjectTeamSerializer
 from baserow_enterprise.teams.models import Team, TeamSubject
 
@@ -16,21 +17,25 @@ class TeamSubjectType(SubjectType):
     type = "baserow_enterprise.Team"
     model_class = Team
 
-    def is_in_group(self, subject_id: int, group: Group) -> bool:
-        return Team.objects.filter(
-            id=subject_id,
-            group=group,
-            trashed=False,
-        ).exists()
+    def are_in_group(self, subjects: List[Subject], group: Group) -> List[bool]:
+        team_ids_in_group = set(
+            Team.objects.filter(
+                id__in=[s.id for s in subjects],
+                group=group,
+                trashed=False,
+            ).values_list("id", flat=True)
+        )
+
+        return [t.id in team_ids_in_group for t in subjects]
 
     def get_serializer(self, model_instance, **kwargs):
         return SubjectTeamSerializer(model_instance, **kwargs)
 
-    def get_associated_users(self, team: Team) -> List[AbstractUser]:
+    def get_users_included_in_subject(self, subject: Team) -> List[AbstractUser]:
         return list(
             User.objects.filter(
                 pk__in=TeamSubject.objects_and_trash.filter(
-                    team_id=team.id,
+                    team_id=subject.id,
                     subject_type=ContentType.objects.get_for_model(User),
                 ).values_list("subject_id", flat=True)
             )

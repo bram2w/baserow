@@ -24,6 +24,7 @@ from baserow.contrib.database.formula.types.exceptions import UnknownFormulaType
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaInvalidType,
     BaserowFormulaType,
+    BaserowFormulaTypeHasEmptyBaserowExpression,
     BaserowFormulaValidType,
     UnTyped,
 )
@@ -31,10 +32,7 @@ from baserow.contrib.database.formula.types.serializers import LinkSerializer
 from baserow.core.utils import list_to_comma_separated_string
 
 
-class BaserowFormulaTextType(BaserowFormulaValidType):
-    type = "text"
-    baserow_field_type = "text"
-
+class BaserowFormulaBaseTextType(BaserowFormulaTypeHasEmptyBaserowExpression):
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return [
@@ -67,6 +65,23 @@ class BaserowFormulaTextType(BaserowFormulaValidType):
             [arg1, arg2]
         )
 
+    def placeholder_empty_value(self):
+        return Value("", output_field=models.TextField())
+
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return literal("")
+
+
+class BaserowFormulaTextType(
+    BaserowFormulaBaseTextType,
+    BaserowFormulaTypeHasEmptyBaserowExpression,
+    BaserowFormulaValidType,
+):
+    type = "text"
+    baserow_field_type = "text"
+
     def cast_to_text(
         self,
         to_text_func_call: "BaserowFunctionCall[UnTyped]",
@@ -77,21 +92,10 @@ class BaserowFormulaTextType(BaserowFormulaValidType):
         # arg.
         return arg
 
-    def placeholder_empty_value(self):
-        return Value("", output_field=models.TextField())
 
-
-class BaserowFormulaCharType(BaserowFormulaTextType):
+class BaserowFormulaCharType(BaserowFormulaBaseTextType, BaserowFormulaValidType):
     type = "char"
     baserow_field_type = "text"
-
-    def cast_to_text(
-        self,
-        to_text_func_call: "BaserowFunctionCall[UnTyped]",
-        arg: "BaserowExpression[BaserowFormulaValidType]",
-    ) -> "BaserowExpression[BaserowFormulaType]":
-        # Force char fields to be casted to text so Django does not complain
-        return to_text_func_call.with_valid_type(BaserowFormulaTextType())
 
 
 class BaserowFormulaLinkType(BaserowFormulaTextType):
@@ -181,14 +185,22 @@ class BaserowFormulaLinkType(BaserowFormulaTextType):
     def placeholder_empty_value(self):
         return Value({}, output_field=JSONField())
 
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return formula_function_registry.get("link")(literal(""))
 
-class BaserowFormulaNumberType(BaserowFormulaValidType):
+
+class BaserowFormulaNumberType(
+    BaserowFormulaTypeHasEmptyBaserowExpression, BaserowFormulaValidType
+):
     type = "number"
     baserow_field_type = "number"
     user_overridable_formatting_option_fields = ["number_decimal_places"]
     MAX_DIGITS = 50
 
-    def __init__(self, number_decimal_places: int):
+    def __init__(self, number_decimal_places: int, **kwargs):
+        super().__init__(**kwargs)
         self.number_decimal_places = number_decimal_places
 
     @property
@@ -247,11 +259,18 @@ class BaserowFormulaNumberType(BaserowFormulaValidType):
             0, output_field=models.DecimalField(max_digits=50, decimal_places=0)
         )
 
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return literal(0)
+
     def __str__(self) -> str:
         return f"number({self.number_decimal_places})"
 
 
-class BaserowFormulaBooleanType(BaserowFormulaValidType):
+class BaserowFormulaBooleanType(
+    BaserowFormulaTypeHasEmptyBaserowExpression, BaserowFormulaValidType
+):
     type = "boolean"
     baserow_field_type = "boolean"
 
@@ -269,6 +288,16 @@ class BaserowFormulaBooleanType(BaserowFormulaValidType):
 
     def placeholder_empty_value(self):
         return Value(False, output_field=models.BooleanField())
+
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return literal(False)
+
+    def try_coerce_to_not_null(
+        self, expr: "BaserowExpression[BaserowFormulaValidType]"
+    ):
+        return expr
 
 
 def _calculate_addition_interval_type(
@@ -288,19 +317,20 @@ def _calculate_addition_interval_type(
     else:
         # date + interval = date
         resulting_type = arg1_type
+    resulting_type.nullable = arg1_type.nullable or arg2_type.nullable
     return resulting_type
 
 
 # noinspection PyMethodMayBeStatic
-class BaserowFormulaDateIntervalType(BaserowFormulaValidType):
+class BaserowFormulaDateIntervalType(
+    BaserowFormulaTypeHasEmptyBaserowExpression, BaserowFormulaValidType
+):
     type = "date_interval"
     baserow_field_type = None
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
-        return [
-            type(self),
-        ]
+        return [type(self)]
 
     @property
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -330,7 +360,11 @@ class BaserowFormulaDateIntervalType(BaserowFormulaValidType):
         arg1: "BaserowExpression[BaserowFormulaValidType]",
         arg2: "BaserowExpression[BaserowFormulaValidType]",
     ):
-        return minus_func_call.with_valid_type(BaserowFormulaDateIntervalType())
+        return minus_func_call.with_valid_type(
+            BaserowFormulaDateIntervalType(
+                nullable=arg1.expression_type.nullable or arg2.expression_type.nullable
+            )
+        )
 
     def get_baserow_field_instance_and_type(self):
         # Until Baserow has a duration field type implement the required methods below
@@ -378,7 +412,12 @@ class BaserowFormulaDateIntervalType(BaserowFormulaValidType):
             return str(human_readable_value)
 
     def placeholder_empty_value(self):
-        return Value(datetime.timedelta(hours=1), output_field=models.DurationField())
+        return Value(datetime.timedelta(hours=0), output_field=models.DurationField())
+
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return literal(datetime.timedelta(hours=0))
 
 
 class BaserowFormulaDateType(BaserowFormulaValidType):
@@ -388,14 +427,26 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         "date_format",
         "date_include_time",
         "date_time_format",
+        "date_show_tzinfo",
+        "date_force_timezone",
     ]
+    nullable_option_fields = ["date_force_timezone"]
 
     def __init__(
-        self, date_format: str, date_include_time: bool, date_time_format: str
+        self,
+        date_format: str,
+        date_include_time: bool,
+        date_time_format: str,
+        date_show_tzinfo: bool = False,
+        date_force_timezone: Optional[str] = None,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         self.date_format = date_format
         self.date_include_time = date_include_time
         self.date_time_format = date_time_format
+        self.date_show_tzinfo = date_show_tzinfo
+        self.date_force_timezone = date_force_timezone
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -436,7 +487,9 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         arg2_type = arg2.expression_type
         if isinstance(arg2_type, BaserowFormulaDateType):
             # date - date = interval
-            resulting_type = BaserowFormulaDateIntervalType()
+            resulting_type = BaserowFormulaDateIntervalType(
+                nullable=arg1_type.nullable or arg2_type.nullable
+            )
         else:
             # date - interval = date
             resulting_type = arg1_type
@@ -461,16 +514,12 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         to_text_func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaValidType]:
-        return BaserowFunctionCall[BaserowFormulaValidType](
-            formula_function_registry.get("datetime_format"),
-            [
-                arg,
-                BaserowStringLiteral(
-                    get_date_time_format(self, "sql"), BaserowFormulaTextType()
-                ),
-            ],
-            BaserowFormulaTextType(),
+        when_empty_func = formula_function_registry.get("when_empty")
+        datetime_fmt_func = formula_function_registry.get("datetime_format")
+        datetime_text_literal = datetime_fmt_func(
+            arg, literal(get_date_time_format(self, "sql"))
         )
+        return when_empty_func(datetime_text_literal, literal(""))
 
     def placeholder_empty_value(self):
         if self.date_include_time:
@@ -495,7 +544,8 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     ]
     can_order_by = False
 
-    def __init__(self, sub_type: BaserowFormulaValidType):
+    def __init__(self, sub_type: BaserowFormulaValidType, **kwargs):
+        super().__init__(**kwargs)
         self.array_formula_type = sub_type.type
         self.sub_type = sub_type
 
@@ -731,8 +781,12 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         to_text_func_call: "BaserowFunctionCall[UnTyped]",
         arg: "BaserowExpression[BaserowFormulaValidType]",
     ) -> "BaserowExpression[BaserowFormulaType]":
-        get_value_func = formula_function_registry.get("get_single_select_value")
-        return get_value_func(arg)
+        single_select_value = formula_function_registry.get("get_single_select_value")(
+            arg
+        )
+        return formula_function_registry.get("when_empty")(
+            single_select_value, literal("")
+        )
 
 
 BASEROW_FORMULA_TYPES = [
@@ -748,9 +802,11 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaSingleSelectType,
 ]
 
-BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = [
-    allowed_field for f in BASEROW_FORMULA_TYPES for allowed_field in f.all_fields()
-]
+BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = list(
+    set(
+        allowed_field for f in BASEROW_FORMULA_TYPES for allowed_field in f.all_fields()
+    )
+)
 
 BASEROW_FORMULA_TYPE_CHOICES = [(f.type, f.type) for f in BASEROW_FORMULA_TYPES]
 BASEROW_FORMULA_ARRAY_TYPE_CHOICES = [
@@ -769,9 +825,7 @@ def calculate_number_type(
             max_number_decimal_places, a.number_decimal_places
         )
 
-    return BaserowFormulaNumberType(
-        number_decimal_places=max_number_decimal_places,
-    )
+    return BaserowFormulaNumberType(number_decimal_places=max_number_decimal_places)
 
 
 def _lookup_formula_type_from_string(formula_type_string):
@@ -782,7 +836,7 @@ def _lookup_formula_type_from_string(formula_type_string):
 
 
 def literal(
-    arg: Union[str, int, bool, Decimal]
+    arg: Union[str, int, bool, Decimal, datetime.timedelta]
 ) -> BaserowExpression[BaserowFormulaValidType]:
     """
     A helper function for building BaserowExpressions with literals
@@ -793,14 +847,18 @@ def literal(
 
     if isinstance(arg, str):
         return BaserowStringLiteral(arg, BaserowFormulaTextType())
+    elif isinstance(arg, bool):
+        return BaserowBooleanLiteral(arg, BaserowFormulaBooleanType())
     elif isinstance(arg, int):
         return BaserowIntegerLiteral(
             arg, BaserowFormulaNumberType(number_decimal_places=0)
         )
-    elif isinstance(arg, bool):
-        return BaserowBooleanLiteral(arg, BaserowFormulaBooleanType())
     elif isinstance(arg, Decimal):
         decimal_literal_expr = BaserowDecimalLiteral(arg, None)
         return decimal_literal_expr.with_valid_type(
             BaserowFormulaNumberType(decimal_literal_expr.num_decimal_places())
         )
+    elif isinstance(arg, datetime.timedelta):
+        return formula_function_registry.get("date_interval")(literal("0 hours"))
+
+    raise TypeError(f"Unknown literal type {type(arg)}")

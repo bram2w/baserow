@@ -1,7 +1,5 @@
 from django.db import models
 
-import pytz
-
 DATE_FORMAT = {
     "EU": {"name": "European (D/M/Y)", "format": "%d/%m/%Y", "sql": "DD/MM/YYYY"},
     "US": {"name": "US (M/D/Y)", "format": "%m/%d/%Y", "sql": "MM/DD/YYYY"},
@@ -20,12 +18,19 @@ def get_date_time_format(options, format_type):
     date_format_for_type = DATE_FORMAT[options.date_format][format_type]
     time_format_for_type = DATE_TIME_FORMAT[options.date_time_format][format_type]
     if options.date_include_time:
-        return f"{date_format_for_type} {time_format_for_type}"
+        format_time = f"{date_format_for_type} {time_format_for_type}"
+        return format_time
     else:
         return date_format_for_type
 
 
 class BaseDateMixin(models.Model):
+    def __init__(self, *args, **kwargs) -> None:
+        # Add retro-compatibility for the old timezone field.
+        if (old_timezone := kwargs.pop("timezone", None)) is not None:
+            kwargs["date_force_timezone"] = old_timezone
+        super().__init__(*args, **kwargs)
+
     date_format = models.CharField(
         choices=DATE_FORMAT_CHOICES,
         default=DATE_FORMAT_CHOICES[0][0],
@@ -40,6 +45,14 @@ class BaseDateMixin(models.Model):
         default=DATE_TIME_FORMAT_CHOICES[0][0],
         max_length=32,
         help_text="24 (14:30) or 12 (02:30 PM)",
+    )
+    date_show_tzinfo = models.BooleanField(
+        default=False, help_text="Indicates if the timezone should be shown."
+    )
+    date_force_timezone = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="Force a timezone for the field overriding user profile settings.",
     )
 
     class Meta:
@@ -92,25 +105,3 @@ class BaseDateMixin(models.Model):
 
     def _get_format(self, format_type):
         return get_date_time_format(self, format_type)
-
-
-class TimezoneMixin(models.Model):
-    timezone = models.CharField(
-        max_length=255,
-        blank=False,
-        help_text="Timezone of User during field creation.",
-        default="UTC",
-    )
-
-    def get_timezone(self, fallback="UTC"):
-        return self.timezone if self.timezone in pytz.all_timezones else fallback
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        """Check if the timezone is a valid choice."""
-
-        if self.timezone not in pytz.all_timezones:
-            raise ValueError(f"{self.timezone} is not a valid choice.")
-        super().save(*args, **kwargs)

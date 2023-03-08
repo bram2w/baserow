@@ -69,7 +69,12 @@
         "name": "Nazwa",
         "members": "Członkowie",
         "applications": "Aplikacje",
-        "created": "Utworzony"
+        "created": "Utworzony",
+        "seatsTaken": "Zajęte miejsca",
+        "storageUsage": "Wykorzystana pamięć (MB)",
+        "freeUsers": "Bezpłatni użytkownicy",
+        "rowCount": "Liczba wierszy",
+        "usageHelpText": "Obliczane co noc, gdy włączone jest ustawienie śledzenia wykorzystania grupy"
     },
     "editGroupContext": {
         "delete": "Usunąć na stałe"
@@ -188,7 +193,8 @@
         "admin": "Funkcjonalność administratora",
         "rowColoring": "Kolorowanie wierszy",
         "surveyForm": "Formularz ankiety",
-        "publicLogoRemoval": "Usunięcie logo publicznego"
+        "publicLogoRemoval": "Usunięcie logo publicznego",
+        "personalViews": "Osobiste widoki"
     },
     "licenses": {
         "titleNoLicenses": "Nie znaleziono licencji",
@@ -285,5 +291,8 @@
             "label": "Ukryj logo Baserow w widoku udostępnionym",
             "premiumModalName": "usuwanie logo publicznego"
         }
+    },
+    "viewsContext": {
+        "personal": "Osobisty"
     }
 }

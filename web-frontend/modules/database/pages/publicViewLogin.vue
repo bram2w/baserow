@@ -28,7 +28,6 @@
             class="button button--large button--primary"
             :class="{ 'button--loading': loading }"
             :disabled="loading || $v.$invalid"
-            @click="authorizeView()"
           >
             {{ $t('publicViewAuthLogin.enter') }}
           </button>
@@ -88,7 +87,7 @@ export default {
         // Subsequent requests will use the token saved into the store.
         const { original } = this.$route.query
         if (original && isRelativeUrl(original)) {
-          this.$nuxt.$router.push(original)
+          await this.$router.push(original)
         }
       } catch (e) {
         const statusCode = e.response?.status

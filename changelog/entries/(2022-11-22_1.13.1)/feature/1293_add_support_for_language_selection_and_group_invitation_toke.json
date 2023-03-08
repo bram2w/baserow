@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for language selection and group invitation tokens for OAuth 2 and SAML.",
+    "issue_number": 1293,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

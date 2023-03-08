@@ -1,0 +1,13 @@
+{
+    "type": "refactor",
+    "message": "Improve existing templates for 1.15",
+    "issue_number": null,
+    "bullet_points": [
+        "Benefit Show Manager",
+        "Business Expenses",
+        "Emergency Triage Log",
+        "Employee Directory",
+        "Team Check-ins"
+    ],
+    "created_at": "2023-03-06"
+}

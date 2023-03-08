@@ -13,6 +13,7 @@ from baserow.contrib.database.tokens.constants import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import object_scope_type_registry
+from baserow.core.types import PermissionCheck
 from baserow.core.utils import random_string
 
 from .exceptions import (
@@ -370,29 +371,24 @@ class TokenHandler:
         if token.group_id != table.database.group_id:
             return False
 
+        # First check the user has the permission to use the token
         if not CoreHandler().check_permissions(
             token.user, UseTokenOperationType.type, group=token.group, context=token
         ):
             return False
 
-        if isinstance(type_name, str):
-            type_names = [type_name]
-        else:
-            type_names = type_name
+        type_names = type_name if isinstance(type_name, list) else [type_name]
 
-        return any(
-            (
-                token_operation in TOKEN_TO_OPERATION_MAP
-                and CoreHandler().check_permissions(
-                    token,
-                    TOKEN_TO_OPERATION_MAP[token_operation],
-                    group=token.group,
-                    context=table,
-                    raise_error=False,
-                )
-                for token_operation in type_names
-            )
-        )
+        checks = [
+            PermissionCheck(token, TOKEN_TO_OPERATION_MAP[token_operation], table)
+            for token_operation in type_names
+            if token_operation in TOKEN_TO_OPERATION_MAP
+        ]
+
+        token_permission = CoreHandler().check_multiple_permissions(checks, token.group)
+
+        # At least one must be True
+        return any([v is True for v in token_permission.values()])
 
     def check_table_permissions(
         self, request_or_token, type_name, table, force_check=False

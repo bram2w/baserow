@@ -1,12 +1,11 @@
-import logging
 import traceback
 from datetime import datetime
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from loguru import logger
 from pytz import UTC
-from pytz import timezone as pytz_timezone
 
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.fields.models import (
@@ -32,13 +31,11 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from .helpers import import_airtable_date_type_options, set_select_options_on_field
 from .registry import AirtableColumnType
 
-logger = logging.getLogger(__name__)
-
 
 class TextAirtableColumnType(AirtableColumnType):
     type = "text"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         validator_name = raw_airtable_column.get("typeOptions", {}).get("validatorName")
         if validator_name == "url":
             return URLField()
@@ -53,7 +50,6 @@ class TextAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         if isinstance(baserow_field, (EmailField, URLField)):
@@ -69,14 +65,14 @@ class TextAirtableColumnType(AirtableColumnType):
 class MultilineTextAirtableColumnType(AirtableColumnType):
     type = "multilineText"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         return LongTextField()
 
 
 class RichTextTextAirtableColumnType(AirtableColumnType):
     type = "richText"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         return LongTextField()
 
     def to_baserow_export_serialized_value(
@@ -85,7 +81,6 @@ class RichTextTextAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         # We don't support rich text formatting yet, so this converts the value to
@@ -96,7 +91,7 @@ class RichTextTextAirtableColumnType(AirtableColumnType):
 class NumberAirtableColumnType(AirtableColumnType):
     type = "number"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         type_options = raw_airtable_column.get("typeOptions", {})
         decimal_places = 0
 
@@ -117,7 +112,6 @@ class NumberAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         if value is not None:
@@ -132,14 +126,14 @@ class NumberAirtableColumnType(AirtableColumnType):
 class RatingAirtableColumnType(AirtableColumnType):
     type = "rating"
 
-    def to_baserow_field(self, raw_airtable_table, values, timezone):
+    def to_baserow_field(self, raw_airtable_table, values):
         return RatingField(max_value=values.get("typeOptions", {}).get("max", 5))
 
 
 class CheckboxAirtableColumnType(AirtableColumnType):
     type = "checkbox"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         return BooleanField()
 
     def to_baserow_export_serialized_value(
@@ -148,7 +142,6 @@ class CheckboxAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         return "true" if value else "false"
@@ -157,9 +150,22 @@ class CheckboxAirtableColumnType(AirtableColumnType):
 class DateAirtableColumnType(AirtableColumnType):
     type = "date"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         type_options = raw_airtable_column.get("typeOptions", {})
-        return DateField(**import_airtable_date_type_options(type_options))
+        # Check if a timezone is provided in the type options, if so, we might want
+        # to use that timezone for the conversion later on.
+        airtable_timezone = type_options.get("timeZone", None)
+        date_show_tzinfo = type_options.get("shouldDisplayTimeZone", False)
+
+        # date_force_timezone=None it the equivalent of airtable_timezone="client".
+        if airtable_timezone == "client":
+            airtable_timezone = None
+
+        return DateField(
+            date_show_tzinfo=date_show_tzinfo,
+            date_force_timezone=airtable_timezone,
+            **import_airtable_date_type_options(type_options),
+        )
 
     def to_baserow_export_serialized_value(
         self,
@@ -167,33 +173,14 @@ class DateAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         if value is None:
             return value
 
-        # Check if a timezone is provided in the type options, if so, we might want
-        # to use that timezone for the conversion later on.
-        airtable_timezone = raw_airtable_column.get("typeOptions", {}).get(
-            "timeZone", None
-        )
-
-        # Baserow doesn't support a "client" option for the date field, so if that is
-        # provided, we must fallback on the main timezone chosen during the import.
-        # Otherwise, we can use the timezone of that value.
-        if airtable_timezone is not None and airtable_timezone != "client":
-            timezone = pytz_timezone(airtable_timezone)
-
-        # The provided Airtable date value is always in UTC format. Because Baserow
-        # doesn't support different timezones for the date field, we need to convert
-        # to the given timezone because then it will be visible in the correct
-        # timezone to the user.
         try:
-            value = (
-                datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-                .astimezone(timezone)
-                .replace(tzinfo=UTC)
+            value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+                tzinfo=UTC
             )
         except ValueError:
             tb = traceback.format_exc()
@@ -218,27 +205,28 @@ class DateAirtableColumnType(AirtableColumnType):
 class FormulaAirtableColumnType(AirtableColumnType):
     type = "formula"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         type_options = raw_airtable_column.get("typeOptions", {})
         display_type = type_options.get("displayType", "")
         airtable_timezone = type_options.get("timeZone", None)
+        date_show_tzinfo = type_options.get("shouldDisplayTimeZone", False)
 
-        # Baserow doesn't support a "client" option for the date field, so if that is
-        # provided, we must fallback on the main timezone chosen during the import.
-        # Otherwise, we can use the timezone of that field.
-        if airtable_timezone is not None and airtable_timezone != "client":
-            timezone = pytz_timezone(airtable_timezone)
+        # date_force_timezone=None it the equivalent of airtable_timezone="client".
+        if airtable_timezone == "client":
+            airtable_timezone = None
 
         # The formula conversion isn't support yet, but because the Created on and
         # Last modified fields work as a formula, we can convert those.
         if display_type == "lastModifiedTime":
             return LastModifiedField(
-                timezone=str(timezone),
+                date_show_tzinfo=date_show_tzinfo,
+                date_force_timezone=airtable_timezone,
                 **import_airtable_date_type_options(type_options),
             )
         elif display_type == "createdTime":
             return CreatedOnField(
-                timezone=str(timezone),
+                date_show_tzinfo=date_show_tzinfo,
+                date_force_timezone=airtable_timezone,
                 **import_airtable_date_type_options(type_options),
             )
 
@@ -248,7 +236,6 @@ class FormulaAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         if isinstance(baserow_field, CreatedOnField):
@@ -269,7 +256,7 @@ class FormulaAirtableColumnType(AirtableColumnType):
 class ForeignKeyAirtableColumnType(AirtableColumnType):
     type = "foreignKey"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         type_options = raw_airtable_column.get("typeOptions", {})
         foreign_table_id = type_options.get("foreignTableId")
 
@@ -284,7 +271,6 @@ class ForeignKeyAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         foreign_table_id = raw_airtable_column["typeOptions"]["foreignTableId"]
@@ -294,7 +280,7 @@ class ForeignKeyAirtableColumnType(AirtableColumnType):
 class MultipleAttachmentAirtableColumnType(AirtableColumnType):
     type = "multipleAttachment"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         return FileField()
 
     def to_baserow_export_serialized_value(
@@ -303,7 +289,6 @@ class MultipleAttachmentAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         new_value = []
@@ -324,7 +309,7 @@ class MultipleAttachmentAirtableColumnType(AirtableColumnType):
 class SelectAirtableColumnType(AirtableColumnType):
     type = "select"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         field = SingleSelectField()
         field = set_select_options_on_field(
             field, raw_airtable_column.get("typeOptions", {})
@@ -335,7 +320,7 @@ class SelectAirtableColumnType(AirtableColumnType):
 class MultiSelectAirtableColumnType(AirtableColumnType):
     type = "multiSelect"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         field = MultipleSelectField()
         field = set_select_options_on_field(
             field, raw_airtable_column.get("typeOptions", {})
@@ -346,7 +331,7 @@ class MultiSelectAirtableColumnType(AirtableColumnType):
 class PhoneAirtableColumnType(AirtableColumnType):
     type = "phone"
 
-    def to_baserow_field(self, raw_airtable_table, raw_airtable_column, timezone):
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         return PhoneNumberField()
 
     def to_baserow_export_serialized_value(
@@ -355,7 +340,6 @@ class PhoneAirtableColumnType(AirtableColumnType):
         raw_airtable_column,
         baserow_field,
         value,
-        timezone,
         files_to_download,
     ):
         try:

@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Formulas which referenced other aggregate formulas now will work correctly.",
+    "issue_number": 1081,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

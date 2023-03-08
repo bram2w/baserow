@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add startup check ensuring BASEROW_PUBLIC_URL and related variables are correct.",
+    "issue_number": 1041,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

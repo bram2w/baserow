@@ -807,7 +807,7 @@ def test_form_view_multiple_collaborators_field_options(api_client, data_fixture
 
 @pytest.mark.django_db
 def test_get_form_view_field_options(
-    api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_max_num_queries
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -883,7 +883,7 @@ def test_get_form_view_field_options(
         field_option=text_field_option_3, field=text_field
     )
 
-    with django_assert_num_queries(len(captured.captured_queries)):
+    with django_assert_max_num_queries(len(captured.captured_queries)):
         api_client.get(
             url,
             format="json",
@@ -1256,7 +1256,7 @@ def test_patch_form_view_field_options_conditions_create_invalid_field(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_conditions_create_num_queries(
-    api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_max_num_queries
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1293,7 +1293,7 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
 
     # Even though we're adding more conditions, we expect to execute the sam amount
     # of queries.
-    with django_assert_num_queries(len(captured.captured_queries)):
+    with django_assert_max_num_queries(len(captured.captured_queries)):
         api_client.patch(
             url,
             {
@@ -1447,7 +1447,7 @@ def test_patch_form_view_field_options_conditions_update_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_conditions_delete_num_queries(
-    api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_max_num_queries
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1498,7 +1498,7 @@ def test_patch_form_view_field_options_conditions_delete_num_queries(
 
     # Even though we're deleting more conditions, we expect to execute the same amount
     # of queries.
-    with django_assert_num_queries(len(captured.captured_queries)):
+    with django_assert_max_num_queries(len(captured.captured_queries)):
         api_client.patch(
             url,
             {

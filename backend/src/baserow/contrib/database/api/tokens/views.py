@@ -15,10 +15,18 @@ from baserow.contrib.database.api.tables.errors import (
 )
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
+from baserow.contrib.database.tokens.actions import (
+    CreateDbTokenActionType,
+    DeleteDbTokenActionType,
+    RotateDbTokenKeyActionType,
+    UpdateDbTokenNameActionType,
+    UpdateDbTokenPermissionsActionType,
+)
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.models import Token
 from baserow.contrib.database.tokens.operations import UpdateTokenOperationType
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 
@@ -74,7 +82,9 @@ class TokensView(APIView):
         """Creates a new database token for the authorized user."""
 
         data["group"] = CoreHandler().get_group(data.pop("group"))
-        token = TokenHandler().create_token(request.user, **data)
+        token = action_type_registry.get(CreateDbTokenActionType.type).do(
+            request.user, data["group"], data["name"]
+        )
         serializer = TokenSerializer(token)
         return Response(serializer.data)
 
@@ -175,13 +185,19 @@ class TokenView(APIView):
         rotate_key = data.pop("rotate_key", False)
 
         if len(data) > 0:
-            token = TokenHandler().update_token(request.user, token, **data)
+            token = action_type_registry.get(UpdateDbTokenNameActionType.type).do(
+                request.user, token, data["name"]
+            )
 
         if permissions:
-            TokenHandler().update_token_permissions(request.user, token, **permissions)
+            action_type_registry.get(UpdateDbTokenPermissionsActionType.type).do(
+                request.user, token, **permissions
+            )
 
         if rotate_key:
-            token = TokenHandler().rotate_token_key(request.user, token)
+            token = action_type_registry.get(RotateDbTokenKeyActionType.type).do(
+                request.user, token
+            )
 
         serializer = TokenSerializer(token)
         return Response(serializer.data)
@@ -218,7 +234,7 @@ class TokenView(APIView):
         """Deletes an existing database token."""
 
         token = TokenHandler().get_token(request.user, token_id)
-        TokenHandler().delete_token(request.user, token)
+        action_type_registry.get(DeleteDbTokenActionType.type).do(request.user, token)
         return Response(status=204)
 
 

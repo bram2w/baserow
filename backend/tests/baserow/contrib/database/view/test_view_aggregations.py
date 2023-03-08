@@ -54,6 +54,7 @@ def test_view_empty_count_aggregation(data_fixture):
     )
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -76,6 +77,7 @@ def test_view_empty_count_aggregation(data_fixture):
     assert result[f"field_{number_field.id}"] == 1
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -97,6 +99,7 @@ def test_view_empty_count_aggregation(data_fixture):
     assert result[f"field_{number_field.id}"] == 3
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -112,7 +115,8 @@ def test_view_empty_count_aggregation(data_fixture):
 
 @pytest.mark.django_db
 def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
-    table, _, _, _, context = setup_interesting_test_table(data_fixture)
+    user = data_fixture.create_user()
+    table, _, _, _, context = setup_interesting_test_table(data_fixture, user=user)
     grid_view = data_fixture.create_grid_view(table=table)
 
     model = table.get_model()
@@ -130,7 +134,7 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
         )
 
     result_empty = view_handler.get_field_aggregations(
-        grid_view, aggregation_query, model=model, with_total=True
+        user, grid_view, aggregation_query, model=model, with_total=True
     )
 
     aggregation_query = []
@@ -144,7 +148,7 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
         )
 
     result_not_empty = view_handler.get_field_aggregations(
-        grid_view, aggregation_query, model=model
+        user, grid_view, aggregation_query, model=model
     )
 
     for field in model._field_objects.values():
@@ -157,7 +161,8 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
 
 @pytest.mark.django_db
 def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
-    table, _, _, _, context = setup_interesting_test_table(data_fixture)
+    user = data_fixture.create_user()
+    table, _, _, _, context = setup_interesting_test_table(data_fixture, user=user)
     grid_view = data_fixture.create_grid_view(table=table)
 
     model = table.get_model()
@@ -178,10 +183,10 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
             )
 
     result = view_handler.get_field_aggregations(
-        grid_view, aggregation_query, model=model, with_total=True
+        user, grid_view, aggregation_query, model=model, with_total=True
     )
 
-    assert len(result.keys()) == 29
+    assert len(result.keys()) == 33
 
     for field_obj in model._field_objects.values():
         field = field_obj["field"]
@@ -233,6 +238,7 @@ def test_view_number_aggregation(data_fixture):
     )
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -244,6 +250,7 @@ def test_view_number_aggregation(data_fixture):
     assert result[number_field.db_column] == 1
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -255,6 +262,7 @@ def test_view_number_aggregation(data_fixture):
     assert result[number_field.db_column] == 94
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -267,6 +275,7 @@ def test_view_number_aggregation(data_fixture):
     assert result[number_field.db_column] == 1546
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -278,6 +287,7 @@ def test_view_number_aggregation(data_fixture):
     assert round(result[number_field.db_column], 2) == Decimal("51.53")
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -289,6 +299,7 @@ def test_view_number_aggregation(data_fixture):
     assert round(result[number_field.db_column], 2) == Decimal("52.5")
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -300,6 +311,7 @@ def test_view_number_aggregation(data_fixture):
     assert round(result[number_field.db_column], 2) == Decimal("26.73")
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -311,6 +323,7 @@ def test_view_number_aggregation(data_fixture):
     assert round(result[number_field.db_column], 2) == Decimal("714.72")
 
     result = view_handler.get_field_aggregations(
+        user,
         grid_view,
         [
             (
@@ -347,6 +360,7 @@ def test_view_aggregation_errors(data_fixture):
 
     with pytest.raises(FieldAggregationNotSupported):
         view_handler.get_field_aggregations(
+            user,
             form_view,
             [
                 (
@@ -358,6 +372,7 @@ def test_view_aggregation_errors(data_fixture):
 
     with pytest.raises(FieldNotInTable):
         view_handler.get_field_aggregations(
+            user,
             grid_view,
             [
                 (
@@ -419,27 +434,33 @@ def test_aggregation_is_updated_when_view_is_trashed(data_fixture):
     )
 
     # Verify both views have an aggregation
-    aggregations_view_one = view_handler.get_view_field_aggregations(grid_view_one)
-    aggregations_view_two = view_handler.get_view_field_aggregations(grid_view_two)
+    aggregations_view_one = view_handler.get_view_field_aggregations(
+        user, grid_view_one
+    )
+    aggregations_view_two = view_handler.get_view_field_aggregations(
+        user, grid_view_two
+    )
 
     assert field.db_column in aggregations_view_one
     assert field.db_column in aggregations_view_two
 
     # Trash the view and verify that the aggregation is not retrievable anymore
     TrashHandler().trash(user, application.group, application, trash_item=grid_view_one)
-    aggregations = view_handler.get_view_field_aggregations(grid_view_one)
+    aggregations = view_handler.get_view_field_aggregations(user, grid_view_one)
     assert field.db_column not in aggregations
 
     # Update the field and verify that the aggregation is removed from the
     # not trashed view
     FieldHandler().update_field(user, field, new_type_name="text")
     aggregations_not_trashed_view = view_handler.get_view_field_aggregations(
-        grid_view_two
+        user, grid_view_two
     )
     assert field.db_column not in aggregations_not_trashed_view
 
     # Restore the view and verify that the aggregation
     # is also removed from the restored view
     TrashHandler().restore_item(user, "view", grid_view_one.id)
-    aggregations_restored_view = view_handler.get_view_field_aggregations(grid_view_one)
+    aggregations_restored_view = view_handler.get_view_field_aggregations(
+        user, grid_view_one
+    )
     assert field.db_column not in aggregations_restored_view

@@ -3,7 +3,8 @@
         "yes": "oui",
         "no": "non",
         "wrong": "Une erreur est survenue",
-        "none": "Aucun(e)"
+        "none": "Aucun(e)",
+        "free": "Gratuit"
     },
     "action": {
         "upload": "Envoyer",
@@ -39,7 +40,11 @@
         "database": "Base de données",
         "cantSelectTableTitle": "Impossible de sélectionner la base de données.",
         "cantSelectTableDescription": "La base de données ne peut pas être sélectionnée car elle ne contient aucune table. Utilisez la bare latérale afin d'en créer une.",
-        "databaseDefaultName": "Base de données sans titre"
+        "databaseDefaultName": "Base de données sans titre",
+        "builder": "Application",
+        "builderDefaultName": "Application sans titre",
+        "cantSelectPageTitle": "Impossible de sélectionner l'application",
+        "cantSelectPageDescription": "Le générateur d'application ne peut pas être sélectionné car il n'y a aucune page. Créez-en une depuis le menu latéral."
     },
     "settingType": {
         "account": "Informations personnelles",
@@ -100,7 +105,7 @@
         "readOnly": "Ce champ est en lecture seule.",
         "text": "Accepte une seule ligne de texte.",
         "longText": "Accepte un texte multi-ligne.",
-        "linkRow": "Accepte un tableau contenant les identifiants des lignes provenant de la table d'identifiant {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont modifiées. Si une liste vide est fournie, toutes les relations seront supprimées.",
+        "linkRow": "Accepte un tableau contenant les identifiants ou les valeurs textuelles des champs principaux des lignes liées de la table {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont mises à jour. Si un tableau vide est fourni, toutes les relations seront supprimées. Dans le cas d'une valeur textuelle au lieu d'un identifiant, une ligne avec la valeur correspondante pour son champ principal sera recherchée. Si plusieurs correspondances sont trouvées, la première dans l'ordre du tableau est sélectionnée.",
         "number": "Accepte un entier.",
         "numberPositive": "Accepte un entier positive.",
         "decimal": "Accepte un nombre décimal.",
@@ -116,8 +121,8 @@
         "url": "Accepte une URL valide.",
         "email": "Accepte une adresse électronique valide.",
         "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur. Vous pouvez utiliser l'API « Envoi de fichier » pour envoyer des fichiers. La réponse à ces appels peut-être fournie directement en tant qu'objet ici. Les différentes API sont listées dans la barre latérale gauche.",
-        "singleSelect": "Accepte un entier correspondant à l'identifiant de l'option sélectionnée ou nul si vide.",
-        "multipleSelect": "Accepte un tableau d'entier correspondant chacun à l'identifiant d'une valeur sélectionnée.",
+        "singleSelect": "Accepte un nombre entier ou une valeur textuelle représentant l'identifiant de l'option de sélection choisie ou la valeur de l'option. Une valeur nulle signifie qu'aucune option n'est sélectionnée. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée.",
+        "multipleSelect": "Accepte un tableau d'entiers mixtes ou de valeurs textuelles représentant chacun l'identifiant ou la valeur de l'option de sélection choisie. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée.",
         "phoneNumber": "Accepte un numéro de téléphone d'une longueur maximum de 100 caractères qui doivent être des chiffres, des espaces ou les caractères suivants : Nx,._+*()#=;/- .",
         "formula": "Un champ en lecture seule défini par une formule rédigée dans le format spécifique de Baserow.",
         "lookup": "Un champ en lecture seule associé à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
@@ -150,7 +155,9 @@
         "isYearsAgo": "il y a X ans",
         "inThisWeek": "cette semaine",
         "beforeToday": "est avant aujourd'hui",
-        "afterToday": "est après aujourd'hui"
+        "afterToday": "est après aujourd'hui",
+        "containsWord": "contient le mot",
+        "doesntContainWord": "ne contient pas le mot"
     },
     "viewType": {
         "grid": "Tableau",
@@ -255,7 +262,9 @@
         "disabledPasswordProviderMessage": "Veuillez utiliser un autre service d'authentification.",
         "disabledPasswordProviderTitle": "L'authentification par mot de passe est désactivée.",
         "lastAdminTitle": "Impossible de supprimer le dernier administrateur du groupe",
-        "lastAdminMessage": "Un groupe doit avoir au moins un administrateur."
+        "lastAdminMessage": "Un groupe doit avoir au moins un administrateur.",
+        "maxLocksPerTransactionExceededTitle": "Problème avec PostgreSQL",
+        "maxLocksPerTransactionExceededDescription": "Baserow a tenté de supprimer définitivement les éléments mis à la corbeille, mais a dépassé les verrous disponibles spécifiés dans `max_locks_per_transaction`."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -322,7 +331,7 @@
         "toNumberDescription": "Convertit l'argument en nombre si cela est possible.",
         "fieldDescription": "Retourne le champ désigné par le nom en argument.",
         "lookupDescription": "Rapporte la valeur d'un champ d'une autre table. Le premier argument doit être le nom d'un champ de lien de la table courante vers une autre table et le second argument doit être le nom d'un champ dans la table liée.",
-        "isBlankDescription": "Retourne vrai si l'argument est vide ou nul sinon retourne faux.",
+        "isBlankDescription": "Retourne true si l'argument est null, empty ou blank, false sinon.",
         "tDescription": "Retourne l'argument si c'est un texte et une chaîne vide autrement.",
         "notDescription": "Retourne faux si l'argument est vrai, vrai sinon.",
         "greaterThanDescription": "Retourne vrai si le premier argument et strictement supérieur au second.",
@@ -383,7 +392,10 @@
         "sqrtDescription": "Renvoie la racine carrée de l’argument fourni.",
         "floorDescription": "Renvoie le plus grand nombre entier qui est inférieur ou égal à la valeur de l'argument fourni.",
         "lnDescription": "Fonction logarithme naturel : renvoie l'exposant auquel la constante e ≈ 2,718 doit être élevée pour produire l'argument.",
-        "signDescription": "Renvoie 1 si l'argument est un nombre positif, -1 si l'argument est un nombre négatif, 0 sinon."
+        "signDescription": "Renvoie 1 si l'argument est un nombre positif, -1 si l'argument est un nombre négatif, 0 sinon.",
+        "isNullDescription": "Retourne true si l'argument est null, false sinon.",
+        "wheNanDescription": "Renvoie le premier argument s'il n'est pas 'NaN'. Renvoie le deuxième argument si le premier argument est 'NaN'",
+        "isNanDescription": "Retourne true si l'argument est 'NaN', retourne false sinon."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

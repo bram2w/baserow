@@ -121,10 +121,10 @@ class InvalidBaserowFieldName(Exception):
     """
 
 
-class AllProvidedMultipleSelectValuesMustBeIntegers(ValidationError):
+class AllProvidedValuesMustBeIntegersOrStrings(ValidationError):
     """
-    Raised when one tries to create or update a row for a MultipleSelectField that
-    contains a value other than an integer.
+    Raised when one tries to create or update a row for a multivalued field that
+    contains a value other than an integer or a string.
     """
 
     def __init__(self, ids, *args, **kwargs):
@@ -132,13 +132,13 @@ class AllProvidedMultipleSelectValuesMustBeIntegers(ValidationError):
             ids = [ids]
         self.ids = ids
         msg = (
-            f"The provided select option ids {self.ids} are not valid integers."
+            f"The provided values '{self.ids}' are not valid integers or strings."
             if len(self.ids) > 1
-            else f"The provided select option id {self.ids} is not a valid integer."
+            else f"The provided value '{self.ids}' is not a valid integer or string."
         )
         super().__init__(
             msg,
-            code="invalid",
+            code="invalid_value",
             *args,
             **kwargs,
         )
@@ -151,14 +151,14 @@ class AllProvidedMultipleSelectValuesMustBeSelectOption(ValidationError):
     field.
     """
 
-    def __init__(self, ids, *args, **kwargs):
-        if not isinstance(ids, list):
-            ids = [ids]
-        self.ids = ids
+    def __init__(self, values, *args, **kwargs):
+        if not isinstance(values, list):
+            values = [values]
+        self.values = values
         msg = (
-            f"The provided select option ids {self.ids} are not valid select options."
-            if len(self.ids) > 1
-            else f"The provided select option id {self.ids} is not a valid select "
+            f"The provided select option values {self.values} are not valid select options."
+            if len(self.values) > 1
+            else f"The provided select option value '{self.values[0]}' is not a valid select "
             "option."
         )
         super().__init__(
@@ -214,4 +214,10 @@ class FailedToLockFieldDueToConflict(LockConflict):
     """
     Raised when a user tried to update a field which was locked by another
     concurrent operation
+    """
+
+
+class DateForceTimezoneOffsetValueError(ValueError):
+    """
+    Raised when the force_timezone_offset value offset cannot be set.
     """

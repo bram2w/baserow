@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Search automatically after 400ms when chosing a related field via the modal.",
+    "issue_number": 1091,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

@@ -1,0 +1,9 @@
+.field-form-context {
+  min-width: 400px;
+}
+
+.field-form-context__dropdown {
+  .select__items {
+    max-height: clamp(165px, 500px, calc(100vh - 220px));
+  }
+}

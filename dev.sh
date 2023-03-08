@@ -86,6 +86,11 @@ launch_tab_and_exec(){
   new_tab "$tab_name" "$command"
 }
 
+launch_e2e_tab(){
+  PWD=$(pwd)
+  new_tab "e2e tests" "cd $PWD/e2e-tests && bash --init-file <(echo 'history -s yarn run test-all-browsers;./run-e2e-tests-locally.sh')"
+}
+
 show_help() {
     echo """
 ./dev.sh starts the baserow development environment and by default attempts to
@@ -112,6 +117,7 @@ attach_all      : Attach to all launched containers.
 dont_build_deps : When building environments which require other environments to be
                   built first dev.sh will build them automatically, disable this by
                   passing this flag.
+no_e2e          : Disabled the e2e testing tab.
 help            : Show this message.
 """
 }
@@ -145,6 +151,7 @@ heroku=false
 env_set=false
 build_deps=true
 build_dependencies=()
+e2e_tests=true
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -258,6 +265,10 @@ case "${1:-noneleft}" in
         build_deps=false
         shift
     ;;
+    no_e2e)
+        e2e_tests=false
+        shift
+    ;;
     help)
         echo "Command given was $*"
         show_help
@@ -348,6 +359,7 @@ if [[ "$dev" = true ]]; then
   export PUBLIC_WEB_FRONTEND_URL=${PUBLIC_WEB_FRONTEND_URL:-http://localhost:3000}
 
   export MEDIA_URL=http://localhost:4000/media/
+  export BASEROW_DEPLOYMENT_ENV="development-$USER"
 fi
 
 
@@ -469,6 +481,9 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
       launch_tab_and_exec "backend lint" \
               "backend" \
               "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-shell"
+      if [ "$e2e_tests" = true ]; then
+        launch_e2e_tab
+      fi
     fi
 
     if [ "$attach_all" = true ] ; then
@@ -476,6 +491,7 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
       launch_tab_and_attach "db" "db"
       launch_tab_and_attach "redis" "redis"
       launch_tab_and_attach "mailhog" "mailhog"
+      launch_tab_and_attach "otel-collector" "otel-collector"
       if [ "$dev" = true ] ; then
         launch_tab_and_attach "mjml compiler" "mjml-email-compiler"
       fi

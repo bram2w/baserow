@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.storage import Storage
 
 import requests
-from pytz import UTC, BaseTzInfo
+from pytz import UTC
 from requests import Response
 
 from baserow.contrib.database.airtable.constants import (
@@ -189,7 +189,6 @@ class AirtableHandler:
     def to_baserow_field(
         table: dict,
         column: dict,
-        timezone: BaseTzInfo,
     ) -> Union[Tuple[None, None, None], Tuple[Field, FieldType, AirtableColumnType]]:
         """
         Converts the provided Airtable column dict to the right Baserow field object.
@@ -198,7 +197,6 @@ class AirtableHandler:
             field is the primary field.
         :param column: The Airtable column dict. These values will be converted to
             Baserow format.
-        :param timezone: The main timezone used for date conversions if needed.
         :return: The converted Baserow field, field type and the Airtable column type.
         """
 
@@ -206,7 +204,7 @@ class AirtableHandler:
             baserow_field,
             airtable_column_type,
         ) = airtable_column_type_registry.from_airtable_column_to_serialized(
-            table, column, timezone
+            table, column
         )
 
         if baserow_field is None:
@@ -239,7 +237,6 @@ class AirtableHandler:
         column_mapping: Dict[str, dict],
         row: dict,
         index: int,
-        timezone: BaseTzInfo,
         files_to_download: Dict[str, str],
     ) -> dict:
         """
@@ -253,7 +250,6 @@ class AirtableHandler:
             Baserow field dict.
         :param row: The Airtable row that must be converted a Baserow row.
         :param index: The index the row has in the table.
-        :param timezone: The main timezone used for date conversions if needed.
         :param files_to_download: A dict that contains all the user file URLs that must
             be downloaded. The key is the file name and the value the URL. Additional
             files can be added to this dict.
@@ -291,7 +287,6 @@ class AirtableHandler:
                 mapping_values["raw_airtable_column"],
                 mapping_values["baserow_field"],
                 column_value,
-                timezone,
                 files_to_download,
             )
             exported_row[f"field_{column_id}"] = baserow_serialized_value
@@ -339,7 +334,6 @@ class AirtableHandler:
         init_data: dict,
         schema: dict,
         tables: list,
-        timezone: BaseTzInfo,
         progress_builder: Optional[ChildProgressBuilder] = None,
         download_files_buffer: Union[None, IOBase] = None,
     ) -> Tuple[dict, IOBase]:
@@ -354,7 +348,6 @@ class AirtableHandler:
             shared base.
         :param schema: An object containing the schema of the Airtable base.
         :param tables: a list containing the table data.
-        :param timezone: The main timezone used for date conversions if needed.
         :param progress_builder: If provided will be used to build a child progress bar
             and report on this methods progress to the parent of the progress_builder.
         :param download_files_buffer: Optionally a file buffer can be provided to store
@@ -414,7 +407,7 @@ class AirtableHandler:
                     baserow_field,
                     baserow_field_type,
                     airtable_column_type,
-                ) = cls.to_baserow_field(table, column, timezone)
+                ) = cls.to_baserow_field(table, column)
                 converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
 
                 # None means that none of the field types know how to parse this field,
@@ -457,7 +450,7 @@ class AirtableHandler:
                         baserow_field,
                         baserow_field_type,
                         airtable_column_type,
-                    ) = cls.to_baserow_field(table, airtable_column, timezone)
+                    ) = cls.to_baserow_field(table, airtable_column)
                     baserow_field.primary = True
                     field_mapping["primary_id"] = {
                         "baserow_field": baserow_field,
@@ -481,12 +474,7 @@ class AirtableHandler:
             for row_index, row in enumerate(tables[table["id"]]["rows"]):
                 exported_rows.append(
                     cls.to_baserow_row_export(
-                        row_id_mapping,
-                        field_mapping,
-                        row,
-                        row_index,
-                        timezone,
-                        files_to_download,
+                        row_id_mapping, field_mapping, row, row_index, files_to_download
                     )
                 )
                 converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
@@ -539,11 +527,10 @@ class AirtableHandler:
         cls,
         group: Group,
         share_id: str,
-        timezone: BaseTzInfo = UTC,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
         download_files_buffer: Union[None, IOBase] = None,
-    ) -> Tuple[List[Database], dict]:
+    ) -> Database:
         """
         Downloads all the data of the provided publicly shared Airtable base, converts
         it into Baserow export format, downloads the related files and imports that
@@ -551,7 +538,6 @@ class AirtableHandler:
 
         :param group: The group where the copy of the Airtable must be added to.
         :param share_id: The shared Airtable ID that must be imported.
-        :param timezone: The main timezone used for date conversions if needed.
         :param storage: The storage where the user files must be saved to.
         :param progress_builder: If provided will be used to build a child progress bar
             and report on this methods progress to the parent of the progress_builder.
@@ -602,13 +588,12 @@ class AirtableHandler:
             init_data,
             schema,
             tables,
-            timezone,
             progress.create_child_builder(represents_progress=300),
             download_files_buffer,
         )
 
         # Import the converted data using the existing method to avoid duplicate code.
-        databases, id_mapping = CoreHandler().import_applications_to_group(
+        databases, _ = CoreHandler().import_applications_to_group(
             group,
             [baserow_database_export],
             files_buffer,
@@ -616,4 +601,4 @@ class AirtableHandler:
             progress_builder=progress.create_child_builder(represents_progress=600),
         )
 
-        return databases, id_mapping
+        return databases[0].specific

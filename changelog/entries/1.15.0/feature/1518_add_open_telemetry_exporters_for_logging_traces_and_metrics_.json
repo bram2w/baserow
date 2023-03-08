@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add open telemetry exporters for logging, traces and metrics enabled using the BASEROW_ENABLE_OTEL env var.",
+    "issue_number": 1518,
+    "bullet_points": [],
+    "created_at": "2023-02-23"
+}

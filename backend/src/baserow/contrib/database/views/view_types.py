@@ -122,7 +122,7 @@ class GridViewType(ViewType):
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-    ) -> View:
+    ) -> Optional[View]:
         """
         Imports the serialized grid view field options.
         """
@@ -132,22 +132,22 @@ class GridViewType(ViewType):
         grid_view = super().import_serialized(
             table, serialized_copy, id_mapping, files_zip, storage
         )
+        if grid_view is not None:
+            if "database_grid_view_field_options" not in id_mapping:
+                id_mapping["database_grid_view_field_options"] = {}
 
-        if "database_grid_view_field_options" not in id_mapping:
-            id_mapping["database_grid_view_field_options"] = {}
-
-        for field_option in field_options:
-            field_option_copy = field_option.copy()
-            field_option_id = field_option_copy.pop("id")
-            field_option_copy["field_id"] = id_mapping["database_fields"][
-                field_option["field_id"]
-            ]
-            field_option_object = GridViewFieldOptions.objects.create(
-                grid_view=grid_view, **field_option_copy
-            )
-            id_mapping["database_grid_view_field_options"][
-                field_option_id
-            ] = field_option_object.id
+            for field_option in field_options:
+                field_option_copy = field_option.copy()
+                field_option_id = field_option_copy.pop("id")
+                field_option_copy["field_id"] = id_mapping["database_fields"][
+                    field_option["field_id"]
+                ]
+                field_option_object = GridViewFieldOptions.objects.create(
+                    grid_view=grid_view, **field_option_copy
+                )
+                id_mapping["database_grid_view_field_options"][
+                    field_option_id
+                ] = field_option_object.id
 
         return grid_view
 
@@ -158,7 +158,6 @@ class GridViewType(ViewType):
         """
 
         grid_view = ViewHandler().get_view(view.id, view_model=GridView)
-
         ordered_visible_field_ids = self.get_visible_field_options_in_order(
             grid_view
         ).values_list("field__id", flat=True)
@@ -401,7 +400,7 @@ class GalleryViewType(ViewType):
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-    ) -> View:
+    ) -> Optional[View]:
         """
         Imports the serialized gallery view field options.
         """
@@ -419,21 +418,22 @@ class GalleryViewType(ViewType):
             table, serialized_copy, id_mapping, files_zip, storage
         )
 
-        if "database_gallery_view_field_options" not in id_mapping:
-            id_mapping["database_gallery_view_field_options"] = {}
+        if gallery_view is not None:
+            if "database_gallery_view_field_options" not in id_mapping:
+                id_mapping["database_gallery_view_field_options"] = {}
 
-        for field_option in field_options:
-            field_option_copy = field_option.copy()
-            field_option_id = field_option_copy.pop("id")
-            field_option_copy["field_id"] = id_mapping["database_fields"][
-                field_option["field_id"]
-            ]
-            field_option_object = GalleryViewFieldOptions.objects.create(
-                gallery_view=gallery_view, **field_option_copy
-            )
-            id_mapping["database_gallery_view_field_options"][
-                field_option_id
-            ] = field_option_object.id
+            for field_option in field_options:
+                field_option_copy = field_option.copy()
+                field_option_id = field_option_copy.pop("id")
+                field_option_copy["field_id"] = id_mapping["database_fields"][
+                    field_option["field_id"]
+                ]
+                field_option_object = GalleryViewFieldOptions.objects.create(
+                    gallery_view=gallery_view, **field_option_copy
+                )
+                id_mapping["database_gallery_view_field_options"][
+                    field_option_id
+                ] = field_option_object.id
 
         return gallery_view
 
@@ -752,7 +752,7 @@ class FormViewType(ViewType):
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-    ) -> View:
+    ) -> Optional[View]:
         """
         Imports the serialized form view and field options.
         """
@@ -778,35 +778,36 @@ class FormViewType(ViewType):
             table, serialized_copy, id_mapping, files_zip, storage
         )
 
-        if "database_form_view_field_options" not in id_mapping:
-            id_mapping["database_form_view_field_options"] = {}
+        if form_view is not None:
+            if "database_form_view_field_options" not in id_mapping:
+                id_mapping["database_form_view_field_options"] = {}
 
-        condition_objects = []
-        for field_option in field_options:
-            field_option_copy = field_option.copy()
-            field_option_id = field_option_copy.pop("id")
-            field_option_conditions = field_option_copy.pop("conditions", [])
-            field_option_copy["field_id"] = id_mapping["database_fields"][
-                field_option["field_id"]
-            ]
-            field_option_object = FormViewFieldOptions.objects.create(
-                form_view=form_view, **field_option_copy
-            )
-            for condition in field_option_conditions:
-                value = view_filter_type_registry.get(
-                    condition["type"]
-                ).set_import_serialized_value(condition["value"], id_mapping)
-                condition_objects.append(
-                    FormViewFieldOptionsCondition(
-                        field_option=field_option_object,
-                        field_id=id_mapping["database_fields"][condition["field"]],
-                        type=condition["type"],
-                        value=value,
-                    )
+            condition_objects = []
+            for field_option in field_options:
+                field_option_copy = field_option.copy()
+                field_option_id = field_option_copy.pop("id")
+                field_option_conditions = field_option_copy.pop("conditions", [])
+                field_option_copy["field_id"] = id_mapping["database_fields"][
+                    field_option["field_id"]
+                ]
+                field_option_object = FormViewFieldOptions.objects.create(
+                    form_view=form_view, **field_option_copy
                 )
-            id_mapping["database_form_view_field_options"][
-                field_option_id
-            ] = field_option_object.id
+                for condition in field_option_conditions:
+                    value = view_filter_type_registry.get(
+                        condition["type"]
+                    ).set_import_serialized_value(condition["value"], id_mapping)
+                    condition_objects.append(
+                        FormViewFieldOptionsCondition(
+                            field_option=field_option_object,
+                            field_id=id_mapping["database_fields"][condition["field"]],
+                            type=condition["type"],
+                            value=value,
+                        )
+                    )
+                id_mapping["database_form_view_field_options"][
+                    field_option_id
+                ] = field_option_object.id
 
         # Create the conditions in bulk to improve performance.
         FormViewFieldOptionsCondition.objects.bulk_create(condition_objects)

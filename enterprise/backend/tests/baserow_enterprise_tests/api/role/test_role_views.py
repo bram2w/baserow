@@ -248,8 +248,8 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
 
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_SUBJECT_DOES_NOT_EXIST"
 
     response = api_client.post(
         reverse("api:enterprise:role:list", kwargs={"group_id": 999999}),
@@ -458,16 +458,23 @@ def test_get_role_assignments_table_level(data_fixture, api_client):
 def test_batch_assign_role(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
+    user3 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user, members=[user2, user3])
     database = data_fixture.create_database_application(group=group)
 
     table = data_fixture.create_database_table(user=user, database=database)
 
     builder_role = Role.objects.get(uid="BUILDER")
+    viewer_role = Role.objects.get(uid="VIEWER")
 
     assert len(RoleAssignment.objects.all()) == 0
 
     url = reverse("api:enterprise:role:batch", kwargs={"group_id": group.id})
+
+    RoleAssignmentHandler().assign_role(
+        user3, group, viewer_role, scope=database.application_ptr
+    )
+    RoleAssignmentHandler().assign_role(user3, group, viewer_role, scope=table)
 
     # Can add a first roleAssignment
     response = api_client.post(
@@ -480,6 +487,20 @@ def test_batch_assign_role(data_fixture, api_client):
                     "subject_id": user2.id,
                     "subject_type": UserSubjectType.type,
                     "role": builder_role.uid,
+                },
+                {
+                    "scope_id": table.id,
+                    "scope_type": "database_table",
+                    "subject_id": user3.id,
+                    "subject_type": UserSubjectType.type,
+                    "role": None,
+                },
+                {
+                    "scope_id": database.application_ptr.id,
+                    "scope_type": "application",
+                    "subject_id": user3.id,
+                    "subject_type": UserSubjectType.type,
+                    "role": None,
                 },
             ]
         },
@@ -513,7 +534,9 @@ def test_batch_assign_role(data_fixture, api_client):
                 "id": user2.id,
                 "username": user2.username,
             },
-        }
+        },
+        None,
+        None,
     ]
 
 

@@ -64,7 +64,12 @@
         "name": "Nom",
         "members": "Membres",
         "applications": "Applications",
-        "created": "Créé le"
+        "created": "Créé le",
+        "seatsTaken": "Places occupées",
+        "storageUsage": "Stockage utilisé (Mo)",
+        "rowCount": "Nombre de lignes",
+        "freeUsers": "Utilisateurs gratuits",
+        "usageHelpText": "Calculé chaque nuit lorsque le paramètre de suivi de l'utilisation des groupes est activé"
     },
     "editGroupContext": {
         "delete": "Supprimer définitivement"
@@ -273,7 +278,8 @@
         "admin": "Administration avancée",
         "rowColoring": "Coloration des lignes",
         "surveyForm": "Sondage",
-        "publicLogoRemoval": "Suppression du logo public"
+        "publicLogoRemoval": "Suppression du logo public",
+        "personalViews": "Vues privées"
     },
     "formViewModePreviewSurvey": {
         "deactivated": "Les sondage sont disponibles dans la version premium.",
@@ -290,5 +296,8 @@
             "label": "Masquer le logo Baserow sur la vue partagée",
             "premiumModalName": "suppression du logo public"
         }
+    },
+    "viewsContext": {
+        "personal": "Privée"
     }
 }

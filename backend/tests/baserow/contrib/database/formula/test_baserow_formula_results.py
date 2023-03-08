@@ -85,9 +85,18 @@ VALID_FORMULA_TESTS = [
     ("tonumber('a')", "NaN"),
     ("tonumber('-12.12345')", "-12.1234500000"),
     ("1.2 * 2", "2.4"),
+    ("isblank(0)", True),
     ("isblank(1)", False),
     ("isblank('')", True),
     ("isblank(' ')", False),
+    ("is_null(0)", False),
+    ("is_null(1)", False),
+    ("is_null('')", False),
+    ("is_null(' ')", False),
+    ("is_null(date_interval('hello'))", True),
+    ("is_null(date_interval('1 day'))", False),
+    ("is_null(left('aaaaaa', 1/0))", True),
+    ("is_null(todate('aaaa', 'DDMMYYYY'))", True),
     ("t('aaaa')", "aaaa"),
     ("t(10)", ""),
     ("true", True),
@@ -148,6 +157,15 @@ VALID_FORMULA_TESTS = [
     ),
     ("todate('20200101', 'YYYYMMDD') - todate('20210101', 'YYYYMMDD')", "-366 days"),
     ("date_interval('1 year') - date_interval('1 day')", "1 year -1 days"),
+    ("now() > todate('20200101', 'YYYYMMDD')", True),
+    ("todate('01123456', 'DDMMYYYY') < now()", False),
+    ("todate('01123456', 'DDMMYYYY') < today()", False),
+    ("today() > todate('20200101', 'YYYYMMDD')", True),
+    ("todate_tz('20200101', 'YYYYMMDD', 'CET')", "2019-12-31T23:00:00Z"),
+    ("todate_tz('20200101', 'YYYYMMDD', 'NONSENSE')", None),
+    ("todate_tz('20200101', 'NONSENSE', 'NONSENSE')", None),
+    ("todate_tz('NONSENSE', 'NONSENSE', 'NONSENSE')", None),
+    ("todate_tz('', '', '')", None),
     ("replace('test test', 'test', 'a')", "a a"),
     ("search('test test', 'test')", "1"),
     ("search('a', 'test')", "0"),
@@ -263,6 +281,12 @@ VALID_FORMULA_TESTS = [
     ("exp(-1.00)", "0.37"),
     ("exp(1/0)", "NaN"),
     ("exp(tonumber('invalid'))", "NaN"),
+    ("is_nan(1/0)", True),
+    ("is_nan(1)", False),
+    ("when_nan(1/0, 4)", "4.0000000000"),
+    ("when_nan(1.0, 4)", "1.0"),
+    ("when_nan(1, 4.0)", "1.0"),
+    ("when_nan(1/0, 1/0)", "NaN"),
     ("int(1.1234)", "1"),
     ("int(1.56)", "1"),
     ("int(-1.56)", "-1"),
@@ -1100,3 +1124,160 @@ def test_can_make_joining_nested_aggregation(
         [[{"id": 1, "value": "c_1b_1,b_2"}]],
         [[{"id": 1, "value": "c_1b_2"}, {"id": 2, "value": "c_2b_2"}]],
     ]
+
+
+NULLABLE_FORMULA_TESTS = [
+    # text
+    ([], "'a'", False),
+    ([{"type": "text", "name": "txt"}], "field('txt')", True),
+    ([{"type": "text", "name": "txt"}], "totext(field('txt'))", False),
+    ([{"type": "text", "name": "txt"}], "isblank(field('txt'))", False),
+    ([{"type": "text", "name": "txt"}], "field('txt') + field('txt')", False),
+    ([], "if(isblank('a'), 'a', 'b')", False),
+    (
+        [{"type": "text", "name": "txt"}],
+        "if(isblank(field('txt')), field('txt'), 'b')",
+        True,
+    ),
+    (
+        [{"type": "text", "name": "txt"}],
+        "if(not(isblank(field('txt'))), 'b', field('txt'))",
+        True,
+    ),
+    # numbers
+    ([], "1", False),
+    ([{"type": "number", "name": "nr"}], "field('nr')", True),
+    ([{"type": "number", "name": "nr"}], "totext(field('nr'))", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') + field('nr')", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') + 1", False),
+    (
+        [
+            {"type": "number", "name": "nr"},
+            {"type": "formula", "name": "fnr", "formula": "field('nr')"},
+        ],
+        "field('fnr')",
+        True,
+    ),
+    (
+        [
+            {"type": "number", "name": "nr"},
+            {"type": "formula", "name": "fnr", "formula": "field('nr')"},
+        ],
+        "field('fnr') + 1",
+        False,
+    ),
+    ([{"type": "number", "name": "nr"}], "field('nr') - field('nr')", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') - 1", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') * field('nr')", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') * 1", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') / field('nr')", False),
+    ([{"type": "number", "name": "nr"}], "field('nr') / 1", False),
+    ([{"type": "number", "name": "nr"}], "isblank(field('nr'))", False),
+    ([{"type": "number", "name": "nr"}], "ceil(field('nr'))", False),
+    ([{"type": "number", "name": "nr"}], "floor(field('nr'))", False),
+    ([{"type": "number", "name": "nr"}], "mod(field('nr'), 2)", False),
+    ([{"type": "number", "name": "nr"}], "power(field('nr'), 2)", False),
+    ([{"type": "number", "name": "nr"}], "abs(field('nr'))", False),
+    ([{"type": "number", "name": "nr"}], "sign(field('nr'))", False),
+    ([{"type": "number", "name": "nr"}], "int(field('nr'))", False),
+    ([], "tonumber('a')", False),
+    ([{"type": "text", "name": "txt"}], "tonumber(field('txt'))", False),
+    # date
+    ([], "todate('01012023', 'DDMMYYYY')", True),
+    ([], "day(todate('01012023', 'DDMMYYYY'))", True),
+    ([], "month(todate('01012023', 'DDMMYYYY'))", True),
+    ([], "year(todate('01012023', 'DDMMYYYY'))", True),
+    ([{"type": "date", "name": "dt"}], "field('dt')", True),
+    ([{"type": "date", "name": "dt"}], "day(field('dt'))", True),
+    ([{"type": "date", "name": "dt"}], "month(field('dt'))", True),
+    ([{"type": "date", "name": "dt"}], "year(field('dt'))", True),
+    ([{"type": "date", "name": "dt"}], "isblank(field('dt'))", False),
+    ([{"type": "date", "name": "dt"}], "is_null(field('dt'))", False),
+    ([{"type": "date", "name": "dt"}], "totext(field('dt'))", False),
+    ([{"type": "date", "name": "dt"}], "field('dt') + date_interval('1d')", True),
+    ([{"type": "date", "name": "dt"}], "field('dt') - date_interval('1d')", True),
+    (
+        [
+            {"type": "date", "name": "dt"},
+            {
+                "type": "formula",
+                "name": "fdt",
+                "formula": "field('dt') - date_interval('1d')",
+            },
+        ],
+        "field('fdt')",
+        True,
+    ),
+    # date intervals
+    ([], "date_interval('1d')", True),
+    ([], "todate('02012023', 'DDMMYYYY') - todate('01012023', 'DDMMYYYY')", True),
+    (
+        [{"type": "date", "name": "tick"}],
+        "todate('02012023', 'DDMMYYYY') - field('tick')",
+        True,
+    ),
+    (
+        [{"type": "date", "name": "tock"}],
+        "field('tock') - todate('02012023', 'DDMMYYYY')",
+        True,
+    ),
+    (
+        [{"type": "date", "name": "tick"}, {"type": "date", "name": "tock"}],
+        "field('tock') - field('tick')",
+        True,
+    ),
+    (
+        [
+            {"type": "date", "name": "tick"},
+            {"type": "date", "name": "tock"},
+            {
+                "type": "formula",
+                "name": "diff",
+                "formula": "field('tock') - field('tick')",
+            },
+        ],
+        "field('diff')",
+        True,
+    ),
+    (
+        [
+            {"type": "date", "name": "tick"},
+            {"type": "date", "name": "tock"},
+            {
+                "type": "formula",
+                "name": "diff",
+                "formula": "field('tock') - field('tick')",
+            },
+        ],
+        "totext(field('diff'))",
+        False,
+    ),
+    (
+        [
+            {"type": "date", "name": "tick"},
+            {"type": "date", "name": "tock"},
+            {
+                "type": "formula",
+                "name": "diff",
+                "formula": "field('tock') - field('tick')",
+            },
+        ],
+        "field('diff') + date_interval('1d')",
+        True,
+    ),
+]
+
+
+@pytest.mark.parametrize("fields,formula,nullable", NULLABLE_FORMULA_TESTS)
+@pytest.mark.django_db
+def test_nullable_formulas(data_fixture, fields, formula, nullable):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    for field in fields:
+        field_type = field.pop("type")
+        getattr(data_fixture, f"create_{field_type}_field")(table=table, **field)
+    formula_field = data_fixture.create_formula_field(
+        user=user, table=table, formula=formula
+    )
+    assert formula_field.error is None
+    assert formula_field.nullable == nullable

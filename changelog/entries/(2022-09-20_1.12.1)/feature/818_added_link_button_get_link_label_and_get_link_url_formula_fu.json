@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added link, button, get_link_label and get_link_url formula functions.",
+    "issue_number": 818,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

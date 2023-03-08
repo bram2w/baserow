@@ -538,12 +538,12 @@ def test_batch_create_rows_ordering_before_row(api_client, data_fixture):
             {
                 "id": 3,
                 f"field_{number_field.id}": "120",
-                "order": "1.99999999999999999998",
+                "order": "1.50000000000000000000",
             },
             {
                 "id": 4,
                 f"field_{number_field.id}": "240",
-                "order": "1.99999999999999999999",
+                "order": "1.66666666666666674068",
             },
         ]
     }
@@ -1740,7 +1740,7 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
 
     # last modified is readonly but the auto update shouldn't produce n+1 queries
     last_modified_field = data_fixture.create_last_modified_field(
-        table=table_b, date_include_time=True, timezone="Europe/Berlin"
+        table=table_b, date_include_time=True
     )
 
     # setup the tables

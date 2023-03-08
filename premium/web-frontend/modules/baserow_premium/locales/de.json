@@ -64,7 +64,12 @@
         "name": "Name",
         "members": "Mitglieder",
         "applications": "Anwendungen",
-        "created": "Erstellt"
+        "created": "Erstellt",
+        "rowCount": "Anzahl der Zeilen",
+        "freeUsers": "Kostenlose Benutzer",
+        "seatsTaken": "Sitze besetzt",
+        "storageUsage": "Verwendeter Speicherplatz (MB)",
+        "usageHelpText": "Wird nachts berechnet, wenn die Einstellung für die Nutzung von Trackgruppen aktiviert ist."
     },
     "editGroupContext": {
         "delete": "Dauerhaft löschen"
@@ -268,7 +273,8 @@
         "admin": "Admin-Funktionalität",
         "rowColoring": "Zeilenfärbung",
         "surveyForm": "Umfrageformular",
-        "publicLogoRemoval": "Entfernung des öffentlichen Logos"
+        "publicLogoRemoval": "Entfernung des öffentlichen Logos",
+        "personalViews": "Persönliche Ansichten"
     },
     "premiumModal": {
         "description": "Ihr Konto hat keinen Zugang zu den Premium-Funktionen. Führen Sie ein Upgrade auf die Premium-Version durch, um {name} nutzen zu können. Sie können Ihr Konto erweitern, indem Sie eine Lizenz erwerben. Klicken Sie auf den Knopf unten, um die Preise zu sehen.",
@@ -290,5 +296,8 @@
             "premiumModalName": "Entfernung des öffentlichen Logos",
             "label": "Baserow-Logo in öffentlicher Ansicht ausblenden"
         }
+    },
+    "viewsContext": {
+        "personal": "Persönlich"
     }
 }

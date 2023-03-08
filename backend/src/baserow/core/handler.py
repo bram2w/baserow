@@ -3,7 +3,7 @@ import json
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any, Dict, List, NewType, Optional, Set, Tuple, TypedDict, cast
+from typing import IO, Any, Dict, List, NewType, Optional, Tuple, Union, cast
 from urllib.parse import urljoin, urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -11,12 +11,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import Storage, default_storage
-from django.db import transaction
+from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
 
 from itsdangerous import URLSafeSerializer
-from rest_framework.exceptions import NotAuthenticated
+from opentelemetry import trace
 from tqdm import tqdm
 
 from baserow.core.user.utils import normalize_email_address
@@ -27,6 +27,7 @@ from .exceptions import (
     ApplicationNotInGroup,
     BaseURLHostnameNotAllowed,
     CannotDeleteYourselfFromGroup,
+    DuplicateApplicationMaxLocksExceededException,
     GroupDoesNotExist,
     GroupInvitationDoesNotExist,
     GroupInvitationEmailMismatch,
@@ -40,6 +41,7 @@ from .exceptions import (
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserNotInGroup,
+    is_max_lock_exceeded_exception,
 )
 from .models import (
     GROUP_USER_PERMISSION_ADMIN,
@@ -91,8 +93,9 @@ from .signals import (
     group_user_updated,
     groups_reordered,
 )
+from .telemetry.utils import baserow_trace_methods, disable_instrumentation
 from .trash.handler import TrashHandler
-from .types import ContextObject
+from .types import Actor, ContextObject, PermissionCheck, PermissionObjectResult
 from .utils import (
     ChildProgressBuilder,
     atomic_if_not_already,
@@ -104,13 +107,10 @@ User = get_user_model()
 
 GroupForUpdate = NewType("GroupForUpdate", Group)
 
-
-class PermissionObjectResult(TypedDict):
-    name: str
-    permissions: Any
+tracer = trace.get_tracer(__name__)
 
 
-class CoreHandler:
+class CoreHandler(metaclass=baserow_trace_methods(tracer)):
     def get_settings(self):
         """
         Returns a settings model instance containing all the admin configured settings.
@@ -154,6 +154,7 @@ class CoreHandler:
                 "allow_reset_password",
                 "allow_global_group_creation",
                 "account_deletion_grace_delay",
+                "track_group_usage",
             ],
             settings_instance,
         )
@@ -161,14 +162,119 @@ class CoreHandler:
         settings_instance.save()
         return settings_instance
 
-    def check_permissions(
+    def check_multiple_permissions(
         self,
-        actor: AbstractUser,
+        checks: List[PermissionCheck],
+        group: Optional[Group] = None,
+        include_trash: bool = False,
+        return_permissions_exceptions: bool = False,
+    ) -> Dict[PermissionCheck, Union[bool, PermissionException]]:
+        """
+        Given a list of permission to check, returns True for each check for which the
+        triplet (actor, permission_name, scope) is allowed.
+
+        When we check the permissions, all permission managers listed in
+        `settings.PERMISSION_MANAGERS` are called successively to determine the policy
+        for each given check.
+
+        For each check, each permission manager can answer with `True` if the operation
+        is permitted, False operation is disallowed and return `None` if it can't take
+        a definitive answer.
+
+        If None of the permission manager replied with a final answer for a check,
+        the operation is denied by default for this check.
+
+        :param checks: The list of check to do. Each check is a triplet of
+            (actor, permission_name, scope).
+        :param group: The optional group in which the operations take place.
+        :param include_trash: If true then also checks if the given group has been
+            trashed instead of raising a DoesNotExist exception.
+        :return: A dictionary with one entry for each check of the parameter as key and
+            whether the operation is allowed or not as value.
+        """
+
+        result = {}
+        undetermined_checks = set(checks)
+        for permission_manager_name in settings.PERMISSION_MANAGERS:
+
+            if not undetermined_checks:
+                break
+
+            permission_manager_type = permission_manager_type_registry.get(
+                permission_manager_name
+            )
+            supported_checks = [
+                c
+                for c in undetermined_checks
+                if permission_manager_type.actor_is_supported(c.actor)
+            ]
+
+            manager_result = permission_manager_type.check_multiple_permissions(
+                supported_checks,
+                group=group,
+                include_trash=include_trash,
+            )
+
+            for check, check_result in manager_result.items():
+                if check_result is not None:
+                    if (
+                        isinstance(check_result, PermissionException)
+                        and not return_permissions_exceptions
+                    ):
+                        result[check] = False
+                    else:
+                        result[check] = check_result
+
+                    undetermined_checks.remove(check)
+
+        # Permission denied by default to all non handled check
+        for undetermined_check in undetermined_checks:
+            result[undetermined_check] = (
+                PermissionDenied(undetermined_check.actor)
+                if return_permissions_exceptions
+                else False
+            )
+
+        return result
+
+    def check_permission_for_multiple_actors(
+        self,
+        actors: List[Actor],
         operation_name: str,
         group: Optional[Group] = None,
         context: Optional[ContextObject] = None,
         include_trash: bool = False,
-        raise_error: bool = True,
+    ) -> List[Actor]:
+        """
+        Helper method for a common use case with multiple permission checking when you
+        want to check the same permission for multiple users at once.
+
+        :param actor: The actor who wants to execute the operation. Generally a `User`,
+            but can be a `Token`.
+        :param operation_name: The operation name the actor wants to execute.
+        :param group: The optional group in which  the operation takes place.
+        :param context: The optional object affected by the operation. For instance
+            if you are updating a `Table` object, the context is this `Table` object.
+        :param include_trash: If true then also checks if the given group has been
+            trashed instead of raising a DoesNotExist exception.
+        :return: The list of allowed actors.
+        """
+
+        checks = [PermissionCheck(actor, operation_name, context) for actor in actors]
+        checked = self.check_multiple_permissions(
+            checks, group, include_trash=include_trash
+        )
+
+        return [actor for (actor, _, _), result in checked.items() if result is True]
+
+    def check_permissions(
+        self,
+        actor: Actor,
+        operation_name: str,
+        group: Optional[Group] = None,
+        context: Optional[ContextObject] = None,
+        include_trash: bool = False,
+        raise_permission_exceptions: bool = True,
         allow_if_template: bool = False,
     ) -> bool:
         """
@@ -194,16 +300,14 @@ class CoreHandler:
             if you are updating a `Table` object, the context is this `Table` object.
         :param include_trash: If true then also checks if the given group has been
             trashed instead of raising a DoesNotExist exception.
-        :param raise_error: Raise an exception when the permission is disallowed when
-            `True`. Return `False` instead when `False`. `True` by default.
-        :raise PermissionDenied: If the operation is disallowed a PermissionDenied is
-            raised.
+        :param raise_permission_exceptions: Raise an exception when the permission is
+            disallowed when `True`. Return `False` instead when `False`.
+            `True` by default.
         :param allow_if_template: If true and if the group is related to a template,
             then True is always returned and no exception will be raised.
-        :raise PermissionDenied: If the operation is disallowed and raise_error is
-            `True` a PermissionDenied is raised.
+        :raise PermissionException: If the operation is disallowed.
         :return: `True` if the operation is permitted or `False` if the operation is
-            disallowed AND raise_error is `False`.
+            disallowed AND raise_permission_exceptions is `False`.
         """
 
         if settings.DEBUG or settings.TESTS:
@@ -212,30 +316,27 @@ class CoreHandler:
         if allow_if_template and group and group.has_template():
             return True
 
-        for permission_manager_name in settings.PERMISSION_MANAGERS:
-            permission_manager_type = permission_manager_type_registry.get(
-                permission_manager_name
-            )
-            try:
-                allowed = permission_manager_type.check_permissions(
-                    actor,
-                    operation_name,
-                    group=group,
-                    context=context,
-                    include_trash=include_trash,
-                )
-            except (PermissionException, NotAuthenticated):
-                if raise_error:
-                    raise
-                else:
-                    return False
-            else:
-                if allowed is True:
-                    return True
+        check = PermissionCheck(actor, operation_name, context)
 
-        # Here none af the permission managers has allowed the operation so the
-        # operation is denied by default.
-        if raise_error:
+        allowed = self.check_multiple_permissions(
+            [check],
+            group,
+            include_trash=include_trash,
+            return_permissions_exceptions=True,
+        ).get(check, None)
+
+        if allowed is True:
+            return True
+
+        if isinstance(allowed, PermissionException):
+            if raise_permission_exceptions:
+                raise allowed
+            else:
+                return False
+
+        # If we get there, the result of the check is probably None so it should be
+        # denied.
+        if raise_permission_exceptions:
             raise PermissionDenied(actor=actor)
         else:
             return False
@@ -257,7 +358,7 @@ class CoreHandler:
             )
 
     def get_permissions(
-        self, actor: AbstractUser, group: Optional[Group] = None
+        self, actor: Actor, group: Optional[Group] = None
     ) -> List[PermissionObjectResult]:
         """
         Generates the object sent to a client to easily check the actor permissions over
@@ -286,7 +387,8 @@ class CoreHandler:
         ```
 
         If the permission manager return value is None, it's ignored and not included
-        in the final result.
+        in the final result. This permission will therefore not be checked on the
+        frontend side at all.
 
         :param actor: The actor whom we want to compute the permission object for.
         :param group: The optional group into which we want to compute the permission
@@ -312,7 +414,7 @@ class CoreHandler:
 
     def filter_queryset(
         self,
-        actor: AbstractUser,
+        actor: Actor,
         operation_name: str,
         queryset: QuerySet,
         group: Optional[Group] = None,
@@ -352,21 +454,6 @@ class CoreHandler:
 
         return queryset
 
-    def get_user_ids_of_permitted_users(
-        self, users: List[AbstractUser], operation_name: str, group: Group, context=None
-    ) -> Set[int]:
-
-        permitted_user_ids = set()
-
-        # TODO replace with batch check_permission once it's implemented
-        for user in users:
-            if self.check_permissions(
-                user, operation_name, group, context, raise_error=False
-            ):
-                permitted_user_ids.add(user.id)
-
-        return permitted_user_ids
-
     def get_group_for_update(self, group_id: int) -> GroupForUpdate:
         return cast(
             GroupForUpdate,
@@ -375,18 +462,15 @@ class CoreHandler:
             ),
         )
 
-    def get_group(self, group_id, base_queryset=None) -> Group:
+    def get_group(self, group_id: int, base_queryset: QuerySet = None) -> Group:
         """
         Selects a group with a given id from the database.
 
         :param group_id: The identifier of the group that must be returned.
-        :type group_id: int
         :param base_queryset: The base queryset from where to select the group
             object. This can for example be used to do a `prefetch_related`.
-        :type base_queryset: Queryset
         :raises GroupDoesNotExist: When the group with the provided id does not exist.
         :return: The requested group instance of the provided id.
-        :rtype: Group
         """
 
         if base_queryset is None:
@@ -617,6 +701,23 @@ class CoreHandler:
             )
 
         return group_user
+
+    def get_group_users(
+        self, group: Group, users: List[User], include_trash: bool = False
+    ) -> QuerySet:
+        """
+        Returns a queryset to get all GroupUser for the given group for all users.
+
+        :param group: The group the GroupUser must belong to.
+        :param users: The user list we want the GroupUsers for.
+        :param include_trash: Whether or not we want to include trashed Group in the
+           result.
+        """
+
+        group_user_queryset = (
+            GroupUser.objects_and_trash if include_trash else GroupUser.objects
+        )
+        return group_user_queryset.filter(user__in=users, group=group)
 
     def update_group_user(
         self,
@@ -1176,6 +1277,8 @@ class CoreHandler:
 
         :param user: The user on whose behalf the application is duplicated.
         :param application: The application instance that needs to be duplicated.
+        :param progress_builder: If provided will be used to build a child progress bar
+            and report on this methods progress to the parent of the progress_builder.
         :return: The new (duplicated) application instance.
         """
 
@@ -1195,7 +1298,17 @@ class CoreHandler:
         # export the application
         specific_application = application.specific
         application_type = application_type_registry.get_by_model(specific_application)
-        serialized = application_type.export_serialized(specific_application)
+        try:
+            serialized = application_type.export_serialized(specific_application)
+        except OperationalError as e:
+            # Detect if this `OperationalError` is due to us exceeding the
+            # lock count in `max_locks_per_transaction`. If it is, we'll
+            # raise a different exception so that we can catch this scenario.
+
+            if is_max_lock_exceeded_exception(e):
+                raise DuplicateApplicationMaxLocksExceededException()
+            raise e
+
         progress.increment(by=export_progress)
 
         # Set a new unique name for the new application
@@ -1416,7 +1529,11 @@ class CoreHandler:
         return template
 
     @transaction.atomic
-    def sync_templates(self, storage=None):
+    # This single function generates a huge number of spans and events, we know it
+    # is slow, and so we disable instrumenting it to save significant resources in
+    # telemetry platforms receiving the instrumentation.
+    @disable_instrumentation
+    def sync_templates(self, storage=None, template_search_glob="*.json"):
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
@@ -1431,6 +1548,9 @@ class CoreHandler:
 
         :param storage:
         :type storage:
+        :param template_search_glob: A glob pattern used to select which template files
+            to sync. Defaults to just syncing all templates but can be used to restrict
+            the syncing to specific templates only.
         """
 
         installed_templates = (
@@ -1442,7 +1562,9 @@ class CoreHandler:
 
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
-        templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
+        templates = list(
+            Path(settings.APPLICATION_TEMPLATES_DIR).glob(template_search_glob)
+        )
         for template_file_path in tqdm(
             templates,
             desc="Syncing Baserow templates. Disable by setting "
@@ -1653,3 +1775,14 @@ class CoreHandler:
 
         if is_subject_last_admin:
             raise LastAdminOfGroup()
+
+    @staticmethod
+    def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:
+        """
+        Returns whether the `OperationalError` which we've been given
+        is due to `max_locks_per_transaction` being exceeded.
+        """
+
+        return (
+            "You might need to increase max_locks_per_transaction" in exception.args[0]
+        )

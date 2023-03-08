@@ -18,6 +18,9 @@ import {
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
+const ORDER_STEP = '1'
+const ORDER_STEP_BEFORE = '0.00000000000000000001'
+
 export function populateRow(row, metadata = {}) {
   row._ = {
     metadata,
@@ -325,37 +328,29 @@ export const mutations = {
     state.rows.forEach((row) => {
       const order = new BigNumber(row.order)
       if (order.isGreaterThan(min) && order.isLessThanOrEqualTo(max)) {
-        row.order = order
-          .minus(new BigNumber('0.00000000000000000001'))
-          .toString()
+        row.order = order.minus(new BigNumber(ORDER_STEP_BEFORE)).toString()
       }
     })
   },
-  INSERT_NEW_ROW_IN_BUFFER_AT_INDEX(state, { row, index }) {
-    state.count++
-    state.bufferLimit++
-
-    // If another row with the same order already exists, then we need to decrease all
-    // the other orders that are within the range by '0.00000000000000000001'.
-    if (
-      state.rows.findIndex((r) => r.id !== row.id && r.order === row.order) > -1
-    ) {
-      const min = new BigNumber(row.order).integerValue(BigNumber.ROUND_FLOOR)
-      const max = new BigNumber(row.order)
-
-      // Decrease all the orders that have already have been inserted before the same
-      // row.
-      state.rows.forEach((row) => {
-        const order = new BigNumber(row.order)
-        if (order.isGreaterThan(min) && order.isLessThanOrEqualTo(max)) {
-          row.order = order
-            .minus(new BigNumber('0.00000000000000000001'))
-            .toString()
-        }
-      })
+  INSERT_NEW_ROWS_IN_BUFFER_AT_INDEX(state, { rows, index }) {
+    if (rows.length === 0) {
+      return
     }
 
-    state.rows.splice(index, 0, row)
+    const potentialNewBufferLimit = state.bufferLimit + rows.length
+    const maximumBufferLimit = state.bufferRequestSize * 3
+
+    state.count += rows.length
+    state.bufferLimit =
+      potentialNewBufferLimit > maximumBufferLimit
+        ? maximumBufferLimit
+        : potentialNewBufferLimit
+
+    // Insert the new rows
+    state.rows.splice(index, 0, ...rows)
+
+    // We might have too many rows inserted now
+    state.rows = state.rows.slice(0, state.bufferLimit)
   },
   INSERT_EXISTING_ROW_IN_BUFFER_AT_INDEX(state, { row, index }) {
     state.rows.splice(index, 0, row)
@@ -383,16 +378,28 @@ export const mutations = {
     const currentValue = row._.metadata[rowMetadataType]
     Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
-  FINALIZE_ROW_IN_BUFFER(state, { oldId, id, order, values }) {
-    const index = state.rows.findIndex((item) => item.id === oldId)
-    if (index !== -1) {
-      state.rows[index].id = id
-      state.rows[index].order = order
-      state.rows[index]._.loading = false
-      Object.keys(values).forEach((key) => {
-        state.rows[index][key] = values[key]
+  FINALIZE_ROWS_IN_BUFFER(state, { oldRows, newRows }) {
+    const stateRowsCopy = { ...state.rows }
+
+    for (let i = 0; i < oldRows.length; i++) {
+      const oldRow = oldRows[i]
+      const newRow = newRows[i]
+
+      const index = state.rows.findIndex((row) => row.id === oldRow.id)
+
+      if (index === -1) {
+        continue
+      }
+
+      stateRowsCopy[index].id = newRow.id
+      stateRowsCopy[index].order = new BigNumber(newRow.order)
+      stateRowsCopy[index]._.loading = false
+      Object.keys(newRow).forEach((key) => {
+        stateRowsCopy[index][key] = newRow[key]
       })
     }
+
+    this.state.rows = stateRowsCopy
   },
   /**
    * Deletes a row of which we are sure that it is in the buffer right now.
@@ -1306,7 +1313,7 @@ export const actions = {
    * object can be provided which will forcefully add the row before that row. If no
    * `before` is provided, the row will be added last.
    */
-  async createNewRow(
+  createNewRow(
     { commit, getters, dispatch },
     {
       view,
@@ -1317,75 +1324,160 @@ export const actions = {
       selectPrimaryCell = false,
     }
   ) {
-    // Fill values with empty values of field if they are not provided
-    fields.forEach((field) => {
+    dispatch('createNewRows', {
+      view,
+      table,
+      fields,
+      rows: [values],
+      before,
+      selectPrimaryCell,
+    })
+  },
+  async createNewRows(
+    { commit, getters, dispatch },
+    { view, table, fields, rows = {}, before = null, selectPrimaryCell = false }
+  ) {
+    // Create an object of default field values that can be used to fill the row with
+    // missing default values
+    const fieldNewRowValueMap = fields.reduce((map, field) => {
       const name = `field_${field.id}`
       const fieldType = this.$registry.get('field', field._.type.type)
+      map[name] = fieldType.getNewRowValue(field)
+      return map
+    }, {})
 
-      if (!(name in values)) {
-        values[name] = fieldType.getNewRowValue(field)
-      }
-    })
-
-    // Fill the not provided values with the empty value of the field type so we can
-    // immediately commit the created row to the state.
-    const preparedRow = prepareRowForRequest(values, fields, this.$registry)
+    const step = before ? ORDER_STEP_BEFORE : ORDER_STEP
 
     // If before is not provided, then the row is added last. Because we don't know
     // the total amount of rows in the table, we are going to add find the highest
     // existing order in the buffer and increase that by one.
     let order = getters.getHighestOrder
       .integerValue(BigNumber.ROUND_CEIL)
-      .plus('1')
+      .plus(step)
       .toString()
-    let index = getters.getBufferEndIndex
     if (before !== null) {
-      // If the row has been placed before another row we can specifically insert to
-      // the row at a calculated index.
-      const change = new BigNumber('0.00000000000000000001')
-      order = new BigNumber(before.order).minus(change).toString()
-      index = getters.getAllRows.findIndex((r) => r.id === before.id)
+      // It's okay to temporary set an order that just subtracts the
+      // ORDER_STEP_BEFORE because there will never be a conflict with rows because
+      // of the fraction ordering.
+      order = new BigNumber(before.order)
+        .minus(new BigNumber(step * rows.length))
+        .toString()
     }
 
-    // Populate the row and set the loading state to indicate that the row has not
-    // yet been added.
-    const row = Object.assign({}, values)
-    populateRow(row)
-    row.id = uuid()
-    row.order = order
-    row._.loading = true
+    const index =
+      before === null
+        ? getters.getBufferEndIndex
+        : getters.getAllRows.findIndex((r) => r.id === before.id)
 
-    commit('INSERT_NEW_ROW_IN_BUFFER_AT_INDEX', { row, index })
+    const rowsPrepared = rows.map((row) => {
+      row = { ...clone(fieldNewRowValueMap), ...row }
+      row = prepareRowForRequest(row, fields, this.$registry)
+      return row
+    })
+
+    const rowsPopulated = rowsPrepared.map((row) => {
+      row = { ...clone(fieldNewRowValueMap), ...row }
+      row = populateRow(row)
+      row.id = uuid()
+      row.order = order
+      row._.loading = true
+
+      order = new BigNumber(order).plus(new BigNumber(step)).toString()
+
+      return row
+    })
+
+    const isSingleRowInsertion = rowsPopulated.length === 1
+    const oldCount = getters.getCount
+
+    if (isSingleRowInsertion) {
+      // When a single row is inserted we don't want to deal with filters, sorts and
+      // search just yet. Therefore it is okay to just insert the row into the buffer.
+      commit('INSERT_NEW_ROWS_IN_BUFFER_AT_INDEX', {
+        rows: rowsPopulated,
+        index,
+      })
+    } else {
+      // When inserting multiple rows we will need to deal with filters, sorts or search
+      // not matching. `createdNewRow` deals with exactly that for us.
+      for (let i = 0; i < rowsPopulated.length; i += 1) {
+        await dispatch('createdNewRow', {
+          view,
+          fields,
+          values: rowsPopulated[i],
+          metadata: {},
+          populate: false,
+        })
+      }
+    }
+
     dispatch('visibleByScrollTop')
 
+    // Check if not all rows are visible.
+    const diff = oldCount - getters.getCount + rowsPopulated.length
+    if (!isSingleRowInsertion && diff > 0) {
+      dispatch(
+        'notification/success',
+        {
+          title: this.$i18n.t('gridView.hiddenRowsInsertedTitle'),
+          message: this.$i18n.t('gridView.hiddenRowsInsertedMessage', {
+            number: diff,
+          }),
+        },
+        { root: true }
+      )
+    }
+
     const primaryField = fields.find((f) => f.primary)
-    if (selectPrimaryCell && primaryField) {
+    if (selectPrimaryCell && primaryField && isSingleRowInsertion) {
       await dispatch('setSelectedCell', {
-        rowId: row.id,
+        rowId: rowsPopulated[0].id,
         fieldId: primaryField.id,
       })
     }
 
     try {
-      const { data } = await RowService(this.$client).create(
+      const { data } = await RowService(this.$client).batchCreate(
         table.id,
-        preparedRow,
+        rowsPrepared,
         before !== null ? before.id : null
       )
-      commit('FINALIZE_ROW_IN_BUFFER', {
-        oldId: row.id,
-        id: data.id,
-        order: data.order,
-        values: data,
+
+      commit('FINALIZE_ROWS_IN_BUFFER', {
+        oldRows: rowsPopulated,
+        newRows: data.items,
       })
-      await dispatch('onRowChange', { view, row, fields })
+
+      for (let i = 0; i < data.items.length; i += 1) {
+        const oldRow = rowsPopulated[i]
+        dispatch('onRowChange', { view, row: oldRow, fields })
+      }
+
       await dispatch('fetchAllFieldAggregationData', {
         view,
       })
     } catch (error) {
-      commit('DELETE_ROW_IN_BUFFER', row)
+      if (isSingleRowInsertion) {
+        commit('DELETE_ROW_IN_BUFFER', rowsPopulated[0])
+      } else {
+        // When we have multiple rows we will need to re-evaluate where the rest of the
+        // rows are now positioned. Therefore, we need to call `deletedExistingRow` to
+        // deal with all the potential edge cases
+        for (let i = 0; i < rowsPopulated.length; i += 1) {
+          await dispatch('deletedExistingRow', {
+            view,
+            fields,
+            row: rowsPopulated[i],
+          })
+        }
+      }
       throw error
     }
+
+    dispatch('fetchByScrollTopDelayed', {
+      scrollTop: getters.getScrollTop,
+      fields,
+    })
   },
   /**
    * Called after a new row has been created, which could be by the user or via
@@ -1394,10 +1486,13 @@ export const actions = {
    */
   createdNewRow(
     { commit, getters, dispatch },
-    { view, fields, values, metadata }
+    { view, fields, values, metadata, populate = true }
   ) {
     const row = clone(values)
-    populateRow(row, metadata)
+
+    if (populate) {
+      populateRow(row, metadata)
+    }
 
     // Check if the row belongs into the current view by checking if it matches the
     // filters and search.
@@ -1432,7 +1527,7 @@ export const actions = {
       (isLast && getters.getBufferEndIndex === getters.getCount) ||
       (index > 0 && index < allRowsCopy.length - 1)
     ) {
-      commit('INSERT_NEW_ROW_IN_BUFFER_AT_INDEX', { row, index })
+      commit('INSERT_NEW_ROWS_IN_BUFFER_AT_INDEX', { rows: [row], index })
     } else {
       if (isFirst) {
         // Because the row has been added before the our buffer, we need know that the
@@ -1465,7 +1560,10 @@ export const actions = {
     if (before !== null) {
       // If the row has been placed before another row we can specifically insert to
       // the row at a calculated index.
-      const change = new BigNumber('0.00000000000000000001')
+      const change = new BigNumber(ORDER_STEP_BEFORE)
+      // It's okay to temporary set an order that just subtracts the
+      // ORDER_STEP_BEFORE because there will never be a conflict with rows because
+      // of the fraction ordering.
       order = new BigNumber(before.order).minus(change).toString()
     }
 
@@ -1721,7 +1819,6 @@ export const actions = {
         const textValue = textData[rowIndex][fieldIndex]
         const jsonValue =
           jsonData != null ? jsonData[rowIndex][fieldIndex] : undefined
-
         const fieldType = this.$registry.get('field', field.type)
         const preparedValue = fieldType.prepareValueForPaste(
           field,

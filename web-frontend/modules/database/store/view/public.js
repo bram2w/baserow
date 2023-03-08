@@ -15,10 +15,14 @@ export const mutations = {
 }
 
 export const actions = {
-  setAuthTokenFromCookies({ commit }, { slug }) {
-    const token = getToken(this.app, slug)
-    commit('SET_AUTH_TOKEN', token)
-    return token
+  setAuthTokenFromCookiesIfNotSet({ state, commit }, { slug }) {
+    if (!state.authToken) {
+      const token = getToken(this.app, slug)
+      commit('SET_AUTH_TOKEN', token)
+      return token
+    } else {
+      return state.authToken
+    }
   },
   setAuthToken({ commit }, { slug, token }) {
     setToken(this.app, token, slug)

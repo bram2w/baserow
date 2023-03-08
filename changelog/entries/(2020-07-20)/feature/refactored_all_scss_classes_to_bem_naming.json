@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Refactored all SCSS classes to BEM naming.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

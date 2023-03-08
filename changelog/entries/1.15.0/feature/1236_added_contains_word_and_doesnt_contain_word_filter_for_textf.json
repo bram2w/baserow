@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added \"Contains word\" and \"Doesn't contain word\" filter for TextFieldType, LongTextFieldType, URLFieldType, EmailFieldType, SingleSelectFieldType, MultipleSelectFieldType and FormulaFieldType (text) fields.",
+    "issue_number": 1236,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

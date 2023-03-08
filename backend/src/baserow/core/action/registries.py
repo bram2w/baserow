@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, Dict, NewType, Optional
 
@@ -7,6 +8,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from opentelemetry import trace
 from rest_framework import serializers
 
 from baserow.api.sessions import (
@@ -15,9 +17,12 @@ from baserow.api.sessions import (
 )
 from baserow.core.models import Group
 from baserow.core.registry import Instance, Registry
+from baserow.core.telemetry.utils import add_baserow_trace_attrs, baserow_trace_methods
 
 from .models import Action
 from .signals import ActionCommandType, action_done
+
+tracer = trace.get_tracer(__name__)
 
 # An alias type of a str (its exactly a str, just with a different name in the type
 # system). We use this instead of a normal str for type safety ensuring
@@ -128,7 +133,10 @@ def render_action_type_description(
     return f"{description.long % params_dict}"
 
 
-class ActionType(Instance, abc.ABC):
+class ActionType(
+    Instance,
+    metaclass=baserow_trace_methods(tracer, only=["do", "undo", "redo"], abc=True),
+):
     type: str = NotImplemented
 
     description: ActionTypeDescription = ActionTypeDescription()
@@ -156,6 +164,24 @@ class ActionType(Instance, abc.ABC):
         """
 
         pass
+
+    @classmethod
+    def params_to_serializable(cls, params: Any) -> Any:
+        """
+        Hooks that allows an action to prepare the params object before the
+        serialization.
+        """
+
+        return params
+
+    @classmethod
+    def serialized_to_params(cls, serialized_params: Any) -> Any:
+        """
+        Hooks that allow an action to change the way the param object is prepared from
+        the serialized dict.
+        """
+
+        return cls.Params(**deepcopy(serialized_params))
 
     @classmethod
     @abc.abstractmethod
@@ -205,6 +231,13 @@ class ActionType(Instance, abc.ABC):
         action_group = get_client_undo_redo_action_group_id(user)
         action_timestamp = timestamp if timestamp else timezone.now()
 
+        add_baserow_trace_attrs(
+            action_user_id=user.id,
+            group_id=getattr(group, "id", None),
+            action_scope=scope,
+            action_type=cls.type,
+        )
+
         action_done.send(
             sender=cls,
             user=user,
@@ -241,7 +274,7 @@ class ActionType(Instance, abc.ABC):
         cls.send_action_done_signal(user, dataclasses.asdict(params), scope, group)
 
 
-class UndoableActionTypeMixin(abc.ABC):
+class UndoableActionTypeMixin:
     @classmethod
     @abc.abstractmethod
     def undo(cls, user: AbstractUser, params: Any, action_being_undone: Action):
@@ -299,7 +332,7 @@ class UndoableActionTypeMixin(abc.ABC):
             user=user,
             group=group,
             type=cls.type,
-            params=params,
+            params=cls.params_to_serializable(params),
             scope=scope,
             session=session,
             action_group=action_group,
@@ -329,7 +362,10 @@ class UndoableActionCustomCleanupMixin(abc.ABC):
         pass
 
 
-class UndoableActionType(UndoableActionTypeMixin, ActionType):
+class UndoableActionType(
+    UndoableActionTypeMixin,
+    ActionType,
+):
     pass
 
 

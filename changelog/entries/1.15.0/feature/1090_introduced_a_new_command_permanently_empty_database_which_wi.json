@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Introduced a new command, `permanently_empty_database`, which will empty a database of all its tables.",
+    "issue_number": 1090,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

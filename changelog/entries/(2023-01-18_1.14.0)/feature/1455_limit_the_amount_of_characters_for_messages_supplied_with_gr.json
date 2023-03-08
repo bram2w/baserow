@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Limit the amount of characters for messages supplied with group invitations to 250",
+    "issue_number": 1455,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

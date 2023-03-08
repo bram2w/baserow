@@ -8,7 +8,11 @@ from baserow.api.applications.serializers import (
     InstallTemplateJobApplicationsSerializer,
     SpecificApplicationSerializer,
 )
-from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
+from baserow.api.errors import (
+    ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
+    ERROR_USER_NOT_IN_GROUP,
+)
 from baserow.api.groups.serializers import GroupSerializer
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,
@@ -21,6 +25,7 @@ from baserow.core.actions import (
     InstallTemplateActionType,
 )
 from baserow.core.exceptions import (
+    DuplicateApplicationMaxLocksExceededException,
     GroupDoesNotExist,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
@@ -42,6 +47,11 @@ class DuplicateApplicationJobType(JobType):
     api_exceptions_map = {
         UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        DuplicateApplicationMaxLocksExceededException: ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
+    }
+
+    job_exceptions_map = {
+        DuplicateApplicationMaxLocksExceededException: DuplicateApplicationMaxLocksExceededException.message
     }
 
     request_serializer_field_names = ["application_id"]

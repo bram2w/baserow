@@ -1,5 +1,4 @@
 import json
-import logging
 import urllib
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional, Tuple
@@ -9,6 +8,7 @@ from django.contrib.sessions.backends.base import SessionBase
 from django.urls import reverse
 
 import requests
+from loguru import logger
 from requests_oauthlib import OAuth2Session
 from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
@@ -29,9 +29,6 @@ from .models import (
 )
 
 OAUTH_BACKEND_URL = settings.PUBLIC_BACKEND_URL
-
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

@@ -166,7 +166,8 @@ export default {
         this.job = data
         this.scheduleNextPoll()
       } catch (error) {
-        this.stopPollAndHandleError(error)
+        this.loading = false
+        this.handleError(error, 'export')
       }
     },
     async getJobInfo() {

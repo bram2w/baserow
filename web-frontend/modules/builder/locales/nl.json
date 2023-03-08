@@ -1,0 +1,25 @@
+{
+    "sidebarComponentBuilder": {
+        "settings": "Instellingen",
+        "createPage": "Pagina maken"
+    },
+    "builderSettingsModal": {
+        "title": "Applicatie"
+    },
+    "createPageModal": {
+        "header": "Pagina maken",
+        "submit": "Pagina toevoegen"
+    },
+    "pageForm": {
+        "nameLabel": "Naam",
+        "defaultName": "Pagina",
+        "errorNameNotUnique": "Een pagina met deze naam bestaat al"
+    },
+    "builderForm": {
+        "submit": "Applicatie toevoegen"
+    },
+    "builderSettingTypes": {
+        "themeName": "Thema",
+        "integrationsName": "Integraties"
+    }
+}

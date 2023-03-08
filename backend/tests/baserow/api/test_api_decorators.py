@@ -1,6 +1,8 @@
 import json
 from unittest.mock import MagicMock
 
+from django.db import OperationalError
+
 import pytest
 import pytz
 from rest_framework import serializers, status
@@ -113,15 +115,37 @@ def test_map_exceptions_decorator():
     def test_no_dict():
         raise PermissionDenied()
 
-    with pytest.raises(APIException) as api_exception_no_dict:
+    with pytest.raises(APIException) as exc_permissiondenied:
         test_no_dict()
 
-    assert api_exception_no_dict.value.detail["error"] == "PERMISSION_DENIED"
+    assert exc_permissiondenied.value.detail["error"] == "PERMISSION_DENIED"
     assert (
-        api_exception_no_dict.value.detail["detail"]
+        exc_permissiondenied.value.detail["detail"]
         == "You don't have the required permission to execute this operation."
     )
-    assert api_exception_no_dict.value.status_code == status.HTTP_401_UNAUTHORIZED
+    assert exc_permissiondenied.value.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # Calling the decorator with no `exceptions` dict
+    # still includes the `OperationalError` exception edge-case
+    # for when `max_locks_per_transaction` is exceeded.
+    @map_exceptions()
+    def test_operationalerror_locks_exceeded():
+        raise OperationalError(
+            "HINT:  You might need to increase max_locks_per_transaction."
+        )
+
+    with pytest.raises(APIException) as exc_operationalerror:
+        test_operationalerror_locks_exceeded()
+
+    assert (
+        exc_operationalerror.value.detail["error"]
+        == "MAX_LOCKS_PER_TRANSACTION_EXCEEDED"
+    )
+    assert exc_operationalerror.value.detail["detail"] == (
+        "The maximum number of PostgreSQL locks per transaction has been exhausted. "
+        "Please increase `max_locks_per_transaction`."
+    )
+    assert exc_operationalerror.value.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_validate_body():

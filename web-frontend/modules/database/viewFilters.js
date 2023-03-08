@@ -10,6 +10,10 @@ import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/Vi
 import ViewFilterTypeNumberWithTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeNumberWithTimeZone'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import { trueString } from '@baserow/modules/database/utils/constants'
+import {
+  splitTimezoneAndFilterValue,
+  DATE_FILTER_TIMEZONE_VALUE_SEPARATOR,
+} from '@baserow/modules/database/utils/date'
 import { isNumeric } from '@baserow/modules/core/utils/string'
 import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
 import ViewFilterTypeCollaborators from '@baserow/modules/database/components/view/ViewFilterTypeCollaborators'
@@ -70,7 +74,7 @@ export class ViewFilterType extends Registerable {
    * almost all cases this should be an empty string, but with timezone sensitive
    * filters we might want use the current timezone.
    */
-  getDefaultValue() {
+  getDefaultValue(field) {
     return ''
   }
 
@@ -78,7 +82,7 @@ export class ViewFilterType extends Registerable {
    * Optionally, right before updating the string value can be prepared. This could for
    * example be used to convert the value to a number.
    */
-  prepareValue(value) {
+  prepareValue(value, field) {
     return value
   }
 
@@ -365,6 +369,52 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 }
 
+export class ContainsWordViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'contains_word'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.containsWord')
+  }
+
+  getInputComponent(field) {
+    return ViewFilterTypeText
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'single_select',
+      'multiple_select',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char'),
+    ]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.containsWordFilter(rowValue, filterValue, field)
+  }
+}
+
+export class DoesntContainWordViewFilterType extends ContainsWordViewFilterType {
+  static getType() {
+    return 'doesnt_contain_word'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.doesntContainWord')
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return fieldType.doesntContainWordFilter(rowValue, filterValue, field)
+  }
+}
+
 export class LengthIsLowerThanViewFilterType extends ViewFilterType {
   static getType() {
     return 'length_is_lower_than'
@@ -397,7 +447,31 @@ export class LengthIsLowerThanViewFilterType extends ViewFilterType {
   }
 }
 
-export class DateEqualViewFilterType extends ViewFilterType {
+class LocalizedDateViewFilterType extends ViewFilterType {
+  getSeparator() {
+    return DATE_FILTER_TIMEZONE_VALUE_SEPARATOR
+  }
+
+  getDateFormat() {
+    return 'YYYY-MM-DD'
+  }
+
+  getDefaultTimezone(field) {
+    return field.date_force_timezone || moment.tz.guess()
+  }
+
+  splitTimezoneAndValue(value) {
+    return splitTimezoneAndFilterValue(value, this.getSeparator())
+  }
+
+  prepareValue(value, field, filterChanged = false) {
+    const [, filterValue] = this.splitTimezoneAndValue(value)
+    const timezone = this.getDefaultTimezone(field)
+    return value && !filterChanged ? value : `${timezone}?${filterValue}`
+  }
+}
+
+export class DateEqualViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_equal'
   }
@@ -426,127 +500,22 @@ export class DateEqualViewFilterType extends ViewFilterType {
 
   matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
-      rowValue = ''
-    }
-
-    if (field.timezone) {
-      rowValue = moment.utc(rowValue).tz(field.timezone).format('YYYY-MM-DD')
-    } else {
-      rowValue = rowValue.toString().toLowerCase().trim()
-      rowValue = rowValue.slice(0, 10)
-    }
-
-    return filterValue === '' || rowValue === filterValue
-  }
-}
-
-export class DateBeforeViewFilterType extends ViewFilterType {
-  static getType() {
-    return 'date_before'
-  }
-
-  getName() {
-    const { i18n } = this.app
-    return i18n.t('viewFilter.isBeforeDate')
-  }
-
-  getExample() {
-    return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
-  }
-
-  getCompatibleFieldTypes() {
-    return [
-      'date',
-      'last_modified',
-      'created_on',
-      FormulaFieldType.compatibleWithFormulaTypes('date'),
-    ]
-  }
-
-  matches(rowValue, filterValue, field, fieldType) {
-    // parse the provided string values as moment objects in order to make
-    // date comparisons
-    let rowDate = moment.utc(rowValue)
-    const filterDate = moment.utc(filterValue)
-
-    if (field.timezone) {
-      rowDate = rowDate.tz(field.timezone)
-    }
-
-    // if the filter date is not a valid date we can immediately return
-    // true because without a valid date the filter won't be applied
-    if (!filterDate.isValid()) {
-      return true
-    }
-
-    // if the row value is null or the rowDate is not valid we can immediately return
-    // false since it does not match the filter and the row won't be in the resultset
-    if (rowValue === null || !rowDate.isValid()) {
       return false
     }
 
-    return rowDate.isBefore(filterDate, 'day')
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    const filterDate = moment.utc(dateValue, this.getDateFormat(), true)
+    const rowDate = moment.utc(rowValue)
+    if (timezone !== null) {
+      filterDate.tz(timezone, true)
+      rowDate.tz(timezone)
+    }
+
+    return dateValue === '' || rowDate.isSame(filterDate, 'date')
   }
 }
 
-export class DateAfterViewFilterType extends ViewFilterType {
-  static getType() {
-    return 'date_after'
-  }
-
-  getName() {
-    const { i18n } = this.app
-    return i18n.t('viewFilter.isAfterDate')
-  }
-
-  getExample() {
-    return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
-  }
-
-  getCompatibleFieldTypes() {
-    return [
-      'date',
-      'last_modified',
-      'created_on',
-      FormulaFieldType.compatibleWithFormulaTypes('date'),
-    ]
-  }
-
-  matches(rowValue, filterValue, field, fieldType) {
-    // parse the provided string values as moment objects in order to make
-    // date comparisons
-    let rowDate = moment.utc(rowValue)
-    const filterDate = moment.utc(filterValue)
-
-    if (field.timezone) {
-      rowDate = rowDate.tz(field.timezone)
-    }
-
-    // if the filter date is not a valid date we can immediately return
-    // true because without a valid date the filter won't be applied
-    if (!filterDate.isValid()) {
-      return true
-    }
-
-    // if the row value is null or the rowDate is not valid we can immediately return
-    // false since it does not match the filter and the row won't be in the resultset
-    if (rowValue === null || !rowDate.isValid()) {
-      return false
-    }
-
-    return rowDate.isAfter(filterDate, 'day')
-  }
-}
-
-export class DateNotEqualViewFilterType extends ViewFilterType {
+export class DateNotEqualViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_not_equal'
   }
@@ -575,24 +544,126 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
 
   matches(rowValue, filterValue, field, fieldType) {
     if (rowValue === null) {
-      rowValue = ''
+      return true
     }
 
-    if (field.timezone) {
-      rowValue = moment.utc(rowValue).tz(field.timezone).format('YYYY-MM-DD')
-    } else {
-      rowValue = rowValue.toString().toLowerCase().trim()
-      rowValue = rowValue.slice(0, 10)
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    const filterDate = moment.utc(dateValue, this.getDateFormat(), true)
+    const rowDate = moment.utc(rowValue)
+
+    if (timezone !== null) {
+      filterDate.tz(timezone, true)
+      rowDate.tz(timezone)
     }
 
-    return filterValue === '' || rowValue !== filterValue
+    return dateValue === '' || !rowDate.isSame(filterDate, 'date')
+  }
+}
+
+export class DateBeforeViewFilterType extends LocalizedDateViewFilterType {
+  static getType() {
+    return 'date_before'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isBeforeDate')
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    const filterDate = moment.utc(dateValue, this.getDateFormat(), true)
+    const rowDate = moment.utc(rowValue)
+
+    // without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // an invalid date will be filtered out
+    if (rowValue === null || !rowDate.isValid()) {
+      return false
+    }
+
+    if (timezone !== null) {
+      filterDate.tz(timezone, true)
+      rowDate.tz(timezone)
+    }
+
+    return rowDate.isBefore(filterDate, 'day')
+  }
+}
+
+export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
+  static getType() {
+    return 'date_after'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAfterDate')
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    const filterDate = moment.utc(dateValue, this.getDateFormat(), true)
+    const rowDate = moment.utc(rowValue)
+    if (timezone !== null) {
+      filterDate.tz(timezone, true)
+      rowDate.tz(timezone)
+    }
+
+    // without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // an invalid date will be filtered out
+    if (rowValue === null || !rowDate.isValid()) {
+      return false
+    }
+    return rowDate.isAfter(filterDate, 'day')
   }
 }
 
 /**
  * Base class for compare dates with today.
  */
-export class DateCompareTodayViewFilterType extends ViewFilterType {
+export class DateCompareTodayViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     throw new Error('Not implemented')
   }
@@ -601,7 +672,7 @@ export class DateCompareTodayViewFilterType extends ViewFilterType {
     throw new Error('Not implemented')
   }
 
-  getCompareFunction() {
+  isDateMatching(rowValue, today) {
     throw new Error('Not implemented')
   }
 
@@ -618,37 +689,32 @@ export class DateCompareTodayViewFilterType extends ViewFilterType {
     ]
   }
 
-  getDefaultValue() {
-    return new Intl.DateTimeFormat().resolvedOptions().timeZone
+  getDefaultValue(field) {
+    return this.getDefaultTimezone(field)
   }
 
-  prepareValue() {
-    return this.getDefaultValue()
+  prepareValue(value, field, filterChanged = false) {
+    return value && !filterChanged ? value : `${this.getDefaultValue(field)}?`
   }
 
   getExample() {
-    return ''
-  }
-
-  getSliceLength() {
-    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
-    return 10
+    return 'UTC'
   }
 
   matches(rowValue, filterValue, field) {
-    if (rowValue === null) {
+    if (rowValue === null || !moment.utc(rowValue).isValid()) {
       return false
     }
 
-    if (field.timezone) {
-      rowValue = moment.utc(rowValue).tz(field.timezone)
-    } else {
-      rowValue = rowValue.toString().toLowerCase().trim()
-      rowValue = moment.utc(rowValue.slice(0, this.getSliceLength()))
-    }
+    const [timezone] = this.splitTimezoneAndValue(filterValue)
 
-    const today = moment().tz(filterValue)
-    return this.getCompareFunction(rowValue, today)
+    const rowDate = moment.utc(rowValue)
+    const today = moment.utc()
+    if (timezone !== null) {
+      today.tz(timezone)
+      rowDate.tz(timezone)
+    }
+    return this.isDateMatching(rowDate, today)
   }
 }
 
@@ -662,10 +728,10 @@ export class DateEqualsTodayViewFilterType extends DateCompareTodayViewFilterTyp
     return i18n.t('viewFilter.isToday')
   }
 
-  getCompareFunction(value, today) {
+  isDateMatching(rowValue, today) {
     const minTime = today.clone().startOf('day')
     const maxtime = today.clone().endOf('day')
-    return value.isBetween(minTime, maxtime, null, '[]')
+    return rowValue.isBetween(minTime, maxtime, null, '[]')
   }
 }
 
@@ -679,9 +745,9 @@ export class DateBeforeTodayViewFilterType extends DateCompareTodayViewFilterTyp
     return i18n.t('viewFilter.beforeToday')
   }
 
-  getCompareFunction(value, today) {
+  isDateMatching(rowValue, today) {
     const minTime = today.clone().startOf('day')
-    return value.isBefore(minTime)
+    return rowValue.isBefore(minTime)
   }
 }
 
@@ -695,9 +761,9 @@ export class DateAfterTodayViewFilterType extends DateCompareTodayViewFilterType
     return i18n.t('viewFilter.afterToday')
   }
 
-  getCompareFunction(value, today) {
+  isDateMatching(rowValue, today) {
     const maxtime = today.clone().endOf('day')
-    return value.isAfter(maxtime)
+    return rowValue.isAfter(maxtime)
   }
 }
 
@@ -711,10 +777,10 @@ export class DateEqualsCurrentWeekViewFilterType extends DateCompareTodayViewFil
     return i18n.t('viewFilter.inThisWeek')
   }
 
-  getCompareFunction(value, today) {
+  isDateMatching(rowValue, today) {
     const firstDay = today.clone().startOf('isoWeek')
     const lastDay = today.clone().endOf('isoWeek')
-    return value.isBetween(firstDay, lastDay, null, '[]')
+    return rowValue.isBetween(firstDay, lastDay, null, '[]')
   }
 }
 
@@ -728,10 +794,10 @@ export class DateEqualsCurrentMonthViewFilterType extends DateCompareTodayViewFi
     return i18n.t('viewFilter.inThisMonth')
   }
 
-  getCompareFunction(value, today) {
+  isDateMatching(rowValue, today) {
     const firstDay = today.clone().startOf('month')
     const lastDay = today.clone().endOf('month')
-    return value.isBetween(firstDay, lastDay, null, '[]')
+    return rowValue.isBetween(firstDay, lastDay, null, '[]')
   }
 }
 
@@ -745,21 +811,17 @@ export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilt
     return i18n.t('viewFilter.inThisYear')
   }
 
-  getCompareFunction(value, today) {
+  isDateMatching(rowValue, today) {
     const firstDay = today.clone().startOf('year')
     const lastDay = today.clone().endOf('year')
-    return value.isBetween(firstDay, lastDay, null, '[]')
+    return rowValue.isBetween(firstDay, lastDay, null, '[]')
   }
 }
 
 /**
  * Base class for days, months, years ago filters.
  */
-export class DateEqualsXAgoViewFilterType extends ViewFilterType {
-  getSeparator() {
-    return '?'
-  }
-
+export class DateEqualsXAgoViewFilterType extends LocalizedDateViewFilterType {
   getInputComponent() {
     return ViewFilterTypeNumberWithTimeZone
   }
@@ -774,38 +836,41 @@ export class DateEqualsXAgoViewFilterType extends ViewFilterType {
   }
 
   getExample() {
-    const tzone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+    const tzone = moment.tz.guess()
     const xAgo = 1
     return `${tzone}${this.getSeparator()}${xAgo}`
   }
 
-  getValidNumberWithTimezone(rawValue = null) {
-    let tzone, xAgo, rawXAgo
-    // keep the original filter timezone if any, otherwise take the default from the browser
-    if (rawValue) {
-      ;[tzone, rawXAgo] = rawValue.split(this.getSeparator())
-      xAgo = parseInt(rawXAgo)
-    } else {
-      tzone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+  splitTimezoneAndXago(field, rawValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(rawValue)
+
+    let filterValue = value
+    if (filterValue !== null) {
+      filterValue = parseInt(filterValue)
     }
-    xAgo = isNaN(xAgo) ? '' : xAgo
-    return `${tzone}${this.getSeparator()}${xAgo}`
+
+    filterValue = isNaN(filterValue) ? '' : filterValue
+    return [timezone, filterValue]
   }
 
-  getDefaultValue() {
-    return this.getValidNumberWithTimezone()
+  getValidNumberWithTimezone(rawValue, field) {
+    const [timezone, filterValue] = this.splitTimezoneAndXago(field, rawValue)
+    return `${timezone}${this.getSeparator()}${filterValue}`
   }
 
-  prepareValue(value) {
-    return this.getValidNumberWithTimezone(value)
+  getDefaultValue(field) {
+    return this.getValidNumberWithTimezone(null, field)
   }
 
-  getSliceLength() {
-    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
+  prepareValue(value, field) {
+    return this.getValidNumberWithTimezone(value, field)
+  }
+
+  getDateToCompare(xAgo) {
     throw new Error('Not implemented')
   }
 
-  getWhen(xAgo, timezone, format) {
+  isDateMatching(rowValue, dateToCompare) {
     throw new Error('Not implemented')
   }
 
@@ -814,32 +879,20 @@ export class DateEqualsXAgoViewFilterType extends ViewFilterType {
       rowValue = ''
     }
 
-    const separator = this.getSeparator()
-    if (filterValue.includes(separator) === -1) {
-      return true
-    }
-
-    const [rawTimezone, rawXAgo] = filterValue.split(separator)
-    const timezone = moment.tz.zone(rawTimezone) ? rawTimezone : 'UTC'
-    const xAgo = parseInt(rawXAgo)
+    const [timezone, xAgo] = this.splitTimezoneAndXago(field, filterValue)
 
     // an invalid daysAgo will result in an empty filter
-    if (isNaN(xAgo)) {
+    if (xAgo === '') {
       return true
     }
 
-    const sliceLength = this.getSliceLength()
-    const format = 'YYYY-MM-DD'.slice(0, sliceLength)
-    const when = this.getWhen(xAgo, timezone, format)
-
-    if (field.timezone) {
-      rowValue = moment.utc(rowValue).tz(field.timezone).format(format)
-    } else {
-      rowValue = rowValue.toString().toLowerCase().trim()
-      rowValue = rowValue.slice(0, sliceLength)
+    const dateToCompare = this.getDateToCompare(xAgo)
+    const rowDate = moment.utc(rowValue)
+    if (timezone) {
+      dateToCompare.tz(timezone)
+      rowDate.tz(timezone)
     }
-
-    return rowValue === when
+    return this.isDateMatching(rowDate, dateToCompare)
   }
 }
 
@@ -853,12 +906,12 @@ export class DateEqualsDaysAgoViewFilterType extends DateEqualsXAgoViewFilterTyp
     return i18n.t('viewFilter.isDaysAgo')
   }
 
-  getWhen(xAgo, timezone, format) {
-    return moment().tz(timezone).subtract(parseInt(xAgo), 'days').format(format)
+  getDateToCompare(xAgo) {
+    return moment.utc().subtract(parseInt(xAgo), 'days')
   }
 
-  getSliceLength() {
-    return 10
+  isDateMatching(rowValue, dateToCompare) {
+    return rowValue.isSame(dateToCompare, 'day')
   }
 }
 
@@ -872,15 +925,12 @@ export class DateEqualsMonthsAgoViewFilterType extends DateEqualsXAgoViewFilterT
     return i18n.t('viewFilter.isMonthsAgo')
   }
 
-  getWhen(xAgo, timezone, format) {
-    return moment()
-      .tz(timezone)
-      .subtract(parseInt(xAgo), 'months')
-      .format(format)
+  getDateToCompare(xAgo) {
+    return moment.utc().subtract(parseInt(xAgo), 'months')
   }
 
-  getSliceLength() {
-    return 7
+  isDateMatching(rowValue, dateToCompare) {
+    return rowValue.isSame(dateToCompare, 'month')
   }
 }
 
@@ -894,19 +944,16 @@ export class DateEqualsYearsAgoViewFilterType extends DateEqualsXAgoViewFilterTy
     return i18n.t('viewFilter.isYearsAgo')
   }
 
-  getWhen(xAgo, timezone, format) {
-    return moment()
-      .tz(timezone)
-      .subtract(parseInt(xAgo), 'years')
-      .format(format)
+  getDateToCompare(xAgo) {
+    return moment.utc().subtract(parseInt(xAgo), 'years')
   }
 
-  getSliceLength() {
-    return 4
+  isDateMatching(rowValue, dateToCompare) {
+    return rowValue.isSame(dateToCompare, 'year')
   }
 }
 
-export class DateEqualsDayOfMonthViewFilterType extends ViewFilterType {
+export class DateEqualsDayOfMonthViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_equals_day_of_month'
   }
@@ -921,35 +968,38 @@ export class DateEqualsDayOfMonthViewFilterType extends ViewFilterType {
   }
 
   getInputComponent() {
-    return ViewFilterTypeNumber
+    return ViewFilterTypeNumberWithTimeZone
+  }
+
+  isDateMatching(rowValue, dayOfMonth) {
+    return rowValue.date() === dayOfMonth
   }
 
   getCompatibleFieldTypes() {
     return ['date', 'last_modified', 'created_on']
   }
 
-  matches(rowValue, filterValue, field) {
-    // Check if the filter value is empty and immediately return true
-    if (filterValue === '') {
+  matches(rowValue, filterValue, field, fieldType) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    const [timezone, rawDayOfMonth] = this.splitTimezoneAndValue(filterValue)
+    if (rawDayOfMonth === '') {
       return true
+    }
+
+    // an invalid daysAgo will result in an empty filter
+    const dayOfMonth = parseInt(rawDayOfMonth)
+    if (isNaN(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
+      return false
     }
 
     let rowDate = moment.utc(rowValue)
-
-    if (field.timezone) {
-      rowDate = rowDate.tz(field.timezone)
+    if (timezone !== null) {
+      rowDate = rowDate.tz(timezone)
     }
-
-    // Check if the row's date matches the filter value
-    // in either the D (1) or DD (01) format for the day of month
-    if (
-      rowDate.format('D') === filterValue ||
-      rowDate.format('DD') === filterValue
-    ) {
-      return true
-    }
-
-    return false
+    return this.isDateMatching(rowDate, dayOfMonth)
   }
 }
 

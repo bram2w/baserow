@@ -25,6 +25,13 @@ export default function CoreModule(options) {
   // Baserow must be run in universal mode.
   this.options.mode = 'universal'
 
+  // Prevent automatically loading pages.
+  this.nuxt.hook('build:before', () => {
+    this.nuxt.options.build.createRoutes = () => {
+      return []
+    }
+  })
+
   // Set the default head object, but override the configured head.
   // @TODO if a child is a list the new children must be appended instead of overridden.
   this.options.head = _.merge({}, head, this.options.head)

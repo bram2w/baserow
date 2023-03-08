@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed OAuth 2 flows for providers that don't provide user's name. Email will be used as a temporary placeholder so that an account can be created.",
+    "issue_number": 1371,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

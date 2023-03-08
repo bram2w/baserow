@@ -39,7 +39,7 @@ ci-test-python:
 	COVERAGE_FILE=backend/reports/.coverage.$(PYTEST_SPLIT_GROUP) \
 	coverage run \
 	    --rcfile=backend/.coveragerc \
-	    -m pytest \
+	    -m pytest -vv \
 	    --durations-path=backend/.test_durations \
 	    --splits $(PYTEST_SPLITS) \
 	    --group $(PYTEST_SPLIT_GROUP) \

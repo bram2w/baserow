@@ -38,6 +38,7 @@
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
       @add-row="addRow()"
+      @add-rows="$refs.rowsAddContext.toggleNextToMouse($event)"
       @add-row-after="addRowAfter($event)"
       @update="updateValue"
       @paste="multiplePasteFromCell"
@@ -54,6 +55,7 @@
         </div>
       </template>
     </GridViewSection>
+    <GridViewRowsAddContext ref="rowsAddContext" @add-rows="addRows" />
     <div
       ref="divider"
       class="grid-view__divider"
@@ -94,6 +96,7 @@
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
       @add-row="addRow()"
+      @add-rows="$refs.rowsAddContext.toggleNextToMouse($event)"
       @add-row-after="addRowAfter($event)"
       @update="updateValue"
       @paste="multiplePasteFromCell"
@@ -269,10 +272,12 @@ import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
 import { clone } from '@baserow/modules/core/utils/object'
 import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
+import GridViewRowsAddContext from '@baserow/modules/database/components/view/grid/fields/GridViewRowsAddContext'
 
 export default {
   name: 'GridView',
   components: {
+    GridViewRowsAddContext,
     GridViewSection,
     GridViewFieldWidthHandle,
     GridViewRowDragging,
@@ -621,6 +626,24 @@ export default {
         notifyIf(error, 'row')
       }
     },
+    async addRows(rowsAmount) {
+      this.$refs.rowsAddContext.hide()
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/createNewRows',
+          {
+            view: this.view,
+            table: this.table,
+            // We need a list of all fields including the primary one here.
+            fields: this.fields,
+            rows: Array.from(Array(rowsAmount)).map(() => ({})),
+            selectPrimaryCell: true,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
+    },
     /**
      * Because it is only possible to add a new row before another row, we have to
      * figure out which row is below the given row and insert before that one. If the
@@ -683,15 +706,7 @@ export default {
     },
     showRowContext(event, row) {
       this.selectedRow = row
-      this.$refs.rowContext.toggle(
-        {
-          top: event.clientY,
-          left: event.clientX,
-        },
-        'bottom',
-        'right',
-        0
-      )
+      this.$refs.rowContext.toggleNextToMouse(event)
     },
     /**
      * Called when the user starts dragging the row. This will initiate the dragging

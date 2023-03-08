@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Prefetch field options on views that are iterated over on field update realtime events",
+    "issue_number": 1113,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

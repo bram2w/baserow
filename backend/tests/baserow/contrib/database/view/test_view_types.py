@@ -1,5 +1,6 @@
 import secrets
 from io import BytesIO
+from unittest.mock import patch
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.core.files.base import ContentFile
@@ -14,6 +15,10 @@ from baserow.contrib.database.views.registries import (
     view_aggregation_type_registry,
     view_type_registry,
 )
+from baserow.contrib.database.views.view_ownership_types import (
+    CollaborativeViewOwnershipType,
+)
+from baserow.core.models import GroupUser
 from baserow.core.user_files.handler import UserFileHandler
 
 
@@ -429,3 +434,90 @@ def test_import_export_form_view(data_fixture, tmpdir):
     assert imported_field_option_condition_2.field_option_id == imported_field_option.id
     assert imported_field_option_condition_2.type == condition_2.type
     assert imported_field_option_condition_2.value == "2"
+
+
+@pytest.mark.django_db
+def test_import_export_view_ownership_type(data_fixture):
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+    database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(user=user, database=database)
+    grid_view = data_fixture.create_grid_view(
+        table=table,
+        name="Test",
+        order=1,
+        filter_type="AND",
+        filters_disabled=False,
+        row_identifier_type="count",
+    )
+    grid_view.ownership_type = "personal"
+    grid_view.created_by = user2
+    grid_view.save()
+    grid_view_type = view_type_registry.get("grid")
+
+    serialized = grid_view_type.export_serialized(grid_view, None, None)
+    imported_grid_view = grid_view_type.import_serialized(
+        grid_view.table, serialized, {}, None, None
+    )
+
+    assert grid_view.id != imported_grid_view.id
+    assert grid_view.ownership_type == imported_grid_view.ownership_type
+    assert grid_view.created_by == imported_grid_view.created_by
+
+    # view should not be imported if the user is gone
+
+    GroupUser.objects.filter(user=user2).delete()
+
+    imported_grid_view = grid_view_type.import_serialized(
+        grid_view.table, serialized, {}, None, None
+    )
+
+    assert imported_grid_view is None
+
+    # created by is not set
+    grid_view.created_by = None
+    grid_view.ownership_type = "collaborative"
+    grid_view.save()
+
+    serialized = grid_view_type.export_serialized(grid_view, None, None)
+    imported_grid_view = grid_view_type.import_serialized(
+        grid_view.table, serialized, {}, None, None
+    )
+
+    assert grid_view.id != imported_grid_view.id
+    assert imported_grid_view.ownership_type == "collaborative"
+    assert imported_grid_view.created_by is None
+
+
+@pytest.mark.django_db
+def test_import_export_view_ownership_type_not_in_registry(data_fixture):
+    ownership_types = {"collaborative": CollaborativeViewOwnershipType()}
+    group = data_fixture.create_group()
+    user = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(group=group)
+    database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(user=user, database=database)
+    grid_view = data_fixture.create_grid_view(
+        table=table,
+        name="Test",
+        order=1,
+        filter_type="AND",
+        filters_disabled=False,
+        row_identifier_type="count",
+    )
+    grid_view.ownership_type = "personal"
+    grid_view.created_by = user2
+    grid_view.save()
+    grid_view_type = view_type_registry.get("grid")
+    serialized = grid_view_type.export_serialized(grid_view, None, None)
+
+    with patch(
+        "baserow.contrib.database.views.registries.view_ownership_type_registry.registry",
+        ownership_types,
+    ):
+        imported_grid_view = grid_view_type.import_serialized(
+            grid_view.table, serialized, {}, None, None
+        )
+
+        assert imported_grid_view is None

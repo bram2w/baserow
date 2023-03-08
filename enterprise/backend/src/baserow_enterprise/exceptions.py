@@ -18,17 +18,17 @@ class RoleUnsupported(Exception):
     """Raised when an API consumer tries to assign a role we do not support."""
 
 
-class SubjectTypeNotExist(Exception):
-    """Raised when trying to use a subject type that does not exist."""
-
-
 class SubjectNotExist(Exception):
-    """Raised when trying to retrieve a subject that does not exist"""
+    """Raised when trying to retrieve a subject that does not exist."""
+
+
+class SubjectUnsupported(Exception):
+    """Raised when trying to use an unsupported subject type."""
 
 
 class ScopeNotExist(Exception):
-    """Raised when trying to retrieve a scope that does not exist"""
+    """Raised when trying to retrieve a scope that does not exist."""
 
 
 class RoleNotExist(Exception):
-    """Raised when trying to retrieve a role that does not exist"""
+    """Raised when trying to retrieve a role that does not exist."""

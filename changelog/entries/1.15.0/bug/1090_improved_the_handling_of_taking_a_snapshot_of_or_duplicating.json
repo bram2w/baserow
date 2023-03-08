@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Improved the handling of taking a snapshot of, or duplicating, a database with many thousands of tables.",
+    "issue_number": 1090,
+    "bullet_points": [],
+    "created_at": "2023-02-10"
+}

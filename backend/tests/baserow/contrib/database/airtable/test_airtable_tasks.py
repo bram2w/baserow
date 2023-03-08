@@ -5,7 +5,6 @@ from django.db import connections
 
 import pytest
 import responses
-from pytz import BaseTzInfo
 
 from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
 from baserow.contrib.database.airtable.models import AirtableImportJob
@@ -39,7 +38,7 @@ def test_run_import_from_airtable(
         progress = ChildProgressBuilder.build(progress_builder, 100)
         progress.increment(100)
 
-        return ([created_database], {})
+        return created_database
 
     mock_import_from_airtable_to_group.side_effect = update_progress_slow
 
@@ -56,7 +55,6 @@ def test_run_import_from_airtable(
     assert args[0][1] == job.airtable_share_id
     assert isinstance(args[1]["progress_builder"], ChildProgressBuilder)
     assert args[1]["progress_builder"].represents_progress == 100
-    assert "timezone" not in args[1]
 
     job = AirtableImportJob.objects.get(pk=job.id)
     assert job.progress_percentage == 100
@@ -103,32 +101,3 @@ def test_run_import_shared_view(mock_import_from_airtable_to_group, data_fixture
         == "The shared link is not a base. It's probably a view and the Airtable "
         "import tool only supports shared bases."
     )
-
-
-@pytest.mark.django_db
-@responses.activate
-@patch(
-    "baserow.contrib.database.airtable.handler"
-    ".AirtableHandler.import_from_airtable_to_group"
-)
-def test_run_import_from_airtable_with_timezone(
-    mock_import_from_airtable_to_group, data_fixture
-):
-    database = data_fixture.create_database_application()
-    mock_import_from_airtable_to_group.return_value = [database], {}
-
-    job = data_fixture.create_airtable_import_job(timezone="Europe/Amsterdam")
-
-    with pytest.raises(Job.DoesNotExist):
-        run_async_job(0)
-
-    run_async_job(job.id)
-
-    mock_import_from_airtable_to_group.assert_called_once()
-    args = mock_import_from_airtable_to_group.call_args
-    assert args[0][0].id == job.group.id
-    assert args[0][1] == job.airtable_share_id
-    assert isinstance(args[1]["progress_builder"], ChildProgressBuilder)
-    assert args[1]["progress_builder"].represents_progress == 100
-    assert isinstance(args[1]["timezone"], BaseTzInfo)
-    assert str(args[1]["timezone"]) == "Europe/Amsterdam"

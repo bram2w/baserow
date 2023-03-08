@@ -63,6 +63,19 @@ export default (client) => {
 
       return client.post(`/database/rows/table/${tableId}/`, values, config)
     },
+    batchCreate(tableId, rows, beforeId = null) {
+      const config = { params: {} }
+
+      if (beforeId !== null) {
+        config.params.before = beforeId
+      }
+
+      return client.post(
+        `/database/rows/table/${tableId}/batch/`,
+        { items: rows },
+        config
+      )
+    },
     update(tableId, rowId, values) {
       return client.patch(`/database/rows/table/${tableId}/${rowId}/`, values)
     },
