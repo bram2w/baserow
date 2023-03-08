@@ -680,6 +680,8 @@ class DatabaseConfig(AppConfig):
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
+        import baserow.contrib.database.fields.tasks  # noqa: F401
+
 
 # noinspection PyPep8Naming
 def clear_generated_model_cache_receiver(sender, **kwargs):

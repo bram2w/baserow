@@ -430,6 +430,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         "date_show_tzinfo",
         "date_force_timezone",
     ]
+    nullable_option_fields = ["date_force_timezone"]
 
     def __init__(
         self,
@@ -801,9 +802,11 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaSingleSelectType,
 ]
 
-BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = [
-    allowed_field for f in BASEROW_FORMULA_TYPES for allowed_field in f.all_fields()
-]
+BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = list(
+    set(
+        allowed_field for f in BASEROW_FORMULA_TYPES for allowed_field in f.all_fields()
+    )
+)
 
 BASEROW_FORMULA_TYPE_CHOICES = [(f.type, f.type) for f in BASEROW_FORMULA_TYPES]
 BASEROW_FORMULA_ARRAY_TYPE_CHOICES = [

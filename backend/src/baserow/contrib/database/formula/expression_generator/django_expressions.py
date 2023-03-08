@@ -62,6 +62,10 @@ class NotExpr(Transform):
     arity = 1
 
 
+class TimezoneExpr(BinaryOpExpr):
+    arg_joiner = " at time zone "
+
+
 class BaserowStringAgg(OrderableAggMixin, Aggregate):
     function = "STRING_AGG"
     template = "%(function)s(%(distinct)s%(expressions)s %(ordering)s)"

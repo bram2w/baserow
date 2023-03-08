@@ -1,6 +1,6 @@
 from abc import ABC
 from decimal import Decimal
-from typing import List, Optional, Type, Union
+from typing import List, Union
 
 from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
@@ -14,7 +14,6 @@ from django.db.models import (
     JSONField,
     Max,
     Min,
-    Model,
     StdDev,
     Sum,
     Value,
@@ -49,6 +48,7 @@ from django.db.models.functions import (
     StrIndex,
     Upper,
 )
+from django.db.models.functions.datetime import TimezoneMixin
 
 from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
 from baserow.contrib.database.formula.ast.function import (
@@ -63,6 +63,7 @@ from baserow.contrib.database.formula.ast.function import (
 from baserow.contrib.database.formula.ast.tree import (
     BaserowDecimalLiteral,
     BaserowExpression,
+    BaserowExpressionContext,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
 )
@@ -108,6 +109,15 @@ from baserow.contrib.database.formula.types.type_checker import (
     BaserowArgumentTypeChecker,
     MustBeManyExprChecker,
 )
+
+
+class BaserowTimezoneMixinOverride(TimezoneMixin):
+    def get_tzname(self):
+        return None
+
+
+class BaserowExtract(BaserowTimezoneMixinOverride, Extract):
+    pass
 
 
 def register_formula_functions(registry):
@@ -172,6 +182,9 @@ def register_formula_functions(registry):
     registry.register(BaserowToDate())
     registry.register(BaserowDateDiff())
     registry.register(BaserowBcToNull())
+    registry.register(BaserowNow())
+    registry.register(BaserowToday())
+    registry.register(BaserowToDateTz())
     # Date interval functions
     registry.register(BaserowDateInterval())
     # Special functions
@@ -1205,6 +1218,63 @@ class BaserowLessThanOrEqual(BaseLimitComparableFunction):
         )
 
 
+class BaserowNow(ZeroArgumentBaserowFunction):
+    type = "now"
+    needs_periodic_update = True
+
+    def type_function(
+        self, func_call: BaserowFunctionCall[UnTyped]
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaDateType(
+                date_format="ISO", date_include_time=True, date_time_format="24"
+            )
+        )
+
+    def to_django_expression(self) -> Expression:
+        pass
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+
+        return WrappedExpressionWithMetadata(
+            Value(context.get_utc_now(), output_field=fields.DateTimeField()),
+        )
+
+
+class BaserowToday(ZeroArgumentBaserowFunction):
+    type = "today"
+    needs_periodic_update = True
+
+    def type_function(
+        self, func_call: BaserowFunctionCall[UnTyped]
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaDateType(
+                date_format="ISO",
+                date_include_time=False,
+                date_time_format="24",
+                date_force_timezone="UTC",
+            )
+        )
+
+    def to_django_expression(self) -> Expression:
+        pass
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+
+        return WrappedExpressionWithMetadata(
+            Value(context.get_utc_now(), output_field=fields.DateField()),
+        )
+
+
 class BaserowToDate(TwoArgumentBaserowFunction):
     type = "todate"
     arg1_type = [BaserowFormulaTextType]
@@ -1234,6 +1304,43 @@ class BaserowToDate(TwoArgumentBaserowFunction):
         )
 
 
+class BaserowToDateTz(ThreeArgumentBaserowFunction):
+    type = "todate_tz"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [BaserowFormulaTextType]
+    arg3_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+        arg3: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaDateType(
+                date_format="ISO",
+                date_include_time=True,
+                date_time_format="24",
+                date_show_tzinfo=True,
+                date_force_timezone=getattr(arg3, "literal", None),
+                nullable=True,
+            )
+        )
+
+    def to_django_expression(
+        self, arg1: Expression, arg2: Expression, arg3: Expression
+    ) -> Expression:
+
+        return Func(
+            arg1,
+            arg2,
+            arg3,
+            function="try_cast_to_date_tz",
+            output_field=fields.DateTimeField(),
+        )
+
+
 class BaserowDay(OneArgumentBaserowFunction):
     type = "day"
     arg_type = [BaserowFormulaDateType]
@@ -1250,7 +1357,7 @@ class BaserowDay(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "day", output_field=int_like_numeric_output_field())
+        return BaserowExtract(arg, "day", output_field=int_like_numeric_output_field())
 
 
 class BaserowMonth(OneArgumentBaserowFunction):
@@ -1269,7 +1376,9 @@ class BaserowMonth(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "month", output_field=int_like_numeric_output_field())
+        return BaserowExtract(
+            arg, "month", output_field=int_like_numeric_output_field()
+        )
 
 
 class BaserowDateDiff(ThreeArgumentBaserowFunction):
@@ -1431,11 +1540,10 @@ class BaserowRowId(ZeroArgumentBaserowFunction):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
-        if model_instance is None:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        if context.model_instance is None:
             return WrappedExpressionWithMetadata(
                 ExpressionWrapper(F("id"), output_field=int_like_numeric_output_field())
             )
@@ -1443,7 +1551,7 @@ class BaserowRowId(ZeroArgumentBaserowFunction):
             # noinspection PyUnresolvedReferences
             return WrappedExpressionWithMetadata(
                 Cast(
-                    Value(model_instance.id),
+                    Value(context.model_instance.id),
                     output_field=fields.IntegerField(),
                 )
             )
@@ -1530,10 +1638,9 @@ class BaserowArrayAgg(OneArgumentBaserowFunction):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
         pre_annotations = dict()
         aggregate_filters = []
         join_ids = []
@@ -1560,7 +1667,7 @@ class BaserowArrayAgg(OneArgumentBaserowFunction):
             WrappedExpressionWithMetadata(
                 expr, pre_annotations, aggregate_filters, join_ids
             ),
-            model,
+            context.model,
         ).expression
         return WrappedExpressionWithMetadata(
             Coalesce(
@@ -1592,11 +1699,10 @@ class Baserow2dArrayAgg(OneArgumentBaserowFunction):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
-        subquery = super().to_django_expression_given_args(args, model, model_instance)
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        subquery = super().to_django_expression_given_args(args, context)
         return WrappedExpressionWithMetadata(
             Func(Func(subquery.expression, function="array"), function="to_jsonb")
         )
@@ -1648,11 +1754,10 @@ class BaserowFilter(TwoArgumentBaserowFunction):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
-        result = super().to_django_expression_given_args(args, model, model_instance)
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        result = super().to_django_expression_given_args(args, context)
         return WrappedExpressionWithMetadata(
             result.expression,
             result.pre_annotations,
@@ -1802,10 +1907,9 @@ class BaserowAggJoin(TwoArgumentBaserowFunction):
 
     def to_django_expression_given_args(
         self,
-        args: List[WrappedExpressionWithMetadata],
-        model: Type[Model],
-        model_instance: Optional[Model],
-    ) -> WrappedExpressionWithMetadata:
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
         pre_annotations = {}
         aggregate_filters = []
         join_ids = []
@@ -1829,7 +1933,7 @@ class BaserowAggJoin(TwoArgumentBaserowFunction):
                 aggregate_filters,
                 join_ids,
             ),
-            model,
+            context.model,
         )
 
 
@@ -2096,7 +2200,7 @@ class BaserowYear(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "year", output_field=int_like_numeric_output_field())
+        return BaserowExtract(arg, "year", output_field=int_like_numeric_output_field())
 
 
 class BaserowSecond(OneArgumentBaserowFunction):
@@ -2115,7 +2219,9 @@ class BaserowSecond(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "second", output_field=int_like_numeric_output_field())
+        return BaserowExtract(
+            arg, "second", output_field=int_like_numeric_output_field()
+        )
 
 
 class BaserowBcToNull(OneArgumentBaserowFunction):
@@ -2131,7 +2237,7 @@ class BaserowBcToNull(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type, nullable=True)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        expr_to_get_year = Extract(
+        expr_to_get_year = BaserowExtract(
             arg, "year", output_field=int_like_numeric_output_field()
         )
         return Case(

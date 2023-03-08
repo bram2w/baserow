@@ -22,6 +22,7 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
     BaserowDecimalLiteral,
     BaserowExpression,
+    BaserowExpressionContext,
     BaserowFieldReference,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
@@ -174,6 +175,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
     ):
         self.model_instance = model_instance
         self.model = model
+        self.context = BaserowExpressionContext(model, model_instance)
 
     def visit_field_reference(
         self, field_reference: BaserowFieldReference[BaserowFormulaType]
@@ -373,11 +375,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
         args: List[WrappedExpressionWithMetadata] = [
             expr.accept(self) for expr in function_call.args
         ]
-        return function_call.to_django_expression_given_args(
-            args,
-            self.model,
-            self.model_instance,
-        )
+        return function_call.to_django_expression_given_args(args, self.context)
 
     def visit_string_literal(
         self, string_literal: BaserowStringLiteral[BaserowFormulaType]

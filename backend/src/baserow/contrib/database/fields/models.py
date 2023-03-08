@@ -431,6 +431,10 @@ class FormulaField(Field):
         null=True,
         help_text="Force a timezone for the field overriding user profile settings.",
     )
+    needs_periodic_update = models.BooleanField(
+        default=False,
+        help_text="Indicates if the field needs to be periodically updated.",
+    )
 
     @cached_property
     def cached_untyped_expression(self):

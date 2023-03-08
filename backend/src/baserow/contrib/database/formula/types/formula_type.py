@@ -88,6 +88,15 @@ class BaserowFormulaType(abc.ABC):
         return []
 
     @classproperty
+    def nullable_option_fields(cls) -> List[str]:
+        """
+        :return: The list of FormulaField model field names which are nullable and
+            the user should be able to override them to being null.
+        """
+
+        return []
+
+    @classproperty
     def internal_fields(cls) -> List[str]:
         """
         :return: The list of FormulaField model field names which store internal
@@ -201,7 +210,10 @@ class BaserowFormulaType(abc.ABC):
         kwargs = {}
         for field_name in self.user_overridable_formatting_option_fields:
             override_set_by_user = getattr(formula_field, field_name)
-            if override_set_by_user is not None:
+            if (
+                override_set_by_user is not None
+                or field_name in self.nullable_option_fields
+            ):
                 kwargs[field_name] = override_set_by_user
             else:
                 kwargs[field_name] = getattr(self, field_name)

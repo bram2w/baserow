@@ -206,9 +206,11 @@ def test_0010_with_no_role_and_no_access_mixed_role_assignments(synced_roles):
 def test_0010_migrates_groupusers(synced_roles):
     # `GroupUser` pointing to `NO_ROLE` are migrated to `NO_ACCESS`.
     migrate_from = [
+        ("core", "0042_add_ip_address_to_jobs"),
         ("baserow_enterprise", "0009_roleassignment_subject_and_scope_uniqueness"),
     ]
     migrate_to = [
+        ("core", "0042_add_ip_address_to_jobs"),
         ("baserow_enterprise", "0010_rename_no_role_to_no_access"),
     ]
 

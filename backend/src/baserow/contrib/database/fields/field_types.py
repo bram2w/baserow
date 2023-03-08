@@ -15,7 +15,16 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import CharField, DateTimeField, F, Func, Q, Value
+from django.db.models import (
+    CharField,
+    Count,
+    DateTimeField,
+    F,
+    Func,
+    Q,
+    QuerySet,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -663,13 +672,6 @@ class BooleanFieldType(FieldType):
         self, boolean_formula_type: BaserowFormulaBooleanType
     ) -> BooleanField:
         return BooleanField()
-
-
-def valid_utc_offset_value_validator(value):
-    if value != 0 and value % 30 != 0:
-        raise serializers.ValidationError(
-            "The UTC offset must be different from 0 and a multiple of 30 minutes."
-        )
 
 
 class DateFieldType(FieldType):
@@ -3271,6 +3273,58 @@ class FormulaFieldType(ReadOnlyFieldType):
         else:
             return False
 
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+
+        return (
+            FormulaField.objects.filter(needs_periodic_update=True)
+            .annotate(num_dependencies=Count("field_dependencies"))
+            .filter(num_dependencies=0)
+        )
+
+    def run_periodic_update(
+        self,
+        field: Field,
+        update_collector: "Optional[FieldUpdateCollector]" = None,
+        field_cache: "Optional[FieldCache]" = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+    ):
+        from baserow.contrib.database.fields.dependencies.update_collector import (
+            FieldUpdateCollector,
+        )
+
+        should_send_signals_at_end = False
+
+        if update_collector is None:
+            # We are the outermost call, and so we should send all the signals
+            # when we finish.
+            should_send_signals_at_end = True
+            update_collector = FieldUpdateCollector(field.table)
+
+        if field_cache is None:
+            field_cache = FieldCache()
+        if via_path_to_starting_table is None:
+            via_path_to_starting_table = []
+
+        self._refresh_row_values(
+            field, update_collector, field_cache, via_path_to_starting_table
+        )
+
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
+            dependant_field_type.run_periodic_update(
+                dependant_field,
+                update_collector,
+                field_cache,
+                path_to_starting_table,
+            )
+
+        if should_send_signals_at_end:
+            update_collector.apply_updates_and_get_updated_fields(field_cache)
+            update_collector.send_force_refresh_signals_for_all_updated_tables()
+
     def row_of_dependency_updated(
         self,
         field: FormulaField,
@@ -3538,6 +3592,9 @@ class LookupFieldType(FormulaFieldType):
             table,
             allowed_field_values,
         )
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        return None
 
     def before_update(self, from_field, to_field_values, user, kwargs):
         if isinstance(from_field, LookupField):

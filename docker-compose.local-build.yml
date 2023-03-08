@@ -113,6 +113,9 @@ x-backend-variables: &backend-variables
   BASEROW_ROW_COUNT_JOB_CRONTAB:
   BASEROW_STORAGE_USAGE_JOB_CRONTAB:
   BASEROW_SEAT_USAGE_JOB_CRONTAB:
+  BASEROW_PERIODIC_FIELD_UPDATE_CRONTAB:
+  BASEROW_PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES:
+  BASEROW_PERIODIC_FIELD_UPDATE_QUEUE_NAME:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing

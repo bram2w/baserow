@@ -641,6 +641,52 @@ export class BaserowLessThanOrEqual extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowNow extends BaserowFunctionDefinition {
+  static getType() {
+    return 'now'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.nowDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['now()']
+  }
+
+  getExamples() {
+    return ['now() > todate("2021-12-12 13:00:00", "YYYY-MM-DD HH24:MI:SS")']
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
+export class BaserowToday extends BaserowFunctionDefinition {
+  static getType() {
+    return 'today'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.todayDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['today()']
+  }
+
+  getExamples() {
+    return ['today() > todate("2021-12-12", "YYYY-MM-DD")']
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
 export class BaserowToDate extends BaserowFunctionDefinition {
   static getType() {
     return 'todate'
@@ -657,6 +703,29 @@ export class BaserowToDate extends BaserowFunctionDefinition {
 
   getExamples() {
     return ["todate('20210101', 'YYYYMMDD')"]
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
+export class BaserowToDateTz extends BaserowFunctionDefinition {
+  static getType() {
+    return 'todate_tz'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.toDateTzDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['todate_tz(text, text, text)']
+  }
+
+  getExamples() {
+    return ["todate_tz('20210101', 'YYYYMMDD', 'Europe/Amsterdam')"]
   }
 
   getFormulaType() {

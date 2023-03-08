@@ -50,6 +50,13 @@ if typing.TYPE_CHECKING:
 tracer = trace.get_tracer(__name__)
 
 
+def _needs_periodic_update(expression: BaserowExpression):
+    functions_used: Set[BaserowFunctionDefinition] = expression.accept(
+        FunctionsUsedVisitor()
+    )
+    return any(getattr(f, "needs_periodic_update", False) for f in functions_used)
+
+
 def _expression_requires_refresh_after_insert(expression: BaserowExpression):
     """
     WARNING: This function is directly used by migration code. Please ensure
@@ -339,6 +346,8 @@ class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
 
         formula_field.internal_formula = internal_formula
         formula_field.version = BASEROW_FORMULA_VERSION
+
+        formula_field.needs_periodic_update = _needs_periodic_update(expression)
         expression_type.persist_onto_formula_field(formula_field)
         formula_field.requires_refresh_after_insert = refresh_after_insert
         return expression

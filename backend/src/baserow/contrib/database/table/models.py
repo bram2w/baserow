@@ -357,8 +357,13 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
     like `isinstance(possible_baserow_model, GeneratedTableModel)`.
     """
 
-    def get_parent(self):
-        return self.baserow_table
+    @classmethod
+    def get_parent(cls):
+        return cls.baserow_table
+
+    @classmethod
+    def get_root(cls):
+        return cls.baserow_table.get_root()
 
     @classmethod
     def fields_requiring_refresh_after_insert(cls):
