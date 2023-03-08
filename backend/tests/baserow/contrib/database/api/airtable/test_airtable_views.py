@@ -66,7 +66,6 @@ def test_create_airtable_import_job(
             "type": "airtable",
             "group_id": "not_int",
             "airtable_share_url": "https://airtable.com/test",
-            "timezone": "UNKNOWN",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -82,9 +81,6 @@ def test_create_airtable_import_job(
                     "code": "invalid",
                 }
             ],
-            "timezone": [
-                {"error": '"UNKNOWN" is not a valid choice.', "code": "invalid_choice"}
-            ],
         },
     }
 
@@ -107,7 +103,6 @@ def test_create_airtable_import_job(
         "group_id": group.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
-        "timezone": None,
         "state": "pending",
         "human_readable_error": "",
         "database": None,
@@ -121,7 +116,6 @@ def test_create_airtable_import_job(
             "type": "airtable",
             "group_id": group.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
-            "timezone": "Europe/Amsterdam",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -135,7 +129,6 @@ def test_create_airtable_import_job(
         "group_id": group.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
-        "timezone": "Europe/Amsterdam",
         "state": "pending",
         "human_readable_error": "",
         "database": None,
@@ -185,7 +178,6 @@ def test_get_airtable_import_job(data_fixture, api_client):
         "group_id": airtable_job_1.group_id,
         "airtable_share_id": "test",
         "progress_percentage": 0,
-        "timezone": None,
         "state": "pending",
         "human_readable_error": "",
         "database": None,
@@ -212,7 +204,6 @@ def test_get_airtable_import_job(data_fixture, api_client):
         "group_id": airtable_job_1.group_id,
         "airtable_share_id": "test",
         "progress_percentage": 50,
-        "timezone": None,
         "state": "failed",
         "human_readable_error": "Wrong",
         "database": {

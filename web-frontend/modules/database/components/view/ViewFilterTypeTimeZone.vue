@@ -1,12 +1,12 @@
 <template>
-  <div class="filters__value-timezone">{{ filter.value }}</div>
+  <div class="filters__value-timezone">{{ getTimezoneAbbr() }}</div>
 </template>
 
 <script>
-import viewFilter from '@baserow/modules/database/mixins/viewFilter'
+import filterTypeDateInput from '@baserow/modules/database/mixins/filterTypeDateInput'
 
 export default {
   name: 'ViewFilterTypeTimeZone',
-  mixins: [viewFilter],
+  mixins: [filterTypeDateInput],
 }
 </script>

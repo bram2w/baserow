@@ -105,6 +105,11 @@ export default {
       required: false,
       default: null,
     },
+    debounceTime: {
+      type: Number,
+      required: false,
+      default: 400,
+    },
   },
   data() {
     return {
@@ -124,6 +129,12 @@ export default {
       this.fetched = true
       this.results = await this.fetch(this.page, this.query)
     }
+  },
+  created() {
+    // Small debounce when searching to prevent a lot of requests to the backend.
+    this._search = debounce(async function () {
+      this.results = await this.fetch(this.page, this.query)
+    }, this.debounceTime)
   },
   methods: {
     clear() {
@@ -165,12 +176,6 @@ export default {
       this.loading = true
       this._search()
     },
-    /**
-     * Small debounce when searching to prevent a lot of requests to the backend.
-     */
-    _search: debounce(async function () {
-      this.results = await this.fetch(this.page, this.query)
-    }, 400),
     /**
      * When the user scrolls in the results, we can check if the user is near the end
      * and if so a new page will be loaded.

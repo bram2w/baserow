@@ -1,5 +1,3 @@
-from pytz import all_timezones
-from pytz import timezone as pytz_timezone
 from requests.exceptions import RequestException
 from rest_framework import serializers
 
@@ -46,7 +44,6 @@ class AirtableImportJobType(JobType):
     request_serializer_field_names = [
         "group_id",
         "database_id",
-        "timezone",
         "airtable_share_url",
     ]
 
@@ -59,20 +56,12 @@ class AirtableImportJobType(JobType):
             help_text="The publicly shared URL of the Airtable base (e.g. "
             "https://airtable.com/shrxxxxxxxxxxxxxx)",
         ),
-        "timezone": serializers.ChoiceField(
-            required=False,
-            choices=all_timezones,
-            help_text="Optionally a timezone can be provided that must be respected "
-            "during import. This is for example setting the correct value of the date "
-            "fields.",
-        ),
     }
 
     serializer_field_names = [
         "group_id",
         "database",
         "airtable_share_id",
-        "timezone",
     ]
 
     serializer_field_overrides = {
@@ -82,11 +71,6 @@ class AirtableImportJobType(JobType):
         "airtable_share_id": serializers.URLField(
             max_length=18,
             help_text="Public ID of the shared Airtable base that must be imported.",
-        ),
-        "timezone": serializers.CharField(
-            help_text="Optionally a timezone can be provided that must be respected "
-            "during import. This is for example setting the correct value of the date "
-            "fields.",
         ),
         "database": ApplicationSerializer(),
     }
@@ -99,23 +83,13 @@ class AirtableImportJobType(JobType):
         )
 
         airtable_share_id = extract_share_id_from_url(values["airtable_share_url"])
-        timezone = values.get("timezone")
-
-        if timezone is not None:
-            timezone = pytz_timezone(timezone)
 
         return {
             "airtable_share_id": airtable_share_id,
-            "timezone": timezone,
             "group": group,
         }
 
     def run(self, job, progress):
-
-        kwargs = {}
-
-        if job.timezone is not None:
-            kwargs["timezone"] = pytz_timezone(job.timezone)
 
         database = action_type_registry.get(
             ImportDatabaseFromAirtableActionType.type
@@ -126,7 +100,6 @@ class AirtableImportJobType(JobType):
             progress_builder=progress.create_child_builder(
                 represents_progress=progress.total
             ),
-            **kwargs,
         )
 
         application_created.send(self, application=database, user=None)

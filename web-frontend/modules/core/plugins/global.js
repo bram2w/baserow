@@ -71,3 +71,13 @@ Vue.directive('autoOverflowScroll', autoOverflowScroll)
 Vue.directive('userFileUpload', userFileUpload)
 Vue.directive('autoScroll', autoScroll)
 Vue.directive('clickOutside', clickOutside)
+
+Vue.prototype.$super = function (options) {
+  return new Proxy(options, {
+    get: (options, name) => {
+      if (options.methods && name in options.methods) {
+        return options.methods[name].bind(this)
+      }
+    },
+  })
+}

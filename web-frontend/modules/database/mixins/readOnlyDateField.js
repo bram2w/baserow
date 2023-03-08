@@ -1,19 +1,24 @@
-import moment from '@baserow/modules/core/moment'
 import {
   getDateMomentFormat,
   getTimeMomentFormat,
+  getCellTimezoneAbbr,
+  getFieldTimezone,
 } from '@baserow/modules/database/utils/date'
+import moment from '@baserow/modules/core/moment'
 
 export default {
   methods: {
-    getTimezone(field) {
-      return field.timezone || 'UTC'
-    },
     getDate(field, value) {
       if (value === null || value === undefined) {
         return ''
       }
-      const existing = moment.tz(value || undefined, this.getTimezone(field))
+
+      const timezone = getFieldTimezone(field)
+      let existing = moment.utc(value, moment.ISO_8601, true)
+      if (timezone) {
+        existing = existing.utcOffset(moment.tz(timezone).utcOffset())
+      }
+
       const dateFormat = getDateMomentFormat(field.date_format)
       return existing.format(dateFormat)
     },
@@ -22,9 +27,17 @@ export default {
         return ''
       }
 
-      const existing = moment.tz(value || undefined, this.getTimezone(field))
+      const timezone = getFieldTimezone(field)
+      let existing = moment.utc(value, moment.ISO_8601, true)
+      if (timezone) {
+        existing = existing.utcOffset(moment.tz(timezone).utcOffset())
+      }
+
       const timeFormat = getTimeMomentFormat(field.date_time_format)
       return existing.format(timeFormat)
+    },
+    getCellTimezoneAbbr(field, value) {
+      return getCellTimezoneAbbr(field, value)
     },
   },
 }

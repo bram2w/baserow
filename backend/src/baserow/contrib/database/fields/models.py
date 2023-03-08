@@ -10,7 +10,6 @@ from baserow.contrib.database.fields.mixins import (
     DATE_FORMAT_CHOICES,
     DATE_TIME_FORMAT_CHOICES,
     BaseDateMixin,
-    TimezoneMixin,
 )
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
@@ -294,11 +293,11 @@ class DateField(Field, BaseDateMixin):
     pass
 
 
-class LastModifiedField(Field, BaseDateMixin, TimezoneMixin):
+class LastModifiedField(Field, BaseDateMixin):
     pass
 
 
-class CreatedOnField(Field, BaseDateMixin, TimezoneMixin):
+class CreatedOnField(Field, BaseDateMixin):
     pass
 
 
@@ -422,6 +421,16 @@ class FormulaField(Field):
         max_length=32,
         help_text="24 (14:30) or 12 (02:30 PM)",
     )
+    date_show_tzinfo = models.BooleanField(
+        default=None,
+        null=True,
+        help_text="Indicates if the time zone should be shown.",
+    )
+    date_force_timezone = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="Force a timezone for the field overriding user profile settings.",
+    )
 
     @cached_property
     def cached_untyped_expression(self):
@@ -482,6 +491,7 @@ class FormulaField(Field):
         recalculate = kwargs.pop("recalculate", not self.trashed)
         field_cache = kwargs.pop("field_cache", None)
         raise_if_invalid = kwargs.pop("raise_if_invalid", False)
+
         if recalculate:
             self.recalculate_internal_fields(
                 field_cache=field_cache, raise_if_invalid=raise_if_invalid

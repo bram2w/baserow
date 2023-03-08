@@ -472,9 +472,9 @@ class DatabaseConfig(AppConfig):
 
         from baserow.core.jobs.registries import job_type_registry
 
-        from .airtable.job_type import AirtableImportJobType
+        from .airtable.job_types import AirtableImportJobType
         from .fields.job_types import DuplicateFieldJobType
-        from .file_import.job_type import FileImportJobType
+        from .file_import.job_types import FileImportJobType
         from .table.job_types import DuplicateTableJobType
 
         job_type_registry.register(AirtableImportJobType())

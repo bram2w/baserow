@@ -480,7 +480,7 @@ export const actions = {
     // If the value is not provided, then we use the default value related to the type.
     if (!Object.prototype.hasOwnProperty.call(values, 'value')) {
       const viewFilterType = this.$registry.get('viewFilter', values.type)
-      values.value = viewFilterType.getDefaultValue()
+      values.value = viewFilterType.getDefaultValue(field)
     }
 
     // Some filter input components expect the preload values to exist, that's why we

@@ -20,8 +20,6 @@ def test_created_on_field_type(data_fixture):
 
     field_handler = FieldHandler()
     row_handler = RowHandler()
-    timezone_to_test = "Europe/Berlin"
-    timezone_of_field = timezone(timezone_to_test)
     time_to_freeze = "2021-08-10 12:00"
 
     data_fixture.create_text_field(table=table, name="text_field", primary=True)
@@ -30,7 +28,6 @@ def test_created_on_field_type(data_fixture):
         table=table,
         type_name="created_on",
         name="Create Date",
-        timezone=timezone_to_test,
     )
     created_on_field_datetime = field_handler.create_field(
         user=user,
@@ -38,7 +35,6 @@ def test_created_on_field_type(data_fixture):
         type_name="created_on",
         name="Create Datetime",
         date_include_time=True,
-        timezone=timezone_to_test,
     )
     assert created_on_field_date.date_include_time is False
     assert created_on_field_datetime.date_include_time is True
@@ -106,7 +102,6 @@ def test_created_on_field_type(data_fixture):
     row_create_datetime_before_alter = row.create_datetime
 
     # changing the field from CreatedOn to Datetime should persist the date
-    # in the corresponding timezone
     with freeze_time(time_to_freeze):
         field_handler.update_field(
             user=user,
@@ -117,15 +112,8 @@ def test_created_on_field_type(data_fixture):
 
     assert len(CreatedOnField.objects.all()) == 1
     row.refresh_from_db()
-    field_before_with_timezone = row_create_datetime_before_alter.astimezone(
-        timezone_of_field
-    )
-    assert row.create_datetime.year == field_before_with_timezone.year
-    assert row.create_datetime.month == field_before_with_timezone.month
-    assert row.create_datetime.day == field_before_with_timezone.day
-    assert row.create_datetime.hour == field_before_with_timezone.hour
-    assert row.create_datetime.minute == field_before_with_timezone.minute
-    assert row.create_datetime.second == field_before_with_timezone.second
+
+    assert row.create_datetime == row_create_datetime_before_alter
 
     # changing the field from LastModified with Datetime to Text Field should persist
     # the datetime as string
@@ -134,7 +122,7 @@ def test_created_on_field_type(data_fixture):
         field=created_on_field_datetime,
         new_type_name="created_on",
         date_include_time=True,
-        timezone="Europe/Berlin",
+        datetime_force_timezone="Europe/Berlin",
     )
     assert len(CreatedOnField.objects.all()) == 2
 
@@ -147,31 +135,14 @@ def test_created_on_field_type(data_fixture):
     )
     row.refresh_from_db()
     assert len(CreatedOnField.objects.all()) == 1
-    assert row.create_datetime == row_create_datetime_before_alter.astimezone(
-        timezone_of_field
-    ).strftime("%d/%m/%Y %H:%M")
+    assert row.create_datetime == row_create_datetime_before_alter.strftime(
+        "%d/%m/%Y %H:%M"
+    )
 
     # deleting the fields
     field_handler.delete_field(user=user, field=created_on_field_date)
 
     assert len(CreatedOnField.objects.all()) == 0
-
-
-@pytest.mark.django_db
-def test_created_on_field_type_wrong_timezone(data_fixture):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-
-    field_handler = FieldHandler()
-
-    with pytest.raises(ValueError):
-        field_handler.create_field(
-            user=user,
-            table=table,
-            type_name="created_on",
-            name="Create Date",
-            timezone="SDj",
-        )
 
 
 @pytest.mark.django_db(transaction=True)

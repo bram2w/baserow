@@ -215,3 +215,9 @@ class FailedToLockFieldDueToConflict(LockConflict):
     Raised when a user tried to update a field which was locked by another
     concurrent operation
     """
+
+
+class DateForceTimezoneOffsetValueError(ValueError):
+    """
+    Raised when the force_timezone_offset value offset cannot be set.
+    """

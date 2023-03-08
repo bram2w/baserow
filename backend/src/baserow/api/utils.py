@@ -198,6 +198,8 @@ def validate_data_custom_fields(
     :type type_attribute_name: str
     :param partial: Whether the data is a partial update.
     :type partial: bool
+    :param allow_empty_type: Whether the type can be empty.
+    :type allow_empty_type: bool
     :raises RequestBodyValidationException: When the type is not a valid choice.
     :return: The validated data.
     :rtype: dict
@@ -286,6 +288,7 @@ def get_serializer_class(
     meta_ref_name=None,
     required_fields=None,
     base_mixins=None,
+    meta_extra_kwargs=None,
 ):
     """
     Generates a model serializer based on the provided field names and field overrides.
@@ -307,6 +310,9 @@ def get_serializer_class(
     :type required_fields: list[str]
     :param mixins: An optional list of mixins that must be added to the serializer.
     :type base_mixins: list[serializers.Serializer]
+    :param meta_extra_kwargs: An optional dict containing extra kwargs for the Meta
+        class.
+    :type meta_extra_kwargs: dict or None
     :return: The generated model serializer containing the provided fields.
     :rtype: ModelSerializer
     """
@@ -326,15 +332,18 @@ def get_serializer_class(
         base_class = ModelSerializer
 
     extends_meta = object
+    meta_extra_kwargs = meta_extra_kwargs or {}
 
     if hasattr(base_class, "Meta"):
         extends_meta = getattr(base_class, "Meta")
         field_names = list(extends_meta.fields) + list(field_names)
+        meta_extra_kwargs.update(getattr(extends_meta, "extra_kwargs", {}))
 
     class Meta(extends_meta):
         ref_name = meta_ref_name
         model = model_
         fields = list(field_names)
+        extra_kwargs = meta_extra_kwargs
 
     attrs = {"Meta": Meta}
 
