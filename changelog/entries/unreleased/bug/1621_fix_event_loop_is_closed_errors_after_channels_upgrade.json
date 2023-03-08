@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix event loop is closed errors after channels upgrade",
+    "issue_number": 1621,
+    "bullet_points": [],
+    "created_at": "2023-03-08"
+}

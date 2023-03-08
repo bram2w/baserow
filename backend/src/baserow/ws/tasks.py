@@ -3,6 +3,19 @@ from typing import Any, Dict, Iterable, List, Optional
 from baserow.config.celery import app
 
 
+async def closing_group_send(channel_layer, channel, message):
+    """
+    All channel_layer.*send* methods must have close_pools called after due to a
+    bug in channels 4.0.0 as recommended on
+    https://github.com/django/channels_redis/issues/332
+    """
+
+    await channel_layer.group_send(channel, message)
+    if hasattr(channel_layer, "close_pools"):
+        # The inmemory channel layer in tests does not have this function.
+        await channel_layer.close_pools()
+
+
 @app.task(bind=True)
 def broadcast_to_users(
     self,
@@ -29,7 +42,8 @@ def broadcast_to_users(
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
+    async_to_sync(closing_group_send)(
+        channel_layer,
         "users",
         {
             "type": "broadcast_to_users",
@@ -122,7 +136,8 @@ def broadcast_to_users_individual_payloads(
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
+    async_to_sync(closing_group_send)(
+        channel_layer,
         "users",
         {
             "type": "broadcast_to_users_individual_payloads",
@@ -154,7 +169,8 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
+    async_to_sync(closing_group_send)(
+        channel_layer,
         group,
         {
             "type": "broadcast_to_group",
