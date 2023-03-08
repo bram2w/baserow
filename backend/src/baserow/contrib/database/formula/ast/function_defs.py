@@ -1087,7 +1087,14 @@ class BaserowIsBlank(OneArgumentBaserowFunction):
         return arg.expression_type.is_blank(func_call, arg)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return arg
+        return EqualsExpr(
+            Coalesce(
+                arg,
+                Value(""),
+            ),
+            Value(""),
+            output_field=fields.BooleanField(),
+        )
 
 
 class BaserowIsNull(OneArgumentBaserowFunction):
