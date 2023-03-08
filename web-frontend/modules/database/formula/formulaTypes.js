@@ -23,6 +23,8 @@ import RowCardFieldArray from '@baserow/modules/database/components/card/RowCard
 import RowEditFieldBlank from '@baserow/modules/database/components/row/RowEditFieldBlank'
 import RowCardFieldBlank from '@baserow/modules/database/components/card/RowCardFieldBlank'
 import RowCardFieldLink from '@baserow/modules/database/components/card/RowCardFieldLink'
+import GridViewFieldLinkURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkURL.vue'
+import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText.vue'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -252,7 +254,7 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
   }
 
   getGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return GridViewFieldText
   }
 
   getFunctionalGridViewFieldComponent() {
@@ -455,7 +457,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
   }
 
   getGridViewFieldComponent() {
-    return FunctionalGridViewFieldLink
+    return GridViewFieldLinkURL
   }
 
   getSortOrder() {
