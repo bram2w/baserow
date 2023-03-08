@@ -251,6 +251,10 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
     return RowEditFieldText
   }
 
+  getGridViewFieldComponent() {
+    return FunctionalGridViewFieldText
+  }
+
   getFunctionalGridViewFieldComponent() {
     return FunctionalGridViewFieldText
   }
@@ -447,6 +451,10 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
   }
 
   getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLink
+  }
+
+  getGridViewFieldComponent() {
     return FunctionalGridViewFieldLink
   }
 
