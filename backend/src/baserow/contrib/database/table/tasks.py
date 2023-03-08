@@ -19,6 +19,7 @@ from baserow.core.registries import (
     subject_type_registry,
 )
 from baserow.core.subjects import UserSubjectType
+from baserow.ws.tasks import closing_group_send
 
 
 @app.task(queue="export")
@@ -102,7 +103,8 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     channel_layer = get_channel_layer()
 
     for channel_group_name, user_ids in channel_group_names_users_dict.items():
-        async_to_sync(channel_layer.group_send)(
+        async_to_sync(closing_group_send)(
+            channel_layer,
             channel_group_name,
             {
                 "type": "remove_user_from_group",
