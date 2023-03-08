@@ -389,7 +389,7 @@
         "roundDescription": "Returns first argument rounded to the number of digits specified by the second argument.",
         "truncDescription": "Returns only the first argument converted into an integer by truncating any decimal places.",
         "isNanDescription": "Returns true if the argument is 'NaN', returns false otherwise.",
-        "wheNanDescription": "Returns the first argument if it's not 'NaN'. Returns the second argument if the first argument is 'NaN'",
+        "whenNanDescription": "Returns the first argument if it's not 'NaN'. Returns the second argument if the first argument is 'NaN'",
         "absDescription": "Returns the absolute value for the argument number provided.",
         "ceilDescription": "Returns the smallest integer that is greater than or equal the argument number provided.",
         "floorDescription": "Returns the largest integer that is less than or equal the argument number provided."
