@@ -24,7 +24,7 @@ export default {
   beforeDestroy() {
     this.$store.dispatch(
       'undoRedo/updateCurrentScopeSet',
-      ENTERPRISE_ACTION_SCOPES.teams_in_group(false)
+      ENTERPRISE_ACTION_SCOPES.teams_in_group(null)
     )
   },
 }
