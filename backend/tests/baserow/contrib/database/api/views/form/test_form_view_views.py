@@ -24,6 +24,7 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptionsCondition,
 )
 from baserow.core.user_files.models import UserFile
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -2032,3 +2033,29 @@ def test_patch_multiple_form_view_field_options_conditions_update(
             "type": "equal",
         },
     ]
+
+
+@pytest.mark.django_db
+def test_submit_empty_form_view_for_interesting_test_table(api_client, data_fixture):
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
+    token = data_fixture.generate_token(user)
+    form = data_fixture.create_form_view(
+        table=table,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+
+    FormViewFieldOptions.objects.filter(form_view=form).update(
+        enabled=True, required=False
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK, response.json()
+    response_json = response.json()
+    assert response_json["submit_action"] == "MESSAGE"
