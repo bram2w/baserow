@@ -1,8 +1,17 @@
 # Changelog
 
+## Released 1.15.1
+
+### Bug fixes
+* Unregister the teams_in_group scope properly when navigating away from the teams settings page. [#1607](https://gitlab.com/bramw/baserow/-/issues/1607)
+* fix forms with multiple select fields not being submitable [#1625](https://gitlab.com/bramw/baserow/-/issues/1625)
+* Fix field creation when submitting with return/enter key
+
+
 ## Released 1.15.0
 
 ### New features
+* Make date fields timezone aware. [#1473](https://gitlab.com/bramw/baserow/-/issues/1473)
 * When right-clicking on the row add button in the grid view, you can now add multiple rows at a time. [#1249](https://gitlab.com/bramw/baserow/-/issues/1249)
 * Add ability to create application builder [#1567](https://gitlab.com/bramw/baserow/-/issues/1567)
 * Make commenter role free for advanced and enterprise. [#1596](https://gitlab.com/bramw/baserow/-/issues/1596)
@@ -27,6 +36,7 @@
 * Personal views improvements regarding premium. [#1532](https://gitlab.com/bramw/baserow/-/issues/1532)
 * Show row and storage usage on premium admin group page. [#1513](https://gitlab.com/bramw/baserow/-/issues/1513)
 * Add `is_nan` and `when_nan` formula functions [#1527](https://gitlab.com/bramw/baserow/-/issues/1527)
+* Add now() and today() formula with periodic updates [#1251](https://gitlab.com/bramw/baserow/-/issues/1251)
 * Can add a row with textual values for single select, multiple select and link row field. [#1312](https://gitlab.com/bramw/baserow/-/issues/1312)
 * Added missing actions for audit log. [#1500](https://gitlab.com/bramw/baserow/-/issues/1500)
 
@@ -43,6 +53,7 @@
 * disable silky_analyze_queries by default in developer env as it causes double data updates [#1591](https://gitlab.com/bramw/baserow/-/issues/1591)
 * Fixed memory leak when using our example `docker-compose` and a https URL in `BASEROW_CADDY_ADDRESSES` files caused by an incorrect Caddy healthcheck. [#1516](https://gitlab.com/bramw/baserow/-/issues/1516)
 * Single scrollbar for the personal and collaborative views. [#1531](https://gitlab.com/bramw/baserow/-/issues/1531)
+* fix event loop is closed errors after channels upgrade [#1621](https://gitlab.com/bramw/baserow/-/issues/1621)
 * Fix 500 error when fetching an aggregation that computes to `NaN` [#1054](https://gitlab.com/bramw/baserow/-/issues/1054)
 * Fix date field failing hard when trying to prefill an empty form value. [#1521](https://gitlab.com/bramw/baserow/-/issues/1521)
 * Fix SimpleGridView graphical glitches
@@ -59,6 +70,7 @@
   * Employee Directory
   * Team Check-ins
 * Move enterprise imports out of core. [#1537](https://gitlab.com/bramw/baserow/-/issues/1537)
+* Refactor date view filters to consider timezone when filtering results. [#1473](https://gitlab.com/bramw/baserow/-/issues/1473)
 * improve row before insert and move performance by refactoring the order to a fraction system [#1083](https://gitlab.com/bramw/baserow/-/issues/1083)
 
 ### Breaking API changes
