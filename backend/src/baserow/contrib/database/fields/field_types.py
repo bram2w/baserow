@@ -2683,7 +2683,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     can_get_unique_values = False
 
     def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
+        required = kwargs.pop("required", False)
         field_serializer = IntegerOrStringField(
             **{
                 "required": required,
@@ -3764,7 +3764,7 @@ class MultipleCollaboratorsFieldType(FieldType):
     can_be_in_form_view = False
 
     def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
+        required = kwargs.pop("required", False)
         field_serializer = CollaboratorSerializer(
             **{
                 "required": required,
