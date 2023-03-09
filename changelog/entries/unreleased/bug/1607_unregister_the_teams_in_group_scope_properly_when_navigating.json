@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Unregister the teams_in_group scope properly when navigating away from the teams settings page.",
+    "issue_number": 1607,
+    "bullet_points": [],
+    "created_at": "2023-03-07"
+}
