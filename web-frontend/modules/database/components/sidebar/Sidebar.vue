@@ -41,12 +41,13 @@
         ></SidebarItem>
       </ul>
       <ul v-if="pendingJobs.length" class="tree__subs">
-        <SidebarItemPendingJob
+        <component
+          :is="getPendingJobComponent(job)"
           v-for="job in pendingJobs"
           :key="job.id"
           :job="job"
         >
-        </SidebarItemPendingJob>
+        </component>
       </ul>
       <a
         v-if="
@@ -71,7 +72,7 @@
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
-import SidebarItemPendingJob from '@baserow/modules/database/components/sidebar/SidebarItemPendingJob'
+import SidebarItemPendingJob from '@baserow/modules/core/components/sidebar/SidebarItemPendingJob'
 import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 
@@ -126,6 +127,9 @@ export default {
       } catch (error) {
         notifyIf(error, 'table')
       }
+    },
+    getPendingJobComponent(job) {
+      return this.$registry.get('job', job.type).getSidebarComponent()
     },
   },
 }

@@ -5,18 +5,16 @@ import de from '@baserow/modules/builder/locales/de.json'
 import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
-
 import {
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
-import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
-
-import { PublicSiteErrorPageType } from '@baserow/modules/builder/errorPageTypes'
-
 import pageStore from '@baserow/modules/builder/store/page'
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
+import { DuplicatePageJobType } from '@baserow/modules/builder/jobTypes'
+import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
+import { PublicSiteErrorPageType } from '@baserow/modules/builder/errorPageTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -40,6 +38,7 @@ export default (context) => {
   app.$registry.registerNamespace('builderSettings')
 
   app.$registry.register('application', new BuilderApplicationType(context))
+  app.$registry.register('job', new DuplicatePageJobType(context))
 
   app.$registry.register(
     'builderSettings',
