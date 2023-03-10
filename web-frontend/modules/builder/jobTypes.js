@@ -1,19 +1,18 @@
+import SidebarItemPendingJob from '@baserow/modules/core/components/sidebar/SidebarItemPendingJob'
 import { JobType } from '@baserow/modules/core/jobTypes'
 
-import SidebarItemPendingJob from '@baserow/modules/core/components/sidebar/SidebarItemPendingJob.vue'
-
-export class DuplicateTableJobType extends JobType {
+export class DuplicatePageJobType extends JobType {
   static getType() {
-    return 'duplicate_table'
+    return 'duplicate_page'
   }
 
   getName() {
-    return 'duplicateTable'
+    return 'duplicatePage'
   }
 
   getSidebarText(job) {
     const { i18n } = this.app
-    return i18n.t('duplicateTableJobType.duplicating') + '...'
+    return i18n.t('duplicatePageJobType.duplicating') + '...'
   }
 
   getSidebarComponent() {
@@ -21,7 +20,7 @@ export class DuplicateTableJobType extends JobType {
   }
 
   isJobPartOfApplication(job, application) {
-    return job.original_table.database_id === application.id
+    return job.original_page.builder_id === application.id
   }
 
   async onJobFailed(job) {
@@ -41,19 +40,17 @@ export class DuplicateTableJobType extends JobType {
   async onJobDone(job) {
     const { i18n, store } = this.app
 
-    const duplicatedTable = job.duplicated_table
-    const database = store.getters['application/get'](
-      duplicatedTable.database_id
-    )
+    const duplicatedPage = job.duplicated_page
+    const builder = store.getters['application/get'](duplicatedPage.builder_id)
 
-    await store.dispatch('table/forceUpsert', {
-      database,
-      data: duplicatedTable,
+    await store.dispatch('page/forceCreate', {
+      builder,
+      page: duplicatedPage,
     })
 
     store.dispatch('notification/info', {
-      title: i18n.t('duplicateTableJobType.duplicatedTitle'),
-      message: duplicatedTable.name,
+      title: i18n.t('duplicatePageJobType.duplicatedTitle'),
+      message: duplicatedPage.name,
     })
 
     store.dispatch('job/forceDelete', job)

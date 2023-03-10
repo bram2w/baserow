@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from django.db.models import QuerySet
 
@@ -6,6 +6,8 @@ from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist, PageNotInBuilder
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import IdDoesNotExist
+from baserow.core.registries import application_type_registry
+from baserow.core.utils import ChildProgressBuilder, find_unused_name
 
 
 class PageHandler:
@@ -90,3 +92,52 @@ class PageHandler:
             raise PageNotInBuilder(error.not_existing_id)
 
         return full_order
+
+    def duplicate_page(
+        self, page: Page, progress_builder: Optional[ChildProgressBuilder] = None
+    ):
+        """
+        Duplicates an existing page instance
+
+        :param page: The page that is being duplicated
+        :param progress_builder: A progress object that can be used to report progress
+        :raises ValueError: When the provided page is not an instance of Page.
+        :return: The duplicated page
+        """
+
+        start_progress, export_progress, import_progress = 10, 30, 60
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+        progress.increment(by=start_progress)
+
+        builder = page.builder
+        builder_application_type = application_type_registry.get_by_model(builder)
+
+        [exported_page] = builder_application_type.export_pages_serialized([page])
+
+        # Set a unique name for the page to import back as a new one.
+        exported_page["name"] = self.find_unused_page_name(builder, page.name)
+        exported_page["order"] = Page.get_last_order(builder)
+
+        progress.increment(by=export_progress)
+
+        [new_page_clone] = builder_application_type.import_pages_serialized(
+            builder,
+            [exported_page],
+            progress_builder=progress.create_child_builder(
+                represents_progress=import_progress
+            ),
+        )
+
+        return new_page_clone
+
+    def find_unused_page_name(self, builder: Builder, proposed_name: str) -> str:
+        """
+        Finds an unused name for a page in a builder.
+
+        :param builder: The builder that the page belongs to.
+        :param proposed_name: The name that is proposed to be used.
+        :return: A unique name to use.
+        """
+
+        existing_pages_names = list(builder.page_set.values_list("name", flat=True))
+        return find_unused_name([proposed_name], existing_pages_names, max_length=255)

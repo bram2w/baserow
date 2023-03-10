@@ -10,6 +10,7 @@ from baserow.contrib.builder.operations import (
 from baserow.contrib.builder.pages.operations import (
     CreatePageOperationType,
     DeletePageOperationType,
+    DuplicatePageOperationType,
     ReadPageOperationType,
     UpdatePageOperationType,
 )
@@ -214,6 +215,7 @@ BUILDER_OPS = EDITOR_OPS + [
     CreatePageOperationType,
     DeletePageOperationType,
     UpdatePageOperationType,
+    DuplicatePageOperationType,
     CreateTableDatabaseTableOperationType,
     UpdateDatabaseTableOperationType,
     DeleteDatabaseTableOperationType,

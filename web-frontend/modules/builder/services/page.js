@@ -14,5 +14,8 @@ export default (client) => {
         page_ids: order,
       })
     },
+    duplicate(pageId) {
+      return client.post(`/builder/pages/${pageId}/duplicate/async/`)
+    },
   }
 }

@@ -11,7 +11,11 @@ export function populatePage(page) {
 }
 
 const state = {
+  // Holds the value of which page is currently selected
   selected: {},
+
+  // A job object that tracks the progress of a page duplication currently running
+  duplicateJob: null,
 }
 
 const mutations = {
@@ -32,6 +36,9 @@ const mutations = {
     })
     page._.selected = true
     state.selected = page
+  },
+  SET_DUPLICATE_JOB(state, job) {
+    state.duplicateJob = job
   },
   ORDER_PAGES(state, { builder, order, isHashed = false }) {
     builder.pages.forEach((page) => {
@@ -123,9 +130,20 @@ const actions = {
       throw error
     }
   },
+  async duplicate({ commit, dispatch }, { page }) {
+    const { data: job } = await PageService(this.$client).duplicate(page.id)
+
+    await dispatch('job/create', job, { root: true })
+
+    commit('SET_DUPLICATE_JOB', job)
+  },
 }
 
-const getters = {}
+const getters = {
+  getDuplicateJob(state) {
+    return state.duplicateJob
+  },
+}
 
 export default {
   namespaced: true,

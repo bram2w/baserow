@@ -92,3 +92,15 @@ def test_order_pages_page_not_in_builder(data_fixture):
 
     with pytest.raises(PageNotInBuilder):
         PageHandler().order_pages(builder, [page_two.id, page_one.id], base_qs=base_qs)
+
+
+@pytest.mark.django_db
+def test_duplicate_page(data_fixture):
+    page = data_fixture.create_builder_page()
+
+    page_clone = PageHandler().duplicate_page(page)
+
+    assert Page.objects.count() == 2
+    assert page_clone.id != page.id
+    assert page_clone.name != page.name
+    assert page_clone.order != page.order
