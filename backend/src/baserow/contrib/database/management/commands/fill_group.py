@@ -1,6 +1,6 @@
 import os
 import sys
-from random import randint
+from random import choice, randint
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -10,6 +10,7 @@ from faker import Faker
 from tqdm import tqdm
 
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.handler import CoreHandler, GroupDoesNotExist
 from baserow.core.management.utils import run_command_concurrently
 from baserow.core.models import Group
@@ -68,6 +69,13 @@ class Command(BaseCommand):
             default=1000,
         )
         parser.add_argument(
+            "--token-count",
+            nargs="?",
+            type=int,
+            help="Amount of tokens per database that need to be created on average (see percentage_variation).",
+            default=1,
+        )
+        parser.add_argument(
             "--percentage-variation",
             nargs="?",
             type=int,
@@ -89,6 +97,7 @@ class Command(BaseCommand):
         table_count = options["table_count"]
         field_count = options["field_count"]
         row_count = options["row_count"]
+        token_count = options["token_count"]
         concurrency = options["concurrency"]
         percentage_variation = options["percentage_variation"]
 
@@ -112,6 +121,7 @@ class Command(BaseCommand):
                 group,
                 database_count,
                 table_count,
+                token_count,
                 field_count,
                 row_count,
                 percentage_variation,
@@ -153,6 +163,7 @@ def fill_group_with_data(
     group: Group,
     database_count: int,
     table_count: int,
+    token_count: int,
     avg_field_count: int,
     avg_row_count: int,
     percentage_variation: int = 0,
@@ -169,7 +180,11 @@ def fill_group_with_data(
     min_row_count = max(1, int(avg_row_count * (1 - percentage_variation / 100)))
     max_row_count = int(avg_row_count * (1 + percentage_variation / 100))
 
-    with tqdm(range(database_count * table_count), desc=f"Worker {process_id}") as pbar:
+    with tqdm(
+        range(database_count * table_count + token_count),
+        desc=f"Worker" f" {process_id}",
+    ) as pbar:
+        created_databases_and_tables = {}
         for _ in range(database_count):
             with transaction.atomic():
                 database = (
@@ -177,6 +192,7 @@ def fill_group_with_data(
                     .create_application(user, group, "database", faker.name())
                     .specific
                 )
+                created_databases_and_tables[database] = []
                 print(f"Creating {table_count} tables in database {database.id}")
                 for _ in range(table_count):
                     table, _ = TableHandler().create_table(
@@ -192,4 +208,38 @@ def fill_group_with_data(
                         f"Creating {row_count} rows for table {table.id} from process {process_id}"
                     )
                     fill_table_rows(row_count, table)
+                    created_databases_and_tables[database].append(table)
                     pbar.update(1)
+        for _ in range(token_count):
+            with transaction.atomic():
+                permissions = []
+                for i in range(0, 4):
+                    random = randint(0, 2)  # nosec
+                    value = True
+                    if random == 1:
+                        value = False
+                    if random == 2:
+                        try:
+                            database = choice(  # nosec
+                                list(created_databases_and_tables.keys())
+                            )
+                            table = choice(  # nosec
+                                created_databases_and_tables[database]
+                            )
+                            value = [database, table]
+                        except IndexError:
+                            value = False
+                    permissions.append(value)
+
+                token = TokenHandler().create_token(
+                    user=user, group=group, name=f"Token {_}"
+                )
+                TokenHandler().update_token_permissions(
+                    user=user,
+                    token=token,
+                    create=permissions[0],
+                    read=permissions[1],
+                    update=permissions[2],
+                    delete=permissions[3],
+                )
+                pbar.update(1)

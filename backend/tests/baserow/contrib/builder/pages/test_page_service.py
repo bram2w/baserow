@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
+from baserow.contrib.builder.pages.exceptions import PageNotInBuilder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.service import PageService
 from baserow.core.exceptions import UserNotInGroup
@@ -120,3 +121,36 @@ def test_order_pages_user_not_in_group(data_fixture):
 
     with pytest.raises(UserNotInGroup):
         PageService().order_pages(user, builder, [page_two.id, page_one.id])
+
+
+@pytest.mark.django_db
+def test_order_pages_page_not_in_builder(data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page_one = data_fixture.create_builder_page(builder=builder, order=1)
+    page_two = data_fixture.create_builder_page(order=2)
+
+    with pytest.raises(PageNotInBuilder):
+        PageService().order_pages(user, builder, [page_two.id, page_one.id])
+
+
+@pytest.mark.django_db
+def test_duplicate_page(data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder)
+
+    page_clone = PageService().duplicate_page(user, page)
+
+    assert page_clone.order != page.order
+    assert page_clone.id != page.id
+    assert page_clone.name != page.name
+
+
+@pytest.mark.django_db
+def test_duplicate_page_user_not_in_group(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page()
+
+    with pytest.raises(UserNotInGroup):
+        PageService().duplicate_page(user, page)

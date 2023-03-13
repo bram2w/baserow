@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix bug that prevented from decoding dates sent as prefilled values in form URLs",
+    "issue_number": 1630,
+    "bullet_points": [],
+    "created_at": "2023-03-13"
+}

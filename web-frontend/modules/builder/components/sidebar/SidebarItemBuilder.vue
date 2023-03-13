@@ -34,6 +34,22 @@
           </a>
         </li>
         <li
+          v-if="
+            $hasPermission('builder.page.duplicate', page, builder.group.id)
+          "
+        >
+          <a
+            :class="{
+              'context__menu-item--loading': duplicateLoading,
+              disabled: deleteLoading || duplicateLoading,
+            }"
+            @click="duplicatePage()"
+          >
+            <i class="context__menu-icon fas fa-fw fa-copy"></i>
+            {{ $t('action.duplicate') }}
+          </a>
+        </li>
+        <li
           v-if="$hasPermission('builder.page.delete', page, builder.group.id)"
         >
           <a
@@ -51,6 +67,7 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'SidebarItemBuilder',
@@ -67,6 +84,7 @@ export default {
   data() {
     return {
       deleteLoading: false,
+      duplicateLoading: false,
     }
   },
   computed: {
@@ -88,6 +106,14 @@ export default {
           this.builder.group.id
         )
       )
+    },
+    ...mapGetters({ duplicateJob: 'page/getDuplicateJob' }),
+  },
+  watch: {
+    'duplicateJob.state'(newState) {
+      if (['finished', 'failed'].includes(newState)) {
+        this.duplicateLoading = false
+      }
     },
   },
   methods: {
@@ -160,6 +186,21 @@ export default {
       }
 
       this.deleteLoading = false
+    },
+    async duplicatePage() {
+      if (this.duplicateLoading) {
+        return
+      }
+
+      this.duplicateLoading = true
+
+      try {
+        await this.$store.dispatch('page/duplicate', { page: this.page })
+      } catch (error) {
+        notifyIf(error, 'page')
+      }
+
+      this.$refs.context.hide()
     },
   },
 }

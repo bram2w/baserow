@@ -6,10 +6,13 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_202_ACCEPTED
 from rest_framework.views import APIView
 
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
+from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.contrib.builder.api.pages.errors import (
     ERROR_PAGE_DOES_NOT_EXIST,
@@ -22,8 +25,16 @@ from baserow.contrib.builder.api.pages.serializers import (
 )
 from baserow.contrib.builder.handler import BuilderHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist, PageNotInBuilder
+from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
 from baserow.contrib.builder.pages.service import PageService
 from baserow.core.exceptions import ApplicationDoesNotExist
+from baserow.core.jobs.exceptions import MaxJobCountExceeded
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.registries import job_type_registry
+
+DuplicatePageJobTypeSerializer = job_type_registry.get(
+    DuplicatePageJobType.type
+).get_serializer_class(base_class=JobSerializer)
 
 
 class PagesView(APIView):
@@ -195,3 +206,51 @@ class OrderPagesView(APIView):
         PageService().order_pages(request.user, builder, data["page_ids"])
 
         return Response(status=204)
+
+
+class AsyncDuplicatePageView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The page to duplicate.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder pages"],
+        operation_id="duplicate_builder_page_async",
+        description=(
+            "Start a job to duplicate the page with the provided `page_id` parameter "
+            "if the authorized user has access to the builder's group."
+        ),
+        responses={
+            202: DuplicatePageJobTypeSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_MAX_JOB_COUNT_EXCEEDED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+            MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
+        }
+    )
+    def post(self, request, page_id):
+        """Creates a job to duplicate a page in a builder."""
+
+        job = JobHandler().create_and_start_job(
+            request.user, DuplicatePageJobType.type, page_id=page_id
+        )
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=HTTP_202_ACCEPTED)

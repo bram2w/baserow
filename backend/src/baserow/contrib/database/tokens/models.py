@@ -79,6 +79,7 @@ class TokenPermission(HierarchicalModelMixin, models.Model):
     token = models.ForeignKey("database.Token", on_delete=models.CASCADE)
     type = models.CharField(
         max_length=6,
+        db_index=True,
         choices=(
             ("create", "Create"),
             ("read", "Read"),

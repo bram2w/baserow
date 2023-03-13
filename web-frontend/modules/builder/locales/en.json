@@ -21,5 +21,9 @@
         "nameLabel": "Name",
         "errorNameNotUnique": "A page with this name already exists",
         "defaultName": "Page"
+    },
+    "duplicatePageJobType": {
+        "duplicating": "Duplicating",
+        "duplicatedTitle": "Page duplicated"
     }
 }

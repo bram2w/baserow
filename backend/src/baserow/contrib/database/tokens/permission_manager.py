@@ -19,7 +19,6 @@ class TokenPermissionManagerType(PermissionManagerType):
         Checks multiple permissions for token.
         """
 
-        token_checks = []
         token_checks_by_context = defaultdict(list)
         for check in checks:
             if check.operation_name not in OPERATION_TO_TOKEN_MAP:
@@ -32,11 +31,10 @@ class TokenPermissionManagerType(PermissionManagerType):
         # NOTE: we do one query per context because it's simpler but we could probably
         # do better. Regarding the way we use tokens for now it should be enough.
         for context, token_checks in token_checks_by_context.items():
-
             query_parts = Q()
             for check in token_checks:
-                query_parts |= Q(token=check.actor) | Q(
-                    type=OPERATION_TO_TOKEN_MAP[check.operation_name]
+                query_parts |= Q(
+                    token=check.actor, type=OPERATION_TO_TOKEN_MAP[check.operation_name]
                 )
 
             # Query the DB and store allowed operation per token id

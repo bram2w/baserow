@@ -32,6 +32,7 @@ class BuilderConfig(AppConfig):
         from baserow.contrib.builder.pages.operations import (
             CreatePageOperationType,
             DeletePageOperationType,
+            DuplicatePageOperationType,
             ReadPageOperationType,
             UpdatePageOperationType,
         )
@@ -40,6 +41,12 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(DeletePageOperationType())
         operation_type_registry.register(UpdatePageOperationType())
         operation_type_registry.register(ReadPageOperationType())
+        operation_type_registry.register(DuplicatePageOperationType())
+
+        from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
+        from baserow.core.jobs.registries import job_type_registry
+
+        job_type_registry.register(DuplicatePageJobType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

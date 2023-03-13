@@ -21,3 +21,7 @@ class UpdatePageOperationType(BuilderPageOperationType):
 
 class ReadPageOperationType(BuilderPageOperationType):
     type = "builder.page.read"
+
+
+class DuplicatePageOperationType(BuilderPageOperationType):
+    type = "builder.page.duplicate"
