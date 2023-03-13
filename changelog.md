@@ -1,5 +1,12 @@
 # Changelog
 
+## Released 1.15.2
+
+### Bug fixes
+* Fix bug that prevented from decoding dates sent as prefilled values in form URLs [#1630](https://gitlab.com/bramw/baserow/-/issues/1630)
+* Fix performance problem when checking token permissions
+
+
 ## Released 1.15.1
 
 ### Bug fixes
