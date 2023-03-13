@@ -353,16 +353,47 @@ const queryParametersForParsing = [
   },
   {
     fieldType: new DateFieldType(),
-    input: { value: '2021-12-04', field: { field: { date_format: 'EU' } } },
-    output: '2021-12-04',
+    input: { value: '33/12/2021', field: { field: { date_format: 'EU' } } },
+    output: null,
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: { value: '31/12/2021', field: { field: { date_format: 'EU' } } },
+    output: '2021-12-31',
   },
   {
     fieldType: new DateFieldType(),
     input: {
-      value: '2021-12-04T22:57:00Z',
-      field: { field: { date_format: 'EU' } },
+      value: '31/12/2021 22:57',
+      field: { field: { date_format: 'EU', date_include_time: true } },
     },
-    output: '2021-12-04',
+    output: '2021-12-31T22:57:00Z',
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: { value: '12/31/2021', field: { field: { date_format: 'US' } } },
+    output: '2021-12-31',
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: {
+      value: '12/31/2021 22:57',
+      field: { field: { date_format: 'EU', date_include_time: true } },
+    },
+    output: '2021-12-31T22:57:00Z',
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: { value: '2021-12-31', field: { field: { date_format: 'ISO' } } },
+    output: '2021-12-31',
+  },
+  {
+    fieldType: new DateFieldType(),
+    input: {
+      value: '2021-12-31 22:57',
+      field: { field: { date_format: 'ISO', date_include_time: true } },
+    },
+    output: '2021-12-31T22:57:00Z',
   },
   {
     fieldType: new URLFieldType(),
