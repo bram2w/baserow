@@ -1544,7 +1544,10 @@ export class DateFieldType extends BaseDateFieldType {
   }
 
   parseQueryParameter(field, value) {
-    return DateFieldType.formatDate(field.field, value)
+    return DateFieldType.formatDate(
+      field.field,
+      DateFieldType.parseDate(field.field, value)
+    )
   }
 }
 
