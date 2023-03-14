@@ -3,7 +3,12 @@
     <h2 class="box__title">
       {{ $t('createPageModal.header') }}
     </h2>
-    <PageForm :creation="true" :builder="builder" @submitted="addPage">
+    <PageForm
+      ref="pageForm"
+      :creation="true"
+      :builder="builder"
+      @submitted="addPage"
+    >
       <FormElement>
         <div class="actions actions--right">
           <button
@@ -47,11 +52,12 @@ export default {
           builder: this.builder,
           name,
         })
+        this.$refs.pageForm.$v.$reset()
+        this.hide()
         await this.$router.push({
           name: 'builder-page',
           params: { builderId: this.builder.id, pageId: page.id },
         })
-        this.hide()
       } catch (error) {
         notifyIf(error, 'application')
       }
